@@ -63,8 +63,9 @@ public abstract class HttpServerLauncher extends Launcher {
 
 	@Provides
 	HttpServer server(NioReactor reactor, AsyncServlet rootServlet, Config config) {
-		return HttpServer.create(reactor, rootServlet)
-				.withInitializer(ofHttpServer(config.getChild("http")));
+		return HttpServer.builder(reactor, rootServlet)
+				.withInitializer(ofHttpServer(config.getChild("http")))
+				.build();
 	}
 
 	@Provides

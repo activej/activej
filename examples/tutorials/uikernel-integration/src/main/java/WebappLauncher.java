@@ -68,8 +68,9 @@ public class WebappLauncher extends Launcher {
 
 	@Provides
 	HttpServer server(NioReactor reactor, Config config, AsyncServlet servlet) {
-		return HttpServer.create(reactor, servlet)
-				.withListenPort(config.get(ofInteger(), "port", DEFAULT_PORT));
+		return HttpServer.builder(reactor, servlet)
+				.withListenPort(config.get(ofInteger(), "port", DEFAULT_PORT))
+				.build();
 	}
 
 	@Override

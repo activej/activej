@@ -232,9 +232,10 @@ public final class HttpStreamTest {
 	}
 
 	private void startTestServer(AsyncServlet servlet) throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(), servlet)
+		HttpServer.builder(Reactor.getCurrentReactor(), servlet)
 				.withListenPort(port)
 				.withAcceptOnce()
+				.build()
 				.listen();
 	}
 

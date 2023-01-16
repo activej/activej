@@ -52,7 +52,8 @@ public final class PingPongSocketConnectionTest {
 
 	@Test
 	public void test() throws IOException {
-		SimpleServer.create(
+		SimpleServer.builder(
+						getCurrentReactor(),
 						socket -> {
 							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 							loop(ITERATIONS,
@@ -66,6 +67,7 @@ public final class PingPongSocketConnectionTest {
 						})
 				.withListenAddress(address)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)

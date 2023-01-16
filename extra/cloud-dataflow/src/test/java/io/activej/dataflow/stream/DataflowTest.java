@@ -25,13 +25,13 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
+import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.Transient;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.reactor.Reactor;
@@ -99,16 +99,18 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(3),
@@ -117,8 +119,9 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(2),
 						new TestItem(4),
@@ -127,13 +130,14 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		Module clientCommon = createCommonClient(common);
+		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> items = datasetOfId("items", simple(TestItem.class));
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
@@ -154,7 +158,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.build();
@@ -162,9 +166,11 @@ public final class DataflowTest {
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -176,21 +182,23 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(6)))
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		Module clientCommon = createCommonClient(common);
+		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
@@ -229,7 +237,7 @@ public final class DataflowTest {
 		Partition partition2 = new Partition(address2);
 		Partition partition3 = new Partition(address3);
 
-		Module common = createCommon(executor, sortingExecutor, List.of(partition1, partition2, partition3))
+		Module common = createCommon(List.of(partition1, partition2, partition3))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -237,6 +245,8 @@ public final class DataflowTest {
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result3 = StreamConsumerToList.create();
+
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		List<TestItem> list1 = List.of(
 				new TestItem(15),
@@ -246,8 +256,9 @@ public final class DataflowTest {
 				new TestItem(11),
 				new TestItem(13));
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(list1)
 				.bind(datasetId("result")).toInstance(result1)
 				.build();
@@ -256,8 +267,9 @@ public final class DataflowTest {
 				new TestItem(21),
 				new TestItem(26));
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(list2)
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
@@ -269,21 +281,23 @@ public final class DataflowTest {
 				new TestItem(38),
 				new TestItem(36));
 		Module serverModule3 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address3.getPort())
 				.bind(datasetId("items")).toInstance(list3)
 				.bind(datasetId("result")).toInstance(result3)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
-		DataflowServer server3 = Injector.of(serverModule3).getInstance(DataflowServer.class).withListenAddress(address3);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
+		DataflowServer server3 = Injector.of(serverModule3).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 		server3.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		Module clientCommon = createCommonClient(common);
+		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> items = localSort(
 				repartition(
@@ -323,7 +337,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -331,9 +345,12 @@ public final class DataflowTest {
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(4),
@@ -344,8 +361,9 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(7),
 						new TestItem(7),
@@ -355,13 +373,14 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		Module clientCommon = createCommonClient(common);
+		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
@@ -385,14 +404,17 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -402,8 +424,9 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(7),
@@ -412,13 +435,14 @@ public final class DataflowTest {
 						new TestItem(10)))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		Injector clientInjector = Injector.of(common);
+		Module clientCommon = createCommonClient(common);
+		Injector clientInjector = Injector.of(clientCommon);
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
@@ -446,15 +470,18 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -464,8 +491,9 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(7),
@@ -474,13 +502,14 @@ public final class DataflowTest {
 						new TestItem(10)))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		Injector clientInjector = Injector.of(common);
+		Module clientCommon = createCommonClient(common);
+		Injector clientInjector = Injector.of(clientCommon);
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
@@ -507,7 +536,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -515,25 +544,30 @@ public final class DataflowTest {
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("result")).toInstance(result1)
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		Module clientCommon = createCommonClient(common);
+		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> emptyDataset = empty(simple(TestItem.class));
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(emptyDataset, "result");
@@ -556,15 +590,18 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items1")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -576,8 +613,9 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items1")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(6),
@@ -588,13 +626,14 @@ public final class DataflowTest {
 						new TestItem(8)))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		Injector clientInjector = Injector.of(common);
+		Module clientCommon = createCommonClient(common);
+		Injector clientInjector = Injector.of(clientCommon);
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
@@ -635,15 +674,18 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items1")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -655,8 +697,9 @@ public final class DataflowTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items1")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(6),
@@ -667,13 +710,14 @@ public final class DataflowTest {
 						new TestItem(8)))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		Injector clientInjector = Injector.of(common);
+		Module clientCommon = createCommonClient(common);
+		Injector clientInjector = Injector.of(clientCommon);
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
@@ -735,16 +779,14 @@ public final class DataflowTest {
 		}
 	}
 
-	public static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, List<Partition> graphPartitions) {
+	public static ModuleBuilder createCommon(List<Partition> graphPartitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
-				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
-				.bind(Executor.class).toInstance(executor)
 				.bind(NioReactor.class).toInstance(Reactor.getCurrentReactor())
 				.scan(new Object() {
 					@Provides
-					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
-						return DataflowServer.create(reactor, codec, serializers, environment);
+					List<Partition> partitions() {
+						return graphPartitions;
 					}
 
 					@Provides
@@ -752,23 +794,50 @@ public final class DataflowTest {
 							BinarySerializerModule.BinarySerializerLocator serializers) {
 						return DataflowClient.create(reactor, codec, serializers);
 					}
+				});
+	}
 
+	public static Module createCommonClient(Module common) {
+		return ModuleBuilder.create()
+				.install(common)
+				.scan(new Object() {
 					@Provides
 					@Transient
-					DataflowGraph graph(NioReactor reactor, DataflowClient client) {
-						return new DataflowGraph(reactor, client, graphPartitions);
+					DataflowGraph graph(NioReactor reactor, DataflowClient client, List<Partition> partitions) {
+						return new DataflowGraph(reactor, client, partitions);
+					}
+				})
+				.build();
+	}
+
+	public static Module createCommonServer(Module common, Executor executor, Executor sortingExecutor) {
+		return ModuleBuilder.create()
+				.install(common)
+				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
+				.bind(Executor.class).toInstance(executor)
+				.scan(new Object() {
+					@Provides
+					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
+							BinarySerializerModule.BinarySerializerLocator serializers, Injector environment,
+							@Named("dataflowPort") OptionalDependency<Integer> listenPort) {
+						DataflowServer.Builder builder = DataflowServer.builder(reactor, codec, serializers, environment);
+						if (listenPort.isPresent()) {
+							builder.withListenPort(listenPort.get());
+						}
+						return builder.build();
 					}
 
 					@Provides
-					AsyncHttpClient httpClient(NioReactor reactor) {
-						return HttpClient.create(reactor);
+					HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+							List<Partition> partitions, Injector env, @Named("debugPort") OptionalDependency<Integer> listenPort) {
+						HttpServer.Builder builder = HttpServer.builder(reactor, new Servlet_DataflowDebug(reactor, partitions, executor, codec, env));
+						if (listenPort.isPresent()) {
+							builder.withListenPort(listenPort.get());
+						}
+						return builder.build();
 					}
-
-					@Provides
-					HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, Injector env) {
-						return HttpServer.create(reactor, new Servlet_DataflowDebug(reactor, graphPartitions, executor, codec, env));
-					}
-				});
+				})
+				.build();
 	}
 
 	public static InetSocketAddress getFreeListenAddress() {

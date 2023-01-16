@@ -49,7 +49,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.crdt.util.Utils.*;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReactiveServer<CrdtServer<K, S>> {
+public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReactiveServer {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
@@ -96,17 +96,31 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, AsyncCrdtStorage<K, S> storage, BinarySerializer_CrdtData<K, S> serializer) {
-		return new CrdtServer<>(reactor, storage, serializer);
+	public static <K extends Comparable<K>, S> CrdtServer<K, S>.Builder builder(
+			NioReactor reactor,
+			AsyncCrdtStorage<K, S> storage,
+			BinarySerializer_CrdtData<K, S> serializer
+	) {
+		return new CrdtServer<>(reactor, storage, serializer).new Builder();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, AsyncCrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
-		return new CrdtServer<>(reactor, storage, new BinarySerializer_CrdtData<>(keySerializer, stateSerializer));
+	public static <K extends Comparable<K>, S> CrdtServer<K, S>.Builder builder(
+			NioReactor reactor,
+			AsyncCrdtStorage<K, S> storage,
+			BinarySerializer<K> keySerializer,
+			BinarySerializer<S> stateSerializer
+	) {
+		return new CrdtServer<>(reactor, storage, new BinarySerializer_CrdtData<>(keySerializer, stateSerializer)).new Builder();
 	}
 
-	public CrdtServer<K, S> withHandshakeHandler(Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler) {
-		this.handshakeHandler = handshakeHandler;
-		return this;
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, CrdtServer<K, S>> {
+		private Builder() {}
+
+		public Builder withHandshakeHandler(Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler) {
+			checkNotBuilt(this);
+			CrdtServer.this.handshakeHandler = handshakeHandler;
+			return this;
+		}
 	}
 
 	@Override

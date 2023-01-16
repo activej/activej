@@ -64,7 +64,9 @@ public final class FileSystem_Remote_TestPartial {
 		clientStorage = tempFolder.newFolder().toPath();
 		FileSystem fileSystem = FileSystem.create(Reactor.getCurrentReactor(), executor, serverStorage);
 		await(fileSystem.start());
-		server = FileSystemServer.create(Reactor.getCurrentReactor(), fileSystem).withListenAddress(address);
+		server = FileSystemServer.builder(Reactor.getCurrentReactor(), fileSystem)
+				.withListenAddress(address)
+				.build();
 		server.listen();
 		client = FileSystem_Remote.create(Reactor.getCurrentReactor(), address);
 

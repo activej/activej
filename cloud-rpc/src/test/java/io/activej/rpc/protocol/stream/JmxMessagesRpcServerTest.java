@@ -42,13 +42,14 @@ public class JmxMessagesRpcServerTest {
 	@Before
 	public void setup() throws IOException {
 		listenPort = getFreePort();
-		server = RpcServer.create(Reactor.getCurrentReactor())
+		server = RpcServer.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
 				.withListenPort(listenPort)
-				.withAcceptOnce();
+				.withAcceptOnce()
+				.build();
 		server.listen();
 	}
 

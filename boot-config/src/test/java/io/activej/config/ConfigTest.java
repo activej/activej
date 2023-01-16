@@ -26,7 +26,10 @@ public class ConfigTest {
 
 	@Test
 	public void testOfConverter1() {
-		Config config = Config.ofValue(ConfigConverters.ofServerSocketSettings(), ServerSocketSettings.create(16384));
+		ServerSocketSettings serverSocketSettings = ServerSocketSettings.builder()
+				.withBacklog(16384)
+				.build();
+		Config config = Config.ofValue(ConfigConverters.ofServerSocketSettings(), serverSocketSettings);
 		assertEquals("16384", config.get("backlog"));
 		assertTrue(config.hasChild("receiveBufferSize"));
 		assertEquals("", config.get("receiveBufferSize", "X"));

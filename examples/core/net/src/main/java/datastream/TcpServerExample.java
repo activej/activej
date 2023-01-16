@@ -26,22 +26,25 @@ public final class TcpServerExample {
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create();
 
-		eventloop.listen(new InetSocketAddress("localhost", TcpClientExample.PORT), ServerSocketSettings.create(100), channel -> {
-			AsyncTcpSocket socket;
+		InetSocketAddress address = new InetSocketAddress("localhost", TcpClientExample.PORT);
+		ServerSocketSettings socketSettings = ServerSocketSettings.create();
+		eventloop.listen(address, socketSettings,
+				channel -> {
+					AsyncTcpSocket socket;
 
-			try {
-				socket = TcpSocket.wrapChannel(eventloop, channel, null);
-				System.out.println("Client connected: " + channel.getRemoteAddress());
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+					try {
+						socket = TcpSocket.wrapChannel(eventloop, channel, null);
+						System.out.println("Client connected: " + channel.getRemoteAddress());
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
 
-			ChannelSupplier.ofSocket(socket)
-					.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-					.transformWith(StreamFilter.mapper(x -> x + " times 10 = " + x * 10))
-					.transformWith(ChannelSerializer.create(UTF8_SERIALIZER))
-					.streamTo(ChannelConsumer.ofSocket(socket));
-		});
+					ChannelSupplier.ofSocket(socket)
+							.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
+							.transformWith(StreamFilter.mapper(x -> x + " times 10 = " + x * 10))
+							.transformWith(ChannelSerializer.create(UTF8_SERIALIZER))
+							.streamTo(ChannelConsumer.ofSocket(socket));
+				});
 
 		System.out.println("Connect to the server by running datastream.TcpClientExample");
 

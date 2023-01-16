@@ -38,9 +38,10 @@ public class TestHttpsServer {
 		KeyManager[] keyManagers = createKeyManagers(new File("./src/test/resources/keystore.jks"), "testtest", "testtest");
 		TrustManager[] trustManagers = createTrustManagers(new File("./src/test/resources/truststore.jks"), "testtest");
 
-		HttpServer server = HttpServer.create(eventloop, bobServlet)
+		HttpServer server = HttpServer.builder(eventloop, bobServlet)
 				.withSslListenPort(createSslContext("TLSv1", keyManagers, trustManagers, new SecureRandom()), executor, PORT)
-				.withListenPort(getFreePort());
+				.withListenPort(getFreePort())
+				.build();
 
 		System.out.println("https://127.0.0.1:" + PORT);
 

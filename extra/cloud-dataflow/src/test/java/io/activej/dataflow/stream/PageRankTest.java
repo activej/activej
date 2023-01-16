@@ -44,7 +44,7 @@ import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.stream.DataflowTest.createCommon;
+import static io.activej.dataflow.stream.DataflowTest.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
@@ -212,20 +212,21 @@ public class PageRankTest {
 	}
 
 	private Module createModule(Partition... partitions) {
-		return createCommon(executor, sortingExecutor, List.of(partitions))
+		return createCommon(List.of(partitions))
 				.install(createSerializersModule())
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 	}
 
 	public DataflowServer launchServer(InetSocketAddress address, Object items, Object result) throws Exception {
 		Injector env = Injector.of(ModuleBuilder.create()
-				.install(createModule())
+				.install(createCommonServer(createModule(), executor, sortingExecutor))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(items)
 				.bind(datasetId("result")).toInstance(result)
+				.bind(Integer.class, "dataflowPort").toInstance(address.getPort())
 				.build());
-		DataflowServer server = env.getInstance(DataflowServer.class).withListenAddress(address);
+		DataflowServer server = env.getInstance(DataflowServer.class);
 		server.listen();
 		return server;
 	}
@@ -264,8 +265,15 @@ public class PageRankTest {
 	@Ignore("For manual run")
 	@Test
 	public void runDebugServer() throws Exception {
-		Injector env = Injector.of(createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)));
-		env.getInstance(HttpServer.class).withListenPort(8080).listen();
+		Injector env = Injector.of(
+				createCommonServer(
+						createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)),
+						executor, sortingExecutor),
+				ModuleBuilder.create()
+						.bind(Integer.class, "debugPort").toInstance(8080)
+						.build()
+		);
+		env.getInstance(HttpServer.class).listen();
 		await();
 	}
 
@@ -276,7 +284,7 @@ public class PageRankTest {
 		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
 		SortedDataset<Long, Rank> pageRanks = pageRank(repartitioned);
 
-		Injector env = Injector.of(createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)));
+		Injector env = Injector.of(createCommonClient(createModule(new Partition(addressForDebug1), new Partition(addressForDebug2))));
 		DataflowGraph graph = env.getInstance(DataflowGraph.class);
 		consumerOfId(pageRanks, "result").channels(DataflowContext.of(graph));
 
@@ -295,7 +303,7 @@ public class PageRankTest {
 		StreamConsumerToList<Rank> result2 = StreamConsumerToList.create();
 		DataflowServer server2 = launchServer(address2, List.of(new Page(2, new long[]{1})), result2);
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		DataflowGraph graph = Injector.of(createCommonClient(common)).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfId("items",
 				simple(Page.class), Long.class, new PageKeyFunction(), new LongComparator()));

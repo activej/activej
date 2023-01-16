@@ -52,14 +52,15 @@ public final class TestRpcClientShutdown {
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<Class<?>> messageTypes = List.of(Request.class, Response.class);
 
-		RpcServer rpcServer = RpcServer.create(reactor)
+		RpcServer rpcServer = RpcServer.builder(reactor)
 				.withMessageTypes(messageTypes)
 				.withHandler(Request.class,
 						request -> Promise.ofBlocking(executor, () -> {
 							Thread.sleep(100);
 							return new Response();
 						}))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		RpcClient rpcClient = RpcClient.builder(reactor)
 				.withMessageTypes(messageTypes)

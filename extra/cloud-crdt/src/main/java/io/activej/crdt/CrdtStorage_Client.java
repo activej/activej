@@ -50,6 +50,7 @@ import io.activej.serializer.BinarySerializer;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.function.Consumer;
 
 import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -115,6 +116,13 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	public CrdtStorage_Client<K, S> withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
+		return this;
+	}
+
+	public CrdtStorage_Client<K, S> withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+		SocketSettings.Builder builder = socketSettings.asBuilder();
+		modifier.accept(builder);
+		this.socketSettings = builder.build();
 		return this;
 	}
 	//endregion

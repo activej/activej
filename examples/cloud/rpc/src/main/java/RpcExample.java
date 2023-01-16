@@ -41,11 +41,12 @@ public class RpcExample extends Launcher {
 
 	@Provides
 	RpcServer rpcServer(NioReactor reactor) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withMessageTypes(String.class)
 				.withHandler(String.class,
 						request -> Promise.of("Hello " + request))
-				.withListenPort(SERVICE_PORT);
+				.withListenPort(SERVICE_PORT)
+				.build();
 	}
 
 	@Provides

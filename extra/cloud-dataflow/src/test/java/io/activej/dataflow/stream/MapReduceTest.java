@@ -38,8 +38,7 @@ import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.stream.DataflowTest.createCommon;
-import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
+import static io.activej.dataflow.stream.DataflowTest.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static java.util.Comparator.naturalOrder;
@@ -106,14 +105,16 @@ public class MapReduceTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat",
@@ -122,20 +123,21 @@ public class MapReduceTest {
 				.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat"))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		Injector clientInjector = Injector.of(common);
+		Injector clientInjector = Injector.of(createCommonClient(common));
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 

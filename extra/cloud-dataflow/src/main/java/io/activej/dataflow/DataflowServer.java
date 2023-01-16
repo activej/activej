@@ -71,7 +71,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Server for processing JSON commands.
  */
-public final class DataflowServer extends AbstractReactiveServer<DataflowServer> {
+public final class DataflowServer extends AbstractReactiveServer {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final int MAX_LAST_RAN_TASKS = ApplicationSettings.getInt(DataflowServer.class, "maxLastRanTasks", 1000);
@@ -94,20 +94,35 @@ public final class DataflowServer extends AbstractReactiveServer<DataflowServer>
 	private Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler = $ ->
 			new DataflowResponse.Handshake(null);
 
-	private DataflowServer(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
+	private DataflowServer(
+			NioReactor reactor,
+			ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
+			BinarySerializerLocator serializers,
+			ResourceLocator environment
+	) {
 		super(reactor);
 		this.codec = codec;
 		this.serializers = serializers;
 		this.environment = environment;
 	}
 
-	public static DataflowServer create(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
-		return new DataflowServer(reactor, codec, serializers, environment);
+	public static Builder builder(
+			NioReactor reactor,
+			ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
+			BinarySerializerLocator serializers,
+			ResourceLocator environment
+	) {
+		return new DataflowServer(reactor, codec, serializers, environment).new Builder();
 	}
 
-	public DataflowServer withHandshakeHandler(Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler) {
-		this.handshakeHandler = handshakeHandler;
-		return this;
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, DataflowServer> {
+		private Builder() {}
+
+		public Builder withHandshakeHandler(Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler) {
+			checkNotBuilt(this);
+			DataflowServer.this.handshakeHandler = handshakeHandler;
+			return this;
+		}
 	}
 
 	private void sendResponse(AsyncMessaging<DataflowRequest, DataflowResponse> messaging, @Nullable Exception exception) {

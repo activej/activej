@@ -54,14 +54,15 @@ public final class RpcTimeoutTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<Class<?>> messageTypes = List.of(String.class);
 
-		server = RpcServer.create(reactor)
+		server = RpcServer.builder(reactor)
 				.withMessageTypes(messageTypes)
 				.withHandler(String.class,
 						request -> Promise.ofBlocking(executor, () -> {
 							Thread.sleep(SERVER_DELAY);
 							return request;
 						}))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		client = RpcClient.builder(reactor)
 				.withMessageTypes(messageTypes)

@@ -6,6 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ref.RefLong;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -36,10 +37,13 @@ public final class AbstractReactiveServerTest {
 	public void testTimeouts() throws IOException {
 		String message = "Hello!";
 		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-		SocketSettings settings = SocketSettings.create().withImplReadTimeout(Duration.ofMillis(100000L)).withImplWriteTimeout(Duration.ofMillis(100000L));
+		SocketSettings settings = SocketSettings.builder()
+				.withImplReadTimeout(Duration.ofMillis(100000L))
+				.withImplWriteTimeout(Duration.ofMillis(100000L))
+				.build();
 
 		RefLong delay = new RefLong(5);
-		SimpleServer.create(socket -> Promises.repeat(
+		SimpleServer.builder(Reactor.getCurrentReactor(), socket -> Promises.repeat(
 						() -> socket.read()
 								.whenResult(buf ->
 										getCurrentReactor().delay(delay.inc(),
@@ -53,6 +57,7 @@ public final class AbstractReactiveServerTest {
 				.withSocketSettings(settings)
 				.withListenAddress(address)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		ByteBuf response = sendMessage(address, message);
@@ -62,7 +67,7 @@ public final class AbstractReactiveServerTest {
 	@Test
 	public void testBoundAddressPortZero() throws IOException {
 		InetSocketAddress address = new InetSocketAddress("localhost", 0);
-		AbstractReactiveServer<?> server = createServer(address);
+		AbstractReactiveServer server = createServer(address);
 
 		server.listen();
 
@@ -81,7 +86,7 @@ public final class AbstractReactiveServerTest {
 	@Test
 	public void testBoundAddressPortNonZero() throws IOException {
 		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-		AbstractReactiveServer<?> server = createServer(address);
+		AbstractReactiveServer server = createServer(address);
 
 		server.listen();
 
@@ -94,8 +99,9 @@ public final class AbstractReactiveServerTest {
 		assertEquals(message, response.asString(UTF_8));
 	}
 
-	private static AbstractReactiveServer<?> createServer(InetSocketAddress address) {
-		return SimpleServer.create(
+	private static AbstractReactiveServer createServer(InetSocketAddress address) {
+		return SimpleServer.builder(
+						Reactor.getCurrentReactor(),
 						socket -> Promises.repeat(
 								() -> socket.read().whenResult(
 												buf -> socket.write(buf).whenComplete(() -> {
@@ -106,7 +112,8 @@ public final class AbstractReactiveServerTest {
 										)
 										.map(Objects::nonNull)))
 				.withListenAddress(address)
-				.withAcceptOnce();
+				.withAcceptOnce()
+				.build();
 	}
 
 	private static ByteBuf sendMessage(InetSocketAddress address, String message) {

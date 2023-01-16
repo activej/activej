@@ -89,11 +89,12 @@ public abstract class RpcServerLauncher extends Launcher {
 				return new AbstractModule() {
 					@Provides
 					RpcServer server(NioReactor reactor, Config config) {
-						return RpcServer.create(reactor)
+						return RpcServer.builder(reactor)
 								.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
 								.withMessageTypes(String.class)
 								.withHandler(String.class,
-										req -> Promise.of("Request: " + req));
+										req -> Promise.of("Request: " + req))
+								.build();
 					}
 				};
 			}

@@ -158,11 +158,12 @@ public class ConfigConvertersTest {
 
 	@Test
 	public void testDatagraphSocketSettingsConverter() {
-		DatagramSocketSettings expected = DatagramSocketSettings.create()
+		DatagramSocketSettings expected = DatagramSocketSettings.builder()
 				.withReceiveBufferSize(MemSize.bytes(256))
 				.withSendBufferSize(MemSize.kilobytes(1))
 				.withReuseAddress(false)
-				.withBroadcast(true);
+				.withBroadcast(true)
+				.build();
 
 		DatagramSocketSettings actual = Config.EMPTY.get(ofDatagramSocketSettings(), THIS, expected);
 
@@ -174,9 +175,11 @@ public class ConfigConvertersTest {
 
 	@Test
 	public void testServerSocketSettings() {
-		ServerSocketSettings expected = ServerSocketSettings.create(1)
+		ServerSocketSettings expected = ServerSocketSettings.builder()
+				.withBacklog(1)
 				.withReceiveBufferSize(MemSize.of(64))
-				.withReuseAddress(true);
+				.withReuseAddress(true)
+				.build();
 
 		ServerSocketSettings actual = Config.EMPTY.get(ofServerSocketSettings(), THIS, expected);
 		assertEquals(expected.getBacklog(), actual.getBacklog());
@@ -186,12 +189,13 @@ public class ConfigConvertersTest {
 
 	@Test
 	public void testSocketSettings() {
-		SocketSettings expected = SocketSettings.create()
+		SocketSettings expected = SocketSettings.builder()
 				.withTcpNoDelay(true)
 				.withReuseAddress(false)
 				.withReceiveBufferSize(MemSize.of(256))
 				.withSendBufferSize(MemSize.of(512))
-				.withKeepAlive(true);
+				.withKeepAlive(true)
+				.build();
 
 		SocketSettings actual = Config.EMPTY.get(ofSocketSettings(), THIS, expected);
 

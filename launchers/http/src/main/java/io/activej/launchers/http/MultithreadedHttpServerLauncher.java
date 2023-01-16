@@ -82,15 +82,17 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Provides
 	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<HttpServer> workerServers, Config config) {
-		return PrimaryServer.create(primaryReactor, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config.getChild("http")));
+		return PrimaryServer.builder(primaryReactor, workerServers.getList())
+				.withInitializer(ofPrimaryServer(config.getChild("http")))
+				.build();
 	}
 
 	@Provides
 	@Worker
 	HttpServer workerServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return HttpServer.create(reactor, servlet)
-				.withInitializer(ofHttpWorker(config.getChild("http")));
+		return HttpServer.builder(reactor, servlet)
+				.withInitializer(ofHttpWorker(config.getChild("http")))
+				.build();
 	}
 
 	@Provides

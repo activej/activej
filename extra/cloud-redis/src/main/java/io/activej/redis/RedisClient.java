@@ -31,6 +31,7 @@ import javax.net.ssl.SSLContext;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -87,6 +88,14 @@ public final class RedisClient extends AbstractNioReactive {
 		public Builder withSocketSettings(SocketSettings socketSettings) {
 			checkNotBuilt(this);
 			RedisClient.this.socketSettings = socketSettings;
+			return this;
+		}
+
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+			checkNotBuilt(this);
+			SocketSettings.Builder builder = socketSettings.asBuilder();
+			modifier.accept(builder);
+			socketSettings = builder.build();
 			return this;
 		}
 

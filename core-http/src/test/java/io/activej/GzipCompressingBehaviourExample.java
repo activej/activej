@@ -22,9 +22,11 @@ public final class GzipCompressingBehaviourExample {
 				.map(GET, "/nogzip/",
 						request -> HttpResponse.ok200().withBody(encodeAscii("Hello!")));
 
-		HttpServer server = HttpServer.create(eventloop, servlet).withListenPort(getFreePort());
+		HttpServer.builder(eventloop, servlet)
+				.withListenPort(getFreePort())
+				.build()
+				.listen();
 
-		server.listen();
 		eventloop.run();
 
 		// this is how you should send an http request with gzipped body.

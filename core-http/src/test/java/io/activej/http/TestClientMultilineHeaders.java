@@ -30,7 +30,7 @@ public final class TestClientMultilineHeaders {
 
 	@Test
 	public void testMultilineHeaders() throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> {
 							HttpResponse response = HttpResponse.ok200();
 							response.addHeader(ALLOW, "GET,\r\n HEAD");
@@ -38,6 +38,7 @@ public final class TestClientMultilineHeaders {
 						})
 				.withListenPort(port)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		AsyncHttpClient client = HttpClient.create(Reactor.getCurrentReactor());

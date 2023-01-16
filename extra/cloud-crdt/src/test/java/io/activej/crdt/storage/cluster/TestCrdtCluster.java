@@ -54,8 +54,9 @@ public final class TestCrdtCluster {
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorage_Map<String, Integer> storage = CrdtStorage_Map.create(reactor, ignoringTimestamp(Math::max));
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
-			CrdtServer<String, Integer> server = CrdtServer.create(reactor, storage, serializer)
-					.withListenAddresses(address);
+			CrdtServer<String, Integer> server = CrdtServer.builder(reactor, storage, serializer)
+					.withListenAddresses(address)
+					.build();
 			server.listen();
 			servers.add(server);
 			clients.put("server_" + i, CrdtStorage_Client.create(reactor, address, serializer));
@@ -127,8 +128,10 @@ public final class TestCrdtCluster {
 			storage.put(key3, Set.of(123));
 
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
-			CrdtServer<String, Set<Integer>> server = CrdtServer.create(reactor, storage, serializer);
-			server.withListenAddresses(address).listen();
+			CrdtServer<String, Set<Integer>> server = CrdtServer.builder(reactor, storage, serializer)
+					.withListenAddresses(address)
+					.build();
+			server.listen();
 			servers.add(server);
 			clients.put("server_" + i, CrdtStorage_Client.create(reactor, address, serializer).withConnectTimeout(Duration.ofSeconds(1)));
 		}

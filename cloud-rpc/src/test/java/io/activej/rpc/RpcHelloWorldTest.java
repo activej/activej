@@ -67,7 +67,7 @@ public final class RpcHelloWorldTest {
 	}
 
 	private static RpcServer createServer(NioReactor reactor) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
 					if (name.equals("--")) {
@@ -75,7 +75,8 @@ public final class RpcHelloWorldTest {
 					}
 					return "Hello, " + name + "!";
 				}))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 	}
 
 	private static class BlockingHelloClient extends AbstractNioReactive implements HelloService, AutoCloseable {

@@ -46,8 +46,8 @@ import static io.activej.trigger.Severity.WARNING;
 
 public final class Initializers {
 
-	public static Initializer<FileSystemServer> ofFileSystemServer(Config config) {
-		return server -> server
+	public static Initializer<FileSystemServer.Builder> ofFileSystemServer(Config config) {
+		return builder -> builder
 				.withInitializer(ofAbstractServer(config));
 	}
 

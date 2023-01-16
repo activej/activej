@@ -52,6 +52,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -83,6 +84,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	private final InetSocketAddress address;
 
 	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
 	private int connectionTimeout = (int) DEFAULT_CONNECTION_TIMEOUT.toMillis();
 
 	//region JMX
@@ -126,6 +128,16 @@ public final class FileSystem_Remote extends AbstractNioReactive
 		public Builder withSocketSettings(SocketSettings socketSettings) {
 			checkNotBuilt(this);
 			FileSystem_Remote.this.socketSettings = socketSettings;
+			FileSystem_Remote.this.socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
+			return this;
+		}
+
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+			checkNotBuilt(this);
+			SocketSettings.Builder builder = socketSettings.asBuilder();
+			modifier.accept(builder);
+			socketSettings = builder.build();
+			socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
 			return this;
 		}
 
@@ -350,7 +362,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	}
 
 	private Promise<Messaging<FileSystemResponse, FileSystemRequest>> connectForStreaming(InetSocketAddress address) {
-		return doConnect(address, socketSettings.withLingerTimeout(Duration.ZERO));
+		return doConnect(address, socketSettingsStreaming);
 	}
 
 	private Promise<Messaging<FileSystemResponse, FileSystemRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
@@ -423,6 +435,12 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	public Promise<?> stop() {
 		checkInReactorThread(this);
 		return Promise.complete();
+	}
+
+	private static SocketSettings createSocketSettingsForStreaming(SocketSettings socketSettings) {
+		return socketSettings.asBuilder()
+				.withLingerTimeout(Duration.ZERO)
+				.build();
 	}
 
 	@Override

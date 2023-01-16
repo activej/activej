@@ -86,8 +86,9 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	public abstract static class CrdtFileServerLogicModule<K extends Comparable<K>, S> extends AbstractModule {
 		@Provides
 		CrdtServer<K, S> crdtServer(NioReactor reactor, CrdtStorage_FileSystem<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
-			return CrdtServer.create(reactor, crdtClient, descriptor.serializer())
-					.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
+			return CrdtServer.builder(reactor, crdtClient, descriptor.serializer())
+					.withInitializer(ofAbstractServer(config.getChild("crdt.server")))
+					.build();
 		}
 
 		@Provides

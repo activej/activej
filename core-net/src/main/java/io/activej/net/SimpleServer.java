@@ -22,13 +22,11 @@ import io.activej.reactor.nio.NioReactor;
 import java.net.InetAddress;
 import java.util.function.Consumer;
 
-import static io.activej.reactor.Reactor.getCurrentReactor;
-
 /**
  * This is a basic implementation of the {@link AbstractReactiveServer} which just dispatches
  * each {@link AsyncTcpSocket acync client connection} to a given consumer.
  */
-public final class SimpleServer extends AbstractReactiveServer<SimpleServer> {
+public final class SimpleServer extends AbstractReactiveServer {
 	private final Consumer<AsyncTcpSocket> socketConsumer;
 
 	private SimpleServer(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
@@ -36,12 +34,12 @@ public final class SimpleServer extends AbstractReactiveServer<SimpleServer> {
 		this.socketConsumer = socketConsumer;
 	}
 
-	public static SimpleServer create(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
-		return new SimpleServer(reactor, socketConsumer);
+	public static Builder builder(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
+		return new SimpleServer(reactor, socketConsumer).new Builder();
 	}
 
-	public static SimpleServer create(Consumer<AsyncTcpSocket> socketConsumer) {
-		return new SimpleServer(getCurrentReactor(), socketConsumer);
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, SimpleServer> {
+		private Builder() {}
 	}
 
 	@Override

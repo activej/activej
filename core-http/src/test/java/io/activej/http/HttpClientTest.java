@@ -56,7 +56,7 @@ public final class HttpClientTest {
 	private int port;
 
 	public void startServer() throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
 								.withBodyStream(ChannelSupplier.ofStream(
 										IntStream.range(0, HELLO_WORLD.length)
@@ -67,6 +67,7 @@ public final class HttpClientTest {
 												}))))
 				.withListenPort(port)
 				.withAcceptOnce()
+				.build()
 				.listen();
 	}
 
@@ -109,13 +110,14 @@ public final class HttpClientTest {
 
 	@Test
 	public void testEmptyLineResponse() throws IOException {
-		SimpleServer.create(socket ->
+		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
 						socket.read()
 								.whenResult(ByteBuf::recycle)
 								.then(() -> socket.write(wrapAscii("\r\n")))
 								.whenComplete(socket::close))
 				.withListenPort(port)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		AsyncHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
@@ -131,9 +133,10 @@ public final class HttpClientTest {
 
 		List<SettablePromise<HttpResponse>> responses = new ArrayList<>();
 
-		HttpServer server = HttpServer.create(reactor,
+		HttpServer server = HttpServer.builder(reactor,
 						request -> Promise.ofCallback(responses::add))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		server.listen();
 
@@ -173,12 +176,11 @@ public final class HttpClientTest {
 	public void testActiveRequestsCounterWithoutRefresh() throws IOException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		HttpServer server = HttpServer.create(reactor,
-						request -> HttpResponse.ok200())
+		HttpServer.builder(reactor, request -> HttpResponse.ok200())
 				.withAcceptOnce()
-				.withListenPort(port);
-
-		server.listen();
+				.withListenPort(port)
+				.build()
+				.listen();
 
 		JmxInspector inspector = new JmxInspector();
 		AsyncHttpClient httpClient = HttpClient.create(reactor)
@@ -305,13 +307,14 @@ public final class HttpClientTest {
 	@Test
 	public void testActiveConnectionsCountWithFailingServer() throws IOException {
 		String serverResponse = "\r\n";
-		SimpleServer.create(socket ->
+		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
 						socket.read()
 								.whenResult(ByteBuf::recycle)
 								.then(() -> socket.write(wrapAscii(serverResponse)))
 								.whenComplete(socket::close))
 				.withListenPort(port)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		JmxInspector inspector = new JmxInspector();
@@ -347,19 +350,19 @@ public final class HttpClientTest {
 	};
 
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
-		SimpleServer server = SimpleServer.create(asyncTcpSocket ->
-						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
+		SimpleServer.Builder builder = SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
+						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
 								.decode(REQUEST_DECODER)
 								.whenResult(ByteBuf::recycle)
-								.then(() -> asyncTcpSocket.write(rawResponse))
-								.whenResult(asyncTcpSocket::close))
+								.then(() -> socket.write(rawResponse))
+								.whenResult(socket::close))
 				.withAcceptOnce();
 		if (ssl) {
-			server.withSslListenAddress(createTestSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(port));
+			builder.withSslListenAddress(createTestSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(port));
 		} else {
-			server.withListenAddress(new InetSocketAddress(port));
+			builder.withListenAddress(new InetSocketAddress(port));
 		}
-		server.listen();
+		builder.build().listen();
 		return HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
 				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + port));

@@ -51,7 +51,7 @@ import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
  * <p>
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
-public final class FileSystemServer extends AbstractReactiveServer<FileSystemServer> {
+public final class FileSystemServer extends AbstractReactiveServer {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final ByteBufsCodec<FileSystemRequest, FileSystemResponse> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
@@ -90,13 +90,18 @@ public final class FileSystemServer extends AbstractReactiveServer<FileSystemSer
 		this.fileSystem = fileSystem;
 	}
 
-	public static FileSystemServer create(NioReactor reactor, AsyncFileSystem fileSystem) {
-		return new FileSystemServer(reactor, fileSystem);
+	public static Builder builder(NioReactor reactor, AsyncFileSystem fileSystem) {
+		return new FileSystemServer(reactor, fileSystem).new Builder();
 	}
 
-	public FileSystemServer withHandshakeHandler(Function<FileSystemRequest.Handshake, FileSystemResponse.Handshake> handshakeHandler) {
-		this.handshakeHandler = handshakeHandler;
-		return this;
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, FileSystemServer> {
+		private Builder() {}
+
+		public Builder withHandshakeHandler(Function<FileSystemRequest.Handshake, FileSystemResponse.Handshake> handshakeHandler) {
+			checkNotBuilt(this);
+			FileSystemServer.this.handshakeHandler = handshakeHandler;
+			return this;
+		}
 	}
 
 	public AsyncFileSystem getFileSystem() {

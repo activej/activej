@@ -67,8 +67,9 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Provides
 	@Eager
 	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return HttpServer.create(reactor, servlet)
-				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")));
+		return HttpServer.builder(reactor, servlet)
+				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")))
+				.build();
 	}
 
 	@Provides

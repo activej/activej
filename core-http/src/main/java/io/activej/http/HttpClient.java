@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -299,6 +300,13 @@ public final class HttpClient extends AbstractNioReactive
 
 	public HttpClient withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
+		return this;
+	}
+
+	public HttpClient withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+		SocketSettings.Builder builder = socketSettings.asBuilder();
+		modifier.accept(builder);
+		socketSettings = builder.build();
 		return this;
 	}
 

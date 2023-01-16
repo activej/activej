@@ -13,6 +13,7 @@ import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.TcpSocket_Ssl;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -243,9 +244,10 @@ public final class SslReactive_TcpSocketTest {
 	}
 
 	void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {
-		SimpleServer.create(logic)
+		SimpleServer.builder(Reactor.getCurrentReactor(), logic)
 				.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), address)
 				.withAcceptOnce()
+				.build()
 				.listen();
 	}
 

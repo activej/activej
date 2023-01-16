@@ -17,7 +17,7 @@
 package io.activej.reactor.net;
 
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
@@ -29,38 +29,54 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
 /**
  * This class used to change settings for server socket. It will be applying with creating new server socket
  */
-public final class ServerSocketSettings implements WithInitializer<ServerSocketSettings> {
+public final class ServerSocketSettings {
 	public static final int DEFAULT_BACKLOG = 16384;
 
 	private static final byte DEF_BOOL = -1;
 	private static final byte TRUE = 1;
 	private static final byte FALSE = 0;
 
-	private final int backlog;
-	private final int receiveBufferSize;
-	private final byte reuseAddress;
+	private int backlog = DEFAULT_BACKLOG;
+	private int receiveBufferSize = 0;
+	private byte reuseAddress = DEF_BOOL;
 
 	// region builders
-	private ServerSocketSettings(int backlog, int receiveBufferSize, byte reuseAddress) {
-		this.backlog = backlog;
-		this.receiveBufferSize = receiveBufferSize;
-		this.reuseAddress = reuseAddress;
+	private ServerSocketSettings() {
 	}
 
-	public static ServerSocketSettings create(int backlog) {
-		return new ServerSocketSettings(backlog, 0, DEF_BOOL);
+	public static ServerSocketSettings create() {
+		return builder().build();
 	}
 
-	public ServerSocketSettings withBacklog(int backlog) {
-		return new ServerSocketSettings(backlog, receiveBufferSize, reuseAddress);
+	public static Builder builder() {
+		return new ServerSocketSettings().new Builder();
 	}
 
-	public ServerSocketSettings withReceiveBufferSize(MemSize receiveBufferSize) {
-		return new ServerSocketSettings(backlog, receiveBufferSize.toInt(), reuseAddress);
-	}
+	public final class Builder extends AbstractBuilder<Builder, ServerSocketSettings> {
+		private Builder() {}
 
-	public ServerSocketSettings withReuseAddress(boolean reuseAddress) {
-		return new ServerSocketSettings(backlog, receiveBufferSize, reuseAddress ? TRUE : FALSE);
+		public Builder withBacklog(int backlog) {
+			checkNotBuilt(this);
+			ServerSocketSettings.this.backlog = backlog;
+			return this;
+		}
+
+		public Builder withReceiveBufferSize(MemSize receiveBufferSize) {
+			checkNotBuilt(this);
+			ServerSocketSettings.this.receiveBufferSize = receiveBufferSize.toInt();
+			return this;
+		}
+
+		public Builder withReuseAddress(boolean reuseAddress) {
+			checkNotBuilt(this);
+			ServerSocketSettings.this.reuseAddress = reuseAddress ? TRUE : FALSE;
+			return this;
+		}
+
+		@Override
+		protected ServerSocketSettings doBuild() {
+			return ServerSocketSettings.this;
+		}
 	}
 	// endregion
 
@@ -97,5 +113,13 @@ public final class ServerSocketSettings implements WithInitializer<ServerSocketS
 	public boolean getReuseAddress() {
 		checkState(hasReuseAddress(), "No 'reuse address' setting is present");
 		return reuseAddress != FALSE;
+	}
+
+	public Builder asBuilder() {
+		ServerSocketSettings serverSocketSettings = new ServerSocketSettings();
+		serverSocketSettings.backlog = backlog;
+		serverSocketSettings.receiveBufferSize = receiveBufferSize;
+		serverSocketSettings.reuseAddress = reuseAddress;
+		return serverSocketSettings.new Builder();
 	}
 }

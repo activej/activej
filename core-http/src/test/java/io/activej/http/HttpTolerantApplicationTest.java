@@ -42,13 +42,14 @@ public final class HttpTolerantApplicationTest {
 
 		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer server = HttpServer.builder(eventloop,
 						request ->
 								Promise.ofCallback(cb ->
 										eventloop.post(() -> cb.set(
 												HttpResponse.ok200()
 														.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		server.listen();
 

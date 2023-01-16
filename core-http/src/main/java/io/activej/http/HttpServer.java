@@ -44,7 +44,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * It has a root {@link AsyncServlet} that receives and handles all the responses that come to this server.
  */
 @SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
-public final class HttpServer extends AbstractReactiveServer<HttpServer> {
+public final class HttpServer extends AbstractReactiveServer {
 	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(HttpServer.class, "readWriteTimeout", Duration.ZERO);
 	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpServer.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
 	public static final Duration SERVE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpServer.class, "serveTimeout_Shutdown", Duration.ofSeconds(0));
@@ -195,64 +195,78 @@ public final class HttpServer extends AbstractReactiveServer<HttpServer> {
 		this.servlet = servlet;
 	}
 
-	public static HttpServer create(NioReactor reactor, AsyncServlet servlet) {
-		return new HttpServer(reactor, servlet);
+	public static Builder builder(NioReactor reactor, AsyncServlet servlet) {
+		return new HttpServer(reactor, servlet).new Builder();
 	}
 
-	public HttpServer withKeepAliveTimeout(Duration keepAliveTime) {
-		keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
-		return this;
-	}
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, HttpServer>{
+		private Builder() {}
 
-	public HttpServer withMaxKeepAliveRequests(int maxKeepAliveRequests) {
-		this.maxKeepAliveRequests = maxKeepAliveRequests;
-		return this;
-	}
+		public Builder withKeepAliveTimeout(Duration keepAliveTime) {
+			checkNotBuilt(this);
+			keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
+			return this;
+		}
 
-	public HttpServer withNoKeepAlive() {
-		return withKeepAliveTimeout(Duration.ZERO);
-	}
+		public Builder withMaxKeepAliveRequests(int maxKeepAliveRequests) {
+			checkNotBuilt(this);
+			HttpServer.this.maxKeepAliveRequests = maxKeepAliveRequests;
+			return this;
+		}
 
-	public HttpServer withReadWriteTimeout(Duration readWriteTimeout) {
-		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
-		return this;
-	}
+		public Builder withNoKeepAlive() {
+			checkNotBuilt(this);
+			return withKeepAliveTimeout(Duration.ZERO);
+		}
 
-	public HttpServer withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
-		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
-		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
-		return this;
-	}
+		public Builder withReadWriteTimeout(Duration readWriteTimeout) {
+			checkNotBuilt(this);
+			HttpServer.this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
+			return this;
+		}
 
-	public HttpServer withServeTimeoutShutdown(Duration serveTimeoutShutdown) {
-		this.serveTimeoutMillisShutdown = (int) serveTimeoutShutdown.toMillis();
-		return this;
-	}
+		public Builder withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
+			checkNotBuilt(this);
+			HttpServer.this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
+			HttpServer.this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
+			return this;
+		}
 
-	public HttpServer withMaxBodySize(MemSize maxBodySize) {
-		return withMaxBodySize(maxBodySize.toInt());
-	}
+		public Builder withServeTimeoutShutdown(Duration serveTimeoutShutdown) {
+			checkNotBuilt(this);
+			HttpServer.this.serveTimeoutMillisShutdown = (int) serveTimeoutShutdown.toMillis();
+			return this;
+		}
 
-	public HttpServer withMaxBodySize(int maxBodySize) {
-		this.maxBodySize = maxBodySize;
-		return this;
-	}
+		public Builder withMaxBodySize(MemSize maxBodySize) {
+			checkNotBuilt(this);
+			return withMaxBodySize(maxBodySize.toInt());
+		}
 
-	public HttpServer withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
-		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
-		return this;
-	}
+		public Builder withMaxBodySize(int maxBodySize) {
+			checkNotBuilt(this);
+			HttpServer.this.maxBodySize = maxBodySize;
+			return this;
+		}
 
-	public HttpServer withHttpErrorFormatter(HttpExceptionFormatter httpExceptionFormatter) {
-		errorFormatter = httpExceptionFormatter;
-		return this;
-	}
+		public Builder withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+			checkNotBuilt(this);
+			HttpServer.this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
+			return this;
+		}
 
-	public HttpServer withInspector(Inspector inspector) {
-		this.inspector = inspector;
-		return this;
-	}
+		public Builder withHttpErrorFormatter(HttpExceptionFormatter httpExceptionFormatter) {
+			checkNotBuilt(this);
+			errorFormatter = httpExceptionFormatter;
+			return this;
+		}
 
+		public Builder withInspector(Inspector inspector) {
+			checkNotBuilt(this);
+			HttpServer.this.inspector = inspector;
+			return this;
+		}
+	}
 	// endregion
 
 	public Duration getKeepAliveTimeout() {

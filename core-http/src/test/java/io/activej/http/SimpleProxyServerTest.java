@@ -50,10 +50,11 @@ public final class SimpleProxyServerTest {
 	public void testSimpleProxyServer() throws Exception {
 		Eventloop eventloop1 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
-		HttpServer echoServer = HttpServer.create(eventloop1,
+		HttpServer echoServer = HttpServer.builder(eventloop1,
 						request -> HttpResponse.ok200()
 								.withBody(encodeAscii(request.getUrl().getPathAndQuery())))
-				.withListenPort(echoServerPort);
+				.withListenPort(echoServerPort)
+				.build();
 		echoServer.listen();
 
 		Thread echoServerThread = new Thread(eventloop1);
@@ -66,7 +67,7 @@ public final class SimpleProxyServerTest {
 						.withDatagramSocketSetting(DatagramSocketSettings.create())
 						.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))));
 
-		HttpServer proxyServer = HttpServer.create(eventloop2,
+		HttpServer proxyServer = HttpServer.builder(eventloop2,
 						request -> {
 							String path = echoServerPort + request.getUrl().getPath();
 							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
@@ -75,7 +76,8 @@ public final class SimpleProxyServerTest {
 													.withBody(encodeAscii("FORWARDED: " + body
 															.getString(UTF_8))))));
 						})
-				.withListenPort(proxyServerPort);
+				.withListenPort(proxyServerPort)
+				.build();
 		proxyServer.listen();
 
 		Thread proxyServerThread = new Thread(eventloop2);

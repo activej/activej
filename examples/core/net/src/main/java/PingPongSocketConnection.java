@@ -26,7 +26,8 @@ public final class PingPongSocketConnection {
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 
-		SimpleServer server = SimpleServer.create(
+		SimpleServer server = SimpleServer.builder(
+						eventloop,
 						socket -> {
 							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 							repeat(() ->
@@ -37,7 +38,8 @@ public final class PingPongSocketConnection {
 									.whenComplete(socket::close);
 						})
 				.withListenAddress(ADDRESS)
-				.withAcceptOnce();
+				.withAcceptOnce()
+				.build();
 
 		server.listen();
 

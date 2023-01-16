@@ -45,9 +45,11 @@ public final class TestSimpleCrdt {
 		remoteStorage.put("only_remote", 4);
 
 		BinarySerializer_CrdtData<String, Integer> serializer = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER);
-		server = CrdtServer.create(getCurrentReactor(), remoteStorage, serializer);
 		int port = getFreePort();
-		server.withListenAddress(new InetSocketAddress(port)).listen();
+		server = CrdtServer.builder(getCurrentReactor(), remoteStorage, serializer)
+				.withListenAddress(new InetSocketAddress(port))
+				.build();
+		server.listen();
 
 		client = CrdtStorage_Client.create(getCurrentReactor(), new InetSocketAddress(port), serializer);
 	}

@@ -135,8 +135,9 @@ public final class CubeTest {
 		NioReactor reactor = getCurrentReactor();
 		FileSystem fs = FileSystem.create(reactor, executor, serverStorage);
 		await(fs.start());
-		HttpServer server = HttpServer.create(reactor, FileSystemServlet.create(reactor, fs))
-				.withListenPort(listenPort);
+		HttpServer server = HttpServer.builder(reactor, FileSystemServlet.create(reactor, fs))
+				.withListenPort(listenPort)
+				.build();
 		server.listen();
 		return server;
 	}

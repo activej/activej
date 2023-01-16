@@ -40,13 +40,14 @@ public class AdvancedRpcServerModule extends AbstractModule {
 	@Provides
 	@Worker
 	RpcServer rpcServer(NioReactor reactor, Integer port) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, in -> {
 					System.out.println("Incoming message: on port #" + port + " : " + in);
 					return Promise.of(in);
 				})
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 	}
 }

@@ -48,8 +48,9 @@ public final class PipelineStressBenchmark extends Launcher {
 
 	@Provides
 	HttpServer server(NioReactor reactor) {
-		return HttpServer.create(reactor, request -> HttpResponse.ok200().withPlainText("Hello, world!"))
-				.withListenPort(PORT);
+		return HttpServer.builder(reactor, request -> HttpResponse.ok200().withPlainText("Hello, world!"))
+				.withListenPort(PORT)
+				.build();
 	}
 
 	@Override

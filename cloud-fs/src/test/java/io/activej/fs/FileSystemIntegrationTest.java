@@ -74,7 +74,9 @@ public final class FileSystemIntegrationTest {
 		storage = temporaryFolder.newFolder("server_storage").toPath();
 		FileSystem fs = FileSystem.create(Reactor.getCurrentReactor(), executor, storage);
 		await(fs.start());
-		server = FileSystemServer.create(Reactor.getCurrentReactor(), fs).withListenAddress(address);
+		server = FileSystemServer.builder(Reactor.getCurrentReactor(), fs)
+				.withListenAddress(address)
+				.build();
 		server.listen();
 		fileSystem = FileSystem_Remote.create(Reactor.getCurrentReactor(), address);
 	}

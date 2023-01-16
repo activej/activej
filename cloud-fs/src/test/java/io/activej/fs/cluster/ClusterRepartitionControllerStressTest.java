@@ -86,7 +86,9 @@ public final class ClusterRepartitionControllerStressTest {
 
 			FileSystem fileSystem = FileSystem.create(reactor, executor, serverStorages[i]);
 			await(fileSystem.start());
-			FileSystemServer server = FileSystemServer.create(reactor, fileSystem).withListenAddress(address);
+			FileSystemServer server = FileSystemServer.builder(reactor, fileSystem)
+					.withListenAddress(address)
+					.build();
 			server.listen();
 			servers.add(server);
 		}

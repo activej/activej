@@ -90,15 +90,17 @@ public final class DoubleServersTwoPools extends Launcher {
 		@Provides
 		@Named("First")
 		PrimaryServer primaryServerFirst(@Named("First") NioReactor primaryReactor, @Named("First") WorkerPool.Instances<HttpServer> workerServers) {
-			return PrimaryServer.create(primaryReactor, workerServers)
-					.withListenAddresses(new InetSocketAddress("localhost", port));
+			return PrimaryServer.builder(primaryReactor, workerServers)
+					.withListenAddresses(new InetSocketAddress("localhost", port))
+					.build();
 		}
 
 		@Provides
 		@WorkerFirst
 		HttpServer workerServerFirst(NioReactor reactor, @WorkerId int workerId) {
-			return HttpServer.create(reactor, request -> HttpResponse.ok200()
-					.withPlainText("Hello from the first server, worker #" + workerId));
+			return HttpServer.builder(reactor, request -> HttpResponse.ok200()
+					.withPlainText("Hello from the first server, worker #" + workerId))
+					.build();
 		}
 
 		@Provides
@@ -132,15 +134,17 @@ public final class DoubleServersTwoPools extends Launcher {
 		@Provides
 		@Named("Second")
 		PrimaryServer primaryServerSecond(@Named("Second") NioReactor primaryReactor, @Named("Second") WorkerPool.Instances<HttpServer> workerServers) {
-			return PrimaryServer.create(primaryReactor, workerServers)
-					.withListenAddresses(new InetSocketAddress("localhost", port));
+			return PrimaryServer.builder(primaryReactor, workerServers)
+					.withListenAddresses(new InetSocketAddress("localhost", port))
+					.build();
 		}
 
 		@Provides
 		@WorkerSecond
 		HttpServer workerServerSecond(NioReactor reactor, @WorkerId int workerId) {
-			return HttpServer.create(reactor, request -> HttpResponse.ok200()
-					.withPlainText("Hello from the second server, worker #" + workerId));
+			return HttpServer.builder(reactor, request -> HttpResponse.ok200()
+					.withPlainText("Hello from the second server, worker #" + workerId))
+					.build();
 		}
 
 		@Provides

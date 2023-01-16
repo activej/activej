@@ -10,6 +10,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.net.SimpleServer;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -19,6 +20,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
@@ -92,11 +94,12 @@ public final class MessagingTest {
 	}
 
 	@Test
-	public void testPing() throws Exception {
-		SimpleServer.create(socket ->
+	public void testPing() throws IOException {
+		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
 						pong(Messaging.create(socket, INTEGER_SERIALIZER)))
 				.withListenPort(listenPort)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
@@ -104,10 +107,11 @@ public final class MessagingTest {
 	}
 
 	@Test
-	public void testMessagingDownload() throws Exception {
+	public void testMessagingDownload() throws IOException {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
-		SimpleServer.create(
+		SimpleServer.builder(
+						Reactor.getCurrentReactor(),
 						socket -> {
 							Messaging<String, String> messaging =
 									Messaging.create(socket, STRING_SERIALIZER);
@@ -123,6 +127,7 @@ public final class MessagingTest {
 						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		List<Long> list = await(TcpSocket.connect(getCurrentReactor(), address)
@@ -141,12 +146,13 @@ public final class MessagingTest {
 	}
 
 	@Test
-	public void testBinaryMessagingUpload() throws Exception {
+	public void testBinaryMessagingUpload() throws IOException {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
-		SimpleServer.create(
+		SimpleServer.builder(
+						Reactor.getCurrentReactor(),
 						socket -> {
 							Messaging<String, String> messaging =
 									Messaging.create(socket, serializer);
@@ -163,6 +169,7 @@ public final class MessagingTest {
 						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
@@ -185,7 +192,8 @@ public final class MessagingTest {
 
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
-		SimpleServer.create(
+		SimpleServer.builder(
+						Reactor.getCurrentReactor(),
 						socket -> {
 							Messaging<String, String> messaging = Messaging.create(socket, serializer);
 
@@ -203,6 +211,7 @@ public final class MessagingTest {
 						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		String msg = await(TcpSocket.connect(getCurrentReactor(), address)
@@ -223,10 +232,11 @@ public final class MessagingTest {
 	}
 
 	@Test
-	public void testGsonMessagingUpload() throws Exception {
+	public void testGsonMessagingUpload() throws IOException {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
-		SimpleServer.create(
+		SimpleServer.builder(
+						Reactor.getCurrentReactor(),
 						socket -> {
 							Messaging<String, String> messaging =
 									Messaging.create(socket, STRING_SERIALIZER);
@@ -242,6 +252,7 @@ public final class MessagingTest {
 						})
 				.withListenPort(listenPort)
 				.withAcceptOnce()
+				.build()
 				.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)

@@ -89,24 +89,27 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Eager
 	@Named("First")
 	PrimaryServer server1(NioReactor reactor, @Named("First") WorkerPool.Instances<HttpServer> serverInstances) {
-		return PrimaryServer.create(reactor, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT));
+		return PrimaryServer.builder(reactor, serverInstances)
+				.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT))
+				.build();
 	}
 
 	@Provides
 	@Eager
 	@Named("Second")
 	PrimaryServer server2(@Named("Second") NioReactor reactor, @Named("Second") WorkerPool.Instances<HttpServer> serverInstances) {
-		return PrimaryServer.create(reactor, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT));
+		return PrimaryServer.builder(reactor, serverInstances)
+				.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT))
+				.build();
 	}
 
 	@Provides
 	@Eager
 	@Named("Third")
 	PrimaryServer server3(@Named("Third") NioReactor reactor, @Named("Third") WorkerPool.Instances<HttpServer> serverInstances) {
-		return PrimaryServer.create(reactor, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT));
+		return PrimaryServer.builder(reactor, serverInstances)
+				.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT))
+				.build();
 	}
 	// endregion
 
@@ -120,7 +123,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@Worker
 	HttpServer workerServer(NioReactor reactor, AsyncServlet servlet) {
-		return HttpServer.create(reactor, servlet);
+		return HttpServer.builder(reactor, servlet).build();
 	}
 
 	@Provides
@@ -140,7 +143,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@MyWorker
 	HttpServer myWorkerServer(NioReactor reactor, AsyncServlet servlet) {
-		return HttpServer.create(reactor, servlet);
+		return HttpServer.builder(reactor, servlet).build();
 	}
 
 	@Provides

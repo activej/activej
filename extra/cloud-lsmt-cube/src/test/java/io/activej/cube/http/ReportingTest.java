@@ -359,9 +359,10 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	private HttpServer startHttpServer() {
-		HttpServer server = HttpServer.create(reactor, Servlet_ReportingService.createRootServlet(reactor, cube))
+		HttpServer server = HttpServer.builder(reactor, Servlet_ReportingService.createRootServlet(reactor, cube))
 				.withListenPort(serverPort)
-				.withAcceptOnce();
+				.withAcceptOnce()
+				.build();
 		try {
 			server.listen();
 		} catch (IOException e) {

@@ -25,12 +25,13 @@ public class ServerModule extends AbstractModule {
 
 	@Provides
 	RpcServer rpcServer(NioReactor reactor, KeyValueStore store) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
 				.withHandler(PutRequest.class, req -> Promise.of(new PutResponse(store.put(req.key(), req.value()))))
 				.withHandler(GetRequest.class, req -> Promise.of(new GetResponse(store.get(req.key()))))
-				.withListenPort(RPC_SERVER_PORT);
+				.withListenPort(RPC_SERVER_PORT)
+				.build();
 	}
 }
 // [END EXAMPLE]

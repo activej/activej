@@ -61,12 +61,13 @@ public final class HttpApiTest {
 	@Before
 	public void setUp() {
 		port = getFreePort();
-		server = HttpServer.create(Reactor.getCurrentReactor(),
+		server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> {
 							testRequest(request);
 							return createResponse();
 						})
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		client = HttpClient.create(Reactor.getCurrentReactor());
 
@@ -97,10 +98,8 @@ public final class HttpApiTest {
 	public void test() throws IOException {
 		server.listen();
 		await(client.request(createRequest())
-				.whenComplete((response, e) -> {
-					testResponse(response);
-					server.close();
-				}));
+				.whenResult(this::testResponse)
+				.whenComplete(server::close));
 	}
 
 	private HttpResponse createResponse() {

@@ -28,6 +28,8 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.PrimaryServer;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.net.SocketSettings;
 import io.activej.trigger.TriggerResult;
 import io.activej.trigger.TriggersModuleSettings;
 
@@ -43,15 +45,21 @@ public class Initializers {
 	public static final String GLOBAL_EVENTLOOP_NAME = "GlobalEventloopStats";
 	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.of(Eventloop.class, GLOBAL_EVENTLOOP_NAME);
 
-	public static <T extends AbstractReactiveServer<T>> Initializer<T> ofAbstractServer(Config config) {
-		return server -> server
-				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "listenAddresses"))
-				.withAcceptOnce(config.get(ofBoolean(), "acceptOnce", false))
-				.withSocketSettings(config.get(ofSocketSettings(), "socketSettings", server.getSocketSettings()))
-				.withServerSocketSettings(config.get(ofServerSocketSettings(), "serverSocketSettings", server.getServerSocketSettings()));
+	public static <S extends AbstractReactiveServer, B extends AbstractReactiveServer.Builder<B, S>> Initializer<B> ofAbstractServer(Config config) {
+		return builder -> {
+			builder
+					.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "listenAddresses"))
+					.withAcceptOnce(config.get(ofBoolean(), "acceptOnce", false));
+
+			SocketSettings socketSettings = config.get(ofSocketSettings(), "socketSettings", null);
+			if (socketSettings != null) builder.withSocketSettings(socketSettings);
+
+			ServerSocketSettings serverSocketSettings = config.get(ofServerSocketSettings(), "serverSocketSettings", null);
+			if (serverSocketSettings != null) builder.withServerSocketSettings(serverSocketSettings);
+		};
 	}
 
-	public static Initializer<PrimaryServer> ofPrimaryServer(Config config) {
+	public static Initializer<PrimaryServer.Builder> ofPrimaryServer(Config config) {
 		return ofAbstractServer(config);
 	}
 
@@ -72,16 +80,16 @@ public class Initializers {
 		};
 	}
 
-	public static Initializer<HttpServer> ofHttpServer(Config config) {
-		return server -> server
+	public static Initializer<HttpServer.Builder> ofHttpServer(Config config) {
+		return builder -> builder
 				.withInitializer(ofAbstractServer(config))
 				.withInitializer(ofHttpWorker(config));
 	}
 
-	public static Initializer<HttpServer> ofHttpWorker(Config config) {
-		return server -> server
-				.withKeepAliveTimeout(config.get(ofDuration(), "keepAliveTimeout", server.getKeepAliveTimeout()))
-				.withReadWriteTimeout(config.get(ofDuration(), "readWriteTimeout", server.getReadWriteTimeout()))
+	public static Initializer<HttpServer.Builder> ofHttpWorker(Config config) {
+		return builder -> builder
+				.withKeepAliveTimeout(config.get(ofDuration(), "keepAliveTimeout", HttpServer.KEEP_ALIVE_TIMEOUT))
+				.withReadWriteTimeout(config.get(ofDuration(), "readWriteTimeout", HttpServer.READ_WRITE_TIMEOUT))
 				.withMaxBodySize(config.get(ofMemSize(), "maxBodySize", MemSize.ZERO));
 	}
 

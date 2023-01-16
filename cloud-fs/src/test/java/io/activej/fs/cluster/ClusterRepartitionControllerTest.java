@@ -91,11 +91,13 @@ public final class ClusterRepartitionControllerTest {
 		FileSystem peer = FileSystem.create(reactor, executor, failingPath);
 		await(peer.start());
 
-		FileSystemServer regularServer = FileSystemServer.create(reactor, fileSystem).withListenAddress(regularPartitionAddress);
+		FileSystemServer regularServer = FileSystemServer.builder(reactor, fileSystem)
+				.withListenAddress(regularPartitionAddress)
+				.build();
 		regularServer.listen();
 		servers.add(regularServer);
 
-		FileSystemServer failingServer = FileSystemServer.create(reactor,
+		FileSystemServer failingServer = FileSystemServer.builder(reactor,
 						new ForwardingFileSystem(peer) {
 							@Override
 							public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
@@ -103,7 +105,8 @@ public final class ClusterRepartitionControllerTest {
 										.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
 							}
 						})
-				.withListenAddress(failingPartitionAddress);
+				.withListenAddress(failingPartitionAddress)
+				.build();
 		failingServer.listen();
 		servers.add(failingServer);
 

@@ -59,6 +59,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
@@ -169,7 +170,7 @@ public final class RpcClient extends AbstractNioReactive
 		 * Creates a client that uses provided socket settings.
 		 *
 		 * @param socketSettings settings for socket
-		 * @return the RPC client with specified socket settings
+		 * @return the builder for RPC client with specified socket settings
 		 */
 		public Builder withSocketSettings(SocketSettings socketSettings) {
 			checkNotBuilt(this);
@@ -178,10 +179,24 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
+		 * Creates a client that modifies current socket settings.
+		 *
+		 * @param modifier modifier of current socket setings
+		 * @return the builder for RPC client with specified socket settings
+		 */
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+			checkNotBuilt(this);
+			SocketSettings.Builder builder = socketSettings.asBuilder();
+			modifier.accept(builder);
+			socketSettings = builder.build();
+			return this;
+		}
+
+		/**
 		 * Creates a client with capability of specified message types processing.
 		 *
 		 * @param messageTypes classes of messages processed by a server
-		 * @return client instance capable for handling provided message types
+		 * @return builder for a client instance capable for handling provided message types
 		 */
 		public Builder withMessageTypes(Class<?>... messageTypes) {
 			return withMessageTypes(List.of(messageTypes));
@@ -191,7 +206,7 @@ public final class RpcClient extends AbstractNioReactive
 		 * Creates a client with capability of specified message types processing.
 		 *
 		 * @param messageTypes classes of messages processed by a server
-		 * @return client instance capable for handling provided
+		 * @return builder for a client instance capable for handling provided
 		 * message types
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
@@ -206,7 +221,7 @@ public final class RpcClient extends AbstractNioReactive
 		 * for creating fast serializers at runtime.
 		 *
 		 * @param serializerBuilder serializer builder, used at runtime
-		 * @return the RPC client with provided serializer builder
+		 * @return builder for the RPC client with provided serializer builder
 		 */
 		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
 			checkNotBuilt(this);
@@ -219,7 +234,7 @@ public final class RpcClient extends AbstractNioReactive
 		 * strategies from {@link RpcStrategy}.
 		 *
 		 * @param requestSendingStrategy strategy of sending requests
-		 * @return the RPC client, which sends requests according to given strategy
+		 * @return builder for the RPC client, which sends requests according to given strategy
 		 */
 		public Builder withStrategy(RpcStrategy requestSendingStrategy) {
 			checkNotBuilt(this);
@@ -256,7 +271,7 @@ public final class RpcClient extends AbstractNioReactive
 		 * Waits for a specified time before connecting.
 		 *
 		 * @param connectTimeout time before connecting
-		 * @return the RPC client with connect timeout settings
+		 * @return builder for the RPC client with connect timeout settings
 		 */
 		public Builder withConnectTimeout(Duration connectTimeout) {
 			checkNotBuilt(this);

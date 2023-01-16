@@ -35,8 +35,8 @@ import static io.activej.trigger.Severity.HIGH;
 
 public final class Initializers {
 
-	public static Initializer<RpcServer> ofRpcServer(Config config) {
-		return server -> server
+	public static Initializer<RpcServer.Builder> ofRpcServer(Config config) {
+		return builder -> builder
 				.withInitializer(ofAbstractServer(config.getChild("rpc.server")))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
@@ -44,7 +44,7 @@ public final class Initializers {
 				.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
 	}
 
-	public static Initializer<TriggersModuleSettings> ofReactiveRpcClient() {
+	public static Initializer<TriggersModuleSettings> ofRpcClient() {
 		return triggersSettings -> triggersSettings
 				.with(RpcClient.class, HIGH, "unresponsiveServers",
 						rpcClient -> {

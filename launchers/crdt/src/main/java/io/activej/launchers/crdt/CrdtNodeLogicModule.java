@@ -114,9 +114,10 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	CrdtServer<K, S> crdtServer(NioReactor reactor,
 			CrdtStorage_Map<K, S> client, CrdtDescriptor<K, S> descriptor, PartitionId localPartitionId,
 			Config config) {
-		return CrdtServer.create(reactor, client, descriptor.serializer())
+		return CrdtServer.builder(reactor, client, descriptor.serializer())
 				.withInitializer(ofAbstractServer(config.getChild("crdt.server")))
-				.withListenAddress(localPartitionId.getCrdtAddress());
+				.withListenAddress(localPartitionId.getCrdtAddress())
+				.build();
 	}
 
 	@Provides
@@ -124,8 +125,9 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	CrdtServer<K, S> clusterServer(NioReactor reactor,
 			CrdtStorage_Cluster<K, S, PartitionId> client, CrdtDescriptor<K, S> descriptor,
 			Config config) {
-		return CrdtServer.create(reactor, client, descriptor.serializer())
-				.withInitializer(ofAbstractServer(config.getChild("crdt.cluster.server")));
+		return CrdtServer.builder(reactor, client, descriptor.serializer())
+				.withInitializer(ofAbstractServer(config.getChild("crdt.cluster.server")))
+				.build();
 	}
 
 	@Provides

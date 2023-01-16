@@ -7,9 +7,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
-import io.activej.dataflow.stream.DataflowTest.TestComparator;
-import io.activej.dataflow.stream.DataflowTest.TestItem;
-import io.activej.dataflow.stream.DataflowTest.TestKeyFunction;
+import io.activej.dataflow.stream.DataflowTest.*;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -38,7 +36,7 @@ import java.util.function.Function;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.stream.DataflowTest.createCommon;
+import static io.activej.dataflow.stream.DataflowTest.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
@@ -73,7 +71,7 @@ public class ReducerDeadlockTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
 				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
 				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
@@ -82,14 +80,17 @@ public class ReducerDeadlockTest {
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
+
 		List<TestItem> list1 = new ArrayList<>(20000);
 		for (int i = 0; i < 20000; i++) {
 			list1.add(new TestItem(i * 2 + 2));
 		}
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 				.bind(datasetId("items")).toInstance(list1)
 				.bind(datasetId("result")).toInstance(result1)
 				.build();
@@ -100,19 +101,21 @@ public class ReducerDeadlockTest {
 		}
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(common)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
+				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 				.bind(datasetId("items")).toInstance(list2)
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		Module clientCommon = createCommonClient(common);
+		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));

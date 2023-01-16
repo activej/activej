@@ -61,10 +61,11 @@ public final class RpcBinaryProtocolTest {
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
 				.build();
 
-		RpcServer server = RpcServer.create(Reactor.getCurrentReactor())
+		RpcServer server = RpcServer.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
-				.withListenPort(listenPort);
+				.withListenPort(listenPort)
+				.build();
 		server.listen();
 
 		int countRequests = 10;

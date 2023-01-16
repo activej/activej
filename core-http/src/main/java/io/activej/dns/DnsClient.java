@@ -46,6 +46,7 @@ import java.nio.channels.DatagramChannel;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static io.activej.promise.Promises.timeout;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -85,6 +86,13 @@ public final class DnsClient extends AbstractNioReactive
 
 	public DnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
 		this.datagramSocketSettings = setting;
+		return this;
+	}
+
+	public DnsClient withDatagramSocketSetting(Consumer<DatagramSocketSettings.Builder> modifier) {
+		DatagramSocketSettings.Builder builder = datagramSocketSettings.asBuilder();
+		modifier.accept(builder);
+		datagramSocketSettings = builder.build();
 		return this;
 	}
 

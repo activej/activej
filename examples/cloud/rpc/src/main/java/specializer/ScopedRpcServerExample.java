@@ -27,10 +27,11 @@ public final class ScopedRpcServerExample extends Launcher {
 	@Provides
 	@Eager
 	RpcServer rpcServer(NioReactor reactor, RpcRequestHandler<RpcRequest, RpcResponse> handler) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withMessageTypes(RpcRequest.class, RpcResponse.class)
 				.withHandler(RpcRequest.class, handler)
-				.withListenPort(PORT);
+				.withListenPort(PORT)
+				.build();
 	}
 
 	@Override

@@ -55,27 +55,30 @@ public final class HttpServerTest {
 	}
 
 	public HttpServer blockingHttpServer() {
-		return HttpServer.create(eventloop,
+		return HttpServer.builder(eventloop,
 						request ->
 								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 	}
 
 	public HttpServer asyncHttpServer() {
-		return HttpServer.create(eventloop,
+		return HttpServer.builder(eventloop,
 						request ->
 								Promise.ofCallback(cb -> cb.post(
 										HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 	}
 
 	static final Random RANDOM = new Random();
 
 	public HttpServer delayedHttpServer() {
-		return HttpServer.create(eventloop,
+		return HttpServer.builder(eventloop,
 						request -> Promises.delay(RANDOM.nextInt(3),
 								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery()))))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 	}
 
 	public static void writeByRandomParts(Socket socket, String string) throws IOException {
@@ -222,10 +225,11 @@ public final class HttpServerTest {
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
-		HttpServer server = HttpServer.create(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
+		HttpServer.builder(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
 				.withListenPort(port)
-				.withAcceptOnce();
-		server.listen();
+				.withAcceptOnce()
+				.build()
+				.listen();
 		new Thread(() -> {
 			try (Socket socket = new Socket()) {
 				socket.connect(new InetSocketAddress("localhost", port));
@@ -245,7 +249,6 @@ public final class HttpServerTest {
 	@Test
 	public void testNoKeepAlive_Http_1_0() throws Exception {
 		HttpServer server = blockingHttpServer();
-		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -273,7 +276,6 @@ public final class HttpServerTest {
 	@Test
 	public void testNoKeepAlive_Http_1_1() throws Exception {
 		HttpServer server = blockingHttpServer();
-		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -307,7 +309,6 @@ public final class HttpServerTest {
 	}
 
 	private void doTestPipelining(HttpServer server) throws Exception {
-		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -380,10 +381,11 @@ public final class HttpServerTest {
 		request.writeTo(buf);
 		buf.put(body);
 
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer server = HttpServer.builder(eventloop,
 						req -> HttpResponse.ok200()
 								.withBody(encodeAscii(req.getUrl().getPathAndQuery())))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -404,9 +406,10 @@ public final class HttpServerTest {
 
 	@Test
 	public void testExpectContinue() throws Exception {
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer server = HttpServer.builder(eventloop,
 						request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -443,16 +446,16 @@ public final class HttpServerTest {
 
 	@Test
 	public void testBodyRecycledOnce() throws IOException, InterruptedException {
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer.builder(eventloop,
 						request -> {
 							// imitate network problems
 							shutdownAllChannels();
 							return HttpResponse.ok200();
 						})
 				.withListenPort(port)
-				.withAcceptOnce(true);
-
-		server.listen();
+				.withAcceptOnce()
+				.build()
+				.listen();
 
 		Thread thread = new Thread(() -> {
 			try (Socket socket = new Socket()) {
@@ -477,21 +480,22 @@ public final class HttpServerTest {
 
 	@Test
 	public void testPostParameters() throws IOException, ExecutionException, InterruptedException {
-		HttpServer server = HttpServer.create(eventloop, request ->
-				request.loadBody()
-						.then(() -> {
-							Map<String, String> postParameters = request.getPostParameters();
-							StringBuilder sb = new StringBuilder();
-							for (Map.Entry<String, String> entry : postParameters.entrySet()) {
-								sb.append(entry.getKey())
-										.append("=")
-										.append(entry.getValue())
-										.append(";");
-							}
+		HttpServer server = HttpServer.builder(eventloop, request ->
+						request.loadBody()
+								.then(() -> {
+									Map<String, String> postParameters = request.getPostParameters();
+									StringBuilder sb = new StringBuilder();
+									for (Map.Entry<String, String> entry : postParameters.entrySet()) {
+										sb.append(entry.getKey())
+												.append("=")
+												.append(entry.getValue())
+												.append(";");
+									}
 
-							return Promise.of(HttpResponse.ok200().withBody(encodeAscii(sb.toString())));
-						}));
-		server.withListenPort(port);
+									return Promise.of(HttpResponse.ok200().withBody(encodeAscii(sb.toString())));
+								}))
+				.withListenPort(port)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -522,7 +526,7 @@ public final class HttpServerTest {
 
 	@Test
 	public void testIncompleteRequest() throws IOException, ExecutionException, InterruptedException {
-		HttpServer server = HttpServer.create(eventloop, request ->
+		HttpServer server = HttpServer.builder(eventloop, request ->
 				request.loadBody()
 						.map(($, e) -> {
 							assertTrue(e instanceof MalformedHttpException);
@@ -532,8 +536,9 @@ public final class HttpServerTest {
 
 							assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
 							return HttpResponse.ofCode(400);
-						}));
-		server.withListenPort(port);
+						}))
+				.withListenPort(port)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -560,11 +565,12 @@ public final class HttpServerTest {
 	@Test
 	public void testMalformedUri() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
-		HttpServer server = HttpServer.create(eventloop, $ -> {
+		HttpServer server = HttpServer.builder(eventloop, $ -> {
 					throw new IllegalArgumentException("Should not be called");
 				})
 				.withListenPort(port)
-				.withInspector(inspector);
+				.withInspector(inspector)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -592,11 +598,12 @@ public final class HttpServerTest {
 	@Test
 	public void testMalformedHeaders() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
-		HttpServer server = HttpServer.create(eventloop, $ -> {
+		HttpServer server = HttpServer.builder(eventloop, $ -> {
 					throw new IllegalArgumentException("Should not be called");
 				})
 				.withListenPort(port)
-				.withInspector(inspector);
+				.withInspector(inspector)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -626,11 +633,12 @@ public final class HttpServerTest {
 	@Test
 	public void testMalformedFirstRequestPipelined() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
-		HttpServer server = HttpServer.create(eventloop, $ -> {
+		HttpServer server = HttpServer.builder(eventloop, $ -> {
 					throw new IllegalArgumentException("Should not be called");
 				})
 				.withListenPort(port)
-				.withInspector(inspector);
+				.withInspector(inspector)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -663,10 +671,11 @@ public final class HttpServerTest {
 	@Test
 	public void testMalformedSecondRequestPipelined() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
-		HttpServer server = HttpServer.create(eventloop, $ -> HttpResponse.ok200()
+		HttpServer server = HttpServer.builder(eventloop, $ -> HttpResponse.ok200()
 						.withPlainText("Hello, world!"))
 				.withListenPort(port)
-				.withInspector(inspector);
+				.withInspector(inspector)
+				.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();

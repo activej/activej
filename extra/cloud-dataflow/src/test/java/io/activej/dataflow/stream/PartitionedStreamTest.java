@@ -303,7 +303,9 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
-						return DataflowServer.create(reactor, codec, locator, injector);
+						return DataflowServer.builder(reactor, codec, locator, injector)
+								.withListenPort(getFreePort())
+								.build();
 					}
 
 					@Provides
@@ -485,11 +487,11 @@ public final class PartitionedStreamTest {
 			writeDataFile(tmp, i, sorted);
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
-			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient));
+			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient))
+					.withListenPort(getFreePort())
+					.build();
+			listen(server);
 			servers.add(server);
-		}
-		for (HttpServer server : servers) {
-			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;
 	}
@@ -500,11 +502,11 @@ public final class PartitionedStreamTest {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
-			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient));
+			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient))
+					.withListenPort(getFreePort())
+					.build();
+			listen(server);
 			servers.add(server);
-		}
-		for (HttpServer server : servers) {
-			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;
 	}
@@ -546,14 +548,13 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nPartitions; i++) {
 			Injector injector = Injector.of(serverModule);
 			DataflowServer server = injector.getInstance(DataflowServer.class);
-			server.withListenPort(getFreePort());
 			listen(server);
 			servers.add(server);
 		}
 		return servers;
 	}
 
-	private void listen(AbstractReactiveServer<?> server) {
+	private void listen(AbstractReactiveServer server) {
 		try {
 			serverEventloop.submit(() -> {
 				try {

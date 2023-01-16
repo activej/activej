@@ -89,13 +89,13 @@ public class ObjectNameRenameTest {
 		@Provides
 		@Eager
 		PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<HttpServer> workerServers) {
-			return PrimaryServer.create(primaryReactor, workerServers);
+			return PrimaryServer.builder(primaryReactor, workerServers).build();
 		}
 
 		@Provides
 		@Worker
 		HttpServer workerServer(NioReactor workerReactor) {
-			return HttpServer.create(workerReactor, request -> HttpResponse.ok200());
+			return HttpServer.builder(workerReactor, request -> HttpResponse.ok200()).build();
 		}
 
 		@Provides

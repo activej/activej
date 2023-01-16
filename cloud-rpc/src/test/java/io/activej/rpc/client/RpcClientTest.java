@@ -60,10 +60,11 @@ public final class RpcClientTest {
 			new Thread(serverEventloop).start();
 
 			int finalI = i;
-			RpcServer rpcServer = RpcServer.create(serverEventloop)
+			RpcServer rpcServer = RpcServer.builder(serverEventloop)
 					.withMessageTypes(Request.class, Integer.class)
 					.withHandler(Request.class, $ -> Promise.of(finalI))
-					.withListenPort(getFreePort());
+					.withListenPort(getFreePort())
+					.build();
 
 			if (i < NUMBER_OF_WORKING_SERVERS) {
 				serverEventloop.submit(() -> {

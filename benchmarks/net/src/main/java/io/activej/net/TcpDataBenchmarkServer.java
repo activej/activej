@@ -26,13 +26,14 @@ public class TcpDataBenchmarkServer extends Launcher {
 	@Provides
 	@Eager
 	SimpleServer server(NioReactor reactor) {
-		return SimpleServer.create(reactor,
+		return SimpleServer.builder(reactor,
 						socket -> ChannelSupplier.ofSocket(socket)
 								.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
 								.transformWith(StreamFilter.mapper(Function.identity()))
 								.transformWith(ChannelSerializer.create(INT_SERIALIZER))
 								.streamTo(ChannelConsumer.ofSocket(socket)))
-				.withListenPort(9001);
+				.withListenPort(9001)
+				.build();
 	}
 
 	@Override

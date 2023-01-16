@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Consumer;
 
 public final class BlockingSocketServer implements WithInitializer<BlockingSocketServer> {
 	public interface AcceptHandler {
@@ -84,8 +85,22 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		return this;
 	}
 
+	public BlockingSocketServer withServerSocketSettings(Consumer<ServerSocketSettings.Builder> modifier) {
+		ServerSocketSettings.Builder builder = serverSocketSettings.asBuilder();
+		modifier.accept(builder);
+		this.serverSocketSettings = builder.build();
+		return this;
+	}
+
 	public BlockingSocketServer withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
+		return this;
+	}
+
+	public BlockingSocketServer withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+		SocketSettings.Builder builder = socketSettings.asBuilder();
+		modifier.accept(builder);
+		this.socketSettings = builder.build();
 		return this;
 	}
 

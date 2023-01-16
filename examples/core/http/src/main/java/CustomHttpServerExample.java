@@ -27,7 +27,9 @@ public final class CustomHttpServerExample extends Launcher {
 	@Provides
 	@Eager
 	HttpServer server(NioReactor reactor, AsyncServlet servlet) {
-		return HttpServer.create(reactor, servlet).withListenPort(PORT);
+		return HttpServer.builder(reactor, servlet)
+				.withListenPort(PORT)
+				.build();
 	}
 
 	@Override

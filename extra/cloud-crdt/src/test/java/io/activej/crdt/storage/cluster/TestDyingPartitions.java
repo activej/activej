@@ -25,6 +25,7 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
@@ -50,7 +51,7 @@ public final class TestDyingPartitions {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private Map<Integer, AbstractReactiveServer<?>> servers;
+	private Map<Integer, AbstractReactiveServer> servers;
 	private CrdtStorage_Cluster<String, Integer, String> cluster;
 
 	@Before
@@ -64,8 +65,9 @@ public final class TestDyingPartitions {
 			Eventloop eventloop = Eventloop.create();
 			CrdtStorage_Map<String, Integer> storage = CrdtStorage_Map.create(eventloop, CRDT_FUNCTION);
 			InetSocketAddress address = new InetSocketAddress(port);
-			CrdtServer<String, Integer> server = CrdtServer.create(eventloop, storage, SERIALIZER)
-					.withListenAddresses(address);
+			CrdtServer<String, Integer> server = CrdtServer.builder(eventloop, storage, SERIALIZER)
+					.withListenAddresses(address)
+					.build();
 			server.listen();
 			assertNull(servers.put(port, server));
 			new Thread(eventloop).start();
@@ -124,9 +126,9 @@ public final class TestDyingPartitions {
 
 	@SuppressWarnings("ConstantConditions")
 	private void shutdown2Servers() {
-		Iterator<AbstractReactiveServer<?>> serverIterator = servers.values().iterator();
+		Iterator<AbstractReactiveServer> serverIterator = servers.values().iterator();
 		for (int i = 0; i < 2; i++) {
-			AbstractReactiveServer<?> server = serverIterator.next();
+			AbstractReactiveServer server = serverIterator.next();
 			NioReactor reactor = server.getReactor();
 			reactor.execute(() -> {
 				for (SelectionKey key : reactor.getSelector().keys()) {
@@ -140,19 +142,17 @@ public final class TestDyingPartitions {
 	}
 
 	private void shutdownAllEventloops() {
-		for (AbstractReactiveServer<?> server : servers.values()) {
-			Eventloop eventloop = (Eventloop) server.getReactor();
-			eventloop.execute(() -> {
-				server.close();
-				eventloop.breakEventloop();
-			});
+		for (AbstractReactiveServer server : servers.values()) {
 			try {
-				Thread eventloopThread = eventloop.getEventloopThread();
+				server.closeFuture().get();
+				Thread eventloopThread = ((Eventloop) server.getReactor()).getEventloopThread();
 				if (eventloopThread != null) {
 					eventloopThread.join();
 				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
+				throw new RuntimeException(e);
+			} catch (ExecutionException e) {
 				throw new RuntimeException(e);
 			}
 		}

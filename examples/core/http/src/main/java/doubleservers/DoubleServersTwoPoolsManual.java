@@ -84,12 +84,14 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 			bind(NioReactor.class, "First").to(Eventloop::create);
 			bind(NioReactor.class).to(Eventloop::create).in(WorkerFirst.class);
 			bind(PrimaryServer.class, "First")
-					.to((primaryReactor, workerServers) -> PrimaryServer.create(primaryReactor, workerServers)
-									.withListenAddresses(new InetSocketAddress("localhost", port)),
+					.to((primaryReactor, workerServers) -> PrimaryServer.builder(primaryReactor, workerServers)
+									.withListenAddresses(new InetSocketAddress("localhost", port))
+									.build(),
 							Key.of(NioReactor.class, "First"), new Key<WorkerPool.Instances<HttpServer>>("First") {});
 			bind(HttpServer.class)
-					.to((reactor, workerId) -> HttpServer.create(reactor, request -> HttpResponse.ok200()
-									.withPlainText("Hello from the first server, worker #" + workerId)),
+					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.ok200()
+											.withPlainText("Hello from the first server, worker #" + workerId))
+									.build(),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerFirst.class);
 			bind(WorkerPool.class, "First")
 					.to(workerPools -> workerPools.createPool(Scope.of(WorkerFirst.class), WORKERS), WorkerPools.class);
@@ -110,12 +112,14 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 			bind(NioReactor.class, "Second").to(Eventloop::create);
 			bind(NioReactor.class).to(Eventloop::create).in(WorkerSecond.class);
 			bind(PrimaryServer.class, "Second")
-					.to((primaryReactor, workerServers) -> PrimaryServer.create(primaryReactor, workerServers)
-									.withListenAddresses(new InetSocketAddress("localhost", port)),
+					.to((primaryReactor, workerServers) -> PrimaryServer.builder(primaryReactor, workerServers)
+									.withListenAddresses(new InetSocketAddress("localhost", port))
+									.build(),
 							Key.of(NioReactor.class, "Second"), new Key<WorkerPool.Instances<HttpServer>>("Second") {});
 			bind(HttpServer.class)
-					.to((reactor, workerId) -> HttpServer.create(reactor, request -> HttpResponse.ok200()
-									.withPlainText("Hello from the second server, worker #" + workerId)),
+					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.ok200()
+											.withPlainText("Hello from the second server, worker #" + workerId))
+									.build(),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
 			bind(WorkerPool.class, "Second")
 					.to(workerPools -> workerPools.createPool(Scope.of(WorkerSecond.class), WORKERS), WorkerPools.class);

@@ -75,13 +75,14 @@ public class RpcBenchmark extends Launcher {
 	@Provides
 	@Eager
 	RpcServer rpcServer(@Named("server") NioReactor reactor, Config config) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))
 				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
 				.withMessageTypes(Integer.class)
-				.withHandler(Integer.class, req -> Promise.of(req * 2));
+				.withHandler(Integer.class, req -> Promise.of(req * 2))
+				.build();
 
 	}
 

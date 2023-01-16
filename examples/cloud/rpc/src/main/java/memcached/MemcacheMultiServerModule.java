@@ -49,7 +49,7 @@ public class MemcacheMultiServerModule extends AbstractModule {
 	@Provides
 	@Worker
 	RpcServer server(NioReactor reactor, RingBuffer storage, InetSocketAddress address) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
 				.withHandler(PutRequest.class,
@@ -62,6 +62,7 @@ public class MemcacheMultiServerModule extends AbstractModule {
 				.withSerializerBuilder(SerializerBuilder.create()
 						.with(Slice.class, ctx -> new SerializerDef_Slice()))
 				.withMessageTypes(MESSAGE_TYPES)
-				.withListenAddresses(address);
+				.withListenAddresses(address)
+				.build();
 	}
 }

@@ -75,14 +75,15 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testMultiLineHeader() throws Exception {
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
 								.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 								.withHeader(CONTENT_TYPE, "text/\n          html")
 								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>")))
 				.withListenPort(port)
-				.withAcceptOnce();
-		server.listen();
+				.withAcceptOnce()
+				.build()
+				.listen();
 
 		await(client.request(HttpRequest.get(url))
 				.then(response -> response.loadBody()
@@ -94,14 +95,14 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testGzipCompression() throws Exception {
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
 								.withBodyGzipCompression()
 								.withBody(encodeAscii("Test message")))
 				.withListenPort(port)
-				.withAcceptOnce();
-
-		server.listen();
+				.withAcceptOnce()
+				.build()
+				.listen();
 
 		await(client.request(HttpRequest.get(url)
 						.withHeader(ACCEPT_ENCODING, "gzip"))
@@ -117,8 +118,9 @@ public final class AbstractHttpConnectionTest {
 		client.withKeepAliveTimeout(Duration.ofSeconds(1));
 		client.withMaxKeepAliveRequests(5);
 
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
-				.withListenPort(port);
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+				.withListenPort(port)
+				.build();
 		server.listen();
 
 		assertNotNull(client.getStats());
@@ -129,9 +131,10 @@ public final class AbstractHttpConnectionTest {
 	public void testServerWithMaxKeepAliveRequests() throws Exception {
 		client.withKeepAliveTimeout(Duration.ofSeconds(1));
 
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
 				.withListenPort(port)
-				.withMaxKeepAliveRequests(5);
+				.withMaxKeepAliveRequests(5)
+				.build();
 		server.listen();
 
 		assertNotNull(server.getAccepts());
@@ -142,9 +145,10 @@ public final class AbstractHttpConnectionTest {
 	public void testServerWithNoKeepAlive() throws Exception {
 		client.withKeepAliveTimeout(Duration.ofSeconds(30));
 
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
 				.withListenPort(port)
-				.withKeepAliveTimeout(Duration.ZERO);
+				.withKeepAliveTimeout(Duration.ZERO)
+				.build();
 		server.listen();
 
 		int code = await(client.request(HttpRequest.get(url))
@@ -164,10 +168,11 @@ public final class AbstractHttpConnectionTest {
 	public void testHugeBodyStreams() throws IOException {
 		int size = 10_000;
 
-		SocketSettings socketSettings = SocketSettings.create()
+		SocketSettings socketSettings = SocketSettings.builder()
 				.withSendBufferSize(MemSize.of(1))
 				.withReceiveBufferSize(MemSize.of(1))
-				.withImplReadBufferSize(MemSize.of(1));
+				.withImplReadBufferSize(MemSize.of(1))
+				.build();
 
 		AsyncHttpClient client = HttpClient.create(Reactor.getCurrentReactor())
 				.withSocketSettings(socketSettings);
@@ -192,11 +197,12 @@ public final class AbstractHttpConnectionTest {
 
 		long size = 3_000_000_000L;
 
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
 								.withBodyStream(request.takeBodyStream()))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 		server.listen();
 
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
@@ -224,7 +230,7 @@ public final class AbstractHttpConnectionTest {
 	public void testGzipHugeBuf() throws IOException {
 		int size = 1_000_000;
 		ByteBuf expected = ByteBufPool.allocate(size);
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> {
 							byte[] bytes = new byte[size];
 							RANDOM.nextBytes(bytes);
@@ -234,13 +240,12 @@ public final class AbstractHttpConnectionTest {
 									.withBodyStream(ChannelSupplier.of(expected.slice()));
 						})
 				.withAcceptOnce()
-				.withListenPort(port);
-
-		server.listen();
+				.withListenPort(port)
+				.build()
+				.listen();
 
 		ByteBuf result = await(HttpClient.create(Reactor.getCurrentReactor()).request(HttpRequest.get("http://127.0.0.1:" + port))
-				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector()))
-				.whenComplete(server::close));
+				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
 
@@ -295,11 +300,12 @@ public final class AbstractHttpConnectionTest {
 		client.withKeepAliveTimeout(Duration.ofSeconds(30));
 
 		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
 				.withListenPort(port)
 				.withInspector(inspector)
-				.withAcceptOnce(true);
-		server.listen();
+				.withAcceptOnce()
+				.build()
+				.listen();
 
 		HttpResponse response = await(client.request(HttpRequest.get(url + '/' + new String(chars))));
 
@@ -318,11 +324,12 @@ public final class AbstractHttpConnectionTest {
 		HttpClient.JmxInspector clientInspector = new HttpClient.JmxInspector();
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
 								.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
 				.withInspector(serverInspector)
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		server.listen();
 
@@ -363,13 +370,14 @@ public final class AbstractHttpConnectionTest {
 		HttpClient.JmxInspector clientInspector = new HttpClient.JmxInspector();
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
 								.map($ -> HttpResponse.ok200()
 										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))))
 				.withInspector(serverInspector)
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		server.listen();
 
@@ -419,11 +427,12 @@ public final class AbstractHttpConnectionTest {
 					errorRef.set(e);
 				});
 
-		HttpServer server = HttpServer.create(reactor,
+		HttpServer server = HttpServer.builder(reactor,
 						request -> {
 							throw fatalError;
 						})
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 
 		server.listen();
 
@@ -450,14 +459,15 @@ public final class AbstractHttpConnectionTest {
 			for (int j = 0; j < messageDecorators.size(); j++) {
 				try {
 					Consumer<HttpMessage> responseDecorator = messageDecorators.get(j);
-					HttpServer server = HttpServer.create(reactor,
+					HttpServer server = HttpServer.builder(reactor,
 									$ -> {
 										HttpResponse response = HttpResponse.ok200();
 										responseDecorator.accept(response);
 										return response;
 									})
 							.withListenPort(port)
-							.withAcceptOnce(true);
+							.withAcceptOnce()
+							.build();
 
 					try {
 						server.listen();
@@ -484,7 +494,7 @@ public final class AbstractHttpConnectionTest {
 
 	private void doTestHugeStreams(AsyncHttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage> decorator) throws IOException {
 		ByteBuf expected = ByteBufPool.allocate(size);
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.map(body -> {
 									HttpResponse httpResponse = HttpResponse.ok200()
@@ -494,7 +504,8 @@ public final class AbstractHttpConnectionTest {
 									return httpResponse;
 								}))
 				.withListenPort(port)
-				.withSocketSettings(socketSettings);
+				.withSocketSettings(socketSettings)
+				.build();
 		server.listen();
 
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)

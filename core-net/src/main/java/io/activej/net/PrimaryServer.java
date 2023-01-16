@@ -29,7 +29,7 @@ import java.util.List;
  * <p>
  * When an incoming connection takes place, it forwards the request to one of them with a round-robin algorithm.
  */
-public final class PrimaryServer extends AbstractReactiveServer<PrimaryServer> {
+public final class PrimaryServer extends AbstractReactiveServer {
 
 	private final WorkerServer[] workerServers;
 
@@ -41,23 +41,27 @@ public final class PrimaryServer extends AbstractReactiveServer<PrimaryServer> {
 		this.workerServers = workerServers;
 		for (WorkerServer workerServer : workerServers) {
 			if (workerServer instanceof AbstractReactiveServer) {
-				((AbstractReactiveServer<?>) workerServer).acceptServer = this;
+				((AbstractReactiveServer) workerServer).acceptServer = this;
 			}
 		}
 	}
 
-	public static PrimaryServer create(NioReactor primaryReactor, List<? extends WorkerServer> workerServers) {
-		return create(primaryReactor, workerServers.toArray(new WorkerServer[0]));
+	public static Builder builder(NioReactor primaryReactor, List<? extends WorkerServer> workerServers) {
+		return builder(primaryReactor, workerServers.toArray(new WorkerServer[0]));
 	}
 
-	public static PrimaryServer create(NioReactor primaryReactor, Iterable<? extends WorkerServer> workerServers) {
+	public static Builder builder(NioReactor primaryReactor, Iterable<? extends WorkerServer> workerServers) {
 		List<WorkerServer> list = new ArrayList<>();
 		workerServers.forEach(list::add);
-		return create(primaryReactor, list);
+		return builder(primaryReactor, list);
 	}
 
-	public static PrimaryServer create(NioReactor primaryReactor, WorkerServer... workerServer) {
-		return new PrimaryServer(primaryReactor, workerServer);
+	public static Builder builder(NioReactor primaryReactor, WorkerServer... workerServer) {
+		return new PrimaryServer(primaryReactor, workerServer).new Builder();
+	}
+
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, PrimaryServer> {
+		private Builder() {}
 	}
 	// endregion
 

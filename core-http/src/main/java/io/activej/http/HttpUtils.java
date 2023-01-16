@@ -365,11 +365,12 @@ public final class HttpUtils {
 				+ "/";
 	}
 
-	public static List<String> getHttpAddresses(AbstractReactiveServer<?> server) {
+	public static List<String> getHttpAddresses(AbstractReactiveServer server) {
 		return Stream.concat(
-				server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
-				server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
-		).collect(toList());
+						server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+						server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
+				)
+				.collect(toList());
 	}
 
 	private static String formatHost(InetAddress address) {

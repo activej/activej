@@ -54,7 +54,7 @@ import static io.activej.common.Checks.checkState;
  * performance.
  * <p>
  * In order to set up a server it's mandatory to create it using
- * {@link #create(NioReactor)}, indicate a types of messages, and specify
+ * {@link #builder(NioReactor)}, indicate a types of messages, and specify
  * an appropriate {@link RpcRequestHandler request handlers} for that types.
  * <p>
  * There are two ways of starting a server:
@@ -76,8 +76,8 @@ import static io.activej.common.Checks.checkState;
  * @see RpcRequestHandler
  * @see RpcClient
  */
-public final class RpcServer extends AbstractReactiveServer<RpcServer> {
-	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);
+public final class RpcServer extends AbstractReactiveServer {
+	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create();
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
@@ -112,84 +112,104 @@ public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 		super(reactor);
 	}
 
-	public static RpcServer create(NioReactor reactor) {
-		return new RpcServer(reactor)
-				.withServerSocketSettings(DEFAULT_SERVER_SOCKET_SETTINGS)
-				.withSocketSettings(DEFAULT_SOCKET_SETTINGS)
-				.withHandler(RpcControlMessage.class, request -> {
-					if (request == RpcControlMessage.PING) {
-						return Promise.of(RpcControlMessage.PONG);
-					}
-					return Promise.ofException(new MalformedDataException("Unknown message: " + request));
-				});
+	public static Builder builder(NioReactor reactor) {
+		return new RpcServer(reactor).new Builder();
 	}
 
-	public RpcServer withClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-		this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
-		return this;
-	}
+	public final class Builder extends AbstractReactiveServer.Builder<Builder, RpcServer> {
+		private Builder() {
+			handlers.put(RpcControlMessage.class, request -> {
+				if (request == RpcControlMessage.PING) {
+					return Promise.of(RpcControlMessage.PONG);
+				}
+				return Promise.ofException(new MalformedDataException("Unknown message: " + request));
+			});
+		}
 
-	/**
-	 * Creates a server, capable of specified message types processing.
-	 *
-	 * @param messageTypes classes of messages processed by a server
-	 * @return server instance capable for handling provided message types
-	 */
-	public RpcServer withMessageTypes(Class<?>... messageTypes) {
-		return withMessageTypes(List.of(messageTypes));
-	}
+		public Builder withClassLoader(ClassLoader classLoader) {
+			checkNotBuilt(this);
+			RpcServer.this.classLoader = classLoader;
+			RpcServer.this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
+			return this;
+		}
 
-	/**
-	 * Creates a server, capable of specified message types processing.
-	 *
-	 * @param messageTypes a list of message types processed by a server
-	 * @return server instance capable for handling provided message types
-	 */
-	public RpcServer withMessageTypes(List<Class<?>> messageTypes) {
-		checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-		this.messageTypes = messageTypes;
-		return this;
-	}
+		/**
+		 * Creates a server, capable of specified message types processing.
+		 *
+		 * @param messageTypes classes of messages processed by a server
+		 * @return server instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(Class<?>... messageTypes) {
+			checkNotBuilt(this);
+			return withMessageTypes(List.of(messageTypes));
+		}
 
-	public RpcServer withSerializerBuilder(SerializerBuilder serializerBuilder) {
-		this.serializerBuilder = serializerBuilder;
-		return this;
-	}
+		/**
+		 * Creates a server, capable of specified message types processing.
+		 *
+		 * @param messageTypes a list of message types processed by a server
+		 * @return server instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(List<Class<?>> messageTypes) {
+			checkNotBuilt(this);
+			checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
+			RpcServer.this.messageTypes = messageTypes;
+			return this;
+		}
 
-	public RpcServer withStreamProtocol(MemSize defaultPacketSize) {
-		this.initialBufferSize = defaultPacketSize;
-		return this;
-	}
+		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
+			checkNotBuilt(this);
+			RpcServer.this.serializerBuilder = serializerBuilder;
+			return this;
+		}
 
-	public RpcServer withStreamProtocol(MemSize defaultPacketSize, FrameFormat frameFormat) {
-		this.initialBufferSize = defaultPacketSize;
-		this.frameFormat = frameFormat;
-		return this;
-	}
+		public Builder withStreamProtocol(MemSize defaultPacketSize) {
+			checkNotBuilt(this);
+			RpcServer.this.initialBufferSize = defaultPacketSize;
+			return this;
+		}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public RpcServer withAutoFlushInterval(Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
-	}
+		public Builder withStreamProtocol(MemSize defaultPacketSize, FrameFormat frameFormat) {
+			checkNotBuilt(this);
+			RpcServer.this.initialBufferSize = defaultPacketSize;
+			RpcServer.this.frameFormat = frameFormat;
+			return this;
+		}
 
-	/**
-	 * Adds a handler for a specified request-response pair.
-	 *
-	 * @param requestClass a class representing a request structure
-	 * @param handler      a class containing logic of request processing and
-	 *                     creating a response
-	 * @param <I>          class of request
-	 * @param <O>          class of response
-	 * @return server instance capable for handling requests of concrete types
-	 */
-	public <I, O> RpcServer withHandler(Class<I> requestClass, RpcRequestHandler<I, O> handler) {
-		checkArgument(!handlers.containsKey(requestClass), "Handler for {} has already been added", requestClass);
-		handlers.put(requestClass, handler);
-		return this;
-	}
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withAutoFlushInterval(Duration autoFlushInterval) {
+			checkNotBuilt(this);
+			RpcServer.this.autoFlushInterval = autoFlushInterval;
+			return this;
+		}
 
+		/**
+		 * Adds a handler for a specified request-response pair.
+		 *
+		 * @param requestClass a class representing a request structure
+		 * @param handler      a class containing logic of request processing and
+		 *                     creating a response
+		 * @param <I>          class of request
+		 * @param <O>          class of response
+		 * @return server instance capable for handling requests of concrete types
+		 */
+		public <I, O> Builder withHandler(Class<I> requestClass, RpcRequestHandler<I, O> handler) {
+			checkNotBuilt(this);
+			checkArgument(!handlers.containsKey(requestClass), "Handler for {} has already been added", requestClass);
+			handlers.put(requestClass, handler);
+			return this;
+		}
+
+		@Override
+		protected RpcServer doBuild() {
+			Set<Class<?>> handlersClasses = new HashSet<>(handlers.keySet());
+			handlersClasses.remove(RpcControlMessage.class);
+			checkState(!handlersClasses.isEmpty(), "No RPC handlers added");
+			//noinspection SlowListContainsAll
+			checkState(messageTypes.containsAll(handlersClasses), "Some message types where not specified");
+			return super.doBuild();
+		}
+	}
 	// endregion
 
 	@Override

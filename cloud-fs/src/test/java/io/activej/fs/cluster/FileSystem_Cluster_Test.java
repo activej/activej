@@ -97,8 +97,9 @@ public final class FileSystem_Cluster_Test {
 			serverEventloop.keepAlive(true);
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(fileSystem::start);
-			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(serverEventloop, fileSystem))
-					.withListenPort(port);
+			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fileSystem))
+					.withListenPort(port)
+					.build();
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -593,7 +594,7 @@ public final class FileSystem_Cluster_Test {
 
 	private void waitForServersToStop() {
 		try {
-			for (AbstractReactiveServer<?> server : servers) {
+			for (AbstractReactiveServer server : servers) {
 				Eventloop serverEventloop = (Eventloop) server.getReactor();
 				if (server.isRunning()) {
 					serverEventloop.submit(server::close).get();

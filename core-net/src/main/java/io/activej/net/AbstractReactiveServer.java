@@ -16,7 +16,7 @@
 
 package io.activej.net;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
@@ -46,11 +46,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 import static io.activej.net.socket.tcp.TcpSocket.wrapChannel;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapServerSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
-import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -62,11 +62,11 @@ import static org.slf4j.LoggerFactory.getLogger;
  * This is simply a higher-level wrapper around {@link NioReactor#listen} call.
  */
 @SuppressWarnings("WeakerAccess, unused")
-public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer<Self>> extends AbstractNioReactive
-		implements ReactiveServer, WorkerServer, WithInitializer<Self>, ReactiveJmxBeanWithStats {
+public abstract class AbstractReactiveServer extends AbstractNioReactive
+		implements ReactiveServer, WorkerServer, ReactiveJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
 
-	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(DEFAULT_BACKLOG);
+	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create();
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 
 	protected ServerSocketSettings serverSocketSettings = DEFAULT_SERVER_SOCKET_SETTINGS;
@@ -95,7 +95,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	// jmx
 	private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
-	AbstractReactiveServer<?> acceptServer = this;
+	AbstractReactiveServer acceptServer = this;
 
 	private @Nullable Inspector socketInspector;
 	private @Nullable Inspector socketSslInspector;
@@ -109,87 +109,120 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	}
 
 	@SuppressWarnings("unchecked")
-	public final Self withAcceptFilter(AcceptFilter acceptFilter) {
-		this.acceptFilter = acceptFilter;
-		return (Self) this;
-	}
+	public abstract class Builder<Self extends Builder<Self, S>, S extends AbstractReactiveServer>
+			extends AbstractBuilder<Self, S> {
 
-	@SuppressWarnings("unchecked")
-	public final Self withServerSocketSettings(ServerSocketSettings serverSocketSettings) {
-		this.serverSocketSettings = serverSocketSettings;
-		return (Self) this;
-	}
+		public final Self withAcceptFilter(AcceptFilter acceptFilter) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.acceptFilter = acceptFilter;
+			return (Self) this;
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return (Self) this;
-	}
+		public final Self withServerSocketSettings(ServerSocketSettings serverSocketSettings) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.serverSocketSettings = serverSocketSettings;
+			return (Self) this;
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withListenAddresses(List<InetSocketAddress> addresses) {
-		this.listenAddresses = addresses;
-		return (Self) this;
-	}
+		public final Self withServerSocketSettings(Consumer<ServerSocketSettings.Builder> modifier) {
+			checkNotBuilt(this);
+			ServerSocketSettings.Builder builder = serverSocketSettings.asBuilder();
+			modifier.accept(builder);
+			serverSocketSettings = builder.build();
+			return (Self) this;
+		}
 
-	public final Self withListenAddresses(InetSocketAddress... addresses) {
-		return withListenAddresses(List.of(addresses));
-	}
+		public final Self withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.socketSettings = socketSettings;
+			return (Self) this;
+		}
 
-	public final Self withListenAddress(InetSocketAddress address) {
-		return withListenAddresses(List.of(address));
-	}
+		public final Self withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+			checkNotBuilt(this);
+			SocketSettings.Builder builder = socketSettings.asBuilder();
+			modifier.accept(builder);
+			socketSettings = builder.build();
+			return (Self) this;
+		}
 
-	public final Self withListenPort(int port) {
-		return withListenAddress(new InetSocketAddress(port));
-	}
+		public final Self withListenAddresses(List<InetSocketAddress> addresses) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.listenAddresses = addresses;
+			return (Self) this;
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withSslListenAddresses(SSLContext sslContext, Executor sslExecutor, List<InetSocketAddress> addresses) {
-		this.sslContext = sslContext;
-		this.sslExecutor = sslExecutor;
-		this.sslListenAddresses = addresses;
-		return (Self) this;
-	}
+		public final Self withListenAddresses(InetSocketAddress... addresses) {
+			checkNotBuilt(this);
+			return withListenAddresses(List.of(addresses));
+		}
 
-	public final Self withSslListenAddresses(SSLContext sslContext, Executor sslExecutor, InetSocketAddress... addresses) {
-		return withSslListenAddresses(sslContext, sslExecutor, List.of(addresses));
-	}
+		public final Self withListenAddress(InetSocketAddress address) {
+			checkNotBuilt(this);
+			return withListenAddresses(List.of(address));
+		}
 
-	public final Self withSslListenAddress(SSLContext sslContext, Executor sslExecutor, InetSocketAddress address) {
-		return withSslListenAddresses(sslContext, sslExecutor, List.of(address));
-	}
+		public final Self withListenPort(int port) {
+			checkNotBuilt(this);
+			return withListenAddress(new InetSocketAddress(port));
+		}
 
-	public final Self withSslListenPort(SSLContext sslContext, Executor sslExecutor, int port) {
-		return withSslListenAddress(sslContext, sslExecutor, new InetSocketAddress(port));
-	}
+		public final Self withSslListenAddresses(SSLContext sslContext, Executor sslExecutor, List<InetSocketAddress> addresses) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.sslContext = sslContext;
+			AbstractReactiveServer.this.sslExecutor = sslExecutor;
+			AbstractReactiveServer.this.sslListenAddresses = addresses;
+			return (Self) this;
+		}
 
-	public final Self withAcceptOnce() {
-		return withAcceptOnce(true);
-	}
+		public final Self withSslListenAddresses(SSLContext sslContext, Executor sslExecutor, InetSocketAddress... addresses) {
+			checkNotBuilt(this);
+			return withSslListenAddresses(sslContext, sslExecutor, List.of(addresses));
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withAcceptOnce(boolean acceptOnce) {
-		this.acceptOnce = acceptOnce;
-		return (Self) this;
-	}
+		public final Self withSslListenAddress(SSLContext sslContext, Executor sslExecutor, InetSocketAddress address) {
+			checkNotBuilt(this);
+			return withSslListenAddresses(sslContext, sslExecutor, List.of(address));
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withSocketInspector(Inspector socketInspector) {
-		this.socketInspector = socketInspector;
-		return (Self) this;
-	}
+		public final Self withSslListenPort(SSLContext sslContext, Executor sslExecutor, int port) {
+			checkNotBuilt(this);
+			return withSslListenAddress(sslContext, sslExecutor, new InetSocketAddress(port));
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withSocketSslInspector(Inspector socketSslInspector) {
-		this.socketSslInspector = socketSslInspector;
-		return (Self) this;
-	}
+		public final Self withAcceptOnce() {
+			checkNotBuilt(this);
+			return withAcceptOnce(true);
+		}
 
-	@SuppressWarnings("unchecked")
-	public final Self withLogger(Logger logger) {
-		this.logger = logger;
-		return (Self) this;
+		public final Self withAcceptOnce(boolean acceptOnce) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.acceptOnce = acceptOnce;
+			return (Self) this;
+		}
+
+		public final Self withSocketInspector(Inspector socketInspector) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.socketInspector = socketInspector;
+			return (Self) this;
+		}
+
+		public final Self withSocketSslInspector(Inspector socketSslInspector) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.socketSslInspector = socketSslInspector;
+			return (Self) this;
+		}
+
+		public final Self withLogger(Logger logger) {
+			checkNotBuilt(this);
+			AbstractReactiveServer.this.logger = logger;
+			return (Self) this;
+		}
+
+		@Override
+		protected S doBuild() {
+			return (S) AbstractReactiveServer.this;
+		}
 	}
 	// endregion
 

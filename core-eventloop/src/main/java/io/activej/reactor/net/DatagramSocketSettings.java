@@ -17,7 +17,7 @@
 package io.activej.reactor.net;
 
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 
 import java.io.IOException;
 import java.nio.channels.DatagramChannel;
@@ -26,44 +26,61 @@ import static io.activej.common.Checks.checkState;
 import static java.net.StandardSocketOptions.*;
 
 /**
- * This class used to change settings for socket. It will be applying with creating new socket
+ * This class is used to change settings for datagram socket. It will be applied when creating a new socket
  */
-public final class DatagramSocketSettings implements WithInitializer<DatagramSocketSettings> {
+public final class DatagramSocketSettings {
 	private static final byte DEF_BOOL = -1;
 	private static final byte TRUE = 1;
 	private static final byte FALSE = 0;
 
-	private final int receiveBufferSize;
-	private final byte reuseAddress;
-	private final int sendBufferSize;
-	private final byte broadcast;
+	private int receiveBufferSize = 0;
+	private byte reuseAddress = DEF_BOOL;
+	private int sendBufferSize = 0;
+	private byte broadcast = DEF_BOOL;
 
 	// region builders
-	private DatagramSocketSettings(int receiveBufferSize, int sendBufferSize, byte reuseAddress, byte broadcast) {
-		this.receiveBufferSize = receiveBufferSize;
-		this.reuseAddress = reuseAddress;
-		this.sendBufferSize = sendBufferSize;
-		this.broadcast = broadcast;
+	private DatagramSocketSettings() {
 	}
 
 	public static DatagramSocketSettings create() {
-		return new DatagramSocketSettings(0, 0, DEF_BOOL, DEF_BOOL);
+		return builder().build();
 	}
 
-	public DatagramSocketSettings withReceiveBufferSize(MemSize receiveBufferSize) {
-		return new DatagramSocketSettings(receiveBufferSize.toInt(), sendBufferSize, reuseAddress, broadcast);
+	public static Builder builder() {
+		return new DatagramSocketSettings().new Builder();
 	}
 
-	public DatagramSocketSettings withSendBufferSize(MemSize sendBufferSize) {
-		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize.toInt(), reuseAddress, broadcast);
-	}
+	public final class Builder extends AbstractBuilder<Builder, DatagramSocketSettings> {
+		private Builder() {}
 
-	public DatagramSocketSettings withReuseAddress(boolean reuseAddress) {
-		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress ? TRUE : FALSE, broadcast);
-	}
+		public Builder withReceiveBufferSize(MemSize receiveBufferSize) {
+			checkNotBuilt(this);
+			DatagramSocketSettings.this.receiveBufferSize = receiveBufferSize.toInt();
+			return this;
+		}
 
-	public DatagramSocketSettings withBroadcast(boolean broadcast) {
-		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize, reuseAddress, broadcast ? TRUE : FALSE);
+		public Builder withSendBufferSize(MemSize sendBufferSize) {
+			checkNotBuilt(this);
+			DatagramSocketSettings.this.sendBufferSize = sendBufferSize.toInt();
+			return this;
+		}
+
+		public Builder withReuseAddress(boolean reuseAddress) {
+			checkNotBuilt(this);
+			DatagramSocketSettings.this.reuseAddress = reuseAddress ? TRUE : FALSE;
+			return this;
+		}
+
+		public Builder withBroadcast(boolean broadcast) {
+			checkNotBuilt(this);
+			DatagramSocketSettings.this.broadcast = broadcast ? TRUE : FALSE;
+			return this;
+		}
+
+		@Override
+		protected DatagramSocketSettings doBuild() {
+			return DatagramSocketSettings.this;
+		}
 	}
 	// endregion
 
@@ -124,5 +141,14 @@ public final class DatagramSocketSettings implements WithInitializer<DatagramSoc
 	public boolean getBroadcast() {
 		checkState(hasBroadcast(), "No 'broadcast' setting is present");
 		return broadcast != FALSE;
+	}
+
+	public Builder asBuilder() {
+		DatagramSocketSettings datagramSocketSettings = new DatagramSocketSettings();
+		datagramSocketSettings.receiveBufferSize = receiveBufferSize;
+		datagramSocketSettings.reuseAddress = reuseAddress;
+		datagramSocketSettings.sendBufferSize = sendBufferSize;
+		datagramSocketSettings.broadcast = broadcast;
+		return datagramSocketSettings.new Builder();
 	}
 }

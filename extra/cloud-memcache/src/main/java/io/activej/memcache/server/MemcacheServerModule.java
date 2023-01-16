@@ -54,7 +54,7 @@ public class MemcacheServerModule extends AbstractModule {
 
 	@Provides
 	RpcServer server(NioReactor reactor, Config config, RingBuffer storage) {
-		return RpcServer.create(reactor)
+		return RpcServer.builder(reactor)
 				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
 				.withHandler(PutRequest.class,
@@ -71,6 +71,7 @@ public class MemcacheServerModule extends AbstractModule {
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))
 				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", DEFAULT_SERVER_SOCKET_SETTINGS))
 				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", DEFAULT_SOCKET_SETTINGS))
-				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"));
+				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"))
+				.build();
 	}
 }

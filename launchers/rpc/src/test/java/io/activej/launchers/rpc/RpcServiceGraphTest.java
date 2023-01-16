@@ -52,11 +52,12 @@ public class RpcServiceGraphTest {
 	public void setUp() throws Exception {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		port = getFreePort();
-		RpcServer server = RpcServer.create(eventloop)
+		RpcServer.builder(eventloop)
 				.withMessageTypes(String.class)
 				.withHandler(String.class, Promise::of)
-				.withListenPort(port);
-		server.listen();
+				.withListenPort(port)
+				.build()
+				.listen();
 		new Thread(eventloop).start();
 	}
 

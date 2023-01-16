@@ -44,8 +44,9 @@ public final class CrdtExample {
 		System.out.println();
 
 		// create and run a server for the 'remote' storage
-		CrdtServer<String, Integer> server = CrdtServer.create(eventloop, remoteStorage, INTEGER_SERIALIZER)
-				.withListenAddress(ADDRESS);
+		CrdtServer<String, Integer> server = CrdtServer.builder(eventloop, remoteStorage, INTEGER_SERIALIZER)
+				.withListenAddress(ADDRESS)
+				.build();
 		server.listen();
 		//[END REGION_1]
 

@@ -51,8 +51,7 @@ import static io.activej.dataflow.calcite.AbstractCalciteTest.State.OFF;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.ON;
 import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.stream.DataflowTest.createCommon;
-import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
+import static io.activej.dataflow.stream.DataflowTest.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -255,9 +254,7 @@ public abstract class AbstractCalciteTest {
 
 		List<Partition> partitions = List.of(new Partition(address1), new Partition(address2));
 		Key<Set<DataflowTable>> setTableKey = new Key<>() {};
-		Module common = createCommon(executor, sortingExecutor, partitions)
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
+		Module common = createCommon(partitions)
 				.bind(new Key<RecordFunction<Student>>() {}).to(RecordFunction_Student::create, DefiningClassLoader.class)
 				.bind(setTableKey).to(studentToRecord -> Set.of(
 								DataflowTable.create(STUDENT_TABLE_NAME, Student.class, studentToRecord)),
@@ -337,14 +334,16 @@ public abstract class AbstractCalciteTest {
 						, DefiningClassLoader.class)
 				.multibindToSet(DataflowTable.class)
 				.build();
+		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
-		Module clientModule = Modules.combine(common, CalciteClientModule.create());
+		Module clientModule = Modules.combine(createCommonClient(common), CalciteClientModule.create());
 		Injector clientInjector = Injector.of(clientModule);
 		clientInjector.createEagerInstances();
 		sqlDataflow = clientInjector.getInstance(AsyncSqlDataflow.class);
 
 		Module serverModule = ModuleBuilder.create()
-				.install(common)
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.install(serverCommon)
 				.install(DatasetIdModule.create())
 				.install(CalciteServerModule.create())
 				.build()
@@ -352,6 +351,7 @@ public abstract class AbstractCalciteTest {
 
 		Module server1Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
+						.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
 						.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST_1)
 						.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST_1)
 						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_1)
@@ -369,6 +369,7 @@ public abstract class AbstractCalciteTest {
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
+						.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
 						.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST_2)
 						.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST_2)
 						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_2)
@@ -390,8 +391,8 @@ public abstract class AbstractCalciteTest {
 
 		server1Injector.createEagerInstances();
 		server2Injector.createEagerInstances();
-		server1 = server1Injector.getInstance(DataflowServer.class).withListenAddress(address1);
-		server2 = server2Injector.getInstance(DataflowServer.class).withListenAddress(address2);
+		server1 = server1Injector.getInstance(DataflowServer.class);
+		server2 = server2Injector.getInstance(DataflowServer.class);
 
 		onSetUp();
 	}

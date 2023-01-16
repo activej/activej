@@ -63,15 +63,17 @@ public class SimpleTcpServerLauncher extends Launcher {
 	@Eager
 	@Provides
 	FileSystemServer fileSystemServer(NioReactor reactor, AsyncFileSystem fileSystem, Config config) {
-		return FileSystemServer.create(reactor, fileSystem)
-				.withInitializer(ofFileSystemServer(config.getChild("fs")));
+		return FileSystemServer.builder(reactor, fileSystem)
+				.withInitializer(ofFileSystemServer(config.getChild("fs")))
+				.build();
 	}
 
 	@Provides
 	@Eager
 	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return HttpServer.create(reactor, servlet)
-				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")));
+		return HttpServer.builder(reactor, servlet)
+				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")))
+				.build();
 	}
 
 	@Provides

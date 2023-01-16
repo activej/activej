@@ -13,11 +13,12 @@ public final class HelloWorldPostServer {
 	public static final String HELLO_WORLD = "Hello, World!";
 
 	public static HttpServer helloWorldServer(NioReactor reactor, int port) {
-		return HttpServer.create(reactor,
+		return HttpServer.builder(reactor,
 						request -> request.loadBody()
 								.map(body -> HttpResponse.ok200()
 										.withBody(encodeAscii(HELLO_WORLD + body.getString(UTF_8)))))
-				.withListenPort(port);
+				.withListenPort(port)
+				.build();
 	}
 
 	public static void main(String[] args) throws Exception {

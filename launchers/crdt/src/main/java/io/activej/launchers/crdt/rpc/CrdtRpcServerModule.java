@@ -63,13 +63,13 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Eager
 	@SuppressWarnings("unchecked")
 	RpcServer server(NioReactor reactor, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
-		RpcServer server = RpcServer.create(reactor)
+		RpcServer.Builder builder = RpcServer.builder(reactor)
 				.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
 				.withMessageTypes(getMessageTypes());
 		for (Map.Entry<Class<?>, RpcRequestHandler<?, ?>> entry : handlers.entrySet()) {
-			server.withHandler((Class<Object>) entry.getKey(), (RpcRequestHandler<Object, Object>) entry.getValue());
+			builder.withHandler((Class<Object>) entry.getKey(), (RpcRequestHandler<Object, Object>) entry.getValue());
 		}
-		return server;
+		return builder.build();
 	}
 
 	@Provides

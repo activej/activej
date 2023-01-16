@@ -78,8 +78,9 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 
 	@Provides
 	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<RpcServer> workerServers, Config config) {
-		return PrimaryServer.create(primaryReactor, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config));
+		return PrimaryServer.builder(primaryReactor, workerServers.getList())
+				.withInitializer(ofPrimaryServer(config))
+				.build();
 	}
 
 	@Provides
@@ -120,10 +121,11 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 					@Provides
 					@Worker
 					RpcServer server(NioReactor reactor, Config config, @WorkerId int id) {
-						return RpcServer.create(reactor)
+						return RpcServer.builder(reactor)
 								.withMessageTypes(String.class)
 								.withHandler(String.class,
-										req -> Promise.of("Request served by worker #" + id + ": " + req));
+										req -> Promise.of("Request served by worker #" + id + ": " + req))
+								.build();
 					}
 				};
 			}
