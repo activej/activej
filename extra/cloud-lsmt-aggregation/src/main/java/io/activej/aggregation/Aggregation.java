@@ -60,6 +60,7 @@ import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expression.arg;
 import static io.activej.codegen.expression.Expression.cast;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -190,6 +191,7 @@ public class Aggregation extends AbstractReactive
 
 		@Override
 		protected Aggregation doBuild() {
+			checkNotNull(Aggregation.this.structure, "Aggregation structure not set");
 			return Aggregation.this;
 		}
 	}
