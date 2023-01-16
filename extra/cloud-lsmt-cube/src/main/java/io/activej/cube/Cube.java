@@ -273,6 +273,7 @@ public final class Cube extends AbstractReactive
 		private Builder(Map<String, AggregationConfig> aggregationConfigs) {this.aggregationConfigs = aggregationConfigs;}
 
 		public Builder withAttribute(String attribute, AsyncAttributeResolver resolver) {
+			checkNotBuilt(this);
 			checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);
 			int pos = attribute.indexOf('.');
 			if (pos == -1)
@@ -304,11 +305,13 @@ public final class Cube extends AbstractReactive
 		}
 
 		public Builder withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
+			checkNotBuilt(this);
 			Cube.this.classLoaderCache = classLoaderCache;
 			return this;
 		}
 
 		public Builder withDimension(String dimensionId, FieldType type) {
+			checkNotBuilt(this);
 			checkState(aggregations.isEmpty(), "Cannot add dimension while aggregations are present");
 			checkState(Comparable.class.isAssignableFrom(wrap((Class<?>) type.getDataType())), "Dimension type is not primitive or Comparable");
 			dimensionTypes.put(dimensionId, type);
@@ -317,6 +320,7 @@ public final class Cube extends AbstractReactive
 		}
 
 		public Builder withMeasure(String measureId, Measure measure) {
+			checkNotBuilt(this);
 			checkState(aggregations.isEmpty(), "Cannot add measure while aggregations are present");
 			measures.put(measureId, measure);
 			fieldTypes.put(measureId, measure.getFieldType());
@@ -324,62 +328,74 @@ public final class Cube extends AbstractReactive
 		}
 
 		public Builder withComputedMeasure(String measureId, ComputedMeasure computedMeasure) {
+			checkNotBuilt(this);
 			checkState(aggregations.isEmpty(), "Cannot add computed measure while aggregations are present");
 			computedMeasures.put(measureId, computedMeasure);
 			return this;
 		}
 
 		public Builder withRelation(String child, String parent) {
+			checkNotBuilt(this);
 			childParentRelations.put(child, parent);
 			return this;
 		}
 
 		public Builder withTemporarySortDir(Path temporarySortDir) {
+			checkNotBuilt(this);
 			Cube.this.temporarySortDir = temporarySortDir;
 			return this;
 		}
 
 		public Builder withSortFrameFormat(FrameFormat sortFrameFormat) {
+			checkNotBuilt(this);
 			Cube.this.sortFrameFormat = sortFrameFormat;
 			return this;
 		}
 
 		public Builder withAggregationsChunkSize(int aggregationsChunkSize) {
+			checkNotBuilt(this);
 			Cube.this.aggregationsChunkSize = aggregationsChunkSize;
 			return this;
 		}
 
 		public Builder withAggregationsReducerBufferSize(int aggregationsReducerBufferSize) {
+			checkNotBuilt(this);
 			Cube.this.aggregationsReducerBufferSize = aggregationsReducerBufferSize;
 			return this;
 		}
 
 		public Builder withAggregationsSorterItemsInMemory(int aggregationsSorterItemsInMemory) {
+			checkNotBuilt(this);
 			Cube.this.aggregationsSorterItemsInMemory = aggregationsSorterItemsInMemory;
 			return this;
 		}
 
 		public Builder withAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
+			checkNotBuilt(this);
 			Cube.this.aggregationsMaxChunksToConsolidate = aggregationsMaxChunksToConsolidate;
 			return this;
 		}
 
 		public Builder withAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
+			checkNotBuilt(this);
 			Cube.this.aggregationsIgnoreChunkReadingExceptions = aggregationsIgnoreChunkReadingExceptions;
 			return this;
 		}
 
 		public Builder withMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
+			checkNotBuilt(this);
 			Cube.this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
 			return this;
 		}
 
 		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
+			checkNotBuilt(this);
 			Cube.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 			return this;
 		}
 
 		public Builder withAggregation(AggregationConfig aggregationConfig) {
+			checkNotBuilt(this);
 			checkArgument(!aggregationConfigs.containsKey(aggregationConfig.id), "Aggregation '%s' is already defined", aggregationConfig.id);
 			aggregationConfigs.put(aggregationConfig.id, aggregationConfig);
 			return this;

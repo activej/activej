@@ -146,45 +146,54 @@ public class Aggregation extends AbstractReactive
 		private Builder() {}
 
 		public Builder withStructure(AggregationStructure structure) {
+			checkNotBuilt(this);
 			return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new OTState_Aggregation(structure)).new Builder();
 		}
 
 		public Builder withChunkSize(int chunkSize) {
+			checkNotBuilt(this);
 			Aggregation.this.chunkSize = chunkSize;
 			return this;
 		}
 
 		public Builder withReducerBufferSize(int reducerBufferSize) {
+			checkNotBuilt(this);
 			Aggregation.this.reducerBufferSize = reducerBufferSize;
 			return this;
 		}
 
 		public Builder withSorterItemsInMemory(int sorterItemsInMemory) {
+			checkNotBuilt(this);
 			Aggregation.this.sorterItemsInMemory = sorterItemsInMemory;
 			return this;
 		}
 
 		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
+			checkNotBuilt(this);
 			Aggregation.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 			return this;
 		}
 
 		public Builder withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
+			checkNotBuilt(this);
 			Aggregation.this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
 			return this;
 		}
 
 		public Builder withMaxChunksToConsolidate(int maxChunksToConsolidate) {
+			checkNotBuilt(this);
 			Aggregation.this.maxChunksToConsolidate = maxChunksToConsolidate;
 			return this;
 		}
 
 		public Builder withTemporarySortDir(Path temporarySortDir) {
+			checkNotBuilt(this);
 			Aggregation.this.temporarySortDir = temporarySortDir;
 			return this;
 		}
 
 		public Builder withStats(AggregationStats stats) {
+			checkNotBuilt(this);
 			Aggregation.this.stats = stats;
 			return this;
 		}

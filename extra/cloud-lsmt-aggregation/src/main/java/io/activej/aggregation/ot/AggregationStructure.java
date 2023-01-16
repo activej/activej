@@ -48,12 +48,14 @@ public final class AggregationStructure {
 		private Builder() {}
 
 		public Builder withKey(String keyId, FieldType type) {
+			checkNotBuilt(this);
 			checkArgument(!keyTypes.containsKey(keyId), "Key '%s' has already been added", keyId);
 			keyTypes.put(keyId, type);
 			return this;
 		}
 
 		public Builder withKeys(Map<String, FieldType> keys) {
+			checkNotBuilt(this);
 			for (String k : keys.keySet()) {
 				withKey(k, keys.get(k));
 			}
@@ -61,6 +63,7 @@ public final class AggregationStructure {
 		}
 
 		public Builder withMeasure(String measureId, Measure aggregateFunction) {
+			checkNotBuilt(this);
 			checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
 			measureTypes.put(measureId, aggregateFunction.getFieldType());
 			measures.put(measureId, aggregateFunction);
@@ -68,6 +71,7 @@ public final class AggregationStructure {
 		}
 
 		public Builder withMeasures(Map<String, Measure> measures) {
+			checkNotBuilt(this);
 			for (String k : measures.keySet()) {
 				withMeasure(k, measures.get(k));
 			}
@@ -76,12 +80,14 @@ public final class AggregationStructure {
 
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder withIgnoredMeasure(String measureId, FieldType measureType) {
+			checkNotBuilt(this);
 			checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
 			measureTypes.put(measureId, measureType);
 			return this;
 		}
 
 		public Builder withIgnoredMeasures(Map<String, FieldType> measures) {
+			checkNotBuilt(this);
 			for (String k : measures.keySet()) {
 				withIgnoredMeasure(k, measures.get(k));
 			}
@@ -89,7 +95,14 @@ public final class AggregationStructure {
 		}
 
 		public Builder withPartitioningKey(List<String> partitioningKey) {
+			checkNotBuilt(this);
 			AggregationStructure.this.partitioningKey.addAll(partitioningKey);
+			return this;
+		}
+
+		public Builder withPartitioningKey(String... partitioningKey) {
+			checkNotBuilt(this);
+			AggregationStructure.this.partitioningKey.addAll(List.of(partitioningKey));
 			return this;
 		}
 
@@ -101,11 +114,6 @@ public final class AggregationStructure {
 
 	public JsonCodec_ChunkId<?> getChunkIdCodec() {
 		return chunkIdCodec;
-	}
-
-	public AggregationStructure withPartitioningKey(String... partitioningKey) {
-		this.partitioningKey.addAll(List.of(partitioningKey));
-		return this;
 	}
 
 	public List<String> getKeys() {
