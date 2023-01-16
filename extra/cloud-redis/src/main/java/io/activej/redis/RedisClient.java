@@ -17,7 +17,7 @@
 package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
@@ -41,7 +41,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * A client for Redis.
  * Allows connecting to Redis server, supports SSL.
  */
-public final class RedisClient extends AbstractNioReactive implements WithInitializer<RedisClient> {
+public final class RedisClient extends AbstractNioReactive {
 	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
 	public static final InetSocketAddress DEFAULT_ADDRESS = ApplicationSettings.getInetSocketAddress(
@@ -66,32 +66,53 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	}
 
 	public static RedisClient create(NioReactor reactor) {
-		return new RedisClient(reactor, DEFAULT_ADDRESS);
+		return builder(reactor).build();
 	}
 
 	public static RedisClient create(NioReactor reactor, InetSocketAddress address) {
-		return new RedisClient(reactor, address);
+		return builder(reactor, address).build();
 	}
 
-	public RedisClient withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return this;
+	public static Builder builder(NioReactor reactor) {
+		return builder(reactor, DEFAULT_ADDRESS);
 	}
 
-	public RedisClient withConnectTimeout(Duration connectTimeout) {
-		this.connectTimeoutMillis = connectTimeout.toMillis();
-		return this;
+	public static Builder builder(NioReactor reactor, InetSocketAddress address) {
+		return new RedisClient(reactor, address).new Builder();
 	}
 
-	public RedisClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
-		this.sslContext = sslContext;
-		this.sslExecutor = sslExecutor;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, RedisClient>{
+		private Builder() {}
 
-	public RedisClient withAutoFlushInterval(Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
+		public Builder withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			RedisClient.this.socketSettings = socketSettings;
+			return this;
+		}
+
+		public Builder withConnectTimeout(Duration connectTimeout) {
+			checkNotBuilt(this);
+			RedisClient.this.connectTimeoutMillis = connectTimeout.toMillis();
+			return this;
+		}
+
+		public Builder withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
+			checkNotBuilt(this);
+			RedisClient.this.sslContext = sslContext;
+			RedisClient.this.sslExecutor = sslExecutor;
+			return this;
+		}
+
+		public Builder withAutoFlushInterval(Duration autoFlushInterval) {
+			checkNotBuilt(this);
+			RedisClient.this.autoFlushInterval = autoFlushInterval;
+			return this;
+		}
+
+		@Override
+		protected RedisClient doBuild() {
+			return RedisClient.this;
+		}
 	}
 	// endregion
 
