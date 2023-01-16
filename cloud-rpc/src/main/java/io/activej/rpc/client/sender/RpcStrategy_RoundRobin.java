@@ -27,7 +27,7 @@ import java.util.Set;
 
 public final class RpcStrategy_RoundRobin implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
-	private final int minActiveSubStrategies;
+	private int minActiveSubStrategies;
 
 	private RpcStrategy_RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.list = list;
@@ -42,10 +42,11 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 		return new RpcStrategy_RoundRobin(strategies, 0).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
-		public RpcStrategy_RoundRobin withMinActiveSubStrategies(int minActiveSubStrategies) {
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RoundRobin> {
+		public Builder withMinActiveSubStrategies(int minActiveSubStrategies) {
 			checkNotBuilt(this);
-			return new RpcStrategy_RoundRobin(list, minActiveSubStrategies);
+			RpcStrategy_RoundRobin.this.minActiveSubStrategies = minActiveSubStrategies;
+			return this;
 		}
 
 		@Override

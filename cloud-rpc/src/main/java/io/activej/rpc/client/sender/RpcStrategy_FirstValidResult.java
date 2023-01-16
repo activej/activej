@@ -32,8 +32,8 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 
 	private final List<? extends RpcStrategy> list;
 
-	private final Predicate<?> resultValidator;
-	private final @Nullable Exception noValidResultException;
+	private Predicate<?> resultValidator;
+	private @Nullable Exception noValidResultException;
 
 	private RpcStrategy_FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
 			@Nullable Exception noValidResultException) {
@@ -54,19 +54,21 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		return new RpcStrategy_FirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_FirstValidResult> {
 		public Builder withResultValidator(Predicate<?> resultValidator) {
 			checkNotBuilt(this);
-			return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException).new Builder();
+			RpcStrategy_FirstValidResult.this.resultValidator = resultValidator;
+			return this;
 		}
 
 		public Builder withNoValidResultException(Exception e) {
 			checkNotBuilt(this);
-			return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException).new Builder();
+			RpcStrategy_FirstValidResult.this.noValidResultException = e;
+			return this;
 		}
 
 		@Override
-		protected RpcStrategy doBuild() {
+		protected RpcStrategy_FirstValidResult doBuild() {
 			return RpcStrategy_FirstValidResult.this;
 		}
 	}

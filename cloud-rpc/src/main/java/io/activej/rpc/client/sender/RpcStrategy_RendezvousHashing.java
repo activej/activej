@@ -54,7 +54,7 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 		return new RpcStrategy_RendezvousHashing(hashFn).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RendezvousHashing> {
 		public Builder withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
 			checkNotBuilt(this);
 			RpcStrategy_RendezvousHashing.this.hashBucketFn = hashBucketFn;
@@ -98,7 +98,7 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 		}
 
 		@Override
-		protected RpcStrategy doBuild() {
+		protected RpcStrategy_RendezvousHashing doBuild() {
 			return RpcStrategy_RendezvousHashing.this;
 		}
 	}

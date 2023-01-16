@@ -35,7 +35,7 @@ public final class RpcStrategy_RandomSampling implements RpcStrategy {
 		return new RpcStrategy_RandomSampling().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RandomSampling> {
 		public Builder with(double weight, RpcStrategy strategy) {
 			checkNotBuilt(this);
 			checkArgument(weight >= 0, "weight cannot be negative");
@@ -51,7 +51,7 @@ public final class RpcStrategy_RandomSampling implements RpcStrategy {
 		}
 
 		@Override
-		protected RpcStrategy doBuild() {
+		protected RpcStrategy_RandomSampling doBuild() {
 			return RpcStrategy_RandomSampling.this;
 		}
 	}

@@ -40,7 +40,7 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 		return new RpcStrategy_TypeDispatching().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_TypeDispatching> {
 		public Builder with(Class<?> dataType, RpcStrategy strategy) {
 			checkNotBuilt(this);
 			checkState(!dataTypeToStrategy.containsKey(dataType),
@@ -57,7 +57,7 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 		}
 
 		@Override
-		protected RpcStrategy doBuild() {
+		protected RpcStrategy_TypeDispatching doBuild() {
 			return RpcStrategy_TypeDispatching.this;
 		}
 	}
