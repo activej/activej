@@ -142,6 +142,8 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, Aggregation> {
+		private Builder() {}
+
 		public Builder withStructure(AggregationStructure structure) {
 			return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new OTState_Aggregation(structure)).new Builder();
 		}

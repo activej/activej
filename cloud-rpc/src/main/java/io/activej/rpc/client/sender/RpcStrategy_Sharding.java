@@ -53,6 +53,8 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_Sharding> {
+		private Builder() {}
+
 		public Builder withMinActiveSubStrategies(int minActiveSubStrategies) {
 			checkNotBuilt(this);
 			RpcStrategy_Sharding.this.minActiveSubStrategies = minActiveSubStrategies;

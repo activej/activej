@@ -45,6 +45,8 @@ public final class AggregationStructure {
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, AggregationStructure> {
+		private Builder() {}
+
 		public Builder withKey(String keyId, FieldType type) {
 			checkArgument(!keyTypes.containsKey(keyId), "Key '%s' has already been added", keyId);
 			keyTypes.put(keyId, type);

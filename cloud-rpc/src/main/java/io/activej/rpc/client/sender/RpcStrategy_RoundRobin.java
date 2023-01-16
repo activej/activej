@@ -43,6 +43,8 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RoundRobin> {
+		private Builder() {}
+
 		public Builder withMinActiveSubStrategies(int minActiveSubStrategies) {
 			checkNotBuilt(this);
 			RpcStrategy_RoundRobin.this.minActiveSubStrategies = minActiveSubStrategies;

@@ -55,6 +55,8 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_FirstValidResult> {
+		private Builder() {}
+
 		public Builder withResultValidator(Predicate<?> resultValidator) {
 			checkNotBuilt(this);
 			RpcStrategy_FirstValidResult.this.resultValidator = resultValidator;

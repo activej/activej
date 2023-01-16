@@ -270,7 +270,7 @@ public final class Cube extends AbstractReactive
 	public final class Builder extends AbstractBuilder<Builder, Cube> {
 		private final Map<String, AggregationConfig> aggregationConfigs;
 
-		public Builder(Map<String, AggregationConfig> aggregationConfigs) {this.aggregationConfigs = aggregationConfigs;}
+		private Builder(Map<String, AggregationConfig> aggregationConfigs) {this.aggregationConfigs = aggregationConfigs;}
 
 		public Builder withAttribute(String attribute, AsyncAttributeResolver resolver) {
 			checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);

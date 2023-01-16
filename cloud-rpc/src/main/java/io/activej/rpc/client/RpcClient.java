@@ -156,6 +156,8 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
+		private Builder() {}
+
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
 			RpcClient.this.classLoader = classLoader;
