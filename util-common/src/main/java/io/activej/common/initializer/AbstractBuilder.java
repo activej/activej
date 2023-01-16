@@ -15,7 +15,7 @@ public abstract class AbstractBuilder<B extends WithInitializer<B>, T> implement
 	}
 
 	@Override
-	public T build() {
+	public final T build() {
 		T t = instance;
 		if (t != null) return t;
 		return buildImpl();
