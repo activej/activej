@@ -353,7 +353,10 @@ public final class TestLocalBlockingFileSystem {
 
 	@Test
 	public void copyWithHardLinksDoesNotCreateNewFile() throws IOException {
-		client.withHardLinkOnCopy(true);
+		client = LocalBlockingFileSystem.builder(storagePath)
+				.withHardLinkOnCopy(true)
+				.build();
+		client.start();
 
 		try (OutputStream outputStream = client.upload("first")) {
 			outputStream.write("test".getBytes());

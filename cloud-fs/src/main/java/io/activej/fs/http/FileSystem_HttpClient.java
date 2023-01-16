@@ -18,7 +18,6 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -54,7 +53,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Inherits all the limitations of {@link AsyncFileSystem} implementation located on server.
  */
 public final class FileSystem_HttpClient extends AbstractReactive
-		implements AsyncFileSystem, WithInitializer<FileSystem_HttpClient> {
+		implements AsyncFileSystem {
 	private final AsyncHttpClient client;
 	private final String url;
 

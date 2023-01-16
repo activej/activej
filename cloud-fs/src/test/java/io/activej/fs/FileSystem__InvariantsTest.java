@@ -63,7 +63,7 @@ public final class FileSystem__InvariantsTest {
 	public String testName;
 
 	@Parameter(1)
-	public UnaryOperator<FileSystem> initializer;
+	public UnaryOperator<FileSystem.Builder> initializer;
 
 	private Path firstPath;
 	private Path secondPath;
@@ -85,11 +85,11 @@ public final class FileSystem__InvariantsTest {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		FileSystem firstFileSystem = initializer.apply(FileSystem.create(getCurrentReactor(), newSingleThreadExecutor(), firstPath));
+		FileSystem firstFileSystem = initializer.apply(FileSystem.builder(getCurrentReactor(), newSingleThreadExecutor(), firstPath)).build();
 		await(firstFileSystem.start());
 		first = firstFileSystem;
 
-		FileSystem secondFileSystem = initializer.apply(FileSystem.create(getCurrentReactor(), newSingleThreadExecutor(), secondPath));
+		FileSystem secondFileSystem = initializer.apply(FileSystem.builder(getCurrentReactor(), newSingleThreadExecutor(), secondPath)).build();
 		await(secondFileSystem.start());
 		second = new FileSystem_Default(secondFileSystem);
 
@@ -107,10 +107,10 @@ public final class FileSystem__InvariantsTest {
 		return List.of(
 				new Object[]{
 						"Regular",
-						(UnaryOperator<FileSystem>) fs -> fs},
+						(UnaryOperator<FileSystem.Builder>) builder -> builder},
 				new Object[]{
 						"With Hard Link On Copy",
-						(UnaryOperator<FileSystem>) fs -> fs.withHardLinkOnCopy(true)
+						(UnaryOperator<FileSystem.Builder>) builder -> builder.withHardLinkOnCopy(true)
 				}
 		);
 	}

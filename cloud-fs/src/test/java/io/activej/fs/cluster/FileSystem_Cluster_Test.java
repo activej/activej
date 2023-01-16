@@ -67,6 +67,7 @@ public final class FileSystem_Cluster_Test {
 	private ExecutorService executor;
 	private List<HttpServer> servers;
 	private Path clientStorage;
+	private AsyncDiscoveryService discoveryService;
 	private FileSystemPartitions partitions;
 	private FileSystem_Cluster client;
 
@@ -115,9 +116,11 @@ public final class FileSystem_Cluster_Test {
 		partitions.put("dead_two", FileSystem_HttpClient.create(reactor, "http://localhost:" + 5556, httpClient));
 		partitions.put("dead_three", FileSystem_HttpClient.create(reactor, "http://localhost:" + 5557, httpClient));
 
-		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions));
-		client = FileSystem_Cluster.create(reactor, this.partitions);
-		client.withReplicationCount(REPLICATION_COUNT); // there are those 3 dead nodes added above
+		discoveryService = AsyncDiscoveryService.constant(partitions);
+		this.partitions = FileSystemPartitions.create(reactor, discoveryService);
+		client = FileSystem_Cluster.builder(reactor, this.partitions)
+				.withReplicationCount(REPLICATION_COUNT) // there are those 3 dead nodes added above
+				.build();
 		await(this.partitions.start());
 		await(this.client.start());
 	}
@@ -166,8 +169,7 @@ public final class FileSystem_Cluster_Test {
 		String content = "test content of the file";
 		ByteBuf data = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 
-		client.withPersistenceOptions(3, 1, 1);
-		partitions
+		partitions = FileSystemPartitions.builder(partitions.getReactor(), discoveryService)
 				.withServerSelector((fileName, serverKeys) -> {
 					String firstServer = fileName.contains("1") ?
 							"server_1" :
@@ -180,7 +182,16 @@ public final class FileSystem_Cluster_Test {
 							.map(String.class::cast)
 							.sorted(Comparator.comparing(key -> key.equals(firstServer) ? -1 : 1))
 							.collect(toList());
-				});
+				})
+				.build();
+
+		client = FileSystem_Cluster.builder(client.getReactor(), partitions)
+				.withDeadPartitionsThreshold(3)
+				.withMinUploadTargets(1)
+				.withMaxUploadTargets(1)
+				.build();
+		await(partitions.start());
+		await(client.start());
 
 		String[] files = {"file_1.txt", "file_2.txt", "file_3.txt", "other.txt"};
 
@@ -213,14 +224,14 @@ public final class FileSystem_Cluster_Test {
 					replicasCount++;
 				}
 			}
-			assertEquals(client.getUploadTargetsMin(), replicasCount);
+			assertEquals(client.getMinUploadTargets(), replicasCount);
 		}
 	}
 
 	@Test
 	public void testNotEnoughUploads() {
 		int allClientsSize = partitions.getPartitions().size();
-		client.withReplicationCount(allClientsSize);
+		client.setReplicationCount(allClientsSize);
 
 		Exception exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8)))
 				.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt"))));

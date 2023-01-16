@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
@@ -92,11 +91,11 @@ public final class ClusterRepartitionControllerStressTest {
 			servers.add(server);
 		}
 
-		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
-				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
+		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions));
 
-		controller = ClusterRepartitionController.create(reactor, localPartitionId, this.partitions)
-				.withReplicationCount(3);
+		controller = ClusterRepartitionController.builder(reactor, localPartitionId, this.partitions)
+				.withReplicationCount(3)
+				.build();
 
 		scheduler = TaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
 				.withInterval(Duration.ofSeconds(1));

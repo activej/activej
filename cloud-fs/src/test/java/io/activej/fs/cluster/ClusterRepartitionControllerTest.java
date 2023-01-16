@@ -3,8 +3,8 @@ package io.activej.fs.cluster;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.fs.AsyncFileSystem;
-import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.FileSystem;
+import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
 import io.activej.fs.tcp.FileSystem_Remote;
 import io.activej.net.AbstractReactiveServer;
@@ -108,14 +108,16 @@ public final class ClusterRepartitionControllerTest {
 		servers.add(failingServer);
 
 		AsyncDiscoveryService discoveryService = AsyncDiscoveryService.constant(partitions);
-		FileSystemPartitions fileSystemPartitions = FileSystemPartitions.create(reactor, discoveryService)
-				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
+		FileSystemPartitions fileSystemPartitions = FileSystemPartitions.builder(reactor, discoveryService)
+				.withServerSelector(RENDEZVOUS_HASH_SHARDER)
+				.build();
 
 		Promise<Map<Object, AsyncFileSystem>> discoverPromise = discoveryService.discover().get();
 		Map<Object, AsyncFileSystem> discovered = discoverPromise.getResult();
 
-		ClusterRepartitionController controller = ClusterRepartitionController.create(reactor, localPartitionId, fileSystemPartitions)
-				.withReplicationCount(partitions.size());    // full replication
+		ClusterRepartitionController controller = ClusterRepartitionController.builder(reactor, localPartitionId, fileSystemPartitions)
+				.withReplicationCount(partitions.size())    // full replication
+				.build();
 
 		assertTrue(discovered.containsKey("regular"));
 		assertTrue(discovered.containsKey("failing")); // no one has marked it dead yet

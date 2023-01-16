@@ -23,7 +23,7 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -70,7 +70,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Inherits all the limitations of {@link AsyncFileSystem} implementation located on {@link FileSystemServer}.
  */
 public final class FileSystem_Remote extends AbstractNioReactive
-		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<FileSystem_Remote> {
+		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem_Remote.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(FileSystem_Remote.class, "connectTimeout", Duration.ZERO);
@@ -113,17 +113,32 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	}
 
 	public static FileSystem_Remote create(NioReactor reactor, InetSocketAddress address) {
-		return new FileSystem_Remote(reactor, address);
+		return builder(reactor, address).build();
 	}
 
-	public FileSystem_Remote withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return this;
+	public static Builder builder(NioReactor reactor, InetSocketAddress address) {
+		return new FileSystem_Remote(reactor, address).new Builder();
 	}
 
-	public FileSystem_Remote withConnectionTimeout(Duration connectionTimeout) {
-		this.connectionTimeout = (int) connectionTimeout.toMillis();
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, FileSystem_Remote> {
+		private Builder() {}
+
+		public Builder withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			FileSystem_Remote.this.socketSettings = socketSettings;
+			return this;
+		}
+
+		public Builder withConnectionTimeout(Duration connectionTimeout) {
+			checkNotBuilt(this);
+			FileSystem_Remote.this.connectionTimeout = (int) connectionTimeout.toMillis();
+			return this;
+		}
+
+		@Override
+		protected FileSystem_Remote doBuild() {
+			return FileSystem_Remote.this;
+		}
 	}
 	// endregion
 

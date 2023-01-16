@@ -17,7 +17,7 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -48,7 +48,7 @@ import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 
-public final class LocalBlockingFileSystem implements BlockingFileSystem, BlockingService, ConcurrentJmxBean, WithInitializer<LocalBlockingFileSystem> {
+public final class LocalBlockingFileSystem implements BlockingFileSystem, BlockingService, ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(LocalBlockingFileSystem.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -85,75 +85,79 @@ public final class LocalBlockingFileSystem implements BlockingFileSystem, Blocki
 	}
 
 	public static LocalBlockingFileSystem create(Path storageDir) {
-		return new LocalBlockingFileSystem(storageDir.normalize());
+		return builder(storageDir).build();
 	}
 
-	/**
-	 * If set to {@code true}, an attempt to create a hard link will be made when copying files
-	 */
-	@SuppressWarnings("UnusedReturnValue")
-	public LocalBlockingFileSystem withHardLinkOnCopy(boolean hardLinkOnCopy) {
-		this.hardLinkOnCopy = hardLinkOnCopy;
-		return this;
+	public static Builder builder(Path storageDir) {
+		return new LocalBlockingFileSystem(storageDir.normalize()).new Builder();
 	}
 
-	/**
-	 * Sets a temporary directory for files to be stored while uploading.
-	 */
-	public LocalBlockingFileSystem withTempDir(Path tempDir) {
-		this.tempDir = tempDir;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, LocalBlockingFileSystem> {
+		private Builder() {}
 
-	/**
-	 * If set to {@code true}, all uploaded files will be synchronously persisted to the storage device.
-	 * <p>
-	 * <b>Note: may be slow when there are a lot of new files uploaded</b>
-	 */
-	public LocalBlockingFileSystem withFSyncUploads(boolean fsync) {
-		this.fsyncUploads = fsync;
-		return this;
-	}
-
-	/**
-	 * If set to {@code true}, all newly created directories as well all changes to the directories
-	 * (e.g. adding new files, updating existing, etc.)
-	 * will be synchronously persisted to the storage device.
-	 * <p>
-	 * <b>Note: may be slow when there are a lot of new directories created or or changed</b>
-	 */
-	public LocalBlockingFileSystem withFSyncDirectories(boolean fsync) {
-		this.fsyncDirectories = fsync;
-		return this;
-	}
-
-	/**
-	 * If set to {@code true}, each write to {@link #append} consumer will be synchronously written to the storage device.
-	 * <p>
-	 * <b>Note: significantly slows down appends</b>
-	 */
-	public LocalBlockingFileSystem withFSyncAppends(boolean fsync) {
-		if (fsync) {
-			appendOptions.add(SYNC);
-			appendNewOptions.add(SYNC);
-		} else {
-			appendOptions.remove(SYNC);
-			appendNewOptions.remove(SYNC);
+		/**
+		 * If set to {@code true}, an attempt to create a hard link will be made when copying files
+		 */
+		public Builder withHardLinkOnCopy(boolean hardLinkOnCopy) {
+			checkNotBuilt(this);
+			LocalBlockingFileSystem.this.hardLinkOnCopy = hardLinkOnCopy;
+			return this;
 		}
-		return this;
-	}
 
-	/**
-	 * Sets file persistence options
-	 *
-	 * @see #withFSyncUploads(boolean)
-	 * @see #withFSyncDirectories(boolean)
-	 * @see #withFSyncAppends(boolean)
-	 */
-	public LocalBlockingFileSystem withFSync(boolean fsyncUploads, boolean fsyncDirectories, boolean fsyncAppends) {
-		this.fsyncUploads = fsyncUploads;
-		this.fsyncDirectories = fsyncDirectories;
-		return withFSyncAppends(fsyncAppends);
+		/**
+		 * Sets a temporary directory for files to be stored while uploading.
+		 */
+		public Builder withTempDir(Path tempDir) {
+			checkNotBuilt(this);
+			LocalBlockingFileSystem.this.tempDir = tempDir;
+			return this;
+		}
+
+		/**
+		 * If set to {@code true}, all uploaded files will be synchronously persisted to the storage device.
+		 * <p>
+		 * <b>Note: may be slow when there are a lot of new files uploaded</b>
+		 */
+		public Builder withFSyncUploads(boolean fsync) {
+			checkNotBuilt(this);
+			LocalBlockingFileSystem.this.fsyncUploads = fsync;
+			return this;
+		}
+
+		/**
+		 * If set to {@code true}, all newly created directories as well all changes to the directories
+		 * (e.g. adding new files, updating existing, etc.)
+		 * will be synchronously persisted to the storage device.
+		 * <p>
+		 * <b>Note: may be slow when there are a lot of new directories created or or changed</b>
+		 */
+		public Builder withFSyncDirectories(boolean fsync) {
+			checkNotBuilt(this);
+			LocalBlockingFileSystem.this.fsyncDirectories = fsync;
+			return this;
+		}
+
+		/**
+		 * If set to {@code true}, each write to {@link #append} consumer will be synchronously written to the storage device.
+		 * <p>
+		 * <b>Note: significantly slows down appends</b>
+		 */
+		public Builder withFSyncAppends(boolean fsync) {
+			checkNotBuilt(this);
+			if (fsync) {
+				appendOptions.add(SYNC);
+				appendNewOptions.add(SYNC);
+			} else {
+				appendOptions.remove(SYNC);
+				appendNewOptions.remove(SYNC);
+			}
+			return this;
+		}
+
+		@Override
+		protected LocalBlockingFileSystem doBuild() {
+			return LocalBlockingFileSystem.this;
+		}
 	}
 	// endregion
 

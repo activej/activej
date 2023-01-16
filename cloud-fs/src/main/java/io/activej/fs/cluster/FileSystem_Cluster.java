@@ -24,7 +24,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -72,7 +72,7 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  */
 public final class FileSystem_Cluster extends AbstractReactive
-		implements AsyncFileSystem, WithInitializer<FileSystem_Cluster>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem_Cluster.class);
 
 	private final FileSystemPartitions partitions;
@@ -86,12 +86,12 @@ public final class FileSystem_Cluster extends AbstractReactive
 	/**
 	 * Minimum number of uploads that have to succeed in order for upload to be considered successful.
 	 */
-	private int uploadTargetsMin = 1;
+	private int minUploadTargets = 1;
 
 	/**
 	 * Initial number of uploads that are initiated.
 	 */
-	private int uploadTargetsMax = 1;
+	private int maxUploadTargets = 1;
 
 	// region JMX
 	private final PromiseStats uploadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -118,36 +118,61 @@ public final class FileSystem_Cluster extends AbstractReactive
 	}
 
 	public static FileSystem_Cluster create(Reactor reactor, FileSystemPartitions partitions) {
-		return new FileSystem_Cluster(reactor, partitions);
+		return builder(reactor, partitions).build();
 	}
 
-	/**
-	 * Sets the replication count that determines how many copies of the file should persist over the cluster.
-	 */
-	public FileSystem_Cluster withReplicationCount(int replicationCount) {
-		checkArgument(1 <= replicationCount, "Replication count cannot be less than one");
-		this.deadPartitionsThreshold = replicationCount - 1;
-		this.uploadTargetsMin = replicationCount;
-		this.uploadTargetsMax = replicationCount;
-		return this;
+	public static Builder builder(Reactor reactor, FileSystemPartitions partitions) {
+		return new FileSystem_Cluster(reactor, partitions).new Builder();
 	}
 
-	/**
-	 * Sets the replication count as well as number of upload targets that determines the number of server where file will be uploaded.
-	 */
-	@SuppressWarnings("UnusedReturnValue")
-	public FileSystem_Cluster withPersistenceOptions(int deadPartitionsThreshold, int uploadTargetsMin, int uploadTargetsMax) {
-		checkArgument(0 <= deadPartitionsThreshold,
-				"Dead partitions threshold cannot be less than zero");
-		checkArgument(0 <= uploadTargetsMin,
-				"Minimum number of upload targets should not be less than zero");
-		checkArgument(0 < uploadTargetsMax && uploadTargetsMin <= uploadTargetsMax,
-				"Maximum number of upload targets should be greater than zero, " +
-						"should not be less than minimum number of upload targets");
-		this.deadPartitionsThreshold = deadPartitionsThreshold;
-		this.uploadTargetsMin = uploadTargetsMin;
-		this.uploadTargetsMax = uploadTargetsMax;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, FileSystem_Cluster> {
+		private Builder() {}
+
+		/**
+		 * Sets the replication count that determines how many copies of the file should persist over the cluster.
+		 */
+		public Builder withReplicationCount(int replicationCount) {
+			checkNotBuilt(this);
+			setReplicationCount(replicationCount);
+			return this;
+		}
+
+		/**
+		 * Sets the number of dead partitions upon reaching which the cluster is considered to be invalid.
+		 */
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withDeadPartitionsThreshold(int deadPartitionsThreshold) {
+			checkNotBuilt(this);
+			setDeadPartitionsThreshold(deadPartitionsThreshold);
+			return this;
+		}
+
+		/**
+		 * Sets the minimum number of partitions for files to be uploaded to.
+		 */
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withMinUploadTargets(int minUploadTargets) {
+			checkNotBuilt(this);
+			setMinUploadTargets(minUploadTargets);
+			return this;
+		}
+
+		/**
+		 * Sets the maximum number of partitions for files to be uploaded to.
+		 */
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withMaxUploadTargets(int maxUploadTargets) {
+			checkNotBuilt(this);
+			setMaxUploadTargets(maxUploadTargets);
+			return this;
+		}
+
+		@Override
+		protected FileSystem_Cluster doBuild() {
+			checkArgument(minUploadTargets <= maxUploadTargets,
+					"Maximum number of upload targets should be not be less than minimum number of upload targets");
+			return FileSystem_Cluster.this;
+		}
 	}
 	// endregion
 
@@ -280,7 +305,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 		checkInReactorThread(this);
 		checkArgument(deadPartitionsThreshold < partitions.getPartitions().size(),
 				"Dead partitions threshold should be less than number of partitions");
-		checkArgument(uploadTargetsMax <= partitions.getPartitions().size(),
+		checkArgument(maxUploadTargets <= partitions.getPartitions().size(),
 				"Maximum number of upload targets should not exceed total number of partitions");
 
 		return ping();
@@ -317,7 +342,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 		return ensureIsAlive()
 				.then(() -> collect(name, action))
 				.then(containers -> {
-					ChannelByteSplitter splitter = ChannelByteSplitter.create(uploadTargetsMin);
+					ChannelByteSplitter splitter = ChannelByteSplitter.create(minUploadTargets);
 					for (Container<ChannelConsumer<ByteBuf>> container : containers) {
 						splitter.addOutput().set(container.value);
 					}
@@ -354,7 +379,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 															}
 														})
 														.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenException(partitions.wrapDeathFn(id))))))))
-								.limit(uploadTargetsMax))
+								.limit(maxUploadTargets))
 				.whenException(() -> {
 					consumers.forEach(AsyncCloseable::close);
 					failed.set(true);
@@ -424,33 +449,42 @@ public final class FileSystem_Cluster extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public int getUploadTargetsMin() {
-		return uploadTargetsMin;
+	public int getMinUploadTargets() {
+		return minUploadTargets;
 	}
 
 	@JmxAttribute
-	public int getUploadTargetsMax() {
-		return uploadTargetsMax;
+	public int getMaxUploadTargets() {
+		return maxUploadTargets;
 	}
 
 	@JmxOperation
 	public void setReplicationCount(int replicationCount) {
-		withReplicationCount(replicationCount);
+		checkArgument(1 <= replicationCount, "Replication count cannot be less than one");
+		deadPartitionsThreshold = replicationCount - 1;
+		minUploadTargets = replicationCount;
+		maxUploadTargets = replicationCount;
 	}
 
 	@JmxAttribute
 	public void setDeadPartitionsThreshold(int deadPartitionsThreshold) {
-		withPersistenceOptions(deadPartitionsThreshold, uploadTargetsMin, uploadTargetsMax);
+		checkArgument(0 <= deadPartitionsThreshold,
+				"Dead partitions threshold cannot be less than zero");
+		this.deadPartitionsThreshold = deadPartitionsThreshold;
 	}
 
 	@JmxAttribute
-	public void setUploadTargetsMin(int uploadTargetsMin) {
-		withPersistenceOptions(deadPartitionsThreshold, uploadTargetsMin, uploadTargetsMax);
+	public void setMinUploadTargets(int minUploadTargets) {
+		checkArgument(0 <= minUploadTargets,
+				"Minimum number of upload targets should not be less than zero");
+		this.minUploadTargets = minUploadTargets;
 	}
 
 	@JmxAttribute
-	public void setUploadTargetsMax(int uploadTargetsMax) {
-		withPersistenceOptions(deadPartitionsThreshold, uploadTargetsMin, uploadTargetsMax);
+	public void setMaxUploadTargets(int maxUploadTargets) {
+		checkArgument(0 < maxUploadTargets,
+				"Maximum number of upload targets should be greater than zero");
+		this.maxUploadTargets = maxUploadTargets;
 	}
 
 	@JmxAttribute

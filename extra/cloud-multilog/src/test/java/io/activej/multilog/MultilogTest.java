@@ -190,8 +190,9 @@ public class MultilogTest {
 	public void logPositionIsCountedCorrectly() {
 		Reactor reactor = Reactor.getCurrentReactor();
 
-		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
-				.withReaderBufferSize(MemSize.bytes(1));
+		FileSystem fs = FileSystem.builder(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
+				.withReaderBufferSize(MemSize.bytes(1))
+				.build();
 
 		await(fs.start());
 

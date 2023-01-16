@@ -41,7 +41,7 @@ public final class TestLocalBlockingFileSystemInvariants {
 	public String testName;
 
 	@Parameterized.Parameter(1)
-	public UnaryOperator<LocalBlockingFileSystem> initializer;
+	public UnaryOperator<LocalBlockingFileSystem.Builder> initializer;
 
 	@Before
 	public void setUp() throws Exception {
@@ -57,11 +57,13 @@ public final class TestLocalBlockingFileSystemInvariants {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		LocalBlockingFileSystem firstFileSystem = LocalBlockingFileSystem.create(firstPath);
+		LocalBlockingFileSystem.Builder firstFileSystemBuilder = LocalBlockingFileSystem.builder(firstPath);
+		LocalBlockingFileSystem firstFileSystem = initializer.apply(firstFileSystemBuilder).build();
 		firstFileSystem.start();
-		first = initializer.apply(firstFileSystem);
+		first = firstFileSystem;
 
-		LocalBlockingFileSystem secondFileSystem = initializer.apply(LocalBlockingFileSystem.create(secondPath));
+		LocalBlockingFileSystem.Builder secondFileSystemBuilder = LocalBlockingFileSystem.builder(secondPath);
+		LocalBlockingFileSystem secondFileSystem = initializer.apply(secondFileSystemBuilder).build();
 		secondFileSystem.start();
 		second = new DefaultBlockingFileSystem(secondFileSystem);
 
@@ -79,10 +81,10 @@ public final class TestLocalBlockingFileSystemInvariants {
 		return List.of(
 				new Object[]{
 						"Regular",
-						(UnaryOperator<LocalBlockingFileSystem>) fs -> fs},
+						(UnaryOperator<LocalBlockingFileSystem.Builder>) builder -> builder},
 				new Object[]{
 						"With Hard Link On Copy",
-						(UnaryOperator<LocalBlockingFileSystem>) fs -> fs.withHardLinkOnCopy(true)
+						(UnaryOperator<LocalBlockingFileSystem.Builder>) builder -> builder.withHardLinkOnCopy(true)
 				}
 		);
 	}

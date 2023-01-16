@@ -78,8 +78,9 @@ public class ClusterTcpClientLauncher extends Launcher {
 
 	@Provides
 	AsyncFileSystem fileSystem(Reactor reactor, FileSystemPartitions partitions, Config config) {
-		return FileSystem_Cluster.create(reactor, partitions)
-				.withInitializer(ofClusterFileSystem(config.getChild("fs.cluster")));
+		return FileSystem_Cluster.builder(reactor, partitions)
+				.withInitializer(ofClusterFileSystem(config.getChild("fs.cluster")))
+				.build();
 	}
 
 	@Provides

@@ -187,11 +187,13 @@ public final class TestClusterDeadPartitionCheck {
 			startFuture.get();
 		}
 
-		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
-				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()));
+		this.partitions = FileSystemPartitions.builder(reactor, AsyncDiscoveryService.constant(partitions))
+				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()))
+				.build();
 		await(this.partitions.start());
-		this.fileSystemCluster = FileSystem_Cluster.create(reactor, this.partitions)
-				.withReplicationCount(CLIENT_SERVER_PAIRS / 2);
+		this.fileSystemCluster = FileSystem_Cluster.builder(reactor, this.partitions)
+				.withReplicationCount(CLIENT_SERVER_PAIRS / 2)
+				.build();
 	}
 
 	@After
@@ -230,7 +232,7 @@ public final class TestClusterDeadPartitionCheck {
 											.toList();
 
 									// temporary files are created
-									assertEquals(fileSystemCluster.getUploadTargetsMax(), allFiles.size());
+									assertEquals(fileSystemCluster.getMaxUploadTargets(), allFiles.size());
 
 									// no real files are created yet
 									assertTrue(allFiles.stream().allMatch(path -> path.toString().contains(DEFAULT_TEMP_DIR)));

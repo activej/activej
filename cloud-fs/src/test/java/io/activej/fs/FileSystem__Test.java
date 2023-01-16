@@ -364,7 +364,10 @@ public final class FileSystem__Test {
 
 	@Test
 	public void copyWithHardLinksDoesNotCreateNewFile() {
-		client.withHardLinkOnCopy(true);
+		client = FileSystem.builder(client.getReactor(), newCachedThreadPool(), storagePath)
+				.withHardLinkOnCopy(true)
+				.build();
+		await(client.start());
 
 		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("first")));
 		await(client.copy("first", "second"));

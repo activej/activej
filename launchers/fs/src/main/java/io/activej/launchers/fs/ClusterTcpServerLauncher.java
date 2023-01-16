@@ -71,8 +71,9 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 		String localPartitionId = first(partitions.getAllPartitions());
 		assert localPartitionId != null;
 
-		return ClusterRepartitionController.create(reactor, localPartitionId, partitions)
-				.withInitializer(ofClusterRepartitionController(config.getChild("fs.repartition")));
+		return ClusterRepartitionController.builder(reactor, localPartitionId, partitions)
+				.withInitializer(ofClusterRepartitionController(config.getChild("fs.repartition")))
+				.build();
 	}
 
 	@Provides
@@ -84,8 +85,9 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 
 	@Provides
 	FileSystemPartitions fileSystemPartitions(Reactor reactor, AsyncDiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
-		return FileSystemPartitions.create(reactor, discoveryService)
-				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER));
+		return FileSystemPartitions.builder(reactor, discoveryService)
+				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER))
+				.build();
 	}
 	//[END EXAMPLE]
 

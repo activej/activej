@@ -51,8 +51,8 @@ public final class Initializers {
 				.withInitializer(ofAbstractServer(config));
 	}
 
-	public static Initializer<ClusterRepartitionController> ofClusterRepartitionController(Config config) {
-		return controller -> controller
+	public static Initializer<ClusterRepartitionController.Builder> ofClusterRepartitionController(Config config) {
+		return builder -> builder
 				.withGlob(config.get("glob", "**"))
 				.withNegativeGlob(config.get("negativeGlob", ""))
 				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
@@ -81,17 +81,15 @@ public final class Initializers {
 		return AsyncDiscoveryService.constant(partitions);
 	}
 
-	public static Initializer<FileSystem_Cluster> ofClusterFileSystem(Config config) {
-		return cluster -> {
+	public static Initializer<FileSystem_Cluster.Builder> ofClusterFileSystem(Config config) {
+		return builder -> {
 			Integer replicationCount = config.get(ofInteger(), "replicationCount", null);
 			if (replicationCount != null) {
-				cluster.withReplicationCount(replicationCount);
+				builder.withReplicationCount(replicationCount);
 			} else {
-				cluster.withPersistenceOptions(
-						config.get(ofInteger(), "deadPartitionsThreshold", 0),
-						config.get(ofInteger(), "uploadTargetsMin", 1),
-						config.get(ofInteger(), "uploadTargetsMax", 1)
-				);
+				builder.withDeadPartitionsThreshold(config.get(ofInteger(), "deadPartitionsThreshold", 0))
+						.withMinUploadTargets(config.get(ofInteger(), "uploadTargetsMin", 1))
+						.withMaxUploadTargets(config.get(ofInteger(), "uploadTargetsMax", 1));
 			}
 		};
 	}

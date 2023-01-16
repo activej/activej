@@ -25,7 +25,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -76,7 +76,7 @@ import static java.nio.file.StandardOpenOption.*;
  * This implementation does not define new limitations, other than those defined in {@link AsyncFileSystem} interface.
  */
 public final class FileSystem extends AbstractReactive
-		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<FileSystem> {
+		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -137,83 +137,89 @@ public final class FileSystem extends AbstractReactive
 	}
 
 	public static FileSystem create(Reactor reactor, Executor executor, Path storageDir) {
-		return new FileSystem(reactor, storageDir.normalize(), executor);
+		return builder(reactor, executor, storageDir).build();
 	}
 
-	/**
-	 * Sets the buffer size for reading files from the filesystem.
-	 */
-	public FileSystem withReaderBufferSize(MemSize size) {
-		readerBufferSize = size;
-		return this;
+	public static Builder builder(Reactor reactor, Executor executor, Path storageDir) {
+		return new FileSystem(reactor, storageDir.normalize(), executor).new Builder();
 	}
 
-	/**
-	 * If set to {@code true}, an attempt to create a hard link will be made when copying files
-	 */
-	@SuppressWarnings("UnusedReturnValue")
-	public FileSystem withHardLinkOnCopy(boolean hardLinkOnCopy) {
-		this.hardLinkOnCopy = hardLinkOnCopy;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, FileSystem> {
+		private Builder() {}
 
-	/**
-	 * Sets a temporary directory for files to be stored while uploading.
-	 */
-	public FileSystem withTempDir(Path tempDir) {
-		this.tempDir = tempDir;
-		return this;
-	}
-
-	/**
-	 * If set to {@code true}, all uploaded files will be synchronously persisted to the storage device.
-	 * <p>
-	 * <b>Note: may be slow when there are a lot of new files uploaded</b>
-	 */
-	public FileSystem withFSyncUploads(boolean fsync) {
-		this.fsyncUploads = fsync;
-		return this;
-	}
-
-	/**
-	 * If set to {@code true}, all newly created directories as well all changes to the directories
-	 * (e.g. adding new files, updating existing, etc.)
-	 * will be synchronously persisted to the storage device.
-	 * <p>
-	 * <b>Note: may be slow when there are a lot of new directories created or or changed</b>
-	 */
-	public FileSystem withFSyncDirectories(boolean fsync) {
-		this.fsyncDirectories = fsync;
-		return this;
-	}
-
-	/**
-	 * If set to {@code true}, each write to {@link AsyncFileSystem#append} consumer will be synchronously written to the storage device.
-	 * <p>
-	 * <b>Note: significantly slows down appends</b>
-	 */
-	public FileSystem withFSyncAppends(boolean fsync) {
-		if (fsync) {
-			appendOptions.add(SYNC);
-			appendNewOptions.add(SYNC);
-		} else {
-			appendOptions.remove(SYNC);
-			appendNewOptions.remove(SYNC);
+		/**
+		 * Sets the buffer size for reading files from the filesystem.
+		 */
+		public Builder withReaderBufferSize(MemSize size) {
+			checkNotBuilt(this);
+			readerBufferSize = size;
+			return this;
 		}
-		return this;
-	}
 
-	/**
-	 * Sets file persistence options
-	 *
-	 * @see #withFSyncUploads(boolean)
-	 * @see #withFSyncDirectories(boolean)
-	 * @see #withFSyncAppends(boolean)
-	 */
-	public FileSystem withFSync(boolean fsyncUploads, boolean fsyncDirectories, boolean fsyncAppends) {
-		this.fsyncUploads = fsyncUploads;
-		this.fsyncDirectories = fsyncDirectories;
-		return withFSyncAppends(fsyncAppends);
+		/**
+		 * If set to {@code true}, an attempt to create a hard link will be made when copying files
+		 */
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withHardLinkOnCopy(boolean hardLinkOnCopy) {
+			checkNotBuilt(this);
+			FileSystem.this.hardLinkOnCopy = hardLinkOnCopy;
+			return this;
+		}
+
+		/**
+		 * Sets a temporary directory for files to be stored while uploading.
+		 */
+		public Builder withTempDir(Path tempDir) {
+			checkNotBuilt(this);
+			FileSystem.this.tempDir = tempDir;
+			return this;
+		}
+
+		/**
+		 * If set to {@code true}, all uploaded files will be synchronously persisted to the storage device.
+		 * <p>
+		 * <b>Note: may be slow when there are a lot of new files uploaded</b>
+		 */
+		public Builder withFSyncUploads(boolean fsync) {
+			checkNotBuilt(this);
+			FileSystem.this.fsyncUploads = fsync;
+			return this;
+		}
+
+		/**
+		 * If set to {@code true}, all newly created directories as well all changes to the directories
+		 * (e.g. adding new files, updating existing, etc.)
+		 * will be synchronously persisted to the storage device.
+		 * <p>
+		 * <b>Note: may be slow when there are a lot of new directories created or changed</b>
+		 */
+		public Builder withFSyncDirectories(boolean fsync) {
+			checkNotBuilt(this);
+			FileSystem.this.fsyncDirectories = fsync;
+			return this;
+		}
+
+		/**
+		 * If set to {@code true}, each write to {@link AsyncFileSystem#append} consumer will be synchronously written to the storage device.
+		 * <p>
+		 * <b>Note: significantly slows down appends</b>
+		 */
+		public Builder withFSyncAppends(boolean fsync) {
+			checkNotBuilt(this);
+			if (fsync) {
+				appendOptions.add(SYNC);
+				appendNewOptions.add(SYNC);
+			} else {
+				appendOptions.remove(SYNC);
+				appendNewOptions.remove(SYNC);
+			}
+			return this;
+		}
+
+		@Override
+		protected FileSystem doBuild() {
+			return FileSystem.this;
+		}
 	}
 	// endregion
 

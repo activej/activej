@@ -66,8 +66,9 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		toBePreserved.clear();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir)
-				.withTempDir(Files.createTempDirectory(""));
+		FileSystem fs = FileSystem.builder(reactor, EXECUTOR, aggregationsDir)
+				.withTempDir(Files.createTempDirectory(""))
+				.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		chunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);

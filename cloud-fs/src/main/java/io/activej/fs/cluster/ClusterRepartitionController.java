@@ -19,7 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.collection.Try;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -60,7 +60,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController extends AbstractReactive
-		implements WithInitializer<ClusterRepartitionController>, ReactiveJmxBeanWithStats, ReactiveService {
+		implements ReactiveJmxBeanWithStats, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterRepartitionController.class);
 
 	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
@@ -98,35 +98,52 @@ public final class ClusterRepartitionController extends AbstractReactive
 	}
 
 	public static ClusterRepartitionController create(Reactor reactor, Object localPartitionId, FileSystemPartitions partitions) {
-		return new ClusterRepartitionController(reactor, localPartitionId, partitions);
+		return builder(reactor, localPartitionId, partitions).build();
 	}
 
-	public ClusterRepartitionController withGlob(String glob) {
-		this.glob = glob;
-		return this;
+	public static Builder builder(Reactor reactor, Object localPartitionId, FileSystemPartitions partitions) {
+		return new ClusterRepartitionController(reactor, localPartitionId, partitions).new Builder();
 	}
 
-	public ClusterRepartitionController withNegativeGlob(String negativeGlob) {
-		if (negativeGlob.isEmpty()) {
+	public final class Builder extends AbstractBuilder<Builder, ClusterRepartitionController> {
+		private Builder() {}
+
+		public Builder withGlob(String glob) {
+			checkNotBuilt(this);
+			ClusterRepartitionController.this.glob = glob;
 			return this;
 		}
-		if (!isWildcard(negativeGlob)) {
-			this.negativeGlobPredicate = file -> !file.equals(negativeGlob);
-		} else {
-			PathMatcher negativeMatcher = FileSystems.getDefault().getPathMatcher("glob:" + negativeGlob);
-			this.negativeGlobPredicate = name -> !negativeMatcher.matches(Paths.get(name));
+
+		public Builder withNegativeGlob(String negativeGlob) {
+			checkNotBuilt(this);
+			if (negativeGlob.isEmpty()) {
+				return this;
+			}
+			if (!isWildcard(negativeGlob)) {
+				ClusterRepartitionController.this.negativeGlobPredicate = file -> !file.equals(negativeGlob);
+			} else {
+				PathMatcher negativeMatcher = FileSystems.getDefault().getPathMatcher("glob:" + negativeGlob);
+				ClusterRepartitionController.this.negativeGlobPredicate = name -> !negativeMatcher.matches(Paths.get(name));
+			}
+			return this;
 		}
-		return this;
-	}
 
-	public ClusterRepartitionController withReplicationCount(int replicationCount) {
-		this.replicationCount = replicationCount;
-		return this;
-	}
+		public Builder withReplicationCount(int replicationCount) {
+			checkNotBuilt(this);
+			ClusterRepartitionController.this.replicationCount = replicationCount;
+			return this;
+		}
 
-	public ClusterRepartitionController withPlanRecalculationInterval(Duration planRecalculationInterval) {
-		this.planRecalculationInterval = planRecalculationInterval.toMillis();
-		return this;
+		public Builder withPlanRecalculationInterval(Duration planRecalculationInterval) {
+			checkNotBuilt(this);
+			ClusterRepartitionController.this.planRecalculationInterval = planRecalculationInterval.toMillis();
+			return this;
+		}
+
+		@Override
+		protected ClusterRepartitionController doBuild() {
+			return ClusterRepartitionController.this;
+		}
 	}
 
 	public Object getLocalPartitionId() {

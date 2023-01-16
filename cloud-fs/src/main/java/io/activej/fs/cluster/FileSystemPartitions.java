@@ -21,7 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.function.ConsumerEx;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.fs.AsyncFileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.exception.FileSystemIOException;
@@ -46,7 +46,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 
 public final class FileSystemPartitions extends AbstractReactive
-		implements ReactiveService, WithInitializer<FileSystemPartitions> {
+		implements ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystemPartitions.class);
 
 	static final FileSystemException LOCAL_EXCEPTION = new FileSystemException("Local exception");
@@ -73,15 +73,29 @@ public final class FileSystemPartitions extends AbstractReactive
 	}
 
 	public static FileSystemPartitions create(Reactor reactor, AsyncDiscoveryService discoveryService) {
-		return new FileSystemPartitions(reactor, discoveryService);
+		return builder(reactor, discoveryService).build();
 	}
 
-	/**
-	 * Sets the server selection strategy based on file name and alive partitions
-	 */
-	public FileSystemPartitions withServerSelector(ServerSelector serverSelector) {
-		this.serverSelector = serverSelector;
-		return this;
+	public static Builder builder(Reactor reactor, AsyncDiscoveryService discoveryService) {
+		return new FileSystemPartitions(reactor, discoveryService).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, FileSystemPartitions> {
+		private Builder() {}
+
+		/**
+		 * Sets the server selection strategy based on file name and alive partitions
+		 */
+		public Builder withServerSelector(ServerSelector serverSelector) {
+			checkNotBuilt(this);
+			FileSystemPartitions.this.serverSelector = serverSelector;
+			return this;
+		}
+
+		@Override
+		protected FileSystemPartitions doBuild() {
+			return FileSystemPartitions.this;
+		}
 	}
 
 	/**
