@@ -80,7 +80,8 @@ public class RpcServiceGraphTest {
 														new InetSocketAddress(port),
 														new InetSocketAddress(getFreePort())
 												))
-										.withMinActiveSubStrategies(2))
+										.withMinActiveSubStrategies(2)
+										.build())
 								.build();
 					}
 				}

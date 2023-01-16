@@ -122,7 +122,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, 
 							.build());
 		}
 		final int count = rendezvousHashings.size();
-		return RpcStrategy_Sharding.builder(item -> keyGetter.apply(item).hashCode() % count, rendezvousHashings).build();
+		return RpcStrategy_Sharding.create(item -> keyGetter.apply(item).hashCode() % count, rendezvousHashings);
 	}
 
 	@Override

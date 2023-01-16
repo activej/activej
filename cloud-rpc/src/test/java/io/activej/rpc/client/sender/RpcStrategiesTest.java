@@ -50,7 +50,7 @@ public class RpcStrategiesTest {
 		pool.put(address4, connection4);
 		pool.put(address5, connection5);
 		int iterations = 100;
-		RpcStrategy strategy = RpcStrategy_RoundRobin.builder(servers(address1, address2, address3, address4, address5)).build();
+		RpcStrategy strategy = RpcStrategy_RoundRobin.create(servers(address1, address2, address3, address4, address5));
 
 		RpcSender sender = strategy.createSender(pool);
 		for (int i = 0; i < iterations; i++) {
@@ -78,10 +78,9 @@ public class RpcStrategiesTest {
 		// we don't put connection3
 		pool.put(address4, connection4);
 		int iterations = 20;
-		RpcStrategy strategy = RpcStrategy_RoundRobin.builder(
-						RpcStrategy_FirstAvailable.of(servers(address1, address2)),
-						RpcStrategy_FirstAvailable.of(servers(address3, address4)))
-				.build();
+		RpcStrategy strategy = RpcStrategy_RoundRobin.create(
+				RpcStrategy_FirstAvailable.of(servers(address1, address2)),
+				RpcStrategy_FirstAvailable.of(servers(address3, address4)));
 
 		RpcSender sender = strategy.createSender(pool);
 		for (int i = 0; i < iterations; i++) {
@@ -110,11 +109,10 @@ public class RpcStrategiesTest {
 		pool.put(address4, connection4);
 		pool.put(address5, connection5);
 		int shardsCount = 2;
-		RpcStrategy strategy = RpcStrategy_Sharding.builder(
-						item -> (Integer) item % shardsCount,
-						RpcStrategy_FirstValidResult.builder(servers(address1, address2)).build(),
-						RpcStrategy_FirstValidResult.builder(servers(address3, address4, address5)).build())
-				.build();
+		RpcStrategy strategy = RpcStrategy_Sharding.create(
+				item -> (Integer) item % shardsCount,
+				RpcStrategy_FirstValidResult.create(servers(address1, address2)),
+				RpcStrategy_FirstValidResult.create(servers(address3, address4, address5)));
 
 		RpcSender sender = strategy.createSender(pool);
 		sender.sendRequest(0, 50, assertNoCalls());
@@ -197,7 +195,7 @@ public class RpcStrategiesTest {
 		RpcSender sender;
 		RpcStrategy strategy = RpcStrategy_TypeDispatching.builder()
 				.with(String.class,
-						RpcStrategy_FirstValidResult.builder(servers(address1, address2)).build())
+						RpcStrategy_FirstValidResult.create(servers(address1, address2)))
 				.withDefault(
 						RpcStrategy_FirstAvailable.of(servers(address3, address4, address5)))
 				.build();

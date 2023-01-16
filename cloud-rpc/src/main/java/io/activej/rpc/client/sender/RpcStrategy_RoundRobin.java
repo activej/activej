@@ -34,6 +34,14 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
+	public static RpcStrategy_RoundRobin create(RpcStrategy... strategies) {
+		return builder(strategies).build();
+	}
+
+	public static RpcStrategy_RoundRobin create(List<? extends RpcStrategy> strategies) {
+		return builder(strategies).build();
+	}
+
 	public static Builder builder(RpcStrategy... strategies) {
 		return builder(List.of(strategies));
 	}

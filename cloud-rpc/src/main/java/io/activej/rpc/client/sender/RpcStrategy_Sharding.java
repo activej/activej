@@ -44,6 +44,14 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 		return new RpcStrategy_Sharding(shardingFunction, strategies, minActiveSubStrategies);
 	}
 
+	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
+		return builder(shardingFunction, strategies).build();
+	}
+
+	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
+		return builder(shardingFunction, strategies).build();
+	}
+
 	public static <T> Builder builder(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
 		return builder(shardingFunction, List.of(strategies));
 	}

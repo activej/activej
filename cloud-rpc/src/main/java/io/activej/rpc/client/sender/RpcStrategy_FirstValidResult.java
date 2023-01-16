@@ -46,6 +46,14 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException);
 	}
 
+	public static RpcStrategy_FirstValidResult create(RpcStrategy... list) {
+		return builder(list).build();
+	}
+
+	public static RpcStrategy_FirstValidResult create(List<? extends RpcStrategy> list) {
+		return builder(list).build();
+	}
+
 	public static Builder builder(RpcStrategy... list) {
 		return builder(List.of(list));
 	}
