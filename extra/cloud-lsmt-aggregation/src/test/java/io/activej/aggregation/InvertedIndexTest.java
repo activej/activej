@@ -127,9 +127,10 @@ public class InvertedIndexTest {
 
 		doProcess(aggregationChunkStorage, aggregation, supplier);
 
-		AggregationQuery query = AggregationQuery.create()
+		AggregationQuery query = AggregationQuery.builder()
 				.withKeys("word")
-				.withMeasures("documents");
+				.withMeasures("documents")
+				.build();
 
 		List<InvertedIndexQueryResult> list = await(aggregation.query(query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 				.toList());

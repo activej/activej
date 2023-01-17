@@ -139,9 +139,10 @@ public class CustomFieldsTest {
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		aggregation.getState().apply(diff);
 
-		AggregationQuery query = AggregationQuery.create()
+		AggregationQuery query = AggregationQuery.builder()
 				.withKeys("siteId")
-				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount");
+				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount")
+				.build();
 
 		List<QueryResult> queryResults = await(aggregation.query(query, QueryResult.class, DefiningClassLoader.create(classLoader))
 				.toList());

@@ -16,7 +16,7 @@
 
 package io.activej.aggregation;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -28,22 +28,10 @@ import static java.util.Collections.unmodifiableList;
 /**
  * Represents a query to aggregation. Contains the list of requested keys, fields, predicates and orderings.
  */
-public final class AggregationQuery implements WithInitializer<AggregationQuery> {
+public final class AggregationQuery {
 	private final List<String> keys = new ArrayList<>();
 	private final List<String> measures = new ArrayList<>();
 	private PredicateDef predicate = AggregationPredicates.alwaysTrue();
-
-	public static AggregationQuery create() {
-		return new AggregationQuery();
-	}
-
-	public static AggregationQuery create(List<String> keys, List<String> measures) {
-		return new AggregationQuery(keys, measures);
-	}
-
-	public static AggregationQuery create(List<String> keys, List<String> measures, PredicateDef predicate) {
-		return new AggregationQuery(keys, measures, predicate);
-	}
 
 	private AggregationQuery() {
 	}
@@ -57,6 +45,67 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 		this.keys.addAll(keys);
 		this.measures.addAll(measures);
 		this.predicate = predicate;
+	}
+
+	public static Builder builder() {
+		return new AggregationQuery().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, AggregationQuery> {
+		private Builder() {}
+
+		public Builder withKey(String key) {
+			checkNotBuilt(this);
+			AggregationQuery.this.keys.add(key);
+			return this;
+		}
+
+		public Builder withKeys(List<String> keys) {
+			checkNotBuilt(this);
+			AggregationQuery.this.keys.addAll(keys);
+			return this;
+		}
+
+		public Builder withKeys(String... keys) {
+			checkNotBuilt(this);
+			AggregationQuery.this.keys.addAll(List.of(keys));
+			return this;
+		}
+
+		public Builder withMeasures(List<String> fields) {
+			checkNotBuilt(this);
+			AggregationQuery.this.measures.addAll(fields);
+			return this;
+		}
+
+		public Builder withMeasures(String... fields) {
+			checkNotBuilt(this);
+			AggregationQuery.this.measures.addAll(List.of(fields));
+			return this;
+		}
+
+		public Builder withMeasure(String field) {
+			checkNotBuilt(this);
+			AggregationQuery.this.measures.add(field);
+			return this;
+		}
+
+		public Builder withPredicate(PredicateDef predicate) {
+			checkNotBuilt(this);
+			AggregationQuery.this.predicate = predicate;
+			return this;
+		}
+
+		public Builder withPredicates(List<PredicateDef> predicates) {
+			checkNotBuilt(this);
+			AggregationQuery.this.predicate = AggregationPredicates.and(predicates);
+			return this;
+		}
+
+		@Override
+		protected AggregationQuery doBuild() {
+			return AggregationQuery.this;
+		}
 	}
 
 	public List<String> getKeys() {
@@ -76,46 +125,6 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 
 	public PredicateDef getPredicate() {
 		return predicate;
-	}
-
-	public AggregationQuery withKey(String key) {
-		this.keys.add(key);
-		return this;
-	}
-
-	public AggregationQuery withKeys(List<String> keys) {
-		this.keys.addAll(keys);
-		return this;
-	}
-
-	public AggregationQuery withKeys(String... keys) {
-		this.keys.addAll(List.of(keys));
-		return this;
-	}
-
-	public AggregationQuery withMeasures(List<String> fields) {
-		this.measures.addAll(fields);
-		return this;
-	}
-
-	public AggregationQuery withMeasures(String... fields) {
-		this.measures.addAll(List.of(fields));
-		return this;
-	}
-
-	public AggregationQuery withMeasure(String field) {
-		this.measures.add(field);
-		return this;
-	}
-
-	public AggregationQuery withPredicate(PredicateDef predicate) {
-		this.predicate = predicate;
-		return this;
-	}
-
-	public AggregationQuery withPredicates(List<PredicateDef> predicates) {
-		this.predicate = AggregationPredicates.and(predicates);
-		return this;
 	}
 
 	@Override

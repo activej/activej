@@ -701,7 +701,11 @@ public final class Cube extends AbstractReactive
 		checkInReactorThread(this);
 		List<AggregationContainerWithScore> containerWithScores = new ArrayList<>();
 		for (AggregationContainer compatibleAggregation : compatibleAggregations) {
-			AggregationQuery aggregationQuery = AggregationQuery.create(dimensions, storedMeasures, where);
+			AggregationQuery aggregationQuery = AggregationQuery.builder()
+					.withKeys(dimensions)
+					.withMeasures(storedMeasures)
+					.withPredicate(where)
+					.build();
 			double score = compatibleAggregation.aggregation.estimateCost(aggregationQuery);
 			containerWithScores.add(new AggregationContainerWithScore(compatibleAggregation, score));
 		}
@@ -729,7 +733,11 @@ public final class Cube extends AbstractReactive
 					queryClassLoader);
 
 			StreamSupplier<S> aggregationSupplier = aggregationContainer.aggregation.query(
-					AggregationQuery.create(dimensions, compatibleMeasures, where),
+					AggregationQuery.builder()
+							.withKeys(dimensions)
+							.withMeasures(compatibleMeasures)
+							.withPredicate(where)
+							.build(),
 					aggregationClass, queryClassLoader);
 
 			if (storedMeasures.isEmpty() && streamReducer.getInputs().isEmpty()) {

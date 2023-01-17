@@ -24,7 +24,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -75,7 +75,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public final class AggregationChunkStorage<C> extends AbstractReactive
-		implements AsyncAggregationChunkStorage<C>, ReactiveService, WithInitializer<AggregationChunkStorage<C>>, ReactiveJmxBeanWithStats {
+		implements AsyncAggregationChunkStorage<C>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(AggregationChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
@@ -139,28 +139,48 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
 			JsonCodec_ChunkId<C> chunkIdCodec,
 			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFileSystem fileSystem) {
-		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem);
+		return builder(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).build();
 	}
 
-	public AggregationChunkStorage<C> withBufferSize(MemSize bufferSize) {
-		this.bufferSize = bufferSize;
-		return this;
+	public static <C> AggregationChunkStorage<C>.Builder builder(Reactor reactor,
+			JsonCodec_ChunkId<C> chunkIdCodec,
+			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFileSystem fileSystem) {
+		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).new Builder();
 	}
 
-	public AggregationChunkStorage<C> withChunksPath(String path) {
-		this.chunksPath = path;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, AggregationChunkStorage<C>>{
+		private Builder() {}
+
+		public Builder withBufferSize(MemSize bufferSize) {
+			checkNotBuilt(this);
+			AggregationChunkStorage.this.bufferSize = bufferSize;
+			return this;
+		}
+
+		public Builder withChunksPath(String path) {
+			checkNotBuilt(this);
+			AggregationChunkStorage.this.chunksPath = path;
+			return this;
+		}
+
+		public Builder withTempPath(String path) {
+			checkNotBuilt(this);
+			AggregationChunkStorage.this.tempPath = path;
+			return this;
+		}
+
+		public Builder withBackupPath(String path) {
+			checkNotBuilt(this);
+			AggregationChunkStorage.this.backupPath = path;
+			return this;
+		}
+
+		@Override
+		protected AggregationChunkStorage<C> doBuild() {
+			return AggregationChunkStorage.this;
+		}
 	}
 
-	public AggregationChunkStorage<C> withTempPath(String path) {
-		this.tempPath = path;
-		return this;
-	}
-
-	public AggregationChunkStorage<C> withBackupPath(String path) {
-		this.backupPath = path;
-		return this;
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override
