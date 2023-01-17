@@ -1,6 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.promise.Promise;
@@ -223,8 +224,10 @@ public class DiscoveryService_File_Test {
 	}
 
 	@Test
-	public void testPartitionChange() throws IOException {
-		discoveryService.withCrdtProvider(partitionId -> CrdtStorage_Map.create(getCurrentReactor()));
+	public void testPartitionChange() throws IOException, CrdtException {
+		discoveryService = DiscoveryService_File.builder(getCurrentReactor(), watchService, file)
+				.withCrdtProvider(partitionId -> CrdtStorage_Map.create(getCurrentReactor()))
+				.build();
 
 		Files.write(file, TEST_PARTITIONS_1);
 

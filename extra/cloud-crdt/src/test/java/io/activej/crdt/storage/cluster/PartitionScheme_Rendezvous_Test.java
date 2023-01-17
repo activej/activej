@@ -13,26 +13,31 @@ public class PartitionScheme_Rendezvous_Test {
 
 	@Test
 	public void testSameIds() {
-		PartitionScheme<PartitionId> partitionings = PartitionScheme_Rendezvous.<PartitionId>create()
-				.withPartitionGroup(RendezvousPartitionGroup.create(
+		PartitionScheme<PartitionId> partitionings = PartitionScheme_Rendezvous.<PartitionId>builder()
+				.withPartitionGroup(RendezvousPartitionGroup.builder(
 								Set.of(
 										PartitionId.of("a", new InetSocketAddress(9001), new InetSocketAddress(8001)),
 										PartitionId.of("b", new InetSocketAddress(9002), new InetSocketAddress(8002)),
 										PartitionId.of("c", new InetSocketAddress(9003), new InetSocketAddress(8003))
 								)
-						).withReplicas(1)
+						)
+						.withReplicas(1)
 						.withRepartition(false)
-						.withActive(true))
-				.withPartitionGroup(RendezvousPartitionGroup.create(
+						.withActive(true)
+						.build())
+				.withPartitionGroup(RendezvousPartitionGroup.builder(
 								Set.of(
 										PartitionId.of("a", new InetSocketAddress(9004), new InetSocketAddress(8004)),
 										PartitionId.of("b", new InetSocketAddress(9005), new InetSocketAddress(8005)),
 										PartitionId.of("c", new InetSocketAddress(9006), new InetSocketAddress(8006))
 								)
-						).withReplicas(1)
+						)
+						.withReplicas(1)
 						.withRepartition(false)
-						.withActive(false))
-				.withPartitionIdGetter(PartitionId::getId);
+						.withActive(false)
+						.build())
+				.withPartitionIdGetter(PartitionId::getId)
+				.build();
 
 		List<PartitionId> alive = List.of(
 				PartitionId.of("a", new InetSocketAddress(9001), new InetSocketAddress(8001)),

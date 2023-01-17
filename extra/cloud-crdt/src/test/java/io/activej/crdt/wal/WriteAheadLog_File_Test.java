@@ -70,6 +70,7 @@ public class WriteAheadLog_File_Test {
 		}
 	};
 
+	private WalUploader<Long, GSet<Integer>> uploader;
 	private WriteAheadLog_File<Long, GSet<Integer>> wal;
 	private AsyncCrdtStorage<Long, GSet<Integer>> storage;
 	private Executor executor;
@@ -83,14 +84,17 @@ public class WriteAheadLog_File_Test {
 		FileSystem storageFS = FileSystem.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFS.start());
 		storage = CrdtStorage_FileSystem.create(reactor, storageFS, serializer, function);
-		WalUploader<Long, GSet<Integer>> uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);
-		wal = WriteAheadLog_File.create(reactor, executor, path, serializer, uploader)
-				.withCurrentTimeProvider(reactor);
+		uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);
+		wal = WriteAheadLog_File.builder(reactor, executor, path, serializer, uploader)
+				.withCurrentTimeProvider(reactor)
+				.build();
 	}
 
 	@Test
 	public void singleFlushSequential() {
-		wal = wal.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10));
+		wal = WriteAheadLog_File.builder(getCurrentReactor(), executor, path, serializer, uploader)
+				.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
+				.build();
 		await(wal.start());
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, 140, GSet.of(1, 2, 3, 6, 9, 10, 11)),
@@ -131,7 +135,9 @@ public class WriteAheadLog_File_Test {
 
 	@Test
 	public void multipleFlushesSequential() {
-		wal = wal.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10));
+		wal = WriteAheadLog_File.builder(getCurrentReactor(), executor, path, serializer, uploader)
+				.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
+				.build();
 		await(wal.start());
 		List<CrdtData<Long, GSet<Integer>>> expectedAfterFlush1 = List.of(
 				new CrdtData<>(1L, 120, GSet.of(1, 2, 3, 6)),

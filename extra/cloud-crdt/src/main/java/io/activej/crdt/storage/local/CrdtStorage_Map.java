@@ -18,7 +18,7 @@ package io.activej.crdt.storage.local;
 
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
@@ -55,7 +55,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorage_Map<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Map.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final CrdtFunction<S> function;
@@ -98,21 +98,40 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorage_Map<K, S> create(Reactor reactor, CrdtFunction<S> crdtFunction) {
-		return new CrdtStorage_Map<>(reactor, crdtFunction);
+		return CrdtStorage_Map.<K, S>builder(reactor, crdtFunction).build();
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_Map<K, S> create(Reactor reactor) {
-		return new CrdtStorage_Map<>(reactor, CrdtFunction.<S>ofCrdtType());
+		return CrdtStorage_Map.<K, S>builder(reactor).build();
 	}
 
-	public CrdtStorage_Map<K, S> withFilter(CrdtFilter<S> filter) {
-		this.filter = filter;
-		return this;
+	public static <K extends Comparable<K>, S> CrdtStorage_Map<K, S>.Builder builder(Reactor reactor, CrdtFunction<S> crdtFunction) {
+		return new CrdtStorage_Map<K, S>(reactor, crdtFunction).new Builder();
 	}
 
-	public CrdtStorage_Map<K, S> withCurrentTimeProvide(CurrentTimeProvider now) {
-		this.now = now;
-		return this;
+	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_Map<K, S>.Builder builder(Reactor reactor) {
+		return new CrdtStorage_Map<K, S>(reactor, CrdtFunction.ofCrdtType()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_Map<K, S>> {
+		private Builder() {}
+
+		public Builder withFilter(CrdtFilter<S> filter) {
+			checkNotBuilt(this);
+			CrdtStorage_Map.this.filter = filter;
+			return this;
+		}
+
+		public Builder withCurrentTimeProvide(CurrentTimeProvider now) {
+			checkNotBuilt(this);
+			CrdtStorage_Map.this.now = now;
+			return this;
+		}
+
+		@Override
+		protected CrdtStorage_Map<K, S> doBuild() {
+			return CrdtStorage_Map.this;
+		}
 	}
 
 	@Override

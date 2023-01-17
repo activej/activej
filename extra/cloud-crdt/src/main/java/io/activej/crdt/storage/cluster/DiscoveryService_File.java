@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardWatchEventKinds.*;
 
-public final class DiscoveryService_File extends AbstractDiscoveryService<DiscoveryService_File> {
+public final class DiscoveryService_File extends AbstractDiscoveryService {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
 
 	private final WatchService watchService;
@@ -47,23 +47,35 @@ public final class DiscoveryService_File extends AbstractDiscoveryService<Discov
 	}
 
 	public static DiscoveryService_File create(Reactor reactor, WatchService watchService, Path pathToFile) throws CrdtException {
+		return builder(reactor, watchService, pathToFile).build();
+	}
+
+	public static DiscoveryService_File create(Reactor reactor, Path pathToFile) throws CrdtException {
+		return builder(reactor, pathToFile).build();
+	}
+
+	public static Builder builder(Reactor reactor, WatchService watchService, Path pathToFile) throws CrdtException {
 		if (!Files.exists(pathToFile)) {
 			throw new CrdtException("File does not exist: " + pathToFile);
 		}
 		if (Files.isDirectory(pathToFile)) {
 			throw new CrdtException("File is a directory: " + pathToFile);
 		}
-		return new DiscoveryService_File(reactor, watchService, pathToFile);
+		return new DiscoveryService_File(reactor, watchService, pathToFile).new Builder();
 	}
 
-	public static DiscoveryService_File create(Reactor reactor, Path pathToFile) throws CrdtException {
+	public static Builder builder(Reactor reactor, Path pathToFile) throws CrdtException {
 		WatchService watchService;
 		try {
 			watchService = pathToFile.getFileSystem().newWatchService();
 		} catch (IOException e) {
 			throw new CrdtException("Could not create a watch service", e);
 		}
-		return create(reactor, watchService, pathToFile);
+		return builder(reactor, watchService, pathToFile);
+	}
+
+	public final class Builder extends AbstractDiscoveryService.Builder<Builder, DiscoveryService_File>{
+		private Builder() {}
 	}
 
 	@Override

@@ -21,7 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.storage.AsyncCrdtStorage;
@@ -57,7 +57,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_Client<K extends Comparable<K>, S> extends AbstractNioReactive
-		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorage_Client<K, S>> {
+		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorage_Client.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Client.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -101,29 +101,68 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S> create(NioReactor reactor, InetSocketAddress address, BinarySerializer_CrdtData<K, S> serializer) {
-		return new CrdtStorage_Client<>(reactor, address, serializer);
+	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S> create(
+			NioReactor reactor,
+			InetSocketAddress address,
+			BinarySerializer_CrdtData<K, S> serializer
+	) {
+		return builder(reactor, address, serializer).build();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S> create(NioReactor reactor, InetSocketAddress address, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
-		return new CrdtStorage_Client<>(reactor, address, new BinarySerializer_CrdtData<>(keySerializer, stateSerializer));
+	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S> create(
+			NioReactor reactor,
+			InetSocketAddress address,
+			BinarySerializer<K> keySerializer,
+			BinarySerializer<S> stateSerializer
+	) {
+		return builder(reactor, address, keySerializer, stateSerializer).build();
 	}
 
-	public CrdtStorage_Client<K, S> withConnectTimeout(Duration connectTimeout) {
-		this.connectTimeoutMillis = connectTimeout.toMillis();
-		return this;
+	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S>.Builder builder(
+			NioReactor reactor,
+			InetSocketAddress address,
+			BinarySerializer_CrdtData<K, S> serializer
+	) {
+		return new CrdtStorage_Client<>(reactor, address, serializer).new Builder();
 	}
 
-	public CrdtStorage_Client<K, S> withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return this;
+	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S>.Builder builder(
+			NioReactor reactor,
+			InetSocketAddress address,
+			BinarySerializer<K> keySerializer,
+			BinarySerializer<S> stateSerializer
+	) {
+		BinarySerializer_CrdtData<K, S> serializer = new BinarySerializer_CrdtData<>(keySerializer, stateSerializer);
+		return new CrdtStorage_Client<>(reactor, address, serializer).new Builder();
 	}
 
-	public CrdtStorage_Client<K, S> withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-		SocketSettings.Builder builder = socketSettings.asBuilder();
-		modifier.accept(builder);
-		this.socketSettings = builder.build();
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_Client<K, S>> {
+		private Builder() {}
+
+		public Builder withConnectTimeout(Duration connectTimeout) {
+			checkNotBuilt(this);
+			CrdtStorage_Client.this.connectTimeoutMillis = connectTimeout.toMillis();
+			return this;
+		}
+
+		public Builder withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			CrdtStorage_Client.this.socketSettings = socketSettings;
+			return this;
+		}
+
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
+			checkNotBuilt(this);
+			SocketSettings.Builder builder = socketSettings.asBuilder();
+			modifier.accept(builder);
+			socketSettings = builder.build();
+			return this;
+		}
+
+		@Override
+		protected CrdtStorage_Client<K, S> doBuild() {
+			return CrdtStorage_Client.this;
+		}
 	}
 	//endregion
 

@@ -19,7 +19,7 @@ package io.activej.crdt.wal;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
@@ -40,7 +40,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncWriteAheadLog<K, S>, ReactiveService, WithInitializer<WriteAheadLog_InMemory<K, S>> {
+		implements AsyncWriteAheadLog<K, S>, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(WriteAheadLog_InMemory.class);
 
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
@@ -59,16 +59,34 @@ public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends Abstract
 	}
 
 	public static <K extends Comparable<K>, S> WriteAheadLog_InMemory<K, S> create(Reactor reactor, CrdtFunction<S> function, AsyncCrdtStorage<K, S> storage) {
-		return new WriteAheadLog_InMemory<>(reactor, function, storage);
+		return builder(reactor, function, storage).build();
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> WriteAheadLog_InMemory<K, S> create(Reactor reactor, AsyncCrdtStorage<K, S> storage) {
-		return new WriteAheadLog_InMemory<>(reactor, CrdtFunction.ofCrdtType(), storage);
+		return builder(reactor, CrdtFunction.ofCrdtType(), storage).build();
 	}
 
-	public WriteAheadLog_InMemory<K, S> withCurrentTimeProvider(CurrentTimeProvider now) {
-		this.now = now;
-		return this;
+	public static <K extends Comparable<K>, S> WriteAheadLog_InMemory<K, S>.Builder builder(Reactor reactor, CrdtFunction<S> function, AsyncCrdtStorage<K, S> storage) {
+		return new WriteAheadLog_InMemory<>(reactor, function, storage).new Builder();
+	}
+
+	public static <K extends Comparable<K>, S extends CrdtType<S>> WriteAheadLog_InMemory<K, S>.Builder builder(Reactor reactor, AsyncCrdtStorage<K, S> storage) {
+		return new WriteAheadLog_InMemory<>(reactor, CrdtFunction.ofCrdtType(), storage).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, WriteAheadLog_InMemory<K, S>> {
+		private Builder() {}
+
+		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
+			checkNotBuilt(this);
+			WriteAheadLog_InMemory.this.now = now;
+			return this;
+		}
+
+		@Override
+		protected WriteAheadLog_InMemory<K, S> doBuild() {
+			return WriteAheadLog_InMemory.this;
+		}
 	}
 
 	@Override

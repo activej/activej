@@ -21,7 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
@@ -70,7 +70,7 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
 public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<WriteAheadLog_File<K, S>> {
+		implements AsyncWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(WriteAheadLog_File.class);
 
 	public static final String EXT_FINAL = ".wal";
@@ -121,7 +121,7 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 			BinarySerializer_CrdtData<K, S> serializer,
 			WalUploader<K, S> uploader
 	) {
-		return new WriteAheadLog_File<>(reactor, executor, path, serializer, UPLOAD_TO_STORAGE, uploader);
+		return builder(reactor, executor, path, serializer, uploader).build();
 	}
 
 	public static <K extends Comparable<K>, S> WriteAheadLog_File<K, S> create(
@@ -131,13 +131,43 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 			BinarySerializer_CrdtData<K, S> serializer,
 			FlushMode flushMode
 	) {
-		checkArgument(flushMode == ROTATE_FILE || flushMode == ROTATE_FILE_AWAIT);
-		return new WriteAheadLog_File<>(reactor, executor, path, serializer, flushMode, null);
+		return builder(reactor, executor, path, serializer, flushMode).build();
 	}
 
-	public WriteAheadLog_File<K, S> withCurrentTimeProvider(CurrentTimeProvider now) {
-		this.now = now;
-		return this;
+	public static <K extends Comparable<K>, S> WriteAheadLog_File<K, S>.Builder builder(
+			Reactor reactor,
+			Executor executor,
+			Path path,
+			BinarySerializer_CrdtData<K, S> serializer,
+			WalUploader<K, S> uploader
+	) {
+		return new WriteAheadLog_File<>(reactor, executor, path, serializer, UPLOAD_TO_STORAGE, uploader).new Builder();
+	}
+
+	public static <K extends Comparable<K>, S> WriteAheadLog_File<K, S>.Builder builder(
+			Reactor reactor,
+			Executor executor,
+			Path path,
+			BinarySerializer_CrdtData<K, S> serializer,
+			FlushMode flushMode
+	) {
+		checkArgument(flushMode == ROTATE_FILE || flushMode == ROTATE_FILE_AWAIT);
+		return new WriteAheadLog_File<>(reactor, executor, path, serializer, flushMode, null).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, WriteAheadLog_File<K, S>> {
+		private Builder() {}
+
+		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
+			checkNotBuilt(this);
+			WriteAheadLog_File.this.now = now;
+			return this;
+		}
+
+		@Override
+		protected WriteAheadLog_File<K, S> doBuild() {
+			return WriteAheadLog_File.this;
+		}
 	}
 
 	public FlushMode getFlushMode() {

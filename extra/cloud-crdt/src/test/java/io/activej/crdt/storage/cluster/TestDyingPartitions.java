@@ -77,9 +77,13 @@ public final class TestDyingPartitions {
 
 		cluster = CrdtStorage_Cluster.create(getCurrentReactor(),
 				AsyncDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>create()
-								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
-								.withCrdtProvider(clients::get)),
+						PartitionScheme_Rendezvous.<String>builder()
+								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+										.withReplicas(REPLICATION_COUNT)
+										.withRepartition(true)
+										.build())
+								.withCrdtProvider(clients::get)
+								.build()),
 				CRDT_FUNCTION);
 		await(cluster.start());
 	}

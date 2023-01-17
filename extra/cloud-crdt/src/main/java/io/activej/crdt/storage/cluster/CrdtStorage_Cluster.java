@@ -22,7 +22,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtStorage_Client;
@@ -58,7 +58,7 @@ import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorage_Cluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Cluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final AsyncDiscoveryService<P> discoveryService;
@@ -101,12 +101,28 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public static <K extends Comparable<K>, S, P> CrdtStorage_Cluster<K, S, P> create(Reactor reactor,
 			AsyncDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
-		return new CrdtStorage_Cluster<>(reactor, discoveryService, crdtFunction);
+		return CrdtStorage_Cluster.<K, S, P>builder(reactor, discoveryService, crdtFunction).build();
 	}
 
-	public CrdtStorage_Cluster<K, S, P> withForceStart(boolean forceStart) {
-		this.forceStart = forceStart;
-		return this;
+	public static <K extends Comparable<K>, S, P> CrdtStorage_Cluster<K, S, P>.Builder builder(Reactor reactor,
+			AsyncDiscoveryService<P> discoveryService,
+			CrdtFunction<S> crdtFunction) {
+		return new CrdtStorage_Cluster<K, S, P>(reactor, discoveryService, crdtFunction).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_Cluster<K, S, P>> {
+		private Builder() {}
+
+		public Builder withForceStart(boolean forceStart) {
+			checkNotBuilt(this);
+			CrdtStorage_Cluster.this.forceStart = forceStart;
+			return this;
+		}
+
+		@Override
+		protected CrdtStorage_Cluster<K, S, P> doBuild() {
+			return CrdtStorage_Cluster.this;
+		}
 	}
 
 /*

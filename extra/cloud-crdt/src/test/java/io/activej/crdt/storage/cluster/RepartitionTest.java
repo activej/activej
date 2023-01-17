@@ -52,9 +52,12 @@ public final class RepartitionTest {
 		int replicationCount = 3;
 		CrdtStorage_Cluster<String, Long, String> cluster = CrdtStorage_Cluster.create(reactor,
 				AsyncDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>create()
-								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(replicationCount))
-								.withCrdtProvider(clients::get)),
+						PartitionScheme_Rendezvous.<String>builder()
+								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+										.withReplicas(replicationCount)
+										.build())
+								.withCrdtProvider(clients::get)
+								.build()),
 				crdtFunction);
 		await(cluster.start());
 

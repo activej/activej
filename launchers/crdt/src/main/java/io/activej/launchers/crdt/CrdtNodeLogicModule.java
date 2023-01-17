@@ -44,7 +44,7 @@ import java.util.Arrays;
 
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
-import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
+import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionSchemeBuilder;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
@@ -81,14 +81,15 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	AsyncDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
 			PartitionId localPartitionId, CrdtStorage_Map<K, S> localCrdtStorage, CrdtDescriptor<K, S> descriptor,
 			Config config) {
-		PartitionScheme_Rendezvous<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster")
+		PartitionScheme_Rendezvous<PartitionId> scheme = config.get(ofRendezvousPartitionSchemeBuilder(ofPartitionId()), "crdt.cluster")
 				.withPartitionIdGetter(PartitionId::getId)
 				.withCrdtProvider(partitionId -> {
 					if (partitionId.equals(localPartitionId)) return localCrdtStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
 					return CrdtStorage_Client.create(reactor, crdtAddress, descriptor.serializer());
-				});
+				})
+				.build();
 
 		return AsyncDiscoveryService.of(scheme);
 	}

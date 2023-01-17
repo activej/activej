@@ -2,11 +2,11 @@ package io.activej.crdt.storage.cluster;
 
 import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.JsonAttribute;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 
 import java.util.Set;
 
-public final class RendezvousPartitionGroup<P> implements WithInitializer<RendezvousPartitionGroup<P>> {
+public final class RendezvousPartitionGroup<P> {
 	private final Set<P> partitionIds;
 	private int replicaCount;
 	private boolean repartition;
@@ -21,26 +21,50 @@ public final class RendezvousPartitionGroup<P> implements WithInitializer<Rendez
 	}
 
 	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds, int replicas, boolean repartition, boolean active) {
-		return new RendezvousPartitionGroup<>(serverIds, replicas, repartition, active);
+		return builder(serverIds)
+				.withReplicas(replicas)
+				.withRepartition(repartition)
+				.withActive(active)
+				.build();
 	}
 
 	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds) {
-		return new RendezvousPartitionGroup<>(serverIds, 1, false, true);
+		return builder(serverIds)
+				.withReplicas(1)
+				.withActive(true)
+				.build();
 	}
 
-	public RendezvousPartitionGroup<P> withReplicas(int replicaCount) {
-		this.replicaCount = replicaCount;
-		return this;
+	public static <P> RendezvousPartitionGroup<P>.Builder builder(Set<P> serverIds) {
+		return new RendezvousPartitionGroup<>(serverIds, 0, false, false).new Builder();
 	}
 
-	public RendezvousPartitionGroup<P> withRepartition(boolean repartition) {
-		this.repartition = repartition;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, RendezvousPartitionGroup<P>> {
+		private Builder() {
+		}
 
-	public RendezvousPartitionGroup<P> withActive(boolean active) {
-		this.active = active;
-		return this;
+		public Builder withReplicas(int replicaCount) {
+			checkNotBuilt(this);
+			RendezvousPartitionGroup.this.replicaCount = replicaCount;
+			return this;
+		}
+
+		public Builder withRepartition(boolean repartition) {
+			checkNotBuilt(this);
+			RendezvousPartitionGroup.this.repartition = repartition;
+			return this;
+		}
+
+		public Builder withActive(boolean active) {
+			checkNotBuilt(this);
+			RendezvousPartitionGroup.this.active = active;
+			return this;
+		}
+
+		@Override
+		protected RendezvousPartitionGroup<P> doBuild() {
+			return RendezvousPartitionGroup.this;
+		}
 	}
 
 	@JsonAttribute(name = "ids")

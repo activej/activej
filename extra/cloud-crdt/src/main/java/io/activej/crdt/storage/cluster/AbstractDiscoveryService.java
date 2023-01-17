@@ -1,6 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -13,37 +14,45 @@ import java.util.function.Function;
 
 import static io.activej.fs.util.JsonUtils.fromJson;
 
-public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryService<D>> extends AbstractReactive
+public abstract class AbstractDiscoveryService extends AbstractReactive
 		implements AsyncDiscoveryService<PartitionId> {
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;
 	protected @Nullable Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider;
 
-	public AbstractDiscoveryService(Reactor reactor) {
+	protected AbstractDiscoveryService(Reactor reactor) {
 		super(reactor);
 	}
 
-	public D withCrdtProvider(Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider) {
-		this.crdtProvider = crdtProvider;
-		//noinspection unchecked
-		return (D) this;
-	}
+	@SuppressWarnings("unchecked")
+	public abstract class Builder<Self extends Builder<Self, D>, D extends AbstractDiscoveryService>
+			extends AbstractBuilder<Self, D> {
 
-	public D withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
-		this.rpcProvider = rpcProvider;
-		//noinspection unchecked
-		return (D) this;
+		public Self withCrdtProvider(Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider) {
+			AbstractDiscoveryService.this.crdtProvider = crdtProvider;
+			return (Self) this;
+		}
+
+		public Self withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
+			AbstractDiscoveryService.this.rpcProvider = rpcProvider;
+			return (Self) this;
+		}
+
+		@Override
+		protected D doBuild() {
+			return (D) AbstractDiscoveryService.this;
+		}
 	}
 
 	protected final PartitionScheme_Rendezvous<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
 		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
-		PartitionScheme_Rendezvous<PartitionId> scheme = PartitionScheme_Rendezvous.create(partitionGroups)
+		PartitionScheme_Rendezvous<PartitionId>.Builder schemeBuilder = PartitionScheme_Rendezvous.builder(partitionGroups)
 				.withPartitionIdGetter(PartitionId::getId);
 
-		if (rpcProvider != null) scheme.withRpcProvider(rpcProvider);
-		if (crdtProvider != null) scheme.withCrdtProvider(crdtProvider);
+		if (rpcProvider != null) schemeBuilder.withRpcProvider(rpcProvider);
+		if (crdtProvider != null) schemeBuilder.withCrdtProvider(crdtProvider);
 
-		return scheme;
+		return schemeBuilder.build();
 	}
 }

@@ -21,7 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtTombstone;
@@ -74,7 +74,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorage_FileSystem<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorage_FileSystem.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_FileSystem.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -126,24 +126,50 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 			BinarySerializer_CrdtData<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, function);
+		return builder(reactor, fileSystem, serializer, function).build();
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_FileSystem<K, S> create(
 			Reactor reactor, AsyncFileSystem fileSystem,
 			BinarySerializer_CrdtData<K, S> serializer
 	) {
-		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType());
+		return builder(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).build();
 	}
 
-	public CrdtStorage_FileSystem<K, S> withNamingStrategy(Supplier<String> namingStrategy) {
-		this.namingStrategy = namingStrategy;
-		return this;
+	public static <K extends Comparable<K>, S> CrdtStorage_FileSystem<K, S>.Builder builder(
+			Reactor reactor, AsyncFileSystem fileSystem,
+			BinarySerializer_CrdtData<K, S> serializer,
+			CrdtFunction<S> function
+	) {
+		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, function).new Builder();
 	}
 
-	public CrdtStorage_FileSystem<K, S> withFilter(CrdtFilter<S> filter) {
-		this.filter = filter;
-		return this;
+	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_FileSystem<K, S>.Builder builder(
+			Reactor reactor, AsyncFileSystem fileSystem,
+			BinarySerializer_CrdtData<K, S> serializer
+	) {
+		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_FileSystem<K, S>> {
+		private Builder() {}
+
+		public Builder withNamingStrategy(Supplier<String> namingStrategy) {
+			checkNotBuilt(this);
+			CrdtStorage_FileSystem.this.namingStrategy = namingStrategy;
+			return this;
+		}
+
+		public Builder withFilter(CrdtFilter<S> filter) {
+			checkNotBuilt(this);
+			CrdtStorage_FileSystem.this.filter = filter;
+			return this;
+		}
+
+		@Override
+		protected CrdtStorage_FileSystem<K, S> doBuild() {
+			return CrdtStorage_FileSystem.this;
+		}
 	}
 	// endregion
 

@@ -57,10 +57,12 @@ public final class CrdtClusterExample {
 		// cluster will make 5 copies of them across known partitions
 		CrdtStorage_Cluster<String, LWWSet<String>, String> cluster = CrdtStorage_Cluster.<String, LWWSet<String>, String>create(
 				eventloop,
-				AsyncDiscoveryService.of(PartitionScheme_Rendezvous.<String>create()
-						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
-								.withReplicas(5))
-						.withCrdtProvider(clients::get)),
+				AsyncDiscoveryService.of(PartitionScheme_Rendezvous.<String>builder()
+						.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+								.withReplicas(5)
+								.build())
+						.withCrdtProvider(clients::get)
+						.build()),
 				CrdtFunction.ofCrdtType());
 
 		//[END REGION_1]

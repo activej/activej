@@ -19,7 +19,7 @@ package io.activej.crdt.wal;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -64,7 +64,7 @@ import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
 public final class WalUploader<K extends Comparable<K>, S> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, WithInitializer<WalUploader<K, S>> {
+		implements ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(WalUploader.class);
 
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);
@@ -96,21 +96,40 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	public static <K extends Comparable<K>, S> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
-		return new WalUploader<>(reactor, executor, path, function, serializer, storage);
+		return builder(reactor, executor, path, function, serializer, storage).build();
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
-		return new WalUploader<>(reactor, executor, path, CrdtFunction.ofCrdtType(), serializer, storage);
+		return builder(reactor, executor, path, serializer, storage).build();
 	}
 
-	public WalUploader<K, S> withSortDir(Path sortDir) {
-		this.sortDir = sortDir;
-		return this;
+	public static <K extends Comparable<K>, S> WalUploader<K, S>.Builder builder(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+		return new WalUploader<>(reactor, executor, path, function, serializer, storage).new Builder();
 	}
 
-	public WalUploader<K, S> withSortItemsInMemory(int sortItemsInMemory) {
-		this.sortItemsInMemory = sortItemsInMemory;
-		return this;
+	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S>.Builder builder(Reactor reactor, Executor executor, Path path, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+		return new WalUploader<>(reactor, executor, path, CrdtFunction.ofCrdtType(), serializer, storage).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, WalUploader<K, S>> {
+		private Builder() {}
+
+		public Builder withSortDir(Path sortDir) {
+			checkNotBuilt(this);
+			WalUploader.this.sortDir = sortDir;
+			return this;
+		}
+
+		public Builder withSortItemsInMemory(int sortItemsInMemory) {
+			checkNotBuilt(this);
+			WalUploader.this.sortItemsInMemory = sortItemsInMemory;
+			return this;
+		}
+
+		@Override
+		protected WalUploader<K, S> doBuild() {
+			return WalUploader.this;
+		}
 	}
 
 	public Promise<Void> uploadToStorage() {

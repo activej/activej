@@ -60,8 +60,9 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Provides
 	AsyncDiscoveryService<PartitionId> discoveryServiceDiscoveryService(Reactor reactor, Config config) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
-		return DiscoveryService_File.create(reactor, pathToFile)
-				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())));
+		return DiscoveryService_File.builder(reactor, pathToFile)
+				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())))
+				.build();
 	}
 
 	@Provides

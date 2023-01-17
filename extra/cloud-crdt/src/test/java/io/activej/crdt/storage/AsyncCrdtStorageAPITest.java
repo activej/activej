@@ -114,8 +114,9 @@ public class AsyncCrdtStorageAPITest {
 							}
 							RendezvousPartitionGroup<Integer> partitionGroup2 = RendezvousPartitionGroup.create(partitions, 4, false, true);
 
-							PartitionScheme_Rendezvous<Integer> partitionScheme = PartitionScheme_Rendezvous.create(partitionGroup1, partitionGroup2)
-									.withCrdtProvider(map::get);
+							PartitionScheme_Rendezvous<Integer> partitionScheme = PartitionScheme_Rendezvous.builder(partitionGroup1, partitionGroup2)
+									.withCrdtProvider(map::get)
+									.build();
 							AsyncDiscoveryService<Integer> discoveryService = AsyncDiscoveryService.of(partitionScheme);
 							CrdtStorage_Cluster<String, Integer, Integer> storageCluster = CrdtStorage_Cluster.create(reactor, discoveryService, CRDT_FUNCTION);
 

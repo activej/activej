@@ -37,6 +37,40 @@ import static io.activej.config.converter.ConfigConverters.*;
 public final class ConfigConverters {
 
 	/**
+	 * Config converter to create a {@link PartitionScheme_Rendezvous.Builder} out of a {@link Config}
+	 * that is useful for creating {@link RpcStrategy} on a client side
+	 *
+	 * @return a config converter for {@link PartitionScheme_Rendezvous.Builder}
+	 */
+	public static <P> ConfigConverter<PartitionScheme_Rendezvous<P>.Builder> ofRendezvousPartitionSchemeBuilder(
+			ConfigConverter<P> partitionIdConverter
+	) {
+		return new ConfigConverter<>() {
+			@Override
+			public PartitionScheme_Rendezvous<P>.Builder get(Config config) {
+				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
+
+				List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
+				for (Config partitionGroupConfig : partitionGroupsConfig) {
+					partitionGroups.add(ofPartitionGroup(partitionIdConverter).get(partitionGroupConfig));
+				}
+
+				return PartitionScheme_Rendezvous.builder(partitionGroups);
+			}
+
+			@Override
+			@Contract("_, !null -> !null")
+			public PartitionScheme_Rendezvous<P>.Builder get(Config config, @Nullable PartitionScheme_Rendezvous<P>.Builder defaultValue) {
+				if (config.isEmpty()) {
+					return defaultValue;
+				} else {
+					return get(config);
+				}
+			}
+		};
+	}
+
+	/**
 	 * Config converter to create a {@link PartitionScheme_Rendezvous} out of a {@link Config}
 	 * that is useful for creating {@link RpcStrategy} on a client side
 	 *

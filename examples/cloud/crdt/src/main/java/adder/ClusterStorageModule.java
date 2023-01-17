@@ -56,13 +56,14 @@ public final class ClusterStorageModule extends AbstractModule {
 			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config,
 			PartitionId localPartitionId) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
-		return DiscoveryService_File.create(reactor, pathToFile)
+		return DiscoveryService_File.builder(reactor, pathToFile)
 				.withCrdtProvider(partitionId -> {
 					if (partitionId.equals(localPartitionId)) return localStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
 					return CrdtStorage_Client.create(reactor, crdtAddress, serializer);
-				});
+				})
+				.build();
 	}
 
 	@Provides

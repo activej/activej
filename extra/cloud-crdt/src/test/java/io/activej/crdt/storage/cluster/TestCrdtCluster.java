@@ -62,9 +62,15 @@ public final class TestCrdtCluster {
 			clients.put("server_" + i, CrdtStorage_Client.create(reactor, address, serializer));
 			remoteStorages.put("server_" + i, storage);
 		}
-		clients.put("dead_one", CrdtStorage_Client.create(reactor, new InetSocketAddress(5555), serializer).withConnectTimeout(Duration.ofSeconds(1)));
-		clients.put("dead_two", CrdtStorage_Client.create(reactor, new InetSocketAddress(5556), serializer).withConnectTimeout(Duration.ofSeconds(1)));
-		clients.put("dead_three", CrdtStorage_Client.create(reactor, new InetSocketAddress(5557), serializer).withConnectTimeout(Duration.ofSeconds(1)));
+		clients.put("dead_one", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5555), serializer)
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
+		clients.put("dead_two", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5556), serializer)
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
+		clients.put("dead_three", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5557), serializer)
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
 
 		List<CrdtData<String, Integer>> data = new ArrayList<>();
 		long now = reactor.currentTimeMillis();
@@ -78,12 +84,14 @@ public final class TestCrdtCluster {
 		CrdtStorage_Cluster<String, Integer, String> cluster = CrdtStorage_Cluster.create(
 				reactor,
 				AsyncDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>create()
+						PartitionScheme_Rendezvous.<String>builder()
 								.withPartitionGroup(
-										RendezvousPartitionGroup.create(clients.keySet())
+										RendezvousPartitionGroup.builder(clients.keySet())
 												.withReplicas(REPLICATION_COUNT)
-												.withRepartition(true))
+												.withRepartition(true)
+												.build())
 								.withCrdtProvider(clients::get)
+								.build()
 				),
 				ignoringTimestamp(Integer::max));
 
@@ -133,19 +141,31 @@ public final class TestCrdtCluster {
 					.build();
 			server.listen();
 			servers.add(server);
-			clients.put("server_" + i, CrdtStorage_Client.create(reactor, address, serializer).withConnectTimeout(Duration.ofSeconds(1)));
+			clients.put("server_" + i, CrdtStorage_Client.builder(reactor, address, serializer)
+					.withConnectTimeout(Duration.ofSeconds(1))
+					.build());
 		}
 
-		clients.put("dead_one", CrdtStorage_Client.create(reactor, new InetSocketAddress(5555), serializer).withConnectTimeout(Duration.ofSeconds(1)));
-		clients.put("dead_two", CrdtStorage_Client.create(reactor, new InetSocketAddress(5556), serializer).withConnectTimeout(Duration.ofSeconds(1)));
-		clients.put("dead_three", CrdtStorage_Client.create(reactor, new InetSocketAddress(5557), serializer).withConnectTimeout(Duration.ofSeconds(1)));
+		clients.put("dead_one", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5555), serializer)
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
+		clients.put("dead_two", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5556), serializer)
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
+		clients.put("dead_three", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5557), serializer)
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
 
 		CrdtStorage_Map<String, Set<Integer>> localStorage = CrdtStorage_Map.create(reactor, union);
 		CrdtStorage_Cluster<String, Set<Integer>, String> cluster = CrdtStorage_Cluster.create(reactor,
 				AsyncDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>create()
-								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
-								.withCrdtProvider(clients::get)),
+						PartitionScheme_Rendezvous.<String>builder()
+								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+										.withReplicas(REPLICATION_COUNT)
+										.withRepartition(true)
+										.build())
+								.withCrdtProvider(clients::get)
+								.build()),
 				union);
 
 		await(cluster.start()
