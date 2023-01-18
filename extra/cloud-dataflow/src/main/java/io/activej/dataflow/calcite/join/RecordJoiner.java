@@ -113,24 +113,24 @@ public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Re
 		assert leftScheme.getClassLoader() == rightScheme.getClassLoader();
 		assert fieldNames.size() == leftScheme.size() + rightScheme.size();
 
-		RecordScheme scheme = RecordScheme.create(leftScheme.getClassLoader());
+		RecordScheme.Builder schemeBuilder = RecordScheme.builder(leftScheme.getClassLoader());
 
-		addFields(scheme, leftScheme, fieldNames, 0, false);
-		addFields(scheme, rightScheme, fieldNames, leftScheme.size(), joinType == LEFT);
+		addFields(schemeBuilder, leftScheme, fieldNames, 0, false);
+		addFields(schemeBuilder, rightScheme, fieldNames, leftScheme.size(), joinType == LEFT);
 
-		return scheme
-				.withComparator(scheme.getFields())
+		return schemeBuilder
+				.withComparator(fieldNames)
 				.build();
 	}
 
-	private static void addFields(RecordScheme toScheme, RecordScheme fromScheme, List<String> fieldNames, int offset, boolean forceNullability) {
+	private static void addFields(RecordScheme.Builder toSchemeBuilder, RecordScheme fromScheme, List<String> fieldNames, int offset, boolean forceNullability) {
 		List<Type> types = fromScheme.getTypes();
 		for (int i = 0; i < types.size(); i++) {
 			Type type = types.get(i);
 			if (forceNullability && type instanceof Class<?> cls && cls.isPrimitive()) {
 				type = Primitives.wrap(cls);
 			}
-			toScheme.addField(fieldNames.get(i + offset), type);
+			toSchemeBuilder.withField(fieldNames.get(i + offset), type);
 		}
 	}
 

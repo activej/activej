@@ -72,10 +72,12 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 	}
 
 	public RecordScheme getToScheme(RecordScheme original, BiFunction<String, UnaryOperator<Expression>, @Nullable UnaryOperator<Expression>> mapping) {
-		RecordScheme schemeTo = RecordScheme.create(original.getClassLoader());
+		RecordScheme.Builder schemeToBuilder = RecordScheme.builder(original.getClassLoader());
+		List<String> fields = new ArrayList<>(fieldProjections.size());
 		for (FieldProjection fieldProjection : fieldProjections) {
 			String fieldName = fieldProjection.fieldName() != null ? fieldProjection.fieldName() : fieldProjection.operand().getFieldName(original);
-			schemeTo.withField(fieldName, fieldProjection.operand().getFieldType(original));
+			fields.add(fieldName);
+			schemeToBuilder.withField(fieldName, fieldProjection.operand().getFieldType(original));
 
 			if (mapping == null) continue;
 
@@ -84,7 +86,7 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 				throw new IllegalArgumentException();
 			}
 		}
-		return schemeTo.withComparator(schemeTo.getFields()).build();
+		return schemeToBuilder.withComparator(fields).build();
 	}
 
 	public List<FieldProjection> getFieldProjections() {

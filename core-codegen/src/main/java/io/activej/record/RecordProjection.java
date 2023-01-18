@@ -36,14 +36,14 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 	public static RecordProjection projection(DefiningClassLoader classLoader, RecordScheme schemeFrom, Collection<String> fields) {
 		if (!isParentChild(schemeFrom.getClassLoader(), classLoader))
 			throw new IllegalArgumentException("Unrelated ClassLoaders");
-		RecordScheme schemeTo = RecordScheme.create(classLoader);
+		RecordScheme.Builder schemeToBuilder = RecordScheme.builder(classLoader);
 		Map<String, UnaryOperator<Expression>> mapping = new HashMap<>();
 		List<String> fromFields = schemeFrom.getFields();
 		for (String field : fields) {
 			if (!fromFields.contains(field)) {
 				throw new IllegalArgumentException("Unknown field: " + field);
 			}
-			schemeTo.withField(field, schemeFrom.getFieldType(field));
+			schemeToBuilder.withField(field, schemeFrom.getFieldType(field));
 			mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
 		}
 		List<String> comparedFields = schemeFrom.getComparedFields();
@@ -54,8 +54,9 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 					newComparedFields.add(field);
 				}
 			}
-			schemeTo.withComparator(newComparedFields);
+			schemeToBuilder.withComparator(newComparedFields);
 		}
+		RecordScheme schemeTo = schemeToBuilder.build();
 		return projection(classLoader, List.of(schemeFrom, fields), schemeFrom, schemeTo, mapping);
 	}
 
@@ -68,11 +69,9 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 	public static RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
 			RecordScheme schemeFrom, RecordScheme schemeTo,
 			Map<String, UnaryOperator<Expression>> mapping) {
-		schemeFrom.build();
-		schemeTo.build();
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordProjection.class, classKey),
-				() -> ClassBuilder.create(RecordProjection.class)
+				() -> ClassBuilder.builder(RecordProjection.class)
 						.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
 								superConstructor(arg(0), arg(1)))
 						.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
@@ -82,7 +81,8 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 										entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
 								));
 							}
-						})),
+						}))
+						.build(),
 				schemeFrom, schemeTo);
 	}
 

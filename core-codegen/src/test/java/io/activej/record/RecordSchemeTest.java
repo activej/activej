@@ -20,7 +20,7 @@ public class RecordSchemeTest {
 
 	@Test
 	public void test() {
-		RecordScheme scheme = RecordScheme.create()
+		RecordScheme scheme = RecordScheme.builder()
 				.withField("id", int.class)
 				.withField("name", String.class)
 				.build();
@@ -45,7 +45,7 @@ public class RecordSchemeTest {
 		assertEquals(record1, record2);
 		assertEquals(record1.hashCode(), record2.hashCode());
 
-		RecordScheme scheme2 = RecordScheme.create(scheme1.getClassLoader())
+		RecordScheme scheme2 = RecordScheme.builder(scheme1.getClassLoader())
 				.withField("id", int.class)
 				.withField("name", String.class)
 				.build();
@@ -56,7 +56,7 @@ public class RecordSchemeTest {
 
 	@Test
 	public void testInterfaceHashCode() {
-		RecordScheme scheme = RecordScheme.create()
+		RecordScheme scheme = RecordScheme.builder()
 				.withField("map", Map.class)
 				.build();
 
@@ -72,7 +72,7 @@ public class RecordSchemeTest {
 	@Test
 	public void test2() {
 		Type listType = Types.parameterizedType(List.class, Integer.class);
-		RecordScheme scheme = RecordScheme.create()
+		RecordScheme scheme = RecordScheme.builder()
 				.withField("boolean", boolean.class)
 				.withField("char", char.class)
 				.withField("byte", byte.class)
@@ -138,7 +138,7 @@ public class RecordSchemeTest {
 
 	@Test
 	public void testHashCodeEqualsDefault() {
-		RecordScheme scheme = RecordScheme.create()
+		RecordScheme scheme = RecordScheme.builder()
 				.withField("id", int.class)
 				.withField("code", long.class)
 				.withField("name", String.class)
@@ -171,7 +171,7 @@ public class RecordSchemeTest {
 
 	@Test
 	public void testHashCodeEquals() {
-		RecordScheme scheme = RecordScheme.create()
+		RecordScheme scheme = RecordScheme.builder()
 				.withField("id", int.class)
 				.withField("code", long.class)
 				.withField("name", String.class)
@@ -213,7 +213,7 @@ public class RecordSchemeTest {
 
 	@Test
 	public void testComparator() {
-		RecordScheme scheme = RecordScheme.create()
+		RecordScheme scheme = RecordScheme.builder()
 				.withField("id", int.class)
 				.withField("code", long.class)
 				.withField("name", String.class)

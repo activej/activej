@@ -8,9 +8,10 @@ public final class CodegenExpressionsExample {
 
 	public static void main(String[] args) throws ReflectiveOperationException {
 		//[START REGION_1]
-		Class<Greeter> greeterClass = ClassBuilder.create(Greeter.class)
+		Class<Greeter> greeterClass = ClassBuilder.builder(Greeter.class)
 				.withMethod("sayHello",
 						call(staticField(System.class, "out"), "println", value("Hello world")))
+				.build()
 				.defineClass(CLASS_LOADER);
 		//[END REGION_1]
 

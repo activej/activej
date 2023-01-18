@@ -39,7 +39,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public final class Utils {
 
-	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = StreamSchema_Record.create(RecordScheme.create().build());
+	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = StreamSchema_Record.create(RecordScheme.builder().build());
 
 	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StreamCodec.create((scale, bytes) -> {
 				BigInteger unscaledValue = new BigInteger(bytes);

@@ -3088,15 +3088,15 @@ public abstract class AbstractCalciteTest {
 	private static RecordScheme ofJavaRecord(DefiningClassLoader classLoader, Class<?> recordClass) {
 		checkState(recordClass.isRecord());
 
-		RecordScheme recordScheme = RecordScheme.create(classLoader);
+		RecordScheme.Builder recordSchemeBuilder = RecordScheme.builder(classLoader);
 		RecordComponent[] recordComponents = recordClass.getRecordComponents();
 
 		for (RecordComponent recordComponent : recordComponents) {
-			recordScheme.addField(recordComponent.getName(), recordComponent.getGenericType());
+			recordSchemeBuilder.withField(recordComponent.getName(), recordComponent.getGenericType());
 		}
 
-		return recordScheme
-				.withComparator(recordScheme.getComparedFields())
+		return recordSchemeBuilder
+				.withComparator(Arrays.stream(recordComponents).map(RecordComponent::getName).toList())
 				.build();
 	}
 

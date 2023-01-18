@@ -334,7 +334,7 @@ public class RelToDatasetConverter {
 			}
 			RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
 			if (scheme == null) {
-				scheme = projectionFn.getToScheme(RecordScheme.create(classLoader), null);
+				scheme = projectionFn.getToScheme(RecordScheme.builder(classLoader).build(), null);
 			}
 			singleDatasets.add(Datasets.map(singleDummyDataset, projectionFn, StreamSchema_Record.create(scheme)));
 		}

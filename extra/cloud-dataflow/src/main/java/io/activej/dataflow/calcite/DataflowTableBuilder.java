@@ -7,6 +7,7 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
+import io.activej.record.RecordScheme.Builder;
 import io.activej.record.RecordSetter;
 import io.activej.types.TypeT;
 import org.apache.calcite.rel.type.RelDataType;
@@ -120,13 +121,13 @@ public sealed class DataflowTableBuilder<T> permits DataflowTableBuilder.Dataflo
 	}
 
 	private RecordFunction<T> createRecordFunction(DefiningClassLoader classLoader) {
-		RecordScheme scheme = RecordScheme.create(classLoader);
+		Builder schemeBuilder = RecordScheme.builder(classLoader);
 
 		for (Map.Entry<String, ColumnEntry> entry : columns.entrySet()) {
-			scheme.addField(entry.getKey(), entry.getValue().type);
+			schemeBuilder.withField(entry.getKey(), entry.getValue().type);
 		}
 
-		RecordScheme finalScheme = scheme.withComparator(scheme.getFields()).build();
+		RecordScheme finalScheme = schemeBuilder.withComparator(new ArrayList<>(columns.keySet())).build();
 
 		Object[] gettersAndSetters = new Object[finalScheme.size() * 2];
 		Iterator<ColumnEntry> entryIterator = columns.values().iterator();

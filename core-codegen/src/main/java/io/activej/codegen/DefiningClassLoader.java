@@ -16,7 +16,7 @@
 
 package io.activej.codegen;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.FileOutputStream;
@@ -54,7 +54,7 @@ import static java.util.stream.Collectors.groupingBy;
  * {@link #withBytecodeStorage(BytecodeStorage)} method.
  */
 @SuppressWarnings("WeakerAccess")
-public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean, WithInitializer<DefiningClassLoader> {
+public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean {
 	public static final Path DEFAULT_DEBUG_OUTPUT_DIR = getPathSetting(DefiningClassLoader.class, "debugOutputDir", null);
 
 	private final Map<String, Class<?>> definedClasses = new ConcurrentHashMap<>();
@@ -79,7 +79,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @return a new instance of a {@code DefiningClassLoader}
 	 */
 	public static DefiningClassLoader create() {
-		return new DefiningClassLoader();
+		return builder().build();
 	}
 
 	/**
@@ -90,30 +90,49 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @return a new instance of a {@code DefiningClassLoader}
 	 */
 	public static DefiningClassLoader create(ClassLoader parent) {
-		return new DefiningClassLoader(parent);
+		return builder(parent).build();
 	}
 
-	/**
-	 * Adds a persistent cache for the bytecode that is used for defining classes.
-	 *
-	 * @param bytecodeStorage a persistent storage of bytecode
-	 * @see BytecodeStorage
-	 */
-	public DefiningClassLoader withBytecodeStorage(BytecodeStorage bytecodeStorage) {
-		this.bytecodeStorage = bytecodeStorage;
-		return this;
+	public static Builder builder() {
+		return new DefiningClassLoader().new Builder();
 	}
 
-	/**
-	 * Writes all classes to the specified directory once a class is defined.
-	 * <p>
-	 * If a directory does not exist when class is defined, a runtime error will be thrown.
-	 *
-	 * @param debugOutputDir directory where bytecode would be written to for debug purposes
-	 */
-	public DefiningClassLoader withDebugOutputDir(Path debugOutputDir) {
-		this.debugOutputDir = debugOutputDir;
-		return this;
+	public static Builder builder(ClassLoader parent) {
+		return new DefiningClassLoader(parent).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, DefiningClassLoader> {
+		private Builder() {}
+
+		/**
+		 * Adds a persistent cache for the bytecode that is used for defining classes.
+		 *
+		 * @param bytecodeStorage a persistent storage of bytecode
+		 * @see BytecodeStorage
+		 */
+		public Builder withBytecodeStorage(BytecodeStorage bytecodeStorage) {
+			checkNotBuilt(this);
+			DefiningClassLoader.this.bytecodeStorage = bytecodeStorage;
+			return this;
+		}
+
+		/**
+		 * Writes all classes to the specified directory once a class is defined.
+		 * <p>
+		 * If a directory does not exist when class is defined, a runtime error will be thrown.
+		 *
+		 * @param debugOutputDir directory where bytecode would be written to for debug purposes
+		 */
+		public Builder withDebugOutputDir(Path debugOutputDir) {
+			checkNotBuilt(this);
+			DefiningClassLoader.this.debugOutputDir = debugOutputDir;
+			return this;
+		}
+
+		@Override
+		protected DefiningClassLoader doBuild() {
+			return DefiningClassLoader.this;
+		}
 	}
 	// endregion
 

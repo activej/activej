@@ -669,9 +669,10 @@ public final class Cube extends AbstractReactive
 			Map<String, FieldType> keyTypes) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, inputClass, predicate),
-				() -> ClassBuilder.create(Predicate.class)
+				() -> ClassBuilder.builder(Predicate.class)
 						.withMethod("test", boolean.class, List.of(Object.class),
 								predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
+						.build()
 		);
 	}
 
@@ -1023,21 +1024,20 @@ public final class Cube extends AbstractReactive
 		}
 
 		RecordScheme createRecordScheme() {
-			RecordScheme recordScheme = RecordScheme.create(classLoader);
+			RecordScheme.Builder recordSchemeBuilder = RecordScheme.builder(classLoader);
 			for (String attribute : recordAttributes) {
-				recordScheme.addField(attribute, getAttributeType(attribute));
+				recordSchemeBuilder.withField(attribute, getAttributeType(attribute));
 			}
 			for (String measure : recordMeasures) {
-				recordScheme.addField(measure, getMeasureType(measure));
+				recordSchemeBuilder.withField(measure, getMeasureType(measure));
 			}
-			recordScheme.build();
-			return recordScheme;
+			return recordSchemeBuilder.build();
 		}
 
 		RecordFunction createRecordFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordFunction.class, resultClass, recordScheme.getFields()),
-					() -> ClassBuilder.create(RecordFunction.class)
+					() -> ClassBuilder.builder(RecordFunction.class)
 							.withMethod("copyAttributes",
 									sequence(seq -> {
 										for (String field : recordScheme.getFields()) {
@@ -1066,13 +1066,14 @@ public final class Cube extends AbstractReactive
 											}
 										}
 									}))
+							.build()
 			);
 		}
 
 		MeasuresFunction<R> createMeasuresFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(MeasuresFunction.class, resultClass, resultComputedMeasures),
-					() -> ClassBuilder.create(MeasuresFunction.class)
+					() -> ClassBuilder.builder(MeasuresFunction.class)
 							.initialize(cb ->
 									resultComputedMeasures.forEach(computedMeasure ->
 											cb.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
@@ -1082,8 +1083,8 @@ public final class Cube extends AbstractReactive
 									seq.add(set(property(record, computedMeasure),
 											computedMeasures.get(computedMeasure).getExpression(record, measures)));
 								}
-
 							}))
+							.build()
 			);
 		}
 
@@ -1093,9 +1094,10 @@ public final class Cube extends AbstractReactive
 
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Predicate.class, resultClass, queryHaving),
-					() -> ClassBuilder.create(Predicate.class)
+					() -> ClassBuilder.builder(Predicate.class)
 							.withMethod("test",
 									queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
+							.build()
 			);
 		}
 
@@ -1113,7 +1115,7 @@ public final class Cube extends AbstractReactive
 
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
-					() -> ClassBuilder.create(Comparator.class)
+					() -> ClassBuilder.builder(Comparator.class)
 							.withMethod("compare", get(() -> {
 								Expression_Compare comparator = Expression.compare();
 								for (Ordering ordering : query.getOrderings()) {
@@ -1128,6 +1130,7 @@ public final class Cube extends AbstractReactive
 								}
 								return comparator;
 							}))
+							.build()
 			);
 		}
 
@@ -1275,7 +1278,7 @@ public final class Cube extends AbstractReactive
 		TotalsFunction<R, R> createTotalsFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(TotalsFunction.class, resultClass, resultStoredMeasures, resultComputedMeasures),
-					() -> ClassBuilder.create(TotalsFunction.class)
+					() -> ClassBuilder.builder(TotalsFunction.class)
 							.withMethod("zero",
 									sequence(seq -> {
 										for (String field : resultStoredMeasures) {
@@ -1310,6 +1313,7 @@ public final class Cube extends AbstractReactive
 													computedMeasures.get(computedMeasure).getExpression(result, measures)));
 										}
 									}))
+							.build()
 			);
 		}
 

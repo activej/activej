@@ -22,7 +22,7 @@ public class RecordProjectionTest {
 
 	@Test
 	public void test1() {
-		RecordScheme schemeFrom = RecordScheme.create()
+		RecordScheme schemeFrom = RecordScheme.builder()
 				.withField("int", int.class)
 				.withField("Integer", Integer.class)
 				.build();
@@ -46,12 +46,12 @@ public class RecordProjectionTest {
 
 	@Test
 	public void test2() {
-		RecordScheme schemeFrom = RecordScheme.create()
+		RecordScheme schemeFrom = RecordScheme.builder()
 				.withField("int", int.class)
 				.withField("Integer", Integer.class)
 				.build();
 
-		RecordScheme schemeTo = RecordScheme.create(schemeFrom.getClassLoader())
+		RecordScheme schemeTo = RecordScheme.builder(schemeFrom.getClassLoader())
 				.withField("x", int.class)
 				.build();
 

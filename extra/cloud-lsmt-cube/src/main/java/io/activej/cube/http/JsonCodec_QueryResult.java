@@ -344,15 +344,14 @@ final class JsonCodec_QueryResult implements JsonCodec<QueryResult>, WithInitial
 	}
 
 	public RecordScheme recordScheme(List<String> attributes, List<String> measures) {
-		RecordScheme recordScheme = RecordScheme.create(classLoader);
+		RecordScheme.Builder recordSchemeBuilder = RecordScheme.builder(classLoader);
 		for (String attribute : attributes) {
-			recordScheme.withField(attribute, attributeTypes.get(attribute));
+			recordSchemeBuilder.withField(attribute, attributeTypes.get(attribute));
 		}
 		for (String measure : measures) {
-			recordScheme.withField(measure, measureTypes.get(measure));
+			recordSchemeBuilder.withField(measure, measureTypes.get(measure));
 		}
-		recordScheme.build();
-		return recordScheme;
+		return recordSchemeBuilder.build();
 	}
 
 	private JsonCodec<?>[] getJsonCodecs(RecordScheme recordScheme) {

@@ -25,7 +25,7 @@ public class FrameFetcherTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private static final RecordScheme SCHEME = RecordScheme.create()
+	private static final RecordScheme SCHEME = RecordScheme.builder()
 			.withField("id", long.class)
 			.build();
 

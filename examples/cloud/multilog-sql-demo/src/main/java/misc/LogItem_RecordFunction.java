@@ -40,7 +40,7 @@ public final class LogItem_RecordFunction implements RecordFunction<LogItem> {
 	}
 
 	private static RecordScheme createScheme(DefiningClassLoader classLoader) {
-		RecordScheme scheme = RecordScheme.create(classLoader)
+		RecordScheme.Builder scheme = RecordScheme.builder(classLoader)
 				.withField("date", int.class)
 				.withField("advertiser", int.class)
 				.withField("campaign", int.class)
@@ -52,7 +52,8 @@ public final class LogItem_RecordFunction implements RecordFunction<LogItem> {
 				.withField("testString", String.class);
 
 		return scheme
-				.withComparator(scheme.getFields())
+				.withComparator("date", "advertiser", "campaign", "banner", "impressions", "clicks",
+						"conversions", "revenue", "testString")
 				.build();
 	}
 }

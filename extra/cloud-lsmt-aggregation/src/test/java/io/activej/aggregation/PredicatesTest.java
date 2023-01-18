@@ -4,6 +4,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import org.intellij.lang.annotations.Language;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -718,11 +719,12 @@ public class PredicatesTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean matches(Record record, String field, String pattern) {
+	private boolean matches(Record record, String field, @Language("RegExp") String pattern) {
 		PredicateDef predicate = AggregationPredicates.regexp(field, pattern);
-		return ClassBuilder.create(Predicate.class)
+		return ClassBuilder.builder(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
 						predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
+				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER)
 				.test(record);
 	}

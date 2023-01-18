@@ -51,22 +51,24 @@ public class Utils {
 		List<String> keyList = new ArrayList<>(keys.keySet());
 		return classLoader.ensureClass(
 				ClassKey.of(Object.class, keyList),
-				() -> ClassBuilder.create((Class<K>) Comparable.class)
+				() -> ClassBuilder.builder((Class<K>) Comparable.class)
 						.initialize(cb ->
 								keys.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
 						.withMethod("compareTo", comparableImpl(keyList))
 						.withMethod("equals", equalsImpl(keyList))
 						.withMethod("hashCode", hashCodeImpl(keyList))
-						.withMethod("toString", toStringImpl(keyList)));
+						.withMethod("toString", toStringImpl(keyList))
+						.build());
 	}
 
 	public static <R> Comparator<R> createKeyComparator(Class<R> recordClass, List<String> keys,
 			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Comparator.class, recordClass, keys),
-				() -> ClassBuilder.create(Comparator.class)
-						.withMethod("compare", comparatorImpl(recordClass, keys)));
+				() -> ClassBuilder.builder(Comparator.class)
+						.withMethod("compare", comparatorImpl(recordClass, keys))
+						.build());
 	}
 
 	public static <T, R> Function<T, R> createMapper(Class<T> recordClass, Class<R> resultClass,
@@ -74,7 +76,7 @@ public class Utils {
 			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Function.class, recordClass, resultClass, keys, fields),
-				() -> ClassBuilder.create(Function.class)
+				() -> ClassBuilder.builder(Function.class)
 						.withMethod("apply",
 								let(constructor(resultClass), result ->
 										sequence(seq -> {
@@ -84,7 +86,8 @@ public class Utils {
 														property(cast(arg(0), recordClass), fieldName)));
 											}
 											return result;
-										}))));
+										})))
+						.build());
 	}
 
 	public static <K extends Comparable, R> Function<R, K> createKeyFunction(Class<R> recordClass, Class<K> keyClass,
@@ -92,7 +95,7 @@ public class Utils {
 			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Function.class, recordClass, keyClass, keys),
-				() -> ClassBuilder.create(Function.class)
+				() -> ClassBuilder.builder(Function.class)
 						.withMethod("apply",
 								let(constructor(keyClass), key ->
 										sequence(seq -> {
@@ -103,7 +106,8 @@ public class Utils {
 																property(cast(arg(0), recordClass), keyString)));
 											}
 											return key;
-										}))));
+										})))
+						.build());
 	}
 
 	public static <T> Class<T> createRecordClass(AggregationStructure aggregation,
@@ -121,14 +125,15 @@ public class Utils {
 		List<String> fieldsList = new ArrayList<>(fields.keySet());
 		return (Class<T>) classLoader.ensureClass(
 				ClassKey.of(Object.class, keysList, fieldsList),
-				() -> ClassBuilder.create(Object.class)
+				() -> ClassBuilder.builder(Object.class)
 						.initialize(cb ->
 								keys.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
 						.initialize(cb ->
 								fields.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
-						.withMethod("toString", toStringImpl(concat(keysList, fieldsList))));
+						.withMethod("toString", toStringImpl(concat(keysList, fieldsList)))
+						.build());
 	}
 
 	public static <T> BinarySerializer<T> createBinarySerializer(AggregationStructure aggregation, Class<T> recordClass,
@@ -174,7 +179,7 @@ public class Utils {
 
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Reducer.class, inputClass, outputClass, keys, fields, extraFields.keySet()),
-				() -> ClassBuilder.create(Reducer.class)
+				() -> ClassBuilder.builder(Reducer.class)
 						.withMethod("onFirstItem",
 								let(constructor(outputClass), accumulator ->
 										sequence(seq -> {
@@ -211,7 +216,8 @@ public class Utils {
 									}
 									return arg(3);
 								}))
-						.withMethod("onComplete", call(arg(0), "accept", arg(2))));
+						.withMethod("onComplete", call(arg(0), "accept", arg(2)))
+						.build());
 	}
 
 	public static <I, O> Aggregate<O, Object> createPreaggregator(AggregationStructure aggregation, Class<I> inputClass, Class<O> outputClass,
@@ -222,7 +228,7 @@ public class Utils {
 		ArrayList<String> measuresList = new ArrayList<>(measureFields.keySet());
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Aggregate.class, inputClass, outputClass, keysList, measuresList),
-				() -> ClassBuilder.create(Aggregate.class)
+				() -> ClassBuilder.builder(Aggregate.class)
 						.withMethod("createAccumulator",
 								let(constructor(outputClass), accumulator ->
 										sequence(seq -> {
@@ -253,7 +259,8 @@ public class Utils {
 												property(cast(arg(0), outputClass), measure),
 												inputFields == null ? null : property(cast(arg(1), inputClass), inputFields)));
 									}
-								})));
+								}))
+						.build());
 	}
 
 	private static final PartitionPredicate SINGLE_PARTITION = (t, u) -> true;
@@ -269,12 +276,13 @@ public class Utils {
 
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(PartitionPredicate.class, recordClass, partitioningKey),
-				() -> ClassBuilder.create(PartitionPredicate.class)
+				() -> ClassBuilder.builder(PartitionPredicate.class)
 						.withMethod("isSamePartition", and(
 								partitioningKey.stream()
 										.map(keyComponent -> isEq(
 												property(cast(arg(0), recordClass), keyComponent),
-												property(cast(arg(1), recordClass), keyComponent))))));
+												property(cast(arg(1), recordClass), keyComponent)))))
+						.build());
 	}
 
 	public static <T> Map<String, String> scanKeyFields(Class<T> inputClass) {

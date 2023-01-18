@@ -39,7 +39,7 @@ public class TableSwitchBenchmark {
 		String test(Object k);
 	}
 
-	private static final Test test1 = ClassBuilder.create(Test.class)
+	private static final Test test1 = ClassBuilder.builder(Test.class)
 			.withMethod("test",
 					get(() -> {
 						Expression result = value("---");
@@ -48,9 +48,10 @@ public class TableSwitchBenchmark {
 						}
 						return result;
 					}))
+			.build()
 			.defineClassAndCreateInstance(DefiningClassLoader.create());
 
-	private static final Test test2 = ClassBuilder.create(Test.class)
+	private static final Test test2 = ClassBuilder.builder(Test.class)
 			.withMethod("test", String.class, List.of(int.class),
 					get(() -> {
 						Map<Integer, Expression> cases = new HashMap<>();
@@ -60,9 +61,10 @@ public class TableSwitchBenchmark {
 
 						return Expression.tableSwitch(arg(0), cases, value("---"));
 					}))
+			.build()
 			.defineClassAndCreateInstance(DefiningClassLoader.create());
 
-	private static final TestS testS1 = ClassBuilder.create(TestS.class)
+	private static final TestS testS1 = ClassBuilder.builder(TestS.class)
 			.withMethod("test",
 					let(arg(0), arg -> {
 						Expression result = value("---");
@@ -71,9 +73,10 @@ public class TableSwitchBenchmark {
 						}
 						return result;
 					}))
+			.build()
 			.defineClassAndCreateInstance(DefiningClassLoader.create());
 
-	private static final TestS testS2 = ClassBuilder.create(TestS.class)
+	private static final TestS testS2 = ClassBuilder.builder(TestS.class)
 			.withMethod("test",
 					let(staticCall(System.class, "identityHashCode", arg(0)), key -> {
 						Map<Integer, Expression> cases = new HashMap<>();
@@ -82,6 +85,7 @@ public class TableSwitchBenchmark {
 						}
 						return Expression.tableSwitch(key, cases, value("---"));
 					}))
+			.build()
 			.defineClassAndCreateInstance(DefiningClassLoader.create());
 
 	@Benchmark

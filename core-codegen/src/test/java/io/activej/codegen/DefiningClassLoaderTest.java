@@ -39,8 +39,9 @@ public class DefiningClassLoaderTest {
 				new Object[]{"No bytecode storage", (Supplier<DefiningClassLoader>) DefiningClassLoader::create},
 				new Object[]{"File bytecode storage", (Supplier<DefiningClassLoader>) () -> {
 					try {
-						return DefiningClassLoader.create()
-								.withBytecodeStorage(BytecodeStorage_File.create(temporaryFolder.newFolder().toPath()));
+						return DefiningClassLoader.builder()
+								.withBytecodeStorage(BytecodeStorage_File.create(temporaryFolder.newFolder().toPath()))
+								.build();
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -57,8 +58,10 @@ public class DefiningClassLoaderTest {
 	public void ensureSameClassName() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 		String testString = "test string";
 		String className = "io.activej.codegen.TestSupplier";
-		Class<Supplier> supplier1Class = classLoader.ensureClass(className, () -> ClassBuilder.create(Supplier.class)
-				.withMethod("get", value(testString)));
+		Class<Supplier> supplier1Class = classLoader.ensureClass(className, () ->
+				ClassBuilder.builder(Supplier.class)
+						.withMethod("get", value(testString))
+						.build());
 
 		Class<Supplier> supplier2Class = classLoader.ensureClass(className, failingSupplier());
 
@@ -74,8 +77,9 @@ public class DefiningClassLoaderTest {
 		String className1 = "io.activej.codegen.TestSupplier";
 		String className2 = "MySupplier";
 
-		Supplier<ClassBuilder<Supplier>> cbSupplier = () -> ClassBuilder.create(Supplier.class)
-				.withMethod("get", value(testString));
+		Supplier<ClassBuilder<Supplier>> cbSupplier = () -> ClassBuilder.builder(Supplier.class)
+				.withMethod("get", value(testString))
+				.build();
 
 		Class<Supplier> supplier1Class = classLoader.ensureClass(className1, cbSupplier);
 		Class<Supplier> supplier2Class = classLoader.ensureClass(className2, cbSupplier);
@@ -94,8 +98,9 @@ public class DefiningClassLoaderTest {
 		String className = "";
 
 		try {
-			classLoader.ensureClass(className, () -> ClassBuilder.create(Supplier.class)
-					.withMethod("get", value(testString)));
+			classLoader.ensureClass(className, () -> ClassBuilder.builder(Supplier.class)
+					.withMethod("get", value(testString))
+					.build());
 			fail();
 		} catch (ClassFormatError ignored) {
 		}
@@ -107,8 +112,9 @@ public class DefiningClassLoaderTest {
 		String className = "/";
 
 		try {
-			classLoader.ensureClass(className, () -> ClassBuilder.create(Supplier.class)
-					.withMethod("get", value(testString)));
+			classLoader.ensureClass(className, () -> ClassBuilder.builder(Supplier.class)
+					.withMethod("get", value(testString))
+					.build());
 			fail();
 		} catch (NoClassDefFoundError e) {
 			assertTrue(e.getMessage().startsWith("IllegalName"));

@@ -19,7 +19,7 @@ package io.activej.codegen;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expression_Constant;
 import io.activej.codegen.util.DefiningClassWriter;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.objectweb.asm.Type;
@@ -48,7 +48,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
  * @param <T> type of class to be generated
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
+public final class ClassBuilder<T> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final String CLASS_BUILDER_MARKER = "$GENERATED";
@@ -80,180 +80,241 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		this.superclass = superclass;
 		this.interfaces = interfaces;
 		this.autoClassName = PACKAGE_PREFIX + className;
-		withStaticField(CLASS_BUILDER_MARKER, Void.class);
 	}
 
 	/**
-	 * Creates a new instance of ClassBuilder
+	 * Creates a new builder of ClassBuilder
 	 *
 	 * @param implementation type of dynamic class
 	 * @param interfaces     additional interfaces for the class to implement
 	 */
-	public static <T> ClassBuilder<T> create(Class<?> implementation, List<Class<?>> interfaces) {
+	public static <T> ClassBuilder<T>.Builder builder(Class<?> implementation, List<Class<?>> interfaces) {
 		if (!interfaces.stream().allMatch(Class::isInterface))
 			throw new IllegalArgumentException();
 		if (implementation.isInterface()) {
-			return new ClassBuilder<>(
+			return new ClassBuilder<T>(
 					Object.class,
 					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()),
-					implementation.getName());
+					implementation.getName()).new Builder();
 		} else {
-			return new ClassBuilder<>(
+			return new ClassBuilder<T>(
 					implementation,
 					interfaces,
-					implementation.getName());
+					implementation.getName()).new Builder();
 		}
 	}
 
 	/**
-	 * Creates a new instance of ClassBuilder
+	 * Creates a new builder of ClassBuilder
 	 *
 	 * @param implementation type of dynamic class
 	 * @param interfaces     additional interfaces for the class to implement
 	 */
-	public static <T> ClassBuilder<T> create(Class<T> implementation, Class<?>... interfaces) {
-		return create(implementation, List.of(interfaces));
+	public static <T> ClassBuilder<T>.Builder builder(Class<T> implementation, Class<?>... interfaces) {
+		return builder(implementation, List.of(interfaces));
 	}
 
-	/**
-	 * Sets a class name for the generated class
-	 *
-	 * @param name a class name of the generated class
-	 */
-	public ClassBuilder<T> withClassName(String name) {
-		this.className = name;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, ClassBuilder<T>> {
+		private Builder() {
+			withStaticField(CLASS_BUILDER_MARKER, Void.class);
+		}
 
-	/**
-	 * Adds static initializer for the generated class
-	 * (code that would be executed inside a static initialization block of the generated class)
-	 *
-	 * @param expression an expression that represents static initializer
-	 */
-	public ClassBuilder<T> withStaticInitializer(Expression expression) {
-		staticInitializers.add(expression);
-		return this;
-	}
-
-	/**
-	 * Adds a constructor for the given class with specified argument types and an {@link Exception}
-	 * that would be executed inside the constructor
-	 *
-	 * @param argumentTypes types of arguments to the constructor
-	 * @param expression    an expression that would be executed inside the constructor
-	 */
-	public ClassBuilder<T> withConstructor(List<? extends Class<?>> argumentTypes, Expression expression) {
-		constructors.put(new Method("<init>", VOID_TYPE, argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
-		return this;
-	}
-
-	/**
-	 * Adds a constructor for the given class with an {@link Exception}
-	 * that would be executed inside the constructor
-	 *
-	 * @param expression an expression that would be executed inside the constructor
-	 * @see #withConstructor(List, Expression)
-	 */
-	public ClassBuilder<T> withConstructor(Expression expression) {
-		return withConstructor(List.of(), expression);
-	}
-
-	/**
-	 * Adds a new uninitialized field for a class
-	 *
-	 * @param field name of the field
-	 * @param type  type of the field
-	 */
-	public ClassBuilder<T> withField(String field, Class<?> type) {
-		fields.put(field, type);
-		return this;
-	}
-
-	/**
-	 * Adds a new initialized field for a class
-	 *
-	 * @param field name of the field
-	 * @param type  type of  the field
-	 * @param value an expression that represents how the new field will be initialized
-	 */
-	public ClassBuilder<T> withField(String field, Class<?> type, Expression value) {
-		fields.put(field, type);
-		fieldExpressions.put(field, value);
-		return this;
-	}
-
-	/**
-	 * Adds a new final initialized field for a class
-	 *
-	 * @param field name of the field
-	 * @param type  type of the field
-	 * @param value an expression that represents how the new final field will be initialized
-	 */
-	public ClassBuilder<T> withFinalField(String field, Class<?> type, Expression value) {
-		fields.put(field, type);
-		fieldsFinal.add(field);
-		fieldExpressions.put(field, value);
-		return this;
-	}
-
-	/**
-	 * Adds a new method to a class
-	 *
-	 * @param methodName    name of the method
-	 * @param returnType    a return type of the method
-	 * @param argumentTypes list of the method's arguments
-	 * @param expression    an expression that represents the method's body
-	 */
-	public ClassBuilder<T> withMethod(String methodName, Class<?> returnType, List<? extends Class<?>> argumentTypes, Expression expression) {
-		methods.put(new Method(methodName, getType(returnType), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
-		return this;
-	}
-
-	/**
-	 * Adds a new method to a class
-	 *
-	 * @param methodName name of the method
-	 * @param expression an expression that represents the method's body
-	 */
-	public ClassBuilder<T> withMethod(String methodName, Expression expression) {
-		if (methodName.contains("(")) {
-			Method method = Method.getMethod(methodName);
-			methods.put(method, expression);
+		/**
+		 * Sets a class name for the generated class
+		 *
+		 * @param name a class name of the generated class
+		 */
+		public Builder withClassName(String name) {
+			checkNotBuilt(this);
+			ClassBuilder.this.className = name;
 			return this;
 		}
 
-		Method foundMethod = null;
-		List<List<java.lang.reflect.Method>> listOfMethods = new ArrayList<>();
-		listOfMethods.add(List.of(Object.class.getMethods()));
-		listOfMethods.add(List.of(superclass.getMethods()));
-		listOfMethods.add(List.of(superclass.getDeclaredMethods()));
-		for (Class<?> type : interfaces) {
-			listOfMethods.add(List.of(type.getMethods()));
-			listOfMethods.add(List.of(type.getDeclaredMethods()));
+		/**
+		 * Adds static initializer for the generated class
+		 * (code that would be executed inside a static initialization block of the generated class)
+		 *
+		 * @param expression an expression that represents static initializer
+		 */
+		public Builder withStaticInitializer(Expression expression) {
+			checkNotBuilt(this);
+			staticInitializers.add(expression);
+			return this;
 		}
-		for (List<java.lang.reflect.Method> list : listOfMethods) {
-			for (java.lang.reflect.Method m : list) {
-				if (m.getName().equals(methodName)) {
-					Method method = getMethod(m);
-					if (foundMethod != null && !method.equals(foundMethod))
-						throw new IllegalArgumentException("Method " + method + " collides with " + foundMethod);
-					foundMethod = method;
+
+		/**
+		 * Adds a constructor for the given class with specified argument types and an {@link Exception}
+		 * that would be executed inside the constructor
+		 *
+		 * @param argumentTypes types of arguments to the constructor
+		 * @param expression    an expression that would be executed inside the constructor
+		 */
+		public Builder withConstructor(List<? extends Class<?>> argumentTypes, Expression expression) {
+			checkNotBuilt(this);
+			constructors.put(new Method("<init>", VOID_TYPE, argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
+			return this;
+		}
+
+		/**
+		 * Adds a constructor for the given class with an {@link Exception}
+		 * that would be executed inside the constructor
+		 *
+		 * @param expression an expression that would be executed inside the constructor
+		 * @see #withConstructor(List, Expression)
+		 */
+		public Builder withConstructor(Expression expression) {
+			checkNotBuilt(this);
+			return withConstructor(List.of(), expression);
+		}
+
+		/**
+		 * Adds a new uninitialized field for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of the field
+		 */
+		public Builder withField(String field, Class<?> type) {
+			checkNotBuilt(this);
+			fields.put(field, type);
+			return this;
+		}
+
+		/**
+		 * Adds a new initialized field for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of  the field
+		 * @param value an expression that represents how the new field will be initialized
+		 */
+		public Builder withField(String field, Class<?> type, Expression value) {
+			checkNotBuilt(this);
+			fields.put(field, type);
+			fieldExpressions.put(field, value);
+			return this;
+		}
+
+		/**
+		 * Adds a new final initialized field for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of the field
+		 * @param value an expression that represents how the new final field will be initialized
+		 */
+		public Builder withFinalField(String field, Class<?> type, Expression value) {
+			checkNotBuilt(this);
+			fields.put(field, type);
+			fieldsFinal.add(field);
+			fieldExpressions.put(field, value);
+			return this;
+		}
+
+		/**
+		 * Adds a new method to a class
+		 *
+		 * @param methodName    name of the method
+		 * @param returnType    a return type of the method
+		 * @param argumentTypes list of the method's arguments
+		 * @param expression    an expression that represents the method's body
+		 */
+		public Builder withMethod(String methodName, Class<?> returnType, List<? extends Class<?>> argumentTypes, Expression expression) {
+			checkNotBuilt(this);
+			methods.put(new Method(methodName, getType(returnType), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
+			return this;
+		}
+
+		/**
+		 * Adds a new method to a class
+		 *
+		 * @param methodName name of the method
+		 * @param expression an expression that represents the method's body
+		 */
+		public Builder withMethod(String methodName, Expression expression) {
+			checkNotBuilt(this);
+			if (methodName.contains("(")) {
+				Method method = Method.getMethod(methodName);
+				methods.put(method, expression);
+				return this;
+			}
+
+			Method foundMethod = null;
+			List<List<java.lang.reflect.Method>> listOfMethods = new ArrayList<>();
+			listOfMethods.add(List.of(Object.class.getMethods()));
+			listOfMethods.add(List.of(superclass.getMethods()));
+			listOfMethods.add(List.of(superclass.getDeclaredMethods()));
+			for (Class<?> type : interfaces) {
+				listOfMethods.add(List.of(type.getMethods()));
+				listOfMethods.add(List.of(type.getDeclaredMethods()));
+			}
+			for (List<java.lang.reflect.Method> list : listOfMethods) {
+				for (java.lang.reflect.Method m : list) {
+					if (m.getName().equals(methodName)) {
+						Method method = getMethod(m);
+						if (foundMethod != null && !method.equals(foundMethod))
+							throw new IllegalArgumentException("Method " + method + " collides with " + foundMethod);
+						foundMethod = method;
+					}
 				}
 			}
+			if (foundMethod == null)
+				throw new IllegalArgumentException(String.format("Could not find method '%s'", methodName));
+			methods.put(foundMethod, expression);
+			return this;
 		}
-		if (foundMethod == null)
-			throw new IllegalArgumentException(String.format("Could not find method '%s'", methodName));
-		methods.put(foundMethod, expression);
-		return this;
-	}
 
-	/**
-	 * @see #setStaticMethod(String, Class, List, Expression)
-	 */
-	public ClassBuilder<T> withStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Expression expression) {
-		setStaticMethod(methodName, returnClass, argumentTypes, expression);
-		return this;
+		/**
+		 * @see #setStaticMethod(String, Class, List, Expression)
+		 */
+		public Builder withStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Expression expression) {
+			checkNotBuilt(this);
+			setStaticMethod(methodName, returnClass, argumentTypes, expression);
+			return this;
+		}
+
+		/**
+		 * Adds a new uninitialized static field for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of the field
+		 */
+		public Builder withStaticField(String field, Class<?> type) {
+			checkNotBuilt(this);
+			fields.put(field, type);
+			fieldsStatic.add(field);
+			return this;
+		}
+
+		/**
+		 * Adds a new initialized static field for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of  the field
+		 * @param value an expression that represents how the new static field will be initialized
+		 */
+		public Builder withStaticField(String field, Class<?> type, Expression value) {
+			checkNotBuilt(this);
+			fields.put(field, type);
+			fieldsStatic.add(field);
+			fieldExpressions.put(field, value);
+			return this;
+		}
+
+		/**
+		 * Adds a new static final initialized field for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of the field
+		 * @param value an expression that represents how the new static final field will be initialized
+		 */
+		public Builder withStaticFinalField(String field, Class<?> type, Expression value) {
+			checkNotBuilt(this);
+			setStaticFinalField(field, type, value);
+			return this;
+		}
+
+		@Override
+		protected ClassBuilder<T> doBuild() {
+			return ClassBuilder.this;
+		}
 	}
 
 	/**
@@ -269,47 +330,20 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	}
 
 	/**
-	 * Adds a new uninitialized static field for a class
-	 *
-	 * @param field name of the field
-	 * @param type  type of the field
-	 */
-	public ClassBuilder<T> withStaticField(String field, Class<?> type) {
-		this.fields.put(field, type);
-		this.fieldsStatic.add(field);
-		return this;
-	}
-
-	/**
 	 * Adds a new initialized static field for a class
 	 *
 	 * @param field name of the field
 	 * @param type  type of  the field
 	 * @param value an expression that represents how the new static field will be initialized
 	 */
-	public ClassBuilder<T> withStaticField(String field, Class<?> type, Expression value) {
-		this.fields.put(field, type);
-		this.fieldsStatic.add(field);
-		this.fieldExpressions.put(field, value);
-		return this;
-	}
-
-	/**
-	 * Adds a new static final initialized field for a class
-	 *
-	 * @param field name of the field
-	 * @param type  type of the field
-	 * @param value an expression that represents how the new static final field will be initialized
-	 */
-	public ClassBuilder<T> withStaticFinalField(String field, Class<?> type, Expression value) {
-		this.fields.put(field, type);
-		this.fieldsStatic.add(field);
-		this.fieldsFinal.add(field);
+	public void setStaticFinalField(String field, Class<?> type, Expression value){
+		fields.put(field, type);
+		fieldsStatic.add(field);
+		fieldsFinal.add(field);
 		if (value instanceof Expression_Constant && !((Expression_Constant) value).isJvmPrimitive()) {
 			STATIC_CONSTANTS.put(((Expression_Constant) value).getId(), ((Expression_Constant) value).getValue());
 		}
-		this.fieldExpressions.put(field, value);
-		return this;
+		fieldExpressions.put(field, value);
 	}
 
 	/**

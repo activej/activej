@@ -37,17 +37,17 @@ public class CalciteCodecModule extends AbstractModule {
 			StreamCodec<Type> typeStreamCodec
 	) {
 		return StreamCodec.create((fieldNames, fieldTypes) -> {
-					RecordScheme recordScheme = RecordScheme.create(classLoader);
+					RecordScheme.Builder recordSchemeBuilder = RecordScheme.builder(classLoader);
 
 					for (int i = 0; i < fieldNames.size(); i++) {
 						String fieldName = fieldNames.get(i);
 						Type fieldType = fieldTypes.get(i);
 
-						recordScheme.addField(fieldName, fieldType);
+						recordSchemeBuilder.withField(fieldName, fieldType);
 					}
 
-					return recordScheme
-							.withComparator(recordScheme.getFields())
+					return recordSchemeBuilder
+							.withComparator(fieldNames)
 							.build();
 				},
 				RecordScheme::getFields, StreamCodecs.ofList(StreamCodecs.ofString()),

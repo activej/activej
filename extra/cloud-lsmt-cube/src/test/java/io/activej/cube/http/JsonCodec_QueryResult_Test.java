@@ -27,7 +27,7 @@ public class JsonCodec_QueryResult_Test {
 						"impressions", long.class,
 						"clicks", long.class));
 
-		RecordScheme recordScheme = RecordScheme.create()
+		RecordScheme recordScheme = RecordScheme.builder()
 				.withField("campaign", int.class)
 				.withField("site", String.class)
 				.withField("clicks", long.class)
