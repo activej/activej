@@ -21,7 +21,7 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;

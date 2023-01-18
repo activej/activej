@@ -22,7 +22,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtStorage_Client;

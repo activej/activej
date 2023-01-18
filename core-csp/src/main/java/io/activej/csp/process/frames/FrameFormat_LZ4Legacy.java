@@ -16,7 +16,7 @@
 
 package io.activej.csp.process.frames;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.xxhash.StreamingXXHash32;

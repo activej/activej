@@ -21,7 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.function.ConsumerEx;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.fs.AsyncFileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.exception.FileSystemIOException;

@@ -19,7 +19,7 @@ package io.activej.codegen;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expression_Constant;
 import io.activej.codegen.util.DefiningClassWriter;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.objectweb.asm.Type;

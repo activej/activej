@@ -24,7 +24,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;

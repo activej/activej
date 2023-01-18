@@ -1,4 +1,6 @@
-package io.activej.common.initializer;
+package io.activej.common.builder;
+
+import io.activej.common.initializer.WithInitializer;
 
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;

@@ -22,7 +22,7 @@ import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;

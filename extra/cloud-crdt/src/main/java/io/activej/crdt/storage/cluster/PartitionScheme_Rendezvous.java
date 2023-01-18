@@ -1,6 +1,6 @@
 package io.activej.crdt.storage.cluster;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;

@@ -23,7 +23,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.jmx.api.attribute.JmxAttribute;

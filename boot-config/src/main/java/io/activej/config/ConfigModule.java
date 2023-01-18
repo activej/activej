@@ -16,7 +16,7 @@
 
 package io.activej.config;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.module.AbstractModule;

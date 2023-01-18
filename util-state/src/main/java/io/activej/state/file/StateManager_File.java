@@ -1,6 +1,6 @@
 package io.activej.state.file;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.fs.BlockingFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.serializer.stream.*;

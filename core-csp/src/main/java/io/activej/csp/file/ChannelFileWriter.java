@@ -19,7 +19,7 @@ package io.activej.csp.file;
 import io.activej.async.file.AsyncFileService;
 import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;

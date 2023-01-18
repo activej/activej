@@ -17,7 +17,7 @@
 package io.activej.reactor.net;
 
 import io.activej.common.MemSize;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

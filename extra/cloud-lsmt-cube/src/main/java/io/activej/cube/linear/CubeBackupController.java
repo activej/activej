@@ -18,7 +18,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.exception.CubeException;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;

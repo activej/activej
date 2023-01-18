@@ -20,7 +20,7 @@ import io.activej.aggregation.AsyncChunkLocker;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;

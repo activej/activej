@@ -22,7 +22,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.ot.CubeDiff;

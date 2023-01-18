@@ -18,7 +18,7 @@ package io.activej.cube.http;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.AsyncCube;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.QueryResult;

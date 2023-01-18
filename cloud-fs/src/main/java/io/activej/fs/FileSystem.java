@@ -25,7 +25,7 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;

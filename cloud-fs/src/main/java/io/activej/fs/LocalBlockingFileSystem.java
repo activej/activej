@@ -17,7 +17,7 @@
 package io.activej.fs;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.service.BlockingService;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.ForbiddenPathException;

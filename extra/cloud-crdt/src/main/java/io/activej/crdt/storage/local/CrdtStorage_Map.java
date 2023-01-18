@@ -18,7 +18,7 @@ package io.activej.crdt.storage.local;
 
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;

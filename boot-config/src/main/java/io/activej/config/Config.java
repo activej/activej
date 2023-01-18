@@ -16,7 +16,7 @@
 
 package io.activej.config;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
 import org.jetbrains.annotations.Nullable;

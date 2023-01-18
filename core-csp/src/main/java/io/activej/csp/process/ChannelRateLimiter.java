@@ -17,7 +17,7 @@
 package io.activej.csp.process;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Nullable;

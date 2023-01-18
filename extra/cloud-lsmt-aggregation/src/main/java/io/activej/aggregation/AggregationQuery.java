@@ -16,7 +16,7 @@
 
 package io.activej.aggregation;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

@@ -20,7 +20,7 @@ import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncRunnable;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;

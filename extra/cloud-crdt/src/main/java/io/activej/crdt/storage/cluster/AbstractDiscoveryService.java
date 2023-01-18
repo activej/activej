@@ -1,7 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;

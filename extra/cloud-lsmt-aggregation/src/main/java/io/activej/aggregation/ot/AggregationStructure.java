@@ -19,7 +19,7 @@ package io.activej.aggregation.ot;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

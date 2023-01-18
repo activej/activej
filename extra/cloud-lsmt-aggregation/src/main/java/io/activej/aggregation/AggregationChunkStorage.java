@@ -24,7 +24,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;

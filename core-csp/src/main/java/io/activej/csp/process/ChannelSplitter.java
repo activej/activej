@@ -16,7 +16,7 @@
 
 package io.activej.csp.process;
 
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;

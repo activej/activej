@@ -19,7 +19,7 @@ package io.activej.crdt.wal;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
