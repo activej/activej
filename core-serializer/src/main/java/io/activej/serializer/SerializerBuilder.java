@@ -682,7 +682,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 							serializerDef.encoder(this, BUF, POS, VALUE, version, compatibilityLevel),
 							POS));
 				}
-				return set(pos, staticCallSelf(methodName, buf, pos, value));
+				return Expression.set(pos, staticCallSelf(methodName, buf, pos, value));
 			}
 		};
 	}

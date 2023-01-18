@@ -507,12 +507,12 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				Expression expression = entry.getValue();
 
 				if (expression instanceof Expression_Constant && !((Expression_Constant) expression).isJvmPrimitive()) {
-					set(staticField(field), cast(
+					Expression.set(staticField(field), cast(
 							staticCall(ClassBuilder.class, "getStaticConstant", value(((Expression_Constant) expression).getId())),
 							this.fields.get(field)))
 							.load(ctx);
 				} else {
-					set(staticField(field), expression).load(ctx);
+					Expression.set(staticField(field), expression).load(ctx);
 				}
 			}
 

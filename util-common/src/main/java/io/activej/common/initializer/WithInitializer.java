@@ -16,6 +16,10 @@
 
 package io.activej.common.initializer;
 
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+
 /**
  * An interface that marks a class as initializable
  *
@@ -33,6 +37,18 @@ public interface WithInitializer<T extends WithInitializer<T>> {
 	default T initialize(Initializer<? super T> initializer) {
 		initializer.initialize((T) this);
 		return (T) this;
+	}
+
+	default <V> T set(BiConsumer<T, ? super V> setter, V value) {
+		return initialize(instance -> setter.accept(instance, value));
+	}
+
+	default <V> T setIf(BiConsumer<T, ? super V> setter, V value, Predicate<? super V> predicate) {
+		return predicate.test(value) ? set(setter, value) : (T) this;
+	}
+
+	default <V> T setIfNotNull(BiConsumer<T, ? super V> setter, V value) {
+		return setIf(setter, value, Objects::nonNull);
 	}
 
 }

@@ -49,13 +49,13 @@ public final class MeasureHyperLogLog extends Measure implements WithInitializer
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return set(accumulator, constructor(HyperLogLog.class, value(registers)));
+		return Expression.set(accumulator, constructor(HyperLogLog.class, value(registers)));
 	}
 
 	@Override
 	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
 		return sequence(
-				set(accumulator, constructor(HyperLogLog.class, value(registers))),
+				Expression.set(accumulator, constructor(HyperLogLog.class, value(registers))),
 				call(accumulator, "union", firstAccumulator));
 	}
 
@@ -69,7 +69,7 @@ public final class MeasureHyperLogLog extends Measure implements WithInitializer
 	public Expression initAccumulatorWithValue(Variable accumulator,
 			Variable firstValue) {
 		return sequence(
-				set(accumulator, constructor(HyperLogLog.class, value(registers))),
+				Expression.set(accumulator, constructor(HyperLogLog.class, value(registers))),
 				add(accumulator, firstValue));
 	}
 

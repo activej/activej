@@ -34,10 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -216,21 +213,19 @@ public final class ConfigConverters {
 		return new ConfigConverter_Complex<>(ServerSocketSettings.create()) {
 			@Override
 			protected ServerSocketSettings provide(Config config, ServerSocketSettings defaultValue) {
-				ServerSocketSettings.Builder builder = ServerSocketSettings.builder();
-
-				consume(ServerSocketSettings.Builder::withBacklog,
+				return ServerSocketSettings.builder()
+						.set(
+								ServerSocketSettings.Builder::withBacklog,
 								config.get(ofInteger(), "backlog", defaultValue.getBacklog()))
-						.andThen(consumeIfNotNull(
+						.setIfNotNull(
 								ServerSocketSettings.Builder::withReceiveBufferSize,
 								config.get(ofMemSize(), "receiveBufferSize",
-										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null))
+						.setIfNotNull(
 								ServerSocketSettings.Builder::withReuseAddress,
 								config.get(ofBoolean(), "reuseAddress",
-										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null)))
-						.accept(builder);
-
-				return builder.build();
+										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null))
+						.build();
 			}
 		};
 	}
@@ -239,46 +234,43 @@ public final class ConfigConverters {
 		return new ConfigConverter_Complex<>(SocketSettings.create()) {
 			@Override
 			protected SocketSettings provide(Config config, SocketSettings defaultValue) {
-				SocketSettings.Builder builder = SocketSettings.builder();
-
-						consumeIfNotNull(
+				return SocketSettings.builder()
+						.setIfNotNull(
 								SocketSettings.Builder::withReceiveBufferSize,
 								config.get(ofMemSize(), "receiveBufferSize",
 										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null))
-						.andThen(consumeIfNotNull(
+						.setIfNotNull(
 								SocketSettings.Builder::withSendBufferSize,
 								config.get(ofMemSize(), "sendBufferSize",
-										defaultValue.hasSendBufferSize() ? defaultValue.getSendBufferSize() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasSendBufferSize() ? defaultValue.getSendBufferSize() : null))
+						.setIfNotNull(
 								SocketSettings.Builder::withReuseAddress,
 								config.get(ofBoolean(), "reuseAddress",
-										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null))
+						.setIfNotNull(
 								SocketSettings.Builder::withKeepAlive,
 								config.get(ofBoolean(), "keepAlive",
-										defaultValue.hasKeepAlive() ? defaultValue.getKeepAlive() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasKeepAlive() ? defaultValue.getKeepAlive() : null))
+						.setIfNotNull(
 								SocketSettings.Builder::withTcpNoDelay,
 								config.get(ofBoolean(), "tcpNoDelay",
-										defaultValue.hasTcpNoDelay() ? defaultValue.getTcpNoDelay() : null)))
-						.andThen(consumeIfNotNull(SocketSettings.Builder::withLingerTimeout,
+										defaultValue.hasTcpNoDelay() ? defaultValue.getTcpNoDelay() : null))
+						.setIfNotNull(
+								SocketSettings.Builder::withLingerTimeout,
 								config.get(ofDuration(), "lingerTimeout",
-										defaultValue.hasLingerTimeout() ? defaultValue.getLingerTimeout() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasLingerTimeout() ? defaultValue.getLingerTimeout() : null))
+						.setIfNotNull(
 								SocketSettings.Builder::withImplReadTimeout,
 								config.get(ofDuration(), "implReadTimeout",
-										defaultValue.hasImplReadTimeout() ? defaultValue.getImplReadTimeout() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasImplReadTimeout() ? defaultValue.getImplReadTimeout() : null))
+						.setIfNotNull(
 								SocketSettings.Builder::withImplWriteTimeout,
 								config.get(ofDuration(), "implWriteTimeout",
-										defaultValue.hasImplWriteTimeout() ? defaultValue.getImplWriteTimeout() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasImplWriteTimeout() ? defaultValue.getImplWriteTimeout() : null))
+						.setIfNotNull(
 								SocketSettings.Builder::withImplReadBufferSize,
 								config.get(ofMemSize(), "implReadBufferSize",
-										defaultValue.hasReadBufferSize() ? defaultValue.getImplReadBufferSize() : null)))
-						.accept(builder);
-
-				return builder.build();
+										defaultValue.hasReadBufferSize() ? defaultValue.getImplReadBufferSize() : null)).build();
 			}
 		};
 	}
@@ -287,27 +279,24 @@ public final class ConfigConverters {
 		return new ConfigConverter_Complex<>(DatagramSocketSettings.create()) {
 			@Override
 			protected DatagramSocketSettings provide(Config config, DatagramSocketSettings defaultValue) {
-				DatagramSocketSettings.Builder builder = DatagramSocketSettings.builder();
-
-						consumeIfNotNull(
+				return DatagramSocketSettings.builder()
+						.setIfNotNull(
 								DatagramSocketSettings.Builder::withReceiveBufferSize,
 								config.get(ofMemSize(), "receiveBufferSize",
 										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null))
-						.andThen(consumeIfNotNull(
+						.setIfNotNull(
 								DatagramSocketSettings.Builder::withSendBufferSize,
 								config.get(ofMemSize(), "sendBufferSize",
-										defaultValue.hasSendBufferSize() ? defaultValue.getSendBufferSize() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasSendBufferSize() ? defaultValue.getSendBufferSize() : null))
+						.setIfNotNull(
 								DatagramSocketSettings.Builder::withReuseAddress,
 								config.get(ofBoolean(), "reuseAddress",
-										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null)))
-						.andThen(consumeIfNotNull(
+										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null))
+						.setIfNotNull(
 								DatagramSocketSettings.Builder::withBroadcast,
 								config.get(ofBoolean(), "broadcast",
-										defaultValue.hasBroadcast() ? defaultValue.getBroadcast() : null)))
-						.accept(builder);
-
-				return builder.build();
+										defaultValue.hasBroadcast() ? defaultValue.getBroadcast() : null))
+						.build();
 			}
 		};
 	}
@@ -493,21 +482,6 @@ public final class ConfigConverters {
 				throw new IllegalArgumentException("Should not use executor config converter with default value");
 			}
 		};
-	}
-
-	public static <T, V> Consumer<T> consume(BiConsumer<T, ? super V> modifier, V value) {
-		return instance -> modifier.accept(instance, value);
-	}
-
-	public static <T, V> Consumer<T> consumeIf(BiConsumer<T, ? super V> modifier, V value, Predicate<? super V> predicate) {
-		return instance -> {
-			if (!predicate.test(value)) return;
-			modifier.accept(instance, value);
-		};
-	}
-
-	public static <T, V> Consumer<T> consumeIfNotNull(BiConsumer<T, ? super V> modifier, V value) {
-		return consumeIf(modifier, value, Objects::nonNull);
 	}
 
 }
