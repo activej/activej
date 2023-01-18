@@ -48,7 +48,7 @@ public final class Initializers {
 
 	public static Initializer<FileSystemServer.Builder> ofFileSystemServer(Config config) {
 		return builder -> builder
-				.withInitializer(ofAbstractServer(config));
+				.initialize(ofAbstractServer(config));
 	}
 
 	public static Initializer<ClusterRepartitionController.Builder> ofClusterRepartitionController(Config config) {

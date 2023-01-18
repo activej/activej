@@ -52,7 +52,7 @@ public class Utils {
 		return classLoader.ensureClass(
 				ClassKey.of(Object.class, keyList),
 				() -> ClassBuilder.create((Class<K>) Comparable.class)
-						.withInitializer(cb ->
+						.initialize(cb ->
 								keys.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
 						.withMethod("compareTo", comparableImpl(keyList))
@@ -122,10 +122,10 @@ public class Utils {
 		return (Class<T>) classLoader.ensureClass(
 				ClassKey.of(Object.class, keysList, fieldsList),
 				() -> ClassBuilder.create(Object.class)
-						.withInitializer(cb ->
+						.initialize(cb ->
 								keys.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
-						.withInitializer(cb ->
+						.initialize(cb ->
 								fields.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
 						.withMethod("toString", toStringImpl(concat(keysList, fieldsList))));

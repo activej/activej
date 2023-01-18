@@ -64,15 +64,15 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	NioReactor primaryReactor(Config config) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop.primary")));
+				.initialize(ofEventloop(config.getChild("eventloop.primary")));
 	}
 
 	@Provides
 	@Worker
 	NioReactor workerReactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.initialize(ofEventloop(config.getChild("eventloop.worker")))
+				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides
@@ -83,7 +83,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<HttpServer> workerServers, Config config) {
 		return PrimaryServer.builder(primaryReactor, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config.getChild("http")))
+				.initialize(ofPrimaryServer(config.getChild("http")))
 				.build();
 	}
 
@@ -91,7 +91,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Worker
 	HttpServer workerServer(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.withInitializer(ofHttpWorker(config.getChild("http")))
+				.initialize(ofHttpWorker(config.getChild("http")))
 				.build();
 	}
 

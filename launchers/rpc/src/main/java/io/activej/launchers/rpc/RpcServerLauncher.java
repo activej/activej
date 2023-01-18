@@ -50,8 +50,8 @@ public abstract class RpcServerLauncher extends Launcher {
 	public NioReactor reactor(Config config,
 			OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.initialize(ofEventloop(config.getChild("eventloop")))
+				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides

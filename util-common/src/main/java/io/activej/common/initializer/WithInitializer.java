@@ -16,8 +16,6 @@
 
 package io.activej.common.initializer;
 
-import java.util.function.Consumer;
-
 /**
  * An interface that marks a class as initializable
  *
@@ -32,7 +30,7 @@ public interface WithInitializer<T extends WithInitializer<T>> {
 	 * @param initializer an initializing consumer
 	 * @return this same object
 	 */
-	default T withInitializer(Consumer<? super T> initializer) {
+	default T initialize(Initializer<? super T> initializer) {
 		initializer.accept((T) this);
 		return (T) this;
 	}

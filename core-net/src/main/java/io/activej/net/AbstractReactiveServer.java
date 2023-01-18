@@ -17,6 +17,7 @@
 package io.activej.net;
 
 import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.initializer.Initializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
@@ -46,7 +47,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
 
 import static io.activej.net.socket.tcp.TcpSocket.wrapChannel;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapServerSocket;
@@ -124,8 +124,8 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return (Self) this;
 		}
 
-		public final Self withServerSocketSettings(Consumer<ServerSocketSettings.Builder> initializer) {
-			return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).withInitializer(initializer).build());
+		public final Self withServerSocketSettings(Initializer<ServerSocketSettings.Builder> initializer) {
+			return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).initialize(initializer).build());
 		}
 
 		public final Self withSocketSettings(SocketSettings socketSettings) {
@@ -134,8 +134,8 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return (Self) this;
 		}
 
-		public final Self withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
+		public final Self withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		public final Self withListenAddresses(List<InetSocketAddress> addresses) {

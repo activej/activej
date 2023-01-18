@@ -22,6 +22,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.initializer.Initializer;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.storage.AsyncCrdtStorage;
@@ -50,7 +51,6 @@ import io.activej.serializer.BinarySerializer;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.function.Consumer;
 
 import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -151,8 +151,8 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 			return this;
 		}
 
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
+		public Builder withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		@Override

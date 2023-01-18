@@ -66,8 +66,8 @@ public final class DataflowServerModule extends AbstractModule {
 	@Provides
 	DataflowServer server(@Named("Dataflow") NioReactor reactor, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
 		return DataflowServer.builder(reactor, codec, serializers, environment)
-				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
-				.withInitializer(builder -> builder.withSocketSettings(settings -> settings.withTcpNoDelay(true)))
+				.initialize(ofAbstractServer(config.getChild("dataflow.server")))
+				.initialize(builder -> builder.withSocketSettings(settings -> settings.withTcpNoDelay(true)))
 				.build();
 	}
 

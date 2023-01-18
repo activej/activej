@@ -61,14 +61,14 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Named("clusterDeadCheck")
 	TaskScheduler deadCheckScheduler(Config config, FileSystemPartitions partitions) {
 		return TaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
-				.withInitializer(ofReactorTaskScheduler(config.getChild("fs.repartition.deadCheck")));
+				.initialize(ofReactorTaskScheduler(config.getChild("fs.repartition.deadCheck")));
 	}
 
 	@Provides
 	@Eager
 	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")))
+				.initialize(ofHttpServer(config.getChild("fs.http.gui")))
 				.build();
 	}
 
@@ -80,7 +80,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Provides
 	AsyncFileSystem fileSystem(Reactor reactor, FileSystemPartitions partitions, Config config) {
 		return FileSystem_Cluster.builder(reactor, partitions)
-				.withInitializer(ofClusterFileSystem(config.getChild("fs.cluster")))
+				.initialize(ofClusterFileSystem(config.getChild("fs.cluster")))
 				.build();
 	}
 

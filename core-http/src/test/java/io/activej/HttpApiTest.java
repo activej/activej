@@ -120,7 +120,7 @@ public final class HttpApiTest {
 				.withHeader(CONTENT_TYPE, ofContentType(requestContentType))
 				.withHeader(IF_MODIFIED_SINCE, ofInstant(dateIMS))
 				.withHeader(IF_UNMODIFIED_SINCE, ofInstant(dateIUMS))
-				.withInitializer(httpRequest -> requestCookies.forEach(httpRequest::addCookie));
+				.initialize(httpRequest -> requestCookies.forEach(httpRequest::addCookie));
 	}
 
 	@SuppressWarnings("ConstantConditions")

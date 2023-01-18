@@ -53,7 +53,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 			ClusterRepartitionController controller,
 			Config config) {
 		return TaskScheduler.create(controller.getReactor(), controller::repartition)
-				.withInitializer(ofReactorTaskScheduler(config.getChild("fs.repartition")));
+				.initialize(ofReactorTaskScheduler(config.getChild("fs.repartition")));
 	}
 
 	@Provides
@@ -61,7 +61,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Named("clusterDeadCheck")
 	TaskScheduler deadCheckScheduler(Config config, FileSystemPartitions partitions) {
 		return TaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
-				.withInitializer(ofReactorTaskScheduler(config.getChild("fs.repartition.deadCheck")));
+				.initialize(ofReactorTaskScheduler(config.getChild("fs.repartition.deadCheck")));
 	}
 
 	@Provides
@@ -72,7 +72,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 		assert localPartitionId != null;
 
 		return ClusterRepartitionController.builder(reactor, localPartitionId, partitions)
-				.withInitializer(ofClusterRepartitionController(config.getChild("fs.repartition")))
+				.initialize(ofClusterRepartitionController(config.getChild("fs.repartition")))
 				.build();
 	}
 

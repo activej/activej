@@ -59,7 +59,7 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	@Provides
 	public NioReactor primaryReactor(Config config) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop.primary")));
+				.initialize(ofEventloop(config.getChild("eventloop.primary")));
 	}
 
 	@Provides
@@ -67,8 +67,8 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	public NioReactor workerReactor(Config config,
 			OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.initialize(ofEventloop(config.getChild("eventloop.worker")))
+				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides
@@ -79,7 +79,7 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<RpcServer> workerServers, Config config) {
 		return PrimaryServer.builder(primaryReactor, workerServers.getList())
-				.withInitializer(ofPrimaryServer(config))
+				.initialize(ofPrimaryServer(config))
 				.build();
 	}
 

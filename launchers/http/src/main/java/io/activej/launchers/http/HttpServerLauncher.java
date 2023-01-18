@@ -57,14 +57,14 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.initialize(ofEventloop(config.getChild("eventloop")))
+				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides
 	HttpServer server(NioReactor reactor, AsyncServlet rootServlet, Config config) {
 		return HttpServer.builder(reactor, rootServlet)
-				.withInitializer(ofHttpServer(config.getChild("http")))
+				.initialize(ofHttpServer(config.getChild("http")))
 				.build();
 	}
 

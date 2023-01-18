@@ -124,7 +124,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 				.register(Closeable.class, forCloseable())
 				.register(ExecutorService.class, forExecutorService())
 				.register(Timer.class, forTimer())
-				.withInitializer(module -> {
+				.initialize(module -> {
 					try {
 						currentThread().getContextClassLoader().loadClass("javax.sql.DataSource");
 						module.register(DataSource.class, forDataSource());

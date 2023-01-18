@@ -16,6 +16,7 @@
 
 package io.activej.reactor.net;
 
+import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Consumer;
 
 public final class BlockingSocketServer implements WithInitializer<BlockingSocketServer> {
 	public interface AcceptHandler {
@@ -85,8 +85,8 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		return this;
 	}
 
-	public BlockingSocketServer withServerSocketSettings(Consumer<ServerSocketSettings.Builder> initializer) {
-		return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).withInitializer(initializer).build());
+	public BlockingSocketServer withServerSocketSettings(Initializer<ServerSocketSettings.Builder> initializer) {
+		return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).initialize(initializer).build());
 	}
 
 	public BlockingSocketServer withSocketSettings(SocketSettings socketSettings) {
@@ -94,8 +94,8 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		return this;
 	}
 
-	public BlockingSocketServer withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
-		return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
+	public BlockingSocketServer withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
+		return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 	}
 
 	private void serveClient(Socket socket) throws IOException {

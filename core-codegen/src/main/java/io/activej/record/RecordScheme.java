@@ -232,7 +232,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 								superConstructor(arg(0)))
 						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
 						.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
-						.withInitializer(b -> {
+						.initialize(b -> {
 							for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
 								Type type = entry.getValue();
 								//noinspection rawtypes
@@ -250,7 +250,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 					ClassKey.of(RecordGetter.class, this, field),
 					() -> ClassBuilder.create(RecordGetter.class)
 							.withMethod("get", property)
-							.withInitializer(cb -> {
+							.initialize(cb -> {
 								if (isImplicitType(fieldType)) {
 									cb.withMethod("getInt", property);
 									cb.withMethod("getLong", property);
@@ -270,7 +270,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 					ClassKey.of(RecordSetter.class, this, field),
 					() -> ClassBuilder.create(RecordSetter.class)
 							.withMethod("set", set)
-							.withInitializer(cb -> {
+							.initialize(cb -> {
 								if (isImplicitType(fieldType)) {
 									cb.withMethod("setInt", set);
 									cb.withMethod("setLong", set);

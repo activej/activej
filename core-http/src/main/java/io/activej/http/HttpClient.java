@@ -21,6 +21,7 @@ import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -55,7 +56,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -303,8 +303,8 @@ public final class HttpClient extends AbstractNioReactive
 		return this;
 	}
 
-	public HttpClient withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
-		return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
+	public HttpClient withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
+		return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 	}
 
 	public HttpClient withDnsClient(AsyncDnsClient asyncDnsClient) {

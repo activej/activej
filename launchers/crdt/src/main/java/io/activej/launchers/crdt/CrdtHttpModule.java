@@ -44,7 +44,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	@Provides
 	HttpServer server(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.withInitializer(ofHttpServer(config.getChild("crdt.http")))
+				.initialize(ofHttpServer(config.getChild("crdt.http")))
 				.build();
 	}
 

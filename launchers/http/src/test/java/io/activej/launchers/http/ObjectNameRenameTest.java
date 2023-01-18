@@ -42,7 +42,7 @@ public class ObjectNameRenameTest {
 		Injector injector = Injector.of(
 				new TestModule(),
 				JmxModule.create()
-						.withInitializer(Initializers.renamedClassNames(
+						.initialize(Initializers.renamedClassNames(
 								Map.of(
 										HttpServer.class, "AsyncHttpServer",
 										AsyncHttpClient.class, "AsyncHttpClient",

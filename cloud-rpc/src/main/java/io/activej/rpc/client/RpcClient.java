@@ -24,6 +24,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.initializer.Initializer;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -59,7 +60,6 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 
 import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
@@ -184,8 +184,8 @@ public final class RpcClient extends AbstractNioReactive
 		 * @param initializer modifier of current socket setings
 		 * @return the builder for RPC client with specified socket settings
 		 */
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
+		public Builder withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		/**

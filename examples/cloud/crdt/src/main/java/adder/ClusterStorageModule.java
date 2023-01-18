@@ -47,7 +47,7 @@ public final class ClusterStorageModule extends AbstractModule {
 	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(NioReactor reactor,
 			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config) {
 		return CrdtServer.builder(reactor, localStorage, serializer)
-				.withInitializer(ofAbstractServer(config.getChild("crdt.server")))
+				.initialize(ofAbstractServer(config.getChild("crdt.server")))
 				.build();
 	}
 

@@ -56,15 +56,15 @@ public class SimpleTcpServerLauncher extends Launcher {
 	@Provides
 	public NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
-				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.initialize(ofEventloop(config.getChild("eventloop")))
+				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Eager
 	@Provides
 	FileSystemServer fileSystemServer(NioReactor reactor, AsyncFileSystem fileSystem, Config config) {
 		return FileSystemServer.builder(reactor, fileSystem)
-				.withInitializer(ofFileSystemServer(config.getChild("fs")))
+				.initialize(ofFileSystemServer(config.getChild("fs")))
 				.build();
 	}
 
@@ -72,7 +72,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 	@Eager
 	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")))
+				.initialize(ofHttpServer(config.getChild("fs.http.gui")))
 				.build();
 	}
 

@@ -412,7 +412,7 @@ public final class Cube extends AbstractReactive
 		private void addAggregation(AggregationConfig aggregationConfig) {
 			Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat)
 					.withStructure(AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
-							.withInitializer(s -> {
+							.initialize(s -> {
 								for (String dimensionId : aggregationConfig.dimensions) {
 									s.withKey(dimensionId, dimensionTypes.get(dimensionId));
 								}
@@ -1073,7 +1073,7 @@ public final class Cube extends AbstractReactive
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(MeasuresFunction.class, resultClass, resultComputedMeasures),
 					() -> ClassBuilder.create(MeasuresFunction.class)
-							.withInitializer(cb ->
+							.initialize(cb ->
 									resultComputedMeasures.forEach(computedMeasure ->
 											cb.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
 							.withMethod("computeMeasures", sequence(seq -> {

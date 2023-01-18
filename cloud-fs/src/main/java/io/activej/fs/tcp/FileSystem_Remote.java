@@ -24,6 +24,7 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.AbstractBuilder;
+import io.activej.common.initializer.Initializer;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -52,7 +53,6 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -132,8 +132,8 @@ public final class FileSystem_Remote extends AbstractNioReactive
 			return this;
 		}
 
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
+		public Builder withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		public Builder withConnectionTimeout(Duration connectionTimeout) {

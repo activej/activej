@@ -258,8 +258,8 @@ public final class ReportingTest extends CubeTestBase {
 				JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
 		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
-				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
-				.withInitializer(cube -> MEASURES.forEach(cube::withMeasure))
+				.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
+				.initialize(cube -> MEASURES.forEach(cube::withMeasure))
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign")
 				.withRelation("site", "affiliate")

@@ -82,8 +82,8 @@ public class Initializers {
 
 	public static Initializer<HttpServer.Builder> ofHttpServer(Config config) {
 		return builder -> builder
-				.withInitializer(ofAbstractServer(config))
-				.withInitializer(ofHttpWorker(config));
+				.initialize(ofAbstractServer(config))
+				.initialize(ofHttpWorker(config));
 	}
 
 	public static Initializer<HttpServer.Builder> ofHttpWorker(Config config) {
