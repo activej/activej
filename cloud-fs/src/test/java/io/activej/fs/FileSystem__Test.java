@@ -114,8 +114,10 @@ public final class FileSystem__Test {
 		Path path = clientPath.resolve("c.txt");
 
 		await(client.upload("1/c.txt")
-				.then(consumer -> ChannelFileReader.open(newCachedThreadPool(), path)
-						.then(file -> file.withBufferSize(MemSize.of(2)).streamTo(consumer))));
+				.then(consumer -> ChannelFileReader.builderOpen(newCachedThreadPool(), path)
+						.then(file -> file.withBufferSize(MemSize.of(2))
+								.build()
+								.streamTo(consumer))));
 
 		assertEquals(-1, Files.mismatch(path, storagePath.resolve("1/c.txt")));
 	}

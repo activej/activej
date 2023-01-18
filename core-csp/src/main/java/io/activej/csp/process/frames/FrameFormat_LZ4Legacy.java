@@ -16,7 +16,7 @@
 
 package io.activej.csp.process.frames;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.xxhash.StreamingXXHash32;
@@ -27,7 +27,7 @@ import java.util.zip.Checksum;
 import static io.activej.common.Checks.checkArgument;
 
 @Deprecated
-public final class FrameFormat_LZ4Legacy implements FrameFormat, WithInitializer<FrameFormat_LZ4Legacy> {
+public final class FrameFormat_LZ4Legacy implements FrameFormat {
 	static final byte[] MAGIC = {'L', 'Z', '4', 'B', 'l', 'o', 'c', 'k'};
 	static final byte[] LAST_BYTES;
 	static final byte[] MAGIC_AND_LAST_BYTES;
@@ -70,38 +70,59 @@ public final class FrameFormat_LZ4Legacy implements FrameFormat, WithInitializer
 	}
 
 	public static FrameFormat_LZ4Legacy create() {
-		return new FrameFormat_LZ4Legacy(LZ4Factory.fastestInstance(), XXHashFactory.fastestInstance());
+		return builder().build();
 	}
 
 	public static FrameFormat_LZ4Legacy create(LZ4Factory lz4Factory, XXHashFactory hashFactory) {
-		return new FrameFormat_LZ4Legacy(lz4Factory, hashFactory);
+		return builder(lz4Factory, hashFactory).build();
 	}
 
-	public FrameFormat_LZ4Legacy withHighCompression() {
-		this.compressionLevel = -1;
-		return this;
+	public static Builder builder() {
+		return new FrameFormat_LZ4Legacy(LZ4Factory.fastestInstance(), XXHashFactory.fastestInstance()).new Builder();
 	}
 
-	public FrameFormat_LZ4Legacy withCompressionLevel(int compressionLevel) {
-		checkArgument(compressionLevel >= -1);
-		this.compressionLevel = compressionLevel;
-		return this;
+	public static Builder builder(LZ4Factory lz4Factory, XXHashFactory hashFactory) {
+		return new FrameFormat_LZ4Legacy(lz4Factory, hashFactory).new Builder();
 	}
 
-	public FrameFormat_LZ4Legacy withIgnoreMissingEndOfStream(boolean ignore) {
-		this.ignoreMissingEndOfStreamBlock = ignore;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, FrameFormat_LZ4Legacy>{
+		private Builder() {}
 
-	/**
-	 * Whether streaming hash will be used as a {@link Checksum}, same as in LZ4 library stream encoder/decoder
-	 * <p>
-	 * Useful for interoperation with {@link net.jpountz.lz4.LZ4BlockOutputStream} and {@link net.jpountz.lz4.LZ4BlockInputStream}
-	 */
-	@Deprecated
-	public FrameFormat_LZ4Legacy withLegacyChecksum(boolean legacyChecksum) {
-		this.legacyChecksum = legacyChecksum;
-		return this;
+		public Builder withHighCompression() {
+			checkNotBuilt(this);
+			FrameFormat_LZ4Legacy.this.compressionLevel = -1;
+			return this;
+		}
+
+		public Builder withCompressionLevel(int compressionLevel) {
+			checkNotBuilt(this);
+			checkArgument(compressionLevel >= -1);
+			FrameFormat_LZ4Legacy.this.compressionLevel = compressionLevel;
+			return this;
+		}
+
+		public Builder withIgnoreMissingEndOfStream(boolean ignore) {
+			checkNotBuilt(this);
+			FrameFormat_LZ4Legacy.this.ignoreMissingEndOfStreamBlock = ignore;
+			return this;
+		}
+
+		/**
+		 * Whether streaming hash will be used as a {@link Checksum}, same as in LZ4 library stream encoder/decoder
+		 * <p>
+		 * Useful for interoperation with {@link net.jpountz.lz4.LZ4BlockOutputStream} and {@link net.jpountz.lz4.LZ4BlockInputStream}
+		 */
+		@Deprecated
+		public Builder withLegacyChecksum(boolean legacyChecksum) {
+			checkNotBuilt(this);
+			FrameFormat_LZ4Legacy.this.legacyChecksum = legacyChecksum;
+			return this;
+		}
+
+		@Override
+		protected FrameFormat_LZ4Legacy doBuild() {
+			return FrameFormat_LZ4Legacy.this;
+		}
 	}
 
 	@Override

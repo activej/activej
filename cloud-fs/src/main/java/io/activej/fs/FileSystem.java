@@ -264,18 +264,15 @@ public final class FileSystem extends AbstractReactive
 				})
 				.then(translateScalarErrorsFn(name))
 				.whenComplete(appendBeginPromise.recordStats())
-				.map(channel -> {
-					ChannelFileWriter writer = ChannelFileWriter.create(reactor, executor, channel)
-							.withOffset(offset);
-					if (fsyncUploads && !appendOptions.contains(SYNC)) {
-						writer.withForceOnClose(true);
-					}
-					return writer
-							.withAcknowledgement(ack -> ack
-									.then(translateScalarErrorsFn())
-									.whenComplete(appendFinishPromise.recordStats())
-									.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)));
-				})
+				.map(channel -> ChannelFileWriter.builder(reactor, executor, channel)
+						.withOffset(offset)
+						.setIf(ChannelFileWriter.Builder::withForceOnClose, true, $ ->
+								fsyncUploads && !appendOptions.contains(SYNC))
+						.build()
+						.withAcknowledgement(ack -> ack
+								.then(translateScalarErrorsFn())
+								.whenComplete(appendFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this))))
 				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
@@ -295,10 +292,11 @@ public final class FileSystem extends AbstractReactive
 					}
 					return channel;
 				})
-				.map(channel -> ChannelFileReader.create(reactor, executor, channel)
+				.map(channel -> ChannelFileReader.builder(reactor, executor, channel)
 						.withBufferSize(readerBufferSize)
 						.withOffset(offset)
 						.withLimit(limit)
+						.build()
 						.withEndOfStream(eos -> eos
 								.then(translateScalarErrorsFn(name))
 								.whenComplete(downloadFinishPromise.recordStats())
@@ -472,26 +470,22 @@ public final class FileSystem extends AbstractReactive
 					Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
-				.map(pathAndChannel -> {
-					ChannelFileWriter writer = ChannelFileWriter.create(reactor, executor, pathAndChannel.value2());
-					if (fsyncUploads) {
-						writer.withForceOnClose(true);
-					}
-					return writer
-							.transformWith(transformer)
-							.withAcknowledgement(ack -> ack
-									.then(() -> execute(() -> {
-										Path target = resolve(name);
-										doMove(pathAndChannel.value1(), target);
-										if (fsyncDirectories) {
-											tryFsync(target.getParent());
-										}
-									}))
-									.then(translateScalarErrorsFn())
-									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.value1())))
-									.whenComplete(uploadFinishPromise.recordStats())
-									.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this)));
-				})
+				.map(pathAndChannel -> ChannelFileWriter.builder(reactor, executor, pathAndChannel.value2())
+						.setIf(ChannelFileWriter.Builder::withForceOnClose, true, $ -> fsyncUploads)
+						.build()
+						.transformWith(transformer)
+						.withAcknowledgement(ack -> ack
+								.then(() -> execute(() -> {
+									Path target = resolve(name);
+									doMove(pathAndChannel.value1(), target);
+									if (fsyncDirectories) {
+										tryFsync(target.getParent());
+									}
+								}))
+								.then(translateScalarErrorsFn())
+								.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.value1())))
+								.whenComplete(uploadFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this))))
 				.then(translateScalarErrorsFn(name))
 				.whenComplete(uploadBeginPromise.recordStats());
 	}

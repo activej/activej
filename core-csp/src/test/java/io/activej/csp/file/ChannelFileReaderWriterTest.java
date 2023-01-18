@@ -48,8 +48,9 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void streamFileReaderWithDelay() throws IOException {
-		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
-				.then(cfr -> cfr.withBufferSize(MemSize.of(1))
+		ByteBuf byteBuf = await(ChannelFileReader.builderOpen(newCachedThreadPool(), Paths.get("test_data/in.dat"))
+				.then(builder -> builder.withBufferSize(MemSize.of(1))
+						.build()
 						.mapAsync(buf -> Promises.delay(10L, buf))
 						.toCollector(ByteBufs.collector())));
 
@@ -119,10 +120,11 @@ public final class ChannelFileReaderWriterTest {
 
 	@Test
 	public void readOverFile() throws IOException {
-		ChannelFileReader cfr = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat")));
+		ChannelFileReader.Builder builder = await(ChannelFileReader.builderOpen(newCachedThreadPool(), Paths.get("test_data/in.dat")));
 
-		ByteBuf byteBuf = await(cfr.withOffset(Files.size(Paths.get("test_data/in.dat")) + 100)
+		ByteBuf byteBuf = await(builder.withOffset(Files.size(Paths.get("test_data/in.dat")) + 100)
 				.withBufferSize(MemSize.of(1))
+				.build()
 				.toCollector(ByteBufs.collector()));
 
 		assertEquals("", byteBuf.asString(UTF_8));

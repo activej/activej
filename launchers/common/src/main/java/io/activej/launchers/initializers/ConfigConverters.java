@@ -75,21 +75,21 @@ public final class ConfigConverters {
 					case "identity" -> FrameFormats.identity();
 					case "size-prefixed" -> FrameFormats.sizePrefixed();
 					case "lz4" -> {
-						FrameFormat_LZ4 format = FrameFormat_LZ4.create();
-						if (!config.hasChild("compressionLevel")) {
-							yield format;
+						FrameFormat_LZ4.Builder formatBuilder = FrameFormat_LZ4.builder();
+						if (config.hasChild("compressionLevel")) {
+							formatBuilder.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
 						}
-						yield format.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
+						yield formatBuilder.build();
 					}
 					case "legacy-lz4" -> {
-						FrameFormat_LZ4Legacy legacyFormat = FrameFormat_LZ4Legacy.create();
+						FrameFormat_LZ4Legacy.Builder legacyFormatBuilder = FrameFormat_LZ4Legacy.builder();
 						if (config.hasChild("compressionLevel")) {
-							legacyFormat.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
+							legacyFormatBuilder.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
 						}
 						if (config.hasChild("ignoreMissingEndOfStream")) {
-							legacyFormat.withIgnoreMissingEndOfStream(config.get(ofBoolean(), "ignoreMissingEndOfStream"));
+							legacyFormatBuilder.withIgnoreMissingEndOfStream(config.get(ofBoolean(), "ignoreMissingEndOfStream"));
 						}
-						yield legacyFormat;
+						yield legacyFormatBuilder.build();
 					}
 					case "compound" -> {
 						Config compoundFormatsConfig = config.getChild("compoundFormats");

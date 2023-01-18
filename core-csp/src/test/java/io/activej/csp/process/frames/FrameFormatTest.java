@@ -191,26 +191,26 @@ public class FrameFormatTest {
 	}
 
 	private void doTestCombinations(byte[] expected, byte[] data1, byte[] data2, boolean resets) {
-		ChannelFrameEncoder encoder = ChannelFrameEncoder.create(frameFormat);
+		ChannelFrameEncoder.Builder encoderBuilder = ChannelFrameEncoder.builder(frameFormat);
 		if (resets) {
 			if (!resetsAllowed) return;
-			encoder = encoder.withEncoderResets();
+			encoderBuilder = encoderBuilder.withEncoderResets();
 		}
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data1), ByteBuf.wrapForReading(data2))
-				.transformWith(encoder);
+				.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
 		for (int i = 0; i < compressed.readRemaining(); i++) {
-			ChannelFrameDecoder decoder = ChannelFrameDecoder.create(frameFormat);
+			ChannelFrameDecoder.Builder decoderBuilder = ChannelFrameDecoder.builder(frameFormat);
 			if (resets) {
-				decoder = decoder.withDecoderResets();
+				decoderBuilder = decoderBuilder.withDecoderResets();
 			}
 
 			ByteBufs bufs = new ByteBufs();
 			bufs.add(compressed.slice());
 			ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(bufs.takeExactSize(i), bufs.takeRemaining())
-					.transformWith(decoder);
+					.transformWith(decoderBuilder.build());
 
 			ByteBuf resultBuf = await(supplier.toCollector(ByteBufs.collector()));
 			assertArrayEquals(expected, resultBuf.asArray());
@@ -223,22 +223,22 @@ public class FrameFormatTest {
 				MemSize.of(1) :
 				MemSize.bytes(ThreadLocalRandom.current().nextInt(1000) + 500);
 
-		ChannelFrameEncoder encoder = ChannelFrameEncoder.create(frameFormat);
-		ChannelFrameDecoder decoder = ChannelFrameDecoder.create(frameFormat);
+		ChannelFrameEncoder.Builder encoderBuilder = ChannelFrameEncoder.builder(frameFormat);
+		ChannelFrameDecoder.Builder decoderBuilder = ChannelFrameDecoder.builder(frameFormat);
 		if (resets) {
 			if (!resetsAllowed) return;
-			encoder = encoder.withEncoderResets();
-			decoder = decoder.withDecoderResets();
+			encoderBuilder.withEncoderResets();
+			decoderBuilder.withDecoderResets();
 		}
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data))
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
-				.transformWith(encoder);
+				.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(compressed)
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
-				.transformWith(decoder);
+				.transformWith(decoderBuilder.build());
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));
 		assertArrayEquals(data, collected.asArray());

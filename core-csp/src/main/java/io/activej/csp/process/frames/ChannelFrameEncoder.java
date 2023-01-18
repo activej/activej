@@ -17,7 +17,7 @@
 package io.activej.csp.process.frames;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -28,7 +28,7 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf>, WithInitializer<ChannelFrameEncoder> {
+		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf> {
 
 	private final BlockEncoder encoder;
 	private boolean encoderResets;
@@ -41,20 +41,39 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 	}
 
 	public static ChannelFrameEncoder create(FrameFormat format) {
-		return create(format.createEncoder());
+		return builder(format.createEncoder()).build();
 	}
 
 	public static ChannelFrameEncoder create(BlockEncoder encoder) {
-		return new ChannelFrameEncoder(encoder);
+		return builder(encoder).build();
 	}
 
-	public ChannelFrameEncoder withEncoderResets() {
-		return withEncoderResets(true);
+	public static Builder builder(FrameFormat format) {
+		return builder(format.createEncoder());
 	}
 
-	public ChannelFrameEncoder withEncoderResets(boolean encoderResets) {
-		this.encoderResets = encoderResets;
-		return this;
+	public static Builder builder(BlockEncoder encoder) {
+		return new ChannelFrameEncoder(encoder).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, ChannelFrameEncoder> {
+		private Builder() {}
+
+		public Builder withEncoderResets() {
+			checkNotBuilt(this);
+			return withEncoderResets(true);
+		}
+
+		public Builder withEncoderResets(boolean encoderResets) {
+			checkNotBuilt(this);
+			ChannelFrameEncoder.this.encoderResets = encoderResets;
+			return this;
+		}
+
+		@Override
+		protected ChannelFrameEncoder doBuild() {
+			return ChannelFrameEncoder.this;
+		}
 	}
 
 	//check input for clarity

@@ -124,8 +124,9 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		String logFile = first(files.keySet());
 		ByteBuf serializedData = await(logsFileSystem.download(logFile).then(supplier -> supplier
-				.transformWith(ChannelFrameDecoder.create(FrameFormat_LZ4.create())
-						.withDecoderResets())
+				.transformWith(ChannelFrameDecoder.builder(FrameFormat_LZ4.create())
+						.withDecoderResets()
+						.build())
 				.toCollector(ByteBufs.collector())));
 
 		// offset right before string
@@ -135,8 +136,9 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		byte[] malformed = new byte[bufSize - 49];
 		malformed[0] = 127; // exceeds message size
 		await(ChannelSupplier.of(serializedData, ByteBuf.wrapForReading(malformed))
-				.transformWith(ChannelFrameEncoder.create(FrameFormat_LZ4.create())
-						.withEncoderResets())
+				.transformWith(ChannelFrameEncoder.builder(FrameFormat_LZ4.create())
+						.withEncoderResets()
+						.build())
 				.streamTo(logsFileSystem.upload(logFile)));
 
 		CubeException exception = awaitException(controller.process());

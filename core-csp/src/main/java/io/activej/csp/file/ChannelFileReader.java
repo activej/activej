@@ -22,7 +22,7 @@ import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -44,7 +44,7 @@ import static java.nio.file.StandardOpenOption.READ;
 /**
  * This supplier allows you to asynchronously read binary data from a file.
  */
-public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> implements WithInitializer<ChannelFileReader> {
+public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileReader.class);
 
 	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{READ};
@@ -64,11 +64,11 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 	}
 
 	public static ChannelFileReader create(Reactor reactor, Executor executor, FileChannel channel) {
-		return create(new FileService_Executor(reactor, executor), channel);
+		return builder(reactor, executor, channel).build();
 	}
 
 	public static ChannelFileReader create(AsyncFileService fileService, FileChannel channel) {
-		return new ChannelFileReader(fileService, channel);
+		return builder(fileService, channel).build();
 	}
 
 	public static Promise<ChannelFileReader> open(Executor executor, Path path) {
@@ -76,13 +76,8 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 	}
 
 	public static Promise<ChannelFileReader> open(Executor executor, Path path, OpenOption... openOptions) {
-		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
-		return Promise.ofBlocking(executor,
-						() -> {
-							if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
-							return FileChannel.open(path, openOptions);
-						})
-				.map(channel -> create(Reactor.getCurrentReactor(), executor, channel));
+		return builderOpen(executor, path, openOptions)
+				.map(AbstractBuilder::build);
 	}
 
 	public static ChannelFileReader openBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
@@ -90,32 +85,75 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 	}
 
 	public static ChannelFileReader openBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
+		return builderBlocking(reactor, executor, path, openOptions).build();
+	}
+
+	public static Builder builder(Reactor reactor, Executor executor, FileChannel channel) {
+		return builder(new FileService_Executor(reactor, executor), channel);
+	}
+
+	public static Builder builder(AsyncFileService fileService, FileChannel channel) {
+		return new ChannelFileReader(fileService, channel).new Builder();
+	}
+
+	public static Promise<Builder> builderOpen(Executor executor, Path path) {
+		return builderOpen(executor, path, DEFAULT_OPTIONS);
+	}
+
+	public static Promise<Builder> builderOpen(Executor executor, Path path, OpenOption... openOptions) {
+		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
+		return Promise.ofBlocking(executor,
+						() -> {
+							if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
+							return FileChannel.open(path, openOptions);
+						})
+				.map(channel -> builder(Reactor.getCurrentReactor(), executor, channel));
+	}
+
+	public static Builder builderBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
+		return builderBlocking(reactor, executor, path, DEFAULT_OPTIONS);
+	}
+
+	public static Builder builderBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
 		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
 		if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
 		FileChannel channel = FileChannel.open(path, openOptions);
-		return create(reactor, executor, channel);
+		return builder(reactor, executor, channel);
 	}
 
-	public ChannelFileReader withBufferSize(MemSize bufferSize) {
-		return withBufferSize(bufferSize.toInt());
-	}
+	public final class Builder extends AbstractBuilder<Builder, ChannelFileReader> {
+		private Builder() {}
 
-	public ChannelFileReader withBufferSize(int bufferSize) {
-		checkArgument(bufferSize > 0, "Buffer size cannot be less than or equal to zero");
-		this.bufferSize = bufferSize;
-		return this;
-	}
+		public Builder withBufferSize(MemSize bufferSize) {
+			checkNotBuilt(this);
+			return withBufferSize(bufferSize.toInt());
+		}
 
-	public ChannelFileReader withOffset(long offset) {
-		checkArgument(offset >= 0, "Offset cannot be less than zero");
-		position = offset;
-		return this;
-	}
+		public Builder withBufferSize(int bufferSize) {
+			checkNotBuilt(this);
+			checkArgument(bufferSize > 0, "Buffer size cannot be less than or equal to zero");
+			ChannelFileReader.this.bufferSize = bufferSize;
+			return this;
+		}
 
-	public ChannelFileReader withLimit(long limit) {
-		checkArgument(limit >= 0, "Limit cannot be less than zero");
-		this.limit = limit;
-		return this;
+		public Builder withOffset(long offset) {
+			checkNotBuilt(this);
+			checkArgument(offset >= 0, "Offset cannot be less than zero");
+			position = offset;
+			return this;
+		}
+
+		public Builder withLimit(long limit) {
+			checkNotBuilt(this);
+			checkArgument(limit >= 0, "Limit cannot be less than zero");
+			ChannelFileReader.this.limit = limit;
+			return this;
+		}
+
+		@Override
+		protected ChannelFileReader doBuild() {
+			return ChannelFileReader.this;
+		}
 	}
 
 	public long getPosition() {

@@ -46,8 +46,9 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Reactor reactor = getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(0.0001, ChronoUnit.MICROS)
-				.withInitialTokens(100);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>builder(0.0001, ChronoUnit.MICROS)
+				.withInitialTokens(100)
+				.build();
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -66,8 +67,9 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testFull() {
 		Reactor reactor = getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(0.1, ChronoUnit.MILLIS)
-				.withInitialTokens(200);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>builder(0.1, ChronoUnit.MILLIS)
+				.withInitialTokens(200)
+				.build();
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());

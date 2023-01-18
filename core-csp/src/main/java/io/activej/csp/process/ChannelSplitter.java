@@ -16,7 +16,7 @@
 
 package io.activej.csp.process;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
@@ -36,7 +36,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
-		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T>, WithInitializer<ChannelSplitter<T>> {
+		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
 	private final List<ChannelConsumer<T>> outputs = new ArrayList<>();
 
 	private ChannelSupplier<T> input;
@@ -46,23 +46,40 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 	}
 
 	public static <T> ChannelSplitter<T> create() {
-		return new ChannelSplitter<>();
+		return ChannelSplitter.<T>builder().build();
 	}
 
 	public static <T> ChannelSplitter<T> create(ChannelSupplier<T> input) {
+		return ChannelSplitter.<T>create().withInput(input);
+	}
+
+	public static <T> ChannelSplitter<T>.Builder builder() {
+		return new ChannelSplitter<T>().new Builder();
+	}
+
+	public static <T> ChannelSplitter<T> builder(ChannelSupplier<T> input) {
 		return new ChannelSplitter<T>().withInput(input);
 	}
 
-	/**
-	 * Allows to set a function that will be used for splitting a value.
-	 * A split function is applied to incoming value each time it is being sent to an output.
-	 *
-	 * @param splitFn split function
-	 * @return this {@link ChannelSplitter}
-	 */
-	public ChannelSplitter<T> withSplitFunction(UnaryOperator<T> splitFn) {
-		this.splitFn = splitFn;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, ChannelSplitter<T>> {
+		private Builder() {}
+
+		/**
+		 * Allows to set a function that will be used for splitting a value.
+		 * A split function is applied to incoming value each time it is being sent to an output.
+		 *
+		 * @param splitFn split function
+		 */
+		public Builder withSplitFunction(UnaryOperator<T> splitFn) {
+			checkNotBuilt(this);
+			ChannelSplitter.this.splitFn = splitFn;
+			return this;
+		}
+
+		@Override
+		protected ChannelSplitter<T> doBuild() {
+			return ChannelSplitter.this;
+		}
 	}
 
 	public boolean hasOutputs() {

@@ -129,8 +129,9 @@ public final class Multilog<T> extends AbstractReactive
 								.transformWith(streamWriteStats)
 								.bindTo(new LogStreamChunker(reactor, fileSystem, namingScheme, logPartition,
 										consumer -> consumer.transformWith(
-												ChannelFrameEncoder.create(frameFormat)
-														.withEncoderResets()))))
+												ChannelFrameEncoder.builder(frameFormat)
+														.withEncoderResets()
+														.build()))))
 				.withAcknowledgement(ack -> ack
 						.mapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e))));
 	}
@@ -226,8 +227,9 @@ public final class Multilog<T> extends AbstractReactive
 											.transformWith(streamReads.register(logPartition + ":" + currentLogFile + "@" + position))
 											.transformWith(streamReadStats)
 											.transformWith(
-													ChannelFrameDecoder.create(countingFormat)
-															.withDecoderResets())
+													ChannelFrameDecoder.builder(countingFormat)
+															.withDecoderResets()
+															.build())
 											.transformWith(supplier ->
 													supplier.withEndOfStream(eos ->
 															eos.map(identity(),

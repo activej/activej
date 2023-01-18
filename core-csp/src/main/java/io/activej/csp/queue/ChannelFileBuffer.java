@@ -77,10 +77,11 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 				.map(tuple2 -> {
 					Reactor reactor = Reactor.getCurrentReactor();
 					ChannelFileWriter writer = ChannelFileWriter.create(reactor, executor, tuple2.value1());
-					ChannelFileReader reader = ChannelFileReader.create(reactor, executor, tuple2.value2());
+					ChannelFileReader.Builder readerBuilder = ChannelFileReader.builder(reactor, executor, tuple2.value2());
 					if (limit != null) {
-						reader.withLimit(limit.toLong());
+						readerBuilder.withLimit(limit.toLong());
 					}
+					ChannelFileReader reader = readerBuilder.build();
 					return new ChannelFileBuffer(reader, writer, executor, path);
 				});
 	}

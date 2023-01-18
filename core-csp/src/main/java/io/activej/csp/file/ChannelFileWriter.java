@@ -19,7 +19,7 @@ package io.activej.csp.file;
 import io.activej.async.file.AsyncFileService;
 import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -39,7 +39,7 @@ import static java.nio.file.StandardOpenOption.*;
 /**
  * This consumer allows you to asynchronously write binary data to a file.
  */
-public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> implements WithInitializer<ChannelFileWriter> {
+public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileWriter.class);
 
 	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{WRITE, CREATE_NEW, APPEND};
@@ -60,11 +60,11 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	public static ChannelFileWriter create(Reactor reactor, Executor executor, FileChannel channel) {
-		return create(new FileService_Executor(reactor, executor), channel);
+		return builder(reactor, executor, channel).build();
 	}
 
 	public static ChannelFileWriter create(AsyncFileService fileService, FileChannel channel) {
-		return new ChannelFileWriter(fileService, channel);
+		return builder(fileService, channel).build();
 	}
 
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path) {
@@ -72,9 +72,8 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path, OpenOption... openOptions) {
-		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
-		return Promise.ofBlocking(executor, () -> FileChannel.open(path, openOptions))
-				.map(channel -> create(Reactor.getCurrentReactor(), executor, channel));
+		return builderOpen(executor, path, openOptions)
+				.map(AbstractBuilder::build);
 	}
 
 	public static ChannelFileWriter openBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
@@ -82,20 +81,53 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	public static ChannelFileWriter openBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
+		return builderBlocking(reactor, executor, path, openOptions).build();
+	}
+
+	public static Builder builder(Reactor reactor, Executor executor, FileChannel channel) {
+		return builder(new FileService_Executor(reactor, executor), channel);
+	}
+
+	public static Builder builder(AsyncFileService fileService, FileChannel channel) {
+		return new ChannelFileWriter(fileService, channel).new Builder();
+	}
+
+	public static Promise<Builder> builderOpen(Executor executor, Path path) {
+		return builderOpen(executor, path, DEFAULT_OPTIONS);
+	}
+
+	public static Promise<Builder> builderOpen(Executor executor, Path path, OpenOption... openOptions) {
+		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
+		return Promise.ofBlocking(executor, () -> FileChannel.open(path, openOptions))
+				.map(channel -> builder(Reactor.getCurrentReactor(), executor, channel));
+	}
+
+	public static Builder builderBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
 		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
 		FileChannel channel = FileChannel.open(path, openOptions);
-		return create(reactor, executor, channel);
+		return builder(reactor, executor, channel);
 	}
 
-	public ChannelFileWriter withForceOnClose(boolean forceMetadata) {
-		forceOnClose = true;
-		this.forceMetadata = forceMetadata;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, ChannelFileWriter> {
+		private Builder() {}
 
-	public ChannelFileWriter withOffset(long offset) {
-		startingOffset = offset;
-		return this;
+		public Builder withForceOnClose(boolean forceMetadata) {
+			checkNotBuilt(this);
+			forceOnClose = true;
+			ChannelFileWriter.this.forceMetadata = forceMetadata;
+			return this;
+		}
+
+		public Builder withOffset(long offset) {
+			checkNotBuilt(this);
+			startingOffset = offset;
+			return this;
+		}
+
+		@Override
+		protected ChannelFileWriter doBuild() {
+			return ChannelFileWriter.this;
+		}
 	}
 
 	public long getPosition() {

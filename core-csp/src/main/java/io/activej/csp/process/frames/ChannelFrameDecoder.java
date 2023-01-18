@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -34,8 +34,7 @@ import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder>,
-		WithInitializer<ChannelFrameDecoder> {
+		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
 
 	private final BlockDecoder decoder;
 	private boolean decoderResets;
@@ -49,20 +48,39 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	}
 
 	public static ChannelFrameDecoder create(FrameFormat format) {
-		return create(format.createDecoder());
+		return builder(format).build();
 	}
 
 	public static ChannelFrameDecoder create(BlockDecoder decoder) {
-		return new ChannelFrameDecoder(decoder);
+		return builder(decoder).build();
 	}
 
-	public ChannelFrameDecoder withDecoderResets() {
-		return withDecoderResets(true);
+	public static Builder builder(FrameFormat format) {
+		return builder(format.createDecoder());
 	}
 
-	public ChannelFrameDecoder withDecoderResets(boolean decoderResets) {
-		this.decoderResets = decoderResets;
-		return this;
+	public static Builder builder(BlockDecoder decoder) {
+		return new ChannelFrameDecoder(decoder).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, ChannelFrameDecoder> {
+		private Builder() {}
+
+		public Builder withDecoderResets() {
+			checkNotBuilt(this);
+			return withDecoderResets(true);
+		}
+
+		public Builder withDecoderResets(boolean decoderResets) {
+			checkNotBuilt(this);
+			ChannelFrameDecoder.this.decoderResets = decoderResets;
+			return this;
+		}
+
+		@Override
+		protected ChannelFrameDecoder doBuild() {
+			return ChannelFrameDecoder.this;
+		}
 	}
 
 	@Override

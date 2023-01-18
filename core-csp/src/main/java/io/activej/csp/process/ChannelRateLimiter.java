@@ -17,7 +17,7 @@
 package io.activej.csp.process;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +28,7 @@ import java.time.temporal.ChronoUnit;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
 
-public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<ChannelRateLimiter<T>, T, T>
-		implements WithInitializer<ChannelRateLimiter<T>> {
+public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<ChannelRateLimiter<T>, T, T> {
 	private static final Duration MILLIS_DURATION = ChronoUnit.MILLIS.getDuration();
 
 	private final double refillRatePerMillis;
@@ -46,6 +45,10 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 	}
 
 	public static <T> ChannelRateLimiter<T> create(double refillRate, ChronoUnit perUnit) {
+		return ChannelRateLimiter.<T>builder(refillRate, perUnit).build();
+	}
+
+	public static <T> ChannelRateLimiter<T>.Builder builder(double refillRate, ChronoUnit perUnit) {
 		checkArgument(refillRate >= 0, "Negative refill rate");
 
 		Duration perUnitDuration = perUnit.getDuration();
@@ -55,17 +58,28 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 		} else {
 			refillRatePerMillis = refillRate * MILLIS_DURATION.dividedBy(perUnitDuration);
 		}
-		return new ChannelRateLimiter<>(refillRatePerMillis);
+		return new ChannelRateLimiter<T>(refillRatePerMillis).new Builder();
 	}
 
-	public ChannelRateLimiter<T> withInitialTokens(double initialTokens) {
-		this.tokens = initialTokens;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, ChannelRateLimiter<T>> {
+		private Builder() {}
 
-	public ChannelRateLimiter<T> withTokenizer(Tokenizer<T> tokenizer) {
-		this.tokenizer = tokenizer;
-		return this;
+		public Builder withInitialTokens(double initialTokens) {
+			checkNotBuilt(this);
+			ChannelRateLimiter.this.tokens = initialTokens;
+			return this;
+		}
+
+		public Builder withTokenizer(Tokenizer<T> tokenizer) {
+			checkNotBuilt(this);
+			ChannelRateLimiter.this.tokenizer = tokenizer;
+			return this;
+		}
+
+		@Override
+		protected ChannelRateLimiter<T> doBuild() {
+			return ChannelRateLimiter.this;
+		}
 	}
 
 	@Override
