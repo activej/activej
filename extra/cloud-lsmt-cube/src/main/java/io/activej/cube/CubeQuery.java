@@ -18,14 +18,14 @@ package io.activej.cube;
 
 import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.PredicateDef;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class CubeQuery implements WithInitializer<CubeQuery> {
+public final class CubeQuery {
 	private Set<String> attributes = new LinkedHashSet<>();
 	private Set<String> measures = new LinkedHashSet<>();
 	private PredicateDef where = AggregationPredicates.alwaysTrue();
@@ -38,76 +38,95 @@ public final class CubeQuery implements WithInitializer<CubeQuery> {
 
 	private CubeQuery() {}
 
-	public static CubeQuery create() {
-		return new CubeQuery();
+	public static Builder builder() {
+		return new CubeQuery().new Builder();
 	}
 
-	// region builders
-	public CubeQuery withMeasures(List<String> measures) {
-		this.measures = new LinkedHashSet<>(measures);
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, CubeQuery> {
+		private Builder() {}
 
-	public CubeQuery withMeasures(String... measures) {
-		return withMeasures(List.of(measures));
-	}
+		public Builder withMeasures(List<String> measures) {
+			checkNotBuilt(this);
+			CubeQuery.this.measures = new LinkedHashSet<>(measures);
+			return this;
+		}
 
-	public CubeQuery withAttributes(List<String> attributes) {
-		this.attributes = new LinkedHashSet<>(attributes);
-		return this;
-	}
+		public Builder withMeasures(String... measures) {
+			checkNotBuilt(this);
+			return withMeasures(List.of(measures));
+		}
 
-	public CubeQuery withAttributes(String... attributes) {
-		return withAttributes(List.of(attributes));
-	}
+		public Builder withAttributes(List<String> attributes) {
+			checkNotBuilt(this);
+			CubeQuery.this.attributes = new LinkedHashSet<>(attributes);
+			return this;
+		}
 
-	public CubeQuery withWhere(PredicateDef where) {
-		this.where = where;
-		return this;
-	}
+		public Builder withAttributes(String... attributes) {
+			checkNotBuilt(this);
+			return withAttributes(List.of(attributes));
+		}
 
-	public CubeQuery withHaving(PredicateDef having) {
-		this.having = having;
-		return this;
-	}
+		public Builder withWhere(PredicateDef where) {
+			checkNotBuilt(this);
+			CubeQuery.this.where = where;
+			return this;
+		}
 
-	public CubeQuery withOrderings(List<Ordering> orderings) {
-		this.orderings = orderings;
-		return this;
-	}
+		public Builder withHaving(PredicateDef having) {
+			checkNotBuilt(this);
+			CubeQuery.this.having = having;
+			return this;
+		}
 
-	public CubeQuery withOrderingAsc(String field) {
-		this.orderings.add(Ordering.asc(field));
-		return this;
-	}
+		public Builder withOrderings(List<Ordering> orderings) {
+			checkNotBuilt(this);
+			CubeQuery.this.orderings = orderings;
+			return this;
+		}
 
-	public CubeQuery withOrderingDesc(String field) {
-		this.orderings.add(Ordering.desc(field));
-		return this;
-	}
+		public Builder withOrderingAsc(String field) {
+			checkNotBuilt(this);
+			CubeQuery.this.orderings.add(Ordering.asc(field));
+			return this;
+		}
 
-	public CubeQuery withOrderings(Ordering... orderings) {
-		return withOrderings(List.of(orderings));
-	}
+		public Builder withOrderingDesc(String field) {
+			checkNotBuilt(this);
+			CubeQuery.this.orderings.add(Ordering.desc(field));
+			return this;
+		}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public CubeQuery withLimit(Integer limit) {
-		this.limit = limit;
-		return this;
-	}
+		public Builder withOrderings(Ordering... orderings) {
+			checkNotBuilt(this);
+			return withOrderings(List.of(orderings));
+		}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public CubeQuery withOffset(Integer offset) {
-		this.offset = offset;
-		return this;
-	}
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withLimit(Integer limit) {
+			checkNotBuilt(this);
+			CubeQuery.this.limit = limit;
+			return this;
+		}
 
-	public CubeQuery withReportType(ReportType reportType) {
-		this.reportType = reportType;
-		return this;
-	}
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withOffset(Integer offset) {
+			checkNotBuilt(this);
+			CubeQuery.this.offset = offset;
+			return this;
+		}
 
-	// endregion
+		public Builder withReportType(ReportType reportType) {
+			checkNotBuilt(this);
+			CubeQuery.this.reportType = reportType;
+			return this;
+		}
+
+		@Override
+		protected CubeQuery doBuild() {
+			return CubeQuery.this;
+		}
+	}
 
 	// region getters
 	public Set<String> getAttributes() {

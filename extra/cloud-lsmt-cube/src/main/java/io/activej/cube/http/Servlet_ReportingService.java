@@ -19,7 +19,7 @@ package io.activej.cube.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.AsyncCube;
 import io.activej.cube.CubeQuery;
@@ -45,7 +45,7 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static java.util.stream.Collectors.toList;
 
-public final class Servlet_ReportingService extends Servlet_WithStats implements WithInitializer<Servlet_ReportingService> {
+public final class Servlet_ReportingService extends Servlet_WithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Servlet_ReportingService.class);
 
 	private final AsyncCube cube;
@@ -60,7 +60,7 @@ public final class Servlet_ReportingService extends Servlet_WithStats implements
 	}
 
 	public static Servlet_ReportingService create(Reactor reactor, AsyncCube cube) {
-		return new Servlet_ReportingService(reactor, cube);
+		return builder(reactor, cube).build();
 	}
 
 	public static Servlet_Routing createRootServlet(Reactor reactor, AsyncCube cube) {
@@ -73,9 +73,23 @@ public final class Servlet_ReportingService extends Servlet_WithStats implements
 				.map(GET, "/", reportingServiceServlet);
 	}
 
-	public Servlet_ReportingService withClassLoader(DefiningClassLoader classLoader) {
-		this.classLoader = classLoader;
-		return this;
+	public static Builder builder(Reactor reactor, AsyncCube cube) {
+		return new Servlet_ReportingService(reactor, cube).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Servlet_ReportingService> {
+		private Builder() {}
+
+		public Builder withClassLoader(DefiningClassLoader classLoader) {
+			checkNotBuilt(this);
+			Servlet_ReportingService.this.classLoader = classLoader;
+			return this;
+		}
+
+		@Override
+		protected Servlet_ReportingService doBuild() {
+			return Servlet_ReportingService.this;
+		}
 	}
 
 	private JsonCodec_AggregationPredicate getAggregationPredicateCodec() {
@@ -142,42 +156,42 @@ public final class Servlet_ReportingService extends Servlet_WithStats implements
 	}
 
 	public CubeQuery parseQuery(HttpRequest request) throws MalformedDataException {
-		CubeQuery query = CubeQuery.create();
+		CubeQuery.Builder queryBuilder = CubeQuery.builder();
 
 		String parameter;
 		parameter = request.getQueryParameter(ATTRIBUTES_PARAM);
 		if (parameter != null)
-			query.withAttributes(split(parameter));
+			queryBuilder.withAttributes(split(parameter));
 
 		parameter = request.getQueryParameter(MEASURES_PARAM);
 		if (parameter != null)
-			query.withMeasures(split(parameter));
+			queryBuilder.withMeasures(split(parameter));
 
 		parameter = request.getQueryParameter(WHERE_PARAM);
 		if (parameter != null)
-			query.withWhere(fromJson(getAggregationPredicateCodec(), parameter));
+			queryBuilder.withWhere(fromJson(getAggregationPredicateCodec(), parameter));
 
 		parameter = request.getQueryParameter(SORT_PARAM);
 		if (parameter != null)
-			query.withOrderings(parseOrderings(parameter));
+			queryBuilder.withOrderings(parseOrderings(parameter));
 
 		parameter = request.getQueryParameter(HAVING_PARAM);
 		if (parameter != null)
-			query.withHaving(fromJson(getAggregationPredicateCodec(), parameter));
+			queryBuilder.withHaving(fromJson(getAggregationPredicateCodec(), parameter));
 
 		parameter = request.getQueryParameter(LIMIT_PARAM);
 		if (parameter != null)
-			query.withLimit(parseNonNegativeInteger(parameter));
+			queryBuilder.withLimit(parseNonNegativeInteger(parameter));
 
 		parameter = request.getQueryParameter(OFFSET_PARAM);
 		if (parameter != null)
-			query.withOffset(parseNonNegativeInteger(parameter));
+			queryBuilder.withOffset(parseNonNegativeInteger(parameter));
 
 		parameter = request.getQueryParameter(REPORT_TYPE_PARAM);
 		if (parameter != null)
-			query.withReportType(parseReportType(parameter));
+			queryBuilder.withReportType(parseReportType(parameter));
 
-		return query;
+		return queryBuilder.build();
 	}
 
 }

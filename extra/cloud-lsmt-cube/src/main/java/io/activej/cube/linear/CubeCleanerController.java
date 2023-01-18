@@ -18,7 +18,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.exception.CubeException;
 import io.activej.jmx.api.ConcurrentJmxBean;
@@ -39,7 +39,7 @@ import static io.activej.cube.linear.Utils.loadResource;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 
-public final class CubeCleanerController implements ConcurrentJmxBean, WithInitializer<CubeCleanerController> {
+public final class CubeCleanerController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration CHUNKS_CLEANUP_DELAY = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupDelay", Duration.ofMinutes(1));
@@ -98,37 +98,55 @@ public final class CubeCleanerController implements ConcurrentJmxBean, WithIniti
 	}
 
 	public static CubeCleanerController create(DataSource dataSource, ChunksCleanerService chunksCleanerService) {
-		return new CubeCleanerController(dataSource, chunksCleanerService);
+		return builder(dataSource, chunksCleanerService).build();
 	}
 
-	public CubeCleanerController withChunksCleanupDelay(Duration chunksCleanupDelay) {
-		this.chunksCleanupDelay = chunksCleanupDelay;
-		return this;
+	public static Builder builder(DataSource dataSource, ChunksCleanerService chunksCleanerService) {
+		return new CubeCleanerController(dataSource, chunksCleanerService).new Builder();
 	}
 
-	public CubeCleanerController withCurrentTimeProvider(CurrentTimeProvider now) {
-		this.now = now;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, CubeCleanerController> {
+		private Builder() {}
 
-	public CubeCleanerController withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
-		this.tableRevision = tableRevision;
-		this.tablePosition = tablePosition;
-		this.tableChunk = tableChunk;
-		return this;
-	}
+		public Builder withChunksCleanupDelay(Duration chunksCleanupDelay) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.chunksCleanupDelay = chunksCleanupDelay;
+			return this;
+		}
 
-	/**
-	 * Number of revisions that should not be cleaned up if possible
-	 */
-	public CubeCleanerController withMinimalNumberOfRevisions(int minimalRevisions) {
-		this.minimalNumberOfRevisions = minimalRevisions;
-		return this;
-	}
+		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.now = now;
+			return this;
+		}
 
-	public CubeCleanerController withCleanupOlderThen(Duration cleanupOlderThan) {
-		this.cleanupOlderThan = cleanupOlderThan;
-		return this;
+		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.tableRevision = tableRevision;
+			CubeCleanerController.this.tablePosition = tablePosition;
+			CubeCleanerController.this.tableChunk = tableChunk;
+			return this;
+		}
+
+		/**
+		 * Number of revisions that should not be cleaned up if possible
+		 */
+		public Builder withMinimalNumberOfRevisions(int minimalRevisions) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.minimalNumberOfRevisions = minimalRevisions;
+			return this;
+		}
+
+		public Builder withCleanupOlderThen(Duration cleanupOlderThan) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.cleanupOlderThan = cleanupOlderThan;
+			return this;
+		}
+
+		@Override
+		protected CubeCleanerController doBuild() {
+			return CubeCleanerController.this;
+		}
 	}
 
 	public void cleanup() throws CubeException {

@@ -22,7 +22,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.ot.CubeDiff;
@@ -64,8 +64,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 public final class OTUplink_CubeMySql extends AbstractReactive
-		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit>,
-		WithInitializer<OTUplink_CubeMySql> {
+		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplink_CubeMySql.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(OTUplink_CubeMySql.class, "smoothingWindow", Duration.ofMinutes(5));
@@ -104,24 +103,40 @@ public final class OTUplink_CubeMySql extends AbstractReactive
 	}
 
 	public static OTUplink_CubeMySql create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
-		return new OTUplink_CubeMySql(reactor, executor, dataSource, primaryKeyCodecs);
+		return builder(reactor, executor, dataSource, primaryKeyCodecs).build();
 	}
 
-	public OTUplink_CubeMySql withMeasuresValidator(MeasuresValidator measuresValidator) {
-		this.measuresValidator = measuresValidator;
-		return this;
+	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+		return new OTUplink_CubeMySql(reactor, executor, dataSource, primaryKeyCodecs).new Builder();
 	}
 
-	public OTUplink_CubeMySql withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
-		this.tableRevision = tableRevision;
-		this.tablePosition = tablePosition;
-		this.tableChunk = tableChunk;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, OTUplink_CubeMySql> {
+		private Builder() {}
 
-	public OTUplink_CubeMySql withCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-		return this;
+		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
+			checkNotBuilt(this);
+			OTUplink_CubeMySql.this.measuresValidator = measuresValidator;
+			return this;
+		}
+
+		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
+			checkNotBuilt(this);
+			OTUplink_CubeMySql.this.tableRevision = tableRevision;
+			OTUplink_CubeMySql.this.tablePosition = tablePosition;
+			OTUplink_CubeMySql.this.tableChunk = tableChunk;
+			return this;
+		}
+
+		public Builder withCreatedBy(String createdBy) {
+			checkNotBuilt(this);
+			OTUplink_CubeMySql.this.createdBy = createdBy;
+			return this;
+		}
+
+		@Override
+		protected OTUplink_CubeMySql doBuild() {
+			return OTUplink_CubeMySql.this;
+		}
 	}
 
 	@Override

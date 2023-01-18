@@ -43,10 +43,12 @@ public class ChunkLocker_MySql_DeadlockTest {
 		DataSource dataSource = dataSource("test.properties");
 
 		Reactor reactor = Reactor.getCurrentReactor();
-		lockerA = ChunkLocker_MySql.create(reactor, Executors.newSingleThreadExecutor(), dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID)
-				.withLockedTtl(Duration.ofSeconds(1));
-		lockerB = ChunkLocker_MySql.create(reactor, Executors.newSingleThreadExecutor(), dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID)
-				.withLockedTtl(Duration.ofSeconds(1));
+		lockerA = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID)
+				.withLockedTtl(Duration.ofSeconds(1))
+				.build();
+		lockerB = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID)
+				.withLockedTtl(Duration.ofSeconds(1))
+				.build();
 
 		lockerA.initialize();
 		lockerA.truncateTables();

@@ -178,8 +178,9 @@ public class AddedMeasuresTest {
 		initialDiffs.forEach(cube::apply);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
-		QueryResult queryResult = await(cube.query(CubeQuery.create()
-				.withMeasures(measures)));
+		QueryResult queryResult = await(cube.query(CubeQuery.builder()
+				.withMeasures(measures)
+				.build()));
 
 		assertEquals(measures, queryResult.getMeasures());
 		assertEquals(1, queryResult.getRecords().size());
@@ -216,8 +217,9 @@ public class AddedMeasuresTest {
 		cube.apply(diff);
 
 		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
-		QueryResult queryResult = await(cube.query(CubeQuery.create()
-				.withMeasures(measures)));
+		QueryResult queryResult = await(cube.query(CubeQuery.builder()
+				.withMeasures(measures)
+				.build()));
 
 		assertEquals(measures, queryResult.getMeasures());
 		assertEquals(1, queryResult.getRecords().size());

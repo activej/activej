@@ -20,7 +20,7 @@ import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncRunnable;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -53,7 +53,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<K, D, C> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
+		implements ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
 	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
@@ -107,21 +107,40 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			Cube cube,
 			OTStateManager<K, D> stateManager,
 			AsyncAggregationChunkStorage<C> aggregationChunkStorage) {
+		return builder(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage).build();
+	}
+
+	public static <K, D, C> CubeConsolidationController<K, D, C>.Builder builder(Reactor reactor,
+			CubeDiffScheme<D> cubeDiffScheme,
+			Cube cube,
+			OTStateManager<K, D> stateManager,
+			AsyncAggregationChunkStorage<C> aggregationChunkStorage) {
 		Map<Aggregation, String> map = new IdentityHashMap<>();
 		for (String aggregationId : cube.getAggregationIds()) {
 			map.put(cube.getAggregation(aggregationId), aggregationId);
 		}
-		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
+		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map).new Builder();
 	}
 
-	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy) {
-		this.strategy = strategy;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<K, D, C>> {
+		private Builder() {}
 
-	public CubeConsolidationController<K, D, C> withChunkLockerFactory(Function<String, AsyncChunkLocker<C>> factory) {
-		this.chunkLockerFactory = factory;
-		return this;
+		public Builder withLockerStrategy(Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy) {
+			checkNotBuilt(this);
+			CubeConsolidationController.this.strategy = strategy;
+			return this;
+		}
+
+		public Builder withChunkLockerFactory(Function<String, AsyncChunkLocker<C>> factory) {
+			checkNotBuilt(this);
+			CubeConsolidationController.this.chunkLockerFactory = factory;
+			return this;
+		}
+
+		@Override
+		protected CubeConsolidationController<K, D, C> doBuild() {
+			return CubeConsolidationController.this;
+		}
 	}
 
 	private final AsyncRunnable consolidate = reuse(this::doConsolidate);

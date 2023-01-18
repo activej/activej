@@ -21,7 +21,7 @@ import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -54,7 +54,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeLogProcessorController<K, C> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
+		implements ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeLogProcessorController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
@@ -85,6 +85,14 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 			AsyncAggregationChunkStorage<C> chunkStorage,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors) {
+		return builder(reactor, state, stateManager, chunkStorage, logProcessors).build();
+	}
+
+	public static <K, C> CubeLogProcessorController<K, C>.Builder builder(Reactor reactor,
+			OTState_Log<CubeDiff> state,
+			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
+			AsyncAggregationChunkStorage<C> chunkStorage,
+			List<LogOTProcessor<?, CubeDiff>> logProcessors) {
 		Cube cube = (Cube) state.getDataState();
 		AsyncPredicate<K> predicate = AsyncPredicate.of(commitId -> {
 			if (cube.containsExcessiveNumberOfOverlappingChunks()) {
@@ -93,12 +101,22 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 			}
 			return true;
 		});
-		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager, predicate);
+		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager, predicate).new Builder();
 	}
 
-	public CubeLogProcessorController<K, C> withParallelRunner(boolean parallelRunner) {
-		this.parallelRunner = parallelRunner;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<K, C>> {
+		private Builder() {}
+
+		public Builder withParallelRunner(boolean parallelRunner) {
+			checkNotBuilt(this);
+			CubeLogProcessorController.this.parallelRunner = parallelRunner;
+			return this;
+		}
+
+		@Override
+		protected CubeLogProcessorController<K, C> doBuild() {
+			return CubeLogProcessorController.this;
+		}
 	}
 
 	private final AsyncSupplier<Boolean> processLogs = coalesce(this::doProcessLogs);

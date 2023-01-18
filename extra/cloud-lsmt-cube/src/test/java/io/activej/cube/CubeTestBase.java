@@ -112,8 +112,9 @@ public abstract class CubeTestBase {
 						new UplinkFactory<OTUplink_CubeMySql>() {
 							@Override
 							public OTUplink_CubeMySql createUninitialized(Cube cube) {
-								return OTUplink_CubeMySql.create(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
-										.withMeasuresValidator(MeasuresValidator.ofCube(cube));
+								return OTUplink_CubeMySql.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
+										.withMeasuresValidator(MeasuresValidator.ofCube(cube))
+										.build();
 							}
 
 							@Override

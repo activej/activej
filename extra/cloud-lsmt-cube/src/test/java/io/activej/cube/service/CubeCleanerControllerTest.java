@@ -90,10 +90,11 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
+		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.builder(reactor,
 						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofMillis(0))
-				.withExtraSnapshotsCount(1000);
+				.withExtraSnapshotsCount(1000)
+				.build();
 
 		await(cleanerController.cleanup());
 	}
@@ -103,9 +104,10 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
+		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.builder(reactor,
 						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
-				.withFreezeTimeout(Duration.ofSeconds(10));
+				.withFreezeTimeout(Duration.ofSeconds(10))
+				.build();
 
 		await(cleanerController.cleanup());
 	}

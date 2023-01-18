@@ -18,7 +18,7 @@ package io.activej.cube.http;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.cube.AsyncCube;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.QueryResult;
@@ -41,7 +41,7 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class Cube_HttpClient implements AsyncCube, WithInitializer<Cube_HttpClient> {
+public final class Cube_HttpClient implements AsyncCube {
 	private static final Logger logger = LoggerFactory.getLogger(Cube_HttpClient.class);
 
 	private final String url;
@@ -58,27 +58,39 @@ public final class Cube_HttpClient implements AsyncCube, WithInitializer<Cube_Ht
 		this.httpClient = httpClient;
 	}
 
-	public static Cube_HttpClient create(AsyncHttpClient httpClient, String cubeServletUrl) {
-		return new Cube_HttpClient(httpClient, cubeServletUrl);
+	public static Builder builder(AsyncHttpClient httpClient, String cubeServletUrl) {
+		return new Cube_HttpClient(httpClient, cubeServletUrl).new Builder();
 	}
 
-	public static Cube_HttpClient create(AsyncHttpClient httpClient, URI cubeServletUrl) {
-		return create(httpClient, cubeServletUrl.toString());
+	public static Builder builder(AsyncHttpClient httpClient, URI cubeServletUrl) {
+		return builder(httpClient, cubeServletUrl.toString());
 	}
 
-	public Cube_HttpClient withClassLoader(DefiningClassLoader classLoader) {
-		this.classLoader = classLoader;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, Cube_HttpClient> {
+		private Builder() {}
 
-	public Cube_HttpClient withAttribute(String attribute, Type type) {
-		attributeTypes.put(attribute, type);
-		return this;
-	}
+		public Builder withClassLoader(DefiningClassLoader classLoader) {
+			checkNotBuilt(this);
+			Cube_HttpClient.this.classLoader = classLoader;
+			return this;
+		}
 
-	public Cube_HttpClient withMeasure(String measureId, Type type) {
-		measureTypes.put(measureId, type);
-		return this;
+		public Builder withAttribute(String attribute, Type type) {
+			checkNotBuilt(this);
+			attributeTypes.put(attribute, type);
+			return this;
+		}
+
+		public Builder withMeasure(String measureId, Type type) {
+			checkNotBuilt(this);
+			measureTypes.put(measureId, type);
+			return this;
+		}
+
+		@Override
+		protected Cube_HttpClient doBuild() {
+			return Cube_HttpClient.this;
+		}
 	}
 
 	private JsonCodec_AggregationPredicate getAggregationPredicateCodec() {

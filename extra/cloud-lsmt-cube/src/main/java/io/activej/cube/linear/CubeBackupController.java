@@ -18,7 +18,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.cube.exception.CubeException;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -40,7 +40,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public final class CubeBackupController implements ConcurrentJmxBean, WithInitializer<CubeBackupController> {
+public final class CubeBackupController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "revisionTable", "cube_revision");
@@ -94,31 +94,47 @@ public final class CubeBackupController implements ConcurrentJmxBean, WithInitia
 	}
 
 	public static CubeBackupController create(DataSource dataSource, ChunksBackupService chunksBackupService) {
-		return new CubeBackupController(dataSource, chunksBackupService);
+		return builder(dataSource, chunksBackupService).build();
 	}
 
-	public CubeBackupController withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
-		this.tableRevision = tableRevision;
-		this.tablePosition = tablePosition;
-		this.tableChunk = tableChunk;
-		return this;
+	public static Builder builder(DataSource dataSource, ChunksBackupService chunksBackupService) {
+		return new CubeBackupController(dataSource, chunksBackupService).new Builder();
 	}
 
-	public CubeBackupController withCustomTableNames(String tableRevision, String tablePosition, String tableChunk,
-			String tableBackup, String tablePositionBackup, String tableChunkBackup) {
-		this.tableRevision = tableRevision;
-		this.tablePosition = tablePosition;
-		this.tableChunk = tableChunk;
+	public final class Builder extends AbstractBuilder<Builder, CubeBackupController> {
+		private Builder() {}
 
-		this.tableBackup = tableBackup;
-		this.tablePositionBackup = tablePositionBackup;
-		this.tableChunkBackup = tableChunkBackup;
-		return this;
-	}
+		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
+			checkNotBuilt(this);
+			CubeBackupController.this.tableRevision = tableRevision;
+			CubeBackupController.this.tablePosition = tablePosition;
+			CubeBackupController.this.tableChunk = tableChunk;
+			return this;
+		}
 
-	public CubeBackupController withBackupBy(String backupBy) {
-		this.backupBy = backupBy == null ? "null" : ('\'' + backupBy + '\'');
-		return this;
+		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk,
+				String tableBackup, String tablePositionBackup, String tableChunkBackup) {
+			checkNotBuilt(this);
+			CubeBackupController.this.tableRevision = tableRevision;
+			CubeBackupController.this.tablePosition = tablePosition;
+			CubeBackupController.this.tableChunk = tableChunk;
+
+			CubeBackupController.this.tableBackup = tableBackup;
+			CubeBackupController.this.tablePositionBackup = tablePositionBackup;
+			CubeBackupController.this.tableChunkBackup = tableChunkBackup;
+			return this;
+		}
+
+		public Builder withBackupBy(String backupBy) {
+			checkNotBuilt(this);
+			CubeBackupController.this.backupBy = backupBy == null ? "null" : ('\'' + backupBy + '\'');
+			return this;
+		}
+
+		@Override
+		protected CubeBackupController doBuild() {
+			return CubeBackupController.this;
+		}
 	}
 
 	public void backup() throws CubeException {

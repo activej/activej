@@ -86,8 +86,9 @@ public final class CubeUplinkMigrationServiceTest {
 		initializeRepository(repo);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofCube(cube);
-		uplink = OTUplink_CubeMySql.create(reactor, executor, dataSource, codecs)
-				.withMeasuresValidator(MeasuresValidator.ofCube(cube));
+		uplink = OTUplink_CubeMySql.builder(reactor, executor, dataSource, codecs)
+				.withMeasuresValidator(MeasuresValidator.ofCube(cube))
+				.build();
 
 		uplink.initialize();
 		uplink.truncateTables();

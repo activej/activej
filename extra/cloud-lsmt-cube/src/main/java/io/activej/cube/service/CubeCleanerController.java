@@ -21,7 +21,7 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -56,7 +56,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeCleanerController<K, D, C> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
+		implements ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration DEFAULT_CHUNKS_CLEANUP_DELAY = Duration.ofMinutes(1);
@@ -93,22 +93,42 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 			AsyncOTRepository<K, D> repository,
 			OTSystem<D> otSystem,
 			AggregationChunkStorage<C> storage) {
-		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage);
+		return builder(reactor, cubeDiffScheme, repository, otSystem, storage).build();
 	}
 
-	public CubeCleanerController<K, D, C> withChunksCleanupDelay(Duration chunksCleanupDelay) {
-		this.chunksCleanupDelay = chunksCleanupDelay;
-		return this;
+	public static <K, D, C> CubeCleanerController<K, D, C>.Builder builder(Reactor reactor,
+			CubeDiffScheme<D> cubeDiffScheme,
+			AsyncOTRepository<K, D> repository,
+			OTSystem<D> otSystem,
+			AggregationChunkStorage<C> storage) {
+		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage).new Builder();
 	}
 
-	public CubeCleanerController<K, D, C> withExtraSnapshotsCount(int extraSnapshotsCount) {
-		this.extraSnapshotsCount = extraSnapshotsCount;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, CubeCleanerController<K, D, C>> {
+		private Builder() {}
 
-	public CubeCleanerController<K, D, C> withFreezeTimeout(Duration freezeTimeout) {
-		this.freezeTimeout = freezeTimeout;
-		return this;
+		public Builder withChunksCleanupDelay(Duration chunksCleanupDelay) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.chunksCleanupDelay = chunksCleanupDelay;
+			return this;
+		}
+
+		public Builder withExtraSnapshotsCount(int extraSnapshotsCount) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.extraSnapshotsCount = extraSnapshotsCount;
+			return this;
+		}
+
+		public Builder withFreezeTimeout(Duration freezeTimeout) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.freezeTimeout = freezeTimeout;
+			return this;
+		}
+
+		@Override
+		protected CubeCleanerController<K, D, C> doBuild() {
+			return CubeCleanerController.this;
+		}
 	}
 
 	private final AsyncRunnable cleanup = reuse(this::doCleanup);
