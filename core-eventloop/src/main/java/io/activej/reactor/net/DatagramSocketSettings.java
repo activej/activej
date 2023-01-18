@@ -142,13 +142,4 @@ public final class DatagramSocketSettings {
 		checkState(hasBroadcast(), "No 'broadcast' setting is present");
 		return broadcast != FALSE;
 	}
-
-	public Builder asBuilder() {
-		DatagramSocketSettings datagramSocketSettings = new DatagramSocketSettings();
-		datagramSocketSettings.receiveBufferSize = receiveBufferSize;
-		datagramSocketSettings.reuseAddress = reuseAddress;
-		datagramSocketSettings.sendBufferSize = sendBufferSize;
-		datagramSocketSettings.broadcast = broadcast;
-		return datagramSocketSettings.new Builder();
-	}
 }

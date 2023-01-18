@@ -21,7 +21,6 @@ import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -301,10 +300,6 @@ public final class HttpClient extends AbstractNioReactive
 	public HttpClient withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
-	}
-
-	public HttpClient withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
-		return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 	}
 
 	public HttpClient withDnsClient(AsyncDnsClient asyncDnsClient) {

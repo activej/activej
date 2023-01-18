@@ -71,20 +71,6 @@ public final class SocketSettings {
 		return new SocketSettings().new Builder();
 	}
 
-	public static Builder builderOf(SocketSettings settings) {
-		SocketSettings socketSettings = new SocketSettings();
-		socketSettings.keepAlive = settings.keepAlive;
-		socketSettings.reuseAddress = settings.reuseAddress;
-		socketSettings.tcpNoDelay = settings.tcpNoDelay;
-		socketSettings.sendBufferSize = settings.sendBufferSize;
-		socketSettings.receiveBufferSize = settings.receiveBufferSize;
-		socketSettings.implReadTimeout = settings.implReadTimeout;
-		socketSettings.implWriteTimeout = settings.implWriteTimeout;
-		socketSettings.implReadBufferSize = settings.implReadBufferSize;
-		socketSettings.lingerTimeout = settings.lingerTimeout;
-		return socketSettings.new Builder();
-	}
-
 	public final class Builder extends AbstractBuilder<Builder, SocketSettings> {
 		private Builder() {}
 

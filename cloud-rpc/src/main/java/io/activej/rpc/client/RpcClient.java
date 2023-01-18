@@ -24,7 +24,6 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.AbstractBuilder;
-import io.activej.common.initializer.Initializer;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -176,16 +175,6 @@ public final class RpcClient extends AbstractNioReactive
 			checkNotBuilt(this);
 			RpcClient.this.socketSettings = socketSettings;
 			return this;
-		}
-
-		/**
-		 * Creates a client that modifies current socket settings.
-		 *
-		 * @param initializer modifier of current socket setings
-		 * @return the builder for RPC client with specified socket settings
-		 */
-		public Builder withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		/**

@@ -24,7 +24,6 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.AbstractBuilder;
-import io.activej.common.initializer.Initializer;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -130,10 +129,6 @@ public final class FileSystem_Remote extends AbstractNioReactive
 			FileSystem_Remote.this.socketSettings = socketSettings;
 			FileSystem_Remote.this.socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
 			return this;
-		}
-
-		public Builder withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		public Builder withConnectionTimeout(Duration connectionTimeout) {
@@ -433,9 +428,19 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	}
 
 	private static SocketSettings createSocketSettingsForStreaming(SocketSettings socketSettings) {
-		return SocketSettings.builderOf(socketSettings)
-				.withLingerTimeout(Duration.ZERO)
-				.build();
+		SocketSettings.Builder builder = SocketSettings.builder()
+				.withLingerTimeout(Duration.ZERO);
+
+		if (socketSettings.hasKeepAlive()) builder.withKeepAlive(socketSettings.getKeepAlive());
+		if (socketSettings.hasReuseAddress()) builder.withReuseAddress(socketSettings.getReuseAddress());
+		if (socketSettings.hasTcpNoDelay()) builder.withTcpNoDelay(socketSettings.getTcpNoDelay());
+		if (socketSettings.hasSendBufferSize()) builder.withSendBufferSize(socketSettings.getSendBufferSize());
+		if (socketSettings.hasReceiveBufferSize()) builder.withReceiveBufferSize(socketSettings.getReceiveBufferSize());
+		if (socketSettings.hasImplReadTimeout()) builder.withImplReadTimeout(socketSettings.getImplReadTimeout());
+		if (socketSettings.hasImplWriteTimeout()) builder.withImplWriteTimeout(socketSettings.getImplWriteTimeout());
+		if (socketSettings.hasReadBufferSize()) builder.withImplReadBufferSize(socketSettings.getImplReadBufferSize());
+
+		return builder.build();
 	}
 
 	@Override

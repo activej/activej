@@ -30,8 +30,8 @@ import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.*;
-import static io.activej.rpc.server.RpcServer.DEFAULT_SERVER_SOCKET_SETTINGS;
-import static io.activej.rpc.server.RpcServer.DEFAULT_SOCKET_SETTINGS;
+import static io.activej.net.AbstractReactiveServer.DEFAULT_SERVER_SOCKET_SETTINGS;
+import static io.activej.net.AbstractReactiveServer.DEFAULT_SOCKET_SETTINGS;
 
 public class MemcacheServerModule extends AbstractModule {
 	private MemcacheServerModule() {}

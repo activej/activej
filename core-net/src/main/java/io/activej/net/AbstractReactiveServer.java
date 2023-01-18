@@ -17,7 +17,6 @@
 package io.activej.net;
 
 import io.activej.common.initializer.AbstractBuilder;
-import io.activej.common.initializer.Initializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
@@ -124,18 +123,10 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return (Self) this;
 		}
 
-		public final Self withServerSocketSettings(Initializer<ServerSocketSettings.Builder> initializer) {
-			return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).initialize(initializer).build());
-		}
-
 		public final Self withSocketSettings(SocketSettings socketSettings) {
 			checkNotBuilt(this);
 			AbstractReactiveServer.this.socketSettings = socketSettings;
 			return (Self) this;
-		}
-
-		public final Self withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		public final Self withListenAddresses(List<InetSocketAddress> addresses) {

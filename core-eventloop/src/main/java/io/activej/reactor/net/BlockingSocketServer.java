@@ -16,7 +16,6 @@
 
 package io.activej.reactor.net;
 
-import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,17 +84,9 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		return this;
 	}
 
-	public BlockingSocketServer withServerSocketSettings(Initializer<ServerSocketSettings.Builder> initializer) {
-		return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).initialize(initializer).build());
-	}
-
 	public BlockingSocketServer withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
-	}
-
-	public BlockingSocketServer withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
-		return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 	}
 
 	private void serveClient(Socket socket) throws IOException {

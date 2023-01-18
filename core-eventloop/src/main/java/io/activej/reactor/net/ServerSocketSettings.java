@@ -52,14 +52,6 @@ public final class ServerSocketSettings {
 		return new ServerSocketSettings().new Builder();
 	}
 
-	public static Builder builderOf(ServerSocketSettings self) {
-		ServerSocketSettings settings = new ServerSocketSettings();
-		settings.backlog = self.backlog;
-		settings.receiveBufferSize = self.receiveBufferSize;
-		settings.reuseAddress = self.reuseAddress;
-		return settings.new Builder();
-	}
-
 	public final class Builder extends AbstractBuilder<Builder, ServerSocketSettings> {
 		private Builder() {}
 

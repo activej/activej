@@ -18,7 +18,6 @@ package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.AbstractBuilder;
-import io.activej.common.initializer.Initializer;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
@@ -89,10 +88,6 @@ public final class RedisClient extends AbstractNioReactive {
 			checkNotBuilt(this);
 			RedisClient.this.socketSettings = socketSettings;
 			return this;
-		}
-
-		public Builder withSocketSettings(Initializer<SocketSettings.Builder> initializer) {
-			return withSocketSettings(SocketSettings.builderOf(socketSettings).initialize(initializer).build());
 		}
 
 		public Builder withConnectTimeout(Duration connectTimeout) {
