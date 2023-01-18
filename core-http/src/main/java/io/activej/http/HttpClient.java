@@ -303,11 +303,8 @@ public final class HttpClient extends AbstractNioReactive
 		return this;
 	}
 
-	public HttpClient withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-		SocketSettings.Builder builder = socketSettings.asBuilder();
-		modifier.accept(builder);
-		socketSettings = builder.build();
-		return this;
+	public HttpClient withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+		return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 	}
 
 	public HttpClient withDnsClient(AsyncDnsClient asyncDnsClient) {

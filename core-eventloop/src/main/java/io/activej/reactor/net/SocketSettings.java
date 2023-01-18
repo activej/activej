@@ -71,6 +71,20 @@ public final class SocketSettings {
 		return new SocketSettings().new Builder();
 	}
 
+	public static Builder builderOf(SocketSettings settings) {
+		SocketSettings socketSettings = new SocketSettings();
+		socketSettings.keepAlive = settings.keepAlive;
+		socketSettings.reuseAddress = settings.reuseAddress;
+		socketSettings.tcpNoDelay = settings.tcpNoDelay;
+		socketSettings.sendBufferSize = settings.sendBufferSize;
+		socketSettings.receiveBufferSize = settings.receiveBufferSize;
+		socketSettings.implReadTimeout = settings.implReadTimeout;
+		socketSettings.implWriteTimeout = settings.implWriteTimeout;
+		socketSettings.implReadBufferSize = settings.implReadBufferSize;
+		socketSettings.lingerTimeout = settings.lingerTimeout;
+		return socketSettings.new Builder();
+	}
+
 	public final class Builder extends AbstractBuilder<Builder, SocketSettings> {
 		private Builder() {}
 
@@ -259,19 +273,5 @@ public final class SocketSettings {
 	public int getLingerTimeoutSeconds() {
 		checkState(hasLingerTimeout(), "No 'linger timeout' setting is present");
 		return implReadBufferSize;
-	}
-
-	public Builder asBuilder() {
-		SocketSettings socketSettings = new SocketSettings();
-		socketSettings.keepAlive = keepAlive;
-		socketSettings.reuseAddress = reuseAddress;
-		socketSettings.tcpNoDelay = tcpNoDelay;
-		socketSettings.sendBufferSize = sendBufferSize;
-		socketSettings.receiveBufferSize = receiveBufferSize;
-		socketSettings.implReadTimeout = implReadTimeout;
-		socketSettings.implWriteTimeout = implWriteTimeout;
-		socketSettings.implReadBufferSize = implReadBufferSize;
-		socketSettings.lingerTimeout = lingerTimeout;
-		return socketSettings.new Builder();
 	}
 }

@@ -132,13 +132,8 @@ public final class FileSystem_Remote extends AbstractNioReactive
 			return this;
 		}
 
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-			checkNotBuilt(this);
-			SocketSettings.Builder builder = socketSettings.asBuilder();
-			modifier.accept(builder);
-			socketSettings = builder.build();
-			socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
-			return this;
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 		}
 
 		public Builder withConnectionTimeout(Duration connectionTimeout) {
@@ -438,7 +433,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	}
 
 	private static SocketSettings createSocketSettingsForStreaming(SocketSettings socketSettings) {
-		return socketSettings.asBuilder()
+		return SocketSettings.builderOf(socketSettings)
 				.withLingerTimeout(Duration.ZERO)
 				.build();
 	}

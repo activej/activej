@@ -124,12 +124,8 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return (Self) this;
 		}
 
-		public final Self withServerSocketSettings(Consumer<ServerSocketSettings.Builder> modifier) {
-			checkNotBuilt(this);
-			ServerSocketSettings.Builder builder = serverSocketSettings.asBuilder();
-			modifier.accept(builder);
-			serverSocketSettings = builder.build();
-			return (Self) this;
+		public final Self withServerSocketSettings(Consumer<ServerSocketSettings.Builder> initializer) {
+			return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).withInitializer(initializer).build());
 		}
 
 		public final Self withSocketSettings(SocketSettings socketSettings) {
@@ -138,12 +134,8 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return (Self) this;
 		}
 
-		public final Self withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-			checkNotBuilt(this);
-			SocketSettings.Builder builder = socketSettings.asBuilder();
-			modifier.accept(builder);
-			socketSettings = builder.build();
-			return (Self) this;
+		public final Self withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 		}
 
 		public final Self withListenAddresses(List<InetSocketAddress> addresses) {

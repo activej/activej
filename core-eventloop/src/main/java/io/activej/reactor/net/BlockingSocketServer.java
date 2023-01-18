@@ -85,11 +85,8 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		return this;
 	}
 
-	public BlockingSocketServer withServerSocketSettings(Consumer<ServerSocketSettings.Builder> modifier) {
-		ServerSocketSettings.Builder builder = serverSocketSettings.asBuilder();
-		modifier.accept(builder);
-		this.serverSocketSettings = builder.build();
-		return this;
+	public BlockingSocketServer withServerSocketSettings(Consumer<ServerSocketSettings.Builder> initializer) {
+		return withServerSocketSettings(ServerSocketSettings.builderOf(serverSocketSettings).withInitializer(initializer).build());
 	}
 
 	public BlockingSocketServer withSocketSettings(SocketSettings socketSettings) {
@@ -97,11 +94,8 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		return this;
 	}
 
-	public BlockingSocketServer withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-		SocketSettings.Builder builder = socketSettings.asBuilder();
-		modifier.accept(builder);
-		this.socketSettings = builder.build();
-		return this;
+	public BlockingSocketServer withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+		return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 	}
 
 	private void serveClient(Socket socket) throws IOException {

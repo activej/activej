@@ -82,7 +82,7 @@ public final class RedisClient extends AbstractNioReactive {
 		return new RedisClient(reactor, address).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RedisClient>{
+	public final class Builder extends AbstractBuilder<Builder, RedisClient> {
 		private Builder() {}
 
 		public Builder withSocketSettings(SocketSettings socketSettings) {
@@ -91,12 +91,8 @@ public final class RedisClient extends AbstractNioReactive {
 			return this;
 		}
 
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-			checkNotBuilt(this);
-			SocketSettings.Builder builder = socketSettings.asBuilder();
-			modifier.accept(builder);
-			socketSettings = builder.build();
-			return this;
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 		}
 
 		public Builder withConnectTimeout(Duration connectTimeout) {

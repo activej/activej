@@ -151,12 +151,8 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 			return this;
 		}
 
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-			checkNotBuilt(this);
-			SocketSettings.Builder builder = socketSettings.asBuilder();
-			modifier.accept(builder);
-			socketSettings = builder.build();
-			return this;
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 		}
 
 		@Override

@@ -181,15 +181,11 @@ public final class RpcClient extends AbstractNioReactive
 		/**
 		 * Creates a client that modifies current socket settings.
 		 *
-		 * @param modifier modifier of current socket setings
+		 * @param initializer modifier of current socket setings
 		 * @return the builder for RPC client with specified socket settings
 		 */
-		public Builder withSocketSettings(Consumer<SocketSettings.Builder> modifier) {
-			checkNotBuilt(this);
-			SocketSettings.Builder builder = socketSettings.asBuilder();
-			modifier.accept(builder);
-			socketSettings = builder.build();
-			return this;
+		public Builder withSocketSettings(Consumer<SocketSettings.Builder> initializer) {
+			return withSocketSettings(SocketSettings.builderOf(socketSettings).withInitializer(initializer).build());
 		}
 
 		/**

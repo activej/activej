@@ -52,6 +52,14 @@ public final class ServerSocketSettings {
 		return new ServerSocketSettings().new Builder();
 	}
 
+	public static Builder builderOf(ServerSocketSettings self) {
+		ServerSocketSettings settings = new ServerSocketSettings();
+		settings.backlog = self.backlog;
+		settings.receiveBufferSize = self.receiveBufferSize;
+		settings.reuseAddress = self.reuseAddress;
+		return settings.new Builder();
+	}
+
 	public final class Builder extends AbstractBuilder<Builder, ServerSocketSettings> {
 		private Builder() {}
 
@@ -78,7 +86,6 @@ public final class ServerSocketSettings {
 			return ServerSocketSettings.this;
 		}
 	}
-	// endregion
 
 	public void applySettings(ServerSocketChannel channel) throws IOException {
 		if (receiveBufferSize != 0) {
@@ -115,11 +122,4 @@ public final class ServerSocketSettings {
 		return reuseAddress != FALSE;
 	}
 
-	public Builder asBuilder() {
-		ServerSocketSettings serverSocketSettings = new ServerSocketSettings();
-		serverSocketSettings.backlog = backlog;
-		serverSocketSettings.receiveBufferSize = receiveBufferSize;
-		serverSocketSettings.reuseAddress = reuseAddress;
-		return serverSocketSettings.new Builder();
-	}
 }
