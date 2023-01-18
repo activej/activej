@@ -20,8 +20,9 @@ public final class BannerServerLauncher extends Launcher {
 	protected Module getModule() {
 		return Modules.combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				new CrdtRpcServerModule<Long, GSet<Integer>>() {
 					@Override
 					protected List<Class<?>> getMessageTypes() {

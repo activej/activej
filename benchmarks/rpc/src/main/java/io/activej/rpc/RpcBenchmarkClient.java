@@ -65,8 +65,9 @@ public class RpcBenchmarkClient extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("rpc.server.port", "" + SERVICE_PORT)
+				.build()
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 
@@ -74,8 +75,9 @@ public class RpcBenchmarkClient extends Launcher {
 	protected Module getModule() {
 		return combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger());
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build());
 	}
 
 	private int warmupRounds;

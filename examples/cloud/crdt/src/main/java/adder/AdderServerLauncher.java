@@ -33,8 +33,9 @@ public final class AdderServerLauncher extends Launcher {
 	protected Module getModule() {
 		return Modules.combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				new CrdtRpcServerModule<Long, DetailedSumsCrdtState>() {
 					@Override
 					protected List<Class<?>> getMessageTypes() {

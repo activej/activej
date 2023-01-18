@@ -103,11 +103,12 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	protected Config createConfig() {
-		return Config.create()
+		return Config.builder()
 				.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
 				.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS)
 				.with("fs.repartition.deadCheck.schedule.type", "interval")
-				.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL);
+				.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL)
+				.build();
 	}
 
 	@Override
@@ -115,8 +116,9 @@ public class ClusterTcpClientLauncher extends Launcher {
 		return combine(
 				ServiceGraphModule.create(),
 				JmxModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger());
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build());
 	}
 
 	@Override

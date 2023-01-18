@@ -16,7 +16,7 @@
 
 package io.activej.config;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.module.AbstractModule;
@@ -43,7 +43,7 @@ import static io.activej.common.Checks.checkState;
 /**
  * Supplies config to your application, looks after usage of config, prevents usage of config in any part of lifecycle except for startup.
  */
-public final class ConfigModule extends AbstractModule implements WithInitializer<ConfigModule> {
+public final class ConfigModule extends AbstractModule {
 	private static final Logger logger = LoggerFactory.getLogger(ConfigModule.class);
 
 	private Path effectiveConfigPath;
@@ -87,7 +87,48 @@ public final class ConfigModule extends AbstractModule implements WithInitialize
 	}
 
 	public static ConfigModule create() {
-		return new ConfigModule();
+		return builder().build();
+	}
+
+	public static Builder builder() {
+		return new ConfigModule().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, ConfigModule> {
+		private Builder() {}
+
+		public Builder withEffectiveConfigConsumer(Consumer<String> consumer) {
+			checkNotBuilt(this);
+			effectiveConfigConsumer = consumer;
+			return this;
+		}
+
+		public Builder withEffectiveConfigLogger(Writer writer) {
+			checkNotBuilt(this);
+			return withEffectiveConfigConsumer(effectiveConfig -> {
+				try {
+					writer.write(effectiveConfig);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		}
+
+		public Builder withEffectiveConfigLogger(PrintStream writer) {
+			checkNotBuilt(this);
+			return withEffectiveConfigConsumer(writer::print);
+		}
+
+		public Builder withEffectiveConfigLogger() {
+			checkNotBuilt(this);
+			return withEffectiveConfigConsumer(effectiveConfig ->
+					logger.info("Effective Config:\n\n{}", effectiveConfig));
+		}
+
+		@Override
+		protected ConfigModule doBuild() {
+			return ConfigModule.this;
+		}
 	}
 
 	public ConfigModule saveEffectiveConfigTo(String file) {
@@ -97,30 +138,6 @@ public final class ConfigModule extends AbstractModule implements WithInitialize
 	public ConfigModule saveEffectiveConfigTo(Path file) {
 		this.effectiveConfigPath = file;
 		return this;
-	}
-
-	public ConfigModule withEffectiveConfigConsumer(Consumer<String> consumer) {
-		this.effectiveConfigConsumer = consumer;
-		return this;
-	}
-
-	public ConfigModule withEffectiveConfigLogger(Writer writer) {
-		return withEffectiveConfigConsumer(effectiveConfig -> {
-			try {
-				writer.write(effectiveConfig);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		});
-	}
-
-	public ConfigModule withEffectiveConfigLogger(PrintStream writer) {
-		return withEffectiveConfigConsumer(writer::print);
-	}
-
-	public ConfigModule withEffectiveConfigLogger() {
-		return withEffectiveConfigConsumer(effectiveConfig ->
-				logger.info("Effective Config:\n\n{}", effectiveConfig));
 	}
 
 	@SuppressWarnings("unchecked")

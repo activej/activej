@@ -25,8 +25,9 @@ public final class MultilogDataflowJdbcClientLauncher extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("dataflow.jdbc.url", "http://localhost:" + DEFAULT_JDBC_SERVER_PORT)
+				.build()
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}

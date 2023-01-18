@@ -43,12 +43,14 @@ public class ConfigTest {
 
 	@Test
 	public void testCombine() {
-		Config config1 = Config.EMPTY
+		Config config1 = Config.builder()
 				.with("a", "a")
-				.with("a.a", "aa");
-		Config config2 = Config.EMPTY
+				.with("a.a", "aa")
+				.build();
+		Config config2 = Config.builder()
 				.with("b", "b")
-				.with("a.b", "ab");
+				.with("a.b", "ab")
+				.build();
 		Config config = config1.combineWith(config2);
 		assertEquals(Set.of("a", "b"), config.getChildren().keySet());
 		assertEquals(Set.of("a", "b"), config.getChildren().get("a").getChildren().keySet());
@@ -57,9 +59,9 @@ public class ConfigTest {
 		assertEquals("aa", config.get("a.a"));
 		assertEquals("ab", config.get("a.b"));
 
-		assertIllegalArgument(() -> config1.combineWith(Config.EMPTY.with("a", "x")));
-		assertIllegalArgument(() -> config1.combineWith(Config.EMPTY.with("a.a", "x")));
+		assertIllegalArgument(() -> config1.combineWith(Config.builder().with("a", "x").build()));
+		assertIllegalArgument(() -> config1.combineWith(Config.builder().with("a.a", "x").build()));
 
-		config1.combineWith(Config.EMPTY.with("a.a.a", "x"));
+		config1.combineWith(Config.builder().with("a.a.a", "x").build());
 	}
 }

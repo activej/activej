@@ -60,11 +60,12 @@ public class MemcacheRpcBenchmark extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("memcache.buffers", Integer.toString(NUMBER_BUFFERS))
 				.with("memcache.bufferCapacity", BUFFER_CAPACITY.format())
 				.with("server.listenAddresses", "localhost:8080")
 				.with("client.addresses", "localhost:8080")
+				.build()
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 
@@ -78,8 +79,9 @@ public class MemcacheRpcBenchmark extends Launcher {
 	protected Module getModule() {
 		return combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				MemcacheServerModule.create(),
 				MemcacheClientModule.create()
 		);

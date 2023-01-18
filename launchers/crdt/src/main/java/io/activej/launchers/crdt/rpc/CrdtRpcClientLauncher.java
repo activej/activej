@@ -38,8 +38,9 @@ public abstract class CrdtRpcClientLauncher extends Launcher {
 	protected final Module getModule() {
 		return Modules.combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				new CrdtRpcClientModule(),
 				getBusinessLogicModule(),
 				ModuleBuilder.create()

@@ -24,9 +24,10 @@ public class MemcacheLikeServer extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("memcache.buffers", "4")
-				.with("memcache.bufferCapacity", "64mb");
+				.with("memcache.bufferCapacity", "64mb")
+				.build();
 	}
 
 	@Override

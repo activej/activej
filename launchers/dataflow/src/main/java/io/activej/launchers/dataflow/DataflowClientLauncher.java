@@ -59,8 +59,9 @@ public abstract class DataflowClientLauncher extends Launcher {
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				DataflowClientModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				getBusinessLogicModule()
 		);
 	}

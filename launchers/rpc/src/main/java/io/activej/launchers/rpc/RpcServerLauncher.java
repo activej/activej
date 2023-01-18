@@ -56,8 +56,9 @@ public abstract class RpcServerLauncher extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
+				.build()
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}
@@ -67,8 +68,9 @@ public abstract class RpcServerLauncher extends Launcher {
 		return combine(
 				ServiceGraphModule.create(),
 				JmxModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				getBusinessLogicModule());
 	}
 

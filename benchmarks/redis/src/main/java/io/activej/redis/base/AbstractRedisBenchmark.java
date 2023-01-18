@@ -73,8 +73,9 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("redis.address", Config.ofValue(ofInetSocketAddress(), RedisClient.DEFAULT_ADDRESS))
+				.build()
 				.overrideWith(configOverride())
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
@@ -83,8 +84,9 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	protected Module getModule() {
 		return combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger());
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build());
 	}
 
 	protected int warmupRounds;

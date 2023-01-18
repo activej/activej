@@ -103,7 +103,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void startFirst() throws Exception {
-		new TestNodeLauncher(Config.create()
+		new TestNodeLauncher(Config.builder()
 				.with("crdt.http.listenAddresses", "localhost:7000")
 				.with("crdt.server.listenAddresses", "localhost:8000")
 				.with("crdt.cluster.server.listenAddresses", "localhost:9000")
@@ -112,12 +112,13 @@ public final class CrdtClusterTest {
 				.with("crdt.cluster.replicationCount", "2")
 				.with("crdt.cluster.partitions.second", "localhost:8001")
 				//				.with("crdt.cluster.partitions.file", "localhost:8002")
+				.build()
 		).launch(new String[0]);
 	}
 
 	@Test
 	public void startSecond() throws Exception {
-		new TestNodeLauncher(Config.create()
+		new TestNodeLauncher(Config.builder()
 				.with("crdt.http.listenAddresses", "localhost:7001")
 				.with("crdt.server.listenAddresses", "localhost:8001")
 				.with("crdt.cluster.server.listenAddresses", "localhost:9001")
@@ -126,6 +127,7 @@ public final class CrdtClusterTest {
 				.with("crdt.cluster.replicationCount", "2")
 				.with("crdt.cluster.partitions.first", "localhost:8000")
 				//				.with("crdt.cluster.partitions.file", "localhost:8002")
+				.build()
 		).launch(new String[0]);
 	}
 
@@ -142,9 +144,10 @@ public final class CrdtClusterTest {
 				return new AbstractModule() {
 					@Provides
 					Config config() {
-						return Config.create()
+						return Config.builder()
 								.with("crdt.localPath", "/tmp/TESTS/fileServer")
-								.with("crdt.server.listenAddresses", "localhost:8002");
+								.with("crdt.server.listenAddresses", "localhost:8002")
+								.build();
 					}
 				};
 			}

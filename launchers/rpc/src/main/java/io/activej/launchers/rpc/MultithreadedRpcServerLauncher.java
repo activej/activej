@@ -85,9 +85,10 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
 				.with("workers", "" + WORKERS)
+				.build()
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}
@@ -98,8 +99,9 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				WorkerPoolModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				getBusinessLogicModule());
 	}
 

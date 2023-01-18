@@ -76,8 +76,9 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				TriggersModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				getBusinessLogicModule());
 	}
 

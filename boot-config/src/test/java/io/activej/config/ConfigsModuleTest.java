@@ -129,8 +129,9 @@ public class ConfigsModuleTest {
 								.overrideWith(Config.ofProperties("not-existing.properties", true));
 					}
 				},
-				ConfigModule.create()
+				ConfigModule.builder()
 						.withEffectiveConfigLogger()
+						.build()
 		);
 
 		Config config = injector.getInstance(Config.class);

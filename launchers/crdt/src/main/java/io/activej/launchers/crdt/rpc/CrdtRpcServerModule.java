@@ -53,8 +53,9 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_PORT)))
+				.build()
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}

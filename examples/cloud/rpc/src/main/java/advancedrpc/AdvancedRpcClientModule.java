@@ -62,9 +62,10 @@ public class AdvancedRpcClientModule extends AbstractModule {
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("protocol.compression", "false")
 				.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002, localhost:9003")
+				.build()
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 }

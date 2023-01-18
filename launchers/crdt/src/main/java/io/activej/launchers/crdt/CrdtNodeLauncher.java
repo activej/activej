@@ -55,8 +55,9 @@ public abstract class CrdtNodeLauncher<K extends Comparable<K>, S> extends Launc
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				TriggersModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger(),
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build(),
 				getBusinessLogicModule());
 	}
 

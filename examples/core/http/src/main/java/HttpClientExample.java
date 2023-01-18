@@ -57,15 +57,17 @@ public final class HttpClientExample extends Launcher {
 	protected Module getModule() {
 		return combine(
 				ServiceGraphModule.create(),
-				ConfigModule.create()
-						.withEffectiveConfigLogger());
+				ConfigModule.builder()
+						.withEffectiveConfigLogger()
+						.build());
 	}
 
 	@Provides
 	Config config() {
-		return Config.create()
+		return Config.builder()
 				.with("dns.address", "8.8.8.8")
 				.with("dns.timeout", "5 seconds")
+				.build()
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 	//[END REGION_2]
