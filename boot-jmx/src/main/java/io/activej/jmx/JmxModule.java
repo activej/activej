@@ -208,7 +208,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	@ProvidesIntoSet
 	LauncherService service(Injector injector, JmxRegistry jmxRegistry, DynamicMBeanFactory mbeanFactory, OptionalDependency<Set<Initializer<JmxModule>>> initializers) {
 		for (Initializer<JmxModule> initializer : initializers.orElse(Set.of())) {
-			initializer.accept(this);
+			initializer.initialize(this);
 		}
 		return new LauncherService() {
 			@Override

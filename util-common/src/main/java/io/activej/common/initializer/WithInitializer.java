@@ -31,7 +31,7 @@ public interface WithInitializer<T extends WithInitializer<T>> {
 	 * @return this same object
 	 */
 	default T initialize(Initializer<? super T> initializer) {
-		initializer.accept((T) this);
+		initializer.initialize((T) this);
 		return (T) this;
 	}
 

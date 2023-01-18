@@ -17,7 +17,6 @@
 package io.activej.common.initializer;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * An initializer of some value
@@ -30,7 +29,8 @@ import java.util.function.Consumer;
  * @param <T> a type of object to be initialized
  */
 @FunctionalInterface
-public interface Initializer<T> extends Consumer<T> {
+public interface Initializer<T> {
+	void initialize(T t);
 
 	/**
 	 * Combines multiple initializers into a single initializers that
@@ -55,6 +55,6 @@ public interface Initializer<T> extends Consumer<T> {
 	 * @return a combined initializer
 	 */
 	static <T> Initializer<T> combine(Iterable<? extends Initializer<? super T>> initializers) {
-		return target -> initializers.forEach(initializer -> initializer.accept(target));
+		return target -> initializers.forEach(initializer -> initializer.initialize(target));
 	}
 }
