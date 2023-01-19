@@ -56,9 +56,8 @@ public final class CodegenCalculatorExample {
 
 	//[START REGION_2]
 	public static Class<DoubleUnaryOperator> compile(String expression) {
-		return ClassBuilder.builder(DoubleUnaryOperator.class)
+		return ClassBuilder.create(DoubleUnaryOperator.class)
 				.withMethod("applyAsDouble", PARSER.parse(expression))
-				.build()
 				.defineClass(CLASS_LOADER);
 	}
 	//[END REGION_2]

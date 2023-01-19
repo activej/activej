@@ -40,9 +40,8 @@ public final class Operand_FieldAccess implements Operand<Operand_FieldAccess> {
 
 		FieldGetter fieldGetter = classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(FieldGetter.class, objectClass, fieldName),
-				() -> ClassBuilder.builder(FieldGetter.class)
+				() -> ClassBuilder.create(FieldGetter.class)
 						.withMethod("getField", property(cast(arg(0), objectClass), fieldName))
-						.build()
 		);
 
 		return fieldGetter.getField(object, fieldName);

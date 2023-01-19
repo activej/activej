@@ -15,7 +15,7 @@ public class DynamicClassCreationExample {
 		// declare fields
 		// setter for both fields - a sequence of actions
 		// compareTo, equals, hashCode and toString methods implementations follow the standard convention
-		Class<Person> personClass = ClassBuilder.builder(Person.class)
+		Class<Person> personClass = ClassBuilder.create(Person.class)
 				// declare fields
 				.withField("id", int.class)
 				.withField("name", String.class)
@@ -37,7 +37,6 @@ public class DynamicClassCreationExample {
 				.withMethod("toString", toStringImpl()
 						.withField("id")
 						.with("name", property(self(), "name")))
-				.build()
 				.defineClass(CLASS_LOADER);
 		//[END REGION_2]
 

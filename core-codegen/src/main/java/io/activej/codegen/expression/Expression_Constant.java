@@ -95,7 +95,7 @@ public final class Expression_Constant implements Expression {
 		} else {
 			String field = "$STATIC_CONSTANT_" + getId();
 			Class<?> aClass = cls == null ? value.getClass() : cls;
-			ctx.getClassBuilder().setStaticFinalField(field, aClass, this);
+			ctx.getClassBuilder().withStaticFinalField(field, aClass, this);
 			g.getStatic(ctx.getSelfType(), field, getType(aClass));
 		}
 		return type;

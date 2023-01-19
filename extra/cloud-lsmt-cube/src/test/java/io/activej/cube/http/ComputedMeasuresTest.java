@@ -42,7 +42,7 @@ public class ComputedMeasuresTest {
 	@Test
 	public void test() {
 		ComputedMeasure d = CM.div(CM.mul(CM.div(CM.measure("a"), CM.measure("b")), CM.value(100)), CM.measure("c"));
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.create(TestQueryResultPlaceholder.class)
 				.withField("a", long.class)
 				.withField("b", long.class)
 				.withField("c", double.class)
@@ -53,7 +53,6 @@ public class ComputedMeasuresTest {
 						set(property(self(), "b"), value(100)),
 						set(property(self(), "c"), value(5))))
 				.withMethod("getResult", property(self(), "d"))
-				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
@@ -65,7 +64,7 @@ public class ComputedMeasuresTest {
 	@Test
 	public void testNullDivision() {
 		ComputedMeasure d = CM.div(CM.mul(CM.div(CM.measure("a"), CM.measure("b")), CM.value(100)), CM.measure("c"));
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.create(TestQueryResultPlaceholder.class)
 				.withField("a", long.class)
 				.withField("b", long.class)
 				.withField("c", double.class)
@@ -76,7 +75,6 @@ public class ComputedMeasuresTest {
 						set(property(self(), "b"), value(0)),
 						set(property(self(), "c"), value(0))))
 				.withMethod("getResult", property(self(), "d"))
-				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
@@ -87,7 +85,7 @@ public class ComputedMeasuresTest {
 	@Test
 	public void testSqrt() {
 		ComputedMeasure c = CM.sqrt(CM.add(CM.measure("a"), CM.measure("b")));
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.create(TestQueryResultPlaceholder.class)
 				.withField("a", double.class)
 				.withField("b", double.class)
 				.withField("c", double.class)
@@ -96,7 +94,6 @@ public class ComputedMeasuresTest {
 						set(property(self(), "a"), value(2.0)),
 						set(property(self(), "b"), value(7.0))))
 				.withMethod("getResult", property(self(), "c"))
-				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
@@ -107,7 +104,7 @@ public class ComputedMeasuresTest {
 	@Test
 	public void testSqrtOfNegativeArgument() {
 		ComputedMeasure c = CM.sqrt(CM.sub(CM.measure("a"), CM.measure("b")));
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.create(TestQueryResultPlaceholder.class)
 				.withField("a", double.class)
 				.withField("b", double.class)
 				.withField("c", double.class)
@@ -116,7 +113,6 @@ public class ComputedMeasuresTest {
 						set(property(self(), "a"), value(0.0)),
 						set(property(self(), "b"), value(1E-10))))
 				.withMethod("getResult", property(self(), "c"))
-				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();

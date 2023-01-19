@@ -721,10 +721,9 @@ public class PredicatesTest {
 	@SuppressWarnings("unchecked")
 	private boolean matches(Record record, String field, @Language("RegExp") String pattern) {
 		PredicateDef predicate = AggregationPredicates.regexp(field, pattern);
-		return ClassBuilder.builder(Predicate.class)
+		return ClassBuilder.create(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
 						predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
-				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER)
 				.test(record);
 	}
