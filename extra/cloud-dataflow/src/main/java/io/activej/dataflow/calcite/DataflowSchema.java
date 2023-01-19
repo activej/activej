@@ -16,6 +16,8 @@
  */
 package io.activej.dataflow.calcite;
 
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.calcite.util.NameSet;
@@ -28,30 +30,41 @@ import java.util.TreeMap;
 import static io.activej.common.Checks.checkArgument;
 
 public final class DataflowSchema extends AbstractSchema {
-	private final Map<String, DataflowTable> tableMap = new TreeMap<>(NameSet.COMPARATOR);
+	private final Map<String, AbstractDataflowTable<?>> tableMap = new TreeMap<>(NameSet.COMPARATOR);
 
 	private DataflowSchema() {
 		super();
 	}
 
-	public static DataflowSchema create() {
-		return new DataflowSchema();
+	public static Builder builder() {
+		return new DataflowSchema().new Builder();
 	}
 
-	public DataflowSchema withTable(DataflowTable table) {
-		DataflowTable prev = tableMap.put(table.getTableName(), table);
-		checkArgument(prev == null, "Duplicate table names: " + table.getTableName());
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, DataflowSchema> {
+		private Builder() {}
 
-	public DataflowSchema withTables(Collection<DataflowTable> tables) {
-		for (DataflowTable table : tables) {
-			String tableName = table.getTableName();
-			DataflowTable prev = tableMap.put(tableName, table);
-
-			checkArgument(prev == null, "Duplicate table names: " + tableName);
+		public Builder withTable(AbstractDataflowTable<?> table) {
+			checkNotBuilt(this);
+			AbstractDataflowTable<?> prev = tableMap.put(table.getTableName(), table);
+			checkArgument(prev == null, "Duplicate table names: " + table.getTableName());
+			return this;
 		}
-		return this;
+
+		public Builder withTables(Collection<AbstractDataflowTable<?>> tables) {
+			checkNotBuilt(this);
+			for (AbstractDataflowTable<?> table : tables) {
+				String tableName = table.getTableName();
+				AbstractDataflowTable<?> prev = tableMap.put(tableName, table);
+
+				checkArgument(prev == null, "Duplicate table names: " + tableName);
+			}
+			return this;
+		}
+
+		@Override
+		protected DataflowSchema doBuild() {
+			return DataflowSchema.this;
+		}
 	}
 
 	@Override
@@ -59,7 +72,7 @@ public final class DataflowSchema extends AbstractSchema {
 		return Collections.unmodifiableMap(tableMap);
 	}
 
-	public Map<String, DataflowTable> getDataflowTableMap() {
+	public Map<String, AbstractDataflowTable<?>> getDataflowTableMap() {
 		return Collections.unmodifiableMap(tableMap);
 	}
 }

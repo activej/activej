@@ -29,26 +29,50 @@ import java.util.function.Function;
 import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
-public final class Collector_Merge<K, T> extends AbstractCollector<T, StreamReducer<K, T, Void>, Collector_Merge<K, T>> {
+public final class Collector_Merge<K, T> extends AbstractCollector<T, StreamReducer<K, T, Void>> {
 	private final Function<T, K> keyFunction;
 	private final Comparator<K> keyComparator;
-	private final boolean deduplicate;
+	private boolean deduplicate;
 
 	private Collector_Merge(Reactor reactor, Dataset<T> input, DataflowClient client,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
+			Function<T, K> keyFunction, Comparator<K> keyComparator) {
 		super(reactor, input, client);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
-		this.deduplicate = deduplicate;
 	}
 
 	public static <K, T> Collector_Merge<K, T> create(Reactor reactor, Dataset<T> input, DataflowClient client,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
-		return new Collector_Merge<>(reactor, input, client, keyFunction, keyComparator, deduplicate);
+			Function<T, K> keyFunction, Comparator<K> keyComparator) {
+		return builder(reactor, input, client, keyFunction, keyComparator).build();
 	}
 
-	public static <K, T> Collector_Merge<K, T> create(Reactor reactor, LocallySortedDataset<K, T> input, DataflowClient client, boolean deduplicate) {
-		return new Collector_Merge<>(reactor, input, client, input.keyFunction(), input.keyComparator(), deduplicate);
+	public static <K, T> Collector_Merge<K, T> create(Reactor reactor, LocallySortedDataset<K, T> input, DataflowClient client) {
+		return builder(reactor, input, client).build();
+	}
+
+	public static <K, T> Collector_Merge<K, T>.Builder builder(Reactor reactor, Dataset<T> input, DataflowClient client,
+			Function<T, K> keyFunction, Comparator<K> keyComparator) {
+		return new Collector_Merge<>(reactor, input, client, keyFunction, keyComparator).new Builder();
+	}
+
+	public static <K, T> Collector_Merge<K, T>.Builder builder(Reactor reactor, LocallySortedDataset<K, T> input, DataflowClient client) {
+		return new Collector_Merge<>(reactor, input, client, input.keyFunction(), input.keyComparator()).new Builder();
+	}
+
+	public final class Builder extends AbstractCollector<T, StreamReducer<K, T, Void>>.Builder<Builder, Collector_Merge<K, T>> {
+		private Builder() {}
+
+		public Builder withDeduplicate() {
+			checkNotBuilt(this);
+			Collector_Merge.this.deduplicate = true;
+			return this;
+		}
+
+		public Builder withDeduplicate(boolean deduplicate) {
+			checkNotBuilt(this);
+			Collector_Merge.this.deduplicate = deduplicate;
+			return this;
+		}
 	}
 
 	@Override

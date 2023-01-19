@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.collector;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
@@ -34,7 +35,7 @@ import java.util.List;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, C>> extends AbstractReactive
+public abstract class AbstractCollector<T, A> extends AbstractReactive
 		implements AsyncCollector<T> {
 	protected final Dataset<T> input;
 	protected final DataflowClient client;
@@ -47,10 +48,20 @@ public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, 
 		this.client = client;
 	}
 
-	public final C withLimit(long limit) {
-		this.limit = limit;
-		//noinspection unchecked
-		return (C) this;
+	@SuppressWarnings("unchecked")
+	public abstract class Builder<Self extends Builder<Self, C>, C extends AbstractCollector<T, A>>
+			extends AbstractBuilder<Self, C> {
+
+		public final Self withLimit(long limit) {
+			checkNotBuilt(this);
+			AbstractCollector.this.limit = limit;
+			return (Self) this;
+		}
+
+		@Override
+		protected final C doBuild() {
+			return (C) AbstractCollector.this;
+		}
 	}
 
 	protected abstract A createAccumulator();

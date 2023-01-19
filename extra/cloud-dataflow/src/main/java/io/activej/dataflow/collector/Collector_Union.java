@@ -22,14 +22,22 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.reactor.Reactor;
 
-public final class Collector_Union<T> extends AbstractCollector<T, StreamUnion<T>, Collector_Union<T>> {
+public final class Collector_Union<T> extends AbstractCollector<T, StreamUnion<T>> {
 
 	private Collector_Union(Reactor reactor, Dataset<T> input, DataflowClient client) {
 		super(reactor, input, client);
 	}
 
 	public static <T> Collector_Union<T> create(Reactor reactor, Dataset<T> input, DataflowClient client) {
-		return new Collector_Union<>(reactor, input, client);
+		return builder(reactor, input, client).build();
+	}
+
+	public static <T> Collector_Union<T>.Builder builder(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		return new Collector_Union<>(reactor, input, client).new Builder();
+	}
+
+	public final class Builder extends AbstractCollector<T, StreamUnion<T>>.Builder<Builder, Collector_Union<T>> {
+		private Builder() {}
 	}
 
 	@Override

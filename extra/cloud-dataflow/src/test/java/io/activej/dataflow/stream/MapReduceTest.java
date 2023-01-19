@@ -145,7 +145,7 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		AsyncCollector<StringCount> collector = Collector_Merge.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
+		AsyncCollector<StringCount> collector = Collector_Merge.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder());
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 

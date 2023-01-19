@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.dataflow.calcite.DataflowSchema;
-import io.activej.dataflow.calcite.DataflowTable;
+import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.utils.RecordFunction_Named;
 import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.stream.StreamCodec;
@@ -28,7 +28,7 @@ final class NamedRecordFunctionStreamCodec implements StreamCodec<RecordFunction
 	@Override
 	public RecordFunction_Named<?> decode(StreamInput in) throws IOException {
 		String tableName = STRING_STREAM_CODEC.decode(in);
-		DataflowTable dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
+		AbstractDataflowTable<?> dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
 		if (dataflowTable == null) {
 			throw new CorruptedDataException("Unknown table: " + tableName);
 		}

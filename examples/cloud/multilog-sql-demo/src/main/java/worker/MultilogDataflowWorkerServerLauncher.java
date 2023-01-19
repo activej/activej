@@ -2,10 +2,8 @@ package worker;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
-import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launchers.dataflow.DataflowServerLauncher;
 import io.activej.multilog.AsyncMultilog;
@@ -17,6 +15,7 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	public static final int NUMBER_OF_ITEMS = ApplicationSettings.getInt(MultilogDataflowWorkerServerLauncher.class, "numberOfItems", 100);
 
 	@Inject
+	@Named("Dataflow")
 	Reactor reactor;
 
 	@Inject
@@ -25,11 +24,6 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	@Inject
 	@Named("partition")
 	String partitionId;
-
-	@Provides
-	Reactor eventloop() {
-		return Eventloop.create();
-	}
 
 	@Override
 	protected Module getBusinessLogicModule() {

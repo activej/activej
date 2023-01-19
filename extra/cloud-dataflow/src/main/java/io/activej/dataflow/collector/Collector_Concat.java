@@ -24,14 +24,22 @@ import io.activej.reactor.Reactor;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Collector_Concat<T> extends AbstractCollector<T, List<StreamSupplier<T>>, Collector_Concat<T>> {
+public final class Collector_Concat<T> extends AbstractCollector<T, List<StreamSupplier<T>>> {
 
 	private Collector_Concat(Reactor reactor, Dataset<T> input, DataflowClient client) {
 		super(reactor, input, client);
 	}
 
 	public static <T> Collector_Concat<T> create(Reactor reactor, Dataset<T> input, DataflowClient client) {
-		return new Collector_Concat<>(reactor, input, client);
+		return builder(reactor, input, client).build();
+	}
+
+	public static <T> Collector_Concat<T>.Builder builder(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		return new Collector_Concat<>(reactor, input, client).new Builder();
+	}
+
+	public final class Builder extends AbstractCollector<T, List<StreamSupplier<T>>>.Builder<Builder, Collector_Concat<T>> {
+		private Builder() {}
 	}
 
 	@Override

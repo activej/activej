@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.DataflowSchema;
-import io.activej.dataflow.calcite.DataflowTable;
+import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.inject.Key;
@@ -33,9 +33,9 @@ public final class CalciteServerModule extends AbstractModule {
 				.addDependencies(DatasetIds.class)
 				.mapInstance(List.of(Key.of(DatasetIds.class)), (deps, schema) -> {
 					DatasetIds datasetIds = (DatasetIds) deps[0];
-					Map<String, DataflowTable> tableMap = schema.getDataflowTableMap();
+					Map<String, AbstractDataflowTable<?>> tableMap = schema.getDataflowTableMap();
 
-					for (Map.Entry<String, DataflowTable> entry : tableMap.entrySet()) {
+					for (Map.Entry<String, AbstractDataflowTable<?>> entry : tableMap.entrySet()) {
 						String id = entry.getKey();
 						datasetIds.getKeyForId(id); // throws exception if no key
 					}

@@ -56,7 +56,7 @@ public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataf
 	private final RelOptPlanner planner;
 	private final RelToDatasetConverter relToDatasetConverter;
 
-	private RelTraitSet traits = RelTraitSet.createEmpty();
+	private final RelTraitSet traits = RelTraitSet.createEmpty();
 
 	private SqlDataflow(Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
@@ -73,11 +73,6 @@ public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataf
 	public static SqlDataflow create(Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
 		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
-	}
-
-	public SqlDataflow withTraits(RelTraitSet traits) {
-		this.traits = traits;
-		return this;
 	}
 
 	@Override
@@ -180,15 +175,20 @@ public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataf
 		return graph.toGraphViz();
 	}
 
-	private AsyncCollector<Record> createCollector(Dataset<Record> dataset, long limit) {
-		AbstractCollector<Record, ?, ?> collector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
-				Collector_Merge.create(reactor, sortedDataset, client, false) :
-				Collector_Union.create(reactor, dataset, client);
+	private <
+			B extends AbstractCollector<Record, ?>.Builder<B, C>,
+			C extends AbstractCollector<Record, ?>
+			>
+	AsyncCollector<Record> createCollector(Dataset<Record> dataset, long limit) {
+		//noinspection unchecked
+		B collectorBuilder = (B) (dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
+				Collector_Merge.builder(reactor, sortedDataset, client) :
+				Collector_Union.builder(reactor, dataset, client));
 
-		if (limit == StreamLimiter.NO_LIMIT) {
-			return collector;
+		if (limit != StreamLimiter.NO_LIMIT) {
+			collectorBuilder.withLimit(limit);
 		}
 
-		return collector.withLimit(limit);
+		return collectorBuilder.build();
 	}
 }

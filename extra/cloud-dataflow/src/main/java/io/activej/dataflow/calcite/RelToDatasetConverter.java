@@ -10,6 +10,8 @@ import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.Operand_RecordField;
 import io.activej.dataflow.calcite.operand.Operand_Scalar;
 import io.activej.dataflow.calcite.rel.DataflowTableScan;
+import io.activej.dataflow.calcite.table.AbstractDataflowTable;
+import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
 import io.activej.dataflow.calcite.where.*;
@@ -154,7 +156,7 @@ public class RelToDatasetConverter {
 	private UnmaterializedDataset handle(DataflowTableScan scan, ParamsCollector paramsCollector) {
 		RelOptTable table = scan.getTable();
 
-		DataflowTable dataflowTable = table.unwrap(DataflowTable.class);
+		AbstractDataflowTable<?> dataflowTable = table.unwrap(AbstractDataflowTable.class);
 		assert dataflowTable != null;
 
 		RecordFunction<Object> mapper = (RecordFunction<Object>) dataflowTable.getRecordFunction();
@@ -190,7 +192,7 @@ public class RelToDatasetConverter {
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
 
-			if (!(dataflowTable instanceof DataflowPartitionedTable dataflowPartitionedTable)) return filtered;
+			if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) return filtered;
 
 			long offset = ((Number) offsetOperand.materialize(params).getValue().getValue()).longValue();
 			long limit = ((Number) limitOperand.materialize(params).getValue().getValue()).longValue();

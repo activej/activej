@@ -8,6 +8,9 @@ import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.Operand_RecordField;
 import io.activej.dataflow.calcite.operand.Operand_Scalar;
+import io.activej.dataflow.calcite.table.AbstractDataflowTable;
+import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
+import io.activej.dataflow.calcite.table.DataflowTable;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
@@ -20,15 +23,14 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
 import io.activej.record.Record;
-import io.activej.record.RecordScheme;
 import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 
-import java.lang.reflect.RecordComponent;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.sql.Date;
@@ -43,7 +45,6 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_2;
@@ -67,7 +68,7 @@ public abstract class AbstractCalciteTest {
 	public static final String STUDENT_DUPLICATES_TABLE_NAME = "student_duplicates";
 	public static final String DEPARTMENT_TABLE_NAME = "department";
 	public static final String REGISTRY_TABLE_NAME = "registry";
-	public static final String USER_PROFILES_TABLE_NAME = "profiles";
+	public static final String USER_PROFILE_TABLE_NAME = "profiles";
 	public static final String LARGE_TABLE_NAME = "large_table";
 	public static final String SUBJECT_SELECTION_TABLE_NAME = "subject_selection";
 	public static final String FILTERABLE_TABLE_NAME = "filterable";
@@ -253,86 +254,23 @@ public abstract class AbstractCalciteTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		List<Partition> partitions = List.of(new Partition(address1), new Partition(address2));
-		Key<Set<DataflowTable>> setTableKey = new Key<>() {};
+		Key<Set<AbstractDataflowTable<?>>> setTableKey = new Key<>() {};
 		Module common = createCommon(partitions)
-				.bind(new Key<RecordFunction<Student>>() {}).to(RecordFunction_Student::create, DefiningClassLoader.class)
-				.bind(setTableKey).to(studentToRecord -> Set.of(
-								DataflowTable.create(STUDENT_TABLE_NAME, Student.class, studentToRecord)),
-						new Key<RecordFunction<Student>>() {})
-				.bind(setTableKey).to(classLoader -> {
-					RecordFunction_Department departmentToRecord = RecordFunction_Department.create(classLoader);
-					return Set.of(DataflowTable.create(DEPARTMENT_TABLE_NAME, Department.class, departmentToRecord));
-				}, DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> {
-					RecordFunction_Registry registryToRecord = RecordFunction_Registry.create(classLoader);
-					return Set.of(DataflowTable.create(REGISTRY_TABLE_NAME, Registry.class, registryToRecord));
-				}, DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> {
-					RecordFunction_UserProfile userProfileToRecord = RecordFunction_UserProfile.create(classLoader);
-					return Set.of(DataflowTable.create(USER_PROFILES_TABLE_NAME, UserProfile.class, userProfileToRecord));
-				}, DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> {
-					RecordFunction_Large largeToRecord = RecordFunction_Large.create(classLoader);
-					return Set.of(DataflowTable.create(LARGE_TABLE_NAME, Large.class, largeToRecord));
-				}, DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> {
-					RecordFunction_SubjectSelection subjectSelectionToRecord = RecordFunction_SubjectSelection.create(classLoader);
-					return Set.of(DataflowTable.create(SUBJECT_SELECTION_TABLE_NAME, SubjectSelection.class, subjectSelectionToRecord));
-				}, DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> {
-					RecordFunction_Filterable filterableToRecord = RecordFunction_Filterable.create(classLoader);
-					return Set.of(DataflowTable.create(FILTERABLE_TABLE_NAME, Filterable.class, filterableToRecord));
-				}, DefiningClassLoader.class)
-				.bind(setTableKey).to(studentToRecord -> Set.of(
-								DataflowPartitionedTable.create(STUDENT_DUPLICATES_TABLE_NAME, Student.class, studentToRecord)
-										.withReducer(new StudentReducer())
-										.withPrimaryKeyIndexes(0)),
-						new Key<RecordFunction<Student>>() {})
-				.bind(setTableKey).to(classLoader -> Set.of(
-								DataflowTableBuilder.create(classLoader, CUSTOM_TABLE_NAME, Custom.class)
-										.withColumn("id", int.class, Custom::getId)
-										.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
-										.withColumn("description", String.class, Custom::getDescription)
-										.build()),
-						DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> Set.of(
-								DataflowTableBuilder.createPartitioned(classLoader, CUSTOM_PARTITIONED_TABLE_NAME, Custom.class)
-										.withKeyColumn("id", int.class, Custom::getId)
-										.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
-										.build()),
-						DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> Set.of(
-								DataflowTableBuilder.create(classLoader, TEMPORAL_VALUES_TABLE_NAME, TemporalValues.class)
-										.withColumn("userId", int.class, TemporalValues::userId)
-										.withColumn("registeredAt", Instant.class, TemporalValues::registeredAt)
-										.withColumn("dateOfBirth", LocalDate.class, TemporalValues::dateOfBirth)
-										.withColumn("timeOfBirth", LocalTime.class, TemporalValues::timeOfBirth)
-										.build()),
-						DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> Set.of(
-								DataflowTableBuilder.create(classLoader, ENROLLMENT_TABLE_NAME, Enrollment.class)
-										.withColumn("studentId", int.class, Enrollment::studentId)
-										.withColumn("courseCode", String.class, Enrollment::courseCode)
-										.withColumn("active", boolean.class, Enrollment::active)
-										.withColumn("startDate", LocalDate.class, Enrollment::startDate)
-										.build()),
-						DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> Set.of(
-								DataflowTableBuilder.create(classLoader, PAYMENT_TABLE_NAME, Payment.class)
-										.withColumn("studentId", int.class, Payment::studentId)
-										.withColumn("courseCode", String.class, Payment::courseCode)
-										.withColumn("status", boolean.class, Payment::status)
-										.withColumn("amount", int.class, Payment::amount)
-										.build()),
-						DefiningClassLoader.class)
-				.bind(setTableKey).to(classLoader -> Set.of(
-								DataflowTableBuilder.create(classLoader, STATES_TABLE_NAME, States.class)
-										.withColumn("id", int.class, States::id)
-										.withColumn("state", State.class, States::state)
-										.withColumn("innerState", InnerState.class, States::innerState)
-										.build())
-						, DefiningClassLoader.class)
-				.multibindToSet(DataflowTable.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createStudentTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createDepartmentTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createRegistryTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createUserProfileTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createLargeTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createSubjectSelectionTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createFilterableTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createPartitionedStudentTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createCustomTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createPartitionedCustomTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createTemporalValuesTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createEnrollmentTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createPaymentTable(classLoader)), DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(createStatesTable(classLoader)), DefiningClassLoader.class)
+				.multibindToSet(new Key<AbstractDataflowTable<?>>() {})
 				.build();
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -355,7 +293,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST_1)
 						.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST_1)
 						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_1)
-						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_1)
+						.bind(datasetId(USER_PROFILE_TABLE_NAME)).toInstance(USER_PROFILES_LIST_1)
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_1)
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_1)
 						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_1))
@@ -373,7 +311,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST_2)
 						.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST_2)
 						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_2)
-						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_2)
+						.bind(datasetId(USER_PROFILE_TABLE_NAME)).toInstance(USER_PROFILES_LIST_2)
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_2)
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_2)
 						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_2))
@@ -2850,183 +2788,119 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class RecordFunction_Student implements RecordFunction<Student> {
-		private final RecordScheme scheme;
-
-		private RecordFunction_Student(RecordScheme scheme) {
-			this.scheme = scheme;
-		}
-
-		public static RecordFunction_Student create(DefiningClassLoader classLoader) {
-			return new RecordFunction_Student(ofJavaRecord(classLoader, Student.class));
-		}
-
-		@Override
-		public Record apply(Student student) {
-			Record record = scheme.record();
-			record.set("id", student.id);
-			record.set("firstName", student.firstName);
-			record.set("lastName", student.lastName);
-			record.set("dept", student.dept);
-			return record;
-		}
-
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowTable<Student> createStudentTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, STUDENT_TABLE_NAME, Student.class)
+				.withColumn("id", int.class, Student::id)
+				.withColumn("firstName", String.class, Student::firstName)
+				.withColumn("lastName", String.class, Student::lastName)
+				.withColumn("dept", int.class, Student::dept)
+				.build();
 	}
 
-	public static final class RecordFunction_Department implements RecordFunction<Department> {
-		private final RecordScheme scheme;
-
-		private RecordFunction_Department(RecordScheme scheme) {this.scheme = scheme;}
-
-		public static RecordFunction_Department create(DefiningClassLoader classLoader) {
-			return new RecordFunction_Department(ofJavaRecord(classLoader, Department.class));
-		}
-
-		@Override
-		public Record apply(Department department) {
-			Record record = scheme.record();
-			record.set("id", department.id);
-			record.set("departmentName", department.departmentName);
-			record.set("aliases", department.aliases);
-			return record;
-		}
-
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowPartitionedTable<Student> createPartitionedStudentTable(DefiningClassLoader classLoader) {
+		return DataflowPartitionedTable.builder(classLoader, STUDENT_DUPLICATES_TABLE_NAME, Student.class)
+				.withKeyColumn("id", int.class, Student::id)
+				.withColumn("firstName", String.class, Student::firstName)
+				.withColumn("lastName", String.class, Student::lastName)
+				.withColumn("dept", int.class, Student::dept)
+				.withReducer(new StudentReducer())
+				.build();
 	}
 
-	public static final class RecordFunction_Registry implements RecordFunction<Registry> {
-		private final RecordScheme scheme;
-
-		private RecordFunction_Registry(RecordScheme scheme) {
-			this.scheme = scheme;
-		}
-
-		public static RecordFunction_Registry create(DefiningClassLoader classLoader) {
-			return new RecordFunction_Registry(ofJavaRecord(classLoader, Registry.class));
-		}
-
-		@Override
-		public Record apply(Registry registry) {
-			Record record = scheme.record();
-			record.set("id", registry.id);
-			record.set("counters", registry.counters);
-			record.set("domains", registry.domains);
-			return record;
-		}
-
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowTable<Department> createDepartmentTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, DEPARTMENT_TABLE_NAME, Department.class)
+				.withColumn("id", int.class, Department::id)
+				.withColumn("departmentName", String.class, Department::departmentName)
+				.withColumn("aliases", new TypeT<>() {}, Department::aliases)
+				.build();
 	}
 
-	public static final class RecordFunction_UserProfile implements RecordFunction<UserProfile> {
-		private final RecordScheme scheme;
-
-		private RecordFunction_UserProfile(RecordScheme scheme) {
-			this.scheme = scheme;
-		}
-
-		public static RecordFunction_UserProfile create(DefiningClassLoader classLoader) {
-			return new RecordFunction_UserProfile(ofJavaRecord(classLoader, UserProfile.class));
-		}
-
-		@Override
-		public Record apply(UserProfile userProfile) {
-			Record record = scheme.record();
-			record.set("id", userProfile.id);
-			record.set("pojo", userProfile.pojo);
-			record.set("intents", userProfile.intents);
-			record.set("timestamp", userProfile.timestamp);
-			return record;
-		}
-
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowTable<Registry> createRegistryTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, REGISTRY_TABLE_NAME, Registry.class)
+				.withColumn("id", int.class, Registry::id)
+				.withColumn("counters", new TypeT<>() {}, Registry::counters)
+				.withColumn("domains", new TypeT<>() {}, Registry::domains)
+				.build();
 	}
 
-	public static final class RecordFunction_Large implements RecordFunction<Large> {
-		private final RecordScheme scheme;
-
-		private RecordFunction_Large(RecordScheme scheme) {
-			this.scheme = scheme;
-		}
-
-		public static RecordFunction_Large create(DefiningClassLoader classLoader) {
-			return new RecordFunction_Large(ofJavaRecord(classLoader, Large.class));
-		}
-
-		@Override
-		public Record apply(Large large) {
-			Record record = scheme.record();
-			record.set("id", large.id);
-			return record;
-		}
-
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowTable<UserProfile> createUserProfileTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, USER_PROFILE_TABLE_NAME, UserProfile.class)
+				.withColumn("id", String.class, UserProfile::id)
+				.withColumn("pojo", UserProfilePojo.class, UserProfile::pojo)
+				.withColumn("intents", new TypeT<>() {}, UserProfile::intents)
+				.withColumn("timestamp", long.class, UserProfile::timestamp)
+				.build();
 	}
 
-	public static final class RecordFunction_SubjectSelection implements RecordFunction<SubjectSelection> {
-		private final RecordScheme scheme;
-
-		private RecordFunction_SubjectSelection(RecordScheme scheme) {
-			this.scheme = scheme;
-		}
-
-		public static RecordFunction_SubjectSelection create(DefiningClassLoader classLoader) {
-			return new RecordFunction_SubjectSelection(ofJavaRecord(classLoader, SubjectSelection.class));
-		}
-
-		@Override
-		public Record apply(SubjectSelection subjectSelection) {
-			Record record = scheme.record();
-			record.set("subject", subjectSelection.subject);
-			record.set("semester", subjectSelection.semester);
-			record.set("attendee", subjectSelection.attendee);
-			return record;
-		}
-
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowTable<Large> createLargeTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, LARGE_TABLE_NAME, Large.class)
+				.withColumn("id", long.class, Large::id)
+				.build();
 	}
 
-	public static final class RecordFunction_Filterable implements RecordFunction<Filterable> {
-		private final RecordScheme scheme;
+	private static DataflowTable<SubjectSelection> createSubjectSelectionTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, SUBJECT_SELECTION_TABLE_NAME, SubjectSelection.class)
+				.withColumn("subject", String.class, SubjectSelection::subject)
+				.withColumn("semester", int.class, SubjectSelection::semester)
+				.withColumn("attendee", String.class, SubjectSelection::attendee)
+				.build();
+	}
 
-		private RecordFunction_Filterable(RecordScheme scheme) {
-			this.scheme = scheme;
-		}
+	private static DataflowTable<Filterable> createFilterableTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, FILTERABLE_TABLE_NAME, Filterable.class)
+				.withColumn("id", int.class, Filterable::id)
+				.withColumn("created", long.class, Filterable::created)
+				.build();
+	}
 
-		public static RecordFunction_Filterable create(DefiningClassLoader classLoader) {
-			return new RecordFunction_Filterable(ofJavaRecord(classLoader, Filterable.class));
-		}
+	private static DataflowTable<Custom> createCustomTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, CUSTOM_TABLE_NAME, Custom.class)
+				.withColumn("id", int.class, Custom::getId)
+				.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+				.withColumn("description", String.class, Custom::getDescription)
+				.build();
+	}
 
-		@Override
-		public Record apply(Filterable filterable) {
-			Record record = scheme.record();
-			record.setInt("id", filterable.id);
-			record.setLong("created", filterable.created);
-			return record;
-		}
+	private static DataflowPartitionedTable<Custom> createPartitionedCustomTable(DefiningClassLoader classLoader) {
+		return DataflowPartitionedTable.builder(classLoader, CUSTOM_PARTITIONED_TABLE_NAME, Custom.class)
+				.withKeyColumn("id", int.class, Custom::getId)
+				.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+				.build();
+	}
 
-		@Override
-		public RecordScheme getScheme() {
-			return scheme;
-		}
+	private static DataflowTable<TemporalValues> createTemporalValuesTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, TEMPORAL_VALUES_TABLE_NAME, TemporalValues.class)
+				.withColumn("userId", int.class, TemporalValues::userId)
+				.withColumn("registeredAt", Instant.class, TemporalValues::registeredAt)
+				.withColumn("dateOfBirth", LocalDate.class, TemporalValues::dateOfBirth)
+				.withColumn("timeOfBirth", LocalTime.class, TemporalValues::timeOfBirth)
+				.build();
+	}
+
+	private static DataflowTable<Enrollment> createEnrollmentTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, ENROLLMENT_TABLE_NAME, Enrollment.class)
+				.withColumn("studentId", int.class, Enrollment::studentId)
+				.withColumn("courseCode", String.class, Enrollment::courseCode)
+				.withColumn("active", boolean.class, Enrollment::active)
+				.withColumn("startDate", LocalDate.class, Enrollment::startDate)
+				.build();
+	}
+
+	private static DataflowTable<Payment> createPaymentTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, PAYMENT_TABLE_NAME, Payment.class)
+				.withColumn("studentId", int.class, Payment::studentId)
+				.withColumn("courseCode", String.class, Payment::courseCode)
+				.withColumn("status", boolean.class, Payment::status)
+				.withColumn("amount", int.class, Payment::amount)
+				.build();
+	}
+
+	private static DataflowTable<States> createStatesTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, STATES_TABLE_NAME, States.class)
+				.withColumn("id", int.class, States::id)
+				.withColumn("state", State.class, States::state)
+				.withColumn("innerState", InnerState.class, States::innerState)
+				.build();
 	}
 
 	private static QueryResult departmentsToQueryResult(List<Department> departments) {
@@ -3083,21 +2957,6 @@ public abstract class AbstractCalciteTest {
 		}
 
 		return new QueryResult(columnNames, columnValues);
-	}
-
-	private static RecordScheme ofJavaRecord(DefiningClassLoader classLoader, Class<?> recordClass) {
-		checkState(recordClass.isRecord());
-
-		RecordScheme.Builder recordSchemeBuilder = RecordScheme.builder(classLoader);
-		RecordComponent[] recordComponents = recordClass.getRecordComponents();
-
-		for (RecordComponent recordComponent : recordComponents) {
-			recordSchemeBuilder.withField(recordComponent.getName(), recordComponent.getGenericType());
-		}
-
-		return recordSchemeBuilder
-				.withComparator(Arrays.stream(recordComponents).map(RecordComponent::getName).toList())
-				.build();
 	}
 
 	private static Student columnsToStudent(Object[] columnValue) {
