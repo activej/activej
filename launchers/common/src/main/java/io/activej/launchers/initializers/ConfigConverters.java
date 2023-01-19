@@ -44,11 +44,12 @@ public final class ConfigConverters {
 				Duration timedOutExceptionTtl = config.get(ofDuration(), "timedOutExpiration", DEFAULT_TIMED_OUT_EXPIRATION);
 				Duration hardExpirationDelta = config.get(ofDuration(), "hardExpirationDelta", DEFAULT_HARD_EXPIRATION_DELTA);
 				Duration maxTtl = config.get(ofDuration(), "maxTtl", DEFAULT_MAX_TTL);
-				return DnsCache.create(reactor)
+				return DnsCache.builder(reactor)
 						.withErrorCacheExpiration(errorCacheExpiration)
 						.withTimedOutExpiration(timedOutExceptionTtl)
 						.withHardExpirationDelta(hardExpirationDelta)
-						.withMaxTtl(maxTtl);
+						.withMaxTtl(maxTtl)
+						.build();
 			}
 
 			@Override

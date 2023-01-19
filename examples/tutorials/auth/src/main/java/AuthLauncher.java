@@ -39,8 +39,9 @@ public final class AuthLauncher extends HttpServerLauncher {
 
 	@Provides
 	AsyncSessionStore<String> sessionStore(Reactor reactor) {
-		return SessionStore_InMemory.<String>create(reactor)
-				.withLifetime(Duration.ofDays(30));
+		return SessionStore_InMemory.<String>builder(reactor)
+				.withLifetime(Duration.ofDays(30))
+				.build();
 	}
 
 	@Provides
@@ -108,7 +109,10 @@ public final class AuthLauncher extends HttpServerLauncher {
 						//[END REGION_8]
 						.map(POST, "/logout", request ->
 								HttpResponse.redirect302("/")
-										.withCookie(HttpCookie.of(SESSION_ID).withPath("/").withMaxAge(Duration.ZERO))));
+										.withCookie(HttpCookie.builder(SESSION_ID)
+												.withPath("/")
+												.withMaxAge(Duration.ZERO)
+												.build())));
 		//[END REGION_7]
 	}
 	//[END REGION_5]

@@ -19,8 +19,8 @@ package io.activej.dns;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
@@ -55,7 +55,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
 public final class DnsClient extends AbstractNioReactive
-		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient> {
+		implements AsyncDnsClient, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
@@ -80,37 +80,56 @@ public final class DnsClient extends AbstractNioReactive
 	}
 
 	public static DnsClient create(NioReactor reactor) {
-		return new DnsClient(reactor);
+		return builder(reactor).build();
 	}
 
-	public DnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
-		this.datagramSocketSettings = setting;
-		return this;
+	public static Builder builder(NioReactor reactor) {
+		return new DnsClient(reactor).new Builder();
 	}
 
-	public DnsClient withTimeout(Duration timeout) {
-		this.timeout = timeout;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, DnsClient> {
+		private Builder() {}
 
-	public DnsClient withDnsServerAddress(InetSocketAddress address) {
-		this.dnsServerAddress = address;
-		return this;
-	}
+		public Builder withDatagramSocketSetting(DatagramSocketSettings setting) {
+			checkNotBuilt(this);
+			DnsClient.this.datagramSocketSettings = setting;
+			return this;
+		}
 
-	public DnsClient withDnsServerAddress(InetAddress address) {
-		this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
-		return this;
-	}
+		public Builder withTimeout(Duration timeout) {
+			checkNotBuilt(this);
+			DnsClient.this.timeout = timeout;
+			return this;
+		}
 
-	public DnsClient withInspector(Inspector inspector) {
-		this.inspector = inspector;
-		return this;
-	}
+		public Builder withDnsServerAddress(InetSocketAddress address) {
+			checkNotBuilt(this);
+			DnsClient.this.dnsServerAddress = address;
+			return this;
+		}
 
-	public DnsClient withSocketInspector(UdpSocket.Inspector socketInspector) {
-		this.socketInspector = socketInspector;
-		return this;
+		public Builder withDnsServerAddress(InetAddress address) {
+			checkNotBuilt(this);
+			DnsClient.this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
+			return this;
+		}
+
+		public Builder withInspector(Inspector inspector) {
+			checkNotBuilt(this);
+			DnsClient.this.inspector = inspector;
+			return this;
+		}
+
+		public Builder withSocketInspector(UdpSocket.Inspector socketInspector) {
+			checkNotBuilt(this);
+			DnsClient.this.socketInspector = socketInspector;
+			return this;
+		}
+
+		@Override
+		protected DnsClient doBuild() {
+			return DnsClient.this;
+		}
 	}
 	// endregion
 

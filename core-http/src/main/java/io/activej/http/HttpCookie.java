@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -96,70 +97,101 @@ public final class HttpCookie {
 	}
 
 	public static HttpCookie of(String name, String value, String path) {
-		return new HttpCookie(name, value, path);
+		return builder(name, value, path).build();
 	}
 
 	public static HttpCookie of(String name, String value) {
-		return new HttpCookie(name, value);
+		return builder(name, value).build();
 	}
 
 	public static HttpCookie of(String name) {
-		return new HttpCookie(name, null);
+		return builder(name).build();
 	}
 
-	public HttpCookie withValue(String value) {
-		setValue(value);
-		return this;
+	public static Builder builder(String name, String value, String path) {
+		return new HttpCookie(name, value, path).new Builder();
 	}
 
-	public HttpCookie withExpirationDate(Instant expirationDate) {
-		// <rfc1123-date, defined in [RFC2616], Section 3.3.1>
-		setExpirationDate(expirationDate);
-		return this;
+	public static Builder builder(String name, String value) {
+		return new HttpCookie(name, value).new Builder();
 	}
 
-	public HttpCookie withMaxAge(int maxAge) {
-		// %x31-39 ; digits 1 through 9
-		setMaxAge(maxAge);
-		return this;
+	public static Builder builder(String name) {
+		return new HttpCookie(name, null).new Builder();
 	}
 
-	public HttpCookie withMaxAge(Duration maxAge) {
-		setMaxAge(maxAge);
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, HttpCookie> {
+		private Builder() {}
 
-	public HttpCookie withDomain(String domain) {
-		// https://tools.ietf.org/html/rfc1034#section-3.5
-		setDomain(domain);
-		return this;
-	}
+		public Builder withValue(String value) {
+			checkNotBuilt(this);
+			setValue(value);
+			return this;
+		}
 
-	public HttpCookie withPath(String path) {
-		// <any CHAR except CTLs or ";">
-		setPath(path);
-		return this;
-	}
+		public Builder withExpirationDate(Instant expirationDate) {
+			checkNotBuilt(this);
+			// <rfc1123-date, defined in [RFC2616], Section 3.3.1>
+			setExpirationDate(expirationDate);
+			return this;
+		}
 
-	public HttpCookie withSecure(boolean secure) {
-		setSecure(secure);
-		return this;
-	}
+		public Builder withMaxAge(int maxAge) {
+			checkNotBuilt(this);
+			// %x31-39 ; digits 1 through 9
+			setMaxAge(maxAge);
+			return this;
+		}
 
-	public HttpCookie withHttpOnly(boolean httpOnly) {
-		setHttpOnly(httpOnly);
-		return this;
-	}
+		public Builder withMaxAge(Duration maxAge) {
+			checkNotBuilt(this);
+			setMaxAge(maxAge);
+			return this;
+		}
 
-	public HttpCookie withSameSite(SameSite sameSite) {
-		setSameSite(sameSite);
-		return this;
-	}
+		public Builder withDomain(String domain) {
+			checkNotBuilt(this);
+			// https://tools.ietf.org/html/rfc1034#section-3.5
+			setDomain(domain);
+			return this;
+		}
 
-	public HttpCookie withExtension(String extension) {
-		// any CHAR except CTLs or ";"
-		setExtension(extension);
-		return this;
+		public Builder withPath(String path) {
+			checkNotBuilt(this);
+			// <any CHAR except CTLs or ";">
+			setPath(path);
+			return this;
+		}
+
+		public Builder withSecure(boolean secure) {
+			checkNotBuilt(this);
+			setSecure(secure);
+			return this;
+		}
+
+		public Builder withHttpOnly(boolean httpOnly) {
+			checkNotBuilt(this);
+			setHttpOnly(httpOnly);
+			return this;
+		}
+
+		public Builder withSameSite(SameSite sameSite) {
+			checkNotBuilt(this);
+			setSameSite(sameSite);
+			return this;
+		}
+
+		public Builder withExtension(String extension) {
+			checkNotBuilt(this);
+			// any CHAR except CTLs or ";"
+			setExtension(extension);
+			return this;
+		}
+
+		@Override
+		protected HttpCookie doBuild() {
+			return HttpCookie.this;
+		}
 	}
 	// endregion
 

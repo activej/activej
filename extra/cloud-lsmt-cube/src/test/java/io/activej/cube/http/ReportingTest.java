@@ -334,8 +334,9 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = HttpClient.create(reactor)
-				.withNoKeepAlive();
+		AsyncHttpClient httpClient = HttpClient.builder(reactor)
+				.withNoKeepAlive()
+				.build();
 		cubeHttp = Cube_HttpClient.builder(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)

@@ -16,7 +16,7 @@
 
 package io.activej.dns;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.dns.DnsCache.DnsQueryCacheResult;
 import io.activej.dns.protocol.DnsQuery;
 import io.activej.dns.protocol.DnsQueryException;
@@ -44,7 +44,7 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * connects to some DNS server and gets the response from it.
  */
 public final class DnsClient_Cached extends AbstractReactive
-		implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<DnsClient_Cached> {
+		implements AsyncDnsClient, ReactiveJmxBean {
 	private final Logger logger = LoggerFactory.getLogger(DnsClient_Cached.class);
 
 	private final AsyncDnsClient client;
@@ -53,35 +53,53 @@ public final class DnsClient_Cached extends AbstractReactive
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private DnsClient_Cached(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
+	private DnsClient_Cached(Reactor reactor, AsyncDnsClient client) {
 		super(reactor);
 		this.client = client;
-		this.cache = cache;
 	}
 
 	public static DnsClient_Cached create(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
-		return new DnsClient_Cached(reactor, client, cache);
+		return builder(reactor, client)
+				.withCache(cache)
+				.build();
 	}
 
 	public static DnsClient_Cached create(Reactor reactor, AsyncDnsClient client) {
-		return new DnsClient_Cached(reactor, client, DnsCache.create(reactor));
+		return builder(reactor, client)
+				.withCache(DnsCache.create(reactor))
+				.build();
 	}
 
-	public DnsClient_Cached withCache(DnsCache cache) {
-		this.cache = cache;
-		return this;
+	public static Builder builder(Reactor reactor, AsyncDnsClient client){
+		return new DnsClient_Cached(reactor, client).new Builder();
 	}
 
-	public DnsClient_Cached withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta) {
-		return withExpiration(errorCacheExpiration, hardExpirationDelta, DnsCache.DEFAULT_TIMED_OUT_EXPIRATION);
-	}
+	public final class Builder extends AbstractBuilder<Builder, DnsClient_Cached> {
+		private Builder() {}
 
-	public DnsClient_Cached withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta, Duration timedOutExceptionTtl) {
-		cache
-				.withErrorCacheExpiration(errorCacheExpiration)
-				.withHardExpirationDelta(hardExpirationDelta)
-				.withTimedOutExpiration(timedOutExceptionTtl);
-		return this;
+		public Builder withCache(DnsCache cache) {
+			checkNotBuilt(this);
+			DnsClient_Cached.this.cache = cache;
+			return this;
+		}
+
+		public Builder withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta) {
+			checkNotBuilt(this);
+			return withExpiration(errorCacheExpiration, hardExpirationDelta, DnsCache.DEFAULT_TIMED_OUT_EXPIRATION);
+		}
+
+		public Builder withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta, Duration timedOutExceptionTtl) {
+			checkNotBuilt(this);
+			cache.setErrorCacheExpiration(errorCacheExpiration);
+			cache.setHardExpirationDelta(hardExpirationDelta);
+			cache.setTimedOutExpiration(timedOutExceptionTtl);
+			return this;
+		}
+
+		@Override
+		protected DnsClient_Cached doBuild() {
+			return DnsClient_Cached.this;
+		}
 	}
 
 	public AsyncDnsClient adaptToAnotherReactor(Reactor anotherReactor) {

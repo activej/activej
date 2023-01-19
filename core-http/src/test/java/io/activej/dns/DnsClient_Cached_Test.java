@@ -42,7 +42,9 @@ public final class DnsClient_Cached_Test {
 	@Before
 	public void setUp() {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		cachedDnsClient = DnsClient_Cached.create(reactor, DnsClient.create(reactor).withDnsServerAddress(LOCAL_DNS));
+		cachedDnsClient = DnsClient_Cached.create(reactor, DnsClient.builder(reactor)
+				.withDnsServerAddress(LOCAL_DNS)
+				.build());
 	}
 
 	@Test
@@ -81,9 +83,10 @@ public final class DnsClient_Cached_Test {
 
 	@Test
 	public void testDnsClientTimeout() {
-		AsyncDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor())
+		AsyncDnsClient dnsClient = DnsClient.builder(Reactor.getCurrentReactor())
 				.withTimeout(Duration.ofMillis(20))
-				.withDnsServerAddress(UNREACHABLE_DNS);
+				.withDnsServerAddress(UNREACHABLE_DNS)
+				.build();
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("www.google.com"));
 		assertEquals(TIMED_OUT, e.getResult().getErrorCode());

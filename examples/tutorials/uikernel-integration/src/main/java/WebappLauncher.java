@@ -57,8 +57,9 @@ public class WebappLauncher extends Launcher {
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
-		Servlet_Static staticServlet = Servlet_Static.create(reactor, staticLoader)
-				.withIndexHtml();
+		Servlet_Static staticServlet = Servlet_Static.builder(reactor, staticLoader)
+				.withIndexHtml()
+				.build();
 		AsyncServlet usersApiServlet = UiKernelServlets.apiServlet(reactor, model, gson);
 
 		return Servlet_Routing.create(reactor)

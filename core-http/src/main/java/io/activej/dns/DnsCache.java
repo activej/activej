@@ -17,7 +17,7 @@
 package io.activej.dns;
 
 import io.activej.common.StringFormatUtils;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.dns.protocol.DnsProtocol.ResponseErrorCode;
 import io.activej.dns.protocol.DnsQuery;
@@ -47,8 +47,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 /**
  * Represents a cache for storing resolved domains during it's time to live.
  */
-public final class DnsCache extends AbstractReactive
-		implements WithInitializer<DnsCache> {
+public final class DnsCache extends AbstractReactive {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
 
 	public static final Duration DEFAULT_ERROR_CACHE_EXPIRATION = Duration.ofMinutes(1);
@@ -79,36 +78,53 @@ public final class DnsCache extends AbstractReactive
 	}
 
 	public static DnsCache create(Reactor reactor) {
-		return new DnsCache(reactor);
+		return builder(reactor).build();
 	}
 
-	/**
-	 * @param errorCacheExpiration expiration time for errors without time to live
-	 */
-	public DnsCache withErrorCacheExpiration(Duration errorCacheExpiration) {
-		this.errorCacheExpiration = errorCacheExpiration.toMillis();
-		return this;
+	public static Builder builder(Reactor reactor) {
+		return new DnsCache(reactor).new Builder();
 	}
 
-	/**
-	 * @param timedOutExpiration expiration time for timed out exception
-	 */
-	public DnsCache withTimedOutExpiration(Duration timedOutExpiration) {
-		this.timedOutExpiration = timedOutExpiration.toMillis();
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, DnsCache> {
+		private Builder() {}
 
-	/**
-	 * @param hardExpirationDelta delta between time at which entry is considered resolved, but needs
-	 */
-	public DnsCache withHardExpirationDelta(Duration hardExpirationDelta) {
-		this.hardExpirationDelta = hardExpirationDelta.toMillis();
-		return this;
-	}
+		/**
+		 * @param errorCacheExpiration expiration time for errors without time to live
+		 */
+		public Builder withErrorCacheExpiration(Duration errorCacheExpiration) {
+			checkNotBuilt(this);
+			DnsCache.this.errorCacheExpiration = errorCacheExpiration.toMillis();
+			return this;
+		}
 
-	public DnsCache withMaxTtl(@Nullable Duration maxTtl) {
-		this.maxTtl = maxTtl == null ? Long.MAX_VALUE : maxTtl.toMillis();
-		return this;
+		/**
+		 * @param timedOutExpiration expiration time for timed out exception
+		 */
+		public Builder withTimedOutExpiration(Duration timedOutExpiration) {
+			checkNotBuilt(this);
+			DnsCache.this.timedOutExpiration = timedOutExpiration.toMillis();
+			return this;
+		}
+
+		/**
+		 * @param hardExpirationDelta delta between time at which entry is considered resolved, but needs
+		 */
+		public Builder withHardExpirationDelta(Duration hardExpirationDelta) {
+			checkNotBuilt(this);
+			DnsCache.this.hardExpirationDelta = hardExpirationDelta.toMillis();
+			return this;
+		}
+
+		public Builder withMaxTtl(@Nullable Duration maxTtl) {
+			checkNotBuilt(this);
+			DnsCache.this.maxTtl = maxTtl == null ? Long.MAX_VALUE : maxTtl.toMillis();
+			return this;
+		}
+
+		@Override
+		protected DnsCache doBuild() {
+			return DnsCache.this;
+		}
 	}
 
 	/**

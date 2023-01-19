@@ -21,7 +21,7 @@ import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
@@ -75,7 +75,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class HttpClient extends AbstractNioReactive
-		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<HttpClient> {
+		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(HttpClient.class);
 	private static final boolean CHECKS = Checks.isEnabled(HttpClient.class);
 
@@ -292,84 +292,112 @@ public final class HttpClient extends AbstractNioReactive
 	}
 
 	public static HttpClient create(NioReactor reactor) {
+		return builder(reactor).build();
+	}
+
+	public static Builder builder(NioReactor reactor) {
 		AsyncDnsClient defaultDnsClient = DnsClient.create(reactor);
-		return new HttpClient(reactor, defaultDnsClient);
+		return new HttpClient(reactor, defaultDnsClient).new Builder();
 	}
 
-	public HttpClient withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, HttpClient> {
+		private Builder() {}
 
-	public HttpClient withDnsClient(AsyncDnsClient asyncDnsClient) {
-		this.asyncDnsClient = asyncDnsClient;
-		return this;
-	}
+		public Builder withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			HttpClient.this.socketSettings = socketSettings;
+			return this;
+		}
 
-	public HttpClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
-		this.sslContext = sslContext;
-		this.sslExecutor = sslExecutor;
-		return this;
-	}
+		public Builder withDnsClient(AsyncDnsClient asyncDnsClient) {
+			checkNotBuilt(this);
+			HttpClient.this.asyncDnsClient = asyncDnsClient;
+			return this;
+		}
 
-	public HttpClient withKeepAliveTimeout(Duration keepAliveTime) {
-		this.keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
-		return this;
-	}
+		public Builder withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
+			checkNotBuilt(this);
+			HttpClient.this.sslContext = sslContext;
+			HttpClient.this.sslExecutor = sslExecutor;
+			return this;
+		}
 
-	public HttpClient withNoKeepAlive() {
-		return withKeepAliveTimeout(Duration.ZERO);
-	}
+		public Builder withKeepAliveTimeout(Duration keepAliveTime) {
+			checkNotBuilt(this);
+			HttpClient.this.keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
+			return this;
+		}
 
-	public HttpClient withMaxKeepAliveRequests(int maxKeepAliveRequests) {
-		checkArgument(maxKeepAliveRequests >= 0, "Maximum number of requests per keep-alive connection should not be less than zero");
-		this.maxKeepAliveRequests = maxKeepAliveRequests;
-		return this;
-	}
+		public Builder withNoKeepAlive() {
+			checkNotBuilt(this);
+			return withKeepAliveTimeout(Duration.ZERO);
+		}
 
-	public HttpClient withReadWriteTimeout(Duration readWriteTimeout) {
-		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
-		return this;
-	}
+		public Builder withMaxKeepAliveRequests(int maxKeepAliveRequests) {
+			checkNotBuilt(this);
+			checkArgument(maxKeepAliveRequests >= 0, "Maximum number of requests per keep-alive connection should not be less than zero");
+			HttpClient.this.maxKeepAliveRequests = maxKeepAliveRequests;
+			return this;
+		}
 
-	public HttpClient withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
-		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
-		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
-		return this;
-	}
+		public Builder withReadWriteTimeout(Duration readWriteTimeout) {
+			checkNotBuilt(this);
+			HttpClient.this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
+			return this;
+		}
 
-	public HttpClient withConnectTimeout(Duration connectTimeout) {
-		this.connectTimeoutMillis = (int) connectTimeout.toMillis();
-		return this;
-	}
+		public Builder withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
+			checkNotBuilt(this);
+			HttpClient.this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
+			HttpClient.this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
+			return this;
+		}
 
-	public HttpClient withMaxBodySize(MemSize maxBodySize) {
-		return withMaxBodySize(maxBodySize.toInt());
-	}
+		public Builder withConnectTimeout(Duration connectTimeout) {
+			checkNotBuilt(this);
+			HttpClient.this.connectTimeoutMillis = (int) connectTimeout.toMillis();
+			return this;
+		}
 
-	public HttpClient withMaxBodySize(int maxBodySize) {
-		this.maxBodySize = maxBodySize != 0 ? maxBodySize : Integer.MAX_VALUE;
-		return this;
-	}
+		public Builder withMaxBodySize(MemSize maxBodySize) {
+			checkNotBuilt(this);
+			return withMaxBodySize(maxBodySize.toInt());
+		}
 
-	public HttpClient withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
-		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
-		return this;
-	}
+		public Builder withMaxBodySize(int maxBodySize) {
+			checkNotBuilt(this);
+			HttpClient.this.maxBodySize = maxBodySize != 0 ? maxBodySize : Integer.MAX_VALUE;
+			return this;
+		}
 
-	public HttpClient withInspector(Inspector inspector) {
-		this.inspector = inspector;
-		return this;
-	}
+		public Builder withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+			checkNotBuilt(this);
+			HttpClient.this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
+			return this;
+		}
 
-	public HttpClient withSocketInspector(TcpSocket.Inspector socketInspector) {
-		this.socketInspector = socketInspector;
-		return this;
-	}
+		public Builder withInspector(Inspector inspector) {
+			checkNotBuilt(this);
+			HttpClient.this.inspector = inspector;
+			return this;
+		}
 
-	public HttpClient withSocketSslInspector(TcpSocket.Inspector socketSslInspector) {
-		this.socketSslInspector = socketSslInspector;
-		return this;
+		public Builder withSocketInspector(TcpSocket.Inspector socketInspector) {
+			checkNotBuilt(this);
+			HttpClient.this.socketInspector = socketInspector;
+			return this;
+		}
+
+		public Builder withSocketSslInspector(TcpSocket.Inspector socketSslInspector) {
+			checkNotBuilt(this);
+			HttpClient.this.socketSslInspector = socketSslInspector;
+			return this;
+		}
+
+		@Override
+		protected HttpClient doBuild() {
+			return HttpClient.this;
+		}
 	}
 	// endregion
 

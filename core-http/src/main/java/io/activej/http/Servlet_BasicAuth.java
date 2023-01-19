@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.async.function.AsyncBiPredicate;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -58,7 +59,7 @@ public final class Servlet_BasicAuth extends AbstractReactive
 					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody("Authentication is required".getBytes(UTF_8));
 
-	public Servlet_BasicAuth(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+	private Servlet_BasicAuth(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
 		super(reactor);
 		this.next = next;
 		this.credentialsLookup = credentialsLookup;
@@ -66,20 +67,39 @@ public final class Servlet_BasicAuth extends AbstractReactive
 		challenge = PREFIX + "realm=\"" + realm + "\", charset=\"UTF-8\"";
 	}
 
-	public Servlet_BasicAuth withFailureResponse(UnaryOperator<HttpResponse> failureResponse) {
-		this.failureResponse = failureResponse;
-		return this;
+	public static Servlet_BasicAuth create(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+		return builder(reactor, next, realm, credentialsLookup).build();
+	}
+
+	public static Builder builder(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+		return new Servlet_BasicAuth(reactor, next, realm, credentialsLookup).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Servlet_BasicAuth> {
+		private Builder() {}
+
+		public Builder withFailureResponse(UnaryOperator<HttpResponse> failureResponse) {
+			checkNotBuilt(this);
+			Servlet_BasicAuth.this.failureResponse = failureResponse;
+			return this;
+		}
+
+		@Override
+		protected Servlet_BasicAuth doBuild() {
+			return Servlet_BasicAuth.this;
+		}
 	}
 
 	public static Function<AsyncServlet, AsyncServlet> decorator(Reactor reactor, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
-		return next -> new Servlet_BasicAuth(reactor, next, realm, credentialsLookup);
+		return next -> create(reactor, next, realm, credentialsLookup);
 	}
 
 	public static Function<AsyncServlet, AsyncServlet> decorator(Reactor reactor, String realm,
 			AsyncBiPredicate<String, String> credentialsLookup,
 			UnaryOperator<HttpResponse> failureResponse) {
-		return next -> new Servlet_BasicAuth(reactor, next, realm, credentialsLookup)
-				.withFailureResponse(failureResponse);
+		return next -> builder(reactor, next, realm, credentialsLookup)
+				.withFailureResponse(failureResponse)
+				.build();
 	}
 
 	@Override

@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.http.loader.ResourceIsADirectoryException;
 import io.activej.http.loader.ResourceNotFoundException;
@@ -46,7 +46,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * This servlet allows return HTTP responses by HTTP paths from some predefined storage, mainly the filesystem.
  */
 public final class Servlet_Static extends AbstractReactive
-		implements AsyncServlet, WithInitializer<Servlet_Static> {
+		implements AsyncServlet {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
 	private final AsyncStaticLoader resourceLoader;
@@ -63,62 +63,75 @@ public final class Servlet_Static extends AbstractReactive
 	}
 
 	public static Servlet_Static create(Reactor reactor, AsyncStaticLoader resourceLoader) {
-		return new Servlet_Static(reactor, resourceLoader);
+		return builder(reactor, resourceLoader).build();
 	}
 
 	public static Servlet_Static create(Reactor reactor, AsyncStaticLoader resourceLoader, String page) {
-		return create(reactor, resourceLoader).withMappingTo(page);
+		return builder(reactor, resourceLoader).withMappingTo(page).build();
 	}
 
 	public static Servlet_Static ofClassPath(Reactor reactor, Executor executor, String path) {
-		return new Servlet_Static(reactor, AsyncStaticLoader.ofClassPath(reactor, executor, path));
+		return builder(reactor, AsyncStaticLoader.ofClassPath(reactor, executor, path)).build();
 	}
 
 	public static Servlet_Static ofPath(Reactor reactor, Executor executor, Path path) {
-		return new Servlet_Static(reactor, AsyncStaticLoader.ofPath(reactor, executor, path));
+		return builder(reactor, AsyncStaticLoader.ofPath(reactor, executor, path)).build();
 	}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public Servlet_Static withContentType(ContentType contentType) {
-		return withContentTypeResolver($ -> contentType);
+	public static Builder builder(Reactor reactor, AsyncStaticLoader resourceLoader) {
+		return new Servlet_Static(reactor, resourceLoader).new Builder();
 	}
 
-	public Servlet_Static withContentTypeResolver(Function<String, ContentType> contentTypeResolver) {
-		this.contentTypeResolver = contentTypeResolver;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, Servlet_Static>{
+		private Builder() {}
 
-	public Servlet_Static withMapping(Function<HttpRequest, String> fn) {
-		pathMapper = fn;
-		return this;
-	}
-
-	public Servlet_Static withMappingTo(String path) {
-		//noinspection RedundantCast - it does not compile without the cast
-		if (this.contentTypeResolver == (Function<String, ContentType>) Servlet_Static::getContentType) {
-			withContentType(getContentType(path));
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withContentType(ContentType contentType) {
+			return withContentTypeResolver($ -> contentType);
 		}
-		return withMapping($ -> path);
-	}
 
-	public Servlet_Static withMappingNotFoundTo(String defaultResource) {
-		this.defaultResource = defaultResource;
-		return this;
-	}
+		public Builder withContentTypeResolver(Function<String, ContentType> contentTypeResolver) {
+			Servlet_Static.this.contentTypeResolver = contentTypeResolver;
+			return this;
+		}
 
-	public Servlet_Static withIndexResources(String... indexResources) {
-		this.indexResources.addAll(List.of(indexResources));
-		return this;
-	}
+		public Builder withMapping(Function<HttpRequest, String> fn) {
+			pathMapper = fn;
+			return this;
+		}
 
-	public Servlet_Static withIndexHtml() {
-		this.indexResources.add("index.html");
-		return this;
-	}
+		public Builder withMappingTo(String path) {
+			//noinspection RedundantCast - it does not compile without the cast
+			if (Servlet_Static.this.contentTypeResolver == (Function<String, ContentType>) Servlet_Static::getContentType) {
+				withContentType(getContentType(path));
+			}
+			return withMapping($ -> path);
+		}
 
-	public Servlet_Static withResponse(Supplier<HttpResponse> responseSupplier) {
-		this.responseSupplier = responseSupplier;
-		return this;
+		public Builder withMappingNotFoundTo(String defaultResource) {
+			Servlet_Static.this.defaultResource = defaultResource;
+			return this;
+		}
+
+		public Builder withIndexResources(String... indexResources) {
+			Servlet_Static.this.indexResources.addAll(List.of(indexResources));
+			return this;
+		}
+
+		public Builder withIndexHtml() {
+			Servlet_Static.this.indexResources.add("index.html");
+			return this;
+		}
+
+		public Builder withResponse(Supplier<HttpResponse> responseSupplier) {
+			Servlet_Static.this.responseSupplier = responseSupplier;
+			return this;
+		}
+
+		@Override
+		protected Servlet_Static doBuild() {
+			return Servlet_Static.this;
+		}
 	}
 
 	public static ContentType getContentType(String path) {

@@ -42,12 +42,14 @@ public class HttpClientBufsConsumerDecoderTest {
 
 	@BeforeClass
 	public static void init() throws NoSuchAlgorithmException, IOException {
-		AsyncDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor())
+		AsyncDnsClient dnsClient = DnsClient.builder(Reactor.getCurrentReactor())
 				.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
-				.withTimeout(StringFormatUtils.parseDuration("5 seconds"));
-		client = HttpClient.create(Reactor.getCurrentReactor())
+				.withTimeout(StringFormatUtils.parseDuration("5 seconds"))
+				.build();
+		client = HttpClient.builder(Reactor.getCurrentReactor())
 				.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
-				.withDnsClient(dnsClient);
+				.withDnsClient(dnsClient)
+				.build();
 	}
 
 	@Test

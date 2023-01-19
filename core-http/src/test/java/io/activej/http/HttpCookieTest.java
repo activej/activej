@@ -51,7 +51,7 @@ public class HttpCookieTest {
 	@Test
 	public void testRender() {
 		Instant date = Instant.ofEpochMilli(987654321098L); // "Thu, 19 Apr 2001 04:25:21 GMT";
-		HttpCookie cookie = HttpCookie.of("name", "value")
+		HttpCookie cookie = HttpCookie.builder("name", "value")
 				.withExpirationDate(date)
 				.withMaxAge(Duration.ofSeconds(10))
 				.withPath("/test")
@@ -59,7 +59,8 @@ public class HttpCookieTest {
 				.withSameSite(SameSite.NONE)
 				.withSecure(true)
 				.withHttpOnly(true)
-				.withExtension("Alhambra site");
+				.withExtension("Alhambra site")
+				.build();
 
 		String expected = "name=value; Expires=Thu, 19 Apr 2001 04:25:21 GMT; Max-Age=10; Domain=www.google.com; " +
 				"Path=/test; Secure; HttpOnly; SameSite=None; Alhambra site";
@@ -71,17 +72,19 @@ public class HttpCookieTest {
 	@Test
 	public void testRenderMany() {
 		Instant date = Instant.ofEpochMilli(987654321098L); // "Thu, 19 Apr 2001 04:25:21 GMT";
-		HttpCookie cookie1 = HttpCookie.of("name1", "value1")
+		HttpCookie cookie1 = HttpCookie.builder("name1", "value1")
 				.withExpirationDate(date)
 				.withMaxAge(Duration.ofSeconds(10))
 				.withPath("/test")
 				.withSameSite(SameSite.LAX)
 				.withDomain("www.google.com")
-				.withSecure(true);
+				.withSecure(true)
+				.build();
 
-		HttpCookie cookie2 = HttpCookie.of("name2", "value2")
+		HttpCookie cookie2 = HttpCookie.builder("name2", "value2")
 				.withHttpOnly(true)
-				.withExtension("Alhambra site");
+				.withExtension("Alhambra site")
+				.build();
 		HttpCookie cookie3 = HttpCookie.of("name3");
 
 		String expected = "name1=value1; name2=value2; name3";
@@ -110,8 +113,9 @@ public class HttpCookieTest {
 
 	@Test
 	public void testRenderPathSlash() {
-		HttpCookie cookie = HttpCookie.of("name", "value")
-				.withPath("/");
+		HttpCookie cookie = HttpCookie.builder("name", "value")
+				.withPath("/")
+				.build();
 
 		String expected = "name=value; Path=/";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);

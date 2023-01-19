@@ -16,7 +16,7 @@
 
 package io.activej.http.decoder;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -27,7 +27,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * A tree of https errors. A tree structure matches the structure of the decoder it was received from
  */
-public final class DecodeErrors implements WithInitializer<DecodeErrors> {
+public final class DecodeErrors {
 	private static final String DEFAULT_SEPARATOR = ".";
 
 	private @Nullable List<DecodeError> errors;
@@ -37,37 +37,65 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 	}
 
 	public static DecodeErrors create() {
-		return new DecodeErrors();
+		return builder().build();
 	}
 
 	public static DecodeErrors of(String message, Object... args) {
-		return create().with(DecodeError.of(message, args));
+		return builder()
+				.with(DecodeError.of(message, args))
+				.build();
 	}
 
 	public static DecodeErrors of(DecodeError error) {
-		return create().with(error);
+		return builder()
+				.with(error)
+				.build();
 	}
 
 	public static DecodeErrors of(List<DecodeError> errors) {
-		return create().with(errors);
+		return builder()
+				.with(errors)
+				.build();
 	}
 
-	public DecodeErrors with(DecodeError error) {
-		if (this.errors == null) this.errors = new ArrayList<>();
-		this.errors.add(error);
-		return this;
+	public static Builder builder() {
+		return new DecodeErrors().new Builder();
 	}
 
-	public DecodeErrors with(List<DecodeError> errors) {
-		if (this.errors == null) this.errors = new ArrayList<>();
-		this.errors.addAll(errors);
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, DecodeErrors>{
+		private Builder() {}
 
-	public DecodeErrors with(String id, DecodeErrors nestedError) {
-		if (children == null) children = new HashMap<>();
-		children.merge(id, nestedError, DecodeErrors::merge);
-		return this;
+		public Builder with(DecodeError error) {
+			checkNotBuilt(this);
+			setError(error);
+			return this;
+		}
+
+		public Builder with(List<DecodeError> errors) {
+			checkNotBuilt(this);
+			if (DecodeErrors.this.errors == null) DecodeErrors.this.errors = new ArrayList<>();
+			DecodeErrors.this.errors.addAll(errors);
+			return this;
+		}
+
+		public Builder with(String id, DecodeErrors nestedError) {
+			checkNotBuilt(this);
+			if (children == null) children = new HashMap<>();
+			children.merge(id, nestedError, DecodeErrors::merge);
+			return this;
+		}
+
+		public Builder with(String id, DecodeError nestedError) {
+			checkNotBuilt(this);
+			if (children == null) children = new HashMap<>();
+			children.computeIfAbsent(id, $ -> new DecodeErrors()).setError(nestedError);
+			return this;
+		}
+
+		@Override
+		protected DecodeErrors doBuild() {
+			return DecodeErrors.this;
+		}
 	}
 
 	public DecodeErrors merge(DecodeErrors another) {
@@ -87,12 +115,6 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 				}
 			}
 		}
-		return this;
-	}
-
-	public DecodeErrors with(String id, DecodeError nestedError) {
-		if (children == null) children = new HashMap<>();
-		children.computeIfAbsent(id, $ -> new DecodeErrors()).with(nestedError);
 		return this;
 	}
 
@@ -171,5 +193,10 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 		if (errors.children != null) {
 			errors.children.forEach((id, child) -> toMapImpl(child, map, (prefix.isEmpty() ? "" : prefix + separator) + id, formatter, separator));
 		}
+	}
+
+	private void setError(DecodeError error) {
+		if (errors == null) errors = new ArrayList<>();
+		errors.add(error);
 	}
 }

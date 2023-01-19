@@ -19,10 +19,10 @@ package io.activej.http.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -53,8 +53,7 @@ import static java.lang.Short.reverseBytes;
  * method is used.
  */
 public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater>,
-		WithInitializer<BufsConsumerGzipInflater> {
+		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
 	public static final int DEFAULT_BUF_SIZE = 512;
 	// endregion
@@ -78,12 +77,26 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	private BufsConsumerGzipInflater() {}
 
 	public static BufsConsumerGzipInflater create() {
-		return new BufsConsumerGzipInflater();
+		return builder().build();
 	}
 
-	public BufsConsumerGzipInflater withInflater(Inflater inflater) {
-		this.inflater = inflater;
-		return this;
+	public static Builder builder() {
+		return new BufsConsumerGzipInflater().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, BufsConsumerGzipInflater> {
+		private Builder() {}
+
+		public Builder withInflater(Inflater inflater) {
+			checkNotBuilt(this);
+			BufsConsumerGzipInflater.this.inflater = inflater;
+			return this;
+		}
+
+		@Override
+		protected BufsConsumerGzipInflater doBuild() {
+			return BufsConsumerGzipInflater.this;
+		}
 	}
 
 	@Override

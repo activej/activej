@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -43,8 +43,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * method is used.
  */
 public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf>,
-		WithInitializer<BufsConsumerGzipDeflater> {
+		implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf> {
 	public static final int DEFAULT_MAX_BUF_SIZE = 16384;
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, (byte) 0xff};
@@ -61,18 +60,33 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	private BufsConsumerGzipDeflater() {}
 
 	public static BufsConsumerGzipDeflater create() {
-		return new BufsConsumerGzipDeflater();
+		return builder().build();
 	}
 
-	public BufsConsumerGzipDeflater withDeflater(Deflater deflater) {
-		this.deflater = deflater;
-		return this;
+	public static Builder builder() {
+		return new BufsConsumerGzipDeflater().new Builder();
 	}
 
-	public BufsConsumerGzipDeflater withMaxBufSize(MemSize maxBufSize) {
-		checkArgument(maxBufSize.compareTo(MemSize.ZERO) > 0, "Cannot use buf size that is less than 0");
-		this.maxBufSize = maxBufSize.toInt();
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, BufsConsumerGzipDeflater> {
+		private Builder() {}
+
+		public Builder withDeflater(Deflater deflater) {
+			checkNotBuilt(this);
+			BufsConsumerGzipDeflater.this.deflater = deflater;
+			return this;
+		}
+
+		public Builder withMaxBufSize(MemSize maxBufSize) {
+			checkNotBuilt(this);
+			checkArgument(maxBufSize.compareTo(MemSize.ZERO) > 0, "Cannot use buf size that is less than 0");
+			BufsConsumerGzipDeflater.this.maxBufSize = maxBufSize.toInt();
+			return this;
+		}
+
+		@Override
+		protected BufsConsumerGzipDeflater doBuild() {
+			return BufsConsumerGzipDeflater.this;
+		}
 	}
 
 	@SuppressWarnings("ConstantConditions") //check input for clarity

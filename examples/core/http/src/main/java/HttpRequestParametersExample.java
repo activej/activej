@@ -2,6 +2,7 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
+import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -23,7 +24,12 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 
 	//[START REGION_1]
 	@Provides
-	AsyncServlet servlet(Reactor reactor, Executor executor) {
+	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return AsyncStaticLoader.ofClassPath(reactor, executor, RESOURCE_DIR);
+	}
+
+	@Provides
+	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader) {
 		return Servlet_Routing.create(reactor)
 				.map(POST, "/hello", request -> request.loadBody()
 						.map($ -> {
@@ -36,8 +42,9 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 					return HttpResponse.ok200()
 							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>");
 				})
-				.map("/*", Servlet_Static.ofClassPath(reactor, executor, RESOURCE_DIR)
-						.withIndexHtml());
+				.map("/*", Servlet_Static.builder(reactor, staticLoader)
+						.withIndexHtml()
+						.build());
 	}
 	//[END REGION_1]
 

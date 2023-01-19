@@ -36,6 +36,7 @@ import io.activej.dataflow.messaging.DataflowResponse.TaskDescription;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
+import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
 import io.activej.net.socket.tcp.TcpSocket;
@@ -69,8 +70,12 @@ public final class Servlet_DataflowDebug extends AbstractReactive implements Asy
 		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		objectMapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
 
+		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(reactor, executor, "debug");
+		
 		this.servlet = Servlet_Routing.create(reactor)
-				.map("/*", Servlet_Static.ofClassPath(reactor, executor, "debug").withIndexHtml())
+				.map("/*", Servlet_Static.builder(reactor, staticLoader)
+						.withIndexHtml()
+						.build())
 				.map("/api/*", Servlet_Routing.create(reactor)
 						.map(GET, "/partitions", request -> ok200()
 								.withJson(objectMapper.writeValueAsString(partitions.stream()

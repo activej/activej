@@ -10,6 +10,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.HttpClient.JmxInspector;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
@@ -70,7 +71,9 @@ public final class AbstractHttpConnectionTest {
 	public void setUp() {
 		port = getFreePort();
 		url = "http://127.0.0.1:" + port;
-		client = HttpClient.create(Reactor.getCurrentReactor()).withInspector(new HttpClient.JmxInspector());
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+				.withInspector(new JmxInspector())
+				.build();
 	}
 
 	@Test
@@ -115,8 +118,11 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testClientWithMaxKeepAliveRequests() throws Exception {
-		client.withKeepAliveTimeout(Duration.ofSeconds(1));
-		client.withMaxKeepAliveRequests(5);
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+				.withInspector(new JmxInspector())
+				.withKeepAliveTimeout(Duration.ofSeconds(1))
+				.withMaxKeepAliveRequests(5)
+				.build();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
 				.withListenPort(port)
@@ -129,7 +135,9 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testServerWithMaxKeepAliveRequests() throws Exception {
-		client.withKeepAliveTimeout(Duration.ofSeconds(1));
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+				.withKeepAliveTimeout(Duration.ofSeconds(1))
+				.build();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
 				.withListenPort(port)
@@ -143,7 +151,9 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testServerWithNoKeepAlive() throws Exception {
-		client.withKeepAliveTimeout(Duration.ofSeconds(30));
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+				.withKeepAliveTimeout(Duration.ofSeconds(30))
+				.build();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
 				.withListenPort(port)
@@ -174,8 +184,9 @@ public final class AbstractHttpConnectionTest {
 				.withImplReadBufferSize(MemSize.of(1))
 				.build();
 
-		AsyncHttpClient client = HttpClient.create(Reactor.getCurrentReactor())
-				.withSocketSettings(socketSettings);
+		AsyncHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+				.withSocketSettings(socketSettings)
+				.build();
 
 		// regular
 		doTestHugeStreams(client, socketSettings, size, httpMessage -> httpMessage.addHeader(CONTENT_LENGTH, String.valueOf(size)));
@@ -297,7 +308,9 @@ public final class AbstractHttpConnectionTest {
 		char[] chars = new char[16 * 1024];
 		Arrays.fill(chars, 'a');
 
-		client.withKeepAliveTimeout(Duration.ofSeconds(30));
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+				.withKeepAliveTimeout(Duration.ofSeconds(30))
+				.build();
 
 		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
 		HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
@@ -321,7 +334,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testKeepAliveWithStreamingResponse() throws Exception {
-		HttpClient.JmxInspector clientInspector = new HttpClient.JmxInspector();
+		JmxInspector clientInspector = new JmxInspector();
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
@@ -333,9 +346,10 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		HttpClient client = HttpClient.create(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
 				.withKeepAliveTimeout(Duration.ofSeconds(10))
-				.withInspector(clientInspector);
+				.withInspector(clientInspector)
+				.build();
 
 		assertEquals(0, client.getConnectionsKeepAliveCount());
 		assertEquals(0, clientInspector.getConnected().getTotalCount());
@@ -367,7 +381,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testKeepAliveWithStreamingRequest() throws Exception {
-		HttpClient.JmxInspector clientInspector = new HttpClient.JmxInspector();
+		JmxInspector clientInspector = new JmxInspector();
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
@@ -381,9 +395,10 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		HttpClient client = HttpClient.create(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
 				.withKeepAliveTimeout(Duration.ofSeconds(10))
-				.withInspector(clientInspector);
+				.withInspector(clientInspector)
+				.build();
 
 		assertEquals(0, client.getConnectionsKeepAliveCount());
 		assertEquals(0, clientInspector.getConnected().getTotalCount());
@@ -437,8 +452,9 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		AsyncHttpClient client = HttpClient.create(reactor)
-				.withKeepAliveTimeout(Duration.ofSeconds(10));
+		AsyncHttpClient client = HttpClient.builder(reactor)
+				.withKeepAliveTimeout(Duration.ofSeconds(10))
+				.build();
 
 		int responseCode = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.map(HttpResponse::getCode)

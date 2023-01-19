@@ -16,7 +16,7 @@
 
 package io.activej.http.session;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -33,7 +33,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * A simple reference implementation of the session storage over a hash map.
  */
 public final class SessionStore_InMemory<T> extends AbstractReactive
-		implements AsyncSessionStore<T>, WithInitializer<SessionStore_InMemory<T>> {
+		implements AsyncSessionStore<T> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;
@@ -45,12 +45,26 @@ public final class SessionStore_InMemory<T> extends AbstractReactive
 	}
 
 	public static <T> SessionStore_InMemory<T> create(Reactor reactor) {
-		return new SessionStore_InMemory<>(reactor);
+		return SessionStore_InMemory.<T>builder(reactor).build();
 	}
 
-	public SessionStore_InMemory<T> withLifetime(Duration sessionLifetime) {
-		this.sessionLifetime = sessionLifetime;
-		return this;
+	public static <T> SessionStore_InMemory<T>.Builder builder(Reactor reactor) {
+		return new SessionStore_InMemory<T>(reactor).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, SessionStore_InMemory<T>> {
+		private Builder() {}
+
+		public Builder withLifetime(Duration sessionLifetime) {
+			checkNotBuilt(this);
+			SessionStore_InMemory.this.sessionLifetime = sessionLifetime;
+			return this;
+		}
+
+		@Override
+		protected SessionStore_InMemory<T> doBuild() {
+			return SessionStore_InMemory.this;
+		}
 	}
 
 	@Override

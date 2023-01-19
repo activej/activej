@@ -112,7 +112,7 @@ public interface Decoder<T> {
 			@Override
 			public Either<V, DecodeErrors> decode(HttpRequest request) {
 				Object[] args = new Object[decoders.length];
-				DecodeErrors errors = DecodeErrors.create();
+				DecodeErrors.Builder errorsBuilder = DecodeErrors.builder();
 				for (int i = 0; i < decoders.length; i++) {
 					Decoder<?> decoder = decoders[i];
 					Either<?, DecodeErrors> decoded = decoder.decode(request);
@@ -120,9 +120,10 @@ public interface Decoder<T> {
 						args[i] = decoded.getLeft();
 					} else {
 						//noinspection ConstantConditions - not 'left', hence 'right'
-						errors.with(decoder.getId(), decoded.getRight());
+						errorsBuilder.with(decoder.getId(), decoded.getRight());
 					}
 				}
+				DecodeErrors errors = errorsBuilder.build();
 				if (errors.hasErrors()) {
 					return Either.right(errors);
 				}

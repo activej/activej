@@ -4,6 +4,7 @@ import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.http.HttpResponse;
 import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
+import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
@@ -33,10 +34,16 @@ public final class FileUploadExample extends HttpServerLauncher {
 
 	//[START EXAMPLE]
 	@Provides
-	AsyncServlet servlet(Reactor reactor, Executor executor) {
+	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return AsyncStaticLoader.ofClassPath(reactor, executor, "static/multipart/");
+	}
+
+	@Provides
+	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader, Executor executor) {
 		return Servlet_Routing.create(reactor)
-				.map(GET, "/*", Servlet_Static.ofClassPath(reactor, executor, "static/multipart/")
-						.withIndexHtml())
+				.map(GET, "/*", Servlet_Static.builder(reactor, staticLoader)
+						.withIndexHtml()
+						.build())
 				.map(POST, "/test", request ->
 						request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))
 								.map($ -> HttpResponse.ok200().withPlainText("Upload successful")));
