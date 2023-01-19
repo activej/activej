@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.datastream.AbstractStreamConsumer;
@@ -46,7 +46,7 @@ import static java.lang.Math.max;
  * that is serialized into binary data using given {@link BinarySerializer}.
  */
 public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
-		implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf>, WithInitializer<ChannelSerializer<T>> {
+		implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
 	private static final boolean CHECKS = Checks.isEnabled(ChannelSerializer.class);
 
@@ -85,59 +85,82 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 	 * Creates a new instance of the serializer for type T
 	 */
 	public static <T> ChannelSerializer<T> create(BinarySerializer<T> serializer) {
-		return new ChannelSerializer<>(serializer);
+		return ChannelSerializer.builder(serializer).build();
 	}
 
 	/**
-	 * Sets the initial buffer size - a buffer of this size will
-	 * be allocated first when trying to serialize incoming item
-	 * <p>
-	 * Defaults to 16kb
+	 * Creates a builder of the serializer for type T
 	 */
-	public ChannelSerializer<T> withInitialBufferSize(MemSize bufferSize) {
-		this.initialBufferSize = bufferSize;
-		return this;
+	public static <T> ChannelSerializer<T>.Builder builder(BinarySerializer<T> serializer) {
+		return new ChannelSerializer<>(serializer).new Builder();
 	}
 
-	/**
-	 * Sets the auto flush interval - when this is set the
-	 * transformer will automatically flush itself at a given interval
-	 */
-	public ChannelSerializer<T> withAutoFlushInterval(@Nullable Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, ChannelSerializer<T>> {
+		private Builder() {}
 
-	/**
-	 * Enables skipping of serialization errors.
-	 * <p>
-	 * When this method is called, the transformer ignores errors and just logs them,
-	 * the default behaviour is closing serializer with the error.
-	 */
-	public ChannelSerializer<T> withSkipSerializationErrors() {
-		return withSerializationErrorHandler((item, e) -> logger.warn("Skipping serialization error for {} in {}", item, this, e));
-	}
+		/**
+		 * Sets the initial buffer size - a buffer of this size will
+		 * be allocated first when trying to serialize incoming item
+		 * <p>
+		 * Defaults to 16kb
+		 */
+		public Builder withInitialBufferSize(MemSize bufferSize) {
+			checkNotBuilt(this);
+			ChannelSerializer.this.initialBufferSize = bufferSize;
+			return this;
+		}
 
-	/**
-	 * Sets a serialization error handler for this serializer. Handler accepts serialized item and serialization error.
-	 * The default handler simply closes serializer with received error.
-	 */
-	public ChannelSerializer<T> withSerializationErrorHandler(BiConsumer<T, Exception> handler) {
-		this.serializationErrorHandler = handler;
-		return this;
-	}
+		/**
+		 * Sets the auto flush interval - when this is set the
+		 * transformer will automatically flush itself at a given interval
+		 */
+		public Builder withAutoFlushInterval(@Nullable Duration autoFlushInterval) {
+			checkNotBuilt(this);
+			ChannelSerializer.this.autoFlushInterval = autoFlushInterval;
+			return this;
+		}
 
-	public ChannelSerializer<T> withExplicitEndOfStream() {
-		return withExplicitEndOfStream(true);
-	}
+		/**
+		 * Enables skipping of serialization errors.
+		 * <p>
+		 * When this method is called, the transformer ignores errors and just logs them,
+		 * the default behaviour is closing serializer with the error.
+		 */
+		public Builder withSkipSerializationErrors() {
+			checkNotBuilt(this);
+			return withSerializationErrorHandler((item, e) -> logger.warn("Skipping serialization error for {} in {}", item, this, e));
+		}
 
-	public ChannelSerializer<T> withExplicitEndOfStream(boolean explicitEndOfStream) {
-		return withExplicitEndOfStream(explicitEndOfStream ? new byte[]{0} : null);
-	}
+		/**
+		 * Sets a serialization error handler for this serializer. Handler accepts serialized item and serialization error.
+		 * The default handler simply closes serializer with received error.
+		 */
+		public Builder withSerializationErrorHandler(BiConsumer<T, Exception> handler) {
+			checkNotBuilt(this);
+			ChannelSerializer.this.serializationErrorHandler = handler;
+			return this;
+		}
 
-	public ChannelSerializer<T> withExplicitEndOfStream(byte @Nullable [] explicitEndOfStream) {
-		this.explicitEndOfStream = explicitEndOfStream;
-		return this;
+		public Builder withExplicitEndOfStream() {
+			checkNotBuilt(this);
+			return withExplicitEndOfStream(true);
+		}
+
+		public Builder withExplicitEndOfStream(boolean explicitEndOfStream) {
+			checkNotBuilt(this);
+			return withExplicitEndOfStream(explicitEndOfStream ? new byte[]{0} : null);
+		}
+
+		public Builder withExplicitEndOfStream(byte @Nullable [] explicitEndOfStream) {
+			checkNotBuilt(this);
+			ChannelSerializer.this.explicitEndOfStream = explicitEndOfStream;
+			return this;
+		}
+
+		@Override
+		protected ChannelSerializer<T> doBuild() {
+			return ChannelSerializer.this;
+		}
 	}
 
 	@Override

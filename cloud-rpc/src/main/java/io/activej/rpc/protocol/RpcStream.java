@@ -83,10 +83,11 @@ public final class RpcStream {
 		this.server = server;
 		this.socket = socket;
 
-		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.create(messageSerializer)
+		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.builder(messageSerializer)
 				.withInitialBufferSize(initialBufferSize)
 				.withAutoFlushInterval(autoFlushInterval)
-				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e));
+				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e))
+				.build();
 		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(messageSerializer);
 
 		if (frameFormat != null) {

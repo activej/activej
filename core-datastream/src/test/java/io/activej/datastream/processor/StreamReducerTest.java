@@ -33,8 +33,9 @@ public class StreamReducerTest {
 	public void testEmpty() {
 		StreamSupplier<Integer> source = StreamSupplier.of();
 
-		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.create();
-		streamReducer.withBufferSize(1);
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>builder()
+				.withBufferSize(1)
+				.build();
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
@@ -62,8 +63,9 @@ public class StreamReducerTest {
 		StreamSupplier<Integer> source6 = StreamSupplier.of(1, 3);
 		StreamSupplier<Integer> source7 = StreamSupplier.of();
 
-		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.create();
-		streamReducer.withBufferSize(1);
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>builder()
+				.withBufferSize(1)
+				.build();
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
@@ -107,8 +109,9 @@ public class StreamReducerTest {
 				new KeyValue3(2, 10.0, 20.0),
 				new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
-		streamReducer.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
+				.withBufferSize(1)
+				.build();
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
@@ -142,8 +145,9 @@ public class StreamReducerTest {
 
 		StreamSupplier<KeyValue3> source3 = StreamSupplier.of(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
-		streamReducer.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
+				.withBufferSize(1)
+				.build();
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 
@@ -340,8 +344,9 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue2> source2 = StreamSupplier.of(new KeyValue2(1, 10.0), new KeyValue2(3, 30.0));
 		StreamSupplier<KeyValue3> source3 = StreamSupplier.of(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
-		streamReducer.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
+				.withBufferSize(1)
+				.build();
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 
@@ -369,8 +374,9 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue2> source2 = StreamSupplier.of(new KeyValue2(1, 10.0), new KeyValue2(3, 30.0));
 		StreamSupplier<KeyValue3> source3 = StreamSupplier.of(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
-		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.create();
-		streamReducer.withBufferSize(1);
+		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
+				.withBufferSize(1)
+				.build();
 
 		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
 

@@ -53,8 +53,9 @@ public final class StreamSorterTest {
 		//		StreamSupplier<Integer> source2 = StreamSupplier.of(111);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		StreamSorterStorage<Integer> storage = StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.getRoot().toPath())
-				.withWriteBlockSize(MemSize.of(64));
+		StreamSorterStorage<Integer> storage = StreamSorterStorage.builder(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.getRoot().toPath())
+				.withWriteBlockSize(MemSize.of(64))
+				.build();
 
 		StreamConsumer<Integer> writer1 = storage.writeStream(1);
 //		StreamConsumer<Integer> writer2 = storage.writeStream(2);

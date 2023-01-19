@@ -23,8 +23,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -108,16 +108,26 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private boolean detailed;
 
-	private final StreamStats_Detailed<ByteBuf> readFile = StreamStats.detailed(forByteBufs());
-	private final StreamStats_Detailed<ByteBuf> readDecompress = StreamStats.detailed(forByteBufs());
+	private final StreamStats_Detailed<ByteBuf> readFile = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
+	private final StreamStats_Detailed<ByteBuf> readDecompress = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
 	private final StreamStats_Basic<?> readDeserialize = StreamStats.basic();
 	private final StreamStats_Detailed<?> readDeserializeDetailed = StreamStats.detailed();
 
 	private final StreamStats_Basic<?> writeSerialize = StreamStats.basic();
 	private final StreamStats_Detailed<?> writeSerializeDetailed = StreamStats.detailed();
-	private final StreamStats_Detailed<ByteBuf> writeCompress = StreamStats.detailed(forByteBufs());
-	private final StreamStats_Detailed<ByteBuf> writeChunker = StreamStats.detailed(forByteBufs());
-	private final StreamStats_Detailed<ByteBuf> writeFile = StreamStats.detailed(forByteBufs());
+	private final StreamStats_Detailed<ByteBuf> writeCompress = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
+	private final StreamStats_Detailed<ByteBuf> writeChunker = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
+	private final StreamStats_Detailed<ByteBuf> writeFile = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
 
 	private final ExceptionStats chunkNameWarnings = ExceptionStats.create();
 	private int cleanupPreservedFiles;
@@ -214,9 +224,10 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 				.map(consumer -> StreamConsumer.<T>ofSupplier(
 								supplier -> supplier
 										.transformWith((StreamStats<T>) (detailed ? writeSerializeDetailed : writeSerialize))
-										.transformWith(ChannelSerializer.create(
+										.transformWith(ChannelSerializer.builder(
 														createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader))
-												.withInitialBufferSize(bufferSize))
+												.withInitialBufferSize(bufferSize)
+												.build())
 										.transformWith(writeCompress)
 										.transformWith(ChannelFrameEncoder.create(frameFormat))
 										.transformWith(writeChunker)

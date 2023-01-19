@@ -17,6 +17,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.*;
 import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.schedule.ScheduledRunnable;
@@ -59,6 +60,10 @@ public final class StreamRateLimiter<T> extends ImplicitlyReactive implements St
 	}
 
 	public static <T> StreamRateLimiter<T> create(double refillRate, ChronoUnit perUnit) {
+		return StreamRateLimiter.<T>builder(refillRate, perUnit).build();
+	}
+
+	public static <T> StreamRateLimiter<T>.Builder builder(double refillRate, ChronoUnit perUnit) {
 		checkArgument(refillRate >= 0, "Negative refill rate");
 
 		Duration perUnitDuration = perUnit.getDuration();
@@ -68,17 +73,28 @@ public final class StreamRateLimiter<T> extends ImplicitlyReactive implements St
 		} else {
 			refillRatePerMillis = refillRate * MILLIS_DURATION.dividedBy(perUnitDuration);
 		}
-		return new StreamRateLimiter<>(refillRatePerMillis);
+		return new StreamRateLimiter<T>(refillRatePerMillis).new Builder();
 	}
 
-	public StreamRateLimiter<T> withInitialTokens(long initialTokens) {
-		this.tokens = initialTokens;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, StreamRateLimiter<T>> {
+		private Builder() {}
 
-	public StreamRateLimiter<T> withTokenizer(Tokenizer<T> tokenizer) {
-		this.tokenizer = tokenizer;
-		return this;
+		public Builder withInitialTokens(long initialTokens) {
+			checkNotBuilt(this);
+			StreamRateLimiter.this.tokens = initialTokens;
+			return this;
+		}
+
+		public Builder withTokenizer(Tokenizer<T> tokenizer) {
+			checkNotBuilt(this);
+			StreamRateLimiter.this.tokenizer = tokenizer;
+			return this;
+		}
+
+		@Override
+		protected StreamRateLimiter<T> doBuild() {
+			return StreamRateLimiter.this;
+		}
 	}
 
 	@Override

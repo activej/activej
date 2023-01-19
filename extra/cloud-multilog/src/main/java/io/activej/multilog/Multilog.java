@@ -77,8 +77,12 @@ public final class Multilog<T> extends AbstractReactive
 	private final StreamRegistry<String> streamReads = StreamRegistry.create();
 	private final StreamRegistry<String> streamWrites = StreamRegistry.create();
 
-	private final StreamStats_Detailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
-	private final StreamStats_Detailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
+	private final StreamStats_Detailed<ByteBuf> streamReadStats = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
+	private final StreamStats_Detailed<ByteBuf> streamWriteStats = StreamStats.<ByteBuf>detailedBuilder()
+			.withSizeCounter(forByteBufs())
+			.build();
 
 	private Multilog(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
@@ -121,10 +125,11 @@ public final class Multilog<T> extends AbstractReactive
 
 		return Promise.of(StreamConsumer.<T>ofSupplier(
 						supplier -> supplier
-								.transformWith(ChannelSerializer.create(serializer)
+								.transformWith(ChannelSerializer.builder(serializer)
 										.withAutoFlushInterval(autoFlushInterval)
 										.withInitialBufferSize(bufferSize)
-										.withSkipSerializationErrors())
+										.withSkipSerializationErrors()
+										.build())
 								.transformWith(streamWrites.register(logPartition))
 								.transformWith(streamWriteStats)
 								.bindTo(new LogStreamChunker(reactor, fileSystem, namingScheme, logPartition,

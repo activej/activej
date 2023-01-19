@@ -23,22 +23,23 @@ import io.activej.jmx.stats.JmxStatsWithReset;
 import io.activej.jmx.stats.StatsUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
-
 public final class StreamStats_Detailed<T> extends StreamStats_Basic<T> implements JmxStatsWithReset {
-	private final @Nullable StreamStatsSizeCounter<Object> sizeCounter;
+	private @Nullable StreamStatsSizeCounter<T> sizeCounter;
 
 	private long count;
 	private long totalSize;
 
-	@SuppressWarnings("unchecked")
-	StreamStats_Detailed(@Nullable StreamStatsSizeCounter<?>sizeCounter) {
-		this.sizeCounter = (StreamStatsSizeCounter<Object>) sizeCounter;
+	StreamStats_Detailed() {
 	}
 
-	@Override
-	public StreamStats_Detailed<T> withBasicSmoothingWindow(Duration smoothingWindow) {
-		return (StreamStats_Detailed<T>) super.withBasicSmoothingWindow(smoothingWindow);
+	public final class Builder extends StreamStats_Basic<T>.AbstractStatsBuilder<Builder, StreamStats_Detailed<T>> {
+		Builder() {}
+
+		public Builder withSizeCounter(StreamStatsSizeCounter<T> sizeCounter) {
+			checkNotBuilt(this);
+			StreamStats_Detailed.this.sizeCounter = sizeCounter;
+			return this;
+		}
 	}
 
 	@Override

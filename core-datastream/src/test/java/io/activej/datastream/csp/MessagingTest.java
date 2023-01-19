@@ -120,8 +120,9 @@ public final class MessagingTest {
 									.whenResult(msg -> {
 										assertEquals("start", msg);
 										StreamSupplier.ofIterable(source)
-												.transformWith(ChannelSerializer.create(LONG_SERIALIZER)
-														.withInitialBufferSize(MemSize.of(1)))
+												.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+														.withInitialBufferSize(MemSize.of(1))
+														.build())
 												.streamTo(messaging.sendBinaryStream());
 									});
 						})
@@ -180,8 +181,9 @@ public final class MessagingTest {
 					messaging.send("start");
 
 					StreamSupplier.ofIterable(source)
-							.transformWith(ChannelSerializer.create(LONG_SERIALIZER)
-									.withInitialBufferSize(MemSize.of(1)))
+							.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+									.withInitialBufferSize(MemSize.of(1))
+									.build())
 							.streamTo(messaging.sendBinaryStream());
 				}));
 	}
@@ -221,8 +223,9 @@ public final class MessagingTest {
 
 					return messaging.send("start")
 							.then(() -> StreamSupplier.ofIterable(source)
-									.transformWith(ChannelSerializer.create(LONG_SERIALIZER)
-											.withInitialBufferSize(MemSize.of(1)))
+									.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+											.withInitialBufferSize(MemSize.of(1))
+											.build())
 									.streamTo(messaging.sendBinaryStream()))
 							.then(messaging::receive)
 							.whenComplete(messaging::close);
@@ -263,8 +266,9 @@ public final class MessagingTest {
 					messaging.send("start");
 
 					StreamSupplier.ofIterable(source)
-							.transformWith(ChannelSerializer.create(LONG_SERIALIZER)
-									.withInitialBufferSize(MemSize.of(1)))
+							.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+									.withInitialBufferSize(MemSize.of(1))
+									.build())
 							.streamTo(messaging.sendBinaryStream());
 				}));
 	}

@@ -20,7 +20,9 @@ public class StreamStatsForwarderTest {
 
 	@Test
 	public void testDetailedStats() {
-		StreamStats_Detailed<Integer> stats = StreamStats.detailed(number -> number);
+		StreamStats_Detailed<Integer> stats = StreamStats.<Integer>detailedBuilder()
+				.withSizeCounter(number -> number)
+				.build();
 
 		await(StreamSupplier.of(1, 2, 3, 4, 5)
 				.transformWith(stats)

@@ -302,8 +302,9 @@ public class WriteAheadLog_File_Test {
 		Path file = path.resolve(UUID.randomUUID() + EXT_FINAL);
 		await(StreamSupplier.ofChannelSupplier(ChannelSupplier.of(mockData)
 						.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))
-				.transformWith(ChannelSerializer.create(serializer)
-						.withAutoFlushInterval(Duration.ZERO))
+				.transformWith(ChannelSerializer.builder(serializer)
+						.withAutoFlushInterval(Duration.ZERO)
+						.build())
 				.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
 				.streamTo(ChannelFileWriter.open(executor, file)));
 		return file;

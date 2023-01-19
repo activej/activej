@@ -30,7 +30,9 @@ public final class ChannelSerializerDeserializerTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(StreamSupplier.ofIterable(ints)
-				.transformWith(ChannelSerializer.create(BinarySerializers.INT_SERIALIZER).withInitialBufferSize(MemSize.bytes(1)))
+				.transformWith(ChannelSerializer.builder(BinarySerializers.INT_SERIALIZER)
+						.withInitialBufferSize(MemSize.bytes(1))
+						.build())
 				.transformWith(ChannelDeserializer.create(BinarySerializers.INT_SERIALIZER))
 				.streamTo(consumer));
 
@@ -50,8 +52,9 @@ public final class ChannelSerializerDeserializerTest {
 		StreamConsumerToList<byte[]> consumer = StreamConsumerToList.create();
 
 		await(StreamSupplier.ofIterable(byteArrays)
-				.transformWith(ChannelSerializer.create(BinarySerializers.BYTES_SERIALIZER)
-						.withInitialBufferSize(MemSize.bytes(1)))
+				.transformWith(ChannelSerializer.builder(BinarySerializers.BYTES_SERIALIZER)
+						.withInitialBufferSize(MemSize.bytes(1))
+						.build())
 				.transformWith(ChannelDeserializer.create(BinarySerializers.BYTES_SERIALIZER))
 				.streamTo(consumer));
 

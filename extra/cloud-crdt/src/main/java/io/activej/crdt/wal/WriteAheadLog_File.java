@@ -323,8 +323,9 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 			this.walFile = walFile;
 			ChannelConsumer<ByteBuf> writer = ChannelConsumer.ofPromise(ChannelFileWriter.open(executor, walFile));
 			internalSupplier.streamTo(StreamConsumer.ofSupplier(supplier -> supplier
-					.transformWith(ChannelSerializer.create(serializer)
-							.withAutoFlushInterval(Duration.ZERO))
+					.transformWith(ChannelSerializer.builder(serializer)
+							.withAutoFlushInterval(Duration.ZERO)
+							.build())
 					.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
 					.streamTo(ChannelConsumer.of(value -> {
 						if (this.writeCallback == null) return writer.accept(value);

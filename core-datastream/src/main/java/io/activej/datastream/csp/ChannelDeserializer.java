@@ -18,11 +18,11 @@ package io.activej.datastream.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.exception.UnknownFormatException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.AbstractStreamSupplier;
@@ -38,7 +38,7 @@ import static java.lang.String.format;
  * that is deserialized from incoming binary data using given {@link BinarySerializer}.
  */
 public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
-		implements WithChannelToStream<ChannelDeserializer<T>, ByteBuf, T>, WithInitializer<ChannelDeserializer<T>> {
+		implements WithChannelToStream<ChannelDeserializer<T>, ByteBuf, T> {
 	private ChannelSupplier<ByteBuf> input;
 	private final BinarySerializer<T> valueSerializer;
 
@@ -54,16 +54,34 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 	 * Creates a new instance of the deserializer for type T
 	 */
 	public static <T> ChannelDeserializer<T> create(BinarySerializer<T> valueSerializer) {
-		return new ChannelDeserializer<>(valueSerializer);
+		return ChannelDeserializer.builder(valueSerializer).build();
 	}
 
-	public ChannelDeserializer<T> withExplicitEndOfStream() {
-		return withExplicitEndOfStream(true);
+	/**
+	 * Creates a builder of the deserializer for type T
+	 */
+	public static <T> ChannelDeserializer<T>.Builder builder(BinarySerializer<T> valueSerializer) {
+		return new ChannelDeserializer<>(valueSerializer).new Builder();
 	}
 
-	public ChannelDeserializer<T> withExplicitEndOfStream(boolean explicitEndOfStream) {
-		this.explicitEndOfStream = explicitEndOfStream;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, ChannelDeserializer<T>> {
+		private Builder() {}
+
+		public Builder withExplicitEndOfStream() {
+			checkNotBuilt(this);
+			return withExplicitEndOfStream(true);
+		}
+
+		public Builder withExplicitEndOfStream(boolean explicitEndOfStream) {
+			checkNotBuilt(this);
+			ChannelDeserializer.this.explicitEndOfStream = explicitEndOfStream;
+			return this;
+		}
+
+		@Override
+		protected ChannelDeserializer<T> doBuild() {
+			return ChannelDeserializer.this;
+		}
 	}
 
 	@Override

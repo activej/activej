@@ -17,7 +17,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.async.AsyncAccumulator;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
@@ -44,7 +44,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @param <K> type of keys
  * @param <T> type of objects
  */
-public final class StreamSorter<K, T> extends ImplicitlyReactive implements StreamTransformer<T, T>, WithInitializer<StreamSorter<K, T>> {
+public final class StreamSorter<K, T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	private static final Logger logger = getLogger(StreamSorter.class);
 	private final AsyncAccumulator<? extends List<Integer>> temporaryStreamsAccumulator;
 	private final AsyncStreamSorterStorage<T> storage;
@@ -101,9 +101,55 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 						}));
 	}
 
-	public StreamSorter<K, T> withSortingExecutor(Executor executor) {
-		sortingExecutor = executor;
-		return this;
+	/**
+	 * Creates a new instance of StreamSorter
+	 *
+	 * @param storage           storage for storing elements which were not placed
+	 *                          to RAM
+	 * @param keyFunction       function for searching key
+	 * @param keyComparator     comparator for comparing key
+	 * @param distinct          if it is true it means that in result will be
+	 *                          not objects with same key
+	 * @param itemsInMemorySize size of elements which can be saved in RAM
+	 *                          before sorting
+	 */
+	public static <K, T> StreamSorter<K, T> create(AsyncStreamSorterStorage<T> storage,
+			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
+			int itemsInMemorySize) {
+		return StreamSorter.builder(storage, keyFunction, keyComparator, distinct, itemsInMemorySize).build();
+	}
+
+	/**
+	 * Creates a builder of StreamSorter
+	 *
+	 * @param storage           storage for storing elements which were not placed
+	 *                          to RAM
+	 * @param keyFunction       function for searching key
+	 * @param keyComparator     comparator for comparing key
+	 * @param distinct          if it is true it means that in result will be
+	 *                          not objects with same key
+	 * @param itemsInMemorySize size of elements which can be saved in RAM
+	 *                          before sorting
+	 */
+	public static <K, T> StreamSorter<K, T>.Builder builder(AsyncStreamSorterStorage<T> storage,
+			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
+			int itemsInMemorySize) {
+		return new StreamSorter<>(storage, keyFunction, keyComparator, distinct, itemsInMemorySize).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, StreamSorter<K, T>>{
+		private Builder() {}
+
+		public Builder withSortingExecutor(Executor executor) {
+			checkNotBuilt(this);
+			sortingExecutor = executor;
+			return this;
+		}
+
+		@Override
+		protected StreamSorter<K, T> doBuild() {
+			return StreamSorter.this;
+		}
 	}
 
 	private static final class DistinctIterator<K, T> implements Iterator<T> {
@@ -136,24 +182,6 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 			}
 			return next;
 		}
-	}
-
-	/**
-	 * Creates a new instance of StreamSorter
-	 *
-	 * @param storage           storage for storing elements which were not placed
-	 *                          to RAM
-	 * @param keyFunction       function for searching key
-	 * @param keyComparator     comparator for comparing key
-	 * @param distinct          if it is true it means that in result will be
-	 *                          not objects with same key
-	 * @param itemsInMemorySize size of elements which can be saved in RAM
-	 *                          before sorting
-	 */
-	public static <K, T> StreamSorter<K, T> create(AsyncStreamSorterStorage<T> storage,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
-			int itemsInMemorySize) {
-		return new StreamSorter<>(storage, keyFunction, keyComparator, distinct, itemsInMemorySize);
 	}
 
 	private final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {

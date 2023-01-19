@@ -61,8 +61,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Client for datagraph server.
- * Sends JSON commands for performing certain actions on server.
+ * Client for dataflow server.
+ * Sends commands for performing certain actions on server.
  */
 public final class DataflowClient extends AbstractNioReactive {
 	private static final Logger logger = getLogger(DataflowClient.class);
@@ -93,8 +93,9 @@ public final class DataflowClient extends AbstractNioReactive {
 									.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
 							.map($ -> messaging.receiveBinaryStream()
 									.transformWith(transformer)
-									.transformWith(ChannelDeserializer.create(streamSchema.createSerializer(serializers))
-											.withExplicitEndOfStream())
+									.transformWith(ChannelDeserializer.builder(streamSchema.createSerializer(serializers))
+											.withExplicitEndOfStream()
+											.build())
 									.transformWith(new StreamTraceCounter<>(streamId, address))
 									.withEndOfStream(eos -> eos
 											.mapException(e -> (e instanceof IOException ||

@@ -65,11 +65,15 @@ public interface StreamStats<T> extends
 		return new StreamStats_Basic<>();
 	}
 
-	static <T> StreamStats_Detailed<T> detailed() {
-		return new StreamStats_Detailed<>(null);
+	static <T> StreamStats_Basic<T>.Builder basicBuilder() {
+		return new StreamStats_Basic<T>().new Builder();
 	}
 
-	static <T> StreamStats_Detailed<T> detailed(StreamStatsSizeCounter<T> sizeCounter) {
-		return new StreamStats_Detailed<>(sizeCounter);
+	static <T> StreamStats_Detailed<T> detailed() {
+		return new StreamStats_Detailed<>();
+	}
+
+	static <T> StreamStats_Detailed<T>.Builder detailedBuilder() {
+		return new StreamStats_Detailed<T>().new Builder();
 	}
 }

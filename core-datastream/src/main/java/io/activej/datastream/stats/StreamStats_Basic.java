@@ -16,6 +16,7 @@
 
 package io.activej.datastream.stats;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
@@ -33,12 +34,32 @@ public class StreamStats_Basic<T> implements StreamStats<T> {
 	private final EventStats endOfStream = EventStats.create(DEFAULT_BASIC_SMOOTHING_WINDOW);
 	private final ExceptionStats error = ExceptionStats.create();
 
-	public StreamStats_Basic<T> withBasicSmoothingWindow(Duration smoothingWindow) {
-		started.setSmoothingWindow(smoothingWindow);
-		resume.setSmoothingWindow(smoothingWindow);
-		suspend.setSmoothingWindow(smoothingWindow);
-		endOfStream.setSmoothingWindow(smoothingWindow);
-		return this;
+	protected StreamStats_Basic() {
+	}
+
+	public final class Builder extends AbstractStatsBuilder<Builder, StreamStats_Basic<T>> {
+		Builder() {}
+	}
+
+	@SuppressWarnings("unchecked")
+	public abstract class AbstractStatsBuilder<Self extends AbstractStatsBuilder<Self, S>, S extends StreamStats_Basic<T>>
+			extends AbstractBuilder<Self, S> {
+		protected AbstractStatsBuilder() {
+		}
+
+		public final Self withBasicSmoothingWindow(Duration smoothingWindow) {
+			checkNotBuilt(this);
+			started.setSmoothingWindow(smoothingWindow);
+			resume.setSmoothingWindow(smoothingWindow);
+			suspend.setSmoothingWindow(smoothingWindow);
+			endOfStream.setSmoothingWindow(smoothingWindow);
+			return (Self) this;
+		}
+
+		@Override
+		protected final S doBuild() {
+			return (S) StreamStats_Basic.this;
+		}
 	}
 
 	@Override

@@ -17,7 +17,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.ChannelByteChunker;
@@ -53,7 +53,7 @@ import static java.lang.String.format;
  * @param <T> type of storing data
  */
 public final class StreamSorterStorage<T> extends ImplicitlyReactive
-		implements AsyncStreamSorterStorage<T>, WithInitializer<StreamSorterStorage<T>> {
+		implements AsyncStreamSorterStorage<T> {
 	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage.class);
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";
@@ -80,7 +80,7 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 	}
 
 	/**
-	 * Creates a new storage
+	 * Creates a new stream sorter storage
 	 *
 	 * @param executor   executor for running tasks in new thread
 	 * @param serializer for serialization to bytes
@@ -88,29 +88,53 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 	 */
 	public static <T> StreamSorterStorage<T> create(Executor executor,
 			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
+		return StreamSorterStorage.<T>builder(executor, serializer, frameFormat, path).build();
+	}
+
+	/**
+	 * Creates a builder for stream sorter storage
+	 *
+	 * @param executor   executor for running tasks in new thread
+	 * @param serializer for serialization to bytes
+	 * @param path       path in which will store received data
+	 */
+	public static <T> StreamSorterStorage<T>.Builder builder(Executor executor,
+			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
 		checkArgument(!path.getFileName().toString().contains("%d"), "Filename should not contain '%d'");
 		try {
 			Files.createDirectories(path);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-		return new StreamSorterStorage<>(executor, serializer, frameFormat, path);
+		return new StreamSorterStorage<>(executor, serializer, frameFormat, path).new Builder();
 	}
 
-	public StreamSorterStorage<T> withFilePattern(String filePattern) {
-		checkArgument(!filePattern.contains("%d"), "File pattern should not contain '%d'");
-		this.filePattern = filePattern;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, StreamSorterStorage<T>> {
+		private Builder() {}
 
-	public StreamSorterStorage<T> withReadBlockSize(MemSize readBlockSize) {
-		this.readBlockSize = readBlockSize;
-		return this;
-	}
+		public Builder withFilePattern(String filePattern) {
+			checkNotBuilt(this);
+			checkArgument(!filePattern.contains("%d"), "File pattern should not contain '%d'");
+			StreamSorterStorage.this.filePattern = filePattern;
+			return this;
+		}
 
-	public StreamSorterStorage<T> withWriteBlockSize(MemSize writeBlockSize) {
-		this.writeBlockSize = writeBlockSize;
-		return this;
+		public Builder withReadBlockSize(MemSize readBlockSize) {
+			checkNotBuilt(this);
+			StreamSorterStorage.this.readBlockSize = readBlockSize;
+			return this;
+		}
+
+		public Builder withWriteBlockSize(MemSize writeBlockSize) {
+			checkNotBuilt(this);
+			StreamSorterStorage.this.writeBlockSize = writeBlockSize;
+			return this;
+		}
+
+		@Override
+		protected StreamSorterStorage<T> doBuild() {
+			return StreamSorterStorage.this;
+		}
 	}
 	// endregion
 
@@ -132,8 +156,9 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 		Path path = partitionPath(partition);
 		return Promise.of(StreamConsumer.ofSupplier(
 				supplier -> supplier
-						.transformWith(ChannelSerializer.create(serializer)
-								.withInitialBufferSize(readBlockSize))
+						.transformWith(ChannelSerializer.builder(serializer)
+								.withInitialBufferSize(readBlockSize)
+								.build())
 						.transformWith(ChannelByteChunker.create(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
 						.transformWith(ChannelFrameEncoder.create(frameFormat))
 						.transformWith(ChannelByteChunker.create(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))

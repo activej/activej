@@ -16,7 +16,7 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
@@ -39,7 +39,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * because it represents few consumers and one supplier.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements HasStreamInputs, HasStreamOutput<O>, WithInitializer<StreamReducer<K, O, A>> {
+public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements HasStreamInputs, HasStreamOutput<O> {
 	public static final int DEFAULT_BUFFER_SIZE = 2000;
 
 	private final List<Input> inputs = new ArrayList<>();
@@ -61,26 +61,44 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 	}
 
 	public static <K, O, A> StreamReducer<K, O, A> create(Comparator<K> keyComparator) {
-		return new StreamReducer<>(new PriorityQueue<>(1, (input1, input2) -> {
-			int compare = ((Comparator) keyComparator).compare(input1.headKey, input2.headKey);
-			if (compare != 0) return compare;
-			return input1.index - input2.index;
-		}));
+		return StreamReducer.<K, O, A>builder(keyComparator).build();
 	}
 
-	@SuppressWarnings({"ComparatorCombinators", "Convert2Diamond"})
 	public static <K extends Comparable<K>, O, A> StreamReducer<K, O, A> create() {
+		return StreamReducer.<K, O, A>builder().build();
+	}
+
+	public static <K, O, A> StreamReducer<K, O, A>.Builder builder(Comparator<K> keyComparator) {
+		return new StreamReducer<K, O, A>(new PriorityQueue<>(1, (input1, input2) -> {
+			int compare = keyComparator.compare(input1.headKey, input2.headKey);
+			if (compare != 0) return compare;
+			return input1.index - input2.index;
+		})).new Builder();
+	}
+
+	@SuppressWarnings("ComparatorCombinators")
+	public static <K extends Comparable<K>, O, A> StreamReducer<K, O, A>.Builder builder() {
 		return new StreamReducer<K, O, A>(new PriorityQueue<>(1, (input1, input2) -> {
 			int compare = input1.headKey.compareTo(input2.headKey);
 			if (compare != 0) return compare;
 			return input1.index - input2.index;
-		}));
+		})).new Builder();
 	}
 
-	public StreamReducer<K, O, A> withBufferSize(int bufferSize) {
-		checkArgument(bufferSize >= 0, "bufferSize must be positive value, got %s", bufferSize);
-		this.bufferSize = bufferSize;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, StreamReducer<K, O, A>> {
+		private Builder() {}
+
+		public Builder withBufferSize(int bufferSize) {
+			checkNotBuilt(this);
+			checkArgument(bufferSize >= 0, "bufferSize must be positive value, got %s", bufferSize);
+			StreamReducer.this.bufferSize = bufferSize;
+			return this;
+		}
+
+		@Override
+		protected StreamReducer<K, O, A> doBuild() {
+			return StreamReducer.this;
+		}
 	}
 
 	public <I> StreamConsumer<I> newInput(Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {

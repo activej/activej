@@ -135,10 +135,11 @@ public final class DataflowServer extends AbstractReactiveServer {
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
-		ChannelSerializer<T> streamSerializer = ChannelSerializer.create(streamSchema.createSerializer(serializers))
+		ChannelSerializer<T> streamSerializer = ChannelSerializer.builder(streamSchema.createSerializer(serializers))
 				.withInitialBufferSize(MemSize.kilobytes(256))
 				.withAutoFlushInterval(Duration.ZERO)
-				.withExplicitEndOfStream();
+				.withExplicitEndOfStream()
+				.build();
 
 		ChannelQueue<ByteBuf> forwarder = pendingStreams.remove(streamId);
 		if (forwarder == null) {

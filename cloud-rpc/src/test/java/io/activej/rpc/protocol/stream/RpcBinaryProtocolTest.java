@@ -95,8 +95,9 @@ public final class RpcBinaryProtocolTest {
 
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		StreamSupplier<RpcMessage> supplier = StreamSupplier.ofIterable(sourceList)
-				.transformWith(ChannelSerializer.create(binarySerializer)
-						.withInitialBufferSize(MemSize.of(1)))
+				.transformWith(ChannelSerializer.builder(binarySerializer)
+						.withInitialBufferSize(MemSize.of(1))
+						.build())
 				.transformWith(ChannelFrameEncoder.create(frameFormat))
 				.transformWith(ChannelFrameDecoder.create(frameFormat))
 				.transformWith(ChannelDeserializer.create(binarySerializer));

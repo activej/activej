@@ -480,10 +480,11 @@ public class Aggregation extends AbstractReactive
 					.transformWith((StreamStats<R>) stats.mergeMapOutput);
 		}
 
-		StreamReducer<K, R, Object> streamReducer = StreamReducer.create();
+		StreamReducer<K, R, Object>.Builder streamReducerBuilder = StreamReducer.builder();
 		if (reducerBufferSize != 0 && reducerBufferSize != DEFAULT_REDUCER_BUFFER_SIZE) {
-			streamReducer.withBufferSize(reducerBufferSize);
+			streamReducerBuilder.withBufferSize(reducerBufferSize);
 		}
+		StreamReducer<K, R, Object> streamReducer = streamReducerBuilder.build();
 
 		Class<K> keyClass = createKeyClass(
 				keysToMap(queryKeys.stream(), structure.getKeyTypes()::get),

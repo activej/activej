@@ -88,8 +88,9 @@ public final class Node_Sort<K, T> extends AbstractNode {
 		Executor executor = task.get(Key.of(Executor.class, SortingExecutor.class));
 		StreamSorterStorageFactory storageFactory = task.get(StreamSorterStorageFactory.class);
 		AsyncStreamSorterStorage<T> storage = storageFactory.create(streamSchema, task, task.getExecutionPromise());
-		StreamSorter<K, T> streamSorter = StreamSorter.create(storage, keyFunction, keyComparator, deduplicate, itemsInMemorySize)
-				.withSortingExecutor(executor);
+		StreamSorter<K, T> streamSorter = StreamSorter.builder(storage, keyFunction, keyComparator, deduplicate, itemsInMemorySize)
+				.withSortingExecutor(executor)
+				.build();
 		task.bindChannel(input, streamSorter.getInput());
 		task.export(output, streamSorter.getOutput());
 		streamSorter.getInput().getAcknowledgement()
