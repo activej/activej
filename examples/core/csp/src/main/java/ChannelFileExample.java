@@ -19,7 +19,9 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class ChannelFileExample {
 	private static final ExecutorService executor = newSingleThreadExecutor();
-	private static final Eventloop eventloop = Eventloop.create().withCurrentThread();
+	private static final Eventloop eventloop = Eventloop.builder()
+			.withCurrentThread()
+			.build();
 	private static final Path PATH;
 
 	static {

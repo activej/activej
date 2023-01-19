@@ -93,7 +93,9 @@ public final class FileSystem_Cluster_Test {
 			serverStorages.add(path);
 			Files.createDirectories(path);
 
-			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+			Eventloop serverEventloop = Eventloop.builder()
+					.withFatalErrorHandler(rethrow())
+					.build();
 			serverEventloop.keepAlive(true);
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(fileSystem::start);

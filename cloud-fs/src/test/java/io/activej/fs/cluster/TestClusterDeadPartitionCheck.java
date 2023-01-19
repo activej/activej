@@ -171,7 +171,9 @@ public final class TestClusterDeadPartitionCheck {
 
 			Files.createDirectories(serverStorages[i]);
 
-			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+			Eventloop serverEventloop = Eventloop.builder()
+					.withFatalErrorHandler(rethrow())
+					.build();
 			serverEventloop.keepAlive(true);
 
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, serverStorages[i]);

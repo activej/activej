@@ -11,7 +11,9 @@ public final class SupplierExample {
 	public static void main(String[] args) {
 
 		//create an eventloop for streams operations
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 		//create a supplier of some numbers
 		StreamSupplier<Integer> supplier = StreamSupplier.of(0, 1, 2, 3, 4);
 		//creating a consumer for our supplier

@@ -154,7 +154,10 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherReactor() {
-		Eventloop anotherReactor = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop anotherReactor = Eventloop
+				.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		List<Integer> expectedList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumer.ofConsumer(actualList::add));
@@ -169,7 +172,9 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testOfAnotherReactorException() {
-		Eventloop anotherReactor = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop anotherReactor = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumer.ofConsumer(list::add));

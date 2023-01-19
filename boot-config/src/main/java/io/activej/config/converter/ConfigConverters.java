@@ -428,13 +428,14 @@ public final class ConfigConverters {
 		return new ConfigConverter_Complex<>(ThrottlingController.create()) {
 			@Override
 			protected ThrottlingController provide(Config config, ThrottlingController defaultValue) {
-				return ThrottlingController.create()
+				return ThrottlingController.builder()
 						.withTargetTime(config.get(ofDuration(), "targetTime", defaultValue.getTargetTime()))
 						.withGcTime(config.get(ofDuration(), "gcTime", defaultValue.getGcTime()))
 						.withSmoothingWindow(config.get(ofDuration(), "smoothingWindow", defaultValue.getSmoothingWindow()))
 						.withThrottlingDecrease(config.get(ofDouble(), "throttlingDecrease", defaultValue.getThrottlingDecrease()))
 						.withInitialKeysPerSecond(config.get(ofDouble(), "initialKeysPerSecond", INITIAL_KEYS_PER_SECOND))
-						.withInitialThrottling(config.get(ofDouble(), "initialThrottling", INITIAL_THROTTLING));
+						.withInitialThrottling(config.get(ofDouble(), "initialThrottling", INITIAL_THROTTLING))
+						.build();
 			}
 		};
 	}

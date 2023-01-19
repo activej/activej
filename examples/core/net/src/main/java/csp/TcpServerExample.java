@@ -24,7 +24,9 @@ public final class TcpServerExample {
 	/* Run server in an event loop. */
 	//[START REGION_1]
 	public static void main(String[] args) throws Exception {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		SimpleServer server = SimpleServer.builder(eventloop, socket ->
 						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))

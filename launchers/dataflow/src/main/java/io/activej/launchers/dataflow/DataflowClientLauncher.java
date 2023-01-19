@@ -41,9 +41,10 @@ public abstract class DataflowClientLauncher extends Launcher {
 
 	@Provides
 	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
-		return Eventloop.create()
+		return Eventloop.builder()
 				.initialize(ofEventloop(config.getChild("eventloop")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.withInspector(throttlingController.orElse(null))
+				.build();
 	}
 
 	@Provides

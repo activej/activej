@@ -27,7 +27,9 @@ public final class TcpClientExample {
 	public static final int PORT = 9922;
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 
 		eventloop.connect(new InetSocketAddress("localhost", PORT), (socketChannel, e) -> {
 			if (e == null) {

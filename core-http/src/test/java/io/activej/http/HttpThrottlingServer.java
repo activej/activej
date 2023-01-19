@@ -105,7 +105,11 @@ public class HttpThrottlingServer {
 		info(options);
 
 		EventloopInspector throttlingController = ThrottlingController.create();
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread().withInspector(throttlingController);
+		Eventloop eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.withCurrentThread()
+				.withInspector(throttlingController)
+				.build();
 
 		HttpThrottlingServer server = new HttpThrottlingServer(eventloop, options);
 

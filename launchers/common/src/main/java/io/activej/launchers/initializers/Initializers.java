@@ -28,8 +28,6 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.PrimaryServer;
-import io.activej.reactor.net.ServerSocketSettings;
-import io.activej.reactor.net.SocketSettings;
 import io.activej.trigger.TriggerResult;
 import io.activej.trigger.TriggersModuleSettings;
 
@@ -46,28 +44,37 @@ public class Initializers {
 	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.of(Eventloop.class, GLOBAL_EVENTLOOP_NAME);
 
 	public static <S extends AbstractReactiveServer, B extends AbstractReactiveServer.Builder<B, S>> Initializer<B> ofAbstractServer(Config config) {
-		return builder -> {
-			builder
-					.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "listenAddresses"))
-					.withAcceptOnce(config.get(ofBoolean(), "acceptOnce", false));
-
-			SocketSettings socketSettings = config.get(ofSocketSettings(), "socketSettings", null);
-			if (socketSettings != null) builder.withSocketSettings(socketSettings);
-
-			ServerSocketSettings serverSocketSettings = config.get(ofServerSocketSettings(), "serverSocketSettings", null);
-			if (serverSocketSettings != null) builder.withServerSocketSettings(serverSocketSettings);
-		};
+		return builder -> builder
+				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "listenAddresses"))
+				.withAcceptOnce(config.get(ofBoolean(), "acceptOnce", false))
+				.setIfNotNull(
+						AbstractReactiveServer.Builder::withSocketSettings,
+						config.get(ofSocketSettings(), "socketSettings", null)
+				)
+				.setIfNotNull(
+						AbstractReactiveServer.Builder::withServerSocketSettings,
+						config.get(ofServerSocketSettings(), "serverSocketSettings", null)
+				);
 	}
 
 	public static Initializer<PrimaryServer.Builder> ofPrimaryServer(Config config) {
 		return ofAbstractServer(config);
 	}
 
-	public static Initializer<Eventloop> ofEventloop(Config config) {
-		return eventloop -> eventloop
-				.withFatalErrorHandler(config.get(ofFatalErrorHandler(), "fatalErrorHandler", eventloop.getFatalErrorHandler()))
-				.withIdleInterval(config.get(ofDuration(), "idleInterval", eventloop.getIdleInterval()))
-				.withThreadPriority(config.get(ofInteger(), "threadPriority", eventloop.getThreadPriority()));
+	public static Initializer<Eventloop.Builder> ofEventloop(Config config) {
+		return builder -> builder
+				.setIfNotNull(
+						Eventloop.Builder::withFatalErrorHandler,
+						config.get(ofFatalErrorHandler(), "fatalErrorHandler", null)
+				)
+				.setIfNotNull(
+						Eventloop.Builder::withIdleInterval,
+						config.get(ofDuration(), "idleInterval", null)
+				)
+				.setIfNotNull(
+						Eventloop.Builder::withThreadPriority,
+						config.get(ofInteger(), "threadPriority", null)
+				);
 	}
 
 	public static Initializer<TaskScheduler> ofReactorTaskScheduler(Config config) {

@@ -57,7 +57,10 @@ public class ChannelConsumersIOTest {
 
 	@Test
 	public void outputStreamAsChannelConsumerTest() throws IOException {
-		Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+		Eventloop.builder()
+				.withCurrentThread()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		ChannelConsumer<ByteBuf> consumer;
 		try (OutputStream os = outputStream()) {
 			consumer = outputStreamAsChannelConsumer(executor, os);
@@ -73,7 +76,10 @@ public class ChannelConsumersIOTest {
 
 	@Test
 	public void outputStreamAsChannelConsumerCloseTest() throws IOException {
-		Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+		Eventloop.builder()
+				.withCurrentThread()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		try (OutputStream os = outputStream()) {
 			os.close();
 			ChannelConsumer<ByteBuf> consumer = outputStreamAsChannelConsumer(executor, os);
@@ -90,7 +96,9 @@ public class ChannelConsumersIOTest {
 
 	@Test
 	public void channelConsumerAsOutputStreamTest() throws IOException, InterruptedException {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
@@ -117,7 +125,9 @@ public class ChannelConsumersIOTest {
 
 	@Test
 	public void channelConsumerAsOutputStreamCloseTest() throws IOException, InterruptedException {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();

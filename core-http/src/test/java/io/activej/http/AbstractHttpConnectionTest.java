@@ -420,12 +420,13 @@ public final class AbstractHttpConnectionTest {
 		RuntimeException fatalError = new RuntimeException("test");
 		Ref<Throwable> errorRef = new Ref<>();
 
-		NioReactor reactor = Eventloop.create()
+		NioReactor reactor = Eventloop.builder()
 				.withCurrentThread()
 				.withFatalErrorHandler((e, context) -> {
 					assertNull(errorRef.get());
 					errorRef.set(e);
-				});
+				})
+				.build();
 
 		HttpServer server = HttpServer.builder(reactor,
 						request -> {

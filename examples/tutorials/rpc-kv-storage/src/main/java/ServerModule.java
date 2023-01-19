@@ -14,8 +14,9 @@ public class ServerModule extends AbstractModule {
 
 	@Provides
 	NioReactor reactor() {
-		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+		return Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 	}
 
 	@Provides

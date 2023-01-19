@@ -63,16 +63,18 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Provides
 	NioReactor primaryReactor(Config config) {
-		return Eventloop.create()
-				.initialize(ofEventloop(config.getChild("eventloop.primary")));
+		return Eventloop.builder()
+				.initialize(ofEventloop(config.getChild("eventloop.primary")))
+				.build();
 	}
 
 	@Provides
 	@Worker
 	NioReactor workerReactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
-		return Eventloop.create()
+		return Eventloop.builder()
 				.initialize(ofEventloop(config.getChild("eventloop.worker")))
-				.initialize(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+				.withInspector(throttlingController.orElse(null))
+				.build();
 	}
 
 	@Provides

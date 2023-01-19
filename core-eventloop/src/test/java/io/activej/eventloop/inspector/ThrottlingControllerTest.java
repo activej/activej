@@ -13,8 +13,9 @@ public class ThrottlingControllerTest {
 	@Test
 	public void testGcExceeding() {
 		int gcMillis = 100;
-		ThrottlingController throttlingController = ThrottlingController.create()
-				.withGcTime(Duration.ofMillis(gcMillis));
+		ThrottlingController throttlingController = ThrottlingController.builder()
+				.withGcTime(Duration.ofMillis(gcMillis))
+				.build();
 
 		// normal execution
 		throttlingController.onUpdateBusinessLogicTime(true, true, gcMillis / 2);

@@ -16,7 +16,7 @@
 
 package io.activej.eventloop.inspector;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -34,7 +34,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static java.lang.Math.pow;
 
 public final class ThrottlingController
-		implements ReactiveJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
+		implements ReactiveJmxBean, EventloopInspector {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);
@@ -51,10 +51,10 @@ public final class ThrottlingController
 	private int concurrentTasksSize;
 
 	// region settings
-	private int targetTimeMillis;
-	private int gcTimeMillis;
-	private double throttlingDecrease;
-	private int smoothingWindow;
+	private int targetTimeMillis = (int) TARGET_TIME.toMillis();
+	private int gcTimeMillis = (int) GC_TIME.toMillis();
+	private double throttlingDecrease = THROTTLING_DECREASE;
+	private int smoothingWindow = (int) SMOOTHING_WINDOW.toMillis();
 	// endregion
 
 	// region intermediate counters for current round
@@ -82,59 +82,71 @@ public final class ThrottlingController
 	private float throttling;
 
 	// region creators
-
 	public static ThrottlingController create() {
-		return new ThrottlingController()
-				.withTargetTime(TARGET_TIME)
-				.withGcTime(GC_TIME)
-				.withSmoothingWindow(SMOOTHING_WINDOW)
-				.withThrottlingDecrease(THROTTLING_DECREASE)
-				.withInitialKeysPerSecond(INITIAL_KEYS_PER_SECOND)
-				.withInitialThrottling(INITIAL_THROTTLING);
+		return builder().build();
 	}
 
-	public ThrottlingController withEventloop(Eventloop eventloop) {
-		setEventloop(eventloop);
-		return this;
+	public static Builder builder() {
+		return new ThrottlingController().new Builder();
 	}
+
+	public final class Builder extends AbstractBuilder<Builder, ThrottlingController>{
+		private Builder() {}
+
+		public Builder withEventloop(Eventloop eventloop) {
+			checkNotBuilt(this);
+			setEventloop(eventloop);
+			return this;
+		}
+
+		public Builder withTargetTime(Duration targetTime) {
+			checkNotBuilt(this);
+			setTargetTime(targetTime);
+			return this;
+		}
+
+		public Builder withGcTime(Duration gcTime) {
+			checkNotBuilt(this);
+			setGcTime(gcTime);
+			return this;
+		}
+
+		public Builder withSmoothingWindow(Duration smoothingWindow) {
+			checkNotBuilt(this);
+			setSmoothingWindow(smoothingWindow);
+			return this;
+		}
+
+		public Builder withThrottlingDecrease(double throttlingDecrease) {
+			checkNotBuilt(this);
+			setThrottlingDecrease(throttlingDecrease);
+			return this;
+		}
+
+		public Builder withInitialKeysPerSecond(double initialKeysPerSecond) {
+			checkNotBuilt(this);
+			checkArgument(initialKeysPerSecond > 0, "Initial keys per second should not be zero or less");
+			ThrottlingController.this.smoothedTimePerKeyMillis = 1000.0 / initialKeysPerSecond;
+			return this;
+		}
+
+		public Builder withInitialThrottling(double initialThrottling) {
+			checkNotBuilt(this);
+			checkArgument(initialThrottling >= 0, "Initial throttling should not be zero or less");
+			ThrottlingController.this.smoothedThrottling = initialThrottling;
+			return this;
+		}
+
+		@Override
+		protected ThrottlingController doBuild() {
+			return ThrottlingController.this;
+		}
+	}
+	// endregion
 
 	public void setEventloop(Eventloop eventloop) {
 		this.eventloop = eventloop;
 	}
-
-	public ThrottlingController withTargetTime(Duration targetTime) {
-		setTargetTime(targetTime);
-		return this;
-	}
-
-	public ThrottlingController withGcTime(Duration gcTime) {
-		setGcTime(gcTime);
-		return this;
-	}
-
-	public ThrottlingController withSmoothingWindow(Duration smoothingWindow) {
-		setSmoothingWindow(smoothingWindow);
-		return this;
-	}
-
-	public ThrottlingController withThrottlingDecrease(double throttlingDecrease) {
-		setThrottlingDecrease(throttlingDecrease);
-		return this;
-	}
-
-	public ThrottlingController withInitialKeysPerSecond(double initialKeysPerSecond) {
-		checkArgument(initialKeysPerSecond > 0, "Initial keys per second should not be zero or less");
-		this.smoothedTimePerKeyMillis = 1000.0 / initialKeysPerSecond;
-		return this;
-	}
-
-	public ThrottlingController withInitialThrottling(double initialThrottling) {
-		checkArgument(initialThrottling >= 0, "Initial throttling should not be zero or less");
-		this.smoothedThrottling = initialThrottling;
-		return this;
-	}
-
-	// endregion
 
 	private static long rngState = System.nanoTime();
 

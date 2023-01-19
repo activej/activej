@@ -22,7 +22,10 @@ public final class HelloWorldPostServer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Eventloop primaryEventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
+		Eventloop primaryEventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.withCurrentThread()
+				.build();
 
 		HttpServer httpServerListener = helloWorldServer(primaryEventloop, PORT);
 

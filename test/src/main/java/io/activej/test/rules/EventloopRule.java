@@ -34,9 +34,10 @@ public final class EventloopRule implements TestRule {
 	}
 
 	private static void createEventloop() {
-		Eventloop.create()
+		Eventloop.builder()
 				.withCurrentThread()
-				.withFatalErrorHandler(rethrow());
+				.withFatalErrorHandler(rethrow())
+				.build();
 	}
 
 	@Override

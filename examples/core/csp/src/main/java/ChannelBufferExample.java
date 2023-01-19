@@ -10,7 +10,9 @@ public final class ChannelBufferExample {
 	//[START REGION_1]
 	static final class ChannelBufferStream {
 		public static void main(String[] args) {
-			Eventloop eventloop = Eventloop.create().withCurrentThread();
+			Eventloop eventloop = Eventloop.builder()
+					.withCurrentThread()
+					.build();
 
 			ChannelBuffer<Integer> plate = new ChannelBuffer<>(5, 10);
 			ChannelSupplier<Integer> granny = plate.getSupplier();
@@ -29,7 +31,9 @@ public final class ChannelBufferExample {
 	//[START REGION_2]
 	static final class ChannelBufferZeroExample {
 		public static void main(String[] args) {
-			Eventloop eventloop = Eventloop.create().withCurrentThread();
+			Eventloop eventloop = Eventloop.builder()
+					.withCurrentThread()
+					.build();
 
 			ChannelQueue<Integer> buffer = new ChannelZeroBuffer<>();
 			ChannelSupplier<Integer> granny = buffer.getSupplier();

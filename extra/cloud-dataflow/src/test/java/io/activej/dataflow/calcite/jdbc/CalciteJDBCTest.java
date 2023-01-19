@@ -42,7 +42,9 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 								.withPort(port)
 								.build(),
 						NioReactor.class, int.class, SqlDataflow.class)
-				.bind(Eventloop.class).to(() -> Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow()))
+				.bind(Eventloop.class).to(() -> Eventloop.builder()
+						.withFatalErrorHandler(FatalErrorHandler.rethrow())
+						.build())
 				.bind(NioReactor.class).to(Eventloop.class)
 				.build();
 	}

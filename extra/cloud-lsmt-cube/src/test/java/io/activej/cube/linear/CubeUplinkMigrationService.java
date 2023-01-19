@@ -44,7 +44,10 @@ final class CubeUplinkMigrationService {
 
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
-	private final Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+	private final Eventloop eventloop = Eventloop.builder()
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 	private final Executor executor = newSingleThreadExecutor();
 
 	@VisibleForTesting

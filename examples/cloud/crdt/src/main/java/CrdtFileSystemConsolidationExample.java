@@ -31,7 +31,9 @@ public final class CrdtFileSystemConsolidationExample {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]

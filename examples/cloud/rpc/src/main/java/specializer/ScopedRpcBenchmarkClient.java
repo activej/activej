@@ -40,8 +40,9 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 
 	@Provides
 	NioReactor reactor() {
-		return Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+		return Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 	}
 
 	@Provides

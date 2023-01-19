@@ -133,8 +133,9 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	NioReactor reactor(Config config) {
-		return Eventloop.create()
-				.initialize(ofEventloop(config));
+		return Eventloop.builder()
+				.initialize(ofEventloop(config))
+				.build();
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

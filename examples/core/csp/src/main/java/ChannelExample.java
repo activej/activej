@@ -37,7 +37,9 @@ public final class ChannelExample {
 	//[END REGION_1]
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 		supplierOfValues();
 		supplierOfList(List.of("One", "Two", "Three"));
 		map();

@@ -59,7 +59,9 @@ public class DatastreamBenchmark extends Launcher {
 
 	@Provides
 	Reactor reactor() {
-		return Eventloop.create().withCurrentThread();
+		return Eventloop.builder()
+				.withCurrentThread()
+				.build();
 	}
 
 	@Provides

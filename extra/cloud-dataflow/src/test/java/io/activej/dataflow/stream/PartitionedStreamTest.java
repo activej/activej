@@ -112,7 +112,9 @@ public final class PartitionedStreamTest {
 		sourceFileSystemServers = new ArrayList<>();
 		targetFileSystemServers = new ArrayList<>();
 		dataflowServers = new ArrayList<>();
-		serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		serverEventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		serverEventloop.keepAlive(true);
 		new Thread(serverEventloop).start();
 	}

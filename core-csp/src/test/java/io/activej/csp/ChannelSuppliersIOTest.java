@@ -55,7 +55,10 @@ public class ChannelSuppliersIOTest {
 
 	@Test
 	public void inputStreamAsChannelSupplierTest() throws IOException {
-		Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+		Eventloop.builder()
+				.withCurrentThread()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		ChannelSupplier<ByteBuf> supplier;
 		try (InputStream is = inputStream()) {
 			supplier = inputStreamAsChannelSupplier(executor, is);
@@ -71,7 +74,10 @@ public class ChannelSuppliersIOTest {
 
 	@Test
 	public void inputStreamAsChannelSupplierCloseTest() throws IOException {
-		Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+		Eventloop.builder()
+				.withCurrentThread()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		try (InputStream is = inputStream()) {
 			is.close();
 			ChannelSupplier<ByteBuf> supplier = inputStreamAsChannelSupplier(executor, is);
@@ -91,7 +97,9 @@ public class ChannelSuppliersIOTest {
 	public void channelSupplierAsInputStreamTest() throws IOException, InterruptedException {
 		ByteBuf byteBuf = wrapForReading(DATA);
 
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
@@ -126,7 +134,10 @@ public class ChannelSuppliersIOTest {
 	public void channelSupplierAsInputStreamCloseTest() throws IOException, InterruptedException {
 		ByteBuf byteBuf = wrapForReading(DATA);
 
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop
+				.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();

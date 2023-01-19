@@ -16,7 +16,9 @@ public final class RedisPipelineExample {
 	private static final int N = 20;
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		RedisClient client = RedisClient.create(eventloop, ADDRESS);
 

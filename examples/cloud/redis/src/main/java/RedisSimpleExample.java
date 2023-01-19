@@ -14,7 +14,9 @@ public final class RedisSimpleExample {
 	private static final String VALUE = "This is redis client example";
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		RedisClient client = RedisClient.create(eventloop, ADDRESS);
 

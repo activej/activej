@@ -32,7 +32,9 @@ public final class CrdtClusterExample {
 			new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
 
 	public static void main(String[] args) throws IOException {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]

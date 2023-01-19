@@ -20,10 +20,10 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.time.Stopwatch;
@@ -80,7 +80,7 @@ import static java.util.Collections.emptyIterator;
  * and its queues with tasks are empty.
  */
 @SuppressWarnings("unused")
-public final class Eventloop implements NioReactor, NioReactive, Runnable, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
+public final class Eventloop implements NioReactor, NioReactive, Runnable, ReactiveJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECKS = Checks.isEnabled(Eventloop.class);
 
@@ -178,114 +178,130 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return a new instance of {@link Eventloop}
 	 */
 	public static Eventloop create() {
-		return new Eventloop();
+		return builder().build();
 	}
 
 	/**
-	 * Sets a thread name for this {@link Eventloop} thread
+	 * Creates builder for {@link Eventloop}
 	 *
-	 * @param threadName a thread name for this {@link Eventloop} thread
-	 * @return this {@link Eventloop}
+	 * @return a builder for {@link Eventloop}
 	 */
-	public Eventloop withThreadName(@Nullable String threadName) {
-		this.threadName = threadName;
-		return this;
+	public static Builder builder() {
+		return new Eventloop().new Builder();
 	}
 
-	/**
-	 * Sets a thread priority for this {@link Eventloop} thread
-	 *
-	 * @param threadPriority a thread priority for this {@link Eventloop} thread
-	 * @return this {@link Eventloop}
-	 */
-	@SuppressWarnings("UnusedReturnValue")
-	public Eventloop withThreadPriority(int threadPriority) {
-		this.threadPriority = threadPriority;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, Eventloop> {
+		private Builder() {}
 
-	/**
-	 * Sets an {@link EventloopInspector} for this {@link Eventloop}
-	 * <p>
-	 * Inspector can be used to collect and process statistics of this {@link Eventloop}
-	 * (task execution time, business logic time, I/O key process time, etc.)
-	 *
-	 * @param inspector an inspector for this {@link Eventloop}
-	 * @return this {@link Eventloop}
-	 */
-	public Eventloop withInspector(@Nullable EventloopInspector inspector) {
-		this.inspector = inspector;
-		return this;
-	}
+		/**
+		 * Sets a thread name for this {@link Eventloop} thread
+		 *
+		 * @param threadName a thread name for this {@link Eventloop} thread
+		 */
+		public Builder withThreadName(@Nullable String threadName) {
+			checkNotBuilt(this);
+			Eventloop.this.threadName = threadName;
+			return this;
+		}
 
-	/**
-	 * Sets a fatal error on an event loop level. It handles all errors that were not handled by
-	 * thread local error handler
-	 *
-	 * @param fatalErrorHandler a fatal error handler on an event loop level
-	 * @return this {@link Eventloop}
-	 */
-	public Eventloop withFatalErrorHandler(FatalErrorHandler fatalErrorHandler) {
-		this.fatalErrorHandler = fatalErrorHandler;
-		return this;
-	}
+		/**
+		 * Sets a thread priority for this {@link Eventloop} thread
+		 *
+		 * @param threadPriority a thread priority for this {@link Eventloop} thread
+		 */
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withThreadPriority(int threadPriority) {
+			checkNotBuilt(this);
+			Eventloop.this.threadPriority = threadPriority;
+			return this;
+		}
 
-	/**
-	 * Sets a custom {@link SelectorProvider} for this {@link Eventloop}
-	 * <p>
-	 * If no custom selector provider is set, a default selector provider from {@link SelectorProvider#provider()} will be used
-	 *
-	 * @param selectorProvider a custom selector provider
-	 * @return this {@link Eventloop}
-	 */
-	public Eventloop withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
-		this.selectorProvider = selectorProvider;
-		return this;
-	}
+		/**
+		 * Sets an {@link EventloopInspector} for this {@link Eventloop}
+		 * <p>
+		 * Inspector can be used to collect and process statistics of this {@link Eventloop}
+		 * (task execution time, business logic time, I/O key process time, etc.)
+		 *
+		 * @param inspector an inspector for this {@link Eventloop}
+		 */
+		public Builder withInspector(@Nullable EventloopInspector inspector) {
+			checkNotBuilt(this);
+			Eventloop.this.inspector = inspector;
+			return this;
+		}
 
-	/**
-	 * Creates a new {@link Eventloop} with a custom {@link CurrentTimeProvider}
-	 * <p>
-	 * Useful for tests when passed time should be precisely controlled
-	 *
-	 * @return a new instance of {@link Eventloop} with a custom {@link CurrentTimeProvider}
-	 */
-	public Eventloop withTimeProvider(CurrentTimeProvider currentTimeProvider) {
-		this.timeProvider = currentTimeProvider;
-		return this;
-	}
+		/**
+		 * Sets a fatal error on an event loop level. It handles all errors that were not handled by
+		 * thread local error handler
+		 *
+		 * @param fatalErrorHandler a fatal error handler on an event loop level
+		 */
+		public Builder withFatalErrorHandler(FatalErrorHandler fatalErrorHandler) {
+			checkNotBuilt(this);
+			Eventloop.this.fatalErrorHandler = fatalErrorHandler;
+			return this;
+		}
 
-	/**
-	 * Sets an idle interval for this {@link Eventloop}.
-	 * <p>
-	 * An idle interval is the time a {@link Selector} is blocked for when calling {@link Selector#select(long)}
-	 * <p>
-	 * An idle interval is only applicable when there are no active tasks in an {@link Eventloop}
-	 *
-	 * @param idleInterval an idle interval for the {@link Selector} to block for on {@link Selector#select(long)} calls
-	 * @return this {@link Eventloop}
-	 */
-	public Eventloop withIdleInterval(Duration idleInterval) {
-		this.idleInterval = idleInterval;
-		return this;
-	}
+		/**
+		 * Sets a custom {@link SelectorProvider} for this {@link Eventloop}
+		 * <p>
+		 * If no custom selector provider is set, a default selector provider from {@link SelectorProvider#provider()} will be used
+		 *
+		 * @param selectorProvider a custom selector provider
+		 */
+		public Builder withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
+			checkNotBuilt(this);
+			Eventloop.this.selectorProvider = selectorProvider;
+			return this;
+		}
 
-	/**
-	 * Register this {@link Eventloop} to an inner {@link ThreadLocal}.
-	 * <p>
-	 * The registration also happens automatically when you call {@link Eventloop#run} but sometimes you need to execute
-	 * Eventloop-related code prior to calling {@link Eventloop#run}.
-	 * <p>
-	 * This method is useful for tests, for example, when you need to initialize a component in a context of an {@link Eventloop}
-	 * prior to {@link Eventloop#run} invocation.
-	 * <p>
-	 * This method should not be called after {@link Eventloop#run} has been invoked.
-	 *
-	 * @return this {@link Eventloop}
-	 */
-	public Eventloop withCurrentThread() {
-		Reactor.setCurrentReactor(this);
-		return this;
+		/**
+		 * Sets a custom {@link CurrentTimeProvider} for this {@link Eventloop}
+		 * <p>
+		 * Useful for tests when passed time should be precisely controlled
+		 */
+		public Builder withTimeProvider(CurrentTimeProvider currentTimeProvider) {
+			checkNotBuilt(this);
+			Eventloop.this.timeProvider = currentTimeProvider;
+			return this;
+		}
+
+		/**
+		 * Sets an idle interval for this {@link Eventloop}.
+		 * <p>
+		 * An idle interval is the time a {@link Selector} is blocked for when calling {@link Selector#select(long)}
+		 * <p>
+		 * An idle interval is only applicable when there are no active tasks in an {@link Eventloop}
+		 *
+		 * @param idleInterval an idle interval for the {@link Selector} to block for on {@link Selector#select(long)} calls
+		 */
+		public Builder withIdleInterval(Duration idleInterval) {
+			checkNotBuilt(this);
+			Eventloop.this.idleInterval = idleInterval;
+			return this;
+		}
+
+		/**
+		 * Register this {@link Eventloop} to an inner {@link ThreadLocal}.
+		 * <p>
+		 * The registration also happens automatically when you call {@link Eventloop#run} but sometimes you need to execute
+		 * Eventloop-related code prior to calling {@link Eventloop#run}.
+		 * <p>
+		 * This method is useful for tests, for example, when you need to initialize a component in a context of an {@link Eventloop}
+		 * prior to {@link Eventloop#run} invocation.
+		 * <p>
+		 * This method should not be called after {@link Eventloop#run} has been invoked.
+		 */
+		public Builder withCurrentThread() {
+			checkNotBuilt(this);
+			Reactor.setCurrentReactor(Eventloop.this);
+			return this;
+		}
+
+		@Override
+		protected Eventloop doBuild() {
+			return Eventloop.this;
+		}
 	}
 	// endregion
 
@@ -1177,7 +1193,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * Returns this {@link Eventloop} fatal error handler
 	 *
 	 * @return this {@link Eventloop} fatal error handler
-	 * @see #withFatalErrorHandler(FatalErrorHandler)
+	 * @see Builder#withFatalErrorHandler(FatalErrorHandler)
 	 */
 	public FatalErrorHandler getFatalErrorHandler() {
 		return fatalErrorHandler;

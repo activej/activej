@@ -5,7 +5,9 @@ import io.activej.promise.Promises;
 //[START EXAMPLE]
 @SuppressWarnings("Convert2MethodRef")
 public class PromiseChainExample {
-	private static final Eventloop eventloop = Eventloop.create().withCurrentThread();
+	private static final Eventloop eventloop = Eventloop.builder()
+			.withCurrentThread()
+			.build();
 
 	public static void main(String[] args) {
 		//[START REGION_1]

@@ -58,7 +58,9 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 	}
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		CspExample process = new CspExample();
 		ChannelSupplier.of("hello", "world", "nice", "to", "see", "you")

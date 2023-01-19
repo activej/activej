@@ -15,11 +15,13 @@ public final class EventloopTest {
 	public void testContextInFatalErrorHandlers() {
 		StringBuilder sb = new StringBuilder();
 		Ref<Throwable> errorRef = new Ref<>();
-		Eventloop eventloop = Eventloop.create().withCurrentThread()
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
 				.withFatalErrorHandler((e, context) -> {
 					errorRef.set(e);
 					sb.append(requireNonNull(context));
-				});
+				})
+				.build();
 		RuntimeException error = new RuntimeException("error");
 		String contextString = "Failed component";
 		Object context = new Object() {
@@ -38,7 +40,10 @@ public final class EventloopTest {
 
 	@Test
 	public void testGetSmoothingWindow() {
-		Duration smoothingWindow = Eventloop.create().withInspector(EventloopStats.create()).getSmoothingWindow();
+		Duration smoothingWindow = Eventloop.builder()
+				.withInspector(EventloopStats.create())
+				.build()
+				.getSmoothingWindow();
 		assertEquals(Eventloop.DEFAULT_SMOOTHING_WINDOW, smoothingWindow);
 	}
 }

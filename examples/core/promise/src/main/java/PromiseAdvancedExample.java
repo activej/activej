@@ -11,7 +11,9 @@ public class PromiseAdvancedExample {
 	private static final ExecutorService executor = newSingleThreadExecutor();
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		firstExample();
 		secondExample();

@@ -16,7 +16,7 @@
 
 package io.activej.reactor.net;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
-public final class BlockingSocketServer implements WithInitializer<BlockingSocketServer> {
+public final class BlockingSocketServer {
 	public interface AcceptHandler {
 		void onAccept(Socket socket) throws IOException;
 	}
@@ -52,41 +52,57 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 		this.acceptHandler = acceptHandler;
 	}
 
-	public static BlockingSocketServer create(Executor executor, AcceptHandler acceptHandler) {
-		return new BlockingSocketServer(executor, acceptHandler);
+	public static Builder builder(Executor executor, AcceptHandler acceptHandler) {
+		return new BlockingSocketServer(executor, acceptHandler).new Builder();
 	}
 
-	public BlockingSocketServer withAcceptThreadFactory(ThreadFactory acceptThreadFactory) {
-		this.acceptThreadFactory = acceptThreadFactory;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, BlockingSocketServer> {
+		private Builder() {}
 
-	public BlockingSocketServer withListenAddresses(List<InetSocketAddress> listenAddresses) {
-		this.listenAddresses.addAll(listenAddresses);
-		return this;
-	}
+		public Builder withAcceptThreadFactory(ThreadFactory acceptThreadFactory) {
+			checkNotBuilt(this);
+			BlockingSocketServer.this.acceptThreadFactory = acceptThreadFactory;
+			return this;
+		}
 
-	public BlockingSocketServer withListenAddresses(InetSocketAddress... listenAddresses) {
-		return withListenAddresses(List.of(listenAddresses));
-	}
+		public Builder withListenAddresses(List<InetSocketAddress> listenAddresses) {
+			checkNotBuilt(this);
+			BlockingSocketServer.this.listenAddresses.addAll(listenAddresses);
+			return this;
+		}
 
-	public BlockingSocketServer withListenAddress(InetSocketAddress listenAddress) {
-		this.listenAddresses.add(listenAddress);
-		return this;
-	}
+		public Builder withListenAddresses(InetSocketAddress... listenAddresses) {
+			checkNotBuilt(this);
+			return withListenAddresses(List.of(listenAddresses));
+		}
 
-	public BlockingSocketServer withListenPort(int port) {
-		return withListenAddress(new InetSocketAddress(port));
-	}
+		public Builder withListenAddress(InetSocketAddress listenAddress) {
+			checkNotBuilt(this);
+			BlockingSocketServer.this.listenAddresses.add(listenAddress);
+			return this;
+		}
 
-	public BlockingSocketServer withServerSocketSettings(ServerSocketSettings socketSettings) {
-		this.serverSocketSettings = socketSettings;
-		return this;
-	}
+		public Builder withListenPort(int port) {
+			checkNotBuilt(this);
+			return withListenAddress(new InetSocketAddress(port));
+		}
 
-	public BlockingSocketServer withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return this;
+		public Builder withServerSocketSettings(ServerSocketSettings socketSettings) {
+			checkNotBuilt(this);
+			BlockingSocketServer.this.serverSocketSettings = socketSettings;
+			return this;
+		}
+
+		public Builder withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			BlockingSocketServer.this.socketSettings = socketSettings;
+			return this;
+		}
+
+		@Override
+		protected BlockingSocketServer doBuild() {
+			return BlockingSocketServer.this;
+		}
 	}
 
 	private void serveClient(Socket socket) throws IOException {

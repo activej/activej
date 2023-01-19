@@ -21,7 +21,9 @@ public final class ScopedRpcServerExample extends Launcher {
 
 	@Provides
 	NioReactor reactor() {
-		return Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow());
+		return Eventloop.builder()
+				.withFatalErrorHandler(FatalErrorHandler.rethrow())
+				.build();
 	}
 
 	@Provides

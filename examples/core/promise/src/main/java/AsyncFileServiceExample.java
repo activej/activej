@@ -20,7 +20,9 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 
 @SuppressWarnings("Convert2MethodRef")
 public final class AsyncFileServiceExample {
-	private static final Eventloop EVENTLOOP = Eventloop.create().withCurrentThread();
+	private static final Eventloop EVENTLOOP = Eventloop.builder()
+			.withCurrentThread()
+			.build();
 	private static final ExecutorService EXECUTOR_SERVICE = newCachedThreadPool();
 	private static final AsyncFileService FILE_SERVICE = new FileService_Executor(EVENTLOOP, EXECUTOR_SERVICE);
 	private static final Path PATH;

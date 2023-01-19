@@ -23,7 +23,9 @@ public final class UdpPongServerExample {
 
 	//[START REGION_1]
 	public static void main(String[] args) throws Exception {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
 		DatagramChannel serverDatagramChannel = NioReactor.createDatagramChannel(socketSettings, SERVER_ADDRESS, null);
 

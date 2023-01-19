@@ -25,7 +25,9 @@ public final class CrdtExample {
 	private static final InetSocketAddress ADDRESS = new InetSocketAddress(5555);
 
 	public static void main(String[] args) throws IOException {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		//[START REGION_1]
 		// create the 'remote' storage

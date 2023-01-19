@@ -24,7 +24,9 @@ public final class PingPongSocketConnection {
 
 	//[START REGION_1]
 	public static void main(String[] args) throws IOException {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 
 		SimpleServer server = SimpleServer.builder(
 						eventloop,

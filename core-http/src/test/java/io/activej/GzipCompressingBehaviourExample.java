@@ -13,7 +13,10 @@ import static io.activej.test.TestUtils.getFreePort;
 
 public final class GzipCompressingBehaviourExample {
 	public static void main(String[] args) throws IOException {
-		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.withCurrentThread()
+				.build();
 		Servlet_Routing servlet = Servlet_Routing.create(eventloop)
 				// always responds in gzip
 				.map(GET, "/gzip/",

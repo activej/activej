@@ -35,7 +35,9 @@ public class StreamConsumerOfAnotherReactorTest {
 
 	@Before
 	public void setUp() throws InterruptedException {
-		anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+		anotherEventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 		anotherEventloop.keepAlive(true);
 		CountDownLatch latch = new CountDownLatch(1);
 		new Thread(() -> {

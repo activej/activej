@@ -74,8 +74,9 @@ public class CubeBackupControllerTest {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Executor executor = Executors.newCachedThreadPool();
 
-		eventloop = Eventloop.create()
-				.withFatalErrorHandler(rethrow());
+		eventloop = Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build();
 
 		eventloop.keepAlive(true);
 

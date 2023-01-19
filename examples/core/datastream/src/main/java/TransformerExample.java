@@ -58,7 +58,10 @@ public final class TransformerExample extends ImplicitlyReactive implements Stre
 
 	//[START REGION_2]
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow());
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.withFatalErrorHandler(rethrow())
+				.build();
 
 		StreamSupplier<String> source = StreamSupplier.of("testdata", "testdata1", "testdata1000");
 		TransformerExample transformer = new TransformerExample();

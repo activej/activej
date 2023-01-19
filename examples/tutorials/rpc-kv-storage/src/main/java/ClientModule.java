@@ -18,9 +18,10 @@ public class ClientModule extends AbstractModule {
 
 	@Provides
 	NioReactor reactor() {
-		return Eventloop.create()
+		return Eventloop.builder()
 				.withFatalErrorHandler(rethrow())
-				.withCurrentThread();
+				.withCurrentThread()
+				.build();
 	}
 
 	@Provides

@@ -12,7 +12,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 //[START EXAMPLE]
 public final class ByteBufsDecoderExample {
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop
+				.builder()
+				.withCurrentThread()
+				.build();
 
 		List<ByteBuf> letters = List.of(wrapAscii("H"), wrapAscii("e"), wrapAscii("l"), wrapAscii("l"), wrapAscii("o"));
 		ByteBufsDecoder<String> decoder = bufs -> {

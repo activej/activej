@@ -21,7 +21,9 @@ public final class UdpPingClientExample {
 
 	//[START REGION_1]
 	public static void main(String[] args) throws Exception {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
+		Eventloop eventloop = Eventloop.builder()
+				.withCurrentThread()
+				.build();
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
 		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(socketSettings, null, null);
 
