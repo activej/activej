@@ -19,9 +19,9 @@ package io.activej.crdt;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.storage.AsyncCrdtStorage;
@@ -57,7 +57,6 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_Client<K extends Comparable<K>, S> extends AbstractNioReactive
 		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
-	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorage_Client.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Client.class, "smoothingWindow", Duration.ofMinutes(1));
 
@@ -71,7 +70,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
-	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
+	private SocketSettings socketSettings = SocketSettings.create();
 
 	// region JMX
 	private boolean detailedStats;

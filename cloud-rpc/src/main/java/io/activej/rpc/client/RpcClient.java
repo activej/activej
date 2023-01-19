@@ -90,7 +90,6 @@ public final class RpcClient extends AbstractNioReactive
 		implements AsyncRpcClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final boolean CHECKS = Checks.isEnabled(RpcClient.class);
 
-	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
 	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
@@ -102,7 +101,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	private Logger logger = getLogger(getClass());
 
-	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
+	private SocketSettings socketSettings = SocketSettings.create();
 
 	// SSL
 	private SSLContext sslContext;

@@ -16,6 +16,7 @@
 
 package io.activej.reactor.net;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 
@@ -30,7 +31,7 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
  * This class used to change settings for server socket. It will be applying with creating new server socket
  */
 public final class ServerSocketSettings {
-	public static final int DEFAULT_BACKLOG = 16384;
+	public static final int DEFAULT_BACKLOG = ApplicationSettings.getInt(ServerSocketSettings.class, "backlog", 16384);
 
 	private static final byte DEF_BOOL = -1;
 	private static final byte TRUE = 1;

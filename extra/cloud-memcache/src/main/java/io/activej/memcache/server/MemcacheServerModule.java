@@ -22,6 +22,8 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.SerializerDef_Slice;
 import io.activej.promise.Promise;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
@@ -30,8 +32,6 @@ import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.*;
-import static io.activej.net.AbstractReactiveServer.DEFAULT_SERVER_SOCKET_SETTINGS;
-import static io.activej.net.AbstractReactiveServer.DEFAULT_SOCKET_SETTINGS;
 
 public class MemcacheServerModule extends AbstractModule {
 	private MemcacheServerModule() {}
@@ -69,8 +69,8 @@ public class MemcacheServerModule extends AbstractModule {
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))
-				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", DEFAULT_SERVER_SOCKET_SETTINGS))
-				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", DEFAULT_SOCKET_SETTINGS))
+				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", ServerSocketSettings.create()))
+				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", SocketSettings.create()))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"))
 				.build();
 	}

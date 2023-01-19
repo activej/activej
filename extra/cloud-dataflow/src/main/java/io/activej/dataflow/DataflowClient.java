@@ -67,7 +67,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public final class DataflowClient extends AbstractNioReactive {
 	private static final Logger logger = getLogger(DataflowClient.class);
 
-	private final SocketSettings socketSettings = SocketSettings.createDefault();
+	private final SocketSettings socketSettings = SocketSettings.create();
 
 	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 	private final BinarySerializerLocator serializers;
