@@ -104,12 +104,11 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	protected Config createConfig() {
-		return Config.builder()
+		return Config.create()
 				.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
 				.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS)
 				.with("fs.repartition.deadCheck.schedule.type", "interval")
-				.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL)
-				.build();
+				.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL);
 	}
 
 	@Override

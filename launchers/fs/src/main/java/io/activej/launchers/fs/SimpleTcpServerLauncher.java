@@ -100,10 +100,9 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	protected Config createConfig() {
-		return Config.builder()
+		return Config.create()
 				.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
-				.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS)
-				.build();
+				.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
 	}
 
 	@Override

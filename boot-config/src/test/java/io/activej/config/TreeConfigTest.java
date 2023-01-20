@@ -16,26 +16,24 @@ public class TreeConfigTest {
 
 	@Before
 	public void setUp() {
-		config = Config.builder()
+		config = Config.create()
 				.with("key1", "value1")
-				.with("key2.key3", Config.builder().with("key4", "value4").build())
-				.with("key5.key6", "6")
-				.build();
+				.with("key2.key3", Config.create().with("key4", "value4"))
+				.with("key5.key6", "6");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testCanNotAddBadPath() {
-		Config.builder().with("a..b.", "illegalValue");
+		Config.create().with("a..b.", "illegalValue");
 	}
 
 	@Test
 	public void testBase() {
-		Config config = Config.builder()
+		Config config = Config.create()
 				.with("a.a.a", "1")
 				.with("a.a.b", "2")
 				.with("a.b", "3")
-				.with("b", "4")
-				.build();
+				.with("b", "4");
 		testBaseConfig(config);
 	}
 

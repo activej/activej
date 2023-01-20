@@ -73,9 +73,8 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.builder()
+		return Config.create()
 				.with("redis.address", Config.ofValue(ofInetSocketAddress(), RedisClient.DEFAULT_ADDRESS))
-				.build()
 				.overrideWith(configOverride())
 				.overrideWith(Config.ofSystemProperties("config"));
 	}

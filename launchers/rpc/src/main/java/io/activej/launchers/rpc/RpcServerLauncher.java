@@ -57,9 +57,8 @@ public abstract class RpcServerLauncher extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.builder()
+		return Config.create()
 				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
-				.build()
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}

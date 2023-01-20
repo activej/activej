@@ -44,9 +44,8 @@ public class CrdtRpcClientModule extends AbstractModule {
 
 	@Provides
 	Config config() {
-		return Config.builder()
+		return Config.create()
 				.with("address", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_PORT)))
-				.build()
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}

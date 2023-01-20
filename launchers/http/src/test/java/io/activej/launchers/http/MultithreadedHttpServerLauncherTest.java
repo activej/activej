@@ -53,9 +53,7 @@ public class MultithreadedHttpServerLauncherTest {
 			@Override
 			Config config() {
 				return super.config()
-						.overrideWith(Config.builder()
-						.with("http.listenAddresses", "0")
-						.build());
+						.overrideWith(Config.create().with("http.listenAddresses", "0"));
 			}
 		};
 

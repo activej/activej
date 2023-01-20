@@ -94,9 +94,8 @@ public class RpcBenchmark extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.builder()
+		return Config.create()
 				.with("rpc.server.port", "" + SERVICE_PORT)
-				.build()
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 

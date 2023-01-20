@@ -34,10 +34,9 @@ public class MemcacheLikeClient extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.builder()
+		return Config.create()
 				.with("protocol.compression", "false")
-				.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002")
-				.build();
+				.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002");
 	}
 
 	@Inject

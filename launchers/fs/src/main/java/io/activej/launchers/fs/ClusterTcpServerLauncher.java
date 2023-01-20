@@ -105,12 +105,11 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 
 	@Override
 	protected Config createConfig() {
-		return Config.builder()
+		return Config.create()
 				.with("fs.repartition.schedule.type", "interval")
 				.with("fs.repartition.schedule.value", DEFAULT_REPARTITION_INTERVAL)
 				.with("fs.repartition.deadCheck.schedule.type", "interval")
 				.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL)
-				.build()
 				.combineWith(super.createConfig());
 	}
 

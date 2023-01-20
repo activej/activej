@@ -68,11 +68,10 @@ public class Config_Effective_Test {
 	@Test
 	public void testCompoundConfig() {
 		config = Config_Effective.wrap(
-				Config.builder()
+				Config.create()
 						.with("Server.socketSettings.backlog", "10")
 						.with("Server.socketSettings.receiveBufferSize", "10")
 						.with("Server.socketSettings.reuseAddress", "true")
-						.build()
 		);
 
 		ConfigConverter<ServerSocketSettings> converter = ofServerSocketSettings();
@@ -95,11 +94,10 @@ public class Config_Effective_Test {
 				""";
 
 		Config_Effective config = Config_Effective.wrap(
-				Config.builder()
+				Config.create()
 						.with("a.a.b", "value1")
 						.with("a.a.c", "value2")
 						.with("a.b.a", "value3")
-						.build()
 		);
 
 		assertNull(config.get("a.a.a", null));

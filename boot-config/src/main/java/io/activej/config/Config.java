@@ -16,7 +16,6 @@
 
 package io.activej.config;
 
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
 import org.jetbrains.annotations.Nullable;
@@ -251,13 +250,6 @@ public interface Config {
 	}
 
 	/**
-	 * Returns an empty config
-	 */
-	static Builder builder() {
-		return new Builder();
-	}
-
-	/**
 	 * Creates a new config from all system properties
 	 *
 	 * @return new {@code Config}
@@ -392,26 +384,26 @@ public interface Config {
 	 * @return new {@code Config}
 	 */
 	static Config ofMap(Map<String, String> map) {
-		Builder builder = builder();
+		Config config = create();
 		for (Map.Entry<String, String> entry : map.entrySet()) {
-			builder = builder.with(entry.getKey(), entry.getValue());
+			config = config.with(entry.getKey(), entry.getValue());
 		}
-		return builder.build();
+		return config;
 	}
 
 	static Config ofConfigs(Map<String, Config> map) {
-		Builder builder = builder();
+		Config config = create();
 		for (Map.Entry<String, Config> entry : map.entrySet()) {
-			builder = builder.with(entry.getKey(), entry.getValue());
+			config = config.with(entry.getKey(), entry.getValue());
 		}
-		return builder.build();
+		return config;
 	}
 
 	/**
 	 * Returns a new {@code Config} with only one value
 	 */
 	static Config ofValue(String value) {
-		return builder().with(THIS, value).build();
+		return create().with(THIS, value);
 	}
 
 	/**
@@ -459,79 +451,67 @@ public interface Config {
 		};
 	}
 
-	final class Builder extends AbstractBuilder<Builder, Config> {
-		private Config config = Config.EMPTY;
+	/**
+	 * Adds a value to a given path for this {@link Config}
+	 *
+	 * @param path path
+	 * @return new {@code Config} with value in path
+	 */
+	default Config with(String path, String value) {
+		checkPath(path);
+		return with(path, new Config() {
+			@Override
+			public String getValue(@Nullable String defaultValue) {
+				return value;
+			}
 
-		private Builder() {
-		}
+			@Override
+			public String getValue() throws NoSuchElementException {
+				return value;
+			}
 
-		/**
-		 * Adds a value to a given path for this {@link Config}
-		 *
-		 * @param path path
-		 */
-		public Builder with(String path, String value) {
-			checkNotBuilt(this);
-			checkPath(path);
-			return with(path, new Config() {
+			@Override
+			public Map<String, Config> getChildren() {
+				return Map.of();
+			}
+		});
+	}
+
+	/**
+	 * Adds a {@link Config} to a given path for this {@link Config}
+	 *
+	 * @param path   path
+	 * @param config holds one value at root
+	 * @return new {@code Config} with overridden value in path
+	 * this method returns new config instead of changing the old one.
+	 */
+	default Config with(String path, Config config) {
+		checkPath(path);
+		String[] keys = path.split(Pattern.quote(DELIMITER));
+		for (int i = keys.length - 1; i >= 0; i--) {
+			String key = keys[i];
+			if (key.isEmpty()) {
+				continue;
+			}
+			Map<String, Config> map = Map.of(key, config);
+			config = new Config() {
 				@Override
-				public String getValue(@Nullable String defaultValue) {
-					return value;
+				public @Nullable String getValue(@Nullable String defaultValue) {
+					return defaultValue;
 				}
 
 				@Override
 				public String getValue() throws NoSuchElementException {
-					return value;
+					throw new NoSuchElementException("No value at intermediate config node");
 				}
 
 				@Override
 				public Map<String, Config> getChildren() {
-					return Map.of();
+					return map;
 				}
-			});
+			};
 		}
-
-		/**
-		 * Adds a {@link Config} to a given path for this {@link Config}
-		 *
-		 * @param path   path
-		 * @param config holds one value at root
-		 */
-		public Builder with(String path, Config config) {
-			checkNotBuilt(this);
-			checkPath(path);
-			String[] keys = path.split(Pattern.quote(DELIMITER));
-			for (int i = keys.length - 1; i >= 0; i--) {
-				String key = keys[i];
-				if (key.isEmpty()) {
-					continue;
-				}
-				Map<String, Config> map = Map.of(key, config);
-				config = new Config() {
-					@Override
-					public @Nullable String getValue(@Nullable String defaultValue) {
-						return defaultValue;
-					}
-
-					@Override
-					public String getValue() throws NoSuchElementException {
-						throw new NoSuchElementException("No value at intermediate config node");
-					}
-
-					@Override
-					public Map<String, Config> getChildren() {
-						return map;
-					}
-				};
-			}
-			this.config = this.config.overrideWith(config);
-			return this;
-		}
-
-		@Override
-		protected Config doBuild() {
-			return config;
-		}
+		return overrideWith(config);
 	}
 
 	/**

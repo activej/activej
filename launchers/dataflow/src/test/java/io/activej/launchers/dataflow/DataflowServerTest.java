@@ -384,7 +384,7 @@ public class DataflowServerTest {
 			return createModule(List.of())
 					.overrideWith(ModuleBuilder.create()
 							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
-							.bind(Config.class).toInstance(Config.builder().with("dataflow.server.listenAddresses", String.valueOf(port)).build())
+							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).to(reactor ->
 											Reactor.executeWithReactor(reactor, () ->

@@ -75,14 +75,13 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 		return new AbstractModule() {
 			@Provides
 			Config config() {
-				return Config.builder()
+				return Config.create()
 						.with("crdt.http.listenAddresses", "localhost:8080")
 						.with("crdt.server.listenAddresses", "localhost:9090")
 						.with("crdt.local.path", "/tmp/TESTS/crdt")
 						.with("crdt.cluster.localPartitionId", "local")
 						.with("crdt.cluster.partitions.noop", "localhost:9091")
 						.with("crdt.cluster.server.listenAddresses", "localhost:9000")
-						.build()
 						.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 						.overrideWith(Config.ofSystemProperties("config"));
 			}

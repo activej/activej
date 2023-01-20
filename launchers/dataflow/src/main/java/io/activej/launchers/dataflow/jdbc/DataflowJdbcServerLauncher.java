@@ -53,10 +53,9 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 
 	@Provides
 	Config config() {
-		return Config.builder()
+		return Config.create()
 				.with("dataflow.jdbc.server.listenAddress", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_JDBC_SERVER_HOSTNAME, DEFAULT_JDBC_SERVER_PORT)))
 				.with("dataflow.jdbc.server.idleTimeout", Config.ofValue(ofDuration(), DEFAULT_IDLE_TIMEOUT))
-				.build()
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}

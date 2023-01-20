@@ -37,11 +37,9 @@ public class ConfigConvertersTest {
 
 	@Test
 	public void testTransform() {
-		Config test = Config.builder()
+		Config test = Config.create()
 				.with("durationToLong", "228 millis")
-				.with("periodToInt", "1 days")
-				.build();
-
+				.with("periodToInt", "1 days");
 		// Basic test
 		assertEquals(228L, (long) test.get(ofDuration().transform(Duration::toMillis, Duration::ofMillis), "durationToLong"));
 		assertEquals(1, (int) test.get(ofPeriod().transform(Period::getDays, Period::ofDays), "periodToInt"));
@@ -281,12 +279,11 @@ public class ConfigConvertersTest {
 	@Test
 	public void testXAsY() {
 		Instant now = Instant.now();
-		Config testConfig = Config.builder()
+		Config testConfig = Config.create()
 				.with("ofDurationAsMillis", "228 millis")
 				.with("ofPeriodAsDays", "3 days")
 				.with("ofMemSizeAsBytesLong", "2gb")
-				.with("ofInstantAsEpochMillis", Config.ofValue(ofInstant(), now))
-				.build();
+				.with("ofInstantAsEpochMillis", Config.ofValue(ofInstant(), now));
 
 		assertEquals(228L, (long) testConfig.get(ofDurationAsMillis(), "ofDurationAsMillis"));
 		assertEquals(3, (int) testConfig.get(ofPeriodAsDays(), "ofPeriodAsDays"));
@@ -303,10 +300,9 @@ public class ConfigConvertersTest {
 		String emptyPath = "empty";
 		String nonPresentPath = "nonpresent";
 
-		Config config = Config.builder()
+		Config config = Config.create()
 				.with(emptyPath, "")
-				.with(presentPath, stringValue)
-				.build();
+				.with(presentPath, stringValue);
 
 		// no default
 		assertEquals(stringValue, config.get(ofString(), presentPath));

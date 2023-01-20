@@ -45,9 +45,8 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 				.bind(StreamSorterStorageFactory.class).toInstance(StreamSorterStorage_MergeStub.FACTORY_STUB)
 
 				.bind(Config.class).toInstance(
-						Config.builder()
+						Config.create()
 								.with("dataflow.partitions", args.length == 0 ? DEFAULT_PARTITION : String.join(",", args))
-								.build()
 				)
 				.build();
 	}

@@ -31,9 +31,8 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 				.bind(StreamSorterStorageFactory.class).toInstance(StreamSorterStorage_MergeStub.FACTORY_STUB)
 
 				.bind(Config.class).toInstance(
-						Config.builder()
+						Config.create()
 								.with("dataflow.server.listenAddresses", args.length > 0 ? args[0] : "9000")
-								.build()
 				)
 				.build();
 	}

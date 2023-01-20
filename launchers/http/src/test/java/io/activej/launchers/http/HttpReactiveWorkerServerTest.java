@@ -63,9 +63,8 @@ public final class HttpReactiveWorkerServerTest {
 				return new AbstractModule() {
 					@Provides
 					Config config() {
-						return Config.builder()
-								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(port)))
-								.build();
+						return Config.create()
+								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(port)));
 					}
 				};
 			}
