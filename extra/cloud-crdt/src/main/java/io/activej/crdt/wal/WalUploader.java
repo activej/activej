@@ -18,8 +18,8 @@ package io.activej.crdt.wal;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -80,7 +80,9 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 
 	private final PromiseStats uploadPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final ValueStats totalFilesUploaded = ValueStats.create(SMOOTHING_WINDOW);
-	private final ValueStats totalFilesUploadedSize = ValueStats.create(SMOOTHING_WINDOW).withUnit("bytes");
+	private final ValueStats totalFilesUploadedSize = ValueStats.builder(SMOOTHING_WINDOW)
+			.withUnit("bytes")
+			.build();
 	private boolean detailedMonitoring;
 
 	private @Nullable Path sortDir;

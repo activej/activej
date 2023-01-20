@@ -111,11 +111,17 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 		public static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
 		private final EventStats connects = EventStats.create(SMOOTHING_WINDOW);
-		private final ValueStats reads = ValueStats.create(SMOOTHING_WINDOW).withUnit("bytes").withRate();
+		private final ValueStats reads = ValueStats.builder(SMOOTHING_WINDOW)
+				.withUnit("bytes")
+				.withRate()
+				.build();
 		private final EventStats readEndOfStreams = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats readErrors = ExceptionStats.create();
 		private final EventStats readTimeouts = EventStats.create(SMOOTHING_WINDOW);
-		private final ValueStats writes = ValueStats.create(SMOOTHING_WINDOW).withUnit("bytes").withRate();
+		private final ValueStats writes = ValueStats.builder(SMOOTHING_WINDOW)
+				.withUnit("bytes")
+				.withRate()
+				.build();
 		private final ExceptionStats writeErrors = ExceptionStats.create();
 		private final EventStats writeTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats writeOverloaded = EventStats.create(SMOOTHING_WINDOW);

@@ -17,7 +17,7 @@
 package io.activej.jmx.stats;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * Class is supposed to work in a single thread
  */
-public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxStatsWithReset, JmxStatsWithSmoothingWindow, WithInitializer<ValueStats> {
+public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxStatsWithReset, JmxStatsWithSmoothingWindow {
 	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 	private static final long MAX_INTERVAL_BETWEEN_REFRESHES = ApplicationSettings.getDuration(JmxStats.class, "maxIntervalBetweenRefreshes", Duration.ofHours(1)).toMillis();
 	private static final double LN_2 = log(2);
@@ -111,7 +111,11 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	}
 
 	public static ValueStats createAccumulator() {
-		return new ValueStats();
+		return accumulatorBuilder().build();
+	}
+
+	public static Builder accumulatorBuilder() {
+		return new ValueStats().new Builder();
 	}
 
 	/**
@@ -120,65 +124,93 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	 * @param smoothingWindow in seconds
 	 */
 	public static ValueStats create(Duration smoothingWindow) {
-		return new ValueStats(smoothingWindow.toMillis() / 1000.0);
+		return builder(smoothingWindow).build();
 	}
 
-	public ValueStats withUnit(String unit) {
-		this.unit = unit;
-		return this;
+	/**
+	 * Creates ValueStats builder with specified smoothing window
+	 *
+	 * @param smoothingWindow in seconds
+	 */
+	public static Builder builder(Duration smoothingWindow) {
+		return new ValueStats(smoothingWindow.toMillis() / 1000.0).new Builder();
 	}
 
-	public ValueStats withRate(String rateUnit) {
-		this.rateUnit = rateUnit;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, ValueStats> {
+		private Builder() {}
 
-	public ValueStats withRate() {
-		this.rateUnit = "";
-		return this;
-	}
+		public Builder withUnit(String unit) {
+			checkNotBuilt(this);
+			ValueStats.this.unit = unit;
+			return this;
+		}
 
-	public ValueStats withHistogram(JmxHistogram histogram) {
-		this.histogram = histogram;
-		return this;
-	}
+		public Builder withRate(String rateUnit) {
+			checkNotBuilt(this);
+			ValueStats.this.rateUnit = rateUnit;
+			return this;
+		}
 
-	public ValueStats withHistogram(int[] histogram) {
-		setHistogram(histogram);
-		return this;
-	}
+		public Builder withRate() {
+			checkNotBuilt(this);
+			ValueStats.this.rateUnit = "";
+			return this;
+		}
 
-	public ValueStats withAbsoluteValues(boolean value) {
-		this.useAbsoluteValues = value;
-		return this;
-	}
+		public Builder withHistogram(JmxHistogram histogram) {
+			checkNotBuilt(this);
+			ValueStats.this.histogram = histogram;
+			return this;
+		}
 
-	public ValueStats withAverageAndDeviation(boolean value) {
-		this.useAvgAndDeviaton = value;
-		return this;
-	}
+		public Builder withHistogram(int[] histogram) {
+			checkNotBuilt(this);
+			setHistogram(histogram);
+			return this;
+		}
 
-	public ValueStats withMinMax(boolean value) {
-		this.useMinMax = value;
-		return this;
-	}
+		public Builder withAbsoluteValues(boolean value) {
+			checkNotBuilt(this);
+			ValueStats.this.useAbsoluteValues = value;
+			return this;
+		}
 
-	public ValueStats withLastValue(boolean value) {
-		this.useLastValue = value;
-		return this;
-	}
+		public Builder withAverageAndDeviation(boolean value) {
+			checkNotBuilt(this);
+			ValueStats.this.useAvgAndDeviaton = value;
+			return this;
+		}
 
-	public ValueStats withPrecision(int precision) {
-		checkArgument(precision > 0, "Precision should be a positive value");
-		this.precision = precision;
-		return this;
-	}
+		public Builder withMinMax(boolean value) {
+			checkNotBuilt(this);
+			ValueStats.this.useMinMax = value;
+			return this;
+		}
 
-	public ValueStats withScientificNotation() {
-		this.precision = -1;
-		return this;
-	}
+		public Builder withLastValue(boolean value) {
+			checkNotBuilt(this);
+			ValueStats.this.useLastValue = value;
+			return this;
+		}
 
+		public Builder withPrecision(int precision) {
+			checkNotBuilt(this);
+			checkArgument(precision > 0, "Precision should be a positive value");
+			ValueStats.this.precision = precision;
+			return this;
+		}
+
+		public Builder withScientificNotation() {
+			checkNotBuilt(this);
+			ValueStats.this.precision = -1;
+			return this;
+		}
+
+		@Override
+		protected ValueStats doBuild() {
+			return ValueStats.this;
+		}
+	}
 	// endregion
 
 	public void setHistogram(@Nullable JmxHistogram histogram) {

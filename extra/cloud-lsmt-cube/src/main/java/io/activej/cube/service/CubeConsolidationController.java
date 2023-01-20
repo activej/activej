@@ -80,9 +80,13 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseCleanupIrrelevantChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private final ValueStats removedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats removedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
+	private final ValueStats removedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			.withRate()
+			.build();
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
+	private final ValueStats addedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			.withRate()
+			.build();
 
 	private final Map<String, AsyncChunkLocker<Object>> lockers = new HashMap<>();
 

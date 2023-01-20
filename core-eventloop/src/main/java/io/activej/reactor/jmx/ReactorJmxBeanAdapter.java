@@ -70,7 +70,10 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 			if (smoothingWindows == null) {
 				smoothingWindows = DEFAULT_SMOOTHING_WINDOW;
 			}
-			ValueStats refreshStats = ValueStats.create(smoothingWindows).withRate().withUnit("ns");
+			ValueStats refreshStats = ValueStats.builder(smoothingWindows)
+					.withRate()
+					.withUnit("ns")
+					.build();
 			List<JmxRefreshable> list = new ArrayList<>();
 			list.add(refreshStats);
 			reactorToJmxRefreshables.put(reactor, list);
@@ -109,7 +112,10 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		List<String> result = new ArrayList<>();
 		if (reactorToJmxRefreshables.size() > 1) {
 			int count = 0;
-			ValueStats total = ValueStats.createAccumulator().withRate().withUnit("ms");
+			ValueStats total = ValueStats.accumulatorBuilder()
+					.withRate()
+					.withUnit("ms")
+					.build();
 			for (List<JmxRefreshable> refreshables : reactorToJmxRefreshables.values()) {
 				total.add((ValueStats) refreshables.get(0));
 				count += refreshables.size();

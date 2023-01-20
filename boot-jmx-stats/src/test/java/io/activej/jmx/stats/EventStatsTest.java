@@ -202,7 +202,36 @@ public class EventStatsTest {
 		}
 		assertEquals("1000 @ 6.024/second", eventStats.toString());
 
-		eventStats.withRateUnit("records");
+		rate = 0.0555464;
+		period = 1.0 / rate;
+		periodInMillis = (int) (period * 1000);
+
+		for (int i = 0; i < events * 5; i++) {
+			eventStats.recordEvent();
+			eventStats.refresh(currentTimestamp);
+			currentTimestamp += periodInMillis;
+		}
+
+		assertEquals("6000 @ 0.05555/second", eventStats.toString());
+	}
+
+	@Test
+	public void itShouldProperlyBuildStringWithRateUnits() {
+		Duration smoothingWindow = Duration.ofSeconds(1);
+		EventStats eventStats = EventStats.builder(smoothingWindow)
+				.withRateUnit("records")
+				.build();
+		long currentTimestamp = 0;
+		int events = 1000;
+		double rate = 6;
+		double period = 1.0 / rate;
+		int periodInMillis = (int) (period * 1000);
+
+		for (int i = 0; i < events; i++) {
+			eventStats.recordEvent();
+			eventStats.refresh(currentTimestamp);
+			currentTimestamp += periodInMillis;
+		}
 		assertEquals("1000 @ 6.024 records/second", eventStats.toString());
 
 		rate = 0.0555464;

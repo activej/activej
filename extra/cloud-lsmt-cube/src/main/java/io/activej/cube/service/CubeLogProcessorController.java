@@ -69,7 +69,9 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	private final PromiseStats promiseProcessLogs = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseProcessLogsImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
+	private final ValueStats addedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
+			.withRate()
+			.build();
 
 	CubeLogProcessorController(Reactor reactor,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors, AsyncAggregationChunkStorage<C> chunkStorage, OTStateManager<K, LogDiff<CubeDiff>> stateManager, AsyncPredicate<K> predicate) {

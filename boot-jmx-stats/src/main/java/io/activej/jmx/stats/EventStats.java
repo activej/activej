@@ -17,7 +17,7 @@
 package io.activej.jmx.stats;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +34,7 @@ import static java.lang.Math.*;
  * <p>
  * Class is supposed to work in a single thread
  */
-public final class EventStats implements JmxRefreshableStats<EventStats>, JmxStatsWithSmoothingWindow, JmxStatsWithReset, WithInitializer<EventStats> {
+public final class EventStats implements JmxRefreshableStats<EventStats>, JmxStatsWithSmoothingWindow, JmxStatsWithReset {
 	private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 	private static final long MAX_INTERVAL_BETWEEN_REFRESHES = ApplicationSettings.getDuration(JmxStats.class, "maxIntervalBetweenRefreshes", Duration.ofHours(1)).toMillis();
 	private static final double LN_2 = log(2);
@@ -78,23 +78,44 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 	 * @param smoothingWindow in seconds
 	 */
 	public static EventStats create(Duration smoothingWindow) {
-		return new EventStats(smoothingWindow.toMillis() / 1000.0);
+		return builder(smoothingWindow).build();
 	}
 
-	public EventStats withRateUnit(String rateUnit) {
-		this.rateUnit = rateUnit;
-		return this;
+	/**
+	 * Creates EventStats builder with specified smoothing window
+	 *
+	 * @param smoothingWindow in seconds
+	 */
+	public static Builder builder(Duration smoothingWindow) {
+		return new EventStats(smoothingWindow.toMillis() / 1000.0).new Builder();
 	}
 
-	public EventStats withPrecision(int precision) {
-		checkArgument(precision > 0, "Precision should be a positive value");
-		this.precision = precision;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, EventStats>{
+		private Builder() {}
 
-	public EventStats withScientificNotation() {
-		this.precision = -1;
-		return this;
+		public Builder withRateUnit(String rateUnit) {
+			checkNotBuilt(this);
+			EventStats.this.rateUnit = rateUnit;
+			return this;
+		}
+
+		public Builder withPrecision(int precision) {
+			checkNotBuilt(this);
+			checkArgument(precision > 0, "Precision should be a positive value");
+			EventStats.this.precision = precision;
+			return this;
+		}
+
+		public Builder withScientificNotation() {
+			checkNotBuilt(this);
+			EventStats.this.precision = -1;
+			return this;
+		}
+
+		@Override
+		protected EventStats doBuild() {
+			return EventStats.this;
+		}
 	}
 	// endregion
 

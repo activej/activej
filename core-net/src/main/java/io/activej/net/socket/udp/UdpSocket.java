@@ -89,9 +89,15 @@ public final class UdpSocket extends AbstractNioReactive implements AsyncUdpSock
 
 		public JmxInspector(Duration smoothingWindow) {
 			this.creates = EventStats.create(smoothingWindow);
-			this.receives = ValueStats.create(smoothingWindow).withUnit("bytes").withRate();
+			this.receives = ValueStats.builder(smoothingWindow)
+					.withUnit("bytes")
+					.withRate()
+					.build();
 			this.receiveErrors = EventStats.create(smoothingWindow);
-			this.sends = ValueStats.create(smoothingWindow).withUnit("bytes").withRate();
+			this.sends = ValueStats.builder(smoothingWindow)
+					.withUnit("bytes")
+					.withRate()
+					.build();
 			this.sendErrors = EventStats.create(smoothingWindow);
 			this.closes = EventStats.create(smoothingWindow);
 		}

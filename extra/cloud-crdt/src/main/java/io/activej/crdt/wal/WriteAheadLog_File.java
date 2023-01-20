@@ -100,7 +100,9 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 	private final PromiseStats flushPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final EventStats totalPuts = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats totalFlushes = EventStats.create(SMOOTHING_WINDOW);
-	private final ValueStats totalFlushedSize = ValueStats.create(SMOOTHING_WINDOW).withUnit("bytes");
+	private final ValueStats totalFlushedSize = ValueStats.builder(SMOOTHING_WINDOW)
+			.withUnit("bytes")
+			.build();
 	private boolean detailedMonitoring;
 	// endregion
 

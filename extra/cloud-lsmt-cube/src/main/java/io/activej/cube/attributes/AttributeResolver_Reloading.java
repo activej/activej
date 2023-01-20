@@ -44,7 +44,10 @@ public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttribut
 	private int reloadErrors;
 	private int resolveErrors;
 	private K lastResolveErrorKey;
-	private final ValueStats reloadTime = ValueStats.create(Duration.ofHours(1)).withRate("reloads").withUnit("milliseconds");
+	private final ValueStats reloadTime = ValueStats.builder(Duration.ofHours(1))
+			.withRate("reloads")
+			.withUnit("milliseconds")
+			.build();
 
 	protected AttributeResolver_Reloading(Reactor reactor) {
 		super(reactor);
