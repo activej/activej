@@ -24,8 +24,9 @@ public class GlobalSingletonsRegistrationTest {
 		globalSingletonClass2.setValue(jmxValue);
 
 		Injector injector = Injector.of(
-				JmxModule.create()
+				JmxModule.builder()
 						.withGlobalSingletons(globalSingletonClass2)
+						.build()
 		);
 		for (LauncherService service : injector.getInstance(new Key<Set<LauncherService>>() {})) {
 			service.start().get();
@@ -46,8 +47,9 @@ public class GlobalSingletonsRegistrationTest {
 		GlobalSingletonClass1 globalSingletonClass1 = GlobalSingletonClass1.getInstance();
 
 		Injector injector = Injector.of(
-				JmxModule.create()
+				JmxModule.builder()
 						.withGlobalSingletons(globalSingletonClass1)
+						.build()
 		);
 		for (LauncherService service : injector.getInstance(new Key<Set<LauncherService>>() {})) {
 			service.start().get();

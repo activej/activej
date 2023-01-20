@@ -33,13 +33,14 @@ public class JmxRegistryTest {
 	public final JUnitRuleMockery context = new JUnitRuleMockery();
 
 	private MBeanServer mBeanServer;
+	private DynamicMBeanFactory mBeanFactory;
 	private JmxRegistry jmxRegistry;
 
 	@Before
 	public void setUp() {
 		mBeanServer = context.mock(MBeanServer.class);
-		DynamicMBeanFactory mbeanFactory = DynamicMBeanFactory.create();
-		jmxRegistry = JmxRegistry.create(mBeanServer, mbeanFactory);
+		mBeanFactory = DynamicMBeanFactory.create();
+		jmxRegistry = JmxRegistry.create(mBeanServer, mBeanFactory);
 	}
 
 	@Test
@@ -86,7 +87,9 @@ public class JmxRegistryTest {
 
 	@Test
 	public void registerWorkersWithPredicate() throws Exception {
-		jmxRegistry.withWorkerPredicate(($, workerId) -> workerId == 0);
+		jmxRegistry = JmxRegistry.builder(mBeanServer, mBeanFactory)
+				.withWorkerPredicate(($, workerId) -> workerId == 0)
+				.build();
 
 		WorkerPool workerPool = getWorkerPool();
 		WorkerPool.Instances<ServiceStub> instances = workerPool.getInstances(ServiceStub.class);
@@ -112,7 +115,7 @@ public class JmxRegistryTest {
 
 		BasicService basicServiceAnnotation = createBasicServiceAnnotation();
 		Key<?> key = Key.of(ServiceStub.class, basicServiceAnnotation);
-		jmxRegistry.registerWorkers(workerPool, key, List.of(worker_1, worker_2, worker_3), JmxBeanSettings.defaultSettings());
+		jmxRegistry.registerWorkers(workerPool, key, List.of(worker_1, worker_2, worker_3), JmxBeanSettings.create());
 	}
 
 	private WorkerPool getWorkerPool() {

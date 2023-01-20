@@ -100,8 +100,8 @@ public class Initializers {
 				.withMaxBodySize(config.get(ofMemSize(), "maxBodySize", MemSize.ZERO));
 	}
 
-	public static Initializer<JmxModule> ofGlobalEventloopStats() {
-		return jmxModule -> jmxModule
+	public static Initializer<JmxModule.Builder> ofGlobalEventloopStats() {
+		return builder -> builder
 				.withGlobalMBean(Eventloop.class, GLOBAL_EVENTLOOP_KEY)
 				.withOptional(GLOBAL_EVENTLOOP_KEY, "fatalErrors_total")
 				.withOptional(GLOBAL_EVENTLOOP_KEY, "businessLogicTime_smoothedAverage")
@@ -188,7 +188,7 @@ public class Initializers {
 				});
 	}
 
-	public static Initializer<JmxModule> renamedClassNames(Map<Class<?>, String> classToOldName) {
+	public static Initializer<JmxModule.Builder> renamedClassNames(Map<Class<?>, String> classToOldName) {
 		Map<String, Map<String, String>> byPackageAndClassMap = new HashMap<>();
 
 		for (Map.Entry<Class<?>, String> entry : classToOldName.entrySet()) {
@@ -198,8 +198,8 @@ public class Initializers {
 					.put(cls.getSimpleName(), entry.getValue());
 		}
 
-		return jmxModule ->
-				jmxModule.withObjectNameMapping(protoObjectName -> {
+		return builder ->
+				builder.withObjectNameMapping(protoObjectName -> {
 					Map<String, String> packageMap = byPackageAndClassMap.get(protoObjectName.getPackageName());
 					if (packageMap == null) return protoObjectName;
 

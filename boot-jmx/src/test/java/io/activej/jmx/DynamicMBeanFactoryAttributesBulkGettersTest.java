@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -19,7 +18,7 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 	@Test
 	public void bulkGetOmitsAttributesWithExceptionButReturnsValidAttributes() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanStub()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanStub()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> attrs = Utils.nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -41,7 +40,7 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 	@Test(expected = MBeanException.class)
 	public void propagatesExceptionInCaseOfSingleAttributeGet() throws Exception {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanStub()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanStub()), JmxBeanSettings.create(), false);
 
 		mbean.getAttribute("value");
 	}

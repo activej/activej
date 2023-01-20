@@ -16,6 +16,7 @@
 
 package io.activej.jmx;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 
@@ -46,33 +47,45 @@ public final class JmxBeanSettings implements WithInitializer<JmxBeanSettings> {
 	}
 
 	public static JmxBeanSettings create() {
-		return new JmxBeanSettings(new HashSet<>(), new HashMap<>(), new HashMap<>());
+		return new JmxBeanSettings(Set.of(), Map.of(), Map.of());
 	}
 
-	public static JmxBeanSettings defaultSettings() {
-		return new JmxBeanSettings(Set.of(), Map.of(), Map.of());
+	public static Builder builder() {
+		return new JmxBeanSettings(new HashSet<>(), new HashMap<>(), new HashMap<>()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, JmxBeanSettings> {
+		private Builder() {}
+
+		public Builder withIncludedOptional(String attrName) {
+			checkNotBuilt(this);
+			includedOptionals.add(attrName);
+			return this;
+		}
+
+		public Builder withModifier(String attrName, AttributeModifier<?> modifier) {
+			checkNotBuilt(this);
+			checkArgument(!modifiers.containsKey(attrName), "cannot add two modifiers for one attribute");
+			modifiers.put(attrName, modifier);
+			return this;
+		}
+
+		public Builder withCustomTypes(Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
+			checkNotBuilt(this);
+			JmxBeanSettings.this.customTypes.putAll(customTypes);
+			return this;
+		}
+
+		@Override
+		protected JmxBeanSettings doBuild() {
+			return JmxBeanSettings.this;
+		}
 	}
 
 	public void merge(JmxBeanSettings otherSettings) {
 		includedOptionals.addAll(otherSettings.includedOptionals);
 		modifiers.putAll(otherSettings.modifiers);
 		customTypes.putAll(otherSettings.customTypes);
-	}
-
-	public JmxBeanSettings withIncludedOptional(String attrName) {
-		includedOptionals.add(attrName);
-		return this;
-	}
-
-	public JmxBeanSettings withModifier(String attrName, AttributeModifier<?> modifier) {
-		checkArgument(!modifiers.containsKey(attrName), "cannot add two modifiers for one attribute");
-		modifiers.put(attrName, modifier);
-		return this;
-	}
-
-	public JmxBeanSettings withCustomTypes(Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
-		this.customTypes.putAll(customTypes);
-		return this;
 	}
 
 	public Set<String> getIncludedOptionals() {

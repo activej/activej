@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import javax.management.MBeanServer;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.CustomMatchers.objectname;
 
 public class StandardMBeansRegistrationTest {
@@ -29,7 +28,7 @@ public class StandardMBeansRegistrationTest {
 		}});
 
 		Key<?> key = Key.of(ServiceStub.class);
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	@Test
@@ -42,7 +41,7 @@ public class StandardMBeansRegistrationTest {
 		});
 
 		Key<?> key = Key.of(NonMBeanServiceImpl.class);
-		jmxRegistry.registerSingleton(key, nonMBean, defaultSettings());
+		jmxRegistry.registerSingleton(key, nonMBean, JmxBeanSettings.create());
 	}
 
 	public interface ServiceStubMBean {

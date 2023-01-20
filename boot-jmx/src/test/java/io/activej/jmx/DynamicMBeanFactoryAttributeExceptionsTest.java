@@ -7,12 +7,11 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static org.junit.Assert.*;
 
 public class DynamicMBeanFactoryAttributeExceptionsTest {
 
-	private static final JmxBeanSettings SETTINGS = defaultSettings();
+	private static final JmxBeanSettings SETTINGS = JmxBeanSettings.create();
 
 	@Test
 	public void concurrentJmxBeansAreNotAllowedToBeInPool() {

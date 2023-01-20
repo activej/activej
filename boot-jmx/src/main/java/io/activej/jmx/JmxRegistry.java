@@ -16,7 +16,7 @@
 
 package io.activej.jmx;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.module.UniqueQualifierImpl;
@@ -42,14 +42,14 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<JmxRegistry> {
+public final class JmxRegistry implements JmxRegistryMXBean {
 	static final Logger logger = LoggerFactory.getLogger(JmxRegistry.class);
 
 	private static final String GENERIC_PARAM_NAME_FORMAT = "T%d=%s";
 
 	private final MBeanServer mbs;
 	private final DynamicMBeanFactory mbeanFactory;
-	private final Map<Type, JmxCustomTypeAdapter<?>> customTypes;
+	private final Map<Type, JmxCustomTypeAdapter<?>> customTypes = new HashMap<>();
 	private final Map<WorkerPool, Key<?>> workerPoolKeys = new HashMap<>();
 	private final Set<ObjectName> registeredObjectNames = new HashSet<>();
 
@@ -63,36 +63,62 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 	private int totallyRegisteredMBeans;
 
 	private JmxRegistry(MBeanServer mbs,
-			DynamicMBeanFactory mbeanFactory,
-			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
+			DynamicMBeanFactory mbeanFactory) {
 		this.mbs = mbs;
 		this.mbeanFactory = mbeanFactory;
-		this.customTypes = customTypes;
 	}
 
 	public static JmxRegistry create(MBeanServer mbs, DynamicMBeanFactory mbeanFactory) {
-		return new JmxRegistry(mbs, mbeanFactory, Map.of());
+		return builder(mbs, mbeanFactory).build();
 	}
 
-	public static JmxRegistry create(MBeanServer mbs,
-			DynamicMBeanFactory mbeanFactory,
-			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
-		return new JmxRegistry(mbs, mbeanFactory, customTypes);
+	public static Builder builder(MBeanServer mbs, DynamicMBeanFactory mbeanFactory) {
+		return new JmxRegistry(mbs, mbeanFactory).new Builder();
 	}
 
-	public JmxRegistry withScopes(boolean withScopes) {
-		this.withScopes = withScopes;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, JmxRegistry> {
+		private Builder() {}
 
-	public JmxRegistry withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
-		this.objectNameMapper = objectNameMapper;
-		return this;
-	}
+		public Builder withCustomTypes(Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
+			checkNotBuilt(this);
+			JmxRegistry.this.customTypes.putAll(customTypes);
+			return this;
+		}
 
-	public JmxRegistry withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate) {
-		this.workerPredicate = predicate;
-		return this;
+		public Builder withCustomType(Type type, JmxCustomTypeAdapter<?> adapter) {
+			checkNotBuilt(this);
+			JmxRegistry.this.customTypes.put(type, adapter);
+			return this;
+		}
+
+		public <T> Builder withCustomType(Class<T> type, JmxCustomTypeAdapter<T> adapter) {
+			checkNotBuilt(this);
+			JmxRegistry.this.customTypes.put(type, adapter);
+			return this;
+		}
+
+		public Builder withScopes(boolean withScopes) {
+			checkNotBuilt(this);
+			JmxRegistry.this.withScopes = withScopes;
+			return this;
+		}
+
+		public Builder withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
+			checkNotBuilt(this);
+			JmxRegistry.this.objectNameMapper = objectNameMapper;
+			return this;
+		}
+
+		public Builder withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate) {
+			checkNotBuilt(this);
+			JmxRegistry.this.workerPredicate = predicate;
+			return this;
+		}
+
+		@Override
+		protected JmxRegistry doBuild() {
+			return JmxRegistry.this;
+		}
 	}
 
 	public void addWorkerPoolKey(WorkerPool workerPool, Key<?> workerPoolKey) {

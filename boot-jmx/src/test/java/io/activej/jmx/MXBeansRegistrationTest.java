@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import javax.management.*;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.CustomMatchers.objectname;
 
 public class MXBeansRegistrationTest {
@@ -30,7 +29,7 @@ public class MXBeansRegistrationTest {
 		}});
 
 		Key<?> key = Key.of(ServiceStub.class);
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	public interface ServiceStubMXBean {
@@ -58,7 +57,7 @@ public class MXBeansRegistrationTest {
 		}});
 
 		Key<?> key = Key.of(ServiceTransitiveInterface.class);
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	public interface InterfaceMXBean {
@@ -91,7 +90,7 @@ public class MXBeansRegistrationTest {
 		}});
 
 		Key<?> key = Key.of(ServiceTransitiveClass.class);
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	public abstract static class TransitiveClass implements InterfaceMXBean {
@@ -120,7 +119,7 @@ public class MXBeansRegistrationTest {
 		}});
 
 		Key<?> key = Key.of(ServiceWithMXBeanInterfaceAnnotation.class);
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	@MXBean

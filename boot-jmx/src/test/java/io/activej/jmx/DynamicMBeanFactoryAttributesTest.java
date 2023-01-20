@@ -17,7 +17,6 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import java.util.*;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -316,7 +315,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		MBeanWithNonPublicAttributes instance = new MBeanWithNonPublicAttributes();
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
 		List<MBeanWithNonPublicAttributes> beans = List.of(instance);
-		JmxBeanSettings settings = defaultSettings();
+		JmxBeanSettings settings = JmxBeanSettings.create();
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
@@ -329,7 +328,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(Object... objects) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(objects), defaultSettings(), false);
+				.createDynamicMBean(List.of(objects), JmxBeanSettings.create(), false);
 	}
 
 	public static Object[] keyForTabularData(String key) {

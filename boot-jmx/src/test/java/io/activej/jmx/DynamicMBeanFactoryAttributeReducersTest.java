@@ -10,7 +10,6 @@ import org.junit.Test;
 import javax.management.DynamicMBean;
 import java.util.List;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static org.junit.Assert.assertEquals;
 
 public class DynamicMBeanFactoryAttributeReducersTest {
@@ -21,7 +20,7 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(
 						List.of(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
-						defaultSettings(),
+						JmxBeanSettings.create(),
 						false);
 
 		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.getAttribute("attr"));
@@ -64,7 +63,7 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(
 						List.of(mbean_1, mbean_2),
-						defaultSettings(),
+						JmxBeanSettings.create(),
 						false);
 
 		assertEquals(25, mbean.getAttribute("pojo_count"));
@@ -126,7 +125,7 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(
 						List.of(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
-						defaultSettings(),
+						JmxBeanSettings.create(),
 						false);
 
 		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.invoke("getOp", new String[0], new String[0]));

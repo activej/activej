@@ -9,7 +9,6 @@ import javax.management.MBeanAttributeInfo;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
 import static junit.framework.TestCase.assertEquals;
 
@@ -18,7 +17,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void ifDescriptionIsNotSpecifiedItIsSameAsFullNameOfAttribute() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanWithNoJmxDescription()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanWithNoJmxDescription()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -42,7 +41,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void showsDescriptionWithoutChangesIfAttributeNameDoNotContainUnderscores() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanWithDescriptionInDirectNonPojoAttribute()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanWithDescriptionInDirectNonPojoAttribute()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -72,7 +71,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void formatsDescriptionsProperlyIfAttributeNameContainsUnderscores() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanWithPojoDescription()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanWithPojoDescription()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 

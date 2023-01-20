@@ -10,7 +10,6 @@ import javax.management.MBeanServer;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.CustomMatchers.objectname;
 
 public class GenericTypesRegistrationTest {
@@ -32,7 +31,7 @@ public class GenericTypesRegistrationTest {
 		}});
 
 		Key<?> key = new Key<ServiceStubOne<String>>() {};
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	@Test
@@ -46,7 +45,7 @@ public class GenericTypesRegistrationTest {
 		}});
 
 		Key<?> key = new Key<ServiceStubThree<String, Integer, Long>>() {};
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	@Test
@@ -60,7 +59,7 @@ public class GenericTypesRegistrationTest {
 		}});
 
 		Key<?> key = new Key<ServiceStubThree<String, List<Integer>, Map<Long, List<String>>>>() {};
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	public interface ServiceStubOneMBean {

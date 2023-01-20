@@ -15,7 +15,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.CustomMatchers.objectname;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -43,14 +42,14 @@ public class DynamicMBeanRegistrationTest {
 		}});
 
 		Key<?> key = Key.of(CustomKeyClass.class, createCustomAnnotation("Global"));
-		jmxRegistry.registerSingleton(key, service, defaultSettings());
+		jmxRegistry.registerSingleton(key, service, JmxBeanSettings.create());
 	}
 
 	@Test
 	public void itShouldRegisterDynamicMBeansWithOverriddenAttributes() throws Exception {
 		PublicMBeanSubclass instance = new PublicMBeanSubclass();
 		DynamicMBean mBean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(instance), defaultSettings(), false);
+				.createDynamicMBean(List.of(instance), JmxBeanSettings.create(), false);
 
 		assertEquals(instance.getValue(), mBean.getAttribute("value"));
 	}
@@ -61,7 +60,7 @@ public class DynamicMBeanRegistrationTest {
 
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
 		List<NonPublicMBean> beans = List.of(instance);
-		JmxBeanSettings settings = defaultSettings();
+		JmxBeanSettings settings = JmxBeanSettings.create();
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
@@ -75,7 +74,7 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldNotThrowExceptionForNonPublicMBeansWithNoJmxFields() throws Exception {
 		NonPublicMBeanSubclass instance = new NonPublicMBeanSubclass();
 		DynamicMBean mBean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(instance), defaultSettings(), false);
+				.createDynamicMBean(List.of(instance), JmxBeanSettings.create(), false);
 
 		assertEquals(instance.getValue(), mBean.getAttribute("value"));
 	}

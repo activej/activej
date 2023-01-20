@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
@@ -28,7 +27,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	public void itShouldCollectInformationAboutJMXOperationsToMBeanInfo() {
 		BeanStubWithOperations bean = new BeanStubWithOperations();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(bean), defaultSettings(), false);
+				.createDynamicMBean(List.of(bean), JmxBeanSettings.create(), false);
 
 		MBeanInfo mBeanInfo = mbean.getMBeanInfo();
 		MBeanOperationInfo[] operations = mBeanInfo.getOperations();
@@ -60,7 +59,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	public void itShouldInvokeAnnotatedOperationsThroughDynamicMBeanInterface() throws Exception {
 		BeanStubWithOperations bean = new BeanStubWithOperations();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(bean), defaultSettings(), false);
+				.createDynamicMBean(List.of(bean), JmxBeanSettings.create(), false);
 
 		mbean.invoke("increment", null, null);
 		mbean.invoke("increment", null, null);
@@ -81,7 +80,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 		BeanStubWithOperations bean_1 = new BeanStubWithOperations();
 		BeanStubWithOperations bean_2 = new BeanStubWithOperations();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(bean_1, bean_2), defaultSettings(), false);
+				.createDynamicMBean(List.of(bean_1, bean_2), JmxBeanSettings.create(), false);
 
 		// set manually init value for second bean to be different from first
 		bean_2.inc();
@@ -113,7 +112,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	public void operationReturnsValueInCaseOfSingleMBeanInPool() throws Exception {
 		MBeanWithOperationThatReturnsValue mbeanOpWithValue = new MBeanWithOperationThatReturnsValue();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(mbeanOpWithValue), defaultSettings(), false);
+				.createDynamicMBean(List.of(mbeanOpWithValue), JmxBeanSettings.create(), false);
 
 		assertEquals(15, (int) mbean.invoke("sum", new Object[]{7, 8}, new String[]{"int", "int"}));
 	}
@@ -123,7 +122,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 		MBeanWithNonPublicOperation instance = new MBeanWithNonPublicOperation();
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
 		List<MBeanWithNonPublicOperation> beans = List.of(instance);
-		JmxBeanSettings settings = defaultSettings();
+		JmxBeanSettings settings = JmxBeanSettings.create();
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
@@ -139,7 +138,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 		MBeanWithOperationThatReturnsValue mbeanOpWithValue_1 = new MBeanWithOperationThatReturnsValue();
 		MBeanWithOperationThatReturnsValue mbeanOpWithValue_2 = new MBeanWithOperationThatReturnsValue();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(mbeanOpWithValue_1, mbeanOpWithValue_2), defaultSettings(), false);
+				.createDynamicMBean(List.of(mbeanOpWithValue_1, mbeanOpWithValue_2), JmxBeanSettings.create(), false);
 
 		assertNull(mbean.invoke("sum", new Object[]{7, 8}, new String[]{"int", "int"}));
 	}
@@ -148,7 +147,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	public void getOperationWithArgument() throws Exception {
 		MBeanWithGetOperationWithArgument mbeanWithGet = new MBeanWithGetOperationWithArgument();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(mbeanWithGet), defaultSettings(), false);
+				.createDynamicMBean(List.of(mbeanWithGet), JmxBeanSettings.create(), false);
 
 		int argument = 123;
 		int result = (int) mbean.invoke("getValue", new Object[]{argument}, new String[]{"int"});

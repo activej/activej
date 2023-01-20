@@ -158,8 +158,9 @@ public final class ComplexHttpLauncher extends Launcher {
 		return Modules.combine(
 				ServiceGraphModule.create(),
 				WorkerPoolModule.create(Worker.class, MyWorker.class),
-				JmxModule.create()
-						.withScopes(false),
+				JmxModule.builder()
+						.withScopes(false)
+						.build(),
 				TriggersModule.create()
 						.with(Key.of(PrimaryServer.class, "First"), Severity.HIGH, "server1", TriggerResult::ofValue)
 						.with(Key.of(PrimaryServer.class, "Second"), Severity.HIGH, "server2", TriggerResult::ofValue)

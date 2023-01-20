@@ -41,7 +41,7 @@ public class ObjectNameRenameTest {
 	public void testRenaming() throws ExecutionException, InterruptedException, MalformedObjectNameException {
 		Injector injector = Injector.of(
 				new TestModule(),
-				JmxModule.create()
+				JmxModule.builder()
 						.initialize(Initializers.renamedClassNames(
 								Map.of(
 										HttpServer.class, "AsyncHttpServer",
@@ -49,7 +49,8 @@ public class ObjectNameRenameTest {
 										TaskScheduler.class, "EventloopTaskScheduler",
 										Reactor.class, Eventloop.class.getName(),
 										NioReactor.class, Eventloop.class.getName()
-								))),
+								)))
+						.build(),
 				WorkerPoolModule.create()
 		);
 

@@ -20,8 +20,8 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.Initializer;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
@@ -52,9 +52,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Collections.newSetFromMap;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -63,7 +63,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * <br>
  * Automatically builds MBeans for parts of application and adds Jmx attributes and operations to it.
  */
-public final class JmxModule extends AbstractModule implements WithInitializer<JmxModule> {
+public final class JmxModule extends AbstractModule {
 	public static final Duration REFRESH_PERIOD_DEFAULT = ApplicationSettings.getDuration(JmxModule.class, "refreshPeriod", Duration.ofSeconds(1));
 	public static final int MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT = ApplicationSettings.getInt(JmxModule.class, "maxJmxRefreshesPerOneCycle", 50);
 
@@ -84,7 +84,11 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	}
 
 	public static JmxModule create() {
-		return new JmxModule()
+		return builder().build();
+	}
+
+	public static Builder builder() {
+		return new JmxModule().new Builder()
 				.withCustomType(Duration.class, StringFormatUtils::formatDuration, StringFormatUtils::parseDuration)
 				.withCustomType(Period.class, StringFormatUtils::formatPeriod, StringFormatUtils::parsePeriod)
 				.withCustomType(Instant.class, StringFormatUtils::formatInstant, StringFormatUtils::parseInstant)
@@ -95,109 +99,145 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 				.withGlobalSingletons(ByteBufPool.getStats());
 	}
 
-	public JmxModule withRefreshPeriod(Duration refreshPeriod) {
-		checkArgument(refreshPeriod.toMillis() > 0, "Duration of refresh period should be a positive value");
-		this.refreshPeriod = refreshPeriod;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, JmxModule> {
+		private final Map<Key<?>, JmxBeanSettings.Builder> keyToSettingsBuilder = new HashMap<>();
+		private final Map<Type, JmxBeanSettings.Builder> typeToSettingsBuilder = new HashMap<>();
 
-	public JmxModule withMaxJmxRefreshesPerOneCycle(int max) {
-		checkArgument(max > 0, "Number of JMX refreshes should be a positive value");
-		this.maxJmxRefreshesPerOneCycle = max;
-		return this;
-	}
+		private Builder() {}
 
-	public <T> JmxModule withModifier(Key<?> key, String attrName, AttributeModifier<T> modifier) {
-		keyToSettings.computeIfAbsent(key, $ -> JmxBeanSettings.create())
-				.withModifier(attrName, modifier);
-		return this;
-	}
+		public Builder withRefreshPeriod(Duration refreshPeriod) {
+			checkNotBuilt(this);
+			checkArgument(refreshPeriod.toMillis() > 0, "Duration of refresh period should be a positive value");
+			JmxModule.this.refreshPeriod = refreshPeriod;
+			return this;
+		}
 
-	public <T> JmxModule withModifier(Type type, String attrName, AttributeModifier<T> modifier) {
-		typeToSettings.computeIfAbsent(type, $ -> JmxBeanSettings.create())
-				.withModifier(attrName, modifier);
-		return this;
-	}
+		public Builder withMaxJmxRefreshesPerOneCycle(int max) {
+			checkNotBuilt(this);
+			checkArgument(max > 0, "Number of JMX refreshes should be a positive value");
+			JmxModule.this.maxJmxRefreshesPerOneCycle = max;
+			return this;
+		}
 
-	public JmxModule withOptional(Key<?> key, String attrName) {
-		keyToSettings.computeIfAbsent(key, $ -> JmxBeanSettings.create())
-				.withIncludedOptional(attrName);
-		return this;
-	}
+		public <T> Builder withModifier(Key<?> key, String attrName, AttributeModifier<T> modifier) {
+			checkNotBuilt(this);
+			keyToSettingsBuilder.computeIfAbsent(key, $ -> JmxBeanSettings.builder())
+					.withModifier(attrName, modifier);
+			return this;
+		}
 
-	public JmxModule withOptional(Type type, String attrName) {
-		typeToSettings.computeIfAbsent(type, $ -> JmxBeanSettings.create())
-				.withIncludedOptional(attrName);
-		return this;
-	}
+		public <T> Builder withModifier(Type type, String attrName, AttributeModifier<T> modifier) {
+			checkNotBuilt(this);
+			typeToSettingsBuilder.computeIfAbsent(type, $ -> JmxBeanSettings.builder())
+					.withModifier(attrName, modifier);
+			return this;
+		}
 
-	public JmxModule withHistogram(Class<?> clazz, String attrName, int[] histogramLevels) {
-		return withHistogram(Key.of(clazz), attrName, () -> JmxHistogram.ofLevels(histogramLevels));
-	}
+		public Builder withOptional(Key<?> key, String attrName) {
+			checkNotBuilt(this);
+			keyToSettingsBuilder.computeIfAbsent(key, $ -> JmxBeanSettings.builder())
+					.withIncludedOptional(attrName);
+			return this;
+		}
 
-	public JmxModule withHistogram(Key<?> key, String attrName, int[] histogramLevels) {
-		return withHistogram(key, attrName, () -> JmxHistogram.ofLevels(histogramLevels));
-	}
+		public Builder withOptional(Type type, String attrName) {
+			checkNotBuilt(this);
+			typeToSettingsBuilder.computeIfAbsent(type, $ -> JmxBeanSettings.builder())
+					.withIncludedOptional(attrName);
+			return this;
+		}
 
-	public JmxModule withHistogram(Class<?> clazz, String attrName, Supplier<JmxHistogram> histogram) {
-		return withHistogram(Key.of(clazz), attrName, histogram);
-	}
+		public Builder withHistogram(Class<?> clazz, String attrName, int[] histogramLevels) {
+			checkNotBuilt(this);
+			return withHistogram(Key.of(clazz), attrName, () -> JmxHistogram.ofLevels(histogramLevels));
+		}
 
-	public JmxModule withHistogram(Key<?> key, String attrName, Supplier<JmxHistogram> histogram) {
-		return withOptional(key, attrName + "_histogram")
-				.withModifier(key, attrName, (ValueStats attribute) ->
-						attribute.setHistogram(histogram.get()));
-	}
+		public Builder withHistogram(Key<?> key, String attrName, int[] histogramLevels) {
+			checkNotBuilt(this);
+			return withHistogram(key, attrName, () -> JmxHistogram.ofLevels(histogramLevels));
+		}
 
-	public JmxModule withGlobalMBean(Type type, String named) {
-		return withGlobalMBean(type, Key.ofType(type, named));
-	}
+		public Builder withHistogram(Class<?> clazz, String attrName, Supplier<JmxHistogram> histogram) {
+			checkNotBuilt(this);
+			return withHistogram(Key.of(clazz), attrName, histogram);
+		}
 
-	public JmxModule withGlobalMBean(Type type, Key<?> key) {
-		checkArgument(key.getType() == type, "Type " + type + " does not match key type " + key.getType());
+		public Builder withHistogram(Key<?> key, String attrName, Supplier<JmxHistogram> histogram) {
+			checkNotBuilt(this);
+			return withOptional(key, attrName + "_histogram")
+					.withModifier(key, attrName, (ValueStats attribute) ->
+							attribute.setHistogram(histogram.get()));
+		}
 
-		globalMBeans.put(type, key);
-		return this;
-	}
+		public Builder withGlobalMBean(Type type, String named) {
+			checkNotBuilt(this);
+			return withGlobalMBean(type, Key.ofType(type, named));
+		}
 
-	public JmxModule withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
-		this.objectNameMapper = objectNameMapper;
-		return this;
-	}
+		public Builder withGlobalMBean(Type type, Key<?> key) {
+			checkNotBuilt(this);
+			checkArgument(key.getType() == type, "Type " + type + " does not match key type " + key.getType());
 
-	public JmxModule withScopes(boolean withScopes) {
-		this.withScopes = withScopes;
-		return this;
-	}
+			globalMBeans.put(type, key);
+			return this;
+		}
 
-	public <T> JmxModule withCustomType(Class<T> type, Function<T, String> to, Function<String, T> from) {
-		this.customTypes.put(type, new JmxCustomTypeAdapter<>(to, from));
-		return this;
-	}
+		public Builder withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
+			checkNotBuilt(this);
+			JmxModule.this.objectNameMapper = objectNameMapper;
+			return this;
+		}
 
-	public <T> JmxModule withCustomType(Class<T> type, Function<T, String> to) {
-		this.customTypes.put(type, new JmxCustomTypeAdapter<>(to));
-		return this;
-	}
+		public Builder withScopes(boolean withScopes) {
+			checkNotBuilt(this);
+			JmxModule.this.withScopes = withScopes;
+			return this;
+		}
 
-	public JmxModule withGlobalSingletons(Object... instances) {
-		checkArgument(Arrays.stream(instances).map(Object::getClass).noneMatch(Class::isAnonymousClass),
-				"Instances of anonymous classes will not be registered in JMX");
-		this.globalSingletons.addAll(List.of(instances));
-		return this;
-	}
+		public <T> Builder withCustomType(Class<T> type, Function<T, String> to, Function<String, T> from) {
+			checkNotBuilt(this);
+			JmxModule.this.customTypes.put(type, new JmxCustomTypeAdapter<>(to, from));
+			return this;
+		}
 
-	public JmxModule withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate) {
-		this.workerPredicate = predicate;
-		return this;
+		public <T> Builder withCustomType(Class<T> type, Function<T, String> to) {
+			checkNotBuilt(this);
+			JmxModule.this.customTypes.put(type, new JmxCustomTypeAdapter<>(to));
+			return this;
+		}
+
+		public Builder withGlobalSingletons(Object... instances) {
+			checkNotBuilt(this);
+			checkArgument(Arrays.stream(instances).map(Object::getClass).noneMatch(Class::isAnonymousClass),
+					"Instances of anonymous classes will not be registered in JMX");
+			JmxModule.this.globalSingletons.addAll(List.of(instances));
+			return this;
+		}
+
+		public Builder withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate) {
+			checkNotBuilt(this);
+			JmxModule.this.workerPredicate = predicate;
+			return this;
+		}
+
+		@Override
+		protected JmxModule doBuild() {
+			keyToSettings.putAll(keyToSettingsBuilder.entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
+			typeToSettings.putAll(typeToSettingsBuilder.entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
+			return JmxModule.this;
+		}
 	}
 
 	@Provides
 	JmxRegistry jmxRegistry(DynamicMBeanFactory mbeanFactory) {
-		return JmxRegistry.create(ManagementFactory.getPlatformMBeanServer(), mbeanFactory, customTypes)
+		return JmxRegistry.builder(ManagementFactory.getPlatformMBeanServer(), mbeanFactory)
+				.withCustomTypes(customTypes)
 				.withObjectNameMapping(objectNameMapper)
 				.withScopes(withScopes)
-				.withWorkerPredicate(workerPredicate);
+				.withWorkerPredicate(workerPredicate)
+				.build();
 	}
 
 	@Provides
@@ -231,7 +271,10 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 		// register global singletons
 		for (Object globalSingleton : globalSingletons) {
 			Key<?> globalKey = Key.of(globalSingleton.getClass());
-			registerSingleton(jmxRegistry, globalSingleton, globalKey, injector, JmxBeanSettings.create().withCustomTypes(customTypes));
+			registerSingleton(jmxRegistry, globalSingleton, globalKey, injector,
+					JmxBeanSettings.builder()
+							.withCustomTypes(customTypes)
+							.build());
 		}
 
 		// register singletons
@@ -279,7 +322,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 			Key<?> key = globalMBeans.get(entry.getKey());
 			DynamicMBean globalMBean =
 					mbeanFactory.createDynamicMBean(new ArrayList<>(entry.getValue()), ensureSettingsFor(key), false);
-			registerSingleton(jmxRegistry, globalMBean, key, injector, defaultSettings());
+			registerSingleton(jmxRegistry, globalMBean, key, injector, JmxBeanSettings.create());
 		}
 	}
 
@@ -326,8 +369,9 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	}
 
 	private JmxBeanSettings ensureSettingsFor(Key<?> key) {
-		JmxBeanSettings settings = JmxBeanSettings.create()
-				.withCustomTypes(customTypes);
+		JmxBeanSettings settings = JmxBeanSettings.builder()
+				.withCustomTypes(customTypes)
+				.build();
 		if (keyToSettings.containsKey(key)) {
 			settings.merge(keyToSettings.get(key));
 		}
