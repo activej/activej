@@ -18,6 +18,7 @@ package io.activej.launchers.crdt.rpc;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -49,12 +50,26 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	}
 
 	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Reactor reactor, AsyncDiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
-		return new CrdtRpcStrategyService<>(reactor, discoveryService, keyGetter);
+		return builder(reactor, discoveryService, keyGetter).build();
 	}
 
-	public CrdtRpcStrategyService<K> withStrategyMapping(Function<RpcStrategy, RpcStrategy> strategyMapFn) {
-		this.strategyMapFn = strategyMapFn;
-		return this;
+	public static <K extends Comparable<K>> CrdtRpcStrategyService<K>.Builder builder(Reactor reactor, AsyncDiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+		return new CrdtRpcStrategyService<>(reactor, discoveryService, keyGetter).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, CrdtRpcStrategyService<K>> {
+		private Builder() {}
+
+		public Builder withStrategyMapping(Function<RpcStrategy, RpcStrategy> strategyMapFn) {
+			checkNotBuilt(this);
+			CrdtRpcStrategyService.this.strategyMapFn = strategyMapFn;
+			return this;
+		}
+
+		@Override
+		protected CrdtRpcStrategyService<K> doBuild() {
+			return CrdtRpcStrategyService.this;
+		}
 	}
 
 	public void setRpcClient(RpcClient rpcClient) {
