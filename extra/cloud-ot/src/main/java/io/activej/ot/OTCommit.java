@@ -16,6 +16,7 @@
 
 package io.activej.ot;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +55,7 @@ public final class OTCommit<K, D> {
 	}
 
 	public static <K, D> OTCommit<K, D> of(int epoch, K id, Map<K, DiffsWithLevel<D>> parents) {
-		return new OTCommit<>(epoch, id, parents);
+		return builder(epoch, id, parents).build();
 	}
 
 	public static <K, D> OTCommit<K, D> of(int epoch, K id, Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> levels) {
@@ -62,21 +63,36 @@ public final class OTCommit<K, D> {
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, K id, K parent, DiffsWithLevel<D> diffs) {
-		return new OTCommit<>(epoch, id, Map.of(parent, diffs));
+		return builder(epoch, id, Map.of(parent, diffs)).build();
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, K id, K parent, List<D> diffs, long level) {
 		return ofCommit(epoch, id, parent, new DiffsWithLevel<>(level, diffs));
 	}
 
-	public OTCommit<K, D> withTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-		return this;
+	public static <K, D> OTCommit<K, D>.Builder builder(int epoch, K id, Map<K, DiffsWithLevel<D>> parents) {
+		return new OTCommit<>(epoch, id, parents).new Builder();
 	}
 
-	public OTCommit<K, D> withSerializedData(byte[] serializedData) {
-		this.serializedData = serializedData;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, OTCommit<K, D>>{
+		private Builder() {}
+
+		public Builder withTimestamp(long timestamp) {
+			checkNotBuilt(this);
+			OTCommit.this.timestamp = timestamp;
+			return this;
+		}
+
+		public Builder withSerializedData(byte[] serializedData) {
+			checkNotBuilt(this);
+			OTCommit.this.serializedData = serializedData;
+			return this;
+		}
+
+		@Override
+		protected OTCommit<K, D> doBuild() {
+			return OTCommit.this;
+		}
 	}
 
 	public boolean isRoot() {

@@ -17,7 +17,7 @@
 package io.activej.ot;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +27,7 @@ import java.util.Objects;
 
 import static io.activej.promise.RetryPolicy.exponentialBackoff;
 
-public final class PollSanitizer<T> implements AsyncSupplier<T>, WithInitializer<PollSanitizer<T>> {
+public final class PollSanitizer<T> implements AsyncSupplier<T> {
 	public static final Duration DEFAULT_YIELD_INTERVAL = Duration.ofSeconds(1);
 
 	private Duration yieldInterval = DEFAULT_YIELD_INTERVAL;
@@ -41,12 +41,26 @@ public final class PollSanitizer<T> implements AsyncSupplier<T>, WithInitializer
 	}
 
 	public static <T> PollSanitizer<T> create(AsyncSupplier<T> poll) {
-		return new PollSanitizer<>(poll);
+		return builder(poll).build();
 	}
 
-	public PollSanitizer<T> withYieldInterval(Duration yieldInterval) {
-		this.yieldInterval = yieldInterval;
-		return this;
+	public static <T> PollSanitizer<T>.Builder builder(AsyncSupplier<T> poll) {
+		return new PollSanitizer<>(poll).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, PollSanitizer<T>> {
+		private Builder() {}
+
+		public Builder withYieldInterval(Duration yieldInterval) {
+			checkNotBuilt(this);
+			PollSanitizer.this.yieldInterval = yieldInterval;
+			return this;
+		}
+
+		@Override
+		protected PollSanitizer<T> doBuild() {
+			return PollSanitizer.this;
+		}
 	}
 
 	@Override

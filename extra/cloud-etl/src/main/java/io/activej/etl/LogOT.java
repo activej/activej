@@ -33,7 +33,7 @@ import static io.activej.common.Utils.*;
 
 public class LogOT {
 	public static <T> OTSystem<LogDiff<T>> createLogOT(OTSystem<T> otSystem) {
-		return OTSystemImpl.<LogDiff<T>>create()
+		return OTSystemImpl.<LogDiff<T>>builder()
 				.withTransformFunction(LogDiff.class, LogDiff.class, (left, right) -> {
 					Set<String> intersection = intersection(left.getPositions().keySet(), right.getPositions().keySet());
 					if (intersection.isEmpty()) {
@@ -80,8 +80,8 @@ public class LogOT {
 				})
 				.withInvertFunction(LogDiff.class, commit -> List.of(LogDiff.of(
 						transformMap(commit.getPositions(), LogPositionDiff::inverse),
-						otSystem.invert(commit.getDiffs()))));
-
+						otSystem.invert(commit.getDiffs()))))
+				.build();
 	}
 
 }

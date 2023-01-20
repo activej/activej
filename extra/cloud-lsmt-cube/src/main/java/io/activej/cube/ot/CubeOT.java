@@ -33,7 +33,7 @@ import static io.activej.common.Utils.union;
 public class CubeOT {
 	public static OTSystem<CubeDiff> createCubeOT() {
 		OTSystem<AggregationDiff> aggregationOTSystem = AggregationOT.createAggregationOT();
-		return OTSystemImpl.<CubeDiff>create()
+		return OTSystemImpl.<CubeDiff>builder()
 				.withTransformFunction(CubeDiff.class, CubeDiff.class, (left, right) -> {
 					Map<String, AggregationDiff> newOpsLeft = new LinkedHashMap<>();
 					Map<String, AggregationDiff> newOpsRight = new LinkedHashMap<>();
@@ -84,7 +84,8 @@ public class CubeOT {
 						}
 					}
 					return CubeDiff.of(newOps);
-				});
+				})
+				.build();
 	}
 
 }

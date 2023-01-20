@@ -27,7 +27,7 @@ import static io.activej.common.Utils.hasIntersection;
 
 public class AggregationOT {
 	public static OTSystem<AggregationDiff> createAggregationOT() {
-		return OTSystemImpl.<AggregationDiff>create()
+		return OTSystemImpl.<AggregationDiff>builder()
 				.withTransformFunction(AggregationDiff.class, AggregationDiff.class, (left, right) -> {
 					if (!hasIntersection(left.getAddedChunks(), right.getAddedChunks()) && !hasIntersection(left.getRemovedChunks(), right.getRemovedChunks())) {
 						return TransformResult.of(right, left);
@@ -39,7 +39,8 @@ public class AggregationOT {
 				})
 				.withInvertFunction(AggregationDiff.class, op -> List.of(op.inverse()))
 				.withEmptyPredicate(AggregationDiff.class, AggregationDiff::isEmpty)
-				.withSquashFunction(AggregationDiff.class, AggregationDiff.class, AggregationDiff::squash);
+				.withSquashFunction(AggregationDiff.class, AggregationDiff.class, AggregationDiff::squash)
+				.build();
 	}
 
 }

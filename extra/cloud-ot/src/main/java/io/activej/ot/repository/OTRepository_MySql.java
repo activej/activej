@@ -21,8 +21,8 @@ import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter.WriteObject;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.NoCommitException;
@@ -63,7 +63,7 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
 public class OTRepository_MySql<D> extends AbstractReactive
-		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepository_MySql<D>> {
+		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
@@ -110,45 +110,76 @@ public class OTRepository_MySql<D> extends AbstractReactive
 
 	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
-		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).build();
 	}
 
 	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, F format) {
-		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, format, format);
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format).build();
 	}
 
 	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
-		return create(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT).build();
 	}
 
 	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Class<? extends D> diffClass) {
-		return create(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, diffClass).build();
+	}
+
+	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
+	}
+
+	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+			OTSystem<D> otSystem, F format) {
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format);
+	}
+
+	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
+	}
+
+	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+			OTSystem<D> otSystem, Class<? extends D> diffClass) {
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	private static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Type diffType) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
 		if (decoder == null || encoder == null) {
 			throw new IllegalArgumentException("Unknown type: " + diffType);
 		}
-		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
 	}
 
-	public OTRepository_MySql<D> withCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, OTRepository_MySql<D>> {
+		private Builder() {}
 
-	public OTRepository_MySql<D> withCustomTableNames(String tableRevision, String tableDiffs, @Nullable String tableBackup) {
-		this.tableRevision = tableRevision;
-		this.tableDiffs = tableDiffs;
-		this.tableBackup = tableBackup;
-		return this;
+		public Builder withCreatedBy(String createdBy) {
+			checkNotBuilt(this);
+			OTRepository_MySql.this.createdBy = createdBy;
+			return this;
+		}
+
+		public Builder withCustomTableNames(String tableRevision, String tableDiffs, @Nullable String tableBackup) {
+			checkNotBuilt(this);
+			OTRepository_MySql.this.tableRevision = tableRevision;
+			OTRepository_MySql.this.tableDiffs = tableDiffs;
+			OTRepository_MySql.this.tableBackup = tableBackup;
+			return this;
+		}
+
+		@Override
+		protected OTRepository_MySql<D> doBuild() {
+			return OTRepository_MySql.this;
+		}
 	}
 
 	public DataSource getDataSource() {
@@ -406,8 +437,9 @@ public class OTRepository_MySql<D> extends AbstractReactive
 									throw new NoCommitException(revisionId);
 								}
 
-								return OTCommit.of(epoch, revisionId, parentDiffs)
-										.withTimestamp(timestamp);
+								return OTCommit.builder(epoch, revisionId, parentDiffs)
+										.withTimestamp(timestamp)
+										.build();
 							}
 						})
 				.whenComplete(promiseLoadCommit.recordStats())

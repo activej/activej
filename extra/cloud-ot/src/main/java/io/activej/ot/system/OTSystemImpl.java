@@ -16,7 +16,7 @@
 
 package io.activej.ot.system;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.exception.TransformException;
@@ -28,7 +28,7 @@ import static io.activej.common.Utils.concat;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 
-public final class OTSystemImpl<D> implements OTSystem<D>, WithInitializer<OTSystemImpl<D>> {
+public final class OTSystemImpl<D> implements OTSystem<D> {
 	@FunctionalInterface
 	public interface TransformFunction<OP, L extends OP, R extends OP> {
 		TransformResult<? extends OP> transform(L left, R right) throws TransformException;
@@ -60,46 +60,63 @@ public final class OTSystemImpl<D> implements OTSystem<D>, WithInitializer<OTSys
 	}
 
 	public static <O> OTSystemImpl<O> create() {
-		return new OTSystemImpl<>();
+		return OTSystemImpl.<O>builder().build();
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public <L extends D, R extends D> OTSystemImpl<D> withTransformFunction(Class<? super L> leftType, Class<? super R> rightType,
-			TransformFunction<D, L, R> transformer) {
-		transformers.put(new KeyPair(leftType, rightType), transformer);
-		if (leftType != rightType) {
-			transformers.put(new KeyPair(rightType, leftType), (TransformFunction<D, R, L>) (left, right) -> {
-				TransformResult<? extends D> transform = transformer.transform(right, left);
-				if (transform.hasConflict()) {
-					if (transform.resolution == ConflictResolution.LEFT)
-						return TransformResult.conflict(ConflictResolution.RIGHT);
-					if (transform.resolution == ConflictResolution.RIGHT)
-						return TransformResult.conflict(ConflictResolution.LEFT);
-					return transform;
-				}
-				return TransformResult.of(transform.right, transform.left);
-			});
+	public static <O> OTSystemImpl<O>.Builder builder() {
+		return new OTSystemImpl<O>().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, OTSystemImpl<D>> {
+		private Builder() {}
+
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		public <L extends D, R extends D> Builder withTransformFunction(Class<? super L> leftType, Class<? super R> rightType,
+				TransformFunction<D, L, R> transformer) {
+			checkNotBuilt(this);
+			transformers.put(new KeyPair(leftType, rightType), transformer);
+			if (leftType != rightType) {
+				transformers.put(new KeyPair(rightType, leftType), (TransformFunction<D, R, L>) (left, right) -> {
+					TransformResult<? extends D> transform = transformer.transform(right, left);
+					if (transform.hasConflict()) {
+						if (transform.resolution == ConflictResolution.LEFT)
+							return TransformResult.conflict(ConflictResolution.RIGHT);
+						if (transform.resolution == ConflictResolution.RIGHT)
+							return TransformResult.conflict(ConflictResolution.LEFT);
+						return transform;
+					}
+					return TransformResult.of(transform.right, transform.left);
+				});
+			}
+			return this;
 		}
-		return this;
-	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public <O1 extends D, O2 extends D> OTSystemImpl<D> withSquashFunction(Class<? super O1> opType1, Class<? super O2> opType2,
-			SquashFunction<D, O1, O2> squashFunction) {
-		squashers.put(new KeyPair(opType1, opType2), squashFunction);
-		return this;
-	}
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		public <O1 extends D, O2 extends D> Builder withSquashFunction(Class<? super O1> opType1, Class<? super O2> opType2,
+				SquashFunction<D, O1, O2> squashFunction) {
+			checkNotBuilt(this);
+			squashers.put(new KeyPair(opType1, opType2), squashFunction);
+			return this;
+		}
 
-	@SuppressWarnings("unchecked")
-	public <O extends D> OTSystemImpl<D> withInvertFunction(Class<? super O> opType, InvertFunction<D, O> inverter) {
-		inverters.put((Class<D>) opType, inverter);
-		return this;
-	}
+		@SuppressWarnings("unchecked")
+		public <O extends D> Builder withInvertFunction(Class<? super O> opType, InvertFunction<D, O> inverter) {
+			checkNotBuilt(this);
+			inverters.put((Class<D>) opType, inverter);
+			return this;
+		}
 
-	@SuppressWarnings("unchecked")
-	public <O extends D> OTSystemImpl<D> withEmptyPredicate(Class<? super O> opType, EmptyPredicate<O> emptyChecker) {
-		emptyPredicates.put((Class<D>) opType, emptyChecker);
-		return this;
+		@SuppressWarnings("unchecked")
+		public <O extends D> Builder withEmptyPredicate(Class<? super O> opType, EmptyPredicate<O> emptyChecker) {
+			checkNotBuilt(this);
+			emptyPredicates.put((Class<D>) opType, emptyChecker);
+			return this;
+		}
+
+		@Override
+		protected OTSystemImpl<D> doBuild() {
+			return OTSystemImpl.this;
+		}
 	}
 
 	@SuppressWarnings({"SimplifiableIfStatement", "unchecked"})

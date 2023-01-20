@@ -22,7 +22,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.ReactiveService;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
@@ -49,7 +49,7 @@ import static io.activej.promise.Promises.sequence;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class OTStateManager<K, D> extends AbstractReactive
-		implements ReactiveService, WithInitializer<OTStateManager<K, D>> {
+		implements ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final OTSystem<D> otSystem;
@@ -87,20 +87,37 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 	public static <K, D> OTStateManager<K, D> create(Reactor reactor, OTSystem<D> otSystem,
 			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
-		return new OTStateManager<>(reactor, otSystem, repository, state);
+		return builder(reactor, otSystem, repository, state).build();
 	}
 
-	public OTStateManager<K, D> withPoll() {
-		return withPoll(UnaryOperator.identity());
+	public static <K, D> OTStateManager<K, D>.Builder builder(Reactor reactor, OTSystem<D> otSystem,
+			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
+		return new OTStateManager<>(reactor, otSystem, repository, state).new Builder();
 	}
 
-	public OTStateManager<K, D> withPoll(RetryPolicy<?> pollRetryPolicy) {
-		return withPoll(poll -> ofExecutor(AsyncExecutors.retry(pollRetryPolicy), poll));
-	}
+	public final class Builder extends AbstractBuilder<Builder, OTStateManager<K, D>> {
+		private Builder() {}
 
-	public OTStateManager<K, D> withPoll(UnaryOperator<AsyncRunnable> pollPolicy) {
-		this.poll = pollPolicy.apply(this::doPoll);
-		return this;
+		public Builder withPoll() {
+			checkNotBuilt(this);
+			return withPoll(UnaryOperator.identity());
+		}
+
+		public Builder withPoll(RetryPolicy<?> pollRetryPolicy) {
+			checkNotBuilt(this);
+			return withPoll(poll -> ofExecutor(AsyncExecutors.retry(pollRetryPolicy), poll));
+		}
+
+		public Builder withPoll(UnaryOperator<AsyncRunnable> pollPolicy) {
+			checkNotBuilt(this);
+			OTStateManager.this.poll = pollPolicy.apply(OTStateManager.this::doPoll);
+			return this;
+		}
+
+		@Override
+		protected OTStateManager<K, D> doBuild() {
+			return OTStateManager.this;
+		}
 	}
 
 	@Override

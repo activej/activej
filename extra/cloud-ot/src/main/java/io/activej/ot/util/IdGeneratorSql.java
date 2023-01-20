@@ -18,7 +18,7 @@ package io.activej.ot.util;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -40,7 +40,7 @@ import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class IdGeneratorSql extends AbstractReactive
-		implements AsyncSupplier<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
+		implements AsyncSupplier<Long>, ReactiveJmxBeanWithStats {
 	private final Executor executor;
 	private final DataSource dataSource;
 
@@ -64,12 +64,27 @@ public final class IdGeneratorSql extends AbstractReactive
 
 	public static IdGeneratorSql create(Reactor reactor, Executor executor, DataSource dataSource,
 			SqlAtomicSequence sequence) {
-		return new IdGeneratorSql(reactor, executor, dataSource, sequence);
+		return builder(reactor, executor, dataSource, sequence).build();
 	}
 
-	public IdGeneratorSql withStride(int stride) {
-		this.stride = stride;
-		return this;
+	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource,
+			SqlAtomicSequence sequence) {
+		return new IdGeneratorSql(reactor, executor, dataSource, sequence).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, IdGeneratorSql> {
+		private Builder() {}
+
+		public Builder withStride(int stride) {
+			checkNotBuilt(this);
+			IdGeneratorSql.this.stride = stride;
+			return this;
+		}
+
+		@Override
+		protected IdGeneratorSql doBuild() {
+			return IdGeneratorSql.this;
+		}
 	}
 
 	private Promise<Void> doReserveId() {

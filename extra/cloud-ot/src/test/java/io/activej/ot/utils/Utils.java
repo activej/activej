@@ -5,6 +5,7 @@ import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.ExplicitDescription;
+import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
@@ -12,6 +13,7 @@ import io.activej.ot.system.OTSystemImpl;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.deserializeInt;
@@ -36,7 +38,7 @@ public class Utils {
 	}
 
 	public static OTSystem<TestOp> createTestOp() {
-		return OTSystemImpl.<TestOp>create()
+		return OTSystemImpl.<TestOp>builder()
 				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> of(add(right.getDelta()), add(left.getDelta())))
 				.withTransformFunction(TestAdd.class, TestSet.class, (left, right) -> left(set(right.getPrev() + left.getDelta(), right.getNext())))
 				.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
@@ -52,7 +54,8 @@ public class Utils {
 				.withEmptyPredicate(TestAdd.class, add -> add.getDelta() == 0)
 				.withEmptyPredicate(TestSet.class, set -> set.getPrev() == set.getNext())
 				.withInvertFunction(TestAdd.class, op -> List.of(op.inverse()))
-				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())));
+				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
+				.build();
 	}
 
 	static final class JsonConverters {
@@ -168,8 +171,19 @@ public class Utils {
 		}
 		return graph.entrySet()
 				.stream()
-				.map(entry -> OTCommit.of(0, entry.getKey(), entry.getValue().keySet(), entry.getValue()::get, id -> initialLevel + levels.getOrDefault(id, 0L) - 1L)
-						.withTimestamp(initialLevel - 1L + levels.get(entry.getKey())))
+				.map(entry -> OTCommit.builder(
+								0,
+								entry.getKey(),
+								entry.getValue().entrySet().stream()
+										.collect(Collectors.toMap(
+												Map.Entry::getKey,
+												e -> new DiffsWithLevel<>(
+														initialLevel + levels.getOrDefault(e.getKey(), 0L) - 1L,
+														e.getValue()
+												)
+										)))
+						.withTimestamp(initialLevel - 1L + levels.get(entry.getKey()))
+						.build())
 				.collect(toList());
 	}
 

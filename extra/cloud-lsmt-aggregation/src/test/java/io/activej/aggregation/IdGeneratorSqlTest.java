@@ -62,8 +62,9 @@ public class IdGeneratorSqlTest {
 
 	@Test
 	public void testIdGeneratorSql10() {
-		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence)
-				.withStride(10);
+		IdGeneratorSql idGeneratorSql = IdGeneratorSql.builder(getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence)
+				.withStride(10)
+				.build();
 		for (int i = 1; i <= 25; i++) {
 			assertEquals(i, (long) await(idGeneratorSql.get()));
 		}

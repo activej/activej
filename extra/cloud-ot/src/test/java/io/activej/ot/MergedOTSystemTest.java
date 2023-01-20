@@ -175,15 +175,16 @@ public final class MergedOTSystemTest {
 
 	// region helpers
 	private static OTSystem<TestAdd> createAddIntSystem() {
-		return OTSystemImpl.<TestAdd>create()
+		return OTSystemImpl.<TestAdd>builder()
 				.withEmptyPredicate(TestAdd.class, op -> op.getDelta() == 0)
 				.withInvertFunction(TestAdd.class, op -> List.of(add(-op.getDelta())))
 				.withSquashFunction(TestAdd.class, TestAdd.class, (first, second) -> add(first.getDelta() + second.getDelta()))
-				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> TransformResult.of(right, left));
+				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> TransformResult.of(right, left))
+				.build();
 	}
 
 	private static OTSystem<TestSet> createTestSetSystem() {
-		return OTSystemImpl.<TestSet>create()
+		return OTSystemImpl.<TestSet>builder()
 				.withEmptyPredicate(TestSet.class, op -> op.getPrev() == op.getNext())
 				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
 				.withSquashFunction(TestSet.class, TestSet.class, (first, second) -> set(first.getPrev(), second.getNext()))
@@ -191,11 +192,12 @@ public final class MergedOTSystemTest {
 					if (left.getNext() > right.getNext()) return right(set(right.getNext(), left.getNext()));
 					if (left.getNext() < right.getNext()) return left(set(left.getNext(), right.getNext()));
 					return TransformResult.empty();
-				});
+				})
+				.build();
 	}
 
 	private static OTSystem<TestSetName> createTestSetNameSystem() {
-		return OTSystemImpl.<TestSetName>create()
+		return OTSystemImpl.<TestSetName>builder()
 				.withEmptyPredicate(TestSetName.class, op -> op.getPrev().equals(op.getNext()))
 				.withInvertFunction(TestSetName.class, op -> List.of(setName(op.getNext(), op.getPrev())))
 				.withSquashFunction(TestSetName.class, TestSetName.class, (first, second) -> setName(first.getPrev(), second.getNext()))
@@ -205,7 +207,8 @@ public final class MergedOTSystemTest {
 					if (left.getNext().compareTo(right.getNext()) < 0)
 						return left(setName(left.getNext(), right.getNext()));
 					return TransformResult.empty();
-				});
+				})
+				.build();
 	}
 
 	private static void assertState(String name, int addVal, int setVal, State state) {

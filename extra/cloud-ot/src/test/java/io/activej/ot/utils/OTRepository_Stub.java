@@ -165,8 +165,9 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 	public OTCommit<K, D> doLoadCommit(K revisionId) {
 		OTCommit<K, D> commit = commits.get(revisionId);
 		checkNotNull(commit);
-		return OTCommit.of(0, commit.getId(), commit.getParentsWithLevels())
-				.withTimestamp(commit.getTimestamp());
+		return OTCommit.builder(0, commit.getId(), commit.getParentsWithLevels())
+				.withTimestamp(commit.getTimestamp())
+				.build();
 	}
 
 	public void doSaveSnapshot(K revisionId, List<D> diffs) {
