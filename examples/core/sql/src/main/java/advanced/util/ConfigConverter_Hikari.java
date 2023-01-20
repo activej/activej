@@ -1,6 +1,7 @@
 package advanced.util;
 
 import com.zaxxer.hikari.HikariConfig;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter_Complex;
 
@@ -10,10 +11,6 @@ import static io.activej.config.Config.ifNotDefault;
 import static io.activej.config.converter.ConfigConverters.*;
 
 public final class ConfigConverter_Hikari extends ConfigConverter_Complex<HikariConfig> {
-	public static ConfigConverter_Hikari create() {
-		return new ConfigConverter_Hikari();
-	}
-
 	private String poolName;
 	private boolean notSafeSql;
 	private boolean allowMultiQueries;
@@ -22,19 +19,39 @@ public final class ConfigConverter_Hikari extends ConfigConverter_Complex<Hikari
 		super(new HikariConfig());
 	}
 
-	public ConfigConverter_Hikari withPoolName(String poolName) {
-		this.poolName = poolName;
-		return this;
+	public static ConfigConverter_Hikari create() {
+		return builder().build();
 	}
 
-	public ConfigConverter_Hikari withNotSafeSql() {
-		this.notSafeSql = true;
-		return this;
+	public static Builder builder() {
+		return new ConfigConverter_Hikari().new Builder();
 	}
 
-	public ConfigConverter_Hikari withAllowMultiQueries() {
-		this.allowMultiQueries = true;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, ConfigConverter_Hikari>{
+		private Builder() {}
+
+		public Builder withPoolName(String poolName) {
+			checkNotBuilt(this);
+			ConfigConverter_Hikari.this.poolName = poolName;
+			return this;
+		}
+
+		public Builder withNotSafeSql() {
+			checkNotBuilt(this);
+			ConfigConverter_Hikari.this.notSafeSql = true;
+			return this;
+		}
+
+		public Builder withAllowMultiQueries() {
+			checkNotBuilt(this);
+			ConfigConverter_Hikari.this.allowMultiQueries = true;
+			return this;
+		}
+
+		@Override
+		protected ConfigConverter_Hikari doBuild() {
+			return ConfigConverter_Hikari.this;
+		}
 	}
 
 	private String getConnectionInitSql() {
