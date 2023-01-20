@@ -26,11 +26,11 @@ public class TriggersModuleTest {
 
 	@Test
 	public void testDuplicatesRejection() {
-		TriggersModule triggersModule = TriggersModule.create()
+		TriggersModule.Builder triggersModuleBuilder = TriggersModule.builder()
 				.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
 
 		try {
-			triggersModule.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
+			triggersModuleBuilder.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertEquals("Cannot assign duplicate trigger", e.getMessage());
@@ -71,8 +71,9 @@ public class TriggersModuleTest {
 						return 0;
 					}
 				},
-				TriggersModule.create()
+				TriggersModule.builder()
 						.with(String.class, Severity.HIGH, "test", s -> TriggerResult.create())
+						.build()
 		);
 		injector.getInstance(Key.of(WorkerPool.class, "first")).getInstances(String.class);
 		injector.getInstance(Key.of(WorkerPool.class, "second")).getInstances(String.class);

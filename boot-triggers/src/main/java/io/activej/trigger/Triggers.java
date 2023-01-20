@@ -16,6 +16,7 @@
 
 package io.activej.trigger;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.jmx.api.ConcurrentJmxBean;
@@ -45,10 +46,6 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 	private Triggers() {
 	}
 
-	public static Triggers create() {
-		return new Triggers();
-	}
-
 	private record TriggerKey(String component, String name) {}
 
 	private final Map<Trigger, TriggerResult> suppressedResults = new LinkedHashMap<>();
@@ -68,22 +65,41 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 		return true;
 	};
 
-	public Triggers withTrigger(Trigger trigger) {
-		this.triggers.add(trigger);
-		return this;
+	public static Triggers create() {
+		return builder().build();
 	}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public Triggers withTrigger(Severity severity, String component, String name, Supplier<TriggerResult> triggerFunction) {
-		return withTrigger(Trigger.of(severity, component, name, triggerFunction));
+	public static Builder builder() {
+		return new Triggers().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Triggers>{
+		private Builder() {}
+
+		public Builder withTrigger(Trigger trigger) {
+			checkNotBuilt(this);
+			addTrigger(trigger);
+			return this;
+		}
+
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withTrigger(Severity severity, String component, String name, Supplier<TriggerResult> triggerFunction) {
+			checkNotBuilt(this);
+			return withTrigger(Trigger.of(severity, component, name, triggerFunction));
+		}
+
+		@Override
+		protected Triggers doBuild() {
+			return Triggers.this;
+		}
 	}
 
 	public synchronized void addTrigger(Trigger trigger) {
-		withTrigger(trigger);
+		triggers.add(trigger);
 	}
 
 	public synchronized void addTrigger(Severity severity, String component, String name, Supplier<TriggerResult> triggerFunction) {
-		withTrigger(severity, component, name, triggerFunction);
+		triggers.add(Trigger.of(severity, component, name, triggerFunction));
 	}
 
 	private void refresh() {

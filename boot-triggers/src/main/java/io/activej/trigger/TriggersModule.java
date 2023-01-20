@@ -16,8 +16,8 @@
 
 package io.activej.trigger;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.Initializer;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
@@ -41,7 +41,7 @@ import static io.activej.trigger.util.Utils.prettyPrintSimpleKeyName;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @SuppressWarnings("unused")
-public final class TriggersModule extends AbstractModule implements TriggersModuleSettings, WithInitializer<TriggersModule> {
+public final class TriggersModule extends AbstractModule {
 	private Function<Key<?>, String> keyToString = Utils::prettyPrintSimpleKeyName;
 
 	private final Map<Class<?>, Set<TriggerConfig<?>>> classSettings = new LinkedHashMap<>();
@@ -70,35 +70,51 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	}
 
 	public static TriggersModule create() {
-		return new TriggersModule();
+		return builder().build();
 	}
 
-	@Override
-	public TriggersModule withNaming(Function<Key<?>, String> keyToString) {
-		this.keyToString = keyToString;
-		return this;
+	public static Builder builder() {
+		return new TriggersModule().new Builder();
 	}
 
-	@Override
-	public <T> TriggersModule with(Class<T> type, Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
-		Set<TriggerConfig<?>> triggerConfigs = classSettings.computeIfAbsent(type, $ -> new LinkedHashSet<>());
+	public final class Builder extends AbstractBuilder<Builder, TriggersModule> implements TriggersModuleSettings {
+		private Builder() {}
 
-		if (!triggerConfigs.add(new TriggerConfig<>(severity, name, triggerFunction))) {
-			throw new IllegalArgumentException("Cannot assign duplicate trigger");
+		@Override
+		public Builder withNaming(Function<Key<?>, String> keyToString) {
+			checkNotBuilt(this);
+			TriggersModule.this.keyToString = keyToString;
+			return this;
 		}
 
-		return this;
-	}
+		@Override
+		public <T> Builder with(Class<T> type, Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
+			checkNotBuilt(this);
+			Set<TriggerConfig<?>> triggerConfigs = classSettings.computeIfAbsent(type, $ -> new LinkedHashSet<>());
 
-	@Override
-	public <T> TriggersModule with(Key<T> key, Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
-		Set<TriggerConfig<?>> triggerConfigs = keySettings.computeIfAbsent(key, $ -> new LinkedHashSet<>());
+			if (!triggerConfigs.add(new TriggerConfig<>(severity, name, triggerFunction))) {
+				throw new IllegalArgumentException("Cannot assign duplicate trigger");
+			}
 
-		if (!triggerConfigs.add(new TriggerConfig<>(severity, name, triggerFunction))) {
-			throw new IllegalArgumentException("Cannot assign duplicate trigger");
+			return this;
 		}
 
-		return this;
+		@Override
+		public <T> Builder with(Key<T> key, Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
+			checkNotBuilt(this);
+			Set<TriggerConfig<?>> triggerConfigs = keySettings.computeIfAbsent(key, $ -> new LinkedHashSet<>());
+
+			if (!triggerConfigs.add(new TriggerConfig<>(severity, name, triggerFunction))) {
+				throw new IllegalArgumentException("Cannot assign duplicate trigger");
+			}
+
+			return this;
+		}
+
+		@Override
+		protected TriggersModule doBuild() {
+			return TriggersModule.this;
+		}
 	}
 
 	@Provides
@@ -108,8 +124,9 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 
 	@ProvidesIntoSet
 	LauncherService service(Injector injector, Triggers triggers, OptionalDependency<Set<Initializer<TriggersModuleSettings>>> initializers) {
+
 		for (Initializer<TriggersModuleSettings> initializer : initializers.orElse(Set.of())) {
-			initializer.initialize(this);
+			initializer.initialize(this.new Builder());
 		}
 		return new LauncherService() {
 			@Override

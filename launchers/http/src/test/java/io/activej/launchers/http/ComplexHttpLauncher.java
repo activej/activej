@@ -161,11 +161,12 @@ public final class ComplexHttpLauncher extends Launcher {
 				JmxModule.builder()
 						.withScopes(false)
 						.build(),
-				TriggersModule.create()
+				TriggersModule.builder()
 						.with(Key.of(PrimaryServer.class, "First"), Severity.HIGH, "server1", TriggerResult::ofValue)
 						.with(Key.of(PrimaryServer.class, "Second"), Severity.HIGH, "server2", TriggerResult::ofValue)
 						.with(Key.of(PrimaryServer.class, "Third"), Severity.HIGH, "server3", TriggerResult::ofValue)
 						.with(Key.of(Eventloop.class), Severity.HIGH, "eventloop", TriggerResult::ofValue)
+						.build()
 		);
 	}
 

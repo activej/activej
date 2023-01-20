@@ -23,25 +23,27 @@ public class TriggersTest {
 
 	@Before
 	public void setUp() {
-		triggers = Triggers.create();
-		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "AnotherComponent", "nameTwo", TriggerResult::create);
-		triggers.addTrigger(Severity.DEBUG, "AnotherComponent", "name", TriggerResult::create);
-		triggers.addTrigger(Severity.DISASTER, "Component", "name", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "Component", "name", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "Component", "nameThree", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "ComponentName", "name", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "Component", "nameTwo", TriggerResult::create);
-		triggers.addTrigger(Severity.DISASTER, "AnotherComponent", "name", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "Component", "nameOne", TriggerResult::create);
-		triggers.addTrigger(Severity.INFORMATION, "Component", "name", TriggerResult::create);
+		triggers = Triggers.builder()
+				.withTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "AnotherComponent", "nameTwo", TriggerResult::create)
+				.withTrigger(Severity.DEBUG, "AnotherComponent", "name", TriggerResult::create)
+				.withTrigger(Severity.DISASTER, "Component", "name", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "Component", "name", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "Component", "nameThree", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "ComponentName", "name", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "Component", "nameTwo", TriggerResult::create)
+				.withTrigger(Severity.DISASTER, "AnotherComponent", "name", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "Component", "nameOne", TriggerResult::create)
+				.withTrigger(Severity.INFORMATION, "Component", "name", TriggerResult::create)
+				.build();
 		timestamp = 10000;
 	}
 
 	@Test
 	public void testAddTriggers() {
-		triggers = Triggers.create();
-		triggers.addTrigger(Severity.HIGH, "Component", "Name", TriggerResult::none);
+		triggers = Triggers.builder()
+				.withTrigger(Severity.HIGH, "Component", "Name", TriggerResult::none)
+				.build();
 		List<String> triggers = this.triggers.getTriggers();
 		assertEquals(1, triggers.size());
 	}
@@ -62,17 +64,18 @@ public class TriggersTest {
 
 	@Test
 	public void testDuplicateTriggersResume() {
-		triggers = Triggers.create();
-		triggers.now = TestCurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
 		RefBoolean condition = new RefBoolean(true);
-		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", () -> {
-			if (!condition.get()) {
-				return TriggerResult.none();
-			}
-			return TriggerResult.create();
-		});
+		triggers = Triggers.builder()
+				.withTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "Component", "nameOne", () -> {
+					if (!condition.get()) {
+						return TriggerResult.none();
+					}
+					return TriggerResult.create();
+				})
+				.build();
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
 
 		assertEquals(3, triggers.getResults().size());
 		triggers.suppressTriggerByName("nameOne");
@@ -87,15 +90,16 @@ public class TriggersTest {
 
 	@Test
 	public void testResumeTrigger() {
-		triggers = Triggers.create();
-		triggers.now = TestCurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
 		RefBoolean condition = new RefBoolean(true);
-		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", () -> {
-			if (!condition.get()) {
-				return TriggerResult.none();
-			}
-			return TriggerResult.create();
-		});
+		triggers = Triggers.builder()
+				.withTrigger(Severity.HIGH, "Component", "nameOne", () -> {
+					if (!condition.get()) {
+						return TriggerResult.none();
+					}
+					return TriggerResult.create();
+				})
+				.build();
+		triggers.now = TestCurrentTimeProvider.ofTimeSequence(System.currentTimeMillis(), Triggers.CACHE_TIMEOUT.toMillis());
 		List<TriggerWithResult> results = triggers.getResults();
 		assertEquals(1, results.size());
 		triggers.suppressTriggerByName("nameOne");
@@ -183,10 +187,10 @@ public class TriggersTest {
 
 	@Test
 	public void testWithoutTimestamp() {
-		triggers = Triggers.create();
+		triggers = Triggers.builder()
+				.withTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", TriggerResult::create)
+				.build();
 		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
-
-		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", TriggerResult::create);
 
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
@@ -200,10 +204,10 @@ public class TriggersTest {
 
 	@Test
 	public void testOfTimestamp() {
-		triggers = Triggers.create();
+		triggers = Triggers.builder()
+				.withTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofTimestamp(increaseTimestampAndGet()))
+				.build();
 		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
-
-		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofTimestamp(increaseTimestampAndGet()));
 
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
@@ -217,10 +221,10 @@ public class TriggersTest {
 
 	@Test
 	public void testOfInstant() {
-		triggers = Triggers.create();
+		triggers = Triggers.builder()
+				.withTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofInstant(Instant.ofEpochMilli(increaseTimestampAndGet())))
+				.build();
 		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + 1);
-
-		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofInstant(Instant.ofEpochMilli(increaseTimestampAndGet())));
 
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
@@ -234,10 +238,11 @@ public class TriggersTest {
 
 	@Test
 	public void testOfValueWithPredicate() {
-		triggers = Triggers.create();
+		triggers = Triggers.builder()
+				.withTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofValue(increaseTimestampAndGet(), time -> time > 1000))
+				.build();
 		int increment = 100;
 		triggers.now = TestCurrentTimeProvider.ofTimeSequence(timestamp, Triggers.CACHE_TIMEOUT.toMillis() + increment);
-		triggers.addTrigger(HIGH, Eventloop.class.getName(), "ProcessDelay", () -> TriggerResult.ofValue(increaseTimestampAndGet(), time -> time > 1000));
 
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
@@ -302,19 +307,20 @@ public class TriggersTest {
 	}
 
 	private void initializeTriggers() {
-		triggers = Triggers.create();
-		triggers.addTrigger(Severity.HIGH, "@CubeThread Eventloop", "fatalErrors", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "error", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "error", TriggerResult::create);
-		triggers.addTrigger(Severity.HIGH, "Cube", "errors", TriggerResult::create);
-		triggers.addTrigger(Severity.AVERAGE, "CubeLogProcessorController", "errorProcessLogs", TriggerResult::create);
-		triggers.addTrigger(Severity.AVERAGE, "Launcher", "runDelay", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "error", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create);
-		triggers.addTrigger(Severity.WARNING, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "error", TriggerResult::create);
+		triggers = Triggers.builder()
+				.withTrigger(Severity.HIGH, "@CubeThread Eventloop", "fatalErrors", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "error", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "error", TriggerResult::create)
+				.withTrigger(Severity.HIGH, "Cube", "errors", TriggerResult::create)
+				.withTrigger(Severity.AVERAGE, "CubeLogProcessorController", "errorProcessLogs", TriggerResult::create)
+				.withTrigger(Severity.AVERAGE, "Launcher", "runDelay", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler", "error", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "delay", TriggerResult::create)
+				.withTrigger(Severity.WARNING, "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler", "error", TriggerResult::create)
+				.build();
 		assertEquals(
 				"@CubeThread Eventloop, " +
 						"@Named(\"CubeFetchScheduler\") EventloopTaskScheduler, " +
