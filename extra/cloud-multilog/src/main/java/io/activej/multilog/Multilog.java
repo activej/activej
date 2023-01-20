@@ -18,9 +18,9 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
 import io.activej.csp.ChannelSupplier;
@@ -60,7 +60,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
 public final class Multilog<T> extends AbstractReactive
-		implements AsyncMultilog<T>, ReactiveJmxBeanWithStats, WithInitializer<Multilog<T>> {
+		implements AsyncMultilog<T>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Multilog.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
@@ -95,27 +95,45 @@ public final class Multilog<T> extends AbstractReactive
 
 	public static <T> Multilog<T> create(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
-		return new Multilog<>(reactor, fileSystem, frameFormat, serializer, namingScheme);
+		return builder(reactor, fileSystem, frameFormat, serializer, namingScheme).build();
 	}
 
-	public Multilog<T> withBufferSize(int bufferSize) {
-		this.bufferSize = MemSize.of(bufferSize);
-		return this;
+	public static <T> Multilog<T>.Builder builder(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+			LogNamingScheme namingScheme) {
+		return new Multilog<>(reactor, fileSystem, frameFormat, serializer, namingScheme).new Builder();
 	}
 
-	public Multilog<T> withBufferSize(MemSize bufferSize) {
-		this.bufferSize = bufferSize;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, Multilog<T>> {
+		private Builder() {}
 
-	public Multilog<T> withAutoFlushInterval(Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
-	}
+		public Builder withBufferSize(int bufferSize) {
+			checkNotBuilt(this);
+			Multilog.this.bufferSize = MemSize.of(bufferSize);
+			return this;
+		}
 
-	public Multilog<T> withIgnoreMalformedLogs(boolean ignore) {
-		this.ignoreMalformedLogs = ignore;
-		return this;
+		public Builder withBufferSize(MemSize bufferSize) {
+			checkNotBuilt(this);
+			Multilog.this.bufferSize = bufferSize;
+			return this;
+		}
+
+		public Builder withAutoFlushInterval(Duration autoFlushInterval) {
+			checkNotBuilt(this);
+			Multilog.this.autoFlushInterval = autoFlushInterval;
+			return this;
+		}
+
+		public Builder withIgnoreMalformedLogs(boolean ignore) {
+			checkNotBuilt(this);
+			Multilog.this.ignoreMalformedLogs = ignore;
+			return this;
+		}
+
+		@Override
+		protected Multilog<T> doBuild() {
+			return Multilog.this;
+		}
 	}
 
 	@Override

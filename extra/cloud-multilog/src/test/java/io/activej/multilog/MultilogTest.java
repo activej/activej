@@ -89,11 +89,12 @@ public class MultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = Multilog.builder(reactor, fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER,
 						NAME_PARTITION_REMAINDER_SEQ)
-				.withBufferSize(1);
+				.withBufferSize(1)
+				.build();
 
 		String partition = "partition";
 
@@ -120,11 +121,12 @@ public class MultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = Multilog.builder(reactor, fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER,
 						NAME_PARTITION_REMAINDER_SEQ)
-				.withIgnoreMalformedLogs(true);
+				.withIgnoreMalformedLogs(true)
+				.build();
 
 		String partition1 = "partition1";
 		String partition2 = "partition2";
@@ -160,10 +162,11 @@ public class MultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = Multilog.builder(reactor, fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
-				.withIgnoreMalformedLogs(true);
+				.withIgnoreMalformedLogs(true)
+				.build();
 
 		String partition = "partition";
 
@@ -196,12 +199,13 @@ public class MultilogTest {
 
 		await(fs.start());
 
-		AsyncMultilog<String> multilog = Multilog.create(reactor,
+		AsyncMultilog<String> multilog = Multilog.builder(reactor,
 						fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER,
 						NAME_PARTITION_REMAINDER_SEQ)
-				.withBufferSize(MemSize.bytes(1));
+				.withBufferSize(MemSize.bytes(1))
+				.build();
 
 		String testPartition = "partition";
 
