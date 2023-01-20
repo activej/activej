@@ -106,7 +106,8 @@ public final class AdderServerModule extends AbstractModule {
 	@Eager
 	@Named("Map refresh")
 	TaskScheduler mapRefresh(Reactor reactor, AsyncCrdtMap<Long, SimpleSumsCrdtState> map) {
-		return TaskScheduler.create(reactor, map::refresh)
-				.withInterval(Duration.ofSeconds(10));
+		return TaskScheduler.builder(reactor, map::refresh)
+				.withInterval(Duration.ofSeconds(10))
+				.build();
 	}
 }

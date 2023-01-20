@@ -22,8 +22,9 @@ public final class TaskSchedulerTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
-		TaskScheduler scheduler = TaskScheduler.create(eventloop, () -> settablePromise)
-				.withSchedule(TaskScheduler.Schedule.immediate());
+		TaskScheduler scheduler = TaskScheduler.builder(eventloop, () -> settablePromise)
+				.withSchedule(TaskScheduler.Schedule.immediate())
+				.build();
 		scheduler.start();
 
 		await(Promise.complete().async()
@@ -42,9 +43,10 @@ public final class TaskSchedulerTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
-		TaskScheduler scheduler = TaskScheduler.create(eventloop, () -> Promise.ofException(new Exception()))
+		TaskScheduler scheduler = TaskScheduler.builder(eventloop, () -> Promise.ofException(new Exception()))
 				.withRetryPolicy(RetryPolicy.immediateRetry())
-				.withSchedule(TaskScheduler.Schedule.immediate());
+				.withSchedule(TaskScheduler.Schedule.immediate())
+				.build();
 		scheduler.start();
 
 		await(Promise.complete().async()

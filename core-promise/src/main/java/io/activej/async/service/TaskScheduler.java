@@ -19,7 +19,7 @@ package io.activej.async.service;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -42,7 +42,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class TaskScheduler extends AbstractReactive
-		implements ReactiveService, WithInitializer<TaskScheduler>, ReactiveJmxBeanWithStats {
+		implements ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
 
 	private final AsyncSupplier<Object> task;
@@ -134,47 +134,70 @@ public final class TaskScheduler extends AbstractReactive
 		this.task = (AsyncSupplier<Object>) task;
 	}
 
-	public static <T> TaskScheduler create(Reactor reactor, AsyncSupplier<T> task) {
-		return new TaskScheduler(reactor, task);
+	public static <T> Builder builder(Reactor reactor, AsyncSupplier<T> task) {
+		return new TaskScheduler(reactor, task).new Builder();
 	}
 
-	public TaskScheduler withInitialDelay(Duration initialDelay) {
-		this.initialDelay = initialDelay.toMillis();
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, TaskScheduler> {
+		private Builder() {}
 
-	public TaskScheduler withSchedule(Schedule schedule) {
-		this.schedule = checkNotNull(schedule);
-		// for JMX:
-		this.period = null;
-		this.interval = null;
-		return this;
-	}
+		public Builder withInitialDelay(Duration initialDelay) {
+			checkNotBuilt(this);
+			TaskScheduler.this.initialDelay = initialDelay.toMillis();
+			return this;
+		}
 
-	public TaskScheduler withPeriod(Duration period) {
-		setPeriod(period);
-		return this;
-	}
+		public Builder withSchedule(Schedule schedule) {
+			checkNotBuilt(this);
+			TaskScheduler.this.schedule = checkNotNull(schedule);
+			// for JMX:
+			TaskScheduler.this.period = null;
+			TaskScheduler.this.interval = null;
+			return this;
+		}
 
-	public TaskScheduler withInterval(Duration interval) {
-		setInterval(interval);
-		return this;
-	}
+		public Builder withPeriod(Duration period) {
+			checkNotBuilt(this);
+			setPeriod(period);
+			return this;
+		}
 
-	public TaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
-		//noinspection unchecked
-		this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
-		return this;
-	}
+		public Builder withInterval(Duration interval) {
+			checkNotBuilt(this);
+			setInterval(interval);
+			return this;
+		}
 
-	public TaskScheduler withAbortOnError(boolean abortOnError) {
-		this.abortOnError = abortOnError;
-		return this;
-	}
+		public Builder withRetryPolicy(RetryPolicy<?> retryPolicy) {
+			checkNotBuilt(this);
+			//noinspection unchecked
+			TaskScheduler.this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
+			return this;
+		}
 
-	public TaskScheduler withStatsHistogramLevels(int[] levels) {
-		this.stats.setHistogram(levels);
-		return this;
+		public Builder withAbortOnError(boolean abortOnError) {
+			checkNotBuilt(this);
+			TaskScheduler.this.abortOnError = abortOnError;
+			return this;
+		}
+
+		public Builder withStatsHistogramLevels(int[] levels) {
+			checkNotBuilt(this);
+			TaskScheduler.this.stats.setHistogram(levels);
+			return this;
+		}
+
+		public Builder withEnabled(boolean enabled) {
+			checkNotBuilt(this);
+			setEnabled(enabled);
+			return this;
+		}
+
+		@Override
+		protected TaskScheduler doBuild() {
+			checkNotNull(schedule, "Schedule is not set");
+			return TaskScheduler.this;
+		}
 	}
 
 	private void scheduleTask() {
@@ -226,7 +249,6 @@ public final class TaskScheduler extends AbstractReactive
 	@Override
 	public Promise<?> start() {
 		checkInReactorThread(this);
-		checkNotNull(schedule, "Schedule is not set");
 
 		scheduleTask();
 		return Promise.complete();

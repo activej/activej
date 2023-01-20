@@ -39,7 +39,7 @@ import io.activej.reactor.nio.NioReactor;
 import static io.activej.common.Utils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
-import static io.activej.launchers.initializers.Initializers.ofReactorTaskScheduler;
+import static io.activej.launchers.initializers.Initializers.ofTaskScheduler;
 
 public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	public static final String DEFAULT_DEAD_CHECK_INTERVAL = "1 seconds";
@@ -52,16 +52,18 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	TaskScheduler repartitionScheduler(
 			ClusterRepartitionController controller,
 			Config config) {
-		return TaskScheduler.create(controller.getReactor(), controller::repartition)
-				.initialize(ofReactorTaskScheduler(config.getChild("fs.repartition")));
+		return TaskScheduler.builder(controller.getReactor(), controller::repartition)
+				.initialize(ofTaskScheduler(config.getChild("fs.repartition")))
+				.build();
 	}
 
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
 	TaskScheduler deadCheckScheduler(Config config, FileSystemPartitions partitions) {
-		return TaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
-				.initialize(ofReactorTaskScheduler(config.getChild("fs.repartition.deadCheck")));
+		return TaskScheduler.builder(partitions.getReactor(), partitions::checkDeadPartitions)
+				.initialize(ofTaskScheduler(config.getChild("fs.repartition.deadCheck")))
+				.build();
 	}
 
 	@Provides

@@ -77,9 +77,10 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Named("consolidate")
 	@Eager
 	TaskScheduler consolidateScheduler(Reactor reactor, CrdtStorage_FileSystem<Long, DetailedSumsCrdtState> storageFileSystem, Config config) {
-		return TaskScheduler.create(reactor, storageFileSystem::consolidate)
+		return TaskScheduler.builder(reactor, storageFileSystem::consolidate)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
-				.withInitialDelay(Duration.ofSeconds(10));
+				.withInitialDelay(Duration.ofSeconds(10))
+				.build();
 	}
 
 }

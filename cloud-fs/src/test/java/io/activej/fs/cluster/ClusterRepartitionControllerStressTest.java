@@ -99,8 +99,9 @@ public final class ClusterRepartitionControllerStressTest {
 				.withReplicationCount(3)
 				.build();
 
-		scheduler = TaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
-				.withInterval(Duration.ofSeconds(1));
+		scheduler = TaskScheduler.builder(reactor, this.partitions::checkDeadPartitions)
+				.withInterval(Duration.ofSeconds(1))
+				.build();
 
 		scheduler.start();
 

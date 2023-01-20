@@ -109,8 +109,9 @@ public class ObjectNameRenameTest {
 		@Provides
 		@Eager
 		TaskScheduler scheduler(NioReactor reactor) {
-			return TaskScheduler.create(reactor, Promise::complete)
-					.withSchedule(TaskScheduler.Schedule.immediate());
+			return TaskScheduler.builder(reactor, Promise::complete)
+					.withSchedule(TaskScheduler.Schedule.immediate())
+					.build();
 		}
 	}
 }

@@ -83,7 +83,8 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Named("Repartition")
 	TaskScheduler repartitionController(Reactor reactor,
 			CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController) {
-		return TaskScheduler.create(reactor, repartitionController::repartition)
-				.withInterval(Duration.ofSeconds(10));
+		return TaskScheduler.builder(reactor, repartitionController::repartition)
+				.withInterval(Duration.ofSeconds(10))
+				.build();
 	}
 }

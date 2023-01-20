@@ -77,8 +77,9 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Eager
 	@Named("WAL flush")
 	TaskScheduler walFlushScheduler(Reactor reactor, AsyncWriteAheadLog<K, S> wal, Config config) {
-		return TaskScheduler.create(reactor, wal::flush)
+		return TaskScheduler.builder(reactor, wal::flush)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
-				.withInitialDelay(Duration.ofMinutes(1));
+				.withInitialDelay(Duration.ofMinutes(1))
+				.build();
 	}
 }

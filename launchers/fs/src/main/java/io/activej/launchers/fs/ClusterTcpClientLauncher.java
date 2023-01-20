@@ -41,7 +41,7 @@ import io.activej.service.ServiceGraphModule;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.fs.Initializers.ofClusterFileSystem;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
-import static io.activej.launchers.initializers.Initializers.ofReactorTaskScheduler;
+import static io.activej.launchers.initializers.Initializers.ofTaskScheduler;
 
 public class ClusterTcpClientLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "fs-client.properties";
@@ -60,8 +60,9 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Eager
 	@Named("clusterDeadCheck")
 	TaskScheduler deadCheckScheduler(Config config, FileSystemPartitions partitions) {
-		return TaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
-				.initialize(ofReactorTaskScheduler(config.getChild("fs.repartition.deadCheck")));
+		return TaskScheduler.builder(partitions.getReactor(), partitions::checkDeadPartitions)
+				.initialize(ofTaskScheduler(config.getChild("fs.repartition.deadCheck")))
+				.build();
 	}
 
 	@Provides

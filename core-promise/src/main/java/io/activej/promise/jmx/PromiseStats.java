@@ -18,8 +18,8 @@ package io.activej.promise.jmx;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.function.BiConsumerEx;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.JmxHistogram;
@@ -37,7 +37,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 /**
  * Allows tracking stats of {@link Promise}s.
  */
-public class PromiseStats implements WithInitializer<PromiseStats> {
+public class PromiseStats {
 	private @Nullable Reactor reactor;
 
 	private int activePromises = 0;
@@ -52,21 +52,40 @@ public class PromiseStats implements WithInitializer<PromiseStats> {
 	}
 
 	public static PromiseStats createMBean(Reactor reactor, Duration smoothingWindow) {
-		return new PromiseStats(reactor, ValueStats.create(smoothingWindow));
+		return builder(reactor, smoothingWindow).build();
 	}
 
 	public static PromiseStats create(Duration smoothingWindow) {
-		return new PromiseStats(null, ValueStats.create(smoothingWindow));
+		return builder(smoothingWindow).build();
 	}
 
-	public PromiseStats withHistogram(int[] levels) {
-		setHistogram(levels);
-		return this;
+	public static Builder builder(Duration smoothingWindow) {
+		return new PromiseStats(null, ValueStats.create(smoothingWindow)).new Builder();
 	}
 
-	public PromiseStats withHistogram(JmxHistogram histogram) {
-		setHistogram(histogram);
-		return this;
+	public static Builder builder(Reactor reactor, Duration smoothingWindow) {
+		return new PromiseStats(reactor, ValueStats.create(smoothingWindow)).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, PromiseStats> {
+		private Builder() {}
+
+		public Builder withHistogram(int[] levels) {
+			checkNotBuilt(this);
+			setHistogram(levels);
+			return this;
+		}
+
+		public Builder withHistogram(JmxHistogram histogram) {
+			checkNotBuilt(this);
+			setHistogram(histogram);
+			return this;
+		}
+
+		@Override
+		protected PromiseStats doBuild() {
+			return PromiseStats.this;
+		}
 	}
 
 	public void setHistogram(int[] levels) {

@@ -17,8 +17,8 @@
 package io.activej.async;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.function.BiConsumerEx;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -30,7 +30,7 @@ import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class AsyncAccumulator<A> extends ImplicitlyReactive implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
+public final class AsyncAccumulator<A> extends ImplicitlyReactive implements AsyncCloseable {
 	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 
@@ -43,12 +43,26 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public static <A> AsyncAccumulator<A> create(@Nullable A accumulator) {
-		return new AsyncAccumulator<>(accumulator);
+		return builder(accumulator).build();
 	}
 
-	public <T> AsyncAccumulator<A> withPromise(Promise<T> promise, BiConsumerEx<A, T> accumulator) {
-		addPromise(promise, accumulator);
-		return this;
+	public static <A> AsyncAccumulator<A>.Builder builder(@Nullable A accumulator) {
+		return new AsyncAccumulator<>(accumulator).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, AsyncAccumulator<A>> {
+		private Builder() {}
+
+		public <T> Builder withPromise(Promise<T> promise, BiConsumerEx<A, T> accumulator) {
+			checkNotBuilt(this);
+			addPromise(promise, accumulator);
+			return this;
+		}
+
+		@Override
+		protected AsyncAccumulator<A> doBuild() {
+			return AsyncAccumulator.this;
+		}
 	}
 
 	public Promise<A> run() {

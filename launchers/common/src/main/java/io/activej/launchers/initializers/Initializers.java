@@ -77,14 +77,13 @@ public class Initializers {
 				);
 	}
 
-	public static Initializer<TaskScheduler> ofReactorTaskScheduler(Config config) {
-		return scheduler -> {
-			scheduler.setEnabled(!config.get(ofBoolean(), "disabled", false));
-			scheduler.withAbortOnError(config.get(ofBoolean(), "abortOnError", false))
-					.withInitialDelay(config.get(ofDuration(), "initialDelay", Duration.ZERO))
-					.withSchedule(config.get(ofReactorTaskSchedule(), "schedule"))
-					.withRetryPolicy(config.get(ofRetryPolicy(), "retryPolicy"));
-		};
+	public static Initializer<TaskScheduler.Builder> ofTaskScheduler(Config config) {
+		return builder -> builder
+				.withEnabled(!config.get(ofBoolean(), "disabled", false))
+				.withAbortOnError(config.get(ofBoolean(), "abortOnError", false))
+				.withInitialDelay(config.get(ofDuration(), "initialDelay", Duration.ZERO))
+				.withSchedule(config.get(ofReactorTaskSchedule(), "schedule"))
+				.withRetryPolicy(config.get(ofRetryPolicy(), "retryPolicy"));
 	}
 
 	public static Initializer<HttpServer.Builder> ofHttpServer(Config config) {
