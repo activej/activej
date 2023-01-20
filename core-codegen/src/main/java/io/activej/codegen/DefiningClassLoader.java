@@ -51,7 +51,7 @@ import static java.util.stream.Collectors.groupingBy;
  * <p>
  * For persistent caching of classes you need to use {@link #ensureClass(String, Supplier)} and
  * {@link #ensureClass(String, BiFunction)} methods and also specify a persistent {@link BytecodeStorage} using
- * {@link #withBytecodeStorage(BytecodeStorage)} method.
+ * {@link Builder#withBytecodeStorage(BytecodeStorage)} method.
  */
 @SuppressWarnings("WeakerAccess")
 public final class DefiningClassLoader extends ClassLoader implements DefiningClassLoaderMBean {

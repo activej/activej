@@ -11,7 +11,6 @@ import java.lang.annotation.Annotation;
  * @see SerializeNullable
  * @see SerializeClass
  * @see SerializeFixedSize
- * @see SerializeReference
  * @see SerializeStringFormat
  * @see SerializeVarLength
  */

@@ -93,6 +93,7 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 		}
 
 		public Builder withShards(List<InetSocketAddress> addresses) {
+			checkNotBuilt(this);
 			for (InetSocketAddress address : addresses) {
 				shards.put(address, server(address));
 			}

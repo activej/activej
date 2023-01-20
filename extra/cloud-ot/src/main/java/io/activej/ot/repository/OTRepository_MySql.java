@@ -62,7 +62,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public class OTRepository_MySql<D> extends AbstractReactive
+public final class OTRepository_MySql<D> extends AbstractReactive
 		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);

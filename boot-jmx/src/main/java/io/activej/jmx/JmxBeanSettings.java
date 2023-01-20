@@ -17,7 +17,6 @@
 package io.activej.jmx;
 
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 
 import java.lang.reflect.Type;
@@ -29,7 +28,7 @@ import java.util.Set;
 import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class JmxBeanSettings implements WithInitializer<JmxBeanSettings> {
+public final class JmxBeanSettings {
 	private final Set<String> includedOptionals = new HashSet<>();
 	private final Map<String, AttributeModifier<?>> modifiers = new HashMap<>();
 	private final Map<Type, JmxCustomTypeAdapter<?>> customTypes = new HashMap<>();

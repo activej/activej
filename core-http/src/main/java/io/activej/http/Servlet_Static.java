@@ -87,20 +87,24 @@ public final class Servlet_Static extends AbstractReactive
 
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder withContentType(ContentType contentType) {
+			checkNotBuilt(this);
 			return withContentTypeResolver($ -> contentType);
 		}
 
 		public Builder withContentTypeResolver(Function<String, ContentType> contentTypeResolver) {
+			checkNotBuilt(this);
 			Servlet_Static.this.contentTypeResolver = contentTypeResolver;
 			return this;
 		}
 
 		public Builder withMapping(Function<HttpRequest, String> fn) {
+			checkNotBuilt(this);
 			pathMapper = fn;
 			return this;
 		}
 
 		public Builder withMappingTo(String path) {
+			checkNotBuilt(this);
 			//noinspection RedundantCast - it does not compile without the cast
 			if (Servlet_Static.this.contentTypeResolver == (Function<String, ContentType>) Servlet_Static::getContentType) {
 				withContentType(getContentType(path));
@@ -109,21 +113,25 @@ public final class Servlet_Static extends AbstractReactive
 		}
 
 		public Builder withMappingNotFoundTo(String defaultResource) {
+			checkNotBuilt(this);
 			Servlet_Static.this.defaultResource = defaultResource;
 			return this;
 		}
 
 		public Builder withIndexResources(String... indexResources) {
+			checkNotBuilt(this);
 			Servlet_Static.this.indexResources.addAll(List.of(indexResources));
 			return this;
 		}
 
 		public Builder withIndexHtml() {
+			checkNotBuilt(this);
 			Servlet_Static.this.indexResources.add("index.html");
 			return this;
 		}
 
 		public Builder withResponse(Supplier<HttpResponse> responseSupplier) {
+			checkNotBuilt(this);
 			Servlet_Static.this.responseSupplier = responseSupplier;
 			return this;
 		}

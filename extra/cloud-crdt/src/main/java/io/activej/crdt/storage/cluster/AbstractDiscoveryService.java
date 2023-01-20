@@ -1,7 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -29,12 +29,12 @@ public abstract class AbstractDiscoveryService extends AbstractReactive
 	public abstract class Builder<Self extends Builder<Self, D>, D extends AbstractDiscoveryService>
 			extends AbstractBuilder<Self, D> {
 
-		public Self withCrdtProvider(Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider) {
+		public final Self withCrdtProvider(Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider) {
 			AbstractDiscoveryService.this.crdtProvider = crdtProvider;
 			return (Self) this;
 		}
 
-		public Self withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
+		public final Self withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
 			AbstractDiscoveryService.this.rpcProvider = rpcProvider;
 			return (Self) this;
 		}

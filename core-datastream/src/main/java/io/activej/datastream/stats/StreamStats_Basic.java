@@ -57,7 +57,7 @@ public class StreamStats_Basic<T> implements StreamStats<T> {
 		}
 
 		@Override
-		protected final S doBuild() {
+		protected S doBuild() {
 			return (S) StreamStats_Basic.this;
 		}
 	}

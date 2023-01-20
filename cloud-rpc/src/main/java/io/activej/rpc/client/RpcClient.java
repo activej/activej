@@ -284,6 +284,7 @@ public final class RpcClient extends AbstractNioReactive
 
 		@Override
 		protected RpcClient doBuild() {
+			Checks.checkNotNull(messageTypes, "Message types must be specified");
 			return RpcClient.this;
 		}
 	}
@@ -295,7 +296,6 @@ public final class RpcClient extends AbstractNioReactive
 	@Override
 	public Promise<Void> start() {
 		checkInReactorThread(this);
-		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
 
 		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);

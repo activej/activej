@@ -88,7 +88,7 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 	 */
 	public static <T> StreamSorterStorage<T> create(Executor executor,
 			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
-		return StreamSorterStorage.<T>builder(executor, serializer, frameFormat, path).build();
+		return StreamSorterStorage.builder(executor, serializer, frameFormat, path).build();
 	}
 
 	/**

@@ -67,16 +67,16 @@ public class PromiseStats {
 		return new PromiseStats(reactor, ValueStats.create(smoothingWindow)).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, PromiseStats> {
-		private Builder() {}
+	public class Builder extends AbstractBuilder<Builder, PromiseStats> {
+		protected Builder() {}
 
-		public Builder withHistogram(int[] levels) {
+		public final Builder withHistogram(int[] levels) {
 			checkNotBuilt(this);
 			setHistogram(levels);
 			return this;
 		}
 
-		public Builder withHistogram(JmxHistogram histogram) {
+		public final Builder withHistogram(JmxHistogram histogram) {
 			checkNotBuilt(this);
 			setHistogram(histogram);
 			return this;

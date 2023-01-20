@@ -59,7 +59,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 		}
 
 		@Override
-		protected final C doBuild() {
+		protected C doBuild() {
 			return (C) AbstractCollector.this;
 		}
 	}

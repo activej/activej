@@ -75,7 +75,7 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class Aggregation extends AbstractReactive
+public final class Aggregation extends AbstractReactive
 		implements AsyncAggregation, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 

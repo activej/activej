@@ -69,7 +69,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
-public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReactive
+public final class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReactive
 		implements AsyncWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(WriteAheadLog_File.class);
 

@@ -39,7 +39,7 @@ import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends AbstractReactive
+public final class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends AbstractReactive
 		implements AsyncWriteAheadLog<K, S>, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(WriteAheadLog_InMemory.class);
 
