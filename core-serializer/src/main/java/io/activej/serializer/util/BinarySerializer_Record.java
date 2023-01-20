@@ -1,6 +1,6 @@
 package io.activej.serializer.util;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.BinaryInput;
@@ -8,7 +8,7 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 
-public final class BinarySerializer_Record implements BinarySerializer<Record>, WithInitializer<BinarySerializer_Record> {
+public final class BinarySerializer_Record implements BinarySerializer<Record> {
 	private final RecordScheme scheme;
 	private final BinarySerializer<?>[] fieldSerializers;
 
@@ -18,12 +18,26 @@ public final class BinarySerializer_Record implements BinarySerializer<Record>, 
 	}
 
 	public static BinarySerializer_Record create(RecordScheme scheme) {
-		return new BinarySerializer_Record(scheme);
+		return builder(scheme).build();
 	}
 
-	public BinarySerializer_Record withField(String field, BinarySerializer<?> fieldSerializer) {
-		this.fieldSerializers[scheme.getFieldIndex(field)] = fieldSerializer;
-		return this;
+	public static Builder builder(RecordScheme scheme) {
+		return new BinarySerializer_Record(scheme).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, BinarySerializer_Record> {
+		private Builder() {}
+
+		public Builder withField(String field, BinarySerializer<?> fieldSerializer) {
+			checkNotBuilt(this);
+			BinarySerializer_Record.this.fieldSerializers[scheme.getFieldIndex(field)] = fieldSerializer;
+			return this;
+		}
+
+		@Override
+		protected BinarySerializer_Record doBuild() {
+			return BinarySerializer_Record.this;
+		}
 	}
 
 	@Override

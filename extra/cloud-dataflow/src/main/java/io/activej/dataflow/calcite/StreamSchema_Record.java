@@ -30,7 +30,7 @@ public final class StreamSchema_Record implements StreamSchema<Record> {
 
 	@Override
 	public BinarySerializer<Record> createSerializer(BinarySerializerModule.BinarySerializerLocator locator) {
-		BinarySerializer_Record recordSerializer = BinarySerializer_Record.create(recordScheme);
+		BinarySerializer_Record.Builder recordSerializerBuilder = BinarySerializer_Record.builder(recordScheme);
 
 		List<String> fields = recordScheme.getFields();
 		List<Type> types = recordScheme.getTypes();
@@ -40,10 +40,10 @@ public final class StreamSchema_Record implements StreamSchema<Record> {
 			if (!Primitives.isPrimitiveType(type)) {
 				fieldSerializer = BinarySerializers.ofNullable(fieldSerializer);
 			}
-			recordSerializer.withField(fields.get(i), fieldSerializer);
+			recordSerializerBuilder.withField(fields.get(i), fieldSerializer);
 		}
 
-		return recordSerializer;
+		return recordSerializerBuilder.build();
 	}
 
 	public RecordScheme getRecordScheme() {
