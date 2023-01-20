@@ -16,7 +16,7 @@
 
 package io.activej.service;
 
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -48,7 +48,7 @@ import static java.util.stream.Collectors.toList;
  * {@link ServiceGraphModule}.
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public final class ServiceGraph implements WithInitializer<ServiceGraph>, ConcurrentJmxBean {
+public final class ServiceGraph implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(ServiceGraph.class);
 
 	public interface Key {
@@ -174,61 +174,84 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	public static ServiceGraph create() {
-		return new ServiceGraph();
+		return builder().build();
+	}
+
+	public static Builder builder() {
+		return new ServiceGraph().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, ServiceGraph> {
+		private Builder() {}
+
+		public Builder withGraphvizGraph(String graphvizGraph) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizGraph = graphvizGraph;
+			return this;
+		}
+
+		public Builder withGraphvizStarting(String graphvizStarting) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizStarting = toGraphvizAttribute(graphvizStarting);
+			return this;
+		}
+
+		public Builder withGraphvizStarted(String graphvizStarted) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizStarted = toGraphvizAttribute(graphvizStarted);
+			return this;
+		}
+
+		public Builder withGraphvizStopping(String graphvizStopping) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizStopping = toGraphvizAttribute(graphvizStopping);
+			return this;
+		}
+
+		public Builder withGraphvizStopped(String graphvizStopped) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizStopped = toGraphvizAttribute(graphvizStopped);
+			return this;
+		}
+
+		public Builder withGraphvizException(String graphvizException) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizException = toGraphvizAttribute(graphvizException);
+			return this;
+		}
+
+		public Builder withGraphvizEdge(String graphvizEdge) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizEdge = toGraphvizAttribute(graphvizEdge);
+			return this;
+		}
+
+		public Builder withGraphvizNodeWithSuffix(String graphvizNodeWithSuffix) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizNodeWithSuffix = toGraphvizAttribute(graphvizNodeWithSuffix);
+			return this;
+		}
+
+		public Builder withGraphvizSlowestNode(String graphvizSlowestNode) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizSlowestNode = toGraphvizAttribute(graphvizSlowestNode);
+			return this;
+		}
+
+		public Builder withGraphvizSlowestEdge(String graphvizSlowestEdge) {
+			checkNotBuilt(this);
+			ServiceGraph.this.graphvizSlowestEdge = toGraphvizAttribute(graphvizSlowestEdge);
+			return this;
+		}
+
+		@Override
+		protected ServiceGraph doBuild() {
+			return ServiceGraph.this;
+		}
 	}
 
 	void setStartCallback(Runnable startCallback) {
 		this.startCallback = startCallback;
-	}
-
-	public ServiceGraph withGraphvizGraph(String graphvizGraph) {
-		this.graphvizGraph = graphvizGraph;
-		return this;
-	}
-
-	public ServiceGraph withGraphvizStarting(String graphvizStarting) {
-		this.graphvizStarting = toGraphvizAttribute(graphvizStarting);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizStarted(String graphvizStarted) {
-		this.graphvizStarted = toGraphvizAttribute(graphvizStarted);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizStopping(String graphvizStopping) {
-		this.graphvizStopping = toGraphvizAttribute(graphvizStopping);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizStopped(String graphvizStopped) {
-		this.graphvizStopped = toGraphvizAttribute(graphvizStopped);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizException(String graphvizException) {
-		this.graphvizException = toGraphvizAttribute(graphvizException);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizEdge(String graphvizEdge) {
-		this.graphvizEdge = toGraphvizAttribute(graphvizEdge);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizNodeWithSuffix(String graphvizNodeWithSuffix) {
-		this.graphvizNodeWithSuffix = toGraphvizAttribute(graphvizNodeWithSuffix);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizSlowestNode(String graphvizSlowestNode) {
-		this.graphvizSlowestNode = toGraphvizAttribute(graphvizSlowestNode);
-		return this;
-	}
-
-	public ServiceGraph withGraphvizSlowestEdge(String graphvizSlowestEdge) {
-		this.graphvizSlowestEdge = toGraphvizAttribute(graphvizSlowestEdge);
-		return this;
 	}
 
 	private static String toGraphvizAttribute(String colorOrAttribute) {
