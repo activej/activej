@@ -227,7 +227,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		}
 
 		generatedClass = classLoader.ensureClass(
-				ClassKey.of(Record.class, this),
+				ClassKey.of(Record.class, asList(fields), asList(types), hashCodeEqualsFields),
 				() -> ClassBuilder.create(Record.class)
 						.withConstructor(asList(RecordScheme.class),
 								superConstructor(arg(0)))
@@ -250,7 +250,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			Type fieldType = entry.getValue();
 			Variable property = this.property(cast(arg(0), generatedClass), field);
 			RecordGetter<?> recordGetter = classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(RecordGetter.class, this, field),
+					ClassKey.of(RecordGetter.class, generatedClass, field),
 					() -> ClassBuilder.create(RecordGetter.class)
 							.withMethod("get", property)
 							.withInitializer(cb -> {
@@ -271,7 +271,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 			Expression set = Expressions.set(property, arg(1));
 			RecordSetter<?> recordSetter = classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(RecordSetter.class, this, field),
+					ClassKey.of(RecordSetter.class, generatedClass, field),
 					() -> ClassBuilder.create(RecordSetter.class)
 							.withMethod("set", set)
 							.withInitializer(cb -> {
@@ -303,13 +303,14 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			}
 
 			//noinspection unchecked
-			comparator = ClassBuilder.create(Comparator.class)
-					.withMethod("compare", expressionComparator)
-					.defineClassAndCreateInstance(classLoader);
+			comparator = classLoader.ensureClassAndCreateInstance(
+					ClassKey.of(Comparator.class, generatedClass),
+					() -> ClassBuilder.create(Comparator.class)
+							.withMethod("compare", expressionComparator));
 		}
 
 		factory = classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(RecordFactory.class, this),
+				ClassKey.of(RecordFactory.class, generatedClass),
 				() -> ClassBuilder.create(RecordFactory.class)
 						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
 						.withMethod("create", Record.class, asList(),
@@ -436,13 +437,15 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		if (o == null || getClass() != o.getClass()) return false;
 		RecordScheme scheme = (RecordScheme) o;
 		return Arrays.equals(fields, scheme.fields) &&
-				Arrays.equals(types, scheme.types);
+				Arrays.equals(types, scheme.types) &&
+				Objects.equals(comparedFields, scheme.comparedFields);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = Arrays.hashCode(fields);
 		result = 31 * result + Arrays.hashCode(types);
+		result = 31 * result + Objects.hashCode(comparedFields);
 		return result;
 	}
 
