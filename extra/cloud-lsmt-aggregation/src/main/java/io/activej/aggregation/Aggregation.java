@@ -549,9 +549,10 @@ public final class Aggregation extends AbstractReactive
 			PredicateDef where, DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, chunkRecordClass, where),
-				() -> ClassBuilder.create(Predicate.class)
+				() -> ClassBuilder.builder(Predicate.class)
 						.withMethod("test", boolean.class, List.of(Object.class),
 								where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
+						.build()
 		);
 	}
 

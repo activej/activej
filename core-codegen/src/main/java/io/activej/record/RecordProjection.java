@@ -71,7 +71,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			Map<String, UnaryOperator<Expression>> mapping) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordProjection.class, classKey),
-				() -> ClassBuilder.create(RecordProjection.class)
+				() -> ClassBuilder.builder(RecordProjection.class)
 						.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
 								superConstructor(arg(0), arg(1)))
 						.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
@@ -81,7 +81,8 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 										entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
 								));
 							}
-						})),
+						}))
+						.build(),
 				schemeFrom, schemeTo);
 	}
 

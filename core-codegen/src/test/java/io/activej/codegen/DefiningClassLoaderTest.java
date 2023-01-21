@@ -59,8 +59,9 @@ public class DefiningClassLoaderTest {
 		String testString = "test string";
 		String className = "io.activej.codegen.TestSupplier";
 		Class<Supplier> supplier1Class = classLoader.ensureClass(className, () ->
-				ClassBuilder.create(Supplier.class)
-						.withMethod("get", value(testString)));
+				ClassBuilder.builder(Supplier.class)
+						.withMethod("get", value(testString))
+						.build());
 
 		Class<Supplier> supplier2Class = classLoader.ensureClass(className, failingSupplier());
 
@@ -76,8 +77,9 @@ public class DefiningClassLoaderTest {
 		String className1 = "io.activej.codegen.TestSupplier";
 		String className2 = "MySupplier";
 
-		Supplier<ClassBuilder<Supplier>> cbSupplier = () -> ClassBuilder.create(Supplier.class)
-				.withMethod("get", value(testString));
+		Supplier<ClassBuilder<Supplier>> cbSupplier = () -> ClassBuilder.builder(Supplier.class)
+				.withMethod("get", value(testString))
+				.build();
 
 		Class<Supplier> supplier1Class = classLoader.ensureClass(className1, cbSupplier);
 		Class<Supplier> supplier2Class = classLoader.ensureClass(className2, cbSupplier);
@@ -96,8 +98,9 @@ public class DefiningClassLoaderTest {
 		String className = "";
 
 		try {
-			classLoader.ensureClass(className, () -> ClassBuilder.create(Supplier.class)
-					.withMethod("get", value(testString)));
+			classLoader.ensureClass(className, () -> ClassBuilder.builder(Supplier.class)
+					.withMethod("get", value(testString))
+					.build());
 			fail();
 		} catch (ClassFormatError ignored) {
 		}
@@ -109,8 +112,9 @@ public class DefiningClassLoaderTest {
 		String className = "/";
 
 		try {
-			classLoader.ensureClass(className, () -> ClassBuilder.create(Supplier.class)
-					.withMethod("get", value(testString)));
+			classLoader.ensureClass(className, () -> ClassBuilder.builder(Supplier.class)
+					.withMethod("get", value(testString))
+					.build());
 			fail();
 		} catch (NoClassDefFoundError e) {
 			assertTrue(e.getMessage().startsWith("IllegalName"));

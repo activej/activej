@@ -398,7 +398,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 			throw new NullPointerException();
 		}
 
-		ClassBuilder<?> classBuilder = ClassBuilder.create(decodeType);
+		ClassBuilder<?>.Builder classBuilder = ClassBuilder.builder(decodeType);
 		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 			String fieldName = entry.getKey();
 			Method method = entry.getValue().method;
@@ -407,7 +407,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 					.withMethod(method.getName(), property(self(), fieldName));
 		}
 
-		Class<?> newClass = staticDecoders.buildClass(classBuilder);
+		Class<?> newClass = staticDecoders.buildClass(classBuilder.build());
 
 		return let(
 				constructor(newClass),

@@ -53,14 +53,14 @@ public final class Utils {
 				ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
 				() -> {
 					//noinspection unchecked
-					ClassBuilder<R> builder = ClassBuilder.create((Class<R>) Object.class);
+					ClassBuilder<R>.Builder builder = ClassBuilder.builder((Class<R>) Object.class);
 					for (String attribute : attributes) {
 						builder.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
 					}
 					for (String measure : measures) {
 						builder.withField(measure, cube.getMeasureInternalType(measure));
 					}
-					return builder;
+					return builder.build();
 				}
 		);
 	}
@@ -92,7 +92,7 @@ public final class Utils {
 
 		KeyFunction keyFunction = classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(KeyFunction.class, recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray)),
-				() -> ClassBuilder.create(KeyFunction.class)
+				() -> ClassBuilder.builder(KeyFunction.class)
 						.withMethod("extractKey",
 								let(
 										arrayNew(Object[].class, value(recordDimensions.size())),
@@ -106,11 +106,12 @@ public final class Utils {
 											}
 											return key;
 										})))
+						.build()
 		);
 
 		AttributesFunction attributesFunction = classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(AttributesFunction.class, recordClass, new HashSet<>(recordAttributes)),
-				() -> ClassBuilder.create(AttributesFunction.class)
+				() -> ClassBuilder.builder(AttributesFunction.class)
 						.withMethod("applyAttributes",
 								sequence(seq -> {
 									List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
@@ -122,6 +123,7 @@ public final class Utils {
 												arrayGet(arg(1), value(resolverAttributeIndex))));
 									}
 								}))
+						.build()
 		);
 
 		return attributeResolver.resolveAttributes((List<Object>) results, keyFunction, attributesFunction);

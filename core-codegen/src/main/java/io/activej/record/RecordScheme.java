@@ -76,7 +76,7 @@ public final class RecordScheme {
 				.collect(Collectors.toList());
 		this.recordClass = builder.classLoader.ensureClass(
 				ClassKey.of(Record.class, asList(builder.fields), asList(builder.types), hashCodeEqualsClassFields),
-				() -> ClassBuilder.create(Record.class)
+				() -> ClassBuilder.builder(Record.class)
 						.withConstructor(List.of(RecordScheme.class),
 								superConstructor(arg(0)))
 						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
@@ -87,7 +87,8 @@ public final class RecordScheme {
 								//noinspection rawtypes
 								b.withField(builder.getClassField(entry.getKey()), type instanceof Class ? ((Class) type) : Object.class);
 							}
-						}));
+						})
+						.build());
 		this.recordGettersMap = new HashMap<>();
 		this.recordSettersMap = new HashMap<>();
 		this.recordGetters = new RecordGetter[builder.size()];
@@ -98,7 +99,7 @@ public final class RecordScheme {
 			Variable property = builder.property(cast(arg(0), recordClass), field);
 			RecordGetter<?> recordGetter = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordGetter.class, recordClass, field),
-					() -> ClassBuilder.create(RecordGetter.class)
+					() -> ClassBuilder.builder(RecordGetter.class)
 							.withMethod("get", property)
 							.initialize(cb -> {
 								if (isImplicitType(fieldType)) {
@@ -111,14 +112,14 @@ public final class RecordScheme {
 							.withMethod("getScheme", value(this))
 							.withMethod("getField", value(field))
 							.withMethod("getType", value(fieldType, Type.class))
-			);
+							.build());
 			recordGetters[recordGettersMap.size()] = recordGetter;
 			recordGettersMap.put(field, recordGetter);
 
 			Expression set = Expression.set(property, arg(1));
 			RecordSetter<?> recordSetter = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordSetter.class, recordClass, field),
-					() -> ClassBuilder.create(RecordSetter.class)
+					() -> ClassBuilder.builder(RecordSetter.class)
 							.withMethod("set", set)
 							.initialize(cb -> {
 								if (isImplicitType(fieldType)) {
@@ -130,7 +131,8 @@ public final class RecordScheme {
 							})
 							.withMethod("getScheme", value(this))
 							.withMethod("getField", value(field))
-							.withMethod("getType", value(fieldType, Type.class)));
+							.withMethod("getType", value(fieldType, Type.class))
+							.build());
 			recordSetters[recordSettersMap.size()] = recordSetter;
 			recordSettersMap.put(field, recordSetter);
 		}
@@ -148,16 +150,18 @@ public final class RecordScheme {
 			//noinspection unchecked
 			comparator = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Comparator.class, recordClass, builder.comparedFields),
-					() -> ClassBuilder.create(Comparator.class)
-							.withMethod("compare", comparatorImpl(recordClass, comparedClassFields)));
+					() -> ClassBuilder.builder(Comparator.class)
+							.withMethod("compare", comparatorImpl(recordClass, comparedClassFields))
+							.build());
 		}
 
 		this.factory = builder.classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordFactory.class, recordClass),
-				() -> ClassBuilder.create(RecordFactory.class)
+				() -> ClassBuilder.builder(RecordFactory.class)
 						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
 						.withMethod("create", Record.class, List.of(),
-								constructor(recordClass, staticField("SCHEME"))));
+								constructor(recordClass, staticField("SCHEME")))
+						.build());
 
 		this.fieldToType = builder.fieldToType;
 		this.fieldToIndex = builder.fieldToIndex;
