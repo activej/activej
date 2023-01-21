@@ -72,7 +72,7 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	}
 
 	@Override
-	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
 			return sequence(
 					writeVarInt(buf, pos, length(value)),
@@ -87,12 +87,13 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	}
 
 	protected Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		Encoder encoder = valueSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 		return doIterate(value,
-				it -> valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(it, valueSerializer.getEncodeType()), version, compatibilityLevel));
+				it -> encoder.encode(buf, pos, cast(it, valueSerializer.getEncodeType())));
 	}
 
 	@Override
-	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readVarInt(in), length ->
 				!nullable ?
 						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
@@ -102,9 +103,10 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	}
 
 	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(createBuilder(length), builder -> sequence(
 				iterate(value(0), length,
-						i -> addToBuilder(builder, i, cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), elementType))),
+						i -> addToBuilder(builder, i, cast(decoder.decode(in), elementType))),
 				build(builder)));
 	}
 

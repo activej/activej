@@ -75,7 +75,7 @@ public final class SerializerDef_Array extends AbstractSerializerDef implements 
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (type.getComponentType() == Byte.TYPE) {
 			Expression castedValue = cast(value, type);
 			Expression length = fixedSize != -1 ? value(fixedSize) : length(castedValue);
@@ -95,8 +95,9 @@ public final class SerializerDef_Array extends AbstractSerializerDef implements 
 		} else {
 			Expression size = fixedSize != -1 ? value(fixedSize) : length(cast(value, type));
 
+			Encoder encoder = valueSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 			Expression writeCollection = iterate(value(0), size,
-					i -> valueSerializer.defineEncoder(staticEncoders, buf, pos, arrayGet(cast(value, type), i), version, compatibilityLevel));
+					i -> encoder.encode(buf, pos, arrayGet(cast(value, type), i)));
 
 			if (!nullable) {
 				return sequence(
@@ -113,7 +114,7 @@ public final class SerializerDef_Array extends AbstractSerializerDef implements 
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		if (type.getComponentType() == Byte.TYPE) {
 			return let(readVarInt(in),
 					len -> !nullable ?
@@ -139,11 +140,12 @@ public final class SerializerDef_Array extends AbstractSerializerDef implements 
 	}
 
 	private Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression size) {
+		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(arrayNew(type, size),
 				array -> sequence(
 						iterate(value(0), size,
 								i -> arraySet(array, i,
-										cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), type.getComponentType()))),
+										cast(decoder.decode(in), type.getComponentType()))),
 						array));
 	}
 

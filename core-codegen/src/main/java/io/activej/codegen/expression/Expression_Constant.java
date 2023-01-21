@@ -55,6 +55,10 @@ public final class Expression_Constant implements Expression {
 		return value;
 	}
 
+	public Class<?> getValueClass() {
+		return cls == null ? value.getClass() : cls;
+	}
+
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
@@ -94,9 +98,8 @@ public final class Expression_Constant implements Expression {
 			g.getStatic(type, ((Enum<?>) value).name(), type);
 		} else {
 			String field = "$STATIC_CONSTANT_" + getId();
-			Class<?> aClass = cls == null ? value.getClass() : cls;
-			ctx.getClassBuilder().setStaticFinalField(field, aClass, this);
-			g.getStatic(ctx.getSelfType(), field, getType(aClass));
+			ctx.setConstant(field, this);
+			g.getStatic(ctx.getSelfType(), field, getType(getValueClass()));
 		}
 		return type;
 	}

@@ -36,12 +36,12 @@ public abstract class ForwardingSerializerDef implements SerializerDef {
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return serializer().encoder(staticEncoders, buf, pos, value, version, compatibilityLevel);
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		return serializer().encode(staticEncoders, buf, pos, value, version, compatibilityLevel);
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return serializer().decoder(staticDecoders, in, version, compatibilityLevel);
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		return serializer().decode(staticDecoders, in, version, compatibilityLevel);
 	}
 }

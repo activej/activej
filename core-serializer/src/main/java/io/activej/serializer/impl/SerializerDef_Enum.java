@@ -45,7 +45,7 @@ public final class SerializerDef_Enum extends AbstractSerializerDef implements S
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		Expression ordinal = call(cast(value, Enum.class), "ordinal");
 		if (isSmallEnum()) {
 			return !nullable ?
@@ -63,7 +63,7 @@ public final class SerializerDef_Enum extends AbstractSerializerDef implements S
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return isSmallEnum() ?
 				let(readByte(in), b ->
 						!nullable ?

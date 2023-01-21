@@ -44,12 +44,14 @@ public final class SerializerDef_Map extends SerializerDef_RegularMap {
 
 	@Override
 	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		Decoder keyDecoder = keySerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
+		Decoder valueDecoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return ifEq(length, value(0),
 				staticCall(Collections.class, "emptyMap"),
 				ifEq(length, value(1),
 						staticCall(Collections.class, "singletonMap",
-								keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel),
-								valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
+								keyDecoder.decode(in),
+								valueDecoder.decode(in)),
 						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 

@@ -44,20 +44,27 @@ public final class SerializerDef_Nullable extends AbstractSerializerDef implemen
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
+		return serializer.isInline(version, compatibilityLevel);
+	}
+
+	@Override
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		Encoder encoder = serializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 		return ifNonNull(value,
 				sequence(
 						writeByte(buf, pos, value((byte) 1)),
-						serializer.defineEncoder(staticEncoders, buf, pos, value, version, compatibilityLevel)),
+						encoder.encode(buf, pos, value)),
 				writeByte(buf, pos, value((byte) 0))
 		);
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+		Decoder decoder = serializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(readByte(in),
 				b -> ifNe(b, value((byte) 0),
-						serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel),
+						decoder.decode(in),
 						nullRef(serializer.getDecodeType())));
 	}
 }

@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 import static io.activej.codegen.DefiningClassLoader.createInstance;
 import static io.activej.codegen.expression.Expression.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
+import static io.activej.common.Checks.checkState;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -73,8 +74,6 @@ public final class ClassBuilder<T> {
 
 	private final Map<Method, Expression> constructors = new LinkedHashMap<>();
 	private final List<Expression> staticInitializers = new ArrayList<>();
-
-	// region builders
 
 	private ClassBuilder(Class<?> superclass, List<Class<?>> interfaces, String className) {
 		this.superclass = superclass;
@@ -262,11 +261,16 @@ public final class ClassBuilder<T> {
 		}
 
 		/**
-		 * @see #setStaticMethod(String, Class, List, Expression)
+		 * Adds a static method to a class
+		 *
+		 * @param methodName    a name of the method
+		 * @param returnClass   the method's return type
+		 * @param argumentTypes types of the method's arguments
+		 * @param expression    an expression that represents the method's body
 		 */
 		public Builder withStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Expression expression) {
 			checkNotBuilt(this);
-			setStaticMethod(methodName, returnClass, argumentTypes, expression);
+			staticMethods.put(new Method(methodName, getType(returnClass), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 			return this;
 		}
 
@@ -307,7 +311,10 @@ public final class ClassBuilder<T> {
 		 */
 		public Builder withStaticFinalField(String field, Class<?> type, Expression value) {
 			checkNotBuilt(this);
-			setStaticFinalField(field, type, value);
+			fields.put(field, type);
+			fieldsStatic.add(field);
+			fieldsFinal.add(field);
+			fieldExpressions.put(field, value);
 			return this;
 		}
 
@@ -315,35 +322,6 @@ public final class ClassBuilder<T> {
 		protected ClassBuilder<T> doBuild() {
 			return ClassBuilder.this;
 		}
-	}
-
-	/**
-	 * Adds a static method to a class
-	 *
-	 * @param methodName    a name of the method
-	 * @param returnClass   the method's return type
-	 * @param argumentTypes types of the method's arguments
-	 * @param expression    an expression that represents the method's body
-	 */
-	public void setStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Expression expression) {
-		staticMethods.put(new Method(methodName, getType(returnClass), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
-	}
-
-	/**
-	 * Adds a new initialized static field for a class
-	 *
-	 * @param field name of the field
-	 * @param type  type of  the field
-	 * @param value an expression that represents how the new static field will be initialized
-	 */
-	public void setStaticFinalField(String field, Class<?> type, Expression value){
-		fields.put(field, type);
-		fieldsStatic.add(field);
-		fieldsFinal.add(field);
-		if (value instanceof Expression_Constant && !((Expression_Constant) value).isJvmPrimitive()) {
-			STATIC_CONSTANTS.put(((Expression_Constant) value).getId(), ((Expression_Constant) value).getValue());
-		}
-		fieldExpressions.put(field, value);
 	}
 
 	/**
@@ -421,7 +399,120 @@ public final class ClassBuilder<T> {
 	 * @see GeneratedBytecode
 	 */
 	public GeneratedBytecode toBytecode(ClassLoader classLoader, String className) {
-		byte[] bytecode = toBytecode(className, classLoader);
+		DefiningClassWriter cw = DefiningClassWriter.create(classLoader);
+
+		Type classType = getType('L' + className.replace('.', '/') + ';');
+
+		cw.visit(V1_6, ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+				classType.getInternalName(),
+				null,
+				getInternalName(superclass),
+				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
+
+		Map<String, Expression_Constant> constantMap = new LinkedHashMap<>();
+
+		Map<Method, Expression> constructors = new LinkedHashMap<>(this.constructors);
+		if (constructors.isEmpty()) {
+			constructors.put(new Method("<init>", VOID_TYPE, new Type[]{}), superConstructor());
+		}
+
+		for (Map.Entry<Method, Expression> entry : constructors.entrySet()) {
+			Method method = entry.getKey();
+
+			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
+			Context ctx = new Context(classLoader, this, g, classType, method, constantMap);
+			Type type = entry.getValue().load(ctx);
+			if (type != null) {
+				ctx.cast(type, method.getReturnType());
+				g.returnValue();
+			}
+
+			g.endMethod();
+		}
+
+		for (String field : this.fields.keySet()) {
+			cw.visitField(ACC_PUBLIC + (fieldsStatic.contains(field) ? ACC_STATIC : 0) + (fieldsFinal.contains(field) ? ACC_FINAL : 0),
+					field, getType(this.fields.get(field)).getDescriptor(), null, null);
+		}
+
+		for (Method m : this.methods.keySet()) {
+			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_FINAL, m, null, null, cw);
+
+			Context ctx = new Context(classLoader, this, g, classType, m, constantMap);
+
+			Expression expression = this.methods.get(m);
+			Type type = expression.load(ctx);
+			if (type != null) {
+				ctx.cast(type, m.getReturnType());
+				g.returnValue();
+			}
+
+			g.endMethod();
+		}
+
+		for (Method m : this.staticMethods.keySet()) {
+			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC + ACC_FINAL, m, null, null, cw);
+
+			Context ctx = new Context(classLoader, this, g, classType, m, constantMap);
+
+			Expression expression = this.staticMethods.get(m);
+			Type type = expression.load(ctx);
+			if (type != null) {
+				ctx.cast(type, m.getReturnType());
+				g.returnValue();
+			}
+
+			g.endMethod();
+		}
+
+		{
+			Method m = getMethod("void <clinit> ()");
+			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC, m, null, null, cw);
+
+			Context ctx = new Context(classLoader, this, g, classType, m, constantMap);
+
+			for (Map.Entry<String, Expression> entry : this.fieldExpressions.entrySet()) {
+				String field = entry.getKey();
+				if (!this.fieldsStatic.contains(field)) continue;
+				Expression expression = entry.getValue();
+
+				if (expression instanceof Expression_Constant expressionConstant && !expressionConstant.isJvmPrimitive()) {
+					STATIC_CONSTANTS.put(expressionConstant.getId(), expressionConstant.getValue());
+					Expression.set(staticField(field), cast(
+									staticCall(ClassBuilder.class, "getStaticConstant", value(((Expression_Constant) expression).getId())),
+									this.fields.get(field)))
+							.load(ctx);
+				} else {
+					Expression.set(staticField(field), expression).load(ctx);
+				}
+			}
+
+			for (Map.Entry<String, Expression_Constant> entry : constantMap.entrySet()) {
+				String field = entry.getKey();
+				Expression_Constant expression = entry.getValue();
+
+				cw.visitField(ACC_PUBLIC + ACC_STATIC + ACC_FINAL,
+						field, getType(expression.getValueClass()).getDescriptor(), null, null);
+
+				checkState(!expression.isJvmPrimitive());
+				STATIC_CONSTANTS.put(expression.getId(), expression.getValue());
+				Type typeFrom = staticCall(ClassBuilder.class, "getStaticConstant", value(expression.getId())).load(ctx);
+				g.checkCast(getType(expression.getValueClass()));
+				g.putStatic(ctx.getSelfType(), field, getType(expression.getValueClass()));
+			}
+
+			for (Expression initializer : staticInitializers) {
+				initializer.load(ctx);
+			}
+
+			g.returnValue();
+			g.endMethod();
+		}
+
+		cw.visitEnd();
+
+		byte[] bytecode = cw.toByteArray();
+
 		return new GeneratedBytecode(className, bytecode) {
 			@Override
 			protected void onDefinedClass(Class<?> clazz) {
@@ -440,135 +531,18 @@ public final class ClassBuilder<T> {
 			protected void onError(Exception e) {
 				cleanup();
 			}
+
+			private void cleanup() {
+				for (Expression expression : fieldExpressions.values()) {
+					if (expression instanceof Expression_Constant) {
+						STATIC_CONSTANTS.remove(((Expression_Constant) expression).getId());
+					}
+				}
+				for (Expression_Constant expression : constantMap.values()) {
+					STATIC_CONSTANTS.remove(expression.getId());
+				}
+			}
 		};
-	}
-
-	private byte[] toBytecode(String className, ClassLoader classLoader) {
-		DefiningClassWriter cw = DefiningClassWriter.create(classLoader);
-
-		Type classType = getType('L' + className.replace('.', '/') + ';');
-
-		cw.visit(V1_6, ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-				classType.getInternalName(),
-				null,
-				getInternalName(superclass),
-				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
-
-		Map<Method, Expression> constructors = new LinkedHashMap<>(this.constructors);
-		if (constructors.isEmpty()) {
-			constructors.put(new Method("<init>", VOID_TYPE, new Type[]{}), superConstructor());
-		}
-
-		for (Map.Entry<Method, Expression> entry : constructors.entrySet()) {
-			Method method = entry.getKey();
-
-			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
-			Context ctx = new Context(classLoader, this, g, classType, method);
-			Type type = entry.getValue().load(ctx);
-			if (type != null) {
-				ctx.cast(type, method.getReturnType());
-				g.returnValue();
-			}
-
-			g.endMethod();
-		}
-
-		Set<Method> methods = new HashSet<>();
-		Set<Method> staticMethods = new HashSet<>();
-		Set<String> fields = new HashSet<>();
-
-		while (true) {
-			Set<String> newFields = new LinkedHashSet<>(this.fields.keySet());
-			newFields.removeAll(fields);
-			Set<Method> newMethods = new LinkedHashSet<>(this.methods.keySet());
-			newMethods.removeAll(methods);
-			Set<Method> newStaticMethods = new LinkedHashSet<>(this.staticMethods.keySet());
-			newStaticMethods.removeAll(staticMethods);
-
-			if (newFields.isEmpty() && newMethods.isEmpty() && newStaticMethods.isEmpty()) {
-				break;
-			}
-
-			for (String field : newFields) {
-				cw.visitField(ACC_PUBLIC + (fieldsStatic.contains(field) ? ACC_STATIC : 0) + (fieldsFinal.contains(field) ? ACC_FINAL : 0),
-						field, getType(this.fields.get(field)).getDescriptor(), null, null);
-			}
-
-			for (Method m : newMethods) {
-				GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_FINAL, m, null, null, cw);
-
-				Context ctx = new Context(classLoader, this, g, classType, m);
-
-				Expression expression = this.methods.get(m);
-				Type type = expression.load(ctx);
-				if (type != null) {
-					ctx.cast(type, m.getReturnType());
-					g.returnValue();
-				}
-
-				g.endMethod();
-			}
-
-			for (Method m : newStaticMethods) {
-				GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC + ACC_FINAL, m, null, null, cw);
-
-				Context ctx = new Context(classLoader, this, g, classType, m);
-
-				Expression expression = this.staticMethods.get(m);
-				Type type = expression.load(ctx);
-				if (type != null) {
-					ctx.cast(type, m.getReturnType());
-					g.returnValue();
-				}
-
-				g.endMethod();
-			}
-
-			fields.addAll(newFields);
-			methods.addAll(newMethods);
-			staticMethods.addAll(newStaticMethods);
-		}
-
-		{
-			Method m = getMethod("void <clinit> ()");
-			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC + ACC_STATIC, m, null, null, cw);
-
-			Context ctx = new Context(classLoader, this, g, classType, m);
-
-			for (Map.Entry<String, Expression> entry : this.fieldExpressions.entrySet()) {
-				String field = entry.getKey();
-				if (!this.fieldsStatic.contains(field)) continue;
-				Expression expression = entry.getValue();
-
-				if (expression instanceof Expression_Constant && !((Expression_Constant) expression).isJvmPrimitive()) {
-					Expression.set(staticField(field), cast(
-							staticCall(ClassBuilder.class, "getStaticConstant", value(((Expression_Constant) expression).getId())),
-							this.fields.get(field)))
-							.load(ctx);
-				} else {
-					Expression.set(staticField(field), expression).load(ctx);
-				}
-			}
-
-			for (Expression initializer : staticInitializers) {
-				initializer.load(ctx);
-			}
-
-			g.returnValue();
-			g.endMethod();
-		}
-
-		cw.visitEnd();
-
-		return cw.toByteArray();
-	}
-
-	private void cleanup() {
-		for (Expression expression : this.fieldExpressions.values()) {
-			if (expression instanceof Expression_Constant) {
-				STATIC_CONSTANTS.remove(((Expression_Constant) expression).getId());
-			}
-		}
 	}
 
 }

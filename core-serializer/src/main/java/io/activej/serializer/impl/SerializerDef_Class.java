@@ -252,7 +252,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		List<Expression> list = new ArrayList<>();
 
 		for (Map.Entry<String, FieldDef> entry : this.fields.entrySet()) {
@@ -262,12 +262,13 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 
 			Class<?> fieldType = fieldDef.serializer.getEncodeType();
 
+			Encoder encoder = fieldDef.serializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 			if (fieldDef.field != null) {
 				list.add(
-						fieldDef.serializer.defineEncoder(staticEncoders, buf, pos, cast(property(value, fieldName), fieldType), version, compatibilityLevel));
+						encoder.encode(buf, pos, cast(property(value, fieldName), fieldType)));
 			} else if (fieldDef.method != null) {
 				list.add(
-						fieldDef.serializer.defineEncoder(staticEncoders, buf, pos, cast(call(value, fieldDef.method.getName()), fieldType), version, compatibilityLevel));
+						encoder.encode(buf, pos, cast(call(value, fieldDef.method.getName()), fieldType)));
 			} else {
 				throw new AssertionError();
 			}
@@ -277,7 +278,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return decoder(staticDecoders, in, version, compatibilityLevel, value -> sequence());
 	}
 
@@ -294,7 +295,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 					for (FieldDef fieldDef : fields.values()) {
 						if (!fieldDef.hasVersion(version)) continue;
 						fieldDeserializers.add(
-								fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel));
+								fieldDef.serializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in));
 					}
 					return fieldDeserializers;
 				}),
@@ -419,7 +420,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 						Variable property = property(instance, entry.getKey());
 
 						Expression expression =
-								fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel);
+								fieldDef.serializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in);
 						seq.add(set(property, expression));
 					}
 					return instance;
@@ -439,7 +440,7 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 
 								seq.add(
 										set(property(instance, entry.getKey()),
-												fieldDef.serializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)));
+												fieldDef.serializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in)));
 							}
 							return instance;
 						}));

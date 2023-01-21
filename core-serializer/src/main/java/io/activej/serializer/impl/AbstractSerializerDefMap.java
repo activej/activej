@@ -77,7 +77,7 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	}
 
 	@Override
-	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
 			return sequence(
 					writeVarInt(buf, pos, length(value)),
@@ -92,14 +92,16 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	}
 
 	protected Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		Encoder keyEncoder = keySerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
+		Encoder valueEncoder = valueSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 		return doIterateMap(value,
 				(k, v) -> sequence(
-						keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
-						valueSerializer.defineEncoder(staticEncoders, buf, pos, cast(v, valueSerializer.getEncodeType()), version, compatibilityLevel)));
+						keyEncoder.encode(buf, pos, cast(k, keySerializer.getEncodeType())),
+						valueEncoder.encode(buf, pos, cast(v, valueSerializer.getEncodeType()))));
 	}
 
 	@Override
-	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readVarInt(in), length ->
 				!nullable ?
 						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
@@ -109,11 +111,13 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	}
 
 	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		Decoder keyDecoder = keySerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
+		Decoder valueDecoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(createBuilder(length), builder -> sequence(
 				iterate(value(0), length,
 						i -> putToBuilder(builder, i,
-								cast(keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), keyType),
-								cast(valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), valueType))),
+								cast(keyDecoder.decode(in), keyType),
+								cast(valueDecoder.decode(in), valueType))),
 				build(builder)));
 	}
 

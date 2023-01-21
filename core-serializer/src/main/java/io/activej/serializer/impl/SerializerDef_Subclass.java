@@ -82,7 +82,7 @@ public final class SerializerDef_Subclass extends AbstractSerializerDef implemen
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		int subClassIndex = (nullable && startIndex == 0 ? 1 : startIndex);
 
 		List<Class<?>> subclasses = new ArrayList<>();
@@ -90,9 +90,10 @@ public final class SerializerDef_Subclass extends AbstractSerializerDef implemen
 		for (Map.Entry<Class<?>, SerializerDef> entry : subclassSerializers.entrySet()) {
 			SerializerDef subclassSerializer = entry.getValue();
 			subclasses.add(entry.getKey());
+			Encoder encoder = subclassSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 			subclassWriters.add(sequence(
 					writeByte(buf, pos, value((byte) subClassIndex)),
-					subclassSerializer.defineEncoder(staticEncoders, buf, pos, cast(value, subclassSerializer.getEncodeType()), version, compatibilityLevel)
+					encoder.encode(buf, pos, cast(value, subclassSerializer.getEncodeType()))
 			));
 
 			subClassIndex++;
@@ -129,12 +130,12 @@ public final class SerializerDef_Subclass extends AbstractSerializerDef implemen
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(startIndex != 0 ? sub(readByte(in), value(startIndex)) : cast(readByte(in), int.class),
 				idx -> {
 					List<Expression> subclasses = new ArrayList<>();
 					for (SerializerDef subclassSerializer : subclassSerializers.values()) {
-						subclasses.add(cast(subclassSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), dataType));
+						subclasses.add(cast(subclassSerializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in), dataType));
 					}
 					if (nullable) subclasses.add(-startIndex, nullRef(getDecodeType()));
 					Map<Integer, Expression> cases = new HashMap<>();

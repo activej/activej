@@ -52,51 +52,57 @@ public interface SerializerDef {
 
 	boolean isInline(int version, CompatibilityLevel compatibilityLevel);
 
-	Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
+	Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
 
-	Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel);
+	Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel);
 
 	interface StaticEncoders {
 		Expression BUF = arg(0);
 		Variable POS = arg(1);
 		Variable VALUE = arg(2);
 
-		Expression define(SerializerDef serializerDef, Expression buf, Variable pos, Expression value);
+		Encoder define(SerializerDef serializerDef);
 	}
 
 	interface StaticDecoders {
 		Variable IN = arg(0);
 
-		Expression define(SerializerDef serializerDef, Expression in);
+		Decoder define(SerializerDef serializerDef);
 
 		<T> Class<T> buildClass(ClassBuilder<T> classBuilder);
 	}
 
-	/**
-	 * Serializes provided {@link Expression} {@code value} to byte array
-	 *
-	 * @param buf                byte array to which the value will be serialized
-	 * @param pos                an offset in the byte array
-	 * @param value              the value to be serialized to byte array
-	 * @param compatibilityLevel defines the {@link CompatibilityLevel compatibility level} of the serializer
-	 * @return serialized to byte array value
-	 */
-	default Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return isInline(version, compatibilityLevel) ?
-				encoder(staticEncoders, buf, pos, value, version, compatibilityLevel) :
-				staticEncoders.define(this, buf, pos, value);
+	interface Encoder {
+		/**
+		 * Serializes provided {@link Expression} {@code value} to byte array
+		 *
+		 * @param buf   byte array to which the value will be serialized
+		 * @param pos   an offset in the byte array
+		 * @param value the value to be serialized to byte array
+		 * @return serialized to byte array value
+		 */
+		Expression encode(Expression buf, Variable pos, Expression value);
 	}
 
-	/**
-	 * Deserializes object from byte array
-	 *
-	 * @param in                 BinaryInput
-	 * @param compatibilityLevel defines the {@link CompatibilityLevel compatibility level} of the serializer
-	 * @return deserialized {@code Expression} object of provided targetType
-	 */
-	default Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	default Encoder defineEncoder(StaticEncoders staticEncoders, int version, CompatibilityLevel compatibilityLevel) {
 		return isInline(version, compatibilityLevel) ?
-				decoder(staticDecoders, in, version, compatibilityLevel) :
-				staticDecoders.define(this, in);
+				(buf, pos, value) -> encode(null, buf, pos, value, version, compatibilityLevel) :
+				staticEncoders.define(this);
+	}
+
+	interface Decoder {
+		/**
+		 * Serializes provided {@link Expression} {@code value} to byte array
+		 *
+		 * @param in BinaryInput
+		 * @return serialized to byte array value
+		 */
+		Expression decode(Expression in);
+	}
+
+	default Decoder defineDecoder(StaticDecoders staticDecoders, int version, CompatibilityLevel compatibilityLevel) {
+		return isInline(version, compatibilityLevel) ?
+				in -> decode(null, in, version, compatibilityLevel) :
+				staticDecoders.define(this);
 	}
 }

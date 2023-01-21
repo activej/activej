@@ -58,12 +58,12 @@ public abstract class SerializerDef_Primitive extends AbstractSerializerDef impl
 	}
 
 	@Override
-	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return doSerialize(buf, pos, castToPrimitive() ? cast(value, primitiveType) : value, compatibilityLevel);
 	}
 
 	@Override
-	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		Expression expression = doDeserialize(in, compatibilityLevel);
 		return wrapped ? cast(expression, wrappedType) : expression;
 	}

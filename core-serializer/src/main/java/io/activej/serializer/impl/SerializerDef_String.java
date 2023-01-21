@@ -61,7 +61,7 @@ public final class SerializerDef_String extends AbstractSerializerDef implements
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos, get(() -> {
 			Expression string = cast(value, String.class);
 			if (compatibilityLevel == LEVEL_1 && (format == ISO_8859_1 || format == UTF8)) {
@@ -94,7 +94,7 @@ public final class SerializerDef_String extends AbstractSerializerDef implements
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel == LEVEL_1 && (format == ISO_8859_1 || format == UTF8)) {
 			// UTF-MB3
 			return nullable ?

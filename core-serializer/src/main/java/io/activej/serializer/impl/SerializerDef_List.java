@@ -48,10 +48,11 @@ public final class SerializerDef_List extends SerializerDef_RegularCollection {
 
 	@Override
 	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return ifEq(length, value(0),
 				staticCall(Collections.class, "emptyList"),
 				ifEq(length, value(1),
-						staticCall(Collections.class, "singletonList", valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
+						staticCall(Collections.class, "singletonList", decoder.decode(in)),
 						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 

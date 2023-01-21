@@ -45,13 +45,13 @@ public abstract class SimpleSerializerDef<T> extends AbstractSerializerDef {
 	}
 
 	@Override
-	public final Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		Expression serializer = ensureSerializerExpression(version, compatibilityLevel);
 		return set(pos, call(serializer, "encode", buf, pos, value));
 	}
 
 	@Override
-	public final Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public final Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		Expression serializer = ensureSerializerExpression(version, compatibilityLevel);
 		return call(serializer, "decode", in);
 	}

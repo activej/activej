@@ -48,7 +48,7 @@ public class SerializerDef_Slice extends AbstractSerializerDef implements Serial
 	}
 
 	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos,
 				staticCall(SerializerDef_Slice.class,
 						"write" + (nullable ? "Nullable" : ""),
@@ -56,7 +56,7 @@ public class SerializerDef_Slice extends AbstractSerializerDef implements Serial
 	}
 
 	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return staticCall(SerializerDef_Slice.class,
 				"read" + (nullable ? "Nullable" : ""),
 				in);
