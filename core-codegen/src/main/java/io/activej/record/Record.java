@@ -108,7 +108,7 @@ public abstract class Record {
 
 	public Map<String, Object> toMap(Map<String, Object> result) {
 		for (int i = 0; i < scheme.size(); i++) {
-			result.put(scheme.fields[i], get(i));
+			result.put(scheme.getField(i), get(i));
 		}
 		return result;
 	}

@@ -29,37 +29,146 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expression.*;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 @SuppressWarnings("unused")
 public final class RecordScheme {
-	private RecordFactory factory;
+	private final RecordFactory factory;
 
-	private RecordGetter<?>[] recordGetters;
-	private RecordSetter<?>[] recordSetters;
+	private final RecordGetter<?>[] recordGetters;
+	private final RecordSetter<?>[] recordSetters;
 
-	private @Nullable Comparator<Record> comparator;
+	private final HashMap<String, RecordGetter<?>> recordGettersMap;
+	private final HashMap<String, RecordSetter<?>> recordSettersMap;
 
-	private final HashMap<String, RecordGetter<?>> recordGettersMap = new HashMap<>();
-	private final HashMap<String, RecordSetter<?>> recordSettersMap = new HashMap<>();
+	private final String[] fields;
+	private final Type[] types;
 
-	private final LinkedHashMap<String, Type> fieldTypes = new LinkedHashMap<>();
-	private final LinkedHashMap<String, Integer> fieldIndices = new LinkedHashMap<>();
-	private Type[] types = {};
-	private final HashMap<String, String> classFields = new HashMap<>();
+	private final List<String> fieldsList;
+	private final List<Type> typesList;
 
-	String[] fields = {};
+	private final LinkedHashMap<String, Type> fieldToType;
+	private final LinkedHashMap<String, Integer> fieldToIndex;
 
-	private @Nullable List<String> hashCodeEqualsFields;
+	private final @Nullable Comparator<Record> comparator;
+	private final @Nullable List<String> comparedFields;
 
-	private @Nullable List<String> comparedFields;
+	private final Class<? extends Record> recordClass;
+	private final Map<String, String> recordClassFields;
 
 	private final DefiningClassLoader classLoader;
-	private Class<? extends Record> generatedClass;
 
-	private RecordScheme(DefiningClassLoader classLoader) {
-		this.classLoader = classLoader;
+	private RecordScheme(Builder builder) {
+		Collection<String> hashCodeEqualsFields;
+		if (builder.hashCodeEqualsFields != null) {
+			Set<String> missing = builder.getMissingFields(builder.hashCodeEqualsFields);
+			if (!missing.isEmpty()) {
+				throw new IllegalStateException("Missing some fields to generate 'hashCode' and 'equals' methods: " + missing);
+			}
+			hashCodeEqualsFields = builder.hashCodeEqualsFields;
+		} else {
+			hashCodeEqualsFields = builder.fieldToType.keySet();
+		}
+		List<String> hashCodeEqualsClassFields = hashCodeEqualsFields.stream()
+				.map(builder::getClassField)
+				.collect(Collectors.toList());
+		this.recordClass = builder.classLoader.ensureClass(
+				ClassKey.of(Record.class, asList(builder.fields), asList(builder.types), hashCodeEqualsClassFields),
+				() -> ClassBuilder.create(Record.class)
+						.withConstructor(List.of(RecordScheme.class),
+								superConstructor(arg(0)))
+						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
+						.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
+						.initialize(b -> {
+							for (Map.Entry<String, Type> entry : builder.fieldToType.entrySet()) {
+								Type type = entry.getValue();
+								//noinspection rawtypes
+								b.withField(builder.getClassField(entry.getKey()), type instanceof Class ? ((Class) type) : Object.class);
+							}
+						}));
+		this.recordGettersMap = new HashMap<>();
+		this.recordSettersMap = new HashMap<>();
+		this.recordGetters = new RecordGetter[builder.size()];
+		this.recordSetters = new RecordSetter[builder.size()];
+		for (Map.Entry<String, Type> entry : builder.fieldToType.entrySet()) {
+			String field = entry.getKey();
+			Type fieldType = entry.getValue();
+			Variable property = builder.property(cast(arg(0), recordClass), field);
+			RecordGetter<?> recordGetter = builder.classLoader.ensureClassAndCreateInstance(
+					ClassKey.of(RecordGetter.class, recordClass, field),
+					() -> ClassBuilder.create(RecordGetter.class)
+							.withMethod("get", property)
+							.initialize(cb -> {
+								if (isImplicitType(fieldType)) {
+									cb.withMethod("getInt", property);
+									cb.withMethod("getLong", property);
+									cb.withMethod("getFloat", property);
+									cb.withMethod("getDouble", property);
+								}
+							})
+							.withMethod("getScheme", value(this))
+							.withMethod("getField", value(field))
+							.withMethod("getType", value(fieldType, Type.class))
+			);
+			recordGetters[recordGettersMap.size()] = recordGetter;
+			recordGettersMap.put(field, recordGetter);
+
+			Expression set = Expression.set(property, arg(1));
+			RecordSetter<?> recordSetter = builder.classLoader.ensureClassAndCreateInstance(
+					ClassKey.of(RecordSetter.class, recordClass, field),
+					() -> ClassBuilder.create(RecordSetter.class)
+							.withMethod("set", set)
+							.initialize(cb -> {
+								if (isImplicitType(fieldType)) {
+									cb.withMethod("setInt", set);
+									cb.withMethod("setLong", set);
+									cb.withMethod("setFloat", set);
+									cb.withMethod("setDouble", set);
+								}
+							})
+							.withMethod("getScheme", value(this))
+							.withMethod("getField", value(field))
+							.withMethod("getType", value(fieldType, Type.class)));
+			recordSetters[recordSettersMap.size()] = recordSetter;
+			recordSettersMap.put(field, recordSetter);
+		}
+		Comparator<Record> comparator = null;
+		if (builder.comparedFields != null) {
+			Set<String> missing = builder.getMissingFields(builder.comparedFields);
+			if (!missing.isEmpty()) {
+				throw new IllegalStateException("Missing some fields to be compared: " + missing);
+			}
+
+			List<String> comparedClassFields = builder.comparedFields.stream()
+					.map(builder::getClassField)
+					.toList();
+
+			//noinspection unchecked
+			comparator = builder.classLoader.ensureClassAndCreateInstance(
+					ClassKey.of(Comparator.class, recordClass, builder.comparedFields),
+					() -> ClassBuilder.create(Comparator.class)
+							.withMethod("compare", comparatorImpl(recordClass, comparedClassFields)));
+		}
+
+		this.factory = builder.classLoader.ensureClassAndCreateInstance(
+				ClassKey.of(RecordFactory.class, recordClass),
+				() -> ClassBuilder.create(RecordFactory.class)
+						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
+						.withMethod("create", Record.class, List.of(),
+								constructor(recordClass, staticField("SCHEME"))));
+
+		this.fieldToType = builder.fieldToType;
+		this.fieldToIndex = builder.fieldToIndex;
+		this.fields = builder.fields;
+		this.types = builder.types;
+		this.fieldsList = Arrays.asList(this.fields);
+		this.typesList = Arrays.asList(this.types);
+		this.recordClassFields = builder.recordClassFields;
+		this.comparator = comparator;
+		this.comparedFields = builder.comparedFields;
+		this.classLoader = builder.classLoader;
 	}
 
 	public static Builder builder() {
@@ -67,22 +176,35 @@ public final class RecordScheme {
 	}
 
 	public static Builder builder(DefiningClassLoader classLoader) {
-		return new RecordScheme(classLoader).new Builder();
+		return new Builder(classLoader);
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RecordScheme> {
-		private Builder() {}
+	public static final class Builder extends AbstractBuilder<Builder, RecordScheme> {
+		private final DefiningClassLoader classLoader;
+
+		private final LinkedHashMap<String, Type> fieldToType = new LinkedHashMap<>();
+		private final LinkedHashMap<String, Integer> fieldToIndex = new LinkedHashMap<>();
+		private String[] fields = {};
+		private Type[] types = {};
+		private final Map<String, String> recordClassFields = new HashMap<>();
+
+		private @Nullable List<String> hashCodeEqualsFields;
+		private @Nullable List<String> comparedFields;
+
+		private Builder(DefiningClassLoader classLoader) {
+			this.classLoader = classLoader;
+		}
 
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder withField(String field, Type type) {
 			checkNotBuilt(this);
-			if (fieldTypes.containsKey(field)) throw new IllegalArgumentException("Duplicate field");
-			fieldTypes.put(field, type);
+			if (fieldToType.containsKey(field)) throw new IllegalArgumentException("Duplicate field");
+			fieldToType.put(field, type);
+			fieldToIndex.put(field, fieldToIndex.size());
 			fields = Arrays.copyOf(fields, fields.length + 1);
 			fields[fields.length - 1] = field;
 			types = Arrays.copyOf(types, types.length + 1);
 			types[types.length - 1] = type;
-			fieldIndices.put(field, fieldIndices.size());
 
 			char[] chars = (Character.isJavaIdentifierStart(field.charAt(0)) ? field : "_" + field).toCharArray();
 			for (int i = 1; i < chars.length; i++) {
@@ -93,9 +215,9 @@ public final class RecordScheme {
 			String sanitized = new String(chars);
 
 			for (int i = 1; ; i++) {
-				String classField = i == 1 ? sanitized : sanitized + i;
-				if (!classFields.containsKey(classField)) {
-					classFields.put(field, classField);
+				String recordClassField = i == 1 ? sanitized : sanitized + i;
+				if (!recordClassFields.containsKey(recordClassField)) {
+					recordClassFields.put(field, recordClassField);
 					break;
 				}
 			}
@@ -105,7 +227,7 @@ public final class RecordScheme {
 		public Builder withHashCodeEqualsFields(List<String> hashCodeEqualsFields) {
 			checkNotBuilt(this);
 			checkUnique(hashCodeEqualsFields);
-			RecordScheme.this.hashCodeEqualsFields = hashCodeEqualsFields;
+			this.hashCodeEqualsFields = hashCodeEqualsFields;
 			return this;
 		}
 
@@ -117,7 +239,7 @@ public final class RecordScheme {
 		public Builder withComparator(List<String> comparedFields) {
 			checkNotBuilt(this);
 			checkUnique(comparedFields);
-			RecordScheme.this.comparedFields = comparedFields;
+			this.comparedFields = comparedFields;
 			return this;
 		}
 
@@ -128,111 +250,30 @@ public final class RecordScheme {
 
 		@Override
 		protected RecordScheme doBuild() {
-			Collection<String> hashCodeEqualsFields1;
-			if (RecordScheme.this.hashCodeEqualsFields != null) {
-				Set<String> missing = getMissingFields(RecordScheme.this.hashCodeEqualsFields);
-				if (!missing.isEmpty()) {
-					throw new IllegalStateException("Missing some fields to generate 'hashCode' and 'equals' methods: " + missing);
-				}
-				hashCodeEqualsFields1 = RecordScheme.this.hashCodeEqualsFields;
-			} else {
-				hashCodeEqualsFields1 = fieldTypes.keySet();
-			}
-			List<String> hashCodeEqualsClassFields = hashCodeEqualsFields1.stream()
-					.map(RecordScheme.this::getClassField)
-					.collect(Collectors.toList());
-			generatedClass = classLoader.ensureClass(
-					ClassKey.of(Record.class, RecordScheme.this),
-					() -> ClassBuilder.create(Record.class)
-							.withConstructor(List.of(RecordScheme.class),
-									superConstructor(arg(0)))
-							.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
-							.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
-							.initialize(b -> {
-								for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
-									Type type = entry.getValue();
-									//noinspection rawtypes
-									b.withField(getClassField(entry.getKey()), type instanceof Class ? ((Class) type) : Object.class);
-								}
-							}));
-			recordGetters = new RecordGetter[size()];
-			recordSetters = new RecordSetter[size()];
-			for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
-				String field = entry.getKey();
-				Type fieldType = entry.getValue();
-				Variable property = RecordScheme.this.property(cast(arg(0), generatedClass), field);
-				RecordGetter<?> recordGetter = classLoader.ensureClassAndCreateInstance(
-						ClassKey.of(RecordGetter.class, RecordScheme.this, field),
-						() -> ClassBuilder.create(RecordGetter.class)
-								.withMethod("get", property)
-								.initialize(cb -> {
-									if (isImplicitType(fieldType)) {
-										cb.withMethod("getInt", property);
-										cb.withMethod("getLong", property);
-										cb.withMethod("getFloat", property);
-										cb.withMethod("getDouble", property);
-									}
-								})
-								.withMethod("getScheme", value(RecordScheme.this))
-								.withMethod("getField", value(field))
-								.withMethod("getType", value(fieldType, Type.class))
-				);
-				recordGetters[recordGettersMap.size()] = recordGetter;
-				recordGettersMap.put(field, recordGetter);
+			return new RecordScheme(this);
+		}
 
-				Expression set = Expression.set(property, arg(1));
-				RecordSetter<?> recordSetter = classLoader.ensureClassAndCreateInstance(
-						ClassKey.of(RecordSetter.class, RecordScheme.this, field),
-						() -> ClassBuilder.create(RecordSetter.class)
-								.withMethod("set", set)
-								.initialize(cb -> {
-									if (isImplicitType(fieldType)) {
-										cb.withMethod("setInt", set);
-										cb.withMethod("setLong", set);
-										cb.withMethod("setFloat", set);
-										cb.withMethod("setDouble", set);
-									}
-								})
-								.withMethod("getScheme", value(RecordScheme.this))
-								.withMethod("getField", value(field))
-								.withMethod("getType", value(fieldType, Type.class)));
-				recordSetters[recordSettersMap.size()] = recordSetter;
-				recordSettersMap.put(field, recordSetter);
-			}
-			if (comparedFields != null) {
-				Set<String> missing = getMissingFields(comparedFields);
-				if (!missing.isEmpty()) {
-					throw new IllegalStateException("Missing some fields to be compared: " + missing);
-				}
+		private String getClassField(String field) {
+			return recordClassFields.get(field);
+		}
 
-				List<String> comparedClassFields = comparedFields.stream()
-						.map(RecordScheme.this::getClassField)
-						.collect(Collectors.toList());
+		private Set<String> getMissingFields(List<String> fields) {
+			return fields.stream()
+					.filter(field -> !fieldToType.containsKey(field))
+					.collect(toSet());
+		}
 
-				//noinspection unchecked
-				comparator = ClassBuilder.create(Comparator.class)
-						.withMethod("compare", comparatorImpl(generatedClass, comparedClassFields))
-						.defineClassAndCreateInstance(classLoader);
-			}
-			factory = classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(RecordFactory.class, RecordScheme.this),
-					() -> ClassBuilder.create(RecordFactory.class)
-							.withStaticFinalField("SCHEME", RecordScheme.class, value(RecordScheme.this))
-							.withMethod("create", Record.class, List.of(),
-									constructor(generatedClass, staticField("SCHEME"))));
+		private Variable property(Expression record, String field) {
+			return Expression.property(record, getClassField(field));
+		}
 
-			return RecordScheme.this;
+		private int size() {
+			return fields.length;
 		}
 	}
 
 	public Record record() {
 		return factory.create();
-	}
-
-	public Comparator<Record> recordComparator() {
-		if (comparator == null) throw new IllegalStateException("Compared fields were not specified");
-
-		return comparator;
 	}
 
 	public Record recordOfArray(Object... values) {
@@ -252,23 +293,27 @@ public final class RecordScheme {
 	}
 
 	public Class<? extends Record> getRecordClass() {
-		return generatedClass;
+		return recordClass;
 	}
 
-	public String getClassField(String field) {
-		return classFields.get(field);
+	public Comparator<Record> getRecordComparator() {
+		return comparator;
+	}
+
+	public String getRecordClassField(String field) {
+		return recordClassFields.get(field);
 	}
 
 	public Variable property(Expression record, String field) {
-		return Expression.property(record, getClassField(field));
+		return Expression.property(record, getRecordClassField(field));
 	}
 
 	public List<String> getFields() {
-		return new ArrayList<>(fieldTypes.keySet());
+		return fieldsList;
 	}
 
 	public List<Type> getTypes() {
-		return new ArrayList<>(fieldTypes.values());
+		return typesList;
 	}
 
 	public String getField(int index) {
@@ -276,7 +321,7 @@ public final class RecordScheme {
 	}
 
 	public Type getFieldType(String field) {
-		return fieldTypes.get(field);
+		return fieldToType.get(field);
 	}
 
 	public Type getFieldType(int field) {
@@ -284,11 +329,12 @@ public final class RecordScheme {
 	}
 
 	public int getFieldIndex(String field) {
-		return fieldIndices.get(field);
+		return fieldToIndex.get(field);
 	}
 
+	@SuppressWarnings("NullableProblems")
 	public List<String> getComparedFields() {
-		return comparedFields == null ? Collections.emptyList() : new ArrayList<>(comparedFields);
+		return comparedFields;
 	}
 
 	public int size() {
@@ -298,12 +344,6 @@ public final class RecordScheme {
 	private static boolean isImplicitType(Type fieldType) {
 		return fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
 				fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class;
-	}
-
-	private Set<String> getMissingFields(List<String> fields) {
-		return fields.stream()
-				.filter(field -> !fieldTypes.containsKey(field))
-				.collect(toSet());
 	}
 
 	private static void checkUnique(List<String> fields) {
@@ -420,19 +460,21 @@ public final class RecordScheme {
 		if (o == null || getClass() != o.getClass()) return false;
 		RecordScheme scheme = (RecordScheme) o;
 		return Arrays.equals(fields, scheme.fields) &&
-				Arrays.equals(types, scheme.types);
+				Arrays.equals(types, scheme.types) &&
+				Objects.equals(comparedFields, scheme.comparedFields);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = Arrays.hashCode(fields);
 		result = 31 * result + Arrays.hashCode(types);
+		result = 31 * result + Objects.hashCode(comparedFields);
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return fieldTypes.entrySet().stream()
+		return fieldToType.entrySet().stream()
 				.map(entry -> entry.getKey() + "=" +
 						(entry.getValue() instanceof Class ? ((Class<?>) entry.getValue()).getSimpleName() : entry.getValue()))
 				.collect(joining(", ", "{", "}"));

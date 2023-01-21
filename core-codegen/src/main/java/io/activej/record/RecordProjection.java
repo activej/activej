@@ -47,7 +47,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
 		}
 		List<String> comparedFields = schemeFrom.getComparedFields();
-		if (!comparedFields.isEmpty()) {
+		if (comparedFields != null) {
 			List<String> newComparedFields = new ArrayList<>();
 			for (String field : fields) {
 				if (comparedFields.contains(field)) {

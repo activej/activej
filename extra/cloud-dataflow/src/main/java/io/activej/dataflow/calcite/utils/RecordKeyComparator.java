@@ -18,7 +18,7 @@ public class RecordKeyComparator implements Comparator<Record> {
 	public int compare(Record o1, Record o2) {
 		assert o1.getScheme() == o2.getScheme();
 
-		Comparator<Record> comparator = o1.getScheme().recordComparator();
+		Comparator<Record> comparator = o1.getScheme().getRecordComparator();
 		return comparator.compare(o1, o2);
 	}
 

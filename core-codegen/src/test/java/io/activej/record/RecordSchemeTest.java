@@ -20,13 +20,13 @@ public class RecordSchemeTest {
 
 	@Test
 	public void test() {
-		RecordScheme scheme = RecordScheme.builder()
+		RecordScheme scheme1 = RecordScheme.builder()
 				.withField("id", int.class)
 				.withField("name", String.class)
 				.build();
 
-		Record record1 = scheme.record();
-		RecordScheme scheme1 = record1.getScheme();
+		Record record1 = scheme1.record();
+		RecordScheme scheme = record1.getScheme();
 		assertSame(scheme, scheme1);
 
 		record1.set("id", 10);
@@ -35,7 +35,7 @@ public class RecordSchemeTest {
 		record1.set("name", "abc");
 		assertEquals("abc", record1.get("name"));
 
-		Record record2 = scheme.record();
+		Record record2 = scheme1.record();
 		assertNotSame(record1, record2);
 		assertNotEquals(record1, record2);
 		assertNotEquals(record1.hashCode(), record2.hashCode());
@@ -50,7 +50,7 @@ public class RecordSchemeTest {
 				.withField("name", String.class)
 				.build();
 
-		assertSame(scheme.getRecordClass(), scheme2.getRecordClass());
+		assertSame(scheme1.getRecordClass(), scheme2.getRecordClass());
 		assertStaticConstantsCleared();
 	}
 
@@ -221,7 +221,7 @@ public class RecordSchemeTest {
 				.withComparator("id", "code", "complex.name")
 				.build();
 
-		Comparator<Record> comparator = scheme.recordComparator();
+		Comparator<Record> comparator = scheme.getRecordComparator();
 
 		Record record1 = scheme.record();
 		Record record2 = scheme.record();
