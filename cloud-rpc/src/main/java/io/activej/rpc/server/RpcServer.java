@@ -37,7 +37,7 @@ import io.activej.rpc.protocol.RpcControlMessage;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -114,7 +114,7 @@ public final class RpcServer extends AbstractReactiveServer {
 
 	public final class Builder extends AbstractReactiveServer.Builder<Builder, RpcServer> {
 		private List<Class<?>> messageTypes;
-		private SerializerBuilder serializerBuilder = SerializerBuilder.create(
+		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance(
 				DefiningClassLoader.create(
 						Thread.currentThread().getContextClassLoader()
 				)
@@ -131,7 +131,7 @@ public final class RpcServer extends AbstractReactiveServer {
 
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
-			this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
+			this.serializerFactory = SerializerFactory.defaultInstance(DefiningClassLoader.create(classLoader));
 			return this;
 		}
 
@@ -159,9 +159,9 @@ public final class RpcServer extends AbstractReactiveServer {
 			return this;
 		}
 
-		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
+		public Builder withSerializerFactory(SerializerFactory serializerFactory) {
 			checkNotBuilt(this);
-			this.serializerBuilder = serializerBuilder;
+			this.serializerFactory = serializerFactory;
 			return this;
 		}
 
@@ -210,8 +210,8 @@ public final class RpcServer extends AbstractReactiveServer {
 			checkState(messageTypes != null, "Message types must be specified");
 			//noinspection SlowListContainsAll
 			checkState(messageTypes.containsAll(handlersClasses), "Some message types where not specified");
-			serializerBuilder.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
-			serializer = serializerBuilder.build(RpcMessage.class);
+			serializerFactory.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
+			serializer = serializerFactory.create(RpcMessage.class);
 
 			return super.doBuild();
 		}

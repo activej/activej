@@ -26,7 +26,7 @@ import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
@@ -63,7 +63,7 @@ public class MemcacheServerModule extends AbstractModule {
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
 							return Promise.of(PutResponse.INSTANCE);
 						})
-				.withSerializerBuilder(SerializerBuilder.builder()
+				.withSerializerFactory(SerializerFactory.builder()
 						.with(Slice.class, ctx -> new SerializerDef_Slice())
 						.build())
 				.withMessageTypes(MESSAGE_TYPES)

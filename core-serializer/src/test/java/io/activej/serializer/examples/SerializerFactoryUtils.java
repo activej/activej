@@ -1,8 +1,8 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.SerializerDef;
+import io.activej.serializer.SerializerFactory;
 import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.Map;
 import static java.lang.Character.toUpperCase;
 import static java.lang.String.format;
 
-public class SerializerBuilderUtils {
+public class SerializerFactoryUtils {
 	public static final List<Class<?>> TYPES = List.of(
 			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
@@ -23,26 +23,26 @@ public class SerializerBuilderUtils {
 	}};
 
 	// region creators
-	public static SerializerBuilder createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {
-		SerializerBuilder.Builder builder = SerializerBuilder.builder(definingClassLoader)
+	public static SerializerFactory createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {
+		SerializerFactory.Builder builder = SerializerFactory.builder(definingClassLoader)
 				.withProfile(profile);
 		return register(builder, definingClassLoader);
 	}
 
-	public static SerializerBuilder createWithHppc7Support(DefiningClassLoader definingClassLoader) {
-		SerializerBuilder.Builder builder = SerializerBuilder.builder(definingClassLoader);
+	public static SerializerFactory createWithHppc7Support(DefiningClassLoader definingClassLoader) {
+		SerializerFactory.Builder builder = SerializerFactory.builder(definingClassLoader);
 		return register(builder, definingClassLoader);
 
 	}
 
 	// endregion
-	private static SerializerBuilder register(SerializerBuilder.Builder builder, DefiningClassLoader definingClassLoader) {
+	private static SerializerFactory register(SerializerFactory.Builder builder, DefiningClassLoader definingClassLoader) {
 		registerHppcMaps(builder, definingClassLoader);
 		registerHppcCollections(builder, definingClassLoader);
 		return builder.build();
 	}
 
-	private static void registerHppcMaps(SerializerBuilder.Builder builder, DefiningClassLoader classLoader) {
+	private static void registerHppcMaps(SerializerFactory.Builder builder, DefiningClassLoader classLoader) {
 		for (int i = 0; i < TYPES.size(); i++) {
 			Class<?> keyType = TYPES.get(i);
 			if (keyType == float.class || keyType == byte.class || keyType == double.class) {
@@ -66,7 +66,7 @@ public class SerializerBuilderUtils {
 		}
 	}
 
-	private static void registerHppcCollections(SerializerBuilder.Builder builder, DefiningClassLoader classLoader) {
+	private static void registerHppcCollections(SerializerFactory.Builder builder, DefiningClassLoader classLoader) {
 		for (Map.Entry<String, String> collectionImpl : COLLECTION_IMPL_SUFFIX.entrySet()) {
 			for (Class<?> valueType : TYPES) {
 				String collectionImplKey = collectionImpl.getKey();

@@ -1,5 +1,5 @@
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 
@@ -14,8 +14,8 @@ public final class GenericsAndInterfacesExample {
 				new Skill<>(2, "ActiveJ")));
 
 		byte[] buffer = new byte[200];
-		BinarySerializer<Developer> serializer = SerializerBuilder.create()
-				.build(Developer.class);
+		BinarySerializer<Developer> serializer = SerializerFactory.defaultInstance()
+				.create(Developer.class);
 		//[END REGION_4]
 
 		//[START REGION_5]

@@ -1,5 +1,5 @@
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 
@@ -13,8 +13,8 @@ public final class SimpleObjectExample {
 		Person john = new Person(34, "Jim");
 		john.setSurname("Smith");
 		byte[] buffer = new byte[200];
-		BinarySerializer<Person> serializer = SerializerBuilder.create()
-				.build(Person.class);
+		BinarySerializer<Person> serializer = SerializerFactory.defaultInstance()
+				.create(Person.class);
 		//[END REGION_2]
 
 		//[START REGION_3]

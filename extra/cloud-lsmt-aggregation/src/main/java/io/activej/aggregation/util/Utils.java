@@ -28,7 +28,7 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.impl.SerializerDef_Class;
 
 import java.lang.reflect.Field;
@@ -157,7 +157,7 @@ public class Utils {
 					addFields(serializer, recordClass, new ArrayList<>(keys.entrySet()));
 					addFields(serializer, recordClass, new ArrayList<>(fields.entrySet()));
 
-					return SerializerBuilder.create(classLoader)
+					return SerializerFactory.defaultInstance(classLoader)
 							.toClassBuilder(serializer);
 				});
 	}

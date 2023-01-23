@@ -19,7 +19,7 @@ import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
 import java.io.File;
@@ -88,7 +88,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				frameFormat,
-				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
+				SerializerFactory.defaultInstance(CLASS_LOADER).create(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,

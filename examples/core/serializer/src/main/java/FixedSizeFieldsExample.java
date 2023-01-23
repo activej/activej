@@ -1,5 +1,5 @@
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeFixedSize;
 import io.activej.serializer.annotations.SerializeNullable;
@@ -27,8 +27,8 @@ public final class FixedSizeFieldsExample {
 		storage.bytes = new byte[]{1, 2, 3, 4, 5, 6};
 
 		byte[] buffer = new byte[200];
-		BinarySerializer<Storage> serializer = SerializerBuilder.create()
-				.build(Storage.class);
+		BinarySerializer<Storage> serializer = SerializerFactory.defaultInstance()
+				.create(Storage.class);
 		//[END REGION_2]
 
 		//[START REGION_3]

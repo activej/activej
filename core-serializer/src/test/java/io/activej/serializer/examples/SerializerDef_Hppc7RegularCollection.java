@@ -9,7 +9,7 @@ import io.activej.serializer.impl.SerializerDef_RegularCollection;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expression.*;
-import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
+import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
 
 public class SerializerDef_Hppc7RegularCollection extends SerializerDef_RegularCollection {
 	public SerializerDef_Hppc7RegularCollection(SerializerDef valueSerializer, Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {

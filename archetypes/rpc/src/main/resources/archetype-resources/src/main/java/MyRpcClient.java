@@ -1,6 +1,5 @@
 package ${groupId};
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
@@ -12,7 +11,6 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
-import io.activej.serializer.SerializerBuilder;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
@@ -43,7 +41,6 @@ public class MyRpcClient extends Launcher {
     @Provides
     AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
         return RpcClient.create(reactor)
-                .withSerializerBuilder(SerializerBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader())))
                 .withMessageTypes(String.class)
                 .withStrategy(RpcStrategies.server(
                         new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))));

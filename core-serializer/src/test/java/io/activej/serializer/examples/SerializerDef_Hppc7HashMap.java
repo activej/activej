@@ -9,7 +9,7 @@ import io.activej.serializer.impl.SerializerDef_RegularMap;
 import java.util.function.BinaryOperator;
 
 import static io.activej.codegen.expression.Expression.*;
-import static io.activej.serializer.examples.SerializerBuilderUtils.capitalize;
+import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
 public final class SerializerDef_Hppc7HashMap extends SerializerDef_RegularMap {

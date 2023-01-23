@@ -22,20 +22,20 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("Convert2Diamond")
-public class SerializerBuilder2Test {
+public class SerializerFactory2Test {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	public static <T> T doTest(Class<T> type, T testData1) {
-		return io.activej.serializer.Utils.doTest(testData1, createBuilder().build(type));
+		return io.activej.serializer.Utils.doTest(testData1, createBuilder().create(type));
 	}
 
 	public static <T> T doTest(TypeT<T> type, T testData1) {
-		return io.activej.serializer.Utils.doTest(testData1, createBuilder().build(type.getAnnotatedType()));
+		return io.activej.serializer.Utils.doTest(testData1, createBuilder().create(type.getAnnotatedType()));
 	}
 
-	private static SerializerBuilder createBuilder() {
-		return SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+	private static SerializerFactory createBuilder() {
+		return SerializerFactory.builder(DEFINING_CLASS_LOADER)
 				.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class))
 				.build();
 	}

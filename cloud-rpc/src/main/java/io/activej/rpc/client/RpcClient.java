@@ -49,7 +49,7 @@ import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -152,7 +152,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
 		private List<Class<?>> messageTypes;
-		private SerializerBuilder serializerBuilder = SerializerBuilder.create(
+		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance(
 				DefiningClassLoader.create(
 						Thread.currentThread().getContextClassLoader()
 				)
@@ -162,7 +162,7 @@ public final class RpcClient extends AbstractNioReactive
 
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
-			this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
+			this.serializerFactory = SerializerFactory.defaultInstance(DefiningClassLoader.create(classLoader));
 			return this;
 		}
 
@@ -203,15 +203,15 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Creates a client with serializer builder. A serializer builder is used
+		 * Creates a client with serializer factory. A serializer factory is used
 		 * for creating fast serializers at runtime.
 		 *
-		 * @param serializerBuilder serializer builder, used at runtime
-		 * @return builder for the RPC client with provided serializer builder
+		 * @param serializerFactory serializer factory, used at runtime
+		 * @return builder for the RPC client with provided serializer factory
 		 */
-		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
+		public Builder withSerializerFactory(SerializerFactory serializerFactory) {
 			checkNotBuilt(this);
-			this.serializerBuilder = serializerBuilder;
+			this.serializerFactory = serializerFactory;
 			return this;
 		}
 
@@ -287,8 +287,8 @@ public final class RpcClient extends AbstractNioReactive
 		@Override
 		protected RpcClient doBuild() {
 			Checks.checkNotNull(messageTypes, "Message types must be specified");
-			serializerBuilder.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
-			serializer = serializerBuilder.build(RpcMessage.class);
+			serializerFactory.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
+			serializer = serializerFactory.create(RpcMessage.class);
 			return RpcClient.this;
 		}
 	}

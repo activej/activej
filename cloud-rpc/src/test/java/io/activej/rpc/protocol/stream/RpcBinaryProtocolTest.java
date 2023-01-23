@@ -15,7 +15,7 @@ import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -84,10 +84,10 @@ public final class RpcBinaryProtocolTest {
 
 	@Test
 	public void testCompression() {
-		BinarySerializer<RpcMessage> binarySerializer = SerializerBuilder.builder()
+		BinarySerializer<RpcMessage> binarySerializer = SerializerFactory.builder()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(String.class))
 				.build()
-				.build(RpcMessage.class);
+				.create(RpcMessage.class);
 
 		int countRequests = 10;
 

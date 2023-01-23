@@ -22,7 +22,7 @@ import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,7 +62,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
-		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER).build(LogItem.class);
+		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance(CLASS_LOADER).create(LogItem.class);
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
 		multilog = Multilog.create(reactor,
@@ -106,7 +106,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				FrameFormat_LZ4.create(),
-				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
+				SerializerFactory.defaultInstance(CLASS_LOADER).create(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);

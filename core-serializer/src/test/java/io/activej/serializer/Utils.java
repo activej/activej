@@ -6,8 +6,8 @@ public final class Utils {
 	public static final DefiningClassLoader DEFINING_CLASS_LOADER = DefiningClassLoader.create();
 
 	public static <T> T doTest(Class<T> type, T testData) {
-		BinarySerializer<T> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.build(type);
+		BinarySerializer<T> serializer = SerializerFactory.defaultInstance(DEFINING_CLASS_LOADER)
+				.create(type);
 		return doTest(testData, serializer);
 	}
 

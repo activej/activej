@@ -28,7 +28,7 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 
 import java.time.Duration;
 
@@ -52,7 +52,7 @@ public class MemcacheClientModule extends AbstractModule {
 								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
 								.build())
 				.withMessageTypes(MemcacheRpcMessage.MESSAGE_TYPES)
-				.withSerializerBuilder(SerializerBuilder.builder()
+				.withSerializerFactory(SerializerFactory.builder()
 						.with(Slice.class, ctx -> new SerializerDef_Slice())
 						.build())
 				.withStreamProtocol(

@@ -64,7 +64,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Scans fields of classes for serialization.
  */
-public final class SerializerBuilder {
+public final class SerializerFactory {
 	private final DefiningClassLoader classLoader;
 
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
@@ -84,36 +84,36 @@ public final class SerializerBuilder {
 
 	private final Map<Class<? extends Annotation>, Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>>> annotationAliases = new HashMap<>();
 
-	private SerializerBuilder(DefiningClassLoader classLoader) {
+	private SerializerFactory(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
 	/**
-	 * Creates a new instance of {@code SerializerBuilder} with newly created {@link DefiningClassLoader}
+	 * Creates a new instance of {@link  SerializerFactory} with newly created {@link DefiningClassLoader}
 	 */
-	public static SerializerBuilder create() {
+	public static SerializerFactory defaultInstance() {
 		return builder().build();
 	}
 
 	/**
-	 * Creates a new instance of {@code SerializerBuilder} with external {@link DefiningClassLoader}
+	 * Creates a new instance of {@link  SerializerFactory} with external {@link DefiningClassLoader}
 	 */
-	public static SerializerBuilder create(DefiningClassLoader definingClassLoader) {
+	public static SerializerFactory defaultInstance(DefiningClassLoader definingClassLoader) {
 		return builder(definingClassLoader).build();
 	}
 
 	/**
-	 * Creates a builder of {@code SerializerBuilder} with newly created {@link DefiningClassLoader}
+	 * Creates a builder of {@link  SerializerFactory} with newly created {@link DefiningClassLoader}
 	 */
 	public static Builder builder() {
 		return builder(DefiningClassLoader.create());
 	}
 
 	/**
-	 * Creates a builder of {@code SerializerBuilder} with external {@link DefiningClassLoader}
+	 * Creates a builder of {@link  SerializerFactory} with external {@link DefiningClassLoader}
 	 */
 	public static Builder builder(DefiningClassLoader definingClassLoader) {
-		SerializerBuilder.Builder builder = new SerializerBuilder(definingClassLoader).new Builder();
+		SerializerFactory.Builder builder = new SerializerFactory(definingClassLoader).new Builder();
 
 		builder
 				.with(boolean.class, ctx -> new SerializerDef_Boolean(false))
@@ -193,7 +193,7 @@ public final class SerializerBuilder {
 		return builder;
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, SerializerBuilder> {
+	public final class Builder extends AbstractBuilder<Builder, SerializerFactory> {
 		private Builder() {}
 
 		/**
@@ -276,7 +276,7 @@ public final class SerializerBuilder {
 		 */
 		public Builder withImplementationClass(Class<?> implementationClass) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.implementationClass = implementationClass;
+			SerializerFactory.this.implementationClass = implementationClass;
 			return this;
 		}
 
@@ -288,7 +288,7 @@ public final class SerializerBuilder {
 		 */
 		public Builder withCompatibilityLevel(CompatibilityLevel compatibilityLevel) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.compatibilityLevel = compatibilityLevel;
+			SerializerFactory.this.compatibilityLevel = compatibilityLevel;
 			return this;
 		}
 
@@ -312,7 +312,7 @@ public final class SerializerBuilder {
 		 */
 		public Builder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.annotationsCompatibilityMode = annotationsCompatibilityMode;
+			SerializerFactory.this.annotationsCompatibilityMode = annotationsCompatibilityMode;
 			return this;
 		}
 
@@ -342,7 +342,7 @@ public final class SerializerBuilder {
 		 */
 		public Builder withEncodeVersion(int encodeVersionMax) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.encodeVersionMax = encodeVersionMax;
+			SerializerFactory.this.encodeVersionMax = encodeVersionMax;
 			return this;
 		}
 
@@ -357,8 +357,8 @@ public final class SerializerBuilder {
 		 */
 		public Builder withDecodeVersions(int decodeVersionMin, int decodeVersionMax) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.decodeVersionMin = decodeVersionMin;
-			SerializerBuilder.this.decodeVersionMax = decodeVersionMax;
+			SerializerFactory.this.decodeVersionMin = decodeVersionMin;
+			SerializerFactory.this.decodeVersionMax = decodeVersionMax;
 			return this;
 		}
 
@@ -374,9 +374,9 @@ public final class SerializerBuilder {
 		 */
 		public Builder withVersions(int encodeVersionMax, int decodeVersionMin, int decodeVersionMax) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.encodeVersionMax = encodeVersionMax;
-			SerializerBuilder.this.decodeVersionMin = decodeVersionMin;
-			SerializerBuilder.this.decodeVersionMax = decodeVersionMax;
+			SerializerFactory.this.encodeVersionMax = encodeVersionMax;
+			SerializerFactory.this.decodeVersionMin = decodeVersionMin;
+			SerializerFactory.this.decodeVersionMax = decodeVersionMax;
 			return this;
 		}
 
@@ -388,8 +388,8 @@ public final class SerializerBuilder {
 		 */
 		public Builder withAutoOrdering(int autoOrderingStart, int autoOrderingStride) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.autoOrderingStart = autoOrderingStart;
-			SerializerBuilder.this.autoOrderingStride = autoOrderingStride;
+			SerializerFactory.this.autoOrderingStart = autoOrderingStart;
+			SerializerFactory.this.autoOrderingStride = autoOrderingStride;
 			return this;
 		}
 
@@ -400,7 +400,7 @@ public final class SerializerBuilder {
 		 */
 		public Builder withProfile(String profile) {
 			checkNotBuilt(this);
-			SerializerBuilder.this.profile = profile;
+			SerializerFactory.this.profile = profile;
 			return this;
 		}
 
@@ -433,8 +433,8 @@ public final class SerializerBuilder {
 		}
 
 		@Override
-		protected SerializerBuilder doBuild() {
-			return SerializerBuilder.this;
+		protected SerializerFactory doBuild() {
+			return SerializerFactory.this;
 		}
 
 		@SuppressWarnings("unchecked")
@@ -513,74 +513,74 @@ public final class SerializerBuilder {
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #build(AnnotatedType)
+	 * @see #create(AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> build(Type type) {
-		return build(annotatedTypeOf(type));
+	public <T> BinarySerializer<T> create(Type type) {
+		return create(annotatedTypeOf(type));
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #build(AnnotatedType)
+	 * @see #create(AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> build(Class<T> type) {
-		return build(annotatedTypeOf(type));
+	public <T> BinarySerializer<T> create(Class<T> type) {
+		return create(annotatedTypeOf(type));
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #build(AnnotatedType)
+	 * @see #create(AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> build(TypeT<T> typeT) {
-		return build(typeT.getAnnotatedType());
+	public <T> BinarySerializer<T> create(TypeT<T> typeT) {
+		return create(typeT.getAnnotatedType());
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 * <p>
 	 *
 	 * @param type a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> build(AnnotatedType type) {
+	public <T> BinarySerializer<T> create(AnnotatedType type) {
 		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
 		ClassBuilder<BinarySerializer<T>> classBuilder = toClassBuilder(serializer);
 		return classBuilder.defineClassAndCreateInstance(classLoader);
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #build(String, AnnotatedType)
+	 * @see #create(String, AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> build(String className, Type type) {
-		return build(className, annotatedTypeOf(type));
+	public <T> BinarySerializer<T> create(String className, Type type) {
+		return create(className, annotatedTypeOf(type));
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #build(String, AnnotatedType)
+	 * @see #create(String, AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> build(String className, Class<T> type) {
-		return build(className, annotatedTypeOf(type));
+	public <T> BinarySerializer<T> create(String className, Class<T> type) {
+		return create(className, annotatedTypeOf(type));
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #build(String, AnnotatedType)
+	 * @see #create(String, AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> build(String className, TypeT<T> typeT) {
-		return build(className, typeT.getAnnotatedType());
+	public <T> BinarySerializer<T> create(String className, TypeT<T> typeT) {
+		return create(className, typeT.getAnnotatedType());
 	}
 
 	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 * <p>
 	 * A built serializer would have a class name equal to the one that passed to this method.
 	 * <p>
@@ -593,7 +593,7 @@ public final class SerializerBuilder {
 	 * @param type      a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> build(String className, AnnotatedType type) {
+	public <T> BinarySerializer<T> create(String className, AnnotatedType type) {
 		return classLoader.ensureClassAndCreateInstance(
 				className,
 				() -> {
@@ -608,7 +608,7 @@ public final class SerializerBuilder {
 	 * @param serializer a {@link SerializerDef} that would be used to create a {@link BinarySerializer}
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> build(SerializerDef serializer) {
+	public <T> BinarySerializer<T> create(SerializerDef serializer) {
 		//noinspection unchecked
 		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(DefiningClassLoader.create());
 	}
@@ -1040,7 +1040,7 @@ public final class SerializerBuilder {
 
 	private FoundSerializer tryAddField(Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings,
 			Field field) {
-		SerializerBuilder.FoundSerializer result = findAnnotations(field, field.getAnnotations());
+		SerializerFactory.FoundSerializer result = findAnnotations(field, field.getAnnotations());
 		if (result == null) {
 			return null;
 		}

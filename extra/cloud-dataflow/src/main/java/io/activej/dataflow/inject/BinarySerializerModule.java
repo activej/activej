@@ -25,7 +25,7 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.types.Types;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -79,10 +79,10 @@ public final class BinarySerializerModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializerLocator serializerLocator(Injector injector, OptionalDependency<SerializerBuilder> optionalSerializerBuilder) {
+	BinarySerializerLocator serializerLocator(Injector injector, OptionalDependency<SerializerFactory> optionalSerializerFactory) {
 		BinarySerializerLocator locator = new BinarySerializerLocator(injector);
-		if (optionalSerializerBuilder.isPresent()) {
-			locator.builder = optionalSerializerBuilder.get();
+		if (optionalSerializerFactory.isPresent()) {
+			locator.builder = optionalSerializerFactory.get();
 		}
 		return locator;
 	}
@@ -96,7 +96,7 @@ public final class BinarySerializerModule extends AbstractModule {
 		private final Map<Type, BinarySerializer<?>> serializers = new HashMap<>();
 
 		private Map<Type, Key<BinarySerializer<?>>> transientSerializers;
-		private @Nullable SerializerBuilder builder = null;
+		private @Nullable SerializerFactory builder = null;
 
 		private final Injector injector;
 
@@ -126,9 +126,9 @@ public final class BinarySerializerModule extends AbstractModule {
 			return (BinarySerializer<T>) serializers.computeIfAbsent(type, $ -> {
 				logger.trace("Creating serializer for {}", type);
 				if (builder == null) {
-					builder = SerializerBuilder.create();
+					builder = SerializerFactory.defaultInstance();
 				}
-				return builder.build(type);
+				return builder.create(type);
 			});
 		}
 	}

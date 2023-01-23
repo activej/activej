@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 
 /**
- * An example of writing a {@link SerializerDef} for a LocalDate and attaching it to a {@link SerializerBuilder}
+ * An example of writing a {@link SerializerDef} for a LocalDate and attaching it to a {@link SerializerFactory}
  * <p>
  * This example can be used as a guideline of how to write custom serializers for arbitrary classes
  * <p>
@@ -21,10 +21,10 @@ public final class LocalDateSerializerExample {
 	public static void main(String[] args) {
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
-				SerializerBuilder.builder()
+				SerializerFactory.builder()
 						.with(LocalDate.class, ctx -> new SerializerDef_LocalDate())
 						.build()
-						.build(LocalDateHolder.class);
+						.create(LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
 
 		byte[] array = new byte[1024];

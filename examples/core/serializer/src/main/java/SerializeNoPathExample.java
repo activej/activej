@@ -1,6 +1,6 @@
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
@@ -37,8 +37,8 @@ public class SerializeNoPathExample {
 	public static void main(String[] args) {
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
 		//[START Serializer]
-		BinarySerializer<Storage> serializer = SerializerBuilder.create(definingClassLoader)
-				.build(Storage.class);
+		BinarySerializer<Storage> serializer = SerializerFactory.defaultInstance(definingClassLoader)
+				.create(Storage.class);
 		//[END Serializer]
 
 		Storage storage = new Storage();

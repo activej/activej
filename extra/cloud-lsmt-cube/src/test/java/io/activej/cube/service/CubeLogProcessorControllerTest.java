@@ -29,7 +29,7 @@ import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -92,8 +92,8 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
-		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
-				.build(LogItem.class);
+		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance(CLASS_LOADER)
+				.create(LogItem.class);
 		multilog = Multilog.create(reactor, logsFileSystem, FrameFormat_LZ4.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(

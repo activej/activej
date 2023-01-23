@@ -1,7 +1,7 @@
 package io.activej.rpc.protocol;
 
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerBuilder;
+import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -32,10 +32,10 @@ public final class RpcMessageSerializeTest {
 	public void testRpcMessage() {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
 		RpcMessage message1 = RpcMessage.of(1, messageData1);
-		BinarySerializer<RpcMessage> serializer = SerializerBuilder.builder()
+		BinarySerializer<RpcMessage> serializer = SerializerFactory.builder()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(TestRpcMessageData.class, TestRpcMessageData2.class))
 				.build()
-				.build(RpcMessage.class);
+				.create(RpcMessage.class);
 
 		byte[] buf = new byte[1000];
 		serializer.encode(buf, 0, message1);
