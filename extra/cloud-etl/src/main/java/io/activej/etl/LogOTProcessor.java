@@ -19,7 +19,6 @@ package io.activej.etl;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.datastream.processor.StreamUnion;
@@ -51,7 +50,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public final class LogOTProcessor<T, D> extends AbstractReactive
-		implements ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
+		implements ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
 	private final AsyncMultilog<T> multilog;

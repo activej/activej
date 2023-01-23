@@ -18,7 +18,6 @@ package io.activej.datastream.processor;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.reactor.ImplicitlyReactive;
 
@@ -29,7 +28,7 @@ import static java.lang.Integer.numberOfLeadingZeros;
 /**
  * A stream transformer that changes each item according to given function.
  */
-public final class StreamBuffer<T> extends ImplicitlyReactive implements StreamTransformer<T, T>, WithInitializer<StreamBuffer<T>> {
+public final class StreamBuffer<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	private static final boolean CHECKS = Checks.isEnabled(StreamBuffer.class);
 	private static final boolean NULLIFY_ON_TAKE_OUT = ApplicationSettings.getBoolean(StreamBuffer.class, "nullifyOnTakeOut", true);
 

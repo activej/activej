@@ -16,7 +16,6 @@
 
 package io.activej.aggregation;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -26,7 +25,7 @@ import java.util.Set;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChunkLocker_NoOp<C> extends AbstractReactive
-		implements AsyncChunkLocker<C>, WithInitializer<ChunkLocker_NoOp<C>> {
+		implements AsyncChunkLocker<C> {
 
 	private ChunkLocker_NoOp(Reactor reactor) {
 		super(reactor);

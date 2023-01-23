@@ -16,7 +16,6 @@
 
 package io.activej.http.session;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
@@ -39,7 +38,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * could then receive and use it.
  */
 public final class Servlet_Session<T> extends AbstractReactive
-		implements AsyncServlet, WithInitializer<Servlet_Session<T>> {
+		implements AsyncServlet {
 	private final AsyncSessionStore<T> store;
 	private final Function<HttpRequest, String> sessionIdExtractor;
 	private final AsyncServlet publicServlet;

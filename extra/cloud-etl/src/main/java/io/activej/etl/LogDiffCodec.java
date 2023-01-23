@@ -20,7 +20,6 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.NumberConverter;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.repository.JsonIndentUtils;
@@ -32,7 +31,7 @@ import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.serialize;
 
 @SuppressWarnings({"unchecked", "rawtypes", "NullableProblems"})
-public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObject<LogDiff<D>>, WithInitializer<LogDiffCodec<D>> {
+public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObject<LogDiff<D>> {
 	public static final String POSITIONS = "positions";
 	public static final String LOG = "log";
 	public static final String FROM = "from";

@@ -20,7 +20,6 @@ import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -47,7 +46,7 @@ import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
  * <p>
  * It allows SSL connections using Java {@link SSLEngine}.
  */
-public final class TcpSocket_Ssl extends AbstractNioReactive implements AsyncTcpSocket, WithInitializer<TcpSocket_Ssl> {
+public final class TcpSocket_Ssl extends AbstractNioReactive implements AsyncTcpSocket {
 	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(TcpSocket_Ssl.class, "errorOnCloseWithoutNotify", false);
 
 	private final SSLEngine engine;

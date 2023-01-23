@@ -17,13 +17,12 @@
 package io.activej.cube;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.initializer.WithInitializer;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean, WithInitializer<CubeClassLoaderCache> {
+public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
 	record Key(Set<String> attributes, Set<String> measures, Set<String> filterDimensions) {}
 
 	private final DefiningClassLoader rootClassLoader;

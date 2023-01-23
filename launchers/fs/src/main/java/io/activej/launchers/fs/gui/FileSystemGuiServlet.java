@@ -20,7 +20,6 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.AsyncFileSystem;
@@ -46,7 +45,7 @@ import static io.activej.http.HttpResponse.redirect302;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
-public final class FileSystemGuiServlet implements WithInitializer<FileSystemGuiServlet> {
+public final class FileSystemGuiServlet {
 	private static final String HIDDEN_FILE = ".EMPTY";
 
 	private FileSystemGuiServlet() {

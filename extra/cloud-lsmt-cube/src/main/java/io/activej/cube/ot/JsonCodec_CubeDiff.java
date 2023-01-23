@@ -23,7 +23,6 @@ import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.JsonCodec_AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.Cube;
 
 import java.io.IOException;
@@ -33,7 +32,7 @@ import java.util.Map;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff>, WithInitializer<JsonCodec_CubeDiff> {
+public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff> {
 	private final Map<String, JsonCodec_AggregationDiff> aggregationDiffCodecs;
 
 	private JsonCodec_CubeDiff(Map<String, JsonCodec_AggregationDiff> aggregationDiffCodecs) {

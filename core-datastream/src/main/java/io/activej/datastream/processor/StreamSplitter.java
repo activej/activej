@@ -16,7 +16,6 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutputs;
@@ -39,7 +38,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * @param <O> type of output items
  */
 @SuppressWarnings("unchecked")
-public final class StreamSplitter<I, O> extends ImplicitlyReactive implements HasStreamInput<I>, HasStreamOutputs<O>, WithInitializer<StreamSplitter<I, O>> {
+public final class StreamSplitter<I, O> extends ImplicitlyReactive implements HasStreamInput<I>, HasStreamOutputs<O> {
 	private final Function<StreamDataAcceptor<O>[], StreamDataAcceptor<I>> acceptorFactory;
 	private final Input input;
 	private final List<Output> outputs = new ArrayList<>();

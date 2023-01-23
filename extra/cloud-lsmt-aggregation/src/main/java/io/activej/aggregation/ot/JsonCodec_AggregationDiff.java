@@ -23,7 +23,6 @@ import io.activej.aggregation.JsonCodec_AggregationChunk;
 import io.activej.aggregation.JsonCodec_PrimaryKey;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.util.JsonCodec;
-import io.activej.common.initializer.WithInitializer;
 
 import java.io.IOException;
 import java.util.Set;
@@ -31,7 +30,7 @@ import java.util.Set;
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.ot.repository.JsonIndentUtils.oneline;
 
-public class JsonCodec_AggregationDiff implements JsonCodec<AggregationDiff>, WithInitializer<JsonCodec_AggregationDiff> {
+public class JsonCodec_AggregationDiff implements JsonCodec<AggregationDiff> {
 	public static final String ADDED = "added";
 	public static final String REMOVED = "removed";
 

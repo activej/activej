@@ -16,13 +16,12 @@
 
 package io.activej.jmx;
 
-import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ProtoObjectName implements WithInitializer<ProtoObjectName> {
+public final class ProtoObjectName {
 	private final @Nullable String className;
 	private final String packageName;
 	private final @Nullable Object qualifier;

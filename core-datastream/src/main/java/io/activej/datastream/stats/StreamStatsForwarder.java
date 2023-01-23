@@ -16,12 +16,11 @@
 
 package io.activej.datastream.stats;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.reactor.ImplicitlyReactive;
 
-public class StreamStatsForwarder<T> extends ImplicitlyReactive implements StreamTransformer<T, T>, WithInitializer<StreamStatsForwarder<T>> {
+public final class StreamStatsForwarder<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	private final Input input;
 	private final Output output;
 

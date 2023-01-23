@@ -16,14 +16,12 @@
 
 package io.activej.aggregation;
 
-import io.activej.common.initializer.WithInitializer;
-
 import java.util.*;
 
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Collections.unmodifiableSortedMap;
 
-public final class RangeTree<K, V> implements WithInitializer<RangeTree<K, V>> {
+public final class RangeTree<K, V> {
 
 	public static final class Segment<V> {
 		private final LinkedHashSet<V> set = new LinkedHashSet<>();

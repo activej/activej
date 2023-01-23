@@ -398,7 +398,7 @@ public final class ClassBuilder<T> {
 	 * @see GeneratedBytecode
 	 */
 	public GeneratedBytecode toBytecode(ClassLoader classLoader, String className) {
-		DefiningClassWriter cw = DefiningClassWriter.create(classLoader);
+		DefiningClassWriter cw = new DefiningClassWriter(classLoader);
 
 		Type classType = getType('L' + className.replace('.', '/') + ';');
 

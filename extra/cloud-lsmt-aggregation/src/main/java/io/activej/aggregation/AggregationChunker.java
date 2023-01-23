@@ -20,7 +20,6 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
 import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.ForwardingStreamConsumer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerSwitcher;
@@ -31,7 +30,7 @@ import io.activej.promise.SettablePromise;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> implements WithInitializer<AggregationChunker<C, T>> {
+public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> {
 	private final StreamConsumerSwitcher<T> switcher;
 	private final SettablePromise<List<AggregationChunk>> result = new SettablePromise<>();
 

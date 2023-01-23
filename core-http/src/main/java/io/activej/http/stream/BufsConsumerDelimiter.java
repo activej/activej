@@ -18,7 +18,6 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -35,8 +34,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * limiting the number of bytes that is sent/received by its peer.
  */
 public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerDelimiter, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerDelimiter>,
-		WithInitializer<BufsConsumerDelimiter> {
+		implements WithChannelTransformer<BufsConsumerDelimiter, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerDelimiter> {
 
 	private ByteBufs bufs;
 	private BinaryChannelSupplier input;

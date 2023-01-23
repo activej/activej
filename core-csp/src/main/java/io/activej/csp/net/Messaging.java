@@ -20,7 +20,6 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
@@ -34,7 +33,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
-public final class Messaging<I, O> extends AbstractAsyncCloseable implements AsyncMessaging<I, O>, WithInitializer<Messaging<I, O>> {
+public final class Messaging<I, O> extends AbstractAsyncCloseable implements AsyncMessaging<I, O> {
 	private final AsyncTcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;

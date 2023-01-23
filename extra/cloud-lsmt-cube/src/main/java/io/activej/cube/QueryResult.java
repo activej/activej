@@ -17,14 +17,13 @@
 package io.activej.cube;
 
 import io.activej.common.Utils;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 
 import java.util.List;
 import java.util.Map;
 
-public final class QueryResult implements WithInitializer<QueryResult> {
+public final class QueryResult {
 	private final RecordScheme recordScheme;
 	private final List<String> attributes;
 	private final List<String> measures;

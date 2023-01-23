@@ -18,7 +18,6 @@ package io.activej.async.executor;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.reactor.Reactor;
 
 import java.util.concurrent.CompletableFuture;
@@ -35,7 +34,7 @@ import static io.activej.common.exception.FatalErrorHandlers.handleError;
  * blocking when the queue is filled until some task completes and
  * frees place for a new ones.
  */
-public final class BlockingReactorExecutor implements ReactorExecutor, WithInitializer<BlockingReactorExecutor> {
+public final class BlockingReactorExecutor implements ReactorExecutor {
 	private final ReactorExecutor reactorExecutor;
 	private final Lock lock = new ReentrantLock();
 	private final Condition notFull = lock.newCondition();

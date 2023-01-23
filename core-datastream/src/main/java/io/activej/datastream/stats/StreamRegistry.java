@@ -17,7 +17,6 @@
 package io.activej.datastream.stats;
 
 import io.activej.common.Utils;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
@@ -37,7 +36,7 @@ import java.util.function.UnaryOperator;
 
 import static java.lang.System.currentTimeMillis;
 
-public final class StreamRegistry<V> implements Iterable<V>, WithInitializer<StreamRegistry<V>> {
+public final class StreamRegistry<V> implements Iterable<V> {
 	private final IntrusiveLinkedList<Entry<V>> list = new IntrusiveLinkedList<>();
 
 	private static class Entry<T> {

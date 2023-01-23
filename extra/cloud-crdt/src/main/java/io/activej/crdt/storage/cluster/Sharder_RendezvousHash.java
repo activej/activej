@@ -18,7 +18,6 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.HashUtils;
-import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -26,7 +25,7 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 
-public final class Sharder_RendezvousHash<K> implements Sharder<K>, WithInitializer<Sharder_RendezvousHash<K>> {
+public final class Sharder_RendezvousHash<K> implements Sharder<K> {
 	public static final int NUMBER_OF_BUCKETS = ApplicationSettings.getInt(Sharder_RendezvousHash.class, "numberOfBuckets", 512);
 
 	static {
@@ -36,7 +35,7 @@ public final class Sharder_RendezvousHash<K> implements Sharder<K>, WithInitiali
 	final int[][] buckets;
 	final ToIntFunction<K> keyHashFn;
 
-	Sharder_RendezvousHash(int[][] buckets, ToIntFunction<K> keyHashFn) {
+	private Sharder_RendezvousHash(int[][] buckets, ToIntFunction<K> keyHashFn) {
 		this.buckets = buckets;
 		this.keyHashFn = keyHashFn;
 	}

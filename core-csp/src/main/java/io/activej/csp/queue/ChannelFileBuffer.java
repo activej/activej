@@ -19,7 +19,6 @@ package io.activej.csp.queue;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
@@ -40,7 +39,7 @@ import java.util.concurrent.Executor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardOpenOption.*;
 
-public final class ChannelFileBuffer extends ImplicitlyReactive implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
+public final class ChannelFileBuffer extends ImplicitlyReactive implements ChannelQueue<ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileBuffer.class);
 	private static final boolean CHECKS = Checks.isEnabled(ChannelFileBuffer.class);
 

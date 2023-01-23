@@ -20,7 +20,6 @@ import io.activej.aggregation.fieldtype.FieldTypes;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.initializer.WithInitializer;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
@@ -30,7 +29,7 @@ import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.isWrapperType;
 import static org.objectweb.asm.Type.*;
 
-public final class MeasureHyperLogLog extends Measure implements WithInitializer<MeasureHyperLogLog> {
+public final class MeasureHyperLogLog extends Measure {
 	private final int registers;
 
 	private MeasureHyperLogLog(int registers) {

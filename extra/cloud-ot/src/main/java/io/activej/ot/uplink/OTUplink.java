@@ -18,7 +18,6 @@ package io.activej.ot.uplink;
 
 import io.activej.async.function.AsyncPredicate;
 import io.activej.common.function.FunctionEx;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import io.activej.ot.OTCommit;
@@ -46,7 +45,7 @@ import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class OTUplink<K, D, PC> extends AbstractReactive
-		implements AsyncOTUplink<K, D, PC>, WithInitializer<OTUplink<K, D, PC>> {
+		implements AsyncOTUplink<K, D, PC> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplink.class);
 
 	private final OTSystem<D> otSystem;

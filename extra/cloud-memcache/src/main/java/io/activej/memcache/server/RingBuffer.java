@@ -20,7 +20,6 @@ import com.carrotsearch.hppc.IntLongHashMap;
 import com.carrotsearch.hppc.LongLongHashMap;
 import com.carrotsearch.hppc.ObjectLongHashMap;
 import io.activej.common.Checks;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.stats.EventStats;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 
@@ -37,7 +36,7 @@ import static java.lang.System.currentTimeMillis;
  * It works like a cache, when you use it you shouldn't rely on the result,
  * because it can be rewritten by the new data when it overfills
  */
-public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBuffer> {
+public final class RingBuffer implements RingBufferMBean {
 	private static final boolean CHECKS = Checks.isEnabled(RingBuffer.class);
 
 	/**

@@ -19,7 +19,6 @@ package io.activej.cube.service;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -50,7 +49,7 @@ import static io.activej.ot.OTAlgorithms.checkout;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CubeBackupController<K, D, C> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
+		implements ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);

@@ -16,19 +16,14 @@
 
 package io.activej.codegen.util;
 
-import io.activej.common.initializer.WithInitializer;
 import org.objectweb.asm.ClassWriter;
 
-public final class DefiningClassWriter extends ClassWriter implements WithInitializer<DefiningClassWriter> {
+public final class DefiningClassWriter extends ClassWriter {
 	private final ClassLoader classLoader;
 
-	private DefiningClassWriter(ClassLoader classLoader) {
+	public DefiningClassWriter(ClassLoader classLoader) {
 		super(ClassWriter.COMPUTE_FRAMES);
 		this.classLoader = classLoader;
-	}
-
-	public static DefiningClassWriter create(ClassLoader classLoader) {
-		return new DefiningClassWriter(classLoader);
 	}
 
 	@Override

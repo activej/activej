@@ -18,7 +18,6 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -31,7 +30,7 @@ import java.time.Duration;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CrdtRepartitionController<K extends Comparable<K>, S, P> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
+		implements ReactiveJmxBeanWithStats {
 	private final P localPartitionId;
 	private final CrdtStorage_Cluster<K, S, P> cluster;
 

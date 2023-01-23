@@ -16,7 +16,6 @@
 
 package io.activej.jmx.stats;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +24,7 @@ import java.util.List;
 
 import static java.lang.System.currentTimeMillis;
 
-public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsWithReset, WithInitializer<ExceptionStats> {
+public final class ExceptionStats implements JmxStats<ExceptionStats>, JmxStatsWithReset {
 	private static final long DETAILS_REFRESH_TIMEOUT = 1000L;
 
 	private @Nullable Class<? extends Throwable> exceptionClass;

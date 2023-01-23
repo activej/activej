@@ -19,7 +19,6 @@ package io.activej.aggregation;
 import com.dslplatform.json.*;
 import com.dslplatform.json.JsonReader.ReadObject;
 import io.activej.aggregation.util.JsonCodec;
-import io.activej.common.initializer.WithInitializer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ import java.util.Set;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class JsonCodec_AggregationChunk implements JsonCodec<AggregationChunk>, WithInitializer<JsonCodec_AggregationChunk> {
+public class JsonCodec_AggregationChunk implements JsonCodec<AggregationChunk> {
 	public static final String ID = "id";
 	public static final String MIN = "min";
 	public static final String MAX = "max";

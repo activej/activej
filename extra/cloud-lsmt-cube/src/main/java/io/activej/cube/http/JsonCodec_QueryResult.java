@@ -23,7 +23,6 @@ import com.dslplatform.json.NumberConverter;
 import com.dslplatform.json.StringConverter;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.QueryResult;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -39,7 +38,7 @@ import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
-final class JsonCodec_QueryResult implements JsonCodec<QueryResult>, WithInitializer<JsonCodec_QueryResult> {
+final class JsonCodec_QueryResult implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";
 	private static final String ATTRIBUTES_FIELD = "attributes";
 	private static final String FILTER_ATTRIBUTES_FIELD = "filterAttributes";
@@ -57,7 +56,7 @@ final class JsonCodec_QueryResult implements JsonCodec<QueryResult>, WithInitial
 
 	private final DefiningClassLoader classLoader;
 
-	public JsonCodec_QueryResult(DefiningClassLoader classLoader,
+	private JsonCodec_QueryResult(DefiningClassLoader classLoader,
 			Map<String, JsonCodec<Object>> attributeCodecs, Map<String, JsonCodec<Object>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
 		this.classLoader = classLoader;
 		this.attributeCodecs = attributeCodecs;

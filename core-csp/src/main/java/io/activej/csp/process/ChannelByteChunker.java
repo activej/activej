@@ -19,15 +19,13 @@ package io.activej.csp.process;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.min;
 
-public final class ChannelByteChunker extends AbstractChannelTransformer<ChannelByteChunker, ByteBuf, ByteBuf>
-		implements WithInitializer<ChannelByteChunker> {
+public final class ChannelByteChunker extends AbstractChannelTransformer<ChannelByteChunker, ByteBuf, ByteBuf> {
 	private final ByteBufs bufs = new ByteBufs();
 
 	private final int minChunkSize;

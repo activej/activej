@@ -21,13 +21,12 @@ import com.dslplatform.json.JsonWriter;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.JsonCodec;
-import io.activej.common.initializer.WithInitializer;
 
 import java.io.IOException;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class JsonCodec_PrimaryKey implements JsonCodec<PrimaryKey>, WithInitializer<JsonCodec_PrimaryKey> {
+public class JsonCodec_PrimaryKey implements JsonCodec<PrimaryKey> {
 	private final JsonCodec<Object>[] codecs;
 
 	private JsonCodec_PrimaryKey(JsonCodec<Object>[] codecs) {

@@ -1,6 +1,5 @@
 package io.activej.serializer.stream;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryOutput;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,7 +7,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
+public class StreamOutput implements Closeable {
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
 
 	private BinaryOutput out;

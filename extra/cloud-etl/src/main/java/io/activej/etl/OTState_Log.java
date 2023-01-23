@@ -16,7 +16,6 @@
 
 package io.activej.etl;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
 
@@ -26,7 +25,7 @@ import java.util.Map;
 import static io.activej.common.Checks.checkState;
 import static java.util.Collections.unmodifiableMap;
 
-public final class OTState_Log<D> implements OTState<LogDiff<D>>, WithInitializer<OTState_Log<D>> {
+public final class OTState_Log<D> implements OTState<LogDiff<D>> {
 
 	private final Map<String, LogPosition> positions = new HashMap<>();
 	private final OTState<D> dataState;

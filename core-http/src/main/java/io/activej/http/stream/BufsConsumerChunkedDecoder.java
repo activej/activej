@@ -21,7 +21,6 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufs.ByteScanner;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
@@ -44,8 +43,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * data into its raw form.
  */
 public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder>,
-		WithInitializer<BufsConsumerChunkedDecoder> {
+		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder> {
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
 
 	private static final byte[] CRLF = {13, 10};

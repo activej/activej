@@ -16,9 +16,7 @@
 
 package io.activej.reactor.schedule;
 
-import io.activej.common.initializer.WithInitializer;
-
-public final class ScheduledRunnable implements Comparable<ScheduledRunnable>, WithInitializer<ScheduledRunnable> {
+public final class ScheduledRunnable implements Comparable<ScheduledRunnable> {
 	private final long timestamp;
 	private Runnable runnable;
 	private boolean cancelled;

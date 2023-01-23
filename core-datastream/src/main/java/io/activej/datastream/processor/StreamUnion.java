@@ -16,7 +16,6 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
@@ -37,7 +36,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  *
  * @param <T> type of output data
  */
-public final class StreamUnion<T> extends ImplicitlyReactive implements HasStreamOutput<T>, HasStreamInputs, WithInitializer<StreamUnion<T>> {
+public final class StreamUnion<T> extends ImplicitlyReactive implements HasStreamOutput<T>, HasStreamInputs {
 	private final List<Input> inputs = new ArrayList<>();
 	private final Output output;
 	private boolean started;

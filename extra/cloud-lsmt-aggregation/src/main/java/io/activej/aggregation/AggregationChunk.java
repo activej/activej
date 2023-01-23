@@ -16,8 +16,6 @@
 
 package io.activej.aggregation;
 
-import io.activej.common.initializer.WithInitializer;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +23,7 @@ import java.util.Objects;
 import static io.activej.aggregation.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableList;
 
-public class AggregationChunk implements WithInitializer<AggregationChunk> {
+public class AggregationChunk {
 	public static AggregationChunk create(Object chunkId,
 			List<String> fields,
 			PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey,

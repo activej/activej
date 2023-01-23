@@ -16,7 +16,6 @@
 
 package io.activej.trigger;
 
-import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.stats.ExceptionStats;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +28,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkState;
 import static io.activej.jmx.stats.MBeanFormat.formatExceptionMultiline;
 
-public final class TriggerResult implements WithInitializer<TriggerResult> {
+public final class TriggerResult {
 	private static final TriggerResult NONE = new TriggerResult(0, null, null);
 
 	private final long timestamp;
@@ -37,14 +36,14 @@ public final class TriggerResult implements WithInitializer<TriggerResult> {
 	private final Object value;
 	private final int count;
 
-	TriggerResult(long timestamp, @Nullable Throwable e, @Nullable Object value, int count) {
+	private TriggerResult(long timestamp, @Nullable Throwable e, @Nullable Object value, int count) {
 		this.timestamp = timestamp;
 		this.throwable = e;
 		this.value = value;
 		this.count = count;
 	}
 
-	TriggerResult(long timestamp, @Nullable Throwable e, @Nullable Object context) {
+	private TriggerResult(long timestamp, @Nullable Throwable e, @Nullable Object context) {
 		this(timestamp, e, context, 1);
 	}
 
