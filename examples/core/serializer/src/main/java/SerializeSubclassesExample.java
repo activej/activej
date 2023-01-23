@@ -1,3 +1,4 @@
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Serialize;
@@ -33,10 +34,11 @@ public final class SerializeSubclassesExample {
 
 		holder.list.addAll(list);
 
+		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		BinarySerializer<ListHolder> serializer = SerializerFactory.builder()
 				.withSubclasses("list", List.of(subClasses))
 				.build()
-				.create(ListHolder.class);
+				.create(classLoader, ListHolder.class);
 
 		byte[] buffer = new byte[1024];
 		serializer.encode(buffer, 0, holder);

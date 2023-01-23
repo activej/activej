@@ -64,10 +64,10 @@ public class AnnotationAliasesTest {
 		testData1.mapOfNullableInt2NullableString.put(2, null);
 		testData1.mapOfNullableInt2NullableString.put(null, "xyz");
 
-		BinarySerializer<TestDataNullables> serializer = SerializerFactory.builder(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestDataNullables> serializer = SerializerFactory.builder()
 				.withAnnotationAlias(SerializeNullable.class, N.class, n -> CustomAnnotations.serializeNullable())
 				.build()
-				.create(TestDataNullables.class);
+				.create(DEFINING_CLASS_LOADER, TestDataNullables.class);
 		TestDataNullables testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.nullableString1, testData2.nullableString1);

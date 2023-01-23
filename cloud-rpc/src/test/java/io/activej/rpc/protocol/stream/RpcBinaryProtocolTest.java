@@ -1,5 +1,6 @@
 package io.activej.rpc.protocol.stream;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
@@ -87,7 +88,7 @@ public final class RpcBinaryProtocolTest {
 		BinarySerializer<RpcMessage> binarySerializer = SerializerFactory.builder()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(String.class))
 				.build()
-				.create(RpcMessage.class);
+				.create(DefiningClassLoader.create(), RpcMessage.class);
 
 		int countRequests = 10;
 

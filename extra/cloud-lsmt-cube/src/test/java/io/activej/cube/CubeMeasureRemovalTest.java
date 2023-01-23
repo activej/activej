@@ -62,7 +62,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
-		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance(CLASS_LOADER).create(LogItem.class);
+		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class);
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
 		multilog = Multilog.create(reactor,
@@ -106,7 +106,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				FrameFormat_LZ4.create(),
-				SerializerFactory.defaultInstance(CLASS_LOADER).create(LogItem.class),
+				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);

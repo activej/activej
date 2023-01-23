@@ -16,7 +16,6 @@
 
 package io.activej.serializer;
 
-import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 
@@ -68,8 +67,6 @@ public interface SerializerDef {
 		Variable IN = arg(0);
 
 		Decoder define(SerializerDef serializerDef);
-
-		<T> Class<T> buildClass(ClassBuilder<T> classBuilder);
 	}
 
 	interface Encoder {

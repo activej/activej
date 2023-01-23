@@ -24,13 +24,13 @@ public class SerializerFactoryUtils {
 
 	// region creators
 	public static SerializerFactory createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {
-		SerializerFactory.Builder builder = SerializerFactory.builder(definingClassLoader)
+		SerializerFactory.Builder builder = SerializerFactory.builder()
 				.withProfile(profile);
 		return register(builder, definingClassLoader);
 	}
 
 	public static SerializerFactory createWithHppc7Support(DefiningClassLoader definingClassLoader) {
-		SerializerFactory.Builder builder = SerializerFactory.builder(definingClassLoader);
+		SerializerFactory.Builder builder = SerializerFactory.builder();
 		return register(builder, definingClassLoader);
 
 	}

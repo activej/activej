@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.inject;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
@@ -79,8 +80,14 @@ public final class BinarySerializerModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializerLocator serializerLocator(Injector injector, OptionalDependency<SerializerFactory> optionalSerializerFactory) {
-		BinarySerializerLocator locator = new BinarySerializerLocator(injector);
+	BinarySerializerLocator serializerLocator(Injector injector,
+			OptionalDependency<DefiningClassLoader> optionalClassLoader,
+			OptionalDependency<SerializerFactory> optionalSerializerFactory
+	) {
+		DefiningClassLoader classLoader = optionalClassLoader.isPresent() ?
+				optionalClassLoader.get() :
+				DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
+		BinarySerializerLocator locator = new BinarySerializerLocator(injector, classLoader);
 		if (optionalSerializerFactory.isPresent()) {
 			locator.builder = optionalSerializerFactory.get();
 		}
@@ -99,9 +106,11 @@ public final class BinarySerializerModule extends AbstractModule {
 		private @Nullable SerializerFactory builder = null;
 
 		private final Injector injector;
+		private final DefiningClassLoader classLoader;
 
-		public BinarySerializerLocator(Injector injector) {
+		public BinarySerializerLocator(Injector injector, DefiningClassLoader classLoader) {
 			this.injector = injector;
+			this.classLoader = classLoader;
 		}
 
 		public <T> BinarySerializer<T> get(Class<T> cls) {
@@ -128,7 +137,7 @@ public final class BinarySerializerModule extends AbstractModule {
 				if (builder == null) {
 					builder = SerializerFactory.defaultInstance();
 				}
-				return builder.create(type);
+				return builder.create(classLoader, type);
 			});
 		}
 	}

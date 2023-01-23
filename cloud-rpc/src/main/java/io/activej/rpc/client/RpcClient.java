@@ -152,17 +152,14 @@ public final class RpcClient extends AbstractNioReactive
 
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
 		private List<Class<?>> messageTypes;
-		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance(
-				DefiningClassLoader.create(
-						Thread.currentThread().getContextClassLoader()
-				)
-		);
+		private DefiningClassLoader classLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
+		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance();
 
 		private Builder() {}
 
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
-			this.serializerFactory = SerializerFactory.defaultInstance(DefiningClassLoader.create(classLoader));
+			this.classLoader = DefiningClassLoader.create(classLoader);
 			return this;
 		}
 
@@ -288,7 +285,7 @@ public final class RpcClient extends AbstractNioReactive
 		protected RpcClient doBuild() {
 			Checks.checkNotNull(messageTypes, "Message types must be specified");
 			serializerFactory.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
-			serializer = serializerFactory.create(RpcMessage.class);
+			serializer = serializerFactory.create(classLoader, RpcMessage.class);
 			return RpcClient.this;
 		}
 	}

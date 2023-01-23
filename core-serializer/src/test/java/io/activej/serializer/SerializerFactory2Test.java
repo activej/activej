@@ -27,15 +27,15 @@ public class SerializerFactory2Test {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	public static <T> T doTest(Class<T> type, T testData1) {
-		return io.activej.serializer.Utils.doTest(testData1, createBuilder().create(type));
+		return io.activej.serializer.Utils.doTest(testData1, createBuilder().create(DEFINING_CLASS_LOADER, type));
 	}
 
 	public static <T> T doTest(TypeT<T> type, T testData1) {
-		return io.activej.serializer.Utils.doTest(testData1, createBuilder().create(type.getAnnotatedType()));
+		return io.activej.serializer.Utils.doTest(testData1, createBuilder().create(DEFINING_CLASS_LOADER, type.getAnnotatedType()));
 	}
 
 	private static SerializerFactory createBuilder() {
-		return SerializerFactory.builder(DEFINING_CLASS_LOADER)
+		return SerializerFactory.builder()
 				.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class))
 				.build();
 	}

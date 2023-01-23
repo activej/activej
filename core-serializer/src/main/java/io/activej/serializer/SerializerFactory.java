@@ -16,7 +16,6 @@
 
 package io.activej.serializer;
 
-import io.activej.codegen.BytecodeStorage;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
@@ -65,8 +64,6 @@ import static org.objectweb.asm.Type.getType;
  * Scans fields of classes for serialization.
  */
 public final class SerializerFactory {
-	private final DefiningClassLoader classLoader;
-
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
 
 	private Class<?> implementationClass = Object.class;
@@ -84,36 +81,21 @@ public final class SerializerFactory {
 
 	private final Map<Class<? extends Annotation>, Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>>> annotationAliases = new HashMap<>();
 
-	private SerializerFactory(DefiningClassLoader classLoader) {
-		this.classLoader = classLoader;
+	private SerializerFactory() {
 	}
 
 	/**
-	 * Creates a new instance of {@link  SerializerFactory} with newly created {@link DefiningClassLoader}
+	 * Creates a new instance of {@link  SerializerFactory}
 	 */
 	public static SerializerFactory defaultInstance() {
 		return builder().build();
 	}
 
 	/**
-	 * Creates a new instance of {@link  SerializerFactory} with external {@link DefiningClassLoader}
-	 */
-	public static SerializerFactory defaultInstance(DefiningClassLoader definingClassLoader) {
-		return builder(definingClassLoader).build();
-	}
-
-	/**
-	 * Creates a builder of {@link  SerializerFactory} with newly created {@link DefiningClassLoader}
+	 * Creates a builder of {@link  SerializerFactory}
 	 */
 	public static Builder builder() {
-		return builder(DefiningClassLoader.create());
-	}
-
-	/**
-	 * Creates a builder of {@link  SerializerFactory} with external {@link DefiningClassLoader}
-	 */
-	public static Builder builder(DefiningClassLoader definingClassLoader) {
-		SerializerFactory.Builder builder = new SerializerFactory(definingClassLoader).new Builder();
+		SerializerFactory.Builder builder = new SerializerFactory().new Builder();
 
 		builder
 				.with(boolean.class, ctx -> new SerializerDef_Boolean(false))
@@ -517,7 +499,16 @@ public final class SerializerFactory {
 	 *
 	 * @see #create(AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> create(Type type) {
+	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, Type type) {
+		return create(classLoader, annotatedTypeOf(type));
+	}
+
+	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
+	 *
+	 * @see #create(AnnotatedType)
+	 */
+	public <T> ClassBuilder<BinarySerializer<T>> create(Type type) {
 		return create(annotatedTypeOf(type));
 	}
 
@@ -526,7 +517,16 @@ public final class SerializerFactory {
 	 *
 	 * @see #create(AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> create(Class<T> type) {
+	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, Class<T> type) {
+		return create(classLoader, annotatedTypeOf(type));
+	}
+
+	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
+	 *
+	 * @see #create(AnnotatedType)
+	 */
+	public <T> ClassBuilder<BinarySerializer<T>> create(Class<T> type) {
 		return create(annotatedTypeOf(type));
 	}
 
@@ -535,7 +535,16 @@ public final class SerializerFactory {
 	 *
 	 * @see #create(AnnotatedType)
 	 */
-	public <T> BinarySerializer<T> create(TypeT<T> typeT) {
+	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, TypeT<T> typeT) {
+		return create(classLoader, typeT.getAnnotatedType());
+	}
+
+	/**
+	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
+	 *
+	 * @see #create(AnnotatedType)
+	 */
+	public <T> ClassBuilder<BinarySerializer<T>> create(TypeT<T> typeT) {
 		return create(typeT.getAnnotatedType());
 	}
 
@@ -546,7 +555,7 @@ public final class SerializerFactory {
 	 * @param type a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> create(AnnotatedType type) {
+	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, AnnotatedType type) {
 		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
 		ClassBuilder<BinarySerializer<T>> classBuilder = toClassBuilder(serializer);
 		return classBuilder.defineClassAndCreateInstance(classLoader);
@@ -554,52 +563,14 @@ public final class SerializerFactory {
 
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
-	 *
-	 * @see #create(String, AnnotatedType)
-	 */
-	public <T> BinarySerializer<T> create(String className, Type type) {
-		return create(className, annotatedTypeOf(type));
-	}
-
-	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
-	 *
-	 * @see #create(String, AnnotatedType)
-	 */
-	public <T> BinarySerializer<T> create(String className, Class<T> type) {
-		return create(className, annotatedTypeOf(type));
-	}
-
-	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
-	 *
-	 * @see #create(String, AnnotatedType)
-	 */
-	public <T> BinarySerializer<T> create(String className, TypeT<T> typeT) {
-		return create(className, typeT.getAnnotatedType());
-	}
-
-	/**
-	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 * <p>
-	 * A built serializer would have a class name equal to the one that passed to this method.
-	 * <p>
-	 * If {@link #classLoader} has already defined the serializer class, the class would be taken from
-	 * the class loader's cache.
-	 * Moreover, if a {@link DefiningClassLoader} has a persistent {@link BytecodeStorage},
-	 * the serializer class would be taken from that persistent cache.
 	 *
-	 * @param className a name of the class of a serializer
-	 * @param type      a type data that would be serialized
+	 * @param type a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> create(String className, AnnotatedType type) {
-		return classLoader.ensureClassAndCreateInstance(
-				className,
-				() -> {
-					SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
-					return toClassBuilder(serializer);
-				});
+	public <T> ClassBuilder<BinarySerializer<T>> create(AnnotatedType type) {
+		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
+		return toClassBuilder(serializer);
 	}
 
 	/**
@@ -608,9 +579,9 @@ public final class SerializerFactory {
 	 * @param serializer a {@link SerializerDef} that would be used to create a {@link BinarySerializer}
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> create(SerializerDef serializer) {
+	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, SerializerDef serializer) {
 		//noinspection unchecked
-		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(DefiningClassLoader.create());
+		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(classLoader);
 	}
 
 	/**
@@ -790,11 +761,6 @@ public final class SerializerFactory {
 				}
 				String finalMethodName = methodName;
 				return in -> staticCallSelf(finalMethodName, in);
-			}
-
-			@Override
-			public <T> Class<T> buildClass(ClassBuilder<T> classBuilder) {
-				return classBuilder.defineClass(classLoader);
 			}
 		};
 	}

@@ -9,11 +9,14 @@ import static org.junit.Assert.assertArrayEquals;
 
 @SuppressWarnings("unused")
 public class SerializerCompatibilityLevel2Test {
+
+	private static final DefiningClassLoader DEFINING_CLASS_LOADER = DefiningClassLoader.create();
+
 	public static <T> T doTest(Class<T> type, T testData) {
-		BinarySerializer<T> serializer = SerializerFactory.builder(DefiningClassLoader.create())
+		BinarySerializer<T> serializer = SerializerFactory.builder()
 				.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
 				.build()
-				.create(type);
+				.create(DEFINING_CLASS_LOADER, type);
 		return doTest(testData, serializer, serializer);
 	}
 

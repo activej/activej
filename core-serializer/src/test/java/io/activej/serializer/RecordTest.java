@@ -54,8 +54,8 @@ public class RecordTest {
 	@Test
 	public void testCompatiblePojo() {
 		Record record = new Record("abc", 1);
-		BinarySerializer<Record> serializer = SerializerFactory.defaultInstance().create(Record.class);
-		BinarySerializer<CompatiblePojo> deserializer = SerializerFactory.defaultInstance().create(CompatiblePojo.class);
+		BinarySerializer<Record> serializer = SerializerFactory.defaultInstance().create(DEFINING_CLASS_LOADER, Record.class);
+		BinarySerializer<CompatiblePojo> deserializer = SerializerFactory.defaultInstance().create(DEFINING_CLASS_LOADER, CompatiblePojo.class);
 		CompatiblePojo pojo = doTest(record, serializer, deserializer);
 		Assert.assertEquals(record.s, pojo.s);
 		Assert.assertEquals(record.n, pojo.n);
@@ -68,13 +68,13 @@ public class RecordTest {
 	public void testGenericRecord() {
 		{
 			var record1 = new GenericRecord<String>("abc", 1);
-			BinarySerializer<GenericRecord<String>> serializer = SerializerFactory.defaultInstance().create(new TypeT<>() {});
+			BinarySerializer<GenericRecord<String>> serializer = SerializerFactory.defaultInstance().create(DEFINING_CLASS_LOADER, new TypeT<>() {});
 			var record2 = doTest(record1, serializer);
 			Assert.assertEquals(record1, record2);
 		}
 		{
 			var record1 = new GenericRecord<String>(null, 1);
-			BinarySerializer<GenericRecord<String>> serializer = SerializerFactory.defaultInstance().create(new TypeT<>() {});
+			BinarySerializer<GenericRecord<String>> serializer = SerializerFactory.defaultInstance().create(DEFINING_CLASS_LOADER, new TypeT<>() {});
 			var record2 = doTest(record1, serializer);
 			Assert.assertEquals(record1, record2);
 		}
@@ -107,10 +107,10 @@ public class RecordTest {
 
 	@Test
 	public void testRecordAnnotationCompatibilityMode() {
-		BinarySerializer<Record> serializer = SerializerFactory.builder(DEFINING_CLASS_LOADER)
+		BinarySerializer<Record> serializer = SerializerFactory.builder()
 				.withAnnotationCompatibilityMode()
 				.build()
-				.create(Record.class);
+				.create(DEFINING_CLASS_LOADER, Record.class);
 		{
 			Record record1 = new Record("abc", 1);
 			Record record2 = doTest(record1, serializer);
@@ -153,10 +153,10 @@ public class RecordTest {
 
 	@Test
 	public void testRecordNestedNullableAnnotationCompatibilityMode() {
-		BinarySerializer<RecordWithNestedPathNullables> serializer = SerializerFactory.builder(DEFINING_CLASS_LOADER)
+		BinarySerializer<RecordWithNestedPathNullables> serializer = SerializerFactory.builder()
 				.withAnnotationCompatibilityMode()
 				.build()
-				.create(RecordWithNestedPathNullables.class);
+				.create(DEFINING_CLASS_LOADER, RecordWithNestedPathNullables.class);
 		{
 			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(List.of("abc", "xyz"), 1);
 			RecordWithNestedPathNullables record2 = doTest(record1, serializer);

@@ -157,7 +157,7 @@ public class Utils {
 					addFields(serializer, recordClass, new ArrayList<>(keys.entrySet()));
 					addFields(serializer, recordClass, new ArrayList<>(fields.entrySet()));
 
-					return SerializerFactory.defaultInstance(classLoader)
+					return SerializerFactory.defaultInstance()
 							.toClassBuilder(serializer);
 				});
 	}

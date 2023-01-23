@@ -41,10 +41,10 @@ public class SerializePathExample {
 	public static void main(String[] args) {
 		DefiningClassLoader definingClassLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
 		//[START Serializer]
-		BinarySerializer<Storage> serializer = SerializerFactory.builder(definingClassLoader)
+		BinarySerializer<Storage> serializer = SerializerFactory.builder()
 				.withAnnotationCompatibilityMode() // Compatibility mode has to be enabled
 				.build()
-				.create(Storage.class);
+				.create(definingClassLoader, Storage.class);
 		//[END Serializer]
 
 		Storage storage = new Storage();

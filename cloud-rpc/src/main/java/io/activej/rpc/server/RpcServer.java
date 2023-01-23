@@ -114,11 +114,8 @@ public final class RpcServer extends AbstractReactiveServer {
 
 	public final class Builder extends AbstractReactiveServer.Builder<Builder, RpcServer> {
 		private List<Class<?>> messageTypes;
-		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance(
-				DefiningClassLoader.create(
-						Thread.currentThread().getContextClassLoader()
-				)
-		);
+		private DefiningClassLoader classLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
+		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance();
 
 		private Builder() {
 			handlers.put(RpcControlMessage.class, request -> {
@@ -131,7 +128,7 @@ public final class RpcServer extends AbstractReactiveServer {
 
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
-			this.serializerFactory = SerializerFactory.defaultInstance(DefiningClassLoader.create(classLoader));
+			this.classLoader = DefiningClassLoader.create(classLoader);
 			return this;
 		}
 
@@ -211,7 +208,7 @@ public final class RpcServer extends AbstractReactiveServer {
 			//noinspection SlowListContainsAll
 			checkState(messageTypes.containsAll(handlersClasses), "Some message types where not specified");
 			serializerFactory.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
-			serializer = serializerFactory.create(RpcMessage.class);
+			serializer = serializerFactory.create(classLoader, RpcMessage.class);
 
 			return super.doBuild();
 		}

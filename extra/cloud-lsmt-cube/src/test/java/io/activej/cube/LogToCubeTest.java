@@ -71,7 +71,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(fileSystem.start());
 		AsyncMultilog<TestPubRequest> multilog = Multilog.create(reactor, fileSystem,
 				frameFormat,
-				SerializerFactory.defaultInstance(CLASS_LOADER).create(TestPubRequest.class),
+				SerializerFactory.defaultInstance().create(CLASS_LOADER, TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,

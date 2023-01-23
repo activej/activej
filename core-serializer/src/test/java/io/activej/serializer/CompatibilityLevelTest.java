@@ -99,11 +99,11 @@ public class CompatibilityLevelTest {
 	}
 
 	private static <T> byte[] doTestPreload(Class<T> aClass, T item, CompatibilityLevel compatibilityLevel, String filePrefix) {
-		BinarySerializer<T> serializer = SerializerFactory.builder(DEFINING_CLASS_LOADER)
+		BinarySerializer<T> serializer = SerializerFactory.builder()
 				.with(ByteBuffer.class, $ -> new SerializerDef_ByteBuffer())
 				.withCompatibilityLevel(compatibilityLevel)
 				.build()
-				.create(aClass);
+				.create(DEFINING_CLASS_LOADER, aClass);
 
 		byte[] arr = new byte[1000];
 		int length = serializer.encode(arr, 0, item);

@@ -18,12 +18,12 @@ public class SerializePathsTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private static final BinarySerializer<TestData<String>> serializer = SerializerFactory.defaultInstance(DEFINING_CLASS_LOADER)
-			.create(new TypeT<TestData<String>>() {}.getType());
-	private static final BinarySerializer<TestDataWithPaths<String>> serializerPaths = SerializerFactory.builder(DEFINING_CLASS_LOADER)
+	private static final BinarySerializer<TestData<String>> serializer = SerializerFactory.defaultInstance()
+			.create(DEFINING_CLASS_LOADER, new TypeT<TestData<String>>() {}.getType());
+	private static final BinarySerializer<TestDataWithPaths<String>> serializerPaths = SerializerFactory.builder()
 			.withAnnotationCompatibilityMode()
 			.build()
-			.create(new TypeT<TestDataWithPaths<String>>() {}.getType());
+			.create(DEFINING_CLASS_LOADER, new TypeT<TestDataWithPaths<String>>() {}.getType());
 
 	@Test
 	public void testAllNull() {

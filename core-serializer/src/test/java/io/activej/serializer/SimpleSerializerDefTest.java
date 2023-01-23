@@ -4,6 +4,7 @@ import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import org.junit.Test;
 
+import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static io.activej.serializer.Utils.doTest;
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +34,7 @@ public class SimpleSerializerDefTest {
 					}
 				})
 				.build()
-				.create(ExternalClass.class);
+				.create(DEFINING_CLASS_LOADER, ExternalClass.class);
 
 		ExternalClass original = new ExternalClass(
 				"test",

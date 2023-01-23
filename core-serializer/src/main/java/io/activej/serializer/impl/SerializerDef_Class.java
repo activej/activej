@@ -16,7 +16,6 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
@@ -32,6 +31,7 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expression.*;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.serializer.util.Utils.get;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
@@ -99,57 +99,48 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 	}
 
 	public static SerializerDef_Class create(Class<?> encodeType, Class<?> decodeType) {
-		if (!encodeType.isAssignableFrom(decodeType))
-			throw new IllegalArgumentException(format("Class should be assignable from %s", decodeType));
+		checkArgument(!decodeType.isInterface(), "Cannot serialize an interface");
+		checkArgument(encodeType.isAssignableFrom(decodeType), format("Class should be assignable from %s", decodeType));
+
 		return new SerializerDef_Class(encodeType, decodeType);
 	}
 
 	public void addSetter(Method method, List<String> fields) {
-		if (decodeType.isInterface())
-			throw new IllegalStateException("Class should either implement an interface or be an interface");
-		if (isPrivate(method.getModifiers()))
-			throw new IllegalArgumentException(format("Setter cannot be private: %s", method));
-		if (method.getGenericParameterTypes().length != fields.size())
-			throw new IllegalArgumentException("Number of arguments of a method should match a size of list of fields");
-		if (setters.containsKey(method)) throw new IllegalArgumentException("Setter has already been added");
+		checkArgument(!isPrivate(method.getModifiers()), format("Setter cannot be private: %s", method));
+		checkArgument(method.getGenericParameterTypes().length == fields.size(),
+				"Number of arguments of a method should match a size of list of fields");
+		checkArgument(!setters.containsKey(method), "Setter has already been added");
+
 		setters.put(method, fields);
 	}
 
 	public void setStaticFactoryMethod(Method staticFactoryMethod, List<String> fields) {
-		if (decodeType.isInterface())
-			throw new IllegalStateException("Class should either implement an interface or be an interface");
-		if (this.staticFactoryMethod != null)
-			throw new IllegalArgumentException(format("Factory is already set: %s", this.staticFactoryMethod));
-		if (isPrivate(staticFactoryMethod.getModifiers()))
-			throw new IllegalArgumentException(format("Factory cannot be private: %s", staticFactoryMethod));
-		if (!isStatic(staticFactoryMethod.getModifiers()))
-			throw new IllegalArgumentException(format("Factory must be static: %s", staticFactoryMethod));
-		if (staticFactoryMethod.getGenericParameterTypes().length != fields.size())
-			throw new IllegalArgumentException("Number of arguments of a method should match a size of list of fields");
+		checkArgument(this.staticFactoryMethod == null, format("Factory is already set: %s", this.staticFactoryMethod));
+		checkArgument(!isPrivate(staticFactoryMethod.getModifiers()), format("Factory cannot be private: %s", staticFactoryMethod));
+		checkArgument(isStatic(staticFactoryMethod.getModifiers()), format("Factory must be static: %s", staticFactoryMethod));
+		checkArgument(staticFactoryMethod.getGenericParameterTypes().length == fields.size(),
+				"Number of arguments of a method should match a size of list of fields");
+
 		this.staticFactoryMethod = staticFactoryMethod;
 		this.staticFactoryMethodParams = fields;
 	}
 
 	public void setConstructor(Constructor<?> constructor, List<String> fields) {
-		if (decodeType.isInterface())
-			throw new IllegalStateException("Class should either implement an interface or be an interface");
-		if (this.constructor != null)
-			throw new IllegalArgumentException(format("Constructor is already set: %s", this.constructor));
-		if (isPrivate(constructor.getModifiers()))
-			throw new IllegalArgumentException(format("Constructor cannot be private: %s", constructor));
-		if (constructor.getGenericParameterTypes().length != fields.size())
-			throw new IllegalArgumentException("Number of arguments of a constructor should match a size of list of fields");
+		checkArgument(this.constructor == null, format("Constructor is already set: %s", this.constructor));
+		checkArgument(!isPrivate(constructor.getModifiers()), format("Constructor cannot be private: %s", constructor));
+		checkArgument(constructor.getGenericParameterTypes().length == fields.size(),
+				"Number of arguments of a constructor should match a size of list of fields");
+
 		this.constructor = constructor;
 		this.constructorParams = fields;
 	}
 
 	public void addField(Field field, SerializerDef serializer, int added, int removed) {
-		if (decodeType.isInterface())
-			throw new IllegalStateException("Class should either implement an interface or be an interface");
-		if (!isPublic(field.getModifiers()))
-			throw new IllegalArgumentException("Method should be public");
+		checkArgument(isPublic(field.getModifiers()), "Method should be public");
+
 		String fieldName = field.getName();
-		if (fields.containsKey(fieldName)) throw new IllegalArgumentException(format("Duplicate field '%s'", field));
+		checkArgument(!fields.containsKey(fieldName), format("Duplicate field '%s'", field));
+
 		FieldDef fieldDef = new FieldDef();
 		fieldDef.field = field;
 		fieldDef.serializer = serializer;
@@ -159,12 +150,12 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 	}
 
 	public void addGetter(Method method, SerializerDef serializer, int added, int removed) {
-		if (method.getGenericParameterTypes().length != 0)
-			throw new IllegalArgumentException("Method should have 0 generic parameter types");
-		if (!isPublic(method.getModifiers()))
-			throw new IllegalArgumentException("Method should be public");
+		checkArgument(method.getGenericParameterTypes().length == 0, "Method should have 0 generic parameter types");
+		checkArgument(isPublic(method.getModifiers()), "Method should be public");
+
 		String fieldName = stripGet(method.getName(), method.getReturnType());
-		if (fields.containsKey(fieldName)) throw new IllegalArgumentException(format("Duplicate field '%s'", method));
+		checkArgument(!fields.containsKey(fieldName), format("Duplicate field '%s'", method));
+
 		FieldDef fieldDef = new FieldDef();
 		fieldDef.method = method;
 		fieldDef.serializer = serializer;
@@ -174,8 +165,6 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 	}
 
 	public void addMatchingSetters() {
-		if (decodeType.isInterface())
-			throw new IllegalArgumentException("Class should either implement an interface or be an interface");
 		Set<String> usedFields = new HashSet<>();
 		if (constructorParams != null) {
 			usedFields.addAll(constructorParams);
@@ -283,9 +272,6 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 	}
 
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, UnaryOperator<Expression> instanceInitializer) {
-		if (decodeType.isInterface()) {
-			return deserializeInterface(staticDecoders, in, version, compatibilityLevel);
-		}
 		if (constructor == null && staticFactoryMethod == null && setters.isEmpty()) {
 			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel, instanceInitializer);
 		}
@@ -390,41 +376,6 @@ public final class SerializerDef_Class extends AbstractSerializerDef {
 			}
 		}
 		return parameters;
-	}
-
-	private Expression deserializeInterface(StaticDecoders staticDecoders, Expression in,
-			int version, CompatibilityLevel compatibilityLevel) {
-
-		if (fields.values().stream().anyMatch(fieldDef -> fieldDef.method == null)) {
-			throw new NullPointerException();
-		}
-
-		ClassBuilder<?>.Builder classBuilder = ClassBuilder.builder(decodeType);
-		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
-			String fieldName = entry.getKey();
-			Method method = entry.getValue().method;
-			classBuilder
-					.withField(fieldName, method.getReturnType())
-					.withMethod(method.getName(), property(self(), fieldName));
-		}
-
-		Class<?> newClass = staticDecoders.buildClass(classBuilder.build());
-
-		return let(
-				constructor(newClass),
-				instance -> sequence(seq -> {
-					for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
-						FieldDef fieldDef = entry.getValue();
-						if (!fieldDef.hasVersion(version))
-							continue;
-						Variable property = property(instance, entry.getKey());
-
-						Expression expression =
-								fieldDef.serializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in);
-						seq.add(set(property, expression));
-					}
-					return instance;
-				}));
 	}
 
 	private Expression deserializeClassSimple(StaticDecoders staticDecoders, Expression in,

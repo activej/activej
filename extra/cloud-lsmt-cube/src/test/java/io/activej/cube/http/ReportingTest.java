@@ -293,7 +293,7 @@ public final class ReportingTest extends CubeTestBase {
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				FrameFormat_LZ4.create(),
-				SerializerFactory.defaultInstance(CLASS_LOADER).create(LogItem.class),
+				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,

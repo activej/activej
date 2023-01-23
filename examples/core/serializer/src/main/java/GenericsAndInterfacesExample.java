@@ -1,3 +1,4 @@
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
@@ -14,8 +15,9 @@ public final class GenericsAndInterfacesExample {
 				new Skill<>(2, "ActiveJ")));
 
 		byte[] buffer = new byte[200];
+		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		BinarySerializer<Developer> serializer = SerializerFactory.defaultInstance()
-				.create(Developer.class);
+				.create(classLoader, Developer.class);
 		//[END REGION_4]
 
 		//[START REGION_5]

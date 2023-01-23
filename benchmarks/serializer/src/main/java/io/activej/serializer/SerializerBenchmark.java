@@ -26,10 +26,10 @@ import static io.activej.serializer.StringFormat.*;
 @State(Scope.Benchmark)
 public class SerializerBenchmark {
 	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
-	private static final BinarySerializer<TestData> serializer = SerializerFactory.builder(definingClassLoader)
+	private static final BinarySerializer<TestData> serializer = SerializerFactory.builder()
 			.withCompatibilityLevel(LEVEL_4_LE)
 			.build()
-			.create(TestData.class);
+			.create(definingClassLoader, TestData.class);
 	private static final byte[] array = new byte[10000];
 
 	public static class TestData {

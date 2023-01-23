@@ -92,8 +92,8 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
-		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance(CLASS_LOADER)
-				.create(LogItem.class);
+		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance()
+				.create(CLASS_LOADER, LogItem.class);
 		multilog = Multilog.create(reactor, logsFileSystem, FrameFormat_LZ4.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(

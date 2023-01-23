@@ -21,8 +21,9 @@ public final class SerializerDefHppc7Example {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static <T> BinarySerializer<T> getBufferSerializer(Class<T> collectionType) {
-		return SerializerFactoryUtils.createWithHppc7Support(DefiningClassLoader.create())
-				.create(collectionType);
+		DefiningClassLoader classLoader = DefiningClassLoader.create();
+		return SerializerFactoryUtils.createWithHppc7Support(classLoader)
+				.create(classLoader, collectionType);
 	}
 
 	@Test
