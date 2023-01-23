@@ -46,7 +46,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			schemeToBuilder.withField(field, schemeFrom.getFieldType(field));
 			mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
 		}
-		List<String> comparedFields = schemeFrom.getComparedFields();
+		List<String> comparedFields = schemeFrom.getComparatorFields();
 		if (comparedFields != null) {
 			List<String> newComparedFields = new ArrayList<>();
 			for (String field : fields) {
@@ -54,7 +54,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 					newComparedFields.add(field);
 				}
 			}
-			schemeToBuilder.withComparator(newComparedFields);
+			schemeToBuilder.withComparatorFields(newComparedFields);
 		}
 		RecordScheme schemeTo = schemeToBuilder.build();
 		return projection(classLoader, List.of(schemeFrom, fields), schemeFrom, schemeTo, mapping);

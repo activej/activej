@@ -53,7 +53,7 @@ public final class RecordScheme {
 	private final LinkedHashMap<String, Integer> fieldToIndex;
 
 	private final @Nullable Comparator<Record> comparator;
-	private final @Nullable List<String> comparedFields;
+	private final @Nullable List<String> comparatorFields;
 
 	private final Class<? extends Record> recordClass;
 	private final Map<String, String> recordClassFields;
@@ -137,21 +137,21 @@ public final class RecordScheme {
 			recordSettersMap.put(field, recordSetter);
 		}
 		Comparator<Record> comparator = null;
-		if (builder.comparedFields != null) {
-			Set<String> missing = builder.getMissingFields(builder.comparedFields);
+		if (builder.comparatorFields != null) {
+			Set<String> missing = builder.getMissingFields(builder.comparatorFields);
 			if (!missing.isEmpty()) {
 				throw new IllegalStateException("Missing some fields to be compared: " + missing);
 			}
 
-			List<String> comparedClassFields = builder.comparedFields.stream()
+			List<String> comparatorClassFields = builder.comparatorFields.stream()
 					.map(builder::getClassField)
 					.toList();
 
 			//noinspection unchecked
 			comparator = builder.classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(Comparator.class, recordClass, builder.comparedFields),
+					ClassKey.of(Comparator.class, recordClass, builder.comparatorFields),
 					() -> ClassBuilder.builder(Comparator.class)
-							.withMethod("compare", comparatorImpl(recordClass, comparedClassFields))
+							.withMethod("compare", comparatorImpl(recordClass, comparatorClassFields))
 							.build());
 		}
 
@@ -171,7 +171,7 @@ public final class RecordScheme {
 		this.typesList = Arrays.asList(this.types);
 		this.recordClassFields = builder.recordClassFields;
 		this.comparator = comparator;
-		this.comparedFields = builder.comparedFields;
+		this.comparatorFields = builder.comparatorFields;
 		this.classLoader = builder.classLoader;
 	}
 
@@ -193,7 +193,7 @@ public final class RecordScheme {
 		private final Map<String, String> recordClassFields = new HashMap<>();
 
 		private @Nullable List<String> hashCodeEqualsFields;
-		private @Nullable List<String> comparedFields;
+		private @Nullable List<String> comparatorFields;
 
 		private Builder(DefiningClassLoader classLoader) {
 			this.classLoader = classLoader;
@@ -240,16 +240,16 @@ public final class RecordScheme {
 			return withHashCodeEqualsFields(List.of(hashCodeEqualsFields));
 		}
 
-		public Builder withComparator(List<String> comparedFields) {
+		public Builder withComparatorFields(List<String> comparatorFields) {
 			checkNotBuilt(this);
-			checkUnique(comparedFields);
-			this.comparedFields = comparedFields;
+			checkUnique(comparatorFields);
+			this.comparatorFields = comparatorFields;
 			return this;
 		}
 
-		public Builder withComparator(String... comparedFields) {
+		public Builder withComparatorFields(String... comparatorFields) {
 			checkNotBuilt(this);
-			return withComparator(List.of(comparedFields));
+			return withComparatorFields(List.of(comparatorFields));
 		}
 
 		@Override
@@ -337,8 +337,8 @@ public final class RecordScheme {
 	}
 
 	@SuppressWarnings("NullableProblems")
-	public List<String> getComparedFields() {
-		return comparedFields;
+	public List<String> getComparatorFields() {
+		return comparatorFields;
 	}
 
 	public int size() {
@@ -465,14 +465,14 @@ public final class RecordScheme {
 		RecordScheme scheme = (RecordScheme) o;
 		return Arrays.equals(fields, scheme.fields) &&
 				Arrays.equals(types, scheme.types) &&
-				Objects.equals(comparedFields, scheme.comparedFields);
+				Objects.equals(comparatorFields, scheme.comparatorFields);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = Arrays.hashCode(fields);
 		result = 31 * result + Arrays.hashCode(types);
-		result = 31 * result + Objects.hashCode(comparedFields);
+		result = 31 * result + Objects.hashCode(comparatorFields);
 		return result;
 	}
 

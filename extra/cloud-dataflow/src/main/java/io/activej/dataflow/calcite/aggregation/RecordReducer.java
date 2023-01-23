@@ -117,7 +117,7 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<Record, 
 		}
 
 		return accumulatorSchemeBuilder
-				.withComparator(fields)
+				.withComparatorFields(fields)
 				.build();
 	}
 
@@ -138,7 +138,7 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<Record, 
 		}
 
 		return outputSchemeBuilder
-				.withComparator(fields)
+				.withComparatorFields(fields)
 				.build();
 	}
 

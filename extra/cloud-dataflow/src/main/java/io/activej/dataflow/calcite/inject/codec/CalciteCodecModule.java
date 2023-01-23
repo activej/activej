@@ -47,7 +47,7 @@ public class CalciteCodecModule extends AbstractModule {
 					}
 
 					return recordSchemeBuilder
-							.withComparator(fieldNames)
+							.withComparatorFields(fieldNames)
 							.build();
 				},
 				RecordScheme::getFields, StreamCodecs.ofList(StreamCodecs.ofString()),

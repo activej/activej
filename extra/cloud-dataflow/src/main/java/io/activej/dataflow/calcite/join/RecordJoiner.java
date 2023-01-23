@@ -119,7 +119,7 @@ public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Re
 		addFields(schemeBuilder, rightScheme, fieldNames, leftScheme.size(), joinType == LEFT);
 
 		return schemeBuilder
-				.withComparator(fieldNames)
+				.withComparatorFields(fieldNames)
 				.build();
 	}
 

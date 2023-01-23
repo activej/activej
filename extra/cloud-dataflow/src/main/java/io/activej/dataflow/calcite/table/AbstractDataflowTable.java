@@ -129,7 +129,7 @@ public abstract class AbstractDataflowTable<T> extends AbstractTable implements 
 				schemeBuilder.withField(entry.getKey(), entry.getValue().type);
 			}
 
-			RecordScheme finalScheme = schemeBuilder.withComparator(new ArrayList<>(columns.keySet())).build();
+			RecordScheme finalScheme = schemeBuilder.withComparatorFields(new ArrayList<>(columns.keySet())).build();
 
 			Object[] gettersAndSetters = new Object[finalScheme.size() * 2];
 			Iterator<ColumnEntry<?>> entryIterator = columns.values().iterator();

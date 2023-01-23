@@ -218,7 +218,7 @@ public class RecordSchemeTest {
 				.withField("code", long.class)
 				.withField("name", String.class)
 				.withField("complex.name", String.class)
-				.withComparator("id", "code", "complex.name")
+				.withComparatorFields("id", "code", "complex.name")
 				.build();
 
 		Comparator<Record> comparator = scheme.getRecordComparator();
