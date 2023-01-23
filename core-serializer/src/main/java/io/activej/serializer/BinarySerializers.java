@@ -369,4 +369,19 @@ public final class BinarySerializers {
 			}
 		};
 	}
+
+	public static <E extends Enum<E>> BinarySerializer<E> ofEnum(Class<E> enumType) {
+		return new BinarySerializer<E>() {
+			@Override
+			public void encode(BinaryOutput out, E item) {
+				out.writeVarInt(item.ordinal());
+			}
+
+			@Override
+			public E decode(BinaryInput in) throws CorruptedDataException {
+				return enumType.getEnumConstants()[in.readVarInt()];
+			}
+		};
+	}
+
 }

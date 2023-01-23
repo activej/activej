@@ -16,45 +16,13 @@
 
 package io.activej.rpc.protocol;
 
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.annotations.SerializeClass;
-import io.activej.serializer.annotations.SerializeNullable;
-
 public final class RpcMessage {
-	public static final String MESSAGE_TYPES = "messageTypes";
+	public int cookie;
+	public Object data;
 
-	private final int cookie;
-	private final Object data;
-
-	private RpcMessage(int cookie, Object data) {
+	public RpcMessage with(int cookie, Object data) {
 		this.cookie = cookie;
 		this.data = data;
-	}
-
-	public static RpcMessage of(@Deserialize("cookie") int cookie, @Deserialize("data") Object data) {
-		return new RpcMessage(cookie, data);
-	}
-
-	@Serialize(order = 1)
-	public int getCookie() {
-		return cookie;
-	}
-
-	@Serialize(order = 2)
-	@SerializeClass(subclassesIdx = -1,
-			subclasses = {RpcControlMessage.class, RpcRemoteException.class},
-			subclassesId = MESSAGE_TYPES)
-	@SerializeNullable
-	public Object getData() {
-		return data;
-	}
-
-	@Override
-	public String toString() {
-		return "RpcMessage{" +
-				"cookie=" + cookie +
-				", data=" + data +
-				'}';
+		return this;
 	}
 }

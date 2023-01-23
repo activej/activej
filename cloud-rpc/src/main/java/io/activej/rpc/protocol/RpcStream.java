@@ -29,7 +29,7 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.serializer.BinarySerializer;
+import io.activej.rpc.server.RpcMessageSerializer;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -77,18 +77,19 @@ public final class RpcStream {
 	private final AsyncTcpSocket socket;
 
 	public RpcStream(AsyncTcpSocket socket,
-			BinarySerializer<RpcMessage> messageSerializer,
+			RpcMessageSerializer inputSerializer,
+			RpcMessageSerializer outputSerializer,
 			MemSize initialBufferSize,
 			Duration autoFlushInterval, @Nullable FrameFormat frameFormat, boolean server) {
 		this.server = server;
 		this.socket = socket;
 
-		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.builder(messageSerializer)
+		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.builder(outputSerializer)
 				.withInitialBufferSize(initialBufferSize)
 				.withAutoFlushInterval(autoFlushInterval)
 				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e))
 				.build();
-		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(messageSerializer);
+		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(inputSerializer);
 
 		if (frameFormat != null) {
 			ChannelFrameDecoder decompressor = ChannelFrameDecoder.create(frameFormat);

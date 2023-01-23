@@ -24,6 +24,8 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.protocol.RpcControlMessage;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcRemoteException;
@@ -35,9 +37,10 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.util.Map;
 
-public final class RpcServerConnection implements RpcStream.Listener, JmxRefreshable {
+public final class RpcServerConnection extends AbstractReactive implements RpcStream.Listener, JmxRefreshable {
 	private static final Logger logger = LoggerFactory.getLogger(RpcServerConnection.class);
 
+	private final RpcMessage rpcMessage = new RpcMessage();
 	private StreamDataAcceptor<RpcMessage> downstreamDataAcceptor;
 
 	private final RpcServer rpcServer;
@@ -56,8 +59,9 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	private final EventStats failedRequests = EventStats.create(RpcServer.SMOOTHING_WINDOW);
 	private boolean monitoring = false;
 
-	RpcServerConnection(RpcServer rpcServer, InetAddress remoteAddress,
+	RpcServerConnection(Reactor reactor, RpcServer rpcServer, InetAddress remoteAddress,
 			Map<Class<?>, RpcRequestHandler<?, ?>> handlers, RpcStream stream) {
+		super(reactor);
 		this.rpcServer = rpcServer;
 		this.stream = stream;
 		this.handlers = handlers;
@@ -79,10 +83,10 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 	public void accept(RpcMessage message) {
 		activeRequests++;
 
-		int cookie = message.getCookie();
+		int cookie = message.cookie;
 		long startTime = monitoring ? System.currentTimeMillis() : 0;
 
-		Object messageData = message.getData();
+		Object messageData = message.data;
 		serve(messageData)
 				.run((result, e) -> {
 					if (startTime != 0) {
@@ -91,13 +95,13 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 						rpcServer.getRequestHandlingTime().recordValue(value);
 					}
 					if (e == null) {
-						downstreamDataAcceptor.accept(RpcMessage.of(cookie, result));
+						downstreamDataAcceptor.accept(rpcMessage.with(cookie, result));
 
 						successfulRequests.recordEvent();
 						rpcServer.getSuccessfulRequests().recordEvent();
 					} else {
 						logger.warn("Exception while processing request ID {}", cookie, e);
-						RpcMessage errorMessage = RpcMessage.of(cookie, new RpcRemoteException(e));
+						RpcMessage errorMessage = rpcMessage.with(cookie, new RpcRemoteException(e));
 						sendError(errorMessage, messageData, e);
 					}
 					if (--activeRequests == 0) {
@@ -134,9 +138,9 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
-		logger.error("Serialization error: {} for data {}", remoteAddress, message.getData(), e);
-		RpcMessage errorMessage = RpcMessage.of(message.getCookie(), new RpcRemoteException(e));
-		sendError(errorMessage, message.getData(), e);
+		logger.error("Serialization error: {} for data {}", remoteAddress, message.data, e);
+		RpcMessage errorMessage = rpcMessage.with(message.cookie, new RpcRemoteException(e));
+		sendError(errorMessage, message.data, e);
 	}
 
 	@Override
@@ -165,7 +169,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 
 	public void shutdown() {
 		if (downstreamDataAcceptor != null) {
-			downstreamDataAcceptor.accept(RpcMessage.of(-1, RpcControlMessage.CLOSE));
+			downstreamDataAcceptor.accept(rpcMessage.with(-1, RpcControlMessage.CLOSE));
 		}
 	}
 

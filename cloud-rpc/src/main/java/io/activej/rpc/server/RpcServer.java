@@ -34,7 +34,6 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcControlMessage;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
@@ -44,8 +43,7 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.*;
 
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkState;
+import static io.activej.common.Checks.*;
 
 /**
  * An RPC server that works asynchronously. This server uses fast serializers
@@ -86,7 +84,8 @@ public final class RpcServer extends AbstractReactiveServer {
 
 	private final List<RpcServerConnection> connections = new ArrayList<>();
 
-	private BinarySerializer<RpcMessage> serializer;
+	private RpcMessageSerializer requestSerializer;
+	private RpcMessageSerializer responseSerializer;
 
 	private SettablePromise<Void> closeCallback;
 
@@ -113,10 +112,6 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	public final class Builder extends AbstractReactiveServer.Builder<Builder, RpcServer> {
-		private List<Class<?>> messageTypes;
-		private DefiningClassLoader classLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
-		private SerializerFactory serializerFactory = SerializerFactory.defaultInstance();
-
 		private Builder() {
 			handlers.put(RpcControlMessage.class, request -> {
 				if (request == RpcControlMessage.PING) {
@@ -126,9 +121,23 @@ public final class RpcServer extends AbstractReactiveServer {
 			});
 		}
 
-		public Builder withClassLoader(ClassLoader classLoader) {
+		public Builder withSerializers(
+				LinkedHashMap<Class<?>, BinarySerializer<?>> requestSerializers,
+				LinkedHashMap<Class<?>, BinarySerializer<?>> responseSerializers) {
+			return this
+					.withRequestsSerializers(requestSerializers)
+					.withResponseSerializers(responseSerializers);
+		}
+
+		public Builder withRequestsSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
 			checkNotBuilt(this);
-			this.classLoader = DefiningClassLoader.create(classLoader);
+			RpcServer.this.requestSerializer = new RpcMessageSerializer(serializers);
+			return this;
+		}
+
+		public Builder withResponseSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
+			checkNotBuilt(this);
+			RpcServer.this.responseSerializer = new RpcMessageSerializer(serializers);
 			return this;
 		}
 
@@ -140,7 +149,7 @@ public final class RpcServer extends AbstractReactiveServer {
 		 */
 		public Builder withMessageTypes(Class<?>... messageTypes) {
 			checkNotBuilt(this);
-			return withMessageTypes(List.of(messageTypes));
+			return withMessageTypes(DefiningClassLoader.create(), List.of(messageTypes));
 		}
 
 		/**
@@ -151,15 +160,60 @@ public final class RpcServer extends AbstractReactiveServer {
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
-			checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-			this.messageTypes = messageTypes;
-			return this;
+			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
 		}
 
-		public Builder withSerializerFactory(SerializerFactory serializerFactory) {
+		/**
+		 * Creates a server, capable of specified message types processing.
+		 *
+		 * @param messageTypes classes of messages processed by a server
+		 * @return server instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(DefiningClassLoader classLoader, Class<?>... messageTypes) {
+			return withMessageTypes(classLoader, List.of(messageTypes));
+		}
+
+		/**
+		 * Creates a server, capable of specified message types processing.
+		 *
+		 * @param messageTypes a list of message types processed by a server
+		 * @return server instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(DefiningClassLoader classLoader, List<Class<?>> messageTypes) {
+			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
+		}
+
+		/**
+		 * Creates a server, capable of specified message types processing.
+		 *
+		 * @param messageTypes classes of messages processed by a server
+		 * @return server instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(
+				DefiningClassLoader classLoader,
+				SerializerFactory serializerFactory,
+				Class<?>... messageTypes
+		) {
+			return withMessageTypes(classLoader, serializerFactory, List.of(messageTypes));
+		}
+
+		/**
+		 * Creates a server, capable of specified message types processing.
+		 *
+		 * @param messageTypes a list of message types processed by a server
+		 * @return server instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(
+				DefiningClassLoader classLoader,
+				SerializerFactory serializerFactory,
+				List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
-			this.serializerFactory = serializerFactory;
-			return this;
+			checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
+			LinkedHashMap<Class<?>, BinarySerializer<?>> map = new LinkedHashMap<>();
+			for (Class<?> messageType : messageTypes) {
+				map.put(messageType, serializerFactory.create(classLoader, messageType));
+			}
+			return withSerializers(map, map);
 		}
 
 		public Builder withStreamProtocol(MemSize defaultPacketSize) {
@@ -201,24 +255,17 @@ public final class RpcServer extends AbstractReactiveServer {
 
 		@Override
 		protected RpcServer doBuild() {
-			Set<Class<?>> handlersClasses = new HashSet<>(handlers.keySet());
-			handlersClasses.remove(RpcControlMessage.class);
-			checkState(!handlersClasses.isEmpty(), "No RPC handlers added");
-			checkState(messageTypes != null, "Message types must be specified");
-			//noinspection SlowListContainsAll
-			checkState(messageTypes.containsAll(handlersClasses), "Some message types where not specified");
-			serializerFactory.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
-			serializer = serializerFactory.create(classLoader, RpcMessage.class);
-
+			checkState(handlers.size() > 1, "No RPC handlers added");
+			checkNotNull(requestSerializer, "No serializer for RPC message is set or no RPC message types are specified");
 			return super.doBuild();
 		}
 	}
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
-		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize,
+		RpcStream stream = new RpcStream(socket, requestSerializer, responseSerializer, initialBufferSize,
 				autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
-		RpcServerConnection connection = new RpcServerConnection(this, remoteAddress, handlers, stream);
+		RpcServerConnection connection = new RpcServerConnection(reactor, this, remoteAddress, handlers, stream);
 		stream.setListener(connection);
 		add(connection);
 
