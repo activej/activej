@@ -189,7 +189,6 @@ public final class HttpServer extends AbstractReactiveServer {
 		}
 	}
 
-	// region builders
 	private HttpServer(NioReactor reactor, AsyncServlet servlet) {
 		super(reactor);
 		this.servlet = servlet;
@@ -267,7 +266,6 @@ public final class HttpServer extends AbstractReactiveServer {
 			return this;
 		}
 	}
-	// endregion
 
 	public Duration getKeepAliveTimeout() {
 		return Duration.ofMillis(keepAliveTimeoutMillis);

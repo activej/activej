@@ -56,7 +56,6 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
 	public static final int DEFAULT_BUF_SIZE = 512;
-	// endregion
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED};
 	private static final int GZIP_FOOTER_SIZE = 8;
@@ -73,7 +72,6 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	private BinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 
-	// region creators
 	private BufsConsumerGzipInflater() {}
 
 	public static BufsConsumerGzipInflater create() {
@@ -125,7 +123,6 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 			}
 		};
 	}
-	// endregion
 
 	@Override
 	protected void beforeProcess() {

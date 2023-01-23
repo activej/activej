@@ -107,7 +107,6 @@ public final class RpcServer extends AbstractReactiveServer {
 	private boolean monitoring;
 	// endregion
 
-	// region builders
 	private RpcServer(NioReactor reactor) {
 		super(reactor);
 	}
@@ -210,7 +209,6 @@ public final class RpcServer extends AbstractReactiveServer {
 			return super.doBuild();
 		}
 	}
-	// endregion
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
@@ -352,5 +350,6 @@ public final class RpcServer extends AbstractReactiveServer {
 	public ExceptionStats getLastProtocolError() {
 		return lastProtocolError;
 	}
+	// endregion
 }
 

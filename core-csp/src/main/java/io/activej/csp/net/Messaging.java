@@ -45,7 +45,6 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 	private boolean readDone;
 	private boolean writeDone;
 
-	// region creators
 	private Messaging(AsyncTcpSocket socket, ByteBufsCodec<I, O> codec) {
 		this.socket = socket;
 		this.codec = codec;
@@ -70,7 +69,6 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 		messaging.prefetch();
 		return messaging;
 	}
-	// endregion
 
 	private void prefetch() {
 		if (bufs.isEmpty()) {

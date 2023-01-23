@@ -41,7 +41,6 @@ public final class ServerSocketSettings {
 	private int receiveBufferSize = 0;
 	private byte reuseAddress = DEF_BOOL;
 
-	// region builders
 	private ServerSocketSettings() {
 	}
 

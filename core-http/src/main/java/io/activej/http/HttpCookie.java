@@ -85,7 +85,6 @@ public final class HttpCookie {
 	private @Nullable SameSite sameSite;
 	private String extension;
 
-	// region builders
 	private HttpCookie(String name, String value) {
 		this.name = name;
 		this.value = value;
@@ -193,7 +192,6 @@ public final class HttpCookie {
 			return HttpCookie.this;
 		}
 	}
-	// endregion
 
 	public String getName() {
 		return name;
@@ -274,7 +272,6 @@ public final class HttpCookie {
 	public void setExtension(String extension) {
 		this.extension = extension;
 	}
-	// endregion
 
 	static void decodeFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
 		HttpCookie cookie = new HttpCookie("", "", "/");
@@ -552,7 +549,6 @@ public final class HttpCookie {
 				"name='" + name + '\'' +
 				", value='" + value + '\'' + '}';
 	}
-	// endregion
 
 	public enum SameSite {
 		LAX(encodeAscii("Lax")),

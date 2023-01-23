@@ -38,7 +38,6 @@ public final class DatagramSocketSettings {
 	private int sendBufferSize = 0;
 	private byte broadcast = DEF_BOOL;
 
-	// region builders
 	private DatagramSocketSettings() {
 	}
 
@@ -82,7 +81,6 @@ public final class DatagramSocketSettings {
 			return DatagramSocketSettings.this;
 		}
 	}
-	// endregion
 
 	public void applySettings(DatagramChannel channel) throws IOException {
 		if (receiveBufferSize != 0) {

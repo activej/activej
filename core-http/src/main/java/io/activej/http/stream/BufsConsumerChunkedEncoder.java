@@ -43,7 +43,6 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	private ChannelSupplier<ByteBuf> input;
 	private ChannelConsumer<ByteBuf> output;
 
-	// region creators
 	private BufsConsumerChunkedEncoder() {}
 
 	public static BufsConsumerChunkedEncoder create() {
@@ -72,7 +71,6 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 			if (this.input != null && this.output != null) startProcess();
 		};
 	}
-	// endregion
 
 	@Override
 	protected void beforeProcess() {

@@ -303,5 +303,4 @@ public final class SslReactive_TcpSocketTest {
 									.map($2 -> i - 1);
 						}));
 	}
-	// endregion
 }

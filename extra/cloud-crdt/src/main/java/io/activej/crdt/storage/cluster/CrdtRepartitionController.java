@@ -49,9 +49,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> exte
 		return new CrdtRepartitionController<>(reactor, cluster, localPartitionId);
 	}
 
-	// region JMX
 	private final PromiseStats repartitionPromise = PromiseStats.create(Duration.ofMinutes(5));
-	// endregion
 
 	public Promise<Void> repartition() {
 		checkInReactorThread(this);
@@ -63,10 +61,8 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> exte
 				.whenComplete(repartitionPromise.recordStats());
 	}
 
-	// region JMX
 	@JmxAttribute
 	public PromiseStats getRepartitionPromise() {
 		return repartitionPromise;
 	}
-	// endregion
 }

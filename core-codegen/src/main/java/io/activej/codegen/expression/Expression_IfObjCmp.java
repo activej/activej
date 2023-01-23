@@ -41,7 +41,6 @@ final class Expression_IfObjCmp implements Expression {
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;
 
-	// region builders
 	Expression_IfObjCmp(CompareOperation operation, Expression left, Expression right, Expression expressionTrue, Expression expressionFalse) {
 		this.left = left;
 		this.right = right;
@@ -49,7 +48,6 @@ final class Expression_IfObjCmp implements Expression {
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
 	}
-	// endregion
 
 	@Override
 	public Type load(Context ctx) {

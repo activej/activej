@@ -64,7 +64,6 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 
 	private Path debugOutputDir = DEFAULT_DEBUG_OUTPUT_DIR;
 
-	// region builders
 	private DefiningClassLoader() {
 	}
 
@@ -134,7 +133,6 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 			return DefiningClassLoader.this;
 		}
 	}
-	// endregion
 
 	/**
 	 * Defines a class using a given class name and bytecode

@@ -70,7 +70,6 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 	private MemSize readBlockSize = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 	private MemSize writeBlockSize = DEFAULT_SORTER_BLOCK_SIZE;
 
-	// region creators
 	private StreamSorterStorage(Executor executor, BinarySerializer<T> serializer,
 			FrameFormat frameFormat, Path path) {
 		this.executor = executor;
@@ -136,7 +135,6 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 			return StreamSorterStorage.this;
 		}
 	}
-	// endregion
 
 	public Path getPath() {
 		return path;

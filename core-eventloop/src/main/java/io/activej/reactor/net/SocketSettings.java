@@ -46,7 +46,6 @@ public final class SocketSettings {
 	private int implReadBufferSize = 0;
 	private int lingerTimeout = -1;
 
-	// region builders
 	private SocketSettings() {
 	}
 
@@ -135,7 +134,6 @@ public final class SocketSettings {
 			return SocketSettings.this;
 		}
 	}
-	// endregion
 
 	public void applySettings(SocketChannel channel) throws IOException {
 		if (sendBufferSize != 0) {

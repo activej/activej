@@ -59,7 +59,6 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	private boolean closing;
 	private boolean waitingForFin;
 
-	// region creators
 	private WebSocketFramesToBufs(boolean masked) {
 		this.masked = masked;
 	}
@@ -90,7 +89,6 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 			if (this.input != null && this.output != null) startProcess();
 		};
 	}
-	// endregion
 
 	@Override
 	protected void beforeProcess() {

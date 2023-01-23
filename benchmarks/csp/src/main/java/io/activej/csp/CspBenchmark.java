@@ -36,7 +36,6 @@ public class CspBenchmark extends Launcher {
 		}
 	}
 
-	//region fields
 	@Inject
 	Reactor reactor;
 

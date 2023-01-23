@@ -74,7 +74,6 @@ public final class DnsClient extends AbstractNioReactive
 	private @Nullable UdpSocket.Inspector socketInspector;
 	private @Nullable Inspector inspector;
 
-	// region creators
 	private DnsClient(NioReactor reactor) {
 		super(reactor);
 	}
@@ -131,7 +130,6 @@ public final class DnsClient extends AbstractNioReactive
 			return DnsClient.this;
 		}
 	}
-	// endregion
 
 	@Override
 	public void close() {

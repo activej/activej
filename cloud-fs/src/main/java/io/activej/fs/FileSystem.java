@@ -20,12 +20,12 @@ import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.ChannelConsumer;
@@ -121,7 +121,6 @@ public final class FileSystem extends AbstractReactive
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	//endregion
 
-	// region creators
 	private FileSystem(Reactor reactor, Path storage, Executor executor) {
 		super(reactor);
 		this.executor = executor;
@@ -221,7 +220,6 @@ public final class FileSystem extends AbstractReactive
 			return FileSystem.this;
 		}
 	}
-	// endregion
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {

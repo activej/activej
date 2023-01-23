@@ -90,7 +90,6 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	private final EventStats removedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	//region creators
 	private CrdtStorage_Client(NioReactor reactor, InetSocketAddress address, BinarySerializer_CrdtData<K, S> serializer) {
 		super(reactor);
 		this.address = address;
@@ -154,7 +153,6 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 			return CrdtStorage_Client.this;
 		}
 	}
-	//endregion
 
 	public InetSocketAddress getAddress() {
 		return address;

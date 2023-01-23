@@ -107,7 +107,6 @@ public final class FileSystem_Remote extends AbstractNioReactive
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	//endregion
 
-	// region creators
 	private FileSystem_Remote(NioReactor reactor, InetSocketAddress address) {
 		super(reactor);
 		this.address = address;
@@ -142,7 +141,6 @@ public final class FileSystem_Remote extends AbstractNioReactive
 			return FileSystem_Remote.this;
 		}
 	}
-	// endregion
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {

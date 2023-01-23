@@ -1318,7 +1318,6 @@ public final class Cube extends AbstractReactive
 		}
 
 	}
-	// endregion
 
 	@Override
 	public String toString() {

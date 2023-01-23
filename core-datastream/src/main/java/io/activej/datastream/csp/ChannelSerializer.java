@@ -76,7 +76,6 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 	private final ArrayDeque<ByteBuf> bufs = new ArrayDeque<>();
 	private boolean sending;
 
-	// region creators
 	private ChannelSerializer(BinarySerializer<T> serializer) {
 		this.serializer = serializer;
 	}
@@ -171,7 +170,6 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 			resume(input);
 		};
 	}
-	// endregion
 
 	@Override
 	protected void onInit() {

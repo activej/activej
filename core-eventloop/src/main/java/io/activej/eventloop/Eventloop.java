@@ -168,7 +168,6 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 
 	private boolean monitoring = false;
 
-	// region builders
 	private Eventloop() {
 	}
 
@@ -303,7 +302,6 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 			return Eventloop.this;
 		}
 	}
-	// endregion
 
 	/**
 	 * Returns this {@link Eventloop}'s {@link Selector}

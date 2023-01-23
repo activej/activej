@@ -35,7 +35,6 @@ public final class PrimaryServer extends AbstractReactiveServer {
 
 	private int currentAcceptor = -1; // first server index is currentAcceptor + 1
 
-	// region builders
 	private PrimaryServer(NioReactor primaryReactor, WorkerServer[] workerServers) {
 		super(primaryReactor);
 		this.workerServers = workerServers;
@@ -63,7 +62,6 @@ public final class PrimaryServer extends AbstractReactiveServer {
 	public final class Builder extends AbstractReactiveServer.Builder<Builder, PrimaryServer> {
 		private Builder() {}
 	}
-	// endregion
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {

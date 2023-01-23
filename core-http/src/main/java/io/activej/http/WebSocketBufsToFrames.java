@@ -69,7 +69,6 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	private final ByteBufs frameBufs = new ByteBufs();
 	private final ByteBufs controlMessageBufs = new ByteBufs();
 
-	// region creators
 	WebSocketBufsToFrames(long maxMessageSize, Consumer<ByteBuf> onPing, Consumer<ByteBuf> onPong, boolean masked) {
 		this.maxMessageSize = maxMessageSize;
 		this.onPing = onPing;
@@ -103,7 +102,6 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 			if (this.input != null && this.output != null) startProcess();
 		};
 	}
-	// endregion
 
 	@Override
 	protected void beforeProcess() {

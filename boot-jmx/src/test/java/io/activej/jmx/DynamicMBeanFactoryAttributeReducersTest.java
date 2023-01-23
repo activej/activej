@@ -53,7 +53,7 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 			return CONSTANT_VALUE;
 		}
 	}
-	// simple type reducers
+	// endregion
 
 	// region pojo reducers
 	@Test

@@ -81,7 +81,6 @@ public final class ThrottlingController
 	private int gcExceededCount;
 	private float throttling;
 
-	// region creators
 	public static ThrottlingController create() {
 		return builder().build();
 	}
@@ -142,7 +141,6 @@ public final class ThrottlingController
 			return ThrottlingController.this;
 		}
 	}
-	// endregion
 
 	public void setEventloop(Eventloop eventloop) {
 		this.eventloop = eventloop;

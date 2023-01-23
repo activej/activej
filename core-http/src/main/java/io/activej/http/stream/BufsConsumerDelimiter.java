@@ -44,7 +44,6 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 
 	private long remaining;
 
-	// region creators
 	private BufsConsumerDelimiter(long remaining) {
 		this.remaining = remaining;
 	}
@@ -76,7 +75,6 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 			if (this.input != null && this.output != null) startProcess();
 		};
 	}
-	// endregion
 
 	@Override
 	protected void beforeProcess() {

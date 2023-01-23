@@ -24,7 +24,6 @@ public final class ScheduledRunnable implements Comparable<ScheduledRunnable>, W
 	private boolean cancelled;
 	private boolean complete;
 
-	// region builders
 	private ScheduledRunnable(long timestamp, Runnable runnable) {
 		this.timestamp = timestamp;
 		this.runnable = runnable;
@@ -33,7 +32,6 @@ public final class ScheduledRunnable implements Comparable<ScheduledRunnable>, W
 	public static ScheduledRunnable create(long timestamp, Runnable runnable) {
 		return new ScheduledRunnable(timestamp, runnable);
 	}
-	// endregion
 
 	@SuppressWarnings("AssignmentToNull") // runnable has been cancelled
 	public void cancel() {

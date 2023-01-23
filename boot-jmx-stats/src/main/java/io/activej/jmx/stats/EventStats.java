@@ -56,7 +56,6 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 	private @Nullable String rateUnit;
 	private int precision = 1000;
 
-	// region builders
 	private EventStats(double smoothingWindow) {
 		this.smoothingWindow = smoothingWindow;
 		this.smoothingWindowCoef = calculateSmoothingWindowCoef(smoothingWindow);
@@ -117,7 +116,6 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 			return EventStats.this;
 		}
 	}
-	// endregion
 
 	private static double calculateSmoothingWindowCoef(double smoothingWindow) {
 		return -(LN_2 / smoothingWindow);

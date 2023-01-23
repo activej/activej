@@ -145,7 +145,6 @@ public final class RpcClient extends AbstractNioReactive
 
 	private final JmxInspector statsSocket = new JmxInspector();
 
-	// region builders
 	private RpcClient(NioReactor reactor) {
 		super(reactor);
 	}

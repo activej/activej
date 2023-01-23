@@ -21,10 +21,10 @@ import io.activej.async.function.AsyncFunction;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.collection.Try;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -111,7 +111,6 @@ public final class FileSystem_Cluster extends AbstractReactive
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	// region creators
 	private FileSystem_Cluster(Reactor reactor, FileSystemPartitions partitions) {
 		super(reactor);
 		this.partitions = partitions;
@@ -174,7 +173,6 @@ public final class FileSystem_Cluster extends AbstractReactive
 			return FileSystem_Cluster.this;
 		}
 	}
-	// endregion
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {

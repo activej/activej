@@ -43,7 +43,6 @@ public final class BlockingReactorExecutor implements ReactorExecutor, WithIniti
 
 	private final int limit;
 
-	// region builders
 	private BlockingReactorExecutor(ReactorExecutor reactorExecutor, int limit) {
 		this.reactorExecutor = reactorExecutor;
 		this.limit = limit;
@@ -52,7 +51,6 @@ public final class BlockingReactorExecutor implements ReactorExecutor, WithIniti
 	public static BlockingReactorExecutor create(ReactorExecutor reactorExecutor, int limit) {
 		return new BlockingReactorExecutor(reactorExecutor, limit);
 	}
-	// endregion
 
 	public int getLimit() {
 		return limit;

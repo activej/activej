@@ -75,7 +75,6 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 	private static final DynamicMBeanFactory INSTANCE_WITH_DEFAULT_REFRESH_PERIOD = new DynamicMBeanFactory(DEFAULT_REFRESH_PERIOD_IN_SECONDS, MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT);
 
-	// region constructor and factory methods
 	private DynamicMBeanFactory(Duration refreshPeriod, int maxJmxRefreshesPerOneCycle) {
 		this.specifiedRefreshPeriod = refreshPeriod;
 		this.maxJmxRefreshesPerOneCycle = maxJmxRefreshesPerOneCycle;
@@ -88,7 +87,6 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	public static DynamicMBeanFactory create(Duration refreshPeriod, int maxJmxRefreshesPerOneCycle) {
 		return new DynamicMBeanFactory(refreshPeriod, maxJmxRefreshesPerOneCycle);
 	}
-	// endregion
 
 	// region exportable stats for JmxRegistry
 	public Duration getSpecifiedRefreshPeriod() {

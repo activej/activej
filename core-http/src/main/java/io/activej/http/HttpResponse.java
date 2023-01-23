@@ -468,5 +468,4 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		if (isRecycled()) return "{Recycled HttpResponse}";
 		return HttpResponse.class.getSimpleName() + ": " + code;
 	}
-	// endregion
 }

@@ -279,7 +279,6 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 	public void setInspector(@Nullable Inspector inspector) {
 		this.inspector = inspector;
 	}
-	// endregion
 
 	public static int getConnectionCount() {
 		return CONNECTION_COUNT.get();

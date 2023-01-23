@@ -99,7 +99,6 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	private final EventStats acceptsSsl = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats filteredAccepts = EventStats.create(SMOOTHING_WINDOW);
 
-	// region creators & builder methods
 	protected AbstractReactiveServer(NioReactor reactor) {
 		super(reactor);
 	}
@@ -204,7 +203,6 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return (S) AbstractReactiveServer.this;
 		}
 	}
-	// endregion
 
 	protected abstract void serve(AsyncTcpSocket socket, InetAddress remoteAddress);
 

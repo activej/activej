@@ -58,7 +58,6 @@ public final class RedisClient extends AbstractNioReactive {
 	private @Nullable SSLContext sslContext;
 	private @Nullable Executor sslExecutor;
 
-	// region creators
 	private RedisClient(NioReactor reactor, InetSocketAddress address) {
 		super(reactor);
 		this.address = address;
@@ -113,7 +112,6 @@ public final class RedisClient extends AbstractNioReactive {
 			return RedisClient.this;
 		}
 	}
-	// endregion
 
 	// region getters
 	public InetSocketAddress getAddress() {

@@ -41,7 +41,6 @@ public class DatastreamBenchmark extends Launcher {
 		}
 	}
 
-	//region fields
 	@Inject
 	Reactor reactor;
 
@@ -88,7 +87,6 @@ public class DatastreamBenchmark extends Launcher {
 	StreamConsumer<Integer> streamConsumer() {
 		return StreamConsumer.skip();
 	}
-	//endregion
 
 	@Override
 	protected Module getModule() {

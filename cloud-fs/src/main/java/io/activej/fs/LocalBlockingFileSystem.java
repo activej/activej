@@ -73,7 +73,6 @@ public final class LocalBlockingFileSystem implements BlockingFileSystem, Blocki
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	// region creators
 	private LocalBlockingFileSystem(Path storage) {
 		this.storage = storage;
 		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
@@ -159,7 +158,6 @@ public final class LocalBlockingFileSystem implements BlockingFileSystem, Blocki
 			return LocalBlockingFileSystem.this;
 		}
 	}
-	// endregion
 
 	@Override
 	public OutputStream upload(String name) throws IOException {

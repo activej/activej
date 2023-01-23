@@ -21,8 +21,8 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.collection.Try;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.Try;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtStorage_Client;
@@ -91,7 +91,6 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	private final EventStats repartitionedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	// region creators
 	private CrdtStorage_Cluster(Reactor reactor, AsyncDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
 		super(reactor);
 		this.discoveryService = discoveryService;
@@ -134,8 +133,6 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 		return this;
 	}
 */
-
-	// endregion
 
 	@Override
 	public Promise<?> start() {

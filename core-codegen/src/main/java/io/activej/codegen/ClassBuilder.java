@@ -352,7 +352,6 @@ public final class ClassBuilder<T> {
 	public static void clearStaticConstants() {
 		STATIC_CONSTANTS.clear();
 	}
-	// endregion
 
 	/**
 	 * Defines a class from {@code this} {@link ClassBuilder} using given {@link DefiningClassLoader}

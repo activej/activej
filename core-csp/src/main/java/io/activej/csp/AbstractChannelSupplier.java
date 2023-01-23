@@ -27,7 +27,6 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable implements ChannelSupplier<T> {
 	private static final boolean CHECKS = Checks.isEnabled(AbstractChannelSupplier.class);
 
-	// region creators
 	protected AbstractChannelSupplier() {
 		setCloseable(null);
 	}
@@ -35,7 +34,6 @@ public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable 
 	protected AbstractChannelSupplier(@Nullable AsyncCloseable closeable) {
 		setCloseable(closeable);
 	}
-	// endregion
 
 	protected abstract Promise<T> doGet();
 

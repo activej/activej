@@ -285,7 +285,6 @@ public final class HttpClient extends AbstractNioReactive
 
 	private int inetAddressIdx = 0;
 
-	// region builders
 	private HttpClient(NioReactor reactor, AsyncDnsClient asyncDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
@@ -399,7 +398,6 @@ public final class HttpClient extends AbstractNioReactive
 			return HttpClient.this;
 		}
 	}
-	// endregion
 
 	private void scheduleExpiredConnectionsCheck() {
 		assert expiredConnectionsCheck == null;

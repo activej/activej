@@ -113,7 +113,6 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 	private final PromiseStats consolidationStats = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	// region creators
 	private CrdtStorage_FileSystem(Reactor reactor, AsyncFileSystem fileSystem, BinarySerializer_CrdtData<K, S> serializer, CrdtFunction<S> function) {
 		super(reactor);
 		this.fileSystem = fileSystem;
@@ -171,7 +170,6 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 			return CrdtStorage_FileSystem.this;
 		}
 	}
-	// endregion
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {

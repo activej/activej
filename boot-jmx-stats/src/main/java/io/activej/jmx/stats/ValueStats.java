@@ -45,8 +45,6 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	private static final String NEG_INF = "-∞";
 	private static final String POS_INF = "+∞";
 
-	// endregion
-
 	private long lastTimestampMillis;
 
 	// integer runtime accumulators
@@ -97,7 +95,6 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	private boolean useAbsoluteValues;
 	private int precision = 1000;
 
-	// region builders
 	private ValueStats(double smoothingWindow) {
 		this.smoothingWindow = smoothingWindow;
 		this.smoothingWindowCoef = calculateSmoothingWindowCoef(smoothingWindow);
@@ -211,7 +208,6 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 			return ValueStats.this;
 		}
 	}
-	// endregion
 
 	public void setHistogram(@Nullable JmxHistogram histogram) {
 		this.histogram = histogram;
