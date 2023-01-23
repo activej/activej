@@ -107,8 +107,9 @@ public class RecordTest {
 
 	@Test
 	public void testRecordAnnotationCompatibilityMode() {
-		BinarySerializer<Record> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<Record> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withAnnotationCompatibilityMode()
+				.build()
 				.build(Record.class);
 		{
 			Record record1 = new Record("abc", 1);
@@ -152,8 +153,9 @@ public class RecordTest {
 
 	@Test
 	public void testRecordNestedNullableAnnotationCompatibilityMode() {
-		BinarySerializer<RecordWithNestedPathNullables> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<RecordWithNestedPathNullables> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withAnnotationCompatibilityMode()
+				.build()
 				.build(RecordWithNestedPathNullables.class);
 		{
 			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(List.of("abc", "xyz"), 1);

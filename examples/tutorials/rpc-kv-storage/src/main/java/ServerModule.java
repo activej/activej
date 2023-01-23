@@ -4,7 +4,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerBuilder;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 
@@ -27,7 +26,6 @@ public class ServerModule extends AbstractModule {
 	@Provides
 	RpcServer rpcServer(NioReactor reactor, KeyValueStore store) {
 		return RpcServer.builder(reactor)
-				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
 				.withHandler(PutRequest.class, req -> Promise.of(new PutResponse(store.put(req.key(), req.value()))))
 				.withHandler(GetRequest.class, req -> Promise.of(new GetResponse(store.get(req.key()))))

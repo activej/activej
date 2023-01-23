@@ -21,7 +21,7 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.types.AnnotationUtils;
@@ -49,6 +49,7 @@ import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.get;
 import static io.activej.types.AnnotatedTypes.*;
+import static io.activej.types.AnnotationUtils.getAnnotation;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
@@ -63,7 +64,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Scans fields of classes for serialization.
  */
-public final class SerializerBuilder implements WithInitializer<SerializerBuilder> {
+public final class SerializerBuilder {
 	private final DefiningClassLoader classLoader;
 
 	private final TypeScannerRegistry<SerializerDef> registry = TypeScannerRegistry.create();
@@ -91,14 +92,28 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	 * Creates a new instance of {@code SerializerBuilder} with newly created {@link DefiningClassLoader}
 	 */
 	public static SerializerBuilder create() {
-		return create(DefiningClassLoader.create());
+		return builder().build();
 	}
 
 	/**
 	 * Creates a new instance of {@code SerializerBuilder} with external {@link DefiningClassLoader}
 	 */
 	public static SerializerBuilder create(DefiningClassLoader definingClassLoader) {
-		SerializerBuilder builder = new SerializerBuilder(definingClassLoader);
+		return builder(definingClassLoader).build();
+	}
+
+	/**
+	 * Creates a builder of {@code SerializerBuilder} with newly created {@link DefiningClassLoader}
+	 */
+	public static Builder builder() {
+		return builder(DefiningClassLoader.create());
+	}
+
+	/**
+	 * Creates a builder of {@code SerializerBuilder} with external {@link DefiningClassLoader}
+	 */
+	public static Builder builder(DefiningClassLoader definingClassLoader) {
+		SerializerBuilder.Builder builder = new SerializerBuilder(definingClassLoader).new Builder();
 
 		builder
 				.with(boolean.class, ctx -> new SerializerDef_Boolean(false))
@@ -178,261 +193,323 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		return builder;
 	}
 
-	/**
-	 * Adds a mapping to resolve a {@link SerializerDef} for a given {@link TypeT}
-	 *
-	 * @param typeT a type token
-	 * @param fn    a mapping to resolve a serializer
-	 */
-	public SerializerBuilder with(TypeT<?> typeT, Mapping<SerializerDef> fn) {
-		return with(typeT.getType(), fn);
-	}
+	public final class Builder extends AbstractBuilder<Builder, SerializerBuilder> {
+		private Builder() {}
 
-	/**
-	 * Adds a mapping to resolve a {@link SerializerDef} for a given {@link Type}
-	 *
-	 * @param type a type
-	 * @param fn   a mapping to resolve a serializer
-	 */
-	@SuppressWarnings("PointlessBooleanExpression")
-	public SerializerBuilder with(Type type, Mapping<SerializerDef> fn) {
-		registry.with(type, ctx -> {
-			Class<?> rawClass = ctx.getRawType();
-			SerializerDef serializerDef;
-			SerializeClass annotationClass;
-			if (false ||
-					(annotationClass = getAnnotation(SerializeClass.class, ctx.getAnnotations())) != null ||
-					(annotationClass = getAnnotation(SerializeClass.class, rawClass.getAnnotations())) != null) {
-				if (annotationClass.value() != SerializerDef.class) {
-					try {
-						serializerDef = annotationClass.value().getDeclaredConstructor().newInstance();
-					} catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-							 InvocationTargetException e) {
-						throw new RuntimeException(e);
+		/**
+		 * Adds a mapping to resolve a {@link SerializerDef} for a given {@link TypeT}
+		 *
+		 * @param typeT a type token
+		 * @param fn    a mapping to resolve a serializer
+		 */
+		public Builder with(TypeT<?> typeT, Mapping<SerializerDef> fn) {
+			checkNotBuilt(this);
+			return with(typeT.getType(), fn);
+		}
+
+		/**
+		 * Adds a mapping to resolve a {@link SerializerDef} for a given {@link Type}
+		 *
+		 * @param type a type
+		 * @param fn   a mapping to resolve a serializer
+		 */
+		@SuppressWarnings("PointlessBooleanExpression")
+		public Builder with(Type type, Mapping<SerializerDef> fn) {
+			checkNotBuilt(this);
+			registry.with(type, ctx -> {
+				Class<?> rawClass = ctx.getRawType();
+				SerializerDef serializerDef;
+				SerializeClass annotationClass;
+				if (false ||
+						(annotationClass = getAnnotation(SerializeClass.class, ctx.getAnnotations())) != null ||
+						(annotationClass = getAnnotation(SerializeClass.class, rawClass.getAnnotations())) != null) {
+					if (annotationClass.value() != SerializerDef.class) {
+						try {
+							serializerDef = annotationClass.value().getDeclaredConstructor().newInstance();
+						} catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+								 InvocationTargetException e) {
+							throw new RuntimeException(e);
+						}
+					} else {
+						LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
+						LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(List.of(annotationClass.subclasses()));
+						subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
+						subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
+						for (Class<?> subclass : subclassesSet) {
+							map.put(subclass, ctx.scan(subclass));
+						}
+						serializerDef = new SerializerDef_Subclass(rawClass, map, annotationClass.subclassesIdx());
 					}
-				} else {
+				} else if (extraSubclassesMap.containsKey(rawClass)) {
 					LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
-					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(List.of(annotationClass.subclasses()));
-					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
-					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
-					for (Class<?> subclass : subclassesSet) {
+					for (Class<?> subclass : extraSubclassesMap.get(rawClass)) {
 						map.put(subclass, ctx.scan(subclass));
 					}
-					serializerDef = new SerializerDef_Subclass(rawClass, map, annotationClass.subclassesIdx());
+					serializerDef = new SerializerDef_Subclass(rawClass, map, 0);
+				} else {
+					serializerDef = fn.apply(ctx);
 				}
-			} else if (extraSubclassesMap.containsKey(rawClass)) {
-				LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
-				for (Class<?> subclass : extraSubclassesMap.get(rawClass)) {
-					map.put(subclass, ctx.scan(subclass));
+
+				if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
+					serializerDef = ((SerializerDef_WithVarLength) serializerDef).ensureVarLength();
 				}
-				serializerDef = new SerializerDef_Subclass(rawClass, map, 0);
-			} else {
-				serializerDef = fn.apply(ctx);
-			}
 
-			if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
-				serializerDef = ((SerializerDef_WithVarLength) serializerDef).ensureVarLength();
-			}
+				SerializeFixedSize annotationFixedSize;
+				if ((annotationFixedSize = getAnnotation(SerializeFixedSize.class, ctx.getAnnotations())) != null) {
+					serializerDef = ((SerializerDef_WithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
+				}
 
-			SerializeFixedSize annotationFixedSize;
-			if ((annotationFixedSize = getAnnotation(SerializeFixedSize.class, ctx.getAnnotations())) != null) {
-				serializerDef = ((SerializerDef_WithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
-			}
+				if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
+					serializerDef = serializerDef instanceof SerializerDef_WithNullable ?
+							((SerializerDef_WithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDef_Nullable(serializerDef);
+				}
 
-			if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
-				serializerDef = serializerDef instanceof SerializerDef_WithNullable ?
-						((SerializerDef_WithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDef_Nullable(serializerDef);
-			}
-
-			return serializerDef;
-		});
-		return this;
-	}
-
-	@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
-	private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
-		for (int i = 0; i < annotations.length; i++) {
-			Annotation annotation = annotations[i];
-			if (annotation.annotationType() == type) {
-				return (A) annotation;
-			}
+				return serializerDef;
+			});
+			return this;
 		}
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
-		if (aliasesMap != null) {
+
+		/**
+		 * Adds an implementation class for the serializer
+		 *
+		 * @param implementationClass an implementation class
+		 */
+		public Builder withImplementationClass(Class<?> implementationClass) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.implementationClass = implementationClass;
+			return this;
+		}
+
+		/**
+		 * Sets a given {@link CompatibilityLevel} for the serializer. This method should be used
+		 * to ensure backwards compatibility with previous versions of serializers
+		 *
+		 * @param compatibilityLevel a compatibility level
+		 */
+		public Builder withCompatibilityLevel(CompatibilityLevel compatibilityLevel) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.compatibilityLevel = compatibilityLevel;
+			return this;
+		}
+
+		/**
+		 * Enables annotation compatibility mode
+		 *
+		 * @see #withAnnotationCompatibilityMode(boolean)
+		 */
+		public Builder withAnnotationCompatibilityMode() {
+			checkNotBuilt(this);
+			return withAnnotationCompatibilityMode(true);
+		}
+
+		/**
+		 * Enables or disables annotation compatibility mode
+		 * <p>
+		 * In previous ActiveJ versions serializer annotations had to be placed directly on fields/getters.
+		 * To specify a concrete annotated type a {@code path} attribute was used. Now it is possible to
+		 * annotate types directly. However, for compatibility with classes annotated using a {@code path} attribute
+		 * this compatibility mode can be enabled
+		 */
+		public Builder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.annotationsCompatibilityMode = annotationsCompatibilityMode;
+			return this;
+		}
+
+		/**
+		 * Adds alias annotation for a serializer annotation. Alias annotation acts as if it is a regular
+		 * serializer annotation
+		 *
+		 * @param annotation      a serializer annotation
+		 * @param annotationAlias an alias annotation
+		 * @param mapping         a function that transforms an alias annotation into a serializer annotation
+		 * @param <A>             a type of serializer annotation
+		 * @param <T>             a type of alias annotation
+		 */
+		public <A extends Annotation, T extends Annotation> Builder withAnnotationAlias(Class<A> annotation, Class<T> annotationAlias,
+				Function<T, A> mapping) {
+			checkNotBuilt(this);
+			annotationAliases.computeIfAbsent(annotation, $ -> new HashMap<>()).put(annotationAlias, mapping);
+			return this;
+		}
+
+		/**
+		 * Sets maximal encode version
+		 * <p>
+		 * This method is used to ensure compatibility between different versions of serialized objects
+		 *
+		 * @param encodeVersionMax a maximal encode version
+		 */
+		public Builder withEncodeVersion(int encodeVersionMax) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.encodeVersionMax = encodeVersionMax;
+			return this;
+		}
+
+		/**
+		 * Sets both minimal and maximal decode versions
+		 *
+		 * <p>
+		 * This method is used to ensure compatibility between different versions of serialized objects
+		 *
+		 * @param decodeVersionMin a minimal decode version
+		 * @param decodeVersionMax a maximal decode version
+		 */
+		public Builder withDecodeVersions(int decodeVersionMin, int decodeVersionMax) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.decodeVersionMin = decodeVersionMin;
+			SerializerBuilder.this.decodeVersionMax = decodeVersionMax;
+			return this;
+		}
+
+		/**
+		 * Sets maximal encode version as well as both minimal and maximal decode versions
+		 *
+		 * <p>
+		 * This method is used to ensure compatibility between different versions of serialized objects
+		 *
+		 * @param encodeVersionMax a maximal encode version
+		 * @param decodeVersionMin a minimal decode version
+		 * @param decodeVersionMax a maximal decode version
+		 */
+		public Builder withVersions(int encodeVersionMax, int decodeVersionMin, int decodeVersionMax) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.encodeVersionMax = encodeVersionMax;
+			SerializerBuilder.this.decodeVersionMin = decodeVersionMin;
+			SerializerBuilder.this.decodeVersionMax = decodeVersionMax;
+			return this;
+		}
+
+		/**
+		 * Sets auto ordering parameters (used when no explicit ordering is set)
+		 *
+		 * @param autoOrderingStart  a value of initial order index
+		 * @param autoOrderingStride a step between indices
+		 */
+		public Builder withAutoOrdering(int autoOrderingStart, int autoOrderingStride) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.autoOrderingStart = autoOrderingStart;
+			SerializerBuilder.this.autoOrderingStride = autoOrderingStride;
+			return this;
+		}
+
+		/**
+		 * Sets a serializer profile
+		 *
+		 * @param profile a serializer profile
+		 */
+		public Builder withProfile(String profile) {
+			checkNotBuilt(this);
+			SerializerBuilder.this.profile = profile;
+			return this;
+		}
+
+		/**
+		 * Sets subclasses to be serialized.
+		 * Uses custom string id to identify subclasses
+		 *
+		 * @param subclassesId an id of subclasses
+		 * @param subclasses   actual subclasses classes
+		 * @param <T>          a parent of subclasses
+		 */
+		public <T> Builder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
+			checkNotBuilt(this);
+			addSubclasses(subclassesId, subclasses);
+			return this;
+		}
+
+		/**
+		 * Sets subclasses to be serialized.
+		 * Uses parent class to identify subclasses
+		 *
+		 * @param type       a parent class  of subclasses
+		 * @param subclasses actual subclasses classes
+		 * @param <T>        a parent type of subclasses
+		 */
+		public <T> Builder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
+			checkNotBuilt(this);
+			addSubclasses(type, subclasses);
+			return this;
+		}
+
+		@Override
+		protected SerializerBuilder doBuild() {
+			return SerializerBuilder.this;
+		}
+
+		@SuppressWarnings("unchecked")
+		private SerializerDef scan(Context<SerializerDef> ctx) {
+			Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.getContextValue();
+			SerializerDef serializerDef = cache.get(ctx.getType());
+			if (serializerDef != null) return serializerDef;
+			ForwardingSerializerDefImpl forwardingSerializerDef = new ForwardingSerializerDefImpl();
+			cache.put(ctx.getType(), forwardingSerializerDef);
+
+			SerializerDef serializer = doScan(ctx);
+
+			forwardingSerializerDef.serializerDef = serializer;
+
+			return serializer;
+		}
+
+		@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
+		private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
 			for (int i = 0; i < annotations.length; i++) {
 				Annotation annotation = annotations[i];
-				Function<Annotation, ? extends Annotation> mapping = (Function<Annotation, ? extends Annotation>) aliasesMap.get(annotation.annotationType());
-				if (mapping != null) {
-					return (A) mapping.apply(annotation);
+				if (annotation.annotationType() == type) {
+					return (A) annotation;
 				}
 			}
-		}
-		return null;
-	}
-
-	@SuppressWarnings("ForLoopReplaceableByForEach")
-	private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
-		for (int i = 0; i < annotations.length; i++) {
-			Class<? extends Annotation> annotationType = annotations[i].annotationType();
-			if (annotationType == type || aliasesMap.containsKey(annotationType)) {
-				return true;
+			Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
+			if (aliasesMap != null) {
+				for (int i = 0; i < annotations.length; i++) {
+					Annotation annotation = annotations[i];
+					Function<Annotation, ? extends Annotation> mapping = (Function<Annotation, ? extends Annotation>) aliasesMap.get(annotation.annotationType());
+					if (mapping != null) {
+						return (A) mapping.apply(annotation);
+					}
+				}
 			}
+			return null;
 		}
-		return false;
+
+		@SuppressWarnings("ForLoopReplaceableByForEach")
+		private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
+			Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
+			for (int i = 0; i < annotations.length; i++) {
+				Class<? extends Annotation> annotationType = annotations[i].annotationType();
+				if (annotationType == type || aliasesMap.containsKey(annotationType)) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	/**
-	 * Adds an implementation class for the serializer
-	 *
-	 * @param implementationClass an implementation class
-	 */
-	public SerializerBuilder withImplementationClass(Class<?> implementationClass) {
-		this.implementationClass = implementationClass;
-		return this;
-	}
-
-	/**
-	 * Sets a given {@link CompatibilityLevel} for the serializer. This method should be used
-	 * to ensure backwards compatibility with previous versions of serializers
-	 *
-	 * @param compatibilityLevel a compatibility level
-	 */
-	public SerializerBuilder withCompatibilityLevel(CompatibilityLevel compatibilityLevel) {
-		this.compatibilityLevel = compatibilityLevel;
-		return this;
-	}
-
-	/**
-	 * Enables annotation compatibility mode
-	 *
-	 * @see #withAnnotationCompatibilityMode(boolean)
-	 */
-	public SerializerBuilder withAnnotationCompatibilityMode() {
-		return withAnnotationCompatibilityMode(true);
-	}
-
-	/**
-	 * Enables or disables annotation compatibility mode
-	 * <p>
-	 * In previous ActiveJ versions serializer annotations had to be placed directly on fields/getters.
-	 * To specify a concrete annotated type a {@code path} attribute was used. Now it is possible to
-	 * annotate types directly. However, for compatibility with classes annotated using a {@code path} attribute
-	 * this compatibility mode can be enabled
-	 */
-	public SerializerBuilder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
-		this.annotationsCompatibilityMode = annotationsCompatibilityMode;
-		return this;
-	}
-
-	/**
-	 * Adds alias annotation for a serializer annotation. Alias annotation acts as if it is a regular
-	 * serializer annotation
-	 *
-	 * @param annotation      a serializer annotation
-	 * @param annotationAlias an alias annotation
-	 * @param mapping         a function that transforms an alias annotation into a serializer annotation
-	 * @param <A>             a type of serializer annotation
-	 * @param <T>             a type of alias annotation
-	 */
-	public <A extends Annotation, T extends Annotation> SerializerBuilder withAnnotationAlias(Class<A> annotation, Class<T> annotationAlias,
-			Function<T, A> mapping) {
-		annotationAliases.computeIfAbsent(annotation, $ -> new HashMap<>()).put(annotationAlias, mapping);
-		return this;
-	}
-
-	/**
-	 * Sets maximal encode version
-	 * <p>
-	 * This method is used to ensure compatibility between different versions of serialized objects
-	 *
-	 * @param encodeVersionMax a maximal encode version
-	 */
-	public SerializerBuilder withEncodeVersion(int encodeVersionMax) {
-		this.encodeVersionMax = encodeVersionMax;
-		return this;
-	}
-
-	/**
-	 * Sets both minimal and maximal decode versions
-	 *
-	 * <p>
-	 * This method is used to ensure compatibility between different versions of serialized objects
-	 *
-	 * @param decodeVersionMin a minimal decode version
-	 * @param decodeVersionMax a maximal decode version
-	 */
-	public SerializerBuilder withDecodeVersions(int decodeVersionMin, int decodeVersionMax) {
-		this.decodeVersionMin = decodeVersionMin;
-		this.decodeVersionMax = decodeVersionMax;
-		return this;
-	}
-
-	/**
-	 * Sets maximal encode version as well as both minimal and maximal decode versions
-	 *
-	 * <p>
-	 * This method is used to ensure compatibility between different versions of serialized objects
-	 *
-	 * @param encodeVersionMax a maximal encode version
-	 * @param decodeVersionMin a minimal decode version
-	 * @param decodeVersionMax a maximal decode version
-	 */
-	public SerializerBuilder withVersions(int encodeVersionMax, int decodeVersionMin, int decodeVersionMax) {
-		this.encodeVersionMax = encodeVersionMax;
-		this.decodeVersionMin = decodeVersionMin;
-		this.decodeVersionMax = decodeVersionMax;
-		return this;
-	}
-
-	/**
-	 * Sets auto ordering parameters (used when no explicit ordering is set)
-	 *
-	 * @param autoOrderingStart  a value of initial order index
-	 * @param autoOrderingStride a step between indices
-	 */
-	public SerializerBuilder withAutoOrdering(int autoOrderingStart, int autoOrderingStride) {
-		this.autoOrderingStart = autoOrderingStart;
-		this.autoOrderingStride = autoOrderingStride;
-		return this;
-	}
-
-	/**
-	 * Sets a serializer profile
-	 *
-	 * @param profile a serializer profile
-	 */
-	public SerializerBuilder withProfile(String profile) {
-		this.profile = profile;
-		return this;
-	}
-
-	/**
-	 * Sets subclasses to be serialized.
+	 * Adds subclasses to be serialized.
 	 * Uses custom string id to identify subclasses
 	 *
 	 * @param subclassesId an id of subclasses
 	 * @param subclasses   actual subclasses classes
 	 * @param <T>          a parent of subclasses
 	 */
-	public <T> SerializerBuilder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
+	public <T> void addSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(subclassesId, (List) subclasses);
-		return this;
 	}
 
 	/**
-	 * Sets subclasses to be serialized.
+	 * Adds subclasses to be serialized.
 	 * Uses parent class to identify subclasses
 	 *
 	 * @param type       a parent class  of subclasses
 	 * @param subclasses actual subclasses classes
 	 * @param <T>        a parent type of subclasses
 	 */
-	public <T> SerializerBuilder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
+	public <T> void addSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
 		//noinspection unchecked,rawtypes
 		extraSubclassesMap.put(type, (List) subclasses);
-		return this;
 	}
 
 	/**
@@ -720,21 +797,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				return classBuilder.defineClass(classLoader);
 			}
 		};
-	}
-
-	@SuppressWarnings("unchecked")
-	private SerializerDef scan(Context<SerializerDef> ctx) {
-		Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.getContextValue();
-		SerializerDef serializerDef = cache.get(ctx.getType());
-		if (serializerDef != null) return serializerDef;
-		ForwardingSerializerDefImpl forwardingSerializerDef = new ForwardingSerializerDefImpl();
-		cache.put(ctx.getType(), forwardingSerializerDef);
-
-		SerializerDef serializer = doScan(ctx);
-
-		forwardingSerializerDef.serializerDef = serializer;
-
-		return serializer;
 	}
 
 	private SerializerDef doScan(Context<SerializerDef> ctx) {

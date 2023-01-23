@@ -21,8 +21,9 @@ public final class LocalDateSerializerExample {
 	public static void main(String[] args) {
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
-				SerializerBuilder.create()
+				SerializerBuilder.builder()
 						.with(LocalDate.class, ctx -> new SerializerDef_LocalDate())
+						.build()
 						.build(LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
 

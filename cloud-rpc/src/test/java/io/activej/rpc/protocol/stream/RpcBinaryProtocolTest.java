@@ -84,8 +84,9 @@ public final class RpcBinaryProtocolTest {
 
 	@Test
 	public void testCompression() {
-		BinarySerializer<RpcMessage> binarySerializer = SerializerBuilder.create()
+		BinarySerializer<RpcMessage> binarySerializer = SerializerBuilder.builder()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(String.class))
+				.build()
 				.build(RpcMessage.class);
 
 		int countRequests = 10;

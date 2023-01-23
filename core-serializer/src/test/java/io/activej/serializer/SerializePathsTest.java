@@ -20,8 +20,9 @@ public class SerializePathsTest {
 
 	private static final BinarySerializer<TestData<String>> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 			.build(new TypeT<TestData<String>>() {}.getType());
-	private static final BinarySerializer<TestDataWithPaths<String>> serializerPaths = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+	private static final BinarySerializer<TestDataWithPaths<String>> serializerPaths = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 			.withAnnotationCompatibilityMode()
+			.build()
 			.build(new TypeT<TestDataWithPaths<String>>() {}.getType());
 
 	@Test

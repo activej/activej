@@ -780,14 +780,38 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testVersions() {
-		BinarySerializer<TestDataVersions> serializer0 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(0).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer1 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(1).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer11 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withVersions(1, 1, 1).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer2 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(2).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer22 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withVersions(2, 2, 2).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer5 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(5).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer10 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withVersions(10, 10, 10).build(TestDataVersions.class);
-		BinarySerializer<TestDataVersions> serializer100 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(100).build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer0 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(0)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer1 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(1)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer11 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withVersions(1, 1, 1)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer2 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(2)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer22 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withVersions(2, 2, 2)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer5 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(5)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer10 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withVersions(10, 10, 10)
+				.build()
+				.build(TestDataVersions.class);
+		BinarySerializer<TestDataVersions> serializer100 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(100)
+				.build()
+				.build(TestDataVersions.class);
 
 		TestDataVersions testData1 = new TestDataVersions();
 		testData1.a = 10;
@@ -892,8 +916,14 @@ public class BinarySerializerTest {
 	@Test
 	public void testProfiles() {
 		BinarySerializer<TestDataProfiles> serializer0 = SerializerBuilder.create(DEFINING_CLASS_LOADER).build(TestDataProfiles.class);
-		BinarySerializer<TestDataProfiles> serializer1 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile1").build(TestDataProfiles.class);
-		BinarySerializer<TestDataProfiles> serializer2 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile2").build(TestDataProfiles.class);
+		BinarySerializer<TestDataProfiles> serializer1 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withProfile("profile1")
+				.build()
+				.build(TestDataProfiles.class);
+		BinarySerializer<TestDataProfiles> serializer2 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withProfile("profile2")
+				.build()
+				.build(TestDataProfiles.class);
 
 		TestDataProfiles testData1 = new TestDataProfiles();
 		testData1.a = 10;
@@ -943,11 +973,25 @@ public class BinarySerializerTest {
 	@Test
 	public void testProfilesVersions() {
 		Class<TestDataProfiles2> type = TestDataProfiles2.class;
-		BinarySerializer<TestDataProfiles2> serializer1 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(1).build(type);
-		BinarySerializer<TestDataProfiles2> serializer2 = SerializerBuilder.create(DEFINING_CLASS_LOADER).withEncodeVersion(2).build(type);
+		BinarySerializer<TestDataProfiles2> serializer1 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(1)
+				.build()
+				.build(type);
+		BinarySerializer<TestDataProfiles2> serializer2 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withEncodeVersion(2)
+				.build()
+				.build(type);
 
-		BinarySerializer<TestDataProfiles2> serializer1Profile = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile").withEncodeVersion(1).build(type);
-		BinarySerializer<TestDataProfiles2> serializer2Profile = SerializerBuilder.create(DEFINING_CLASS_LOADER).withProfile("profile").withEncodeVersion(2).build(type);
+		BinarySerializer<TestDataProfiles2> serializer1Profile = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withProfile("profile")
+				.withEncodeVersion(1)
+				.build()
+				.build(type);
+		BinarySerializer<TestDataProfiles2> serializer2Profile = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withProfile("profile")
+				.withEncodeVersion(2)
+				.build()
+				.build(type);
 
 		TestDataProfiles2 testData1 = new TestDataProfiles2();
 		testData1.a = 10;
@@ -1067,9 +1111,10 @@ public class BinarySerializerTest {
 		testData1.object1 = 10;
 		testData1.object2 = "object2";
 
-		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withSubclasses("extraSubclasses1", List.of(Integer.class))
 				.withSubclasses(Object.class, List.of(Boolean.class))
+				.build()
 				.build(TestDataExtraSubclasses.class);
 		TestDataExtraSubclasses testData2 = doTest(testData1, serializer);
 
@@ -1108,9 +1153,10 @@ public class BinarySerializerTest {
 		TestDataExtraSubclassesInterface testData1 = new TestDataExtraSubclasses2();
 		((TestDataExtraSubclasses2) testData1).i = 10;
 
-		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withSubclasses("extraSubclasses", List.of(TestDataExtraSubclasses2.class))
 				.withSubclasses(TestDataExtraSubclassesInterface.class, List.of(TestDataExtraSubclasses3.class))
+				.build()
 				.build(TestDataExtraSubclassesInterface.class);
 		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer);
 
@@ -1155,8 +1201,9 @@ public class BinarySerializerTest {
 		TestDataContainerOfAbstractData testData1 = new TestDataContainerOfAbstractData();
 		testData1.data = testImpl;
 
-		BinarySerializer<TestDataContainerOfAbstractData> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestDataContainerOfAbstractData> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withSubclasses(TestDataAbstract.class, List.of(TestDataAbstractImpl.class))
+				.build()
 				.build(TestDataContainerOfAbstractData.class);
 		TestDataContainerOfAbstractData testData2 = doTest(testData1, serializer);
 
@@ -1809,9 +1856,9 @@ public class BinarySerializerTest {
 				.create(DEFINING_CLASS_LOADER)
 				.build(TestConstructorWithBoolean.class);
 
-		BinarySerializer<TestConstructorWithBoolean> serializer2 = SerializerBuilder
-				.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestConstructorWithBoolean> serializer2 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withEncodeVersion(1)
+				.build()
 				.build(TestConstructorWithBoolean.class);
 
 		TestConstructorWithBoolean _test = doTest(test, serializer1);
@@ -2044,18 +2091,18 @@ public class BinarySerializerTest {
 	@Test
 	public void testVersionGetter() {
 		TestGetterVersion test = TestGetterVersion.of("test", List.of("a", "b"));
-		BinarySerializer<TestGetterVersion> serializerV1 = SerializerBuilder
-				.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestGetterVersion> serializerV1 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withEncodeVersion(1)
+				.build()
 				.build(TestGetterVersion.class);
 
 		TestGetterVersion _testV1 = doTest(test, serializerV1);
 
 		assertEquals(test.getStr(), _testV1.getStr());
 
-		BinarySerializer<TestGetterVersion> serializerV2 = SerializerBuilder
-				.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<TestGetterVersion> serializerV2 = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.withEncodeVersion(2)
+				.build()
 				.build(TestGetterVersion.class);
 
 		TestGetterVersion _testV2 = doTest(test, serializerV2);
@@ -2770,8 +2817,9 @@ public class BinarySerializerTest {
 	// Accessing UTF-8 Charset used to fail on Java 16+
 	@Test
 	public void testUTF8Charset() {
-		BinarySerializer<StringHolder> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<StringHolder> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.with(StringHolder.class, ctx -> new SerializerDef_StringHolder())
+				.build()
 				.build(StringHolder.class);
 
 		StringHolder stringHolder = new StringHolder("test");
@@ -2785,8 +2833,9 @@ public class BinarySerializerTest {
 
 	@Test
 	public void abstractSubclass() {
-		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, List.of(AbstractClass.class));
+		SerializerBuilder serializerBuilder = SerializerBuilder.builder()
+				.withSubclasses(Object.class, List.of(AbstractClass.class))
+				.build();
 
 		try {
 			serializerBuilder.build(Object.class);
@@ -2798,8 +2847,9 @@ public class BinarySerializerTest {
 
 	@Test
 	public void interfaceSubclass() {
-		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, List.of(Interface.class));
+		SerializerBuilder serializerBuilder = SerializerBuilder.builder()
+				.withSubclasses(Object.class, List.of(Interface.class))
+				.build();
 
 		try {
 			serializerBuilder.build(Object.class);
@@ -2811,8 +2861,9 @@ public class BinarySerializerTest {
 
 	@Test
 	public void annotationSubclass() {
-		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, List.of(Annotation.class));
+		SerializerBuilder serializerBuilder = SerializerBuilder.builder()
+				.withSubclasses(Object.class, List.of(Annotation.class))
+				.build();
 
 		try {
 			serializerBuilder.build(Object.class);

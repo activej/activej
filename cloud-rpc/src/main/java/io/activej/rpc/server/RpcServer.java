@@ -83,9 +83,6 @@ public final class RpcServer extends AbstractReactiveServer {
 	private Duration autoFlushInterval = Duration.ZERO;
 
 	private final Map<Class<?>, RpcRequestHandler<?, ?>> handlers = new LinkedHashMap<>();
-	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-	private SerializerBuilder serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
-	private List<Class<?>> messageTypes;
 
 	private final List<RpcServerConnection> connections = new ArrayList<>();
 
@@ -116,6 +113,13 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	public final class Builder extends AbstractReactiveServer.Builder<Builder, RpcServer> {
+		private List<Class<?>> messageTypes;
+		private SerializerBuilder serializerBuilder = SerializerBuilder.create(
+				DefiningClassLoader.create(
+						Thread.currentThread().getContextClassLoader()
+				)
+		);
+
 		private Builder() {
 			handlers.put(RpcControlMessage.class, request -> {
 				if (request == RpcControlMessage.PING) {
@@ -127,8 +131,7 @@ public final class RpcServer extends AbstractReactiveServer {
 
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
-			RpcServer.this.classLoader = classLoader;
-			RpcServer.this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
+			this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 			return this;
 		}
 
@@ -152,13 +155,13 @@ public final class RpcServer extends AbstractReactiveServer {
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
 			checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-			RpcServer.this.messageTypes = messageTypes;
+			this.messageTypes = messageTypes;
 			return this;
 		}
 
 		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
 			checkNotBuilt(this);
-			RpcServer.this.serializerBuilder = serializerBuilder;
+			this.serializerBuilder = serializerBuilder;
 			return this;
 		}
 
@@ -204,8 +207,12 @@ public final class RpcServer extends AbstractReactiveServer {
 			Set<Class<?>> handlersClasses = new HashSet<>(handlers.keySet());
 			handlersClasses.remove(RpcControlMessage.class);
 			checkState(!handlersClasses.isEmpty(), "No RPC handlers added");
+			checkState(messageTypes != null, "Message types must be specified");
 			//noinspection SlowListContainsAll
 			checkState(messageTypes.containsAll(handlersClasses), "Some message types where not specified");
+			serializerBuilder.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
+			serializer = serializerBuilder.build(RpcMessage.class);
+
 			return super.doBuild();
 		}
 	}
@@ -221,12 +228,6 @@ public final class RpcServer extends AbstractReactiveServer {
 		// jmx
 		ensureConnectStats(remoteAddress).recordEvent();
 		totalConnects.recordEvent();
-	}
-
-	@Override
-	protected void onListen() {
-		checkState(messageTypes != null, "Message types must be specified");
-		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);
 	}
 
 	@Override

@@ -24,24 +24,25 @@ public class SerializerBuilderUtils {
 
 	// region creators
 	public static SerializerBuilder createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {
-		SerializerBuilder builder = SerializerBuilder.create(definingClassLoader).withProfile(profile);
+		SerializerBuilder.Builder builder = SerializerBuilder.builder(definingClassLoader)
+				.withProfile(profile);
 		return register(builder, definingClassLoader);
 	}
 
 	public static SerializerBuilder createWithHppc7Support(DefiningClassLoader definingClassLoader) {
-		SerializerBuilder builder = SerializerBuilder.create(definingClassLoader);
+		SerializerBuilder.Builder builder = SerializerBuilder.builder(definingClassLoader);
 		return register(builder, definingClassLoader);
 
 	}
 
 	// endregion
-	private static SerializerBuilder register(SerializerBuilder builder, DefiningClassLoader definingClassLoader) {
+	private static SerializerBuilder register(SerializerBuilder.Builder builder, DefiningClassLoader definingClassLoader) {
 		registerHppcMaps(builder, definingClassLoader);
 		registerHppcCollections(builder, definingClassLoader);
-		return builder;
+		return builder.build();
 	}
 
-	private static void registerHppcMaps(SerializerBuilder builder, DefiningClassLoader classLoader) {
+	private static void registerHppcMaps(SerializerBuilder.Builder builder, DefiningClassLoader classLoader) {
 		for (int i = 0; i < TYPES.size(); i++) {
 			Class<?> keyType = TYPES.get(i);
 			if (keyType == float.class || keyType == byte.class || keyType == double.class) {
@@ -65,7 +66,7 @@ public class SerializerBuilderUtils {
 		}
 	}
 
-	private static void registerHppcCollections(SerializerBuilder builder, DefiningClassLoader classLoader) {
+	private static void registerHppcCollections(SerializerBuilder.Builder builder, DefiningClassLoader classLoader) {
 		for (Map.Entry<String, String> collectionImpl : COLLECTION_IMPL_SUFFIX.entrySet()) {
 			for (Class<?> valueType : TYPES) {
 				String collectionImplKey = collectionImpl.getKey();

@@ -32,8 +32,9 @@ public final class RpcMessageSerializeTest {
 	public void testRpcMessage() {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
 		RpcMessage message1 = RpcMessage.of(1, messageData1);
-		BinarySerializer<RpcMessage> serializer = SerializerBuilder.create()
+		BinarySerializer<RpcMessage> serializer = SerializerBuilder.builder()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(TestRpcMessageData.class, TestRpcMessageData2.class))
+				.build()
 				.build(RpcMessage.class);
 
 		byte[] buf = new byte[1000];

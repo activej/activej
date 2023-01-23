@@ -121,12 +121,9 @@ public final class RpcClient extends AbstractNioReactive
 	private Duration autoFlushInterval = Duration.ZERO;
 	private Duration keepAliveInterval = Duration.ZERO;
 
-	private List<Class<?>> messageTypes;
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private long reconnectIntervalMillis = DEFAULT_RECONNECT_INTERVAL.toMillis();
 
-	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-	private SerializerBuilder serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 	private BinarySerializer<RpcMessage> serializer;
 
 	private RpcSender requestSender = new NoSenderAvailable();
@@ -154,12 +151,18 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
+		private List<Class<?>> messageTypes;
+		private SerializerBuilder serializerBuilder = SerializerBuilder.create(
+				DefiningClassLoader.create(
+						Thread.currentThread().getContextClassLoader()
+				)
+		);
+
 		private Builder() {}
 
 		public Builder withClassLoader(ClassLoader classLoader) {
 			checkNotBuilt(this);
-			RpcClient.this.classLoader = classLoader;
-			RpcClient.this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
+			this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 			return this;
 		}
 
@@ -195,7 +198,7 @@ public final class RpcClient extends AbstractNioReactive
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
 			Checks.checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-			RpcClient.this.messageTypes = messageTypes;
+			this.messageTypes = messageTypes;
 			return this;
 		}
 
@@ -208,7 +211,7 @@ public final class RpcClient extends AbstractNioReactive
 		 */
 		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
 			checkNotBuilt(this);
-			RpcClient.this.serializerBuilder = serializerBuilder;
+			this.serializerBuilder = serializerBuilder;
 			return this;
 		}
 
@@ -284,6 +287,8 @@ public final class RpcClient extends AbstractNioReactive
 		@Override
 		protected RpcClient doBuild() {
 			Checks.checkNotNull(messageTypes, "Message types must be specified");
+			serializerBuilder.addSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes);
+			serializer = serializerBuilder.build(RpcMessage.class);
 			return RpcClient.this;
 		}
 	}
@@ -296,8 +301,6 @@ public final class RpcClient extends AbstractNioReactive
 	public Promise<Void> start() {
 		checkInReactorThread(this);
 		Checks.checkState(stopPromise == null);
-
-		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);
 
 		return changeStrategy(newStrategy, false);
 	}

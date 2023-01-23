@@ -99,9 +99,10 @@ public class CompatibilityLevelTest {
 	}
 
 	private static <T> byte[] doTestPreload(Class<T> aClass, T item, CompatibilityLevel compatibilityLevel, String filePrefix) {
-		BinarySerializer<T> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+		BinarySerializer<T> serializer = SerializerBuilder.builder(DEFINING_CLASS_LOADER)
 				.with(ByteBuffer.class, $ -> new SerializerDef_ByteBuffer())
 				.withCompatibilityLevel(compatibilityLevel)
+				.build()
 				.build(aClass);
 
 		byte[] arr = new byte[1000];

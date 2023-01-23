@@ -35,8 +35,9 @@ public class SerializerBuilder2Test {
 	}
 
 	private static SerializerBuilder createBuilder() {
-		return SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class));
+		return SerializerBuilder.builder(DEFINING_CLASS_LOADER)
+				.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class))
+				.build();
 	}
 
 	public static class TestDataScalars {

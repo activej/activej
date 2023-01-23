@@ -11,7 +11,7 @@ public class SimpleSerializerDefTest {
 
 	@Test
 	public void test() {
-		BinarySerializer<ExternalClass> serializer = SerializerBuilder.create()
+		BinarySerializer<ExternalClass> serializer = SerializerBuilder.builder()
 				.with(ExternalComponent.class, ctx -> new SimpleSerializerDef<ExternalComponent>() {
 					@Override
 					protected BinarySerializer<ExternalComponent> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
@@ -32,6 +32,7 @@ public class SimpleSerializerDefTest {
 						};
 					}
 				})
+				.build()
 				.build(ExternalClass.class);
 
 		ExternalClass original = new ExternalClass(
