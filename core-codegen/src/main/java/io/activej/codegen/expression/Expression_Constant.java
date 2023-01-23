@@ -24,6 +24,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.activej.common.Checks.checkNotNull;
 import static org.objectweb.asm.Type.getType;
 
 /**
@@ -38,17 +39,20 @@ public final class Expression_Constant implements Expression {
 	private final int id = COUNTER.incrementAndGet();
 
 	Expression_Constant(Object value) {
+		checkNotNull(value);
 		this.value = value;
 		this.cls = null;
 	}
 
 	Expression_Constant(Object value, Class<?> cls) {
+		checkNotNull(value);
 		if (!cls.isInstance(value)) {
 			throw new IllegalArgumentException(value + " is not an instance of " + cls);
 		}
 
 		this.value = value;
 		this.cls = cls;
+
 	}
 
 	public Object getValue() {
