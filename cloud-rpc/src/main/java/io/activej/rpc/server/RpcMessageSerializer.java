@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.lang.System.identityHashCode;
 
 public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
 
@@ -45,7 +44,7 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 		}
 	};
 
-	private record Entry(int key, byte index, BinarySerializer<?> serializer, Entry next) {}
+	private record Entry(Class<?> key, byte index, BinarySerializer<?> serializer, Entry next) {}
 
 	private final BinarySerializer<?>[] serializers;
 	private final Entry[] serializersMap;
@@ -66,11 +65,13 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 		{
 			Entry[] map = new Entry[nextPowerOf2((serializersMap.size() + 3) * 3 / 2)];
 			byte n = -1;
-			put(map, identityHashCode(RpcControlMessage.class), n++, RPC_CONTROL_MESSAGE_SERIALIZER);
-			put(map, 0, n++, NULL_SERIALIZER);
-			put(map, identityHashCode(RpcRemoteException.class), n++, RPC_REMOTE_EXCEPTION_SERIALIZER);
+			put(map, RpcControlMessage.class, n++, RPC_CONTROL_MESSAGE_SERIALIZER);
+			put(map, Void.class, n++, NULL_SERIALIZER);
+			put(map, RpcRemoteException.class, n++, RPC_REMOTE_EXCEPTION_SERIALIZER);
 			for (Map.Entry<Class<?>, BinarySerializer<?>> entry : serializersMap.entrySet()) {
-				put(map, identityHashCode(entry.getKey()), n++, entry.getValue());
+				Class<?> key = entry.getKey();
+				checkArgument(key != Void.class, "Void message type is not supported");
+				put(map, key, n++, entry.getValue());
 			}
 			this.serializersMap = map;
 		}
@@ -80,21 +81,27 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 		return (-1 >>> Integer.numberOfLeadingZeros(x - 1)) + 1;
 	}
 
-	void put(Entry[] map, int key, byte index, BinarySerializer<?> serializer) {
-		map[key & (map.length - 1)] = new Entry(key, index, serializer, map[key & (map.length - 1)]);
+	void put(Entry[] map, Class<?> key, byte index, BinarySerializer<?> serializer) {
+		int mapIdx = getMapIdx(map.length, key);
+		map[mapIdx] = new Entry(key, index, serializer, map[mapIdx]);
 	}
 
-	Entry get(Entry[] map, int key) {
-		Entry entry = map[key & (map.length - 1)];
+	Entry get(Entry[] map, Class<?> key) {
+		int mapIdx = getMapIdx(map.length, key);
+		Entry entry = map[mapIdx];
 		while (entry != null && entry.key != key) entry = entry.next;
 		return entry;
+	}
+
+	private static int getMapIdx(int mapLength, Class<?> key) {
+		return key == Void.class ? 0 : key.hashCode() & mapLength - 1;
 	}
 
 	@Override
 	public void encode(BinaryOutput out, RpcMessage item) {
 		out.writeInt(item.getCookie());
 		Object data = item.getData();
-		int key = data == null ? 0 : identityHashCode(data.getClass());
+		Class<?> key = data == null ? Void.class : data.getClass();
 		Entry entry = get(serializersMap, key);
 		out.writeByte(entry.index);
 		//noinspection unchecked

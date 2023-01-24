@@ -27,7 +27,7 @@ public class RpcMessageSerializerCompatibilityTest {
 	private static BinarySerializer<RpcMessage> newSerializer;
 
 	@BeforeClass
-	public static void beforeClass() throws Exception {
+	public static void beforeClass() {
 		oldSerializer = SerializerFactory.builder()
 				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(Request1.class, Request2.class, Response1.class, Response2.class))
 				.build()
