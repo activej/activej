@@ -16,10 +16,10 @@
 
 package io.activej.memcache.client;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDef_Slice;
 import io.activej.reactor.Reactor;
@@ -36,6 +36,7 @@ import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.HASH_FUNCTION;
+import static io.activej.memcache.protocol.MemcacheRpcMessage.MESSAGE_TYPES;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MemcacheClientModule extends AbstractModule {
@@ -44,17 +45,24 @@ public class MemcacheClientModule extends AbstractModule {
 	public static MemcacheClientModule create() {return new MemcacheClientModule();}
 
 	@Provides
-	AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
+	}
+
+	@Provides
+	AsyncRpcClient rpcClient(NioReactor reactor, Config config, DefiningClassLoader classLoader) {
 		return RpcClient.builder(reactor)
 				.withStrategy(
 						RpcStrategy_RendezvousHashing.builder(HASH_FUNCTION)
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
 								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
 								.build())
-				.withMessageTypes(MemcacheRpcMessage.MESSAGE_TYPES)
-				.withSerializerFactory(SerializerFactory.builder()
-						.with(Slice.class, ctx -> new SerializerDef_Slice())
-						.build())
+				.withMessageTypes(
+						classLoader,
+						SerializerFactory.builder()
+								.with(Slice.class, ctx -> new SerializerDef_Slice())
+								.build(),
+						MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))

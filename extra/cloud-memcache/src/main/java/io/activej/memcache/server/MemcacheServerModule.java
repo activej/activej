@@ -16,6 +16,7 @@
 
 package io.activej.memcache.server;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
@@ -53,7 +54,12 @@ public class MemcacheServerModule extends AbstractModule {
 	}
 
 	@Provides
-	RpcServer server(NioReactor reactor, Config config, RingBuffer storage) {
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
+	}
+
+	@Provides
+	RpcServer server(NioReactor reactor, Config config, RingBuffer storage, DefiningClassLoader classLoader) {
 		return RpcServer.builder(reactor)
 				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
@@ -63,10 +69,12 @@ public class MemcacheServerModule extends AbstractModule {
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
 							return Promise.of(PutResponse.INSTANCE);
 						})
-				.withSerializerFactory(SerializerFactory.builder()
-						.with(Slice.class, ctx -> new SerializerDef_Slice())
-						.build())
-				.withMessageTypes(MESSAGE_TYPES)
+				.withMessageTypes(
+						classLoader,
+						SerializerFactory.builder()
+								.with(Slice.class, ctx -> new SerializerDef_Slice())
+								.build(),
+						MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))

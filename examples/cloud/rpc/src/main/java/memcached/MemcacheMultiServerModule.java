@@ -1,5 +1,6 @@
 package memcached;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
@@ -47,8 +48,13 @@ public class MemcacheMultiServerModule extends AbstractModule {
 	}
 
 	@Provides
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
+	}
+
+	@Provides
 	@Worker
-	RpcServer server(NioReactor reactor, RingBuffer storage, InetSocketAddress address) {
+	RpcServer server(NioReactor reactor, RingBuffer storage, InetSocketAddress address, DefiningClassLoader classLoader) {
 		return RpcServer.builder(reactor)
 				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
@@ -59,10 +65,12 @@ public class MemcacheMultiServerModule extends AbstractModule {
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
 							return Promise.of(PutResponse.INSTANCE);
 						})
-				.withSerializerFactory(SerializerFactory.builder()
-						.with(Slice.class, ctx -> new SerializerDef_Slice())
-						.build())
-				.withMessageTypes(MESSAGE_TYPES)
+				.withMessageTypes(
+						classLoader,
+						SerializerFactory.builder()
+								.with(Slice.class, ctx -> new SerializerDef_Slice())
+								.build(),
+						MESSAGE_TYPES)
 				.withListenAddresses(address)
 				.build();
 	}
