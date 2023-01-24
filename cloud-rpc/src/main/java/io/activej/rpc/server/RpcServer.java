@@ -34,6 +34,7 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcControlMessage;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;

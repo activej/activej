@@ -1,8 +1,5 @@
-package io.activej.rpc.server;
+package io.activej.rpc.protocol;
 
-import io.activej.rpc.protocol.RpcControlMessage;
-import io.activej.rpc.protocol.RpcMessage;
-import io.activej.rpc.protocol.RpcRemoteException;
 import io.activej.serializer.*;
 
 import java.util.LinkedHashMap;

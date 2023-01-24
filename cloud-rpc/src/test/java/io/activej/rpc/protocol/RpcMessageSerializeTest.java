@@ -1,7 +1,6 @@
 package io.activej.rpc.protocol;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.rpc.server.RpcMessageSerializer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.SerializeRecord;

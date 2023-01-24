@@ -29,7 +29,6 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.rpc.server.RpcMessageSerializer;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;

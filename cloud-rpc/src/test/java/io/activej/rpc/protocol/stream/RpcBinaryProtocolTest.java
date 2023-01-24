@@ -13,7 +13,7 @@ import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcMessage;
-import io.activej.rpc.server.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.BinarySerializers;
