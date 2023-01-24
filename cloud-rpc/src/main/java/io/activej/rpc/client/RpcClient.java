@@ -43,6 +43,7 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.jmx.RpcConnectStats;
 import io.activej.rpc.client.jmx.RpcRequestStats;
 import io.activej.rpc.client.sender.RpcSender;
+import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.protocol.RpcMessageSerializer;
@@ -72,8 +73,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Sends requests to the specified servers according to defined
- * {@code RpcStrategy} strategy. Strategies, represented in
- * {@link RpcStrategy} satisfy most cases.
+ * {@link RpcStrategy} strategy.
  * <p>
  * Example. Consider a client which sends a {@code Request} and receives a
  * {@code Response} from some {@link RpcServer}. To implement such kind of
@@ -159,7 +159,7 @@ public final class RpcClient extends AbstractNioReactive
 		private Builder() {}
 
 		/**
-		 * Sets serializers for RPC messages
+		 * Sets serializers for RPC messages.
 		 *
 		 * @param requestSerializers  RPC request serializers
 		 * @param responseSerializers RPC response serializers
@@ -174,7 +174,7 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Sets serializers for RPC requests
+		 * Sets serializers for RPC requests.
 		 *
 		 * @param serializers RPC request serializers
 		 * @return the builder for RPC client with specified serializers for RPC requests
@@ -185,6 +185,17 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Adds serializer for one of RPC requests.
+		 * <p>
+		 * <b>
+		 * Note: order of added request serializers matters. It should match an order on the {@link RpcServer}
+		 * </b>
+		 *
+		 * @param requestClass      class of RPC request
+		 * @param requestSerializer RPC request serializer
+		 * @return the builder for RPC client with specified serializer for one of RPC requests
+		 */
 		public <T> Builder withRequestSerializer(Class<T> requestClass, BinarySerializer<T> requestSerializer) {
 			checkNotBuilt(this);
 			requestSerializers.put(requestClass, requestSerializer);
@@ -192,7 +203,7 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Sets serializers for RPC responses
+		 * Sets serializers for RPC responses.
 		 *
 		 * @param serializers RPC responses serializers
 		 * @return the builder for RPC client with specified serializers for RPC responses
@@ -203,6 +214,17 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Adds serializer for one of RPC responses.
+		 * <p>
+		 * <b>
+		 * Note: order of added response serializers matters. It should match an order on the {@link RpcServer}
+		 * </b>
+		 *
+		 * @param responseClass      class of RPC response
+		 * @param responseSerializer RPC response serializer
+		 * @return the builder for RPC client with specified serializer for one of RPC responses
+		 */
 		public <T> Builder withResponseSerializer(Class<T> responseClass, BinarySerializer<T> responseSerializer) {
 			checkNotBuilt(this);
 			responseSerializers.put(responseClass, responseSerializer);
@@ -221,16 +243,15 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
+		 */
 		public Builder withMessageTypes(Class<?>... messageTypes) {
 			return withMessageTypes(DefiningClassLoader.create(), List.of(messageTypes));
 		}
 
 		/**
-		 * Creates a client with capability of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return builder for a client instance capable for handling provided
-		 * message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
@@ -238,21 +259,14 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Creates a client with capability of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return builder for a client instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, Class<?>... messageTypes) {
 			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), List.of(messageTypes));
 		}
 
 		/**
-		 * Creates a client with capability of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return builder for a client instance capable for handling provided
-		 * message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
@@ -260,10 +274,7 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Creates a client with capability of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return builder for a client instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(
 				DefiningClassLoader classLoader,
@@ -274,17 +285,21 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Sets types of RPC messages to be used by this client
-		 * <p>
+		 * Adds an ability to serialize specified message types.
 		 * <p>
 		 * <b>
-		 * Note: specified message types should match the specified message types on the server.<p>
-		 * Message types can be ommited if a dedicated specializer for RPC message types is specified
-		 * via {@code RpcClient.Builder#withSerializer}
+		 * Note: order of added message types matters. It should match an order on the {@link RpcServer}
+		 * <p>
+		 * Message types should be serializable by passed {@link SerializerFactory}
 		 * </b>
 		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return builder for a client instance capable for handling provided message types
+		 * @param classLoader       defining class loader used for creating instances of serializers for specified
+		 *                          message types
+		 * @param serializerFactory serializer factory used for creating instances of serializers for specified message
+		 *                          types
+		 * @param messageTypes      classes of messages serialized by the client
+		 * @return the builder for RPC client instance capable of serializing provided
+		 * message types
 		 */
 		public Builder withMessageTypes(
 				DefiningClassLoader classLoader,
@@ -301,11 +316,11 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Creates a client with some strategy. Consider some ready-to-use
-		 * strategies from {@link RpcStrategy}.
+		 * Sets some request sending strategy. Consider some ready-to-use
+		 * strategies from {@link RpcStrategies} or other {@link RpcStrategy} implementations.
 		 *
-		 * @param requestSendingStrategy strategy of sending requests
-		 * @return builder for the RPC client, which sends requests according to given strategy
+		 * @param requestSendingStrategy strategy for sending requests
+		 * @return the builder for RPC client, which sends requests according to given strategy
 		 */
 		public Builder withStrategy(RpcStrategy requestSendingStrategy) {
 			checkNotBuilt(this);
@@ -313,12 +328,25 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Sets a default RPC message packet size.
+		 *
+		 * @param defaultPacketSize default size of the message packet
+		 * @return the builder for RPC client with specified size of the message packet
+		 */
 		public Builder withStreamProtocol(MemSize defaultPacketSize) {
 			checkNotBuilt(this);
 			RpcClient.this.defaultPacketSize = defaultPacketSize;
 			return this;
 		}
 
+		/**
+		 * Sets a default RPC message packet size as well as an optional {@link FrameFormat} to be used.
+		 *
+		 * @param defaultPacketSize default size of the message packet
+		 * @param frameFormat       optional message frame format
+		 * @return the builder for RPC client with specified size of the message packet and frame format
+		 */
 		public Builder withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
 			checkNotBuilt(this);
 			RpcClient.this.defaultPacketSize = defaultPacketSize;
@@ -326,12 +354,25 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Sets an interval for an automatic message flush to the network.
+		 *
+		 * @param autoFlushInterval interval for an automatic message flush
+		 * @return the builder for RPC client with specified interval for an automatic message flush
+		 */
 		public Builder withAutoFlush(Duration autoFlushInterval) {
 			checkNotBuilt(this);
 			RpcClient.this.autoFlushInterval = autoFlushInterval;
 			return this;
 		}
 
+		/**
+		 * Sets an interval for sending keep-alive messages to the RPC server.
+		 * An interval of {@link Duration#ZERO} means no keep-alive message will be sent.
+		 *
+		 * @param keepAliveInterval interval for sending keep-alive messages
+		 * @return the builder for RPC client with specified interval for sending keep-alive messages
+		 */
 		public Builder withKeepAlive(Duration keepAliveInterval) {
 			checkNotBuilt(this);
 			RpcClient.this.keepAliveInterval = keepAliveInterval;
@@ -339,10 +380,11 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Waits for a specified time before connecting.
+		 * Sets a duration for which a client will wait on connection to the RPC server before failing with connection
+		 * timeout error.
 		 *
-		 * @param connectTimeout time before connecting
-		 * @return builder for the RPC client with connect timeout settings
+		 * @param connectTimeout timeout duration
+		 * @return the builder for RPC client with specified connect timeout
 		 */
 		public Builder withConnectTimeout(Duration connectTimeout) {
 			checkNotBuilt(this);
@@ -350,12 +392,25 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Sets a duration for which a client will wait before trying to re-establish a connection to the RPC server.
+		 *
+		 * @param reconnectInterval reconnection interval
+		 * @return the builder for RPC client with specified reconnection interval
+		 */
 		public Builder withReconnectInterval(Duration reconnectInterval) {
 			checkNotBuilt(this);
 			RpcClient.this.reconnectIntervalMillis = reconnectInterval.toMillis();
 			return this;
 		}
 
+		/**
+		 * Adds ability to communicate with RPC server using secure connection.
+		 *
+		 * @param sslContext  SSL context to be used for encrypting/decrypting RPC messages
+		 * @param sslExecutor executor of SSL tasks
+		 * @return the builder for RPC client with secure network communication capabilities
+		 */
 		public Builder withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
 			checkNotBuilt(this);
 			RpcClient.this.sslContext = sslContext;
@@ -363,6 +418,12 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Sets a logger to be used on this RPC client.
+		 *
+		 * @param logger logger used for logging messages in this RPC client
+		 * @return the builder for RPC client with specified logger
+		 */
 		public Builder withLogger(Logger logger) {
 			checkNotBuilt(this);
 			RpcClient.this.logger = logger;

@@ -126,6 +126,13 @@ public final class RpcServer extends AbstractReactiveServer {
 			});
 		}
 
+		/**
+		 * Sets serializers for RPC messages.
+		 *
+		 * @param requestSerializers  RPC request serializers
+		 * @param responseSerializers RPC response serializers
+		 * @return the builder for RPC server with specified serializers for RPC messages
+		 */
 		public Builder withSerializers(
 				LinkedHashMap<Class<?>, BinarySerializer<?>> requestSerializers,
 				LinkedHashMap<Class<?>, BinarySerializer<?>> responseSerializers) {
@@ -134,24 +141,58 @@ public final class RpcServer extends AbstractReactiveServer {
 					.withResponseSerializers(responseSerializers);
 		}
 
+		/**
+		 * Sets serializers for RPC requests.
+		 *
+		 * @param serializers RPC request serializers
+		 * @return the builder for RPC server with specified serializers for RPC requests
+		 */
 		public Builder withRequestsSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
 			checkNotBuilt(this);
 			RpcServer.this.requestSerializer = new RpcMessageSerializer(serializers);
 			return this;
 		}
 
+		/**
+		 * Adds serializer for one of RPC requests.
+		 * <p>
+		 * <b>
+		 * Note: order of added request serializers matters. It should match an order on the {@link RpcClient}
+		 * </b>
+		 *
+		 * @param requestClass      class of RPC request
+		 * @param requestSerializer RPC request serializer
+		 * @return the builder for RPC server with specified serializer for one of RPC requests
+		 */
 		public <T> Builder withRequestSerializer(Class<T> requestClass, BinarySerializer<T> requestSerializer) {
 			checkNotBuilt(this);
 			requestSerializers.put(requestClass, requestSerializer);
 			return this;
 		}
 
+		/**
+		 * Sets serializers for RPC responses.
+		 *
+		 * @param serializers RPC responses serializers
+		 * @return the builder for RPC server with specified serializers for RPC responses
+		 */
 		public Builder withResponseSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
 			checkNotBuilt(this);
 			RpcServer.this.responseSerializer = new RpcMessageSerializer(serializers);
 			return this;
 		}
 
+		/**
+		 * Adds serializer for one of RPC responses.
+		 * <p>
+		 * <b>
+		 * Note: order of added response serializers matters. It should match an order on the {@link RpcClient}
+		 * </b>
+		 *
+		 * @param responseClass      class of RPC response
+		 * @param responseSerializer RPC response serializer
+		 * @return the builder for RPC server with specified serializer for one of RPC responses
+		 */
 		public <T> Builder withResponseSerializer(Class<T> responseClass, BinarySerializer<T> responseSerializer) {
 			checkNotBuilt(this);
 			responseSerializers.put(responseClass, responseSerializer);
@@ -159,10 +200,7 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 
 		/**
-		 * Creates a server, capable of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return server instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(Class<?>... messageTypes) {
 			checkNotBuilt(this);
@@ -170,10 +208,7 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 
 		/**
-		 * Creates a server, capable of specified message types processing.
-		 *
-		 * @param messageTypes a list of message types processed by a server
-		 * @return server instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			checkNotBuilt(this);
@@ -181,30 +216,21 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 
 		/**
-		 * Creates a server, capable of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return server instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, Class<?>... messageTypes) {
 			return withMessageTypes(classLoader, List.of(messageTypes));
 		}
 
 		/**
-		 * Creates a server, capable of specified message types processing.
-		 *
-		 * @param messageTypes a list of message types processed by a server
-		 * @return server instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, List<Class<?>> messageTypes) {
 			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
 		}
 
 		/**
-		 * Creates a server, capable of specified message types processing.
-		 *
-		 * @param messageTypes classes of messages processed by a server
-		 * @return server instance capable for handling provided message types
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(
 				DefiningClassLoader classLoader,
@@ -215,10 +241,21 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 
 		/**
-		 * Creates a server, capable of specified message types processing.
+		 * Adds an ability to serialize specified message types.
+		 * <p>
+		 * <b>
+		 * Note: order of added message types matters. It should match an order on the {@link RpcClient}
+		 * <p>
+		 * Message types should be serializable by passed {@link SerializerFactory}
+		 * </b>
 		 *
-		 * @param messageTypes a list of message types processed by a server
-		 * @return server instance capable for handling provided message types
+		 * @param classLoader       defining class loader used for creating instances of serializers for specified
+		 *                          message types
+		 * @param serializerFactory serializer factory used for creating instances of serializers for specified message
+		 *                          types
+		 * @param messageTypes      classes of messages serialized by the server
+		 * @return the builder for RPC server instance capable of serializing provided
+		 * message types
 		 */
 		public Builder withMessageTypes(
 				DefiningClassLoader classLoader,
@@ -233,19 +270,38 @@ public final class RpcServer extends AbstractReactiveServer {
 			return withSerializers(map, map);
 		}
 
+		/**
+		 * Sets a default RPC message packet size.
+		 *
+		 * @param defaultPacketSize default size of the message packet
+		 * @return the builder for RPC server with specified size of the message packet
+		 */
 		public Builder withStreamProtocol(MemSize defaultPacketSize) {
 			checkNotBuilt(this);
 			RpcServer.this.initialBufferSize = defaultPacketSize;
 			return this;
 		}
 
-		public Builder withStreamProtocol(MemSize defaultPacketSize, FrameFormat frameFormat) {
+		/**
+		 * Sets a default RPC message packet size as well as an optional {@link FrameFormat} to be used.
+		 *
+		 * @param defaultPacketSize default size of the message packet
+		 * @param frameFormat       optional message frame format
+		 * @return the builder for RPC server with specified size of the message packet and frame format
+		 */
+		public Builder withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
 			checkNotBuilt(this);
 			RpcServer.this.initialBufferSize = defaultPacketSize;
 			RpcServer.this.frameFormat = frameFormat;
 			return this;
 		}
 
+		/**
+		 * Sets an interval for an automatic message flush to the network.
+		 *
+		 * @param autoFlushInterval interval for an automatic message flush
+		 * @return the builder for RPC server with specified interval for an automatic message flush
+		 */
 		@SuppressWarnings("UnusedReturnValue")
 		public Builder withAutoFlushInterval(Duration autoFlushInterval) {
 			checkNotBuilt(this);
@@ -256,12 +312,12 @@ public final class RpcServer extends AbstractReactiveServer {
 		/**
 		 * Adds a handler for a specified request-response pair.
 		 *
-		 * @param requestClass a class representing a request structure
-		 * @param handler      a class containing logic of request processing and
-		 *                     creating a response
+		 * @param requestClass a class of one of request types
+		 * @param handler      a handler that does a request processing and
+		 *                     creates a response
 		 * @param <I>          class of request
 		 * @param <O>          class of response
-		 * @return server instance capable for handling requests of concrete types
+		 * @return the builder for RPC server with specified handler of one of request types
 		 */
 		public <I, O> Builder withHandler(Class<I> requestClass, RpcRequestHandler<I, O> handler) {
 			checkNotBuilt(this);
