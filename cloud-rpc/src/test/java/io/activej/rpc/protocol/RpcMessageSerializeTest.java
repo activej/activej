@@ -1,6 +1,7 @@
 package io.activej.rpc.protocol;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.rpc.server.RpcMessageSerializer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.SerializeRecord;
@@ -10,7 +11,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.LinkedHashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -19,9 +20,6 @@ public final class RpcMessageSerializeTest {
 
 	@SerializeRecord
 	public record TestRpcMessageData(String s) {}
-
-	@SerializeRecord
-	public record TestRpcMessageData2(int i) {}
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
@@ -33,10 +31,12 @@ public final class RpcMessageSerializeTest {
 	public void testRpcMessage() {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
 		RpcMessage message1 = RpcMessage.of(1, messageData1);
-		BinarySerializer<RpcMessage> serializer = SerializerFactory.builder()
-				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(TestRpcMessageData.class, TestRpcMessageData2.class))
-				.build()
-				.create(DefiningClassLoader.create(), RpcMessage.class);
+		BinarySerializer<TestRpcMessageData> testRpcMessageDataSerializer = SerializerFactory.defaultInstance()
+				.create(DefiningClassLoader.create(), TestRpcMessageData.class);
+
+		LinkedHashMap<Class<?>, BinarySerializer<?>> serializersMap = new LinkedHashMap<>();
+		serializersMap.put(TestRpcMessageData.class, testRpcMessageDataSerializer);
+		BinarySerializer<RpcMessage> serializer = new RpcMessageSerializer(serializersMap);
 
 		byte[] buf = new byte[1000];
 		serializer.encode(buf, 0, message1);

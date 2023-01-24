@@ -16,13 +16,9 @@
 
 package io.activej.rpc.protocol;
 
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
-import io.activej.serializer.annotations.SerializeNullable;
 import org.jetbrains.annotations.Nullable;
 
 public final class RpcRemoteException extends RpcException implements RpcMandatoryData {
-	private static final long serialVersionUID = 769022174067373741L;
 	private final @Nullable String causeMessage;
 	private final @Nullable String causeClassName;
 
@@ -40,29 +36,23 @@ public final class RpcRemoteException extends RpcException implements RpcMandato
 	}
 
 	@SuppressWarnings("unused")
-	public RpcRemoteException(@Deserialize("message") String message,
-			@Nullable @Deserialize("causeClassName") String causeClassName,
-			@Nullable @Deserialize("causeMessage") String causeMessage) {
+	public RpcRemoteException(String message,
+			@Nullable String causeClassName,
+			@Nullable String causeMessage) {
 		super(message);
 		this.causeClassName = causeClassName;
 		this.causeMessage = causeMessage;
 	}
 
-	@Serialize(order = 1)
-	@SerializeNullable
 	public @Nullable String getCauseClassName() {
 		return causeClassName;
 	}
 
-	@Serialize(order = 2)
-	@SerializeNullable
 	public @Nullable String getCauseMessage() {
 		return causeMessage;
 	}
 
 	@Override
-	@Serialize(order = 3)
-	@SerializeNullable
 	public String getMessage() {
 		return super.getMessage();
 	}

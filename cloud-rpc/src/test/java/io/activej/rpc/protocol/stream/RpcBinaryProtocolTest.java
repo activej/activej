@@ -1,6 +1,5 @@
 package io.activej.rpc.protocol.stream;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
@@ -14,9 +13,10 @@ import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcMessage;
+import io.activej.rpc.server.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerFactory;
+import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -85,10 +86,9 @@ public final class RpcBinaryProtocolTest {
 
 	@Test
 	public void testCompression() {
-		BinarySerializer<RpcMessage> binarySerializer = SerializerFactory.builder()
-				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(String.class))
-				.build()
-				.create(DefiningClassLoader.create(), RpcMessage.class);
+		LinkedHashMap<Class<?>, BinarySerializer<?>> serializersMap = new LinkedHashMap<>();
+		serializersMap.put(String.class, BinarySerializers.UTF8_SERIALIZER);
+		BinarySerializer<RpcMessage> binarySerializer = new RpcMessageSerializer(serializersMap);
 
 		int countRequests = 10;
 
