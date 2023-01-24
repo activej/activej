@@ -156,6 +156,13 @@ public final class RpcClient extends AbstractNioReactive
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
 		private Builder() {}
 
+		/**
+		 * Sets serializers for RPC messages
+		 *
+		 * @param requestSerializers  RPC request serializers
+		 * @param responseSerializers RPC response serializers
+		 * @return the builder for RPC client with specified serializers for RPC messages
+		 */
 		public Builder withSerializers(
 				LinkedHashMap<Class<?>, BinarySerializer<?>> requestSerializers,
 				LinkedHashMap<Class<?>, BinarySerializer<?>> responseSerializers) {
@@ -165,10 +172,10 @@ public final class RpcClient extends AbstractNioReactive
 		}
 
 		/**
-		 * Sets a serializer for RPC messages
+		 * Sets serializers for RPC requests
 		 *
-		 * @param serializer RPC messages serializer
-		 * @return the builder for RPC client with specified socket settings
+		 * @param serializers RPC request serializers
+		 * @return the builder for RPC client with specified serializers for RPC requests
 		 */
 		public Builder withRequestsSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
 			checkNotBuilt(this);
@@ -176,6 +183,12 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Sets serializers for RPC responses
+		 *
+		 * @param serializers RPC responses serializers
+		 * @return the builder for RPC client with specified serializers for RPC responses
+		 */
 		public Builder withResponseSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
 			checkNotBuilt(this);
 			RpcClient.this.responseSerializer = new RpcMessageSerializer(serializers);

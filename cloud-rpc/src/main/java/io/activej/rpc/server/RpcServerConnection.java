@@ -40,7 +40,6 @@ import java.util.Map;
 public final class RpcServerConnection extends AbstractReactive implements RpcStream.Listener, JmxRefreshable {
 	private static final Logger logger = LoggerFactory.getLogger(RpcServerConnection.class);
 
-	private final RpcMessage rpcMessage = new RpcMessage();
 	private StreamDataAcceptor<RpcMessage> downstreamDataAcceptor;
 
 	private final RpcServer rpcServer;
@@ -83,10 +82,10 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	public void accept(RpcMessage message) {
 		activeRequests++;
 
-		int cookie = message.cookie;
+		int cookie = message.getCookie();
 		long startTime = monitoring ? System.currentTimeMillis() : 0;
 
-		Object messageData = message.data;
+		Object messageData = message.getData();
 		serve(messageData)
 				.run((result, e) -> {
 					if (startTime != 0) {
@@ -95,13 +94,13 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 						rpcServer.getRequestHandlingTime().recordValue(value);
 					}
 					if (e == null) {
-						downstreamDataAcceptor.accept(rpcMessage.with(cookie, result));
+						downstreamDataAcceptor.accept(RpcMessage.of(cookie, result));
 
 						successfulRequests.recordEvent();
 						rpcServer.getSuccessfulRequests().recordEvent();
 					} else {
 						logger.warn("Exception while processing request ID {}", cookie, e);
-						RpcMessage errorMessage = rpcMessage.with(cookie, new RpcRemoteException(e));
+						RpcMessage errorMessage = RpcMessage.of(cookie, new RpcRemoteException(e));
 						sendError(errorMessage, messageData, e);
 					}
 					if (--activeRequests == 0) {
@@ -138,9 +137,9 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
-		logger.error("Serialization error: {} for data {}", remoteAddress, message.data, e);
-		RpcMessage errorMessage = rpcMessage.with(message.cookie, new RpcRemoteException(e));
-		sendError(errorMessage, message.data, e);
+		logger.error("Serialization error: {} for data {}", remoteAddress, message.getData(), e);
+		RpcMessage errorMessage = RpcMessage.of(message.getCookie(), new RpcRemoteException(e));
+		sendError(errorMessage, message.getData(), e);
 	}
 
 	@Override
@@ -169,7 +168,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 	public void shutdown() {
 		if (downstreamDataAcceptor != null) {
-			downstreamDataAcceptor.accept(rpcMessage.with(-1, RpcControlMessage.CLOSE));
+			downstreamDataAcceptor.accept(RpcMessage.of(-1, RpcControlMessage.CLOSE));
 		}
 	}
 

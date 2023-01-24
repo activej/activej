@@ -12,8 +12,6 @@ import java.util.Map;
 import static java.lang.System.identityHashCode;
 
 public class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
-	public final RpcMessage rpcMessage = new RpcMessage();
-
 	private record Entry(int key, int index, BinarySerializer<?> serializer, Entry next) {}
 
 	private final BinarySerializer<?>[] serializers;
@@ -21,7 +19,7 @@ public class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
 
 	public RpcMessageSerializer(LinkedHashMap<Class<?>, BinarySerializer<?>> serializersMap) {
 		BinarySerializer<RpcControlMessage> rpcControlMessageBinarySerializer = BinarySerializers.ofEnum(RpcControlMessage.class);
-		BinarySerializer<RpcRemoteException> rpcRemoteExceptionBinarySerializer = new BinarySerializer<RpcRemoteException>() {
+		BinarySerializer<RpcRemoteException> rpcRemoteExceptionBinarySerializer = new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, RpcRemoteException item) {
 				out.writeUTF8(item.getMessage());
@@ -75,8 +73,8 @@ public class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
 
 	@Override
 	public void encode(BinaryOutput out, RpcMessage item) {
-		out.writeInt(item.cookie);
-		Object data = item.data;
+		out.writeInt(item.getCookie());
+		Object data = item.getData();
 		Entry entry = get(serializersMap, identityHashCode(data.getClass()));
 		out.writeVarInt(entry.index);
 		//noinspection unchecked
@@ -85,9 +83,9 @@ public class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
 
 	@Override
 	public RpcMessage decode(BinaryInput in) throws CorruptedDataException {
-		rpcMessage.cookie = in.readInt();
+		int cookie = in.readInt();
 		int subClassId = in.readVarInt();
-		rpcMessage.data = serializers[subClassId + 1].decode(in);
-		return rpcMessage;
+		Object data = serializers[subClassId + 1].decode(in);
+		return RpcMessage.of(cookie, data);
 	}
 }

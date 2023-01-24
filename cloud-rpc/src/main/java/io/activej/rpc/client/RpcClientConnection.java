@@ -50,8 +50,6 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	private static final Logger logger = getLogger(RpcClientConnection.class);
 	private static final boolean CHECKS = Checks.isEnabled(RpcClientConnection.class);
 
-	private final RpcMessage rpcMessage = new RpcMessage();
-
 	private static final RpcException CONNECTION_UNRESPONSIVE = new RpcException("Unresponsive connection");
 	private static final RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException("RPC client is overloaded");
 
@@ -117,7 +115,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 				activeRequests.put(cookie, scheduledCallback);
 			}
 
-			downstreamDataAcceptor.accept(rpcMessage.with(cookie, request));
+			downstreamDataAcceptor.accept(RpcMessage.of(cookie, request));
 		} else {
 			doProcessOverloaded(cb);
 		}
@@ -179,7 +177,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 			activeRequests.put(cookie, cb);
 
-			downstreamDataAcceptor.accept(rpcMessage.with(cookie, request));
+			downstreamDataAcceptor.accept(RpcMessage.of(cookie, request));
 		} else {
 			doProcessOverloaded(cb);
 		}
@@ -203,16 +201,16 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	@Override
 	public void accept(RpcMessage message) {
 		if (CHECKS) checkInReactorThread(this);
-		if (message.data.getClass() == RpcRemoteException.class) {
+		if (message.getData().getClass() == RpcRemoteException.class) {
 			processErrorMessage(message);
-		} else if (message.data.getClass() == RpcControlMessage.class) {
-			processControlMessage((RpcControlMessage) message.data);
+		} else if (message.getData().getClass() == RpcControlMessage.class) {
+			processControlMessage((RpcControlMessage) message.getData());
 		} else {
 			@SuppressWarnings("unchecked")
-			Callback<Object> cb = (Callback<Object>) activeRequests.remove(message.cookie);
+			Callback<Object> cb = (Callback<Object>) activeRequests.remove(message.getCookie());
 			if (cb == null) return;
 
-			cb.accept(message.data, null);
+			cb.accept(message.getData(), null);
 			if (serverClosing && activeRequests.size() == 0) {
 				shutdown();
 			}
@@ -220,14 +218,14 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	private void processErrorMessage(RpcMessage message) {
-		RpcRemoteException remoteException = (RpcRemoteException) message.data;
+		RpcRemoteException remoteException = (RpcRemoteException) message.getData();
 		// jmx
 		connectionStats.getFailedRequests().recordEvent();
 		rpcClient.getGeneralRequestsStats().getFailedRequests().recordEvent();
 		connectionStats.getServerExceptions().recordException(remoteException, null);
 		rpcClient.getGeneralRequestsStats().getServerExceptions().recordException(remoteException, null);
 
-		Callback<?> cb = activeRequests.remove(message.cookie);
+		Callback<?> cb = activeRequests.remove(message.getCookie());
 		if (cb != null) {
 			cb.accept(null, remoteException);
 		}
@@ -251,7 +249,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		if (isClosed()) return;
 		if (keepAliveMillis == 0) return;
 		pongReceived = false;
-		downstreamDataAcceptor.accept(rpcMessage.with(-1, RpcControlMessage.PING));
+		downstreamDataAcceptor.accept(RpcMessage.of(-1, RpcControlMessage.PING));
 		reactor.delayBackground(keepAliveMillis, () -> {
 			if (isClosed()) return;
 			if (!pongReceived) {
@@ -291,9 +289,9 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
 		if (isClosed()) return;
-		logger.error("Serialization error: {} for data {}", address, message.data, e);
+		logger.error("Serialization error: {} for data {}", address, message.getData(), e);
 		rpcClient.getLastProtocolError().recordException(e, address);
-		activeRequests.remove(message.cookie).accept(null, e);
+		activeRequests.remove(message.getCookie()).accept(null, e);
 	}
 
 	@Override
