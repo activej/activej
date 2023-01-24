@@ -62,7 +62,6 @@ import java.util.concurrent.Executor;
 
 import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
@@ -154,6 +153,9 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
+		private final LinkedHashMap<Class<?>, BinarySerializer<?>> requestSerializers = new LinkedHashMap<>();
+		private final LinkedHashMap<Class<?>, BinarySerializer<?>> responseSerializers = new LinkedHashMap<>();
+
 		private Builder() {}
 
 		/**
@@ -183,6 +185,12 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		public <T> Builder withRequestSerializer(Class<T> requestClass, BinarySerializer<T> requestSerializer) {
+			checkNotBuilt(this);
+			requestSerializers.put(requestClass, requestSerializer);
+			return this;
+		}
+
 		/**
 		 * Sets serializers for RPC responses
 		 *
@@ -192,6 +200,12 @@ public final class RpcClient extends AbstractNioReactive
 		public Builder withResponseSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
 			checkNotBuilt(this);
 			RpcClient.this.responseSerializer = new RpcMessageSerializer(serializers);
+			return this;
+		}
+
+		public <T> Builder withResponseSerializer(Class<T> responseClass, BinarySerializer<T> responseSerializer) {
+			checkNotBuilt(this);
+			responseSerializers.put(responseClass, responseSerializer);
 			return this;
 		}
 
@@ -357,8 +371,19 @@ public final class RpcClient extends AbstractNioReactive
 
 		@Override
 		protected RpcClient doBuild() {
-			checkNotNull(requestSerializer, "No serializer for RPC message is set or no RPC message types are specified");
-			checkNotNull(responseSerializer, "No serializer for RPC message is set or no RPC message types are specified");
+			if (requestSerializer == null) {
+				if (requestSerializers.isEmpty()) {
+					throw new IllegalStateException("No serializer for RPC request is set or no RPC message types are specified");
+				}
+				requestSerializer = new RpcMessageSerializer(requestSerializers);
+			}
+			if (responseSerializer == null) {
+				if (responseSerializers.isEmpty()) {
+					throw new IllegalStateException("No serializer for RPC response is set or no RPC message types are specified");
+				}
+				responseSerializer = new RpcMessageSerializer(responseSerializers);
+			}
+
 			return RpcClient.this;
 		}
 	}
