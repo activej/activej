@@ -1,13 +1,16 @@
 package io.activej.rpc.protocol;
 
+import io.activej.common.Checks;
 import io.activej.serializer.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 
 public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
+	private static final boolean CHECK = Checks.isEnabled(RpcMessageSerializer.class);
 
 	private static final BinarySerializer<RpcRemoteException> RPC_REMOTE_EXCEPTION_SERIALIZER = new BinarySerializer<>() {
 		@Override
@@ -100,6 +103,9 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 		Object data = item.getData();
 		Class<?> key = data == null ? Void.class : data.getClass();
 		Entry entry = get(serializersMap, key);
+		if (CHECK) {
+			checkState(entry != null, "No serializer for RPC message of type: " + key.getName());
+		}
 		out.writeByte(entry.index);
 		//noinspection unchecked
 		((BinarySerializer<Object>) entry.serializer).encode(out, data);
@@ -109,6 +115,10 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 	public RpcMessage decode(BinaryInput in) throws CorruptedDataException {
 		int cookie = in.readInt();
 		int subClassId = in.readByte();
+		if (CHECK) {
+			checkState(subClassId < serializers.length - 1,
+					"No serializer for RPC message with subclass index: " + subClassId);
+		}
 		Object data = serializers[subClassId + 1].decode(in);
 		return RpcMessage.of(cookie, data);
 	}
