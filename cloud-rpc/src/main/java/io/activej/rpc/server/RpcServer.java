@@ -334,6 +334,11 @@ public final class RpcServer extends AbstractReactiveServer {
 				if (requestSerializers.isEmpty()) {
 					throw new IllegalStateException("No serializer for RPC request is set or no RPC message types are specified");
 				}
+				Set<Class<?>> handlersClasses = new HashSet<>(handlers.keySet());
+				handlersClasses.remove(RpcControlMessage.class);
+				checkState(!handlersClasses.isEmpty(), "No RPC handlers added");
+				checkState(requestSerializers.keySet().equals(handlersClasses), "Some message types where not specified");
+
 				requestSerializer = new RpcMessageSerializer(requestSerializers);
 			}
 			if (responseSerializer == null) {
