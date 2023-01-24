@@ -16,6 +16,7 @@
 
 package io.activej.dns;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.dns.protocol.*;
 import io.activej.http.HttpUtils;
 import io.activej.promise.Promise;
@@ -29,6 +30,7 @@ import java.net.InetAddress;
  * If host is not recognized or connection to DNS server timed out it will
  * fail with a respective {@link DnsQueryException}.
  */
+@ComponentInterface
 public interface AsyncDnsClient {
 	/**
 	 * Searches for an IPv4 for the given domain

@@ -1,5 +1,6 @@
 package userservice.dao;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,6 +9,7 @@ import java.util.Map;
 /**
  * Basic DAO (Data Access Object) class that provides User CRUD-operations
  */
+@ComponentInterface
 public interface AsyncUserDao {
 	Promise<@Nullable User> get(long id);
 

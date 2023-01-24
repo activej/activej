@@ -16,11 +16,13 @@
 
 package io.activej.cube.attributes;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 import java.util.List;
 import java.util.Map;
 
+@ComponentInterface
 public interface AsyncAttributeResolver {
 	Class<?>[] getKeyTypes();
 

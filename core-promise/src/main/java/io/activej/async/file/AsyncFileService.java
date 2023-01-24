@@ -16,10 +16,12 @@
 
 package io.activej.async.file;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 import java.nio.channels.FileChannel;
 
+@ComponentInterface
 public interface AsyncFileService {
 	Promise<Integer> read(FileChannel channel, long position, byte[] array, int offset, int size);
 

@@ -16,10 +16,12 @@
 
 package io.activej.aggregation;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 import java.util.Set;
 
+@ComponentInterface
 public interface AsyncChunkLocker<C> {
 
 	Promise<Void> lockChunks(Set<C> chunkIds);

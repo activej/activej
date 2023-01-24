@@ -16,6 +16,7 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -27,6 +28,7 @@ import java.util.List;
  * it stores data in some external storage to avoid RAM overflow.
  * Data can be stored here with the index of partition and then read to be merged.
  */
+@ComponentInterface
 public interface AsyncStreamSorterStorage<T> {
 	Promise<Integer> newPartitionId();
 

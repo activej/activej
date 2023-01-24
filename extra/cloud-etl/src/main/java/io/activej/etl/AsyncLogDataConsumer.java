@@ -16,10 +16,12 @@
 
 package io.activej.etl;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.datastream.StreamConsumerWithResult;
 
 import java.util.List;
 
+@ComponentInterface
 public interface AsyncLogDataConsumer<T, D> {
 	StreamConsumerWithResult<T, List<D>> consume();
 }

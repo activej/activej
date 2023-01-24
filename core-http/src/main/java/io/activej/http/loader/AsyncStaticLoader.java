@@ -17,6 +17,7 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.http.Servlet_Static;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -33,6 +34,7 @@ import java.util.function.UnaryOperator;
 /**
  * Represents the 'predefined storage' for the {@link Servlet_Static StaticServlet}.
  */
+@ComponentInterface
 public interface AsyncStaticLoader {
 
 	Promise<ByteBuf> load(String path);

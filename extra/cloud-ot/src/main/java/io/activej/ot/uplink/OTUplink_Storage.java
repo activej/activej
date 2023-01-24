@@ -16,6 +16,7 @@
 
 package io.activej.ot.uplink;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.ot.TransformResult;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink_Storage.AsyncStorage.SyncData;
@@ -60,6 +61,7 @@ public final class OTUplink_Storage<K, D> extends AbstractReactive
 		}
 	}
 
+	@ComponentInterface
 	public interface AsyncStorage<K, D> {
 		Promise<Boolean> init(long commitId, List<D> snapshot, K uplinkCommitId, long uplinkLevel);
 

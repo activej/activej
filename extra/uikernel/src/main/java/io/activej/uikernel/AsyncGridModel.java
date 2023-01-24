@@ -16,10 +16,12 @@
 
 package io.activej.uikernel;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 import java.util.List;
 
+@ComponentInterface
 public interface AsyncGridModel<K, R extends AbstractRecord<K>> {
 	Promise<CreateResponse<K>> create(R record);
 

@@ -17,6 +17,7 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.fs.AsyncFileSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -26,6 +27,7 @@ import java.util.Map;
 /**
  * A service that allows to discover actual {@link AsyncFileSystem} partitions in a cluster
  */
+@ComponentInterface
 public interface AsyncDiscoveryService {
 
 	/**

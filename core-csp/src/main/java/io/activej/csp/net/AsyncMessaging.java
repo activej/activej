@@ -18,10 +18,12 @@ package io.activej.csp.net;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 
+@ComponentInterface
 public interface AsyncMessaging<I, O> extends AsyncCloseable {
 	Promise<I> receive();
 

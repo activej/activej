@@ -17,6 +17,7 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.exception.IllegalOffsetException;
@@ -48,6 +49,7 @@ import static java.util.stream.Collectors.toSet;
  * Most operations are executed in the same manner as would be expected from a regular file system,
  * however, some implementations may have certain limitations.
  */
+@ComponentInterface
 public interface AsyncFileSystem {
 	String SEPARATOR = "/";
 

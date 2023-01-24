@@ -16,6 +16,7 @@
 
 package io.activej.http.session;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +25,7 @@ import java.time.Duration;
 /**
  * Basic session storage for the {@link Servlet_Session}.
  */
+@ComponentInterface
 public interface AsyncSessionStore<T> {
 	Promise<Void> save(String sessionId, T sessionObject);
 

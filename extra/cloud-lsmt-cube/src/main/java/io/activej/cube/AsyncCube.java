@@ -16,12 +16,14 @@
 
 package io.activej.cube;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.cube.exception.QueryException;
 import io.activej.promise.Promise;
 
 import java.lang.reflect.Type;
 import java.util.Map;
 
+@ComponentInterface
 public interface AsyncCube {
 	Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException;
 

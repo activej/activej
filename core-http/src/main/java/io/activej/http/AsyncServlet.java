@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 
@@ -26,6 +27,7 @@ import java.util.concurrent.Executor;
  * processes it and then returns a {@link HttpResponse}.
  */
 @FunctionalInterface
+@ComponentInterface
 public interface AsyncServlet {
 	Promisable<HttpResponse> serve(HttpRequest request) throws Exception;
 

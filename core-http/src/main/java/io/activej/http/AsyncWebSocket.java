@@ -19,6 +19,7 @@ package io.activej.http;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -40,6 +41,7 @@ import static io.activej.http.AsyncWebSocket.Message.MessageType.TEXT;
  * Any other exception will result into close frame with close code {@code 1001} on a client
  * and {@code 1011} on a server.
  */
+@ComponentInterface
 public interface AsyncWebSocket extends AsyncCloseable {
 	boolean ENABLED = ApplicationSettings.getBoolean(AsyncWebSocket.class, "enabled", true);
 

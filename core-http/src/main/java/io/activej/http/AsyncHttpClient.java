@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 /**
@@ -25,6 +26,7 @@ import io.activej.promise.Promise;
  * and returns an {@link HttpResponse} for it,
  * so it is basically a reciprocal of the {@link AsyncServlet}.
  */
+@ComponentInterface
 public interface AsyncHttpClient {
 	Promise<HttpResponse> request(HttpRequest request);
 }

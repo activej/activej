@@ -17,8 +17,10 @@
 package io.activej.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.datastream.StreamSupplier;
 
+@ComponentInterface
 public interface AsyncAggregation {
 	<T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass, DefiningClassLoader classLoader);
 }

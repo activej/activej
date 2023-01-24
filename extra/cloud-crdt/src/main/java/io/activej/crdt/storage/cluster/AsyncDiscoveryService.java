@@ -17,6 +17,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+@ComponentInterface
 public interface AsyncDiscoveryService<P> {
 
 	AsyncSupplier<PartitionScheme<P>> discover();

@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.recycle.Recyclable;
@@ -280,6 +281,7 @@ public final class ByteBufsDecoder_Multipart implements ByteBufsDecoder<Multipar
 		}
 	}
 
+	@ComponentInterface
 	public interface AsyncMultipartDataHandler {
 		Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName);
 

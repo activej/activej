@@ -18,6 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -28,6 +29,7 @@ import java.util.Set;
 /**
  * Manages persistence of aggregations (chunks of data).
  */
+@ComponentInterface
 public interface AsyncAggregationChunkStorage<C> {
 	Promise<C> createId();
 

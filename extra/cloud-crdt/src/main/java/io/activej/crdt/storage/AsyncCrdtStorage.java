@@ -16,6 +16,7 @@
 
 package io.activej.crdt.storage;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.datastream.StreamConsumer;
@@ -29,6 +30,7 @@ import io.activej.promise.Promise;
  * @param <K> type of crdt keys
  * @param <S> type of crdt states
  */
+@ComponentInterface
 public interface AsyncCrdtStorage<K extends Comparable<K>, S> {
 
 	/**

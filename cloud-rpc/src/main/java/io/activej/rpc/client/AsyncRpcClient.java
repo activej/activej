@@ -17,9 +17,11 @@
 package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
+@ComponentInterface
 public interface AsyncRpcClient {
 
 	default <I, O> Promise<O> sendRequest(I request, int timeout) {

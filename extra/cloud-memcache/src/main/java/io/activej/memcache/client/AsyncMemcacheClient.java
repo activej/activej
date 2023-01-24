@@ -16,8 +16,10 @@
 
 package io.activej.memcache.client;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
+@ComponentInterface
 public interface AsyncMemcacheClient<K, V> {
 
 	Promise<Void> put(K key, V value, int timeout);

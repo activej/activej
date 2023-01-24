@@ -16,8 +16,10 @@
 
 package io.activej.crdt.wal;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
+@ComponentInterface
 public interface AsyncWriteAheadLog<K extends Comparable<K>, S> {
 	Promise<Void> put(K key, S value);
 

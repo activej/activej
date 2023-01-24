@@ -17,6 +17,7 @@
 package io.activej.ot.repository;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.ot.AsyncOTCommitFactory;
 import io.activej.ot.OTCommit;
 import io.activej.promise.Promise;
@@ -28,6 +29,7 @@ import java.util.stream.IntStream;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.*;
 
+@ComponentInterface
 public interface AsyncOTRepository<K, D> extends AsyncOTCommitFactory<K, D> {
 	Promise<Void> push(Collection<OTCommit<K, D>> commits);
 

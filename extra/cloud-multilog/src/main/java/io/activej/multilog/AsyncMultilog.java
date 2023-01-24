@@ -16,6 +16,7 @@
 
 package io.activej.multilog;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.promise.Promise;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Manages persistence of logs.
  */
+@ComponentInterface
 public interface AsyncMultilog<T> {
 	/**
 	 * Creates a {@code StreamConsumer} that persists streamed log items to log.
