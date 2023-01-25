@@ -87,7 +87,7 @@ public final class HttpClient extends AbstractNioReactive
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient.class, "maxKeepAliveRequests", 0);
 
-	private IDnsClient asyncDnsClient;
+	private IDnsClient dnsClient;
 	private SocketSettings socketSettings = SocketSettings.createDefault();
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
@@ -285,9 +285,9 @@ public final class HttpClient extends AbstractNioReactive
 
 	private int inetAddressIdx = 0;
 
-	private HttpClient(NioReactor reactor, IDnsClient asynDnsClient) {
+	private HttpClient(NioReactor reactor, IDnsClient dnsClient) {
 		super(reactor);
-		this.asyncDnsClient = asyncDnsClient;
+		this.dnsClient = dnsClient;
 	}
 
 	public static HttpClient create(NioReactor reactor) {
@@ -308,9 +308,9 @@ public final class HttpClient extends AbstractNioReactive
 			return this;
 		}
 
-		public Builder withDnsClient(IDnsClient asyncDnsClient) {
+		public Builder withDnsClient(IDnsClient dnsClient) {
 			checkNotBuilt(this);
-			HttpClient.this.asyncDnsClient = asyncDnsClient;
+			HttpClient.this.dnsClient = dnsClient;
 			return this;
 		}
 
@@ -486,7 +486,7 @@ public final class HttpClient extends AbstractNioReactive
 
 		assert host != null;
 
-		return asyncDnsClient.resolve4(host)
+		return dnsClient.resolve4(host)
 				.then(
 						dnsResponse -> {
 							if (inspector != null) inspector.onResolve(request, dnsResponse);
