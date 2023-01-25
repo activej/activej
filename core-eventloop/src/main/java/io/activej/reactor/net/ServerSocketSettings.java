@@ -44,7 +44,11 @@ public final class ServerSocketSettings {
 	private ServerSocketSettings() {
 	}
 
-	public static ServerSocketSettings create() {
+	public static ServerSocketSettings create(int backlog) {
+		return builder().withBacklog(backlog).build();
+	}
+
+	public static ServerSocketSettings createDefault() {
 		return builder().build();
 	}
 

@@ -27,7 +27,7 @@ public final class TcpServerExample {
 		Eventloop eventloop = Eventloop.create();
 
 		InetSocketAddress address = new InetSocketAddress("localhost", TcpClientExample.PORT);
-		ServerSocketSettings socketSettings = ServerSocketSettings.create();
+		ServerSocketSettings socketSettings = ServerSocketSettings.createDefault();
 		eventloop.listen(address, socketSettings,
 				channel -> {
 					AsyncTcpSocket socket;

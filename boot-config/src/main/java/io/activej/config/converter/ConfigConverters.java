@@ -210,7 +210,7 @@ public final class ConfigConverters {
 
 	// compound
 	public static ConfigConverter<ServerSocketSettings> ofServerSocketSettings() {
-		return new ConfigConverter_Complex<>(ServerSocketSettings.create()) {
+		return new ConfigConverter_Complex<>(ServerSocketSettings.createDefault()) {
 			@Override
 			protected ServerSocketSettings provide(Config config, ServerSocketSettings defaultValue) {
 				return ServerSocketSettings.builder()
@@ -231,7 +231,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<SocketSettings> ofSocketSettings() {
-		return new ConfigConverter_Complex<>(SocketSettings.create()) {
+		return new ConfigConverter_Complex<>(SocketSettings.createDefault()) {
 			@Override
 			protected SocketSettings provide(Config config, SocketSettings defaultValue) {
 				return SocketSettings.builder()

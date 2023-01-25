@@ -60,6 +60,10 @@ public final class SocketSettings {
 		return builder().build();
 	}
 
+	public static SocketSettings createDefault() {
+		return builder().withTcpNoDelay(true).build();
+	}
+
 	/**
 	 * Creates a builder for default socket settings with socket option {@code TCP_NODELAY} enabled.
 	 * Enabling this option turns off Nagle's algorithm.
@@ -68,8 +72,7 @@ public final class SocketSettings {
 	 * @return default socket settings builder
 	 */
 	public static Builder builder() {
-		return new SocketSettings().new Builder()
-				.withTcpNoDelay(true);
+		return new SocketSettings().new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, SocketSettings> {

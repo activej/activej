@@ -102,7 +102,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	private Logger logger = getLogger(getClass());
 
-	private SocketSettings socketSettings = SocketSettings.create();
+	private SocketSettings socketSettings = SocketSettings.createDefault();
 
 	// SSL
 	private SSLContext sslContext;

@@ -82,7 +82,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	private final InetSocketAddress address;
 
-	private SocketSettings socketSettings = SocketSettings.create();
+	private SocketSettings socketSettings = SocketSettings.createDefault();
 	private SocketSettings socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
 	private int connectionTimeout = (int) DEFAULT_CONNECTION_TIMEOUT.toMillis();
 
