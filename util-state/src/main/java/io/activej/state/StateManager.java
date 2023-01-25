@@ -1,9 +1,11 @@
 package io.activej.state;
 
+import io.activej.common.annotation.ComponentInterface;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
+@ComponentInterface
 public interface StateManager<T, R extends Comparable<R>> {
 	R newRevision() throws IOException;
 

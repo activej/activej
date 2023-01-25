@@ -19,6 +19,7 @@ package io.activej.http;
 /**
  * A blocking version of {@link AsyncServlet}.
  */
+@FunctionalInterface
 public interface BlockingServlet {
 	HttpResponse serve(HttpRequest request) throws Exception;
 }

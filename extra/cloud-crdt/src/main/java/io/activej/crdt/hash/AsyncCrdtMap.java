@@ -16,9 +16,11 @@
 
 package io.activej.crdt.hash;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
+@ComponentInterface
 public interface AsyncCrdtMap<K extends Comparable<K>, S> {
 	Promise<@Nullable S> put(K key, S value);
 

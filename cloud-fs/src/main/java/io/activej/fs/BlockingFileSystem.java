@@ -1,5 +1,6 @@
 package io.activej.fs;
 
+import io.activej.common.annotation.ComponentInterface;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import static io.activej.common.Utils.isBijection;
 import static io.activej.fs.util.RemoteFileSystemUtils.escapeGlob;
 import static java.util.stream.Collectors.toSet;
 
+@ComponentInterface
 public interface BlockingFileSystem {
 	String SEPARATOR = AsyncFileSystem.SEPARATOR;
 

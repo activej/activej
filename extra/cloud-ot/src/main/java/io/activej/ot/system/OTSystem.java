@@ -16,11 +16,13 @@
 
 package io.activej.ot.system;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.ot.TransformResult;
 import io.activej.ot.exception.TransformException;
 
 import java.util.List;
 
+@ComponentInterface
 public interface OTSystem<D> {
 
 	TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws TransformException;

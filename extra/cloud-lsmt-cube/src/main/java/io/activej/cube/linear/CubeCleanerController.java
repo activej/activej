@@ -18,6 +18,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.exception.CubeException;
@@ -421,6 +422,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 	// endregion
 
+	@ComponentInterface
 	public interface ChunksCleanerService {
 		void checkRequiredChunks(Set<Long> chunkIds) throws IOException;
 
