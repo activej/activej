@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.TestUtils.CountingStreamConsumer;
 import io.activej.eventloop.Eventloop;
@@ -55,7 +55,7 @@ public class StreamSupplierOfAnotherReactorTest {
 	public void testStreaming() throws ExecutionException, InterruptedException {
 		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() -> StreamSupplier.of(1, 2, 3, 4, 5));
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherReactor(anotherEventloop, anotherEventloopSupplier);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
@@ -70,7 +70,7 @@ public class StreamSupplierOfAnotherReactorTest {
 		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() ->
 				StreamSupplier.concat(StreamSupplier.of(1, 2, 3), StreamSupplier.closingWithError(expectedException), StreamSupplier.of(4, 5, 6)));
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherReactor(anotherEventloop, anotherEventloopSupplier);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
@@ -84,7 +84,7 @@ public class StreamSupplierOfAnotherReactorTest {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() -> StreamSupplier.of(1, 2, 3, 4, 5));
 		StreamSupplier<Integer> supplier = StreamSupplier.ofAnotherReactor(anotherEventloop, anotherEventloopSupplier);
-		StreamConsumer<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer<Integer> consumer = StreamConsumer_ToList.create();
 
 		Exception exception = awaitException(supplier.streamTo(consumer
 				.transformWith(decorate(promise -> promise

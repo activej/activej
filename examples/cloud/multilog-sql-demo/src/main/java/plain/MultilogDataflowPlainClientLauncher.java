@@ -3,7 +3,7 @@ package plain;
 import io.activej.config.Config;
 import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.exception.DataflowException;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -89,7 +89,7 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 
 	private List<Record> executeQuery(String query) throws InterruptedException, ExecutionException {
 		return reactor.submit(() -> {
-					StreamConsumerToList<Record> consumer = StreamConsumerToList.create();
+					StreamConsumer_ToList<Record> consumer = StreamConsumer_ToList.create();
 					return sqlDataflow.query(query)
 							.then(supplier -> supplier.streamTo(consumer))
 							.map($ -> consumer.getList());

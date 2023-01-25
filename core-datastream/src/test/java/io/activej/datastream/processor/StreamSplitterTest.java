@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -35,8 +35,8 @@ public class StreamSplitterTest {
 						acceptor.accept(item);
 					}
 				});
-		StreamConsumerToList<Integer> consumerToList1 = StreamConsumerToList.create();
-		StreamConsumerToList<Integer> consumerToList2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumerToList1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<Integer> consumerToList2 = StreamConsumer_ToList.create();
 
 		await(
 				source.streamTo(streamConcat.getInput()),
@@ -61,10 +61,10 @@ public class StreamSplitterTest {
 					}
 				});
 
-		StreamConsumerToList<Integer> consumerToList1 = StreamConsumerToList.create();
-		StreamConsumerToList<Integer> consumerToList2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumerToList1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<Integer> consumerToList2 = StreamConsumer_ToList.create();
 
-		StreamConsumerToList<Integer> badConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> badConsumer = StreamConsumer_ToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
@@ -110,9 +110,9 @@ public class StreamSplitterTest {
 					}
 				});
 
-		StreamConsumerToList<Integer> consumer1 = StreamConsumerToList.create();
-		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
-		StreamConsumerToList<Integer> consumer3 = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<Integer> consumer3 = StreamConsumer_ToList.create();
 
 		Exception e = awaitException(
 				source.streamTo(splitter.getInput()),

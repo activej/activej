@@ -31,7 +31,7 @@ public final class StreamReducers {
 	 * @param <T> type of output
 	 */
 	public static <K, T> Reducer<K, T, T, Void> deduplicateReducer() {
-		return new DeduplicateReducer<>();
+		return new Reducer_Deduplicate<>();
 	}
 
 	/**
@@ -41,7 +41,7 @@ public final class StreamReducers {
 	 * @param <T> type of output
 	 */
 	public static <K, T> Reducer<K, T, T, Void> mergeReducer() {
-		return new MergeReducer<>();
+		return new Reducer_Merge<>();
 	}
 
 	/**
@@ -440,7 +440,7 @@ public final class StreamReducers {
 	 * @param <K> type of keys
 	 * @param <T> type of input and output data
 	 */
-	public static final class DeduplicateReducer<K, T> implements Reducer<K, T, T, Void> {
+	public static final class Reducer_Deduplicate<K, T> implements Reducer<K, T, T, Void> {
 		/**
 		 * On first item with new key it streams it
 		 *
@@ -470,7 +470,7 @@ public final class StreamReducers {
 	 * @param <K> type of keys
 	 * @param <T> type of input and output data
 	 */
-	public static final class MergeReducer<K, T> implements Reducer<K, T, T, Void> {
+	public static final class Reducer_Merge<K, T> implements Reducer<K, T, T, Void> {
 		@Override
 		public Void onFirstItem(StreamDataAcceptor<T> stream, K key, T firstValue) {
 			stream.accept(firstValue);
@@ -488,7 +488,7 @@ public final class StreamReducers {
 		}
 	}
 
-	public static abstract class BinaryAccumulatorReducer<K, T> implements Reducer<K, T, T, T> {
+	public static abstract class Reducer_BinaryAccumulator<K, T> implements Reducer<K, T, T, T> {
 		@Override
 		public T onFirstItem(StreamDataAcceptor<T> stream, K key, T firstValue) {
 			return firstValue;

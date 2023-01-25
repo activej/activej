@@ -227,7 +227,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 				.map(suppliers -> {
 					StreamReducer<K, CrdtReducingData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
 
-					suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new CrdtReducer(includeTombstones))));
+					suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new Reducer_Crdt(includeTombstones))));
 
 					return reducer.getOutput()
 							.withEndOfStream(eos -> eos
@@ -382,10 +382,10 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	record CrdtEntry<S>(S state, long timestamp) {}
 
-	class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
+	class Reducer_Crdt implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
 		final boolean includeTombstones;
 
-		CrdtReducer(boolean includeTombstones) {
+		Reducer_Crdt(boolean includeTombstones) {
 			this.includeTombstones = includeTombstones;
 		}
 

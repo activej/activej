@@ -1,7 +1,7 @@
 package io.activej.etl;
 
-import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamConsumerWithResult;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -32,14 +32,14 @@ public class LogDataConsumer_Splitter_Test {
 
 	@Test
 	public void testConsumes() {
-		List<StreamConsumerToList<Integer>> consumers = List.of(
-				StreamConsumerToList.create(),
-				StreamConsumerToList.create());
+		List<StreamConsumer_ToList<Integer>> consumers = List.of(
+				StreamConsumer_ToList.create(),
+				StreamConsumer_ToList.create());
 
-		Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
+		Iterator<StreamConsumer_ToList<Integer>> iterator = consumers.iterator();
 		LogDataConsumer_Splitter<Integer, Integer> splitter =
 				new LogDataConsumer_SplitterStub<>(() -> {
-					StreamConsumerToList<Integer> next = iterator.next();
+					StreamConsumer_ToList<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
 				});
 
@@ -49,14 +49,14 @@ public class LogDataConsumer_Splitter_Test {
 
 	@Test
 	public void testConsumersWithSuspend() {
-		List<StreamConsumerToList<Integer>> consumers = List.of(
-				StreamConsumerToList.create(),
-				StreamConsumerToList.create());
+		List<StreamConsumer_ToList<Integer>> consumers = List.of(
+				StreamConsumer_ToList.create(),
+				StreamConsumer_ToList.create());
 
-		Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
+		Iterator<StreamConsumer_ToList<Integer>> iterator = consumers.iterator();
 		LogDataConsumer_Splitter<Integer, Integer> splitter =
 				new LogDataConsumer_SplitterStub<>(() -> {
-					StreamConsumerToList<Integer> next = iterator.next();
+					StreamConsumer_ToList<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
 				});
 

@@ -16,7 +16,7 @@ import static io.activej.common.Checks.checkArgument;
 import static org.apache.calcite.rel.core.JoinRelType.INNER;
 import static org.apache.calcite.rel.core.JoinRelType.LEFT;
 
-public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Record> {
+public final class LeftJoiner_Record implements LeftJoiner<Record, Record, Record, Record> {
 	private final JoinRelType joinType;
 
 	private final RecordScheme scheme;
@@ -27,7 +27,7 @@ public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Re
 	private final RecordGetter<?>[] leftGetters;
 	private final RecordGetter<?>[] rightGetters;
 
-	private RecordJoiner(
+	private LeftJoiner_Record(
 			JoinRelType joinType,
 			RecordScheme scheme,
 			RecordScheme leftScheme,
@@ -44,19 +44,19 @@ public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Re
 		this.rightGetters = rightGetters;
 	}
 
-	public static RecordJoiner create(JoinRelType joinType, RecordScheme left, RecordScheme right, List<String> fieldNames) {
+	public static LeftJoiner_Record create(JoinRelType joinType, RecordScheme left, RecordScheme right, List<String> fieldNames) {
 		RecordScheme scheme = createScheme(joinType, left, right, fieldNames);
 		return create(joinType, scheme, left, right);
 	}
 
-	public static RecordJoiner create(JoinRelType joinType, RecordScheme scheme, RecordScheme left, RecordScheme right) {
+	public static LeftJoiner_Record create(JoinRelType joinType, RecordScheme scheme, RecordScheme left, RecordScheme right) {
 		checkArgument(joinType == INNER || joinType == LEFT, "Only INNER and LEFT joins are supported");
 
 		RecordSetter<?>[] setters = getSetters(scheme);
 		RecordGetter<?>[] leftGetters = getGetters(left);
 		RecordGetter<?>[] rightGetters = getGetters(right);
 
-		return new RecordJoiner(joinType, scheme, left, right, setters, leftGetters, rightGetters);
+		return new LeftJoiner_Record(joinType, scheme, left, right, setters, leftGetters, rightGetters);
 	}
 
 	public JoinRelType getJoinRelType() {

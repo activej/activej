@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
@@ -28,7 +28,7 @@ public class StreamMapperTest {
 	@Test
 	public void testFunction() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 		StreamFilter<Integer, Integer> mapper = StreamFilter.mapper(input -> input * input);
 
 		await(supplier.transformWith(mapper)
@@ -47,7 +47,7 @@ public class StreamMapperTest {
 
 		List<Integer> list = new ArrayList<>();
 		StreamSupplier<Integer> source1 = StreamSupplier.of(1, 2, 3);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create(list);
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(source1.transformWith(mapper)
@@ -73,7 +73,7 @@ public class StreamMapperTest {
 				StreamSupplier.of(4, 5, 6),
 				StreamSupplier.closingWithError(exception));
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		Exception e = awaitException(supplier.transformWith(mapper)
 				.streamTo(consumer));
@@ -88,7 +88,7 @@ public class StreamMapperTest {
 	@Test
 	public void testMappedConsumer() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 		StreamFilter<Integer, Integer> mapper = StreamFilter.mapper(input -> input * input);
 
 		StreamConsumer<Integer> mappedConsumer = consumer
@@ -107,7 +107,7 @@ public class StreamMapperTest {
 	@Test
 	public void testConsecutiveMappers() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 		StreamFilter<Integer, Integer> squareMapper = StreamFilter.mapper(input -> input * input);
 		StreamFilter<Integer, Integer> doubleMapper = StreamFilter.mapper(input -> input * 2);
 		StreamFilter<Integer, Integer> mul10Mapper = StreamFilter.mapper(input -> input * 10);

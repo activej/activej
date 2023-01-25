@@ -2803,7 +2803,7 @@ public abstract class AbstractCalciteTest {
 				.withColumn("firstName", String.class, Student::firstName)
 				.withColumn("lastName", String.class, Student::lastName)
 				.withColumn("dept", int.class, Student::dept)
-				.withReducer(new StudentReducer())
+				.withReducer(new Reducer_Student())
 				.build();
 	}
 
@@ -3167,7 +3167,7 @@ public abstract class AbstractCalciteTest {
 		void setValues(PreparedStatement stmt) throws SQLException;
 	}
 
-	public static final class StudentReducer extends StreamReducers.BinaryAccumulatorReducer<Record, Record> {
+	public static final class Reducer_Student extends StreamReducers.Reducer_BinaryAccumulator<Record, Record> {
 		@Override
 		protected Record combine(Record key, Record nextValue, Record accumulator) {
 			return nextValue.getInt("dept") > accumulator.getInt("dept") ? nextValue : accumulator;

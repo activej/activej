@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -23,21 +23,21 @@ public class StreamSupplierOfValueTest {
 
 	@Test
 	public void test1() {
-		StreamConsumerToList<Integer> consumer1 = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
 		StreamSupplier<Integer> supplier1 = StreamSupplier.of(TEST_INT);
 		await(supplier1.streamTo(consumer1));
 
 		assertEquals(TEST_INT, consumer1.getList().get(0));
 		assertEndOfStream(supplier1);
 
-		StreamConsumerToList<String> consumer2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<String> consumer2 = StreamConsumer_ToList.create();
 		StreamSupplier<String> supplier2 = StreamSupplier.of(TEST_STRING);
 		await(supplier2.streamTo(consumer2));
 
 		assertEquals(TEST_STRING, consumer2.getList().get(0));
 		assertEndOfStream(supplier2);
 
-		StreamConsumerToList<DataItem1> consumer3 = StreamConsumerToList.create();
+		StreamConsumer_ToList<DataItem1> consumer3 = StreamConsumer_ToList.create();
 		StreamSupplier<DataItem1> supplier3 = StreamSupplier.of(TEST_OBJECT);
 		await(supplier3.streamTo(consumer3));
 
@@ -47,7 +47,7 @@ public class StreamSupplierOfValueTest {
 
 	@Test
 	public void testNull() {
-		StreamConsumerToList<Object> consumer3 = StreamConsumerToList.create();
+		StreamConsumer_ToList<Object> consumer3 = StreamConsumer_ToList.create();
 		StreamSupplier<Object> supplier3 = StreamSupplier.of(TEST_NULL);
 		await(supplier3.streamTo(consumer3));
 

@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
@@ -28,7 +28,7 @@ public class StreamBufferTest {
 	@Test
 	public void testZeroMinSize() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(0, 1);
 		await(supplier.transformWith(buffer).streamTo(consumer.transformWith(randomlySuspending())));
@@ -41,7 +41,7 @@ public class StreamBufferTest {
 	@Test
 	public void testBufferedSupplier() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
 		await(supplier.transformWith(buffer).streamTo(consumer.transformWith(randomlySuspending())));
@@ -54,7 +54,7 @@ public class StreamBufferTest {
 	@Test
 	public void testBufferedConsumer() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
 		await(supplier.streamTo(consumer.transformWith(buffer).transformWith(randomlySuspending())));
@@ -72,7 +72,7 @@ public class StreamBufferTest {
 				closingWithError(expectedException),
 				StreamSupplier.of(6, 7, 8, 9, 10)
 		);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(buffer).transformWith(randomlySuspending())));
@@ -87,7 +87,7 @@ public class StreamBufferTest {
 	public void testConsumerError() {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
 		Exception exception = awaitException(supplier.streamTo(consumer

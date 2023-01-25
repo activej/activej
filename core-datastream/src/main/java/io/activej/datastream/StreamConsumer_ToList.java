@@ -28,20 +28,20 @@ import java.util.List;
  *
  * @see StreamSupplier#toList()
  */
-public final class StreamConsumerToList<T> extends AbstractStreamConsumer<T> {
+public final class StreamConsumer_ToList<T> extends AbstractStreamConsumer<T> {
 	private final SettablePromise<List<T>> resultPromise = new SettablePromise<>();
 	private final List<T> list;
 
-	private StreamConsumerToList(List<T> list) {
+	private StreamConsumer_ToList(List<T> list) {
 		this.list = list;
 	}
 
-	public static <T> StreamConsumerToList<T> create() {
+	public static <T> StreamConsumer_ToList<T> create() {
 		return create(new ArrayList<>());
 	}
 
-	public static <T> StreamConsumerToList<T> create(List<T> list) {
-		return new StreamConsumerToList<>(list);
+	public static <T> StreamConsumer_ToList<T> create(List<T> list) {
+		return new StreamConsumer_ToList<>(list);
 	}
 
 	public Promise<List<T>> getResult() {

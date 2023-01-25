@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -21,7 +21,7 @@ public class StreamLimiterTest {
 	public void testLimit() {
 		List<Integer> original = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(original);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		int limit = 5;
 		await(supplier.transformWith(StreamLimiter.create(limit)).streamTo(consumer));
@@ -33,7 +33,7 @@ public class StreamLimiterTest {
 	public void testLimitZero() {
 		List<Integer> original = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(original);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.transformWith(StreamLimiter.create(0)).streamTo(consumer));
 
@@ -44,7 +44,7 @@ public class StreamLimiterTest {
 	public void testNoLimit() {
 		List<Integer> original = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(original);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.transformWith(StreamLimiter.create(StreamLimiter.NO_LIMIT)).streamTo(consumer));
 

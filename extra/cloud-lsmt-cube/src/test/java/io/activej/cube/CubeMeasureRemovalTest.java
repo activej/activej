@@ -10,7 +10,7 @@ import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.etl.LogDiff;
@@ -185,7 +185,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		Map<Integer, Long> map = Stream.concat(listOfRandomLogItems1.stream(), listOfRandomLogItems2.stream())
 				.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
-		StreamConsumerToList<LogItem> queryResultConsumer2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<LogItem> queryResultConsumer2 = StreamConsumer_ToList.create();
 		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
 				queryResultConsumer2));
 
@@ -213,7 +213,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
 		// Query
-		StreamConsumerToList<LogItem> queryResultConsumer3 = StreamConsumerToList.create();
+		StreamConsumer_ToList<LogItem> queryResultConsumer3 = StreamConsumer_ToList.create();
 		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 				.streamTo(queryResultConsumer3));
 		List<LogItem> queryResult3 = queryResultConsumer3.getList();

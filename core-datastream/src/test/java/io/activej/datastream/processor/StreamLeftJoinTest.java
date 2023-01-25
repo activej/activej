@@ -1,9 +1,9 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamLeftJoin.ValueLeftJoiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner_Value;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
@@ -45,7 +45,7 @@ public class StreamLeftJoinTest {
 				StreamLeftJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueLeftJoiner<>() {
+						new LeftJoiner_Value<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -58,7 +58,7 @@ public class StreamLeftJoinTest {
 						}
 				);
 
-		StreamConsumerToList<DataItemMasterDetail> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<DataItemMasterDetail> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source1.streamTo(streamLeftJoin.getLeft()),
@@ -90,7 +90,7 @@ public class StreamLeftJoinTest {
 				StreamLeftJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueLeftJoiner<>() {
+						new LeftJoiner_Value<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -103,7 +103,7 @@ public class StreamLeftJoinTest {
 						}
 				);
 
-		StreamConsumerToList<DataItemMasterDetail> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<DataItemMasterDetail> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source1.streamTo(streamJoin.getLeft()),
@@ -130,7 +130,7 @@ public class StreamLeftJoinTest {
 				StreamLeftJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueLeftJoiner<>() {
+						new LeftJoiner_Value<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -143,7 +143,7 @@ public class StreamLeftJoinTest {
 						}
 				);
 
-		StreamConsumerToList<DataItemMasterDetail> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<DataItemMasterDetail> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source1.streamTo(streamLeftJoin.getLeft()),
@@ -178,7 +178,7 @@ public class StreamLeftJoinTest {
 				StreamLeftJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueLeftJoiner<>() {
+						new LeftJoiner_Value<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -192,7 +192,7 @@ public class StreamLeftJoinTest {
 				);
 
 		ExpectedException exception = new ExpectedException("Test Exception");
-		StreamConsumerToList<DataItemMasterDetail> consumerToList = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<DataItemMasterDetail> consumerToList = StreamConsumer_ToList.create(list);
 		StreamConsumer<DataItemMasterDetail> consumer = consumerToList
 				.transformWith(decorate(promise ->
 						promise.then(item -> Promise.ofException(exception))));
@@ -231,7 +231,7 @@ public class StreamLeftJoinTest {
 				StreamLeftJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueLeftJoiner<>() {
+						new LeftJoiner_Value<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -245,7 +245,7 @@ public class StreamLeftJoinTest {
 				);
 
 		List<DataItemMasterDetail> list = new ArrayList<>();
-		StreamConsumer<DataItemMasterDetail> consumer = StreamConsumerToList.create(list);
+		StreamConsumer<DataItemMasterDetail> consumer = StreamConsumer_ToList.create(list);
 
 		Exception e = awaitException(
 				source1.streamTo(streamLeftJoin.getLeft()),

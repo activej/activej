@@ -7,23 +7,23 @@ import java.util.concurrent.ExecutionException;
 import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class BlockingStreamSupplier<T> extends AbstractStreamSupplier<T> {
-	public static final int DEFAULT_BUFFER_SIZE = ApplicationSettings.getInt(BlockingStreamSupplier.class, "bufferSize", 8192);
+public final class StreamSupplier_Blocking<T> extends AbstractStreamSupplier<T> {
+	public static final int DEFAULT_BUFFER_SIZE = ApplicationSettings.getInt(StreamSupplier_Blocking.class, "bufferSize", 8192);
 
 	private final Queue queue;
 
 	private volatile boolean endOfStream;
 
-	private BlockingStreamSupplier(int bufferSize) {
+	private StreamSupplier_Blocking(int bufferSize) {
 		this.queue = new Queue(bufferSize);
 	}
 
-	public static <T> BlockingStreamSupplier<T> create() {
-		return new BlockingStreamSupplier<>(DEFAULT_BUFFER_SIZE);
+	public static <T> StreamSupplier_Blocking<T> create() {
+		return new StreamSupplier_Blocking<>(DEFAULT_BUFFER_SIZE);
 	}
 
-	public static <T> BlockingStreamSupplier<T> create(int bufferSize) {
-		return new BlockingStreamSupplier<>(bufferSize);
+	public static <T> StreamSupplier_Blocking<T> create(int bufferSize) {
+		return new StreamSupplier_Blocking<>(bufferSize);
 	}
 
 	public int getBufferCapacity() {

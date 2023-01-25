@@ -16,7 +16,7 @@ import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
@@ -198,7 +198,7 @@ public class DataflowServerTest {
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
 		ICollector<StringCount> collector = Collector_Concat.create(Reactor.getCurrentReactor(), reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
-		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create(result);
+		StreamConsumer_ToList<StringCount> resultConsumer = StreamConsumer_ToList.create(result);
 
 		return graph.execute().both(resultSupplier.streamTo(resultConsumer))
 				.whenException(resultConsumer::closeEx);
@@ -388,7 +388,7 @@ public class DataflowServerTest {
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).to(reactor ->
 											Reactor.executeWithReactor(reactor, () ->
-													StreamConsumerToList.create(result)),
+													StreamConsumer_ToList.create(result)),
 									NioReactor.class)
 							.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 							.build());

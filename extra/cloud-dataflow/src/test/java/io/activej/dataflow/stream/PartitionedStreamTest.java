@@ -27,7 +27,7 @@ import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamSplitter;
@@ -267,7 +267,7 @@ public final class PartitionedStreamTest {
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
-							.streamTo(StreamConsumerToList.create(items))));
+							.streamTo(StreamConsumer_ToList.create(items))));
 			for (String item : items) {
 				allTargetItems.add(item);
 				Integer value = KEY_FUNCTION.apply(item);

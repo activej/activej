@@ -9,7 +9,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
@@ -73,7 +73,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 
-			StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
+			StreamConsumer_ToList<StringCount> resultConsumer = StreamConsumer_ToList.create();
 
 			System.out.println("\n *** Dataset graph:\n");
 			System.out.println(reducedItems.toGraphViz());

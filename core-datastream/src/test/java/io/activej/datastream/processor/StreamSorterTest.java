@@ -4,7 +4,7 @@ import io.activej.common.MemSize;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormats;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -67,7 +67,7 @@ public final class StreamSorterTest {
 		assertEndOfStream(source1);
 //		assertEndOfStream(source2);
 
-		StreamConsumerToList<Integer> consumer1 = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
 //		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 		storage.readStream(1).streamTo(consumer1.transformWith(oneByOne()));
 //		storage.readStream(2).streamTo(consumer2.with(TestStreamConsumers.randomlySuspending()));
@@ -87,7 +87,7 @@ public final class StreamSorterTest {
 		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 2);
 
-		StreamConsumerToList<Integer> consumerToList = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumerToList = StreamConsumer_ToList.create();
 
 		await(source.transformWith(sorter)
 				.streamTo(consumerToList.transformWith(randomlySuspending())));
@@ -107,7 +107,7 @@ public final class StreamSorterTest {
 				storage, Function.identity(), Integer::compareTo, true, 2);
 
 		List<Integer> list = new ArrayList<>();
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create(list);
 		ExpectedException exception = new ExpectedException();
 
 		Exception e = awaitException(
@@ -138,7 +138,7 @@ public final class StreamSorterTest {
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
 				storage, Function.identity(), Integer::compareTo, true, 10);
 
-		StreamConsumerToList<Integer> consumerToList = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumerToList = StreamConsumer_ToList.create();
 
 		Exception e = awaitException(source.transformWith(sorter)
 				.streamTo(consumerToList));
@@ -159,7 +159,7 @@ public final class StreamSorterTest {
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 0);
 
 		List<Integer> list = new ArrayList<>();
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create(list);
 
 		try (Stream<Path> contents = Files.list(storagePath)) {
 			assertFalse(contents.findAny().isPresent());
@@ -231,7 +231,7 @@ public final class StreamSorterTest {
 		failingStorage.setStorage(StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, path));
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(failingStorage, Function.identity(), Integer::compareTo, true, 2);
 
-		StreamConsumerToList<Integer> consumerToList = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumerToList = StreamConsumer_ToList.create();
 
 		Promise<Void> streamPromise = source.transformWith(sorter)
 				.streamTo(consumerToList.transformWith(randomlySuspending()));
@@ -244,7 +244,7 @@ public final class StreamSorterTest {
 	}
 
 	private interface StreamSorterValidator<K, T> {
-		void validate(Promise<Void> streamPromise, StreamSorter<K, T> sorter, StreamSupplier<T> supplier, StreamConsumerToList<T> consumerToList);
+		void validate(Promise<Void> streamPromise, StreamSorter<K, T> sorter, StreamSupplier<T> supplier, StreamConsumer_ToList<T> consumerToList);
 	}
 
 }

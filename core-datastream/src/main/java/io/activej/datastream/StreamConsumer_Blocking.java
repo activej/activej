@@ -9,24 +9,24 @@ import java.util.concurrent.ExecutionException;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
-public final class BlockingStreamConsumer<T> extends AbstractStreamConsumer<T> {
-	public static final int DEFAULT_BUFFER_SIZE = ApplicationSettings.getInt(BlockingStreamConsumer.class, "bufferSize", 8192);
+public final class StreamConsumer_Blocking<T> extends AbstractStreamConsumer<T> {
+	public static final int DEFAULT_BUFFER_SIZE = ApplicationSettings.getInt(StreamConsumer_Blocking.class, "bufferSize", 8192);
 
 	private final Queue queue;
 
 	private volatile boolean endOfStream;
 
-	private BlockingStreamConsumer(int bufferSize) {
+	private StreamConsumer_Blocking(int bufferSize) {
 		checkArgument(bufferSize > 0, "Negative buffer size");
 		this.queue = new Queue(bufferSize);
 	}
 
-	public static <T> BlockingStreamConsumer<T> create() {
-		return new BlockingStreamConsumer<>(DEFAULT_BUFFER_SIZE);
+	public static <T> StreamConsumer_Blocking<T> create() {
+		return new StreamConsumer_Blocking<>(DEFAULT_BUFFER_SIZE);
 	}
 
-	public static <T> BlockingStreamConsumer<T> create(int bufferSize) {
-		return new BlockingStreamConsumer<>(bufferSize);
+	public static <T> StreamConsumer_Blocking<T> create(int bufferSize) {
+		return new StreamConsumer_Blocking<>(bufferSize);
 	}
 
 	public int getBufferCapacity() {

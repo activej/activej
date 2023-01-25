@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -21,7 +21,7 @@ public class StreamSkipTest {
 	public void testSkip() {
 		List<Integer> original = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(original);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.transformWith(StreamSkip.create(3)).streamTo(consumer));
 
@@ -32,7 +32,7 @@ public class StreamSkipTest {
 	public void testNoSkip() {
 		List<Integer> original = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(original);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.transformWith(StreamSkip.create(StreamSkip.NO_SKIP)).streamTo(consumer));
 
@@ -43,7 +43,7 @@ public class StreamSkipTest {
 	public void testSkipAll() {
 		List<Integer> original = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(original);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.transformWith(StreamSkip.create(100)).streamTo(consumer));
 

@@ -8,7 +8,7 @@ import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.csp.process.frames.FrameFormat_LZ4Legacy;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.fs.FileMetadata;
@@ -174,7 +174,7 @@ public class MultilogTest {
 
 		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
 
-		StreamConsumerToList<String> listConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<String> listConsumer = StreamConsumer_ToList.create();
 		await(fs.list("*" + partition + "*")
 				.then(map -> {
 					PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
@@ -217,7 +217,7 @@ public class MultilogTest {
 		StreamSupplierWithResult<String, LogPosition> supplierWithResult = StreamSupplierWithResult.ofPromise(
 				multilog.read(testPartition, new LogFile("", 0), 0, null));
 
-		StreamConsumerToList<String> consumerToList = StreamConsumerToList.create();
+		StreamConsumer_ToList<String> consumerToList = StreamConsumer_ToList.create();
 		await(supplierWithResult.getSupplier().streamTo(consumerToList));
 
 		assertEquals(values, consumerToList.getList());
@@ -230,7 +230,7 @@ public class MultilogTest {
 		supplierWithResult = StreamSupplierWithResult.ofPromise(
 				multilog.read(testPartition, pos.getLogFile(), position, null));
 
-		consumerToList = StreamConsumerToList.create();
+		consumerToList = StreamConsumer_ToList.create();
 		await(supplierWithResult.getSupplier().streamTo(consumerToList));
 
 		assertTrue(consumerToList.getList().isEmpty());
@@ -239,7 +239,7 @@ public class MultilogTest {
 	}
 
 	private static <T> List<T> readLog(IMultilog<T> multilog, String partition) {
-		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<T> listConsumer = StreamConsumer_ToList.create();
 		await(StreamSupplierWithResult.ofPromise(
 						multilog.read(partition, new LogFile("", 0), 0, null))
 				.getSupplier()

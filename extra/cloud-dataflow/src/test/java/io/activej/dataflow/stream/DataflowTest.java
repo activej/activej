@@ -21,10 +21,10 @@ import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.StreamReducers.Reducer_Merge;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -103,8 +103,8 @@ public final class DataflowTest {
 				.install(createSerializersModule())
 				.build();
 
-		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
-		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
@@ -160,11 +160,11 @@ public final class DataflowTest {
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
 				.build();
 
-		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
-		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
@@ -242,9 +242,9 @@ public final class DataflowTest {
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
-		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
-		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
-		StreamConsumerToList<TestItem> result3 = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<TestItem> result3 = StreamConsumer_ToList.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -342,8 +342,8 @@ public final class DataflowTest {
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
-		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
-		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -399,7 +399,7 @@ public final class DataflowTest {
 
 	@Test
 	public void testCollector() throws Exception {
-		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
@@ -465,14 +465,14 @@ public final class DataflowTest {
 
 	@Test
 	public void testOffsetLimit() throws Exception {
-		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -541,8 +541,8 @@ public final class DataflowTest {
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
-		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
-		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
+		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -585,14 +585,14 @@ public final class DataflowTest {
 
 	@Test
 	public void testUnion() throws Exception {
-		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -669,14 +669,14 @@ public final class DataflowTest {
 
 	@Test
 	public void testUnionAll() throws Exception {
-		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 

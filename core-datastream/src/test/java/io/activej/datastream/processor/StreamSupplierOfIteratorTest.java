@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -22,7 +22,7 @@ public class StreamSupplierOfIteratorTest {
 		List<Integer> list = List.of(1, 2, 3);
 
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(list);
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(supplier.streamTo(consumer));
 

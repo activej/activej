@@ -11,7 +11,7 @@ import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
 import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
@@ -86,7 +86,7 @@ public class StringDimensionTest {
 		cube.apply(consumer1Result);
 		cube.apply(consumer2Result);
 
-		StreamConsumerToList<DataItemResultString> consumerToList = StreamConsumerToList.create();
+		StreamConsumer_ToList<DataItemResultString> consumerToList = StreamConsumer_ToList.create();
 		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 						and(eq("key1", "str2"), eq("key2", 3)),
 						DataItemResultString.class, DefiningClassLoader.create(classLoader))

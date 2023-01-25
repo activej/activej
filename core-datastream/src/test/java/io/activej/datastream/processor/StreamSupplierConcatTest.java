@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
@@ -26,7 +26,7 @@ public class StreamSupplierConcatTest {
 
 	@Test
 	public void testSequence() {
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(StreamSupplier.concat(
 						StreamSupplier.of(1, 2, 3),
@@ -41,7 +41,7 @@ public class StreamSupplierConcatTest {
 	public void testSequenceException() {
 		List<Integer> list = new ArrayList<>();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create(list);
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSupplier.concat(
@@ -71,7 +71,7 @@ public class StreamSupplierConcatTest {
 	public void testConcatException() {
 		List<Integer> list = new ArrayList<>();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create(list);
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSupplier.concat(

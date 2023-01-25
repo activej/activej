@@ -4,7 +4,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
@@ -69,7 +69,7 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				StreamConsumerToList<T> consumer = StreamConsumerToList.create((List<T>) items);
+				StreamConsumer_ToList<T> consumer = StreamConsumer_ToList.create((List<T>) items);
 				consumer.getAcknowledgement().whenComplete(assertCompleteFn());
 				return Promise.of(consumer);
 			}
@@ -131,7 +131,7 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				StreamConsumerToList<T> consumer = StreamConsumerToList.create(items);
+				StreamConsumer_ToList<T> consumer = StreamConsumer_ToList.create(items);
 				listConsumers.add(consumer);
 				return Promise.of(consumer);
 			}
@@ -209,7 +209,7 @@ public final class AggregationChunkerTest {
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
 				if (chunkId == 1) {
-					StreamConsumerToList<T> toList = StreamConsumerToList.create(items);
+					StreamConsumer_ToList<T> toList = StreamConsumer_ToList.create(items);
 					listConsumers.add(toList);
 					return Promise.of(toList);
 				} else {

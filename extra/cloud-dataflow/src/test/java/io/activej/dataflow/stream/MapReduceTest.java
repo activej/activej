@@ -9,7 +9,7 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
@@ -147,7 +147,7 @@ public class MapReduceTest {
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
 		ICollector<StringCount> collector = Collector_Merge.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder());
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
-		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<StringCount> resultConsumer = StreamConsumer_ToList.create();
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 

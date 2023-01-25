@@ -28,7 +28,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Basic;
@@ -137,7 +137,7 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		checkInReactorThread(this);
-		StreamConsumerToList<CrdtData<K, S>> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<CrdtData<K, S>> consumer = StreamConsumer_ToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
 						.whenResult(() -> consumer.getList().forEach(this::doPut))
 						.mapException(e -> new CrdtException("Error while uploading CRDT data", e)))
@@ -187,7 +187,7 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		checkInReactorThread(this);
-		StreamConsumerToList<CrdtTombstone<K>> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<CrdtTombstone<K>> consumer = StreamConsumer_ToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
 						.whenResult(() -> consumer.getList().forEach(this::doRemove))
 						.mapException(e -> new CrdtException("Error while removing CRDT data", e)))

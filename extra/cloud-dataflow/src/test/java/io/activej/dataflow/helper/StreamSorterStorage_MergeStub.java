@@ -4,7 +4,7 @@ import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.IStreamSorterStorage;
 import io.activej.promise.Promise;
@@ -45,7 +45,7 @@ public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
 		checkInReactorThread(this);
 		List<T> list = new ArrayList<>();
 		storage.put(partition, list);
-		StreamConsumerToList<T> consumer = StreamConsumerToList.create(list);
+		StreamConsumer_ToList<T> consumer = StreamConsumer_ToList.create(list);
 		return Promise.of(consumer);
 	}
 

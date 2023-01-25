@@ -5,7 +5,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
-import io.activej.dataflow.calcite.join.RecordJoiner;
+import io.activej.dataflow.calcite.join.LeftJoiner_Record;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.Operand_RecordField;
 import io.activej.dataflow.calcite.operand.Operand_Scalar;
@@ -211,7 +211,7 @@ public class RelToDatasetConverter {
 			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
 			Reducer<Record, Record, Record, ?> providedReducer = dataflowPartitionedTable.getReducer();
-			Reducer<Record, Record, Record, ?> reducer = new NamedReducer(id, (Reducer<Record, Record, Record, Object>) providedReducer);
+			Reducer<Record, Record, Record, ?> reducer = new Reducer_Named(id, (Reducer<Record, Record, Record, Object>) providedReducer);
 
 			return Datasets.repartitionReduce(locallySortedDataset, reducer, StreamSchema_Record.create(scheme));
 		});
@@ -231,7 +231,7 @@ public class RelToDatasetConverter {
 		RecordScheme rightScheme = right.getScheme();
 
 		List<String> fieldNames = join.getRowType().getFieldNames();
-		RecordJoiner joiner = RecordJoiner.create(join.getJoinType(), leftScheme, rightScheme, fieldNames);
+		LeftJoiner_Record joiner = LeftJoiner_Record.create(join.getJoinType(), leftScheme, rightScheme, fieldNames);
 
 		JoinKeyProjections joinKeyProjections = getJoinKeyProjections(leftScheme, rightScheme, join);
 

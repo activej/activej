@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
@@ -32,7 +32,7 @@ public class StreamMergerTest {
 
 		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source0.streamTo(merger.newInput(identity(), deduplicateReducer())),
@@ -61,7 +61,7 @@ public class StreamMergerTest {
 
 		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source0.streamTo(merger.newInput(identity(), mergeReducer())),
@@ -101,7 +101,7 @@ public class StreamMergerTest {
 
 		StreamReducer<Integer, DataItem1, Void> merger = StreamReducer.create();
 
-		StreamConsumerToList<DataItem1> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<DataItem1> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source1.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
@@ -131,7 +131,7 @@ public class StreamMergerTest {
 
 		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 		Exception exception = new Exception("Test Exception");
 
 		Exception e = awaitException(
@@ -171,7 +171,7 @@ public class StreamMergerTest {
 
 		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		awaitException(
 				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),

@@ -4,11 +4,11 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.record.Record;
 
-public class NamedReducer implements Reducer<Record, Record, Record, Object> {
+public final class Reducer_Named implements Reducer<Record, Record, Record, Object> {
 	private final String tableName;
 	private final Reducer<Record, Record, Record, Object> reducer;
 
-	public NamedReducer(String tableName, Reducer<Record, Record, Record, Object> reducer) {
+	public Reducer_Named(String tableName, Reducer<Record, Record, Record, Object> reducer) {
 		this.tableName = tableName;
 		this.reducer = reducer;
 	}

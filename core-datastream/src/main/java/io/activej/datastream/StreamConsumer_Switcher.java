@@ -29,18 +29,18 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * <p>
  * It sets its acknowledgement on supplier end of stream, and acts as if suspended when current consumer stops and acknowledges.
  */
-public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
+public final class StreamConsumer_Switcher<T> extends AbstractStreamConsumer<T> {
 	private InternalSupplier internalSupplier = new InternalSupplier();
 	private final Set<InternalSupplier> pendingAcknowledgements = new HashSet<>();
 
-	private StreamConsumerSwitcher() {
+	private StreamConsumer_Switcher() {
 	}
 
 	/**
 	 * Creates a new instance of this consumer.
 	 */
-	public static <T> StreamConsumerSwitcher<T> create() {
-		return new StreamConsumerSwitcher<>();
+	public static <T> StreamConsumer_Switcher<T> create() {
+		return new StreamConsumer_Switcher<>();
 	}
 
 	public Promise<Void> switchTo(StreamConsumer<T> consumer) {
@@ -96,15 +96,15 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 
 		@Override
 		protected void onResumed() {
-			if (StreamConsumerSwitcher.this.internalSupplier == this) {
-				StreamConsumerSwitcher.this.resume(getDataAcceptor());
+			if (StreamConsumer_Switcher.this.internalSupplier == this) {
+				StreamConsumer_Switcher.this.resume(getDataAcceptor());
 			}
 		}
 
 		@Override
 		protected void onSuspended() {
-			if (StreamConsumerSwitcher.this.internalSupplier == this) {
-				StreamConsumerSwitcher.this.suspend();
+			if (StreamConsumer_Switcher.this.internalSupplier == this) {
+				StreamConsumer_Switcher.this.suspend();
 			}
 		}
 
@@ -112,13 +112,13 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> {
 		protected void onAcknowledge() {
 			pendingAcknowledgements.remove(this);
 			if (pendingAcknowledgements.isEmpty()) {
-				StreamConsumerSwitcher.this.acknowledge();
+				StreamConsumer_Switcher.this.acknowledge();
 			}
 		}
 
 		@Override
 		protected void onError(Exception e) {
-			StreamConsumerSwitcher.this.closeEx(e);
+			StreamConsumer_Switcher.this.closeEx(e);
 		}
 	}
 }

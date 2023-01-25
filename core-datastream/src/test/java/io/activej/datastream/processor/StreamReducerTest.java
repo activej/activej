@@ -1,6 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -37,7 +37,7 @@ public class StreamReducerTest {
 				.withBufferSize(1)
 				.build();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
@@ -67,7 +67,7 @@ public class StreamReducerTest {
 				.withBufferSize(1)
 				.build();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source0.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
@@ -113,7 +113,7 @@ public class StreamReducerTest {
 				.withBufferSize(1)
 				.build();
 
-		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<KeyValueResult> consumer = StreamConsumer_ToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
@@ -149,7 +149,7 @@ public class StreamReducerTest {
 				.withBufferSize(1)
 				.build();
 
-		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<KeyValueResult> consumer = StreamConsumer_ToList.create();
 
 		Exception e = awaitException(
 				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
@@ -348,7 +348,7 @@ public class StreamReducerTest {
 				.withBufferSize(1)
 				.build();
 
-		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<KeyValueResult> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER_TO_ACCUMULATOR.inputToOutput())),
@@ -378,7 +378,7 @@ public class StreamReducerTest {
 				.withBufferSize(1)
 				.build();
 
-		StreamConsumerToList<KeyValueResult> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<KeyValueResult> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),

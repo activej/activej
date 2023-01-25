@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.datastream.BlockingStreamConsumer;
+import io.activej.datastream.StreamConsumer_Blocking;
 import io.activej.record.Record;
 import org.apache.calcite.avatica.Meta.Frame;
 import org.jetbrains.annotations.Nullable;
@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 final class FrameFetcher implements AsyncCloseable {
-	private final BlockingStreamConsumer<Record> blockingConsumer;
+	private final StreamConsumer_Blocking<Record> blockingConsumer;
 	private final int columnSize;
 
 	private int taken;
 
-	FrameFetcher(BlockingStreamConsumer<Record> blockingConsumer, int columnSize) {
+	FrameFetcher(StreamConsumer_Blocking<Record> blockingConsumer, int columnSize) {
 		this.blockingConsumer = blockingConsumer;
 		this.columnSize = columnSize;
 	}

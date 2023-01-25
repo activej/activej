@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
@@ -36,7 +36,7 @@ public class StreamUnionTest {
 		StreamSupplier<Integer> source5 = StreamSupplier.of(6);
 		StreamSupplier<Integer> source6 = StreamSupplier.of();
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 
 		await(
 				source0.streamTo(streamUnion.newInput()),
@@ -75,7 +75,7 @@ public class StreamUnionTest {
 		StreamSupplier<Integer> source1 = StreamSupplier.of(4, 5);
 		StreamSupplier<Integer> source2 = StreamSupplier.of(6, 7);
 
-		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
@@ -115,7 +115,7 @@ public class StreamUnionTest {
 				StreamSupplier.closingWithError(exception)
 		);
 
-		StreamConsumer<Integer> consumer = StreamConsumerToList.create();
+		StreamConsumer<Integer> consumer = StreamConsumer_ToList.create();
 
 		Exception e = awaitException(
 				source0.streamTo(streamUnion.newInput()),

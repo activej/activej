@@ -33,7 +33,7 @@ import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers.BinaryAccumulatorReducer;
+import io.activej.datastream.processor.StreamReducers.Reducer_BinaryAccumulator;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Basic;
@@ -346,7 +346,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 					for (P partitionId : map.keySet()) {
 						map.get(partitionId).streamTo(streamReducer.newInput(
 								CrdtData::getKey,
-								new BinaryAccumulatorReducer<>() {
+								new Reducer_BinaryAccumulator<>() {
 									@Override
 									protected CrdtData<K, S> combine(K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
 										long timestamp = Math.max(nextValue.getTimestamp(), accumulator.getTimestamp());
