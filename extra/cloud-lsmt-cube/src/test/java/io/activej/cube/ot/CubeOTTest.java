@@ -12,7 +12,7 @@ import io.activej.multilog.LogPosition;
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.exception.TransformException;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class CubeOTTest {
-	private IOTSystem<LogDiff<CubeDiff>> logSystem;
+	private OTSystem<LogDiff<CubeDiff>> logSystem;
 
 	@Before
 	public void before() {

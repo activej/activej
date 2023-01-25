@@ -19,13 +19,13 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
-import io.activej.http.IHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
+import io.activej.http.IHttpClient;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerFactory;
@@ -283,7 +283,7 @@ public final class ReportingTest extends CubeTestBase {
 						.withMeasures(MEASURES.keySet()))
 				.build();
 
-		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);

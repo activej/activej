@@ -18,13 +18,11 @@ package io.activej.ot.uplink;
 
 import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.JsonAttribute;
-import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 import java.util.List;
 
-@ComponentInterface
-public interface IOTUplink<K, D, PC> {
+public interface AsyncOTUplink<K, D, PC> {
 
 	@CompiledJson
 	final class FetchData<K, D> {

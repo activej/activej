@@ -36,7 +36,7 @@ import java.util.List;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractCollector<T, A> extends AbstractReactive
-		implements AsyncCollector<T> {
+		implements ICollector<T> {
 	protected final Dataset<T> input;
 	protected final DataflowClient client;
 

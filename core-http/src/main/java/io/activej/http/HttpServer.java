@@ -26,7 +26,7 @@ import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
@@ -301,7 +301,7 @@ public final class HttpServer extends AbstractReactiveServer {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		if (expiredConnectionsCheck == null) {
 			scheduleExpiredConnectionsCheck();
 		}

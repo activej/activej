@@ -16,7 +16,6 @@
 
 package io.activej.ot;
 
-import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 import java.util.List;
@@ -27,8 +26,7 @@ import java.util.function.ToLongFunction;
 
 import static io.activej.common.Utils.keysToMap;
 
-@ComponentInterface
-public interface IOTCommitFactory<K, D> {
+public interface AsyncOTCommitFactory<K, D> {
 	final class DiffsWithLevel<D> {
 		private final long level;
 		private final List<D> diffs;

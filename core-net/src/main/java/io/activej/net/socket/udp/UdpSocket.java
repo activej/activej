@@ -45,7 +45,7 @@ import java.util.ArrayDeque;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class UdpSocket extends AbstractNioReactive implements AsyncUdpSocket, NioChannelEventHandler {
+public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, NioChannelEventHandler {
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 

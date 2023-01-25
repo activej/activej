@@ -28,7 +28,7 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.*;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.http.stream.*;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -62,7 +62,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
-	protected final AsyncTcpSocket socket;
+	protected final ITcpSocket socket;
 	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
@@ -114,7 +114,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	 * @param reactor   eventloop which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
-	protected AbstractHttpConnection(Reactor reactor, AsyncTcpSocket socket, int maxBodySize) {
+	protected AbstractHttpConnection(Reactor reactor, ITcpSocket socket, int maxBodySize) {
 		super(reactor);
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;

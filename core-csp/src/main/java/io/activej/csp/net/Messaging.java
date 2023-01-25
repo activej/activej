@@ -25,7 +25,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -34,7 +34,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Represents a simple binary protocol over for communication a TCP connection.
  */
 public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMessaging<I, O> {
-	private final AsyncTcpSocket socket;
+	private final ITcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
 
@@ -44,7 +44,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	private boolean readDone;
 	private boolean writeDone;
 
-	private Messaging(AsyncTcpSocket socket, ByteBufsCodec<I, O> codec) {
+	private Messaging(ITcpSocket socket, ByteBufsCodec<I, O> codec) {
 		this.socket = socket;
 		this.codec = codec;
 		this.bufsSupplier = BinaryChannelSupplier.ofProvidedBufs(bufs,
@@ -62,7 +62,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 				this);
 	}
 
-	public static <I, O> Messaging<I, O> create(AsyncTcpSocket socket,
+	public static <I, O> Messaging<I, O> create(ITcpSocket socket,
 			ByteBufsCodec<I, O> serializer) {
 		Messaging<I, O> messaging = new Messaging<>(socket, serializer);
 		messaging.prefetch();

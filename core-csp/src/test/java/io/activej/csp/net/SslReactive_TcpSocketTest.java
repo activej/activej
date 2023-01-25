@@ -8,7 +8,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.TcpSocket_Ssl;
 import io.activej.promise.Promise;
@@ -243,7 +243,7 @@ public final class SslReactive_TcpSocketTest {
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}
 
-	void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {
+	void startServer(SSLContext sslContext, Consumer<ITcpSocket> logic) throws IOException {
 		SimpleServer.builder(Reactor.getCurrentReactor(), logic)
 				.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), address)
 				.withAcceptOnce()
@@ -288,7 +288,7 @@ public final class SslReactive_TcpSocketTest {
 		return builder.toString();
 	}
 
-	private Promise<?> sendData(AsyncTcpSocket socket) {
+	private Promise<?> sendData(ITcpSocket socket) {
 		String largeData = generateLargeString(LARGE_STRING_SIZE);
 		ByteBuf largeBuf = wrapAscii(largeData);
 		sentData.append(largeData);

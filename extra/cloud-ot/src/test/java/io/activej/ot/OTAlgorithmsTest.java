@@ -2,7 +2,7 @@ package io.activej.ot;
 
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestOp;
@@ -29,7 +29,7 @@ public class OTAlgorithmsTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private static final Random RANDOM = new Random();
-	private static final IOTSystem<TestOp> TEST_OP = Utils.createTestOp();
+	private static final OTSystem<TestOp> TEST_OP = Utils.createTestOp();
 	private static final OTRepository_Stub<Integer, TestOp> REPOSITORY = OTRepository_Stub.create();
 
 	@Before

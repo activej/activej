@@ -30,7 +30,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.TcpSocket.JmxInspector;
 import io.activej.promise.Promise;
@@ -524,7 +524,7 @@ public final class RpcClient extends AbstractNioReactive
 					}
 					statsSocket.onConnect(tcpSocket);
 					tcpSocket.setInspector(statsSocket);
-					AsyncTcpSocket socket = sslContext == null ?
+					ITcpSocket socket = sslContext == null ?
 							tcpSocket :
 							wrapClientSocket(reactor, tcpSocket, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, responseSerializer, requestSerializer, defaultPacketSize,

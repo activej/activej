@@ -1,6 +1,6 @@
 package io.activej.ot;
 
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.TestOp;
 import io.activej.test.rules.EventloopRule;
@@ -19,7 +19,7 @@ import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
 
 public class OTLoadedGraphTest {
-	private static final IOTSystem<TestOp> SYSTEM = createTestOp();
+	private static final OTSystem<TestOp> SYSTEM = createTestOp();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

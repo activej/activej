@@ -16,6 +16,7 @@
 
 package io.activej.net.socket.udp;
 
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 
 /**
@@ -28,7 +29,8 @@ import io.activej.promise.Promise;
  * <li>Each request to the socket after it was closed should complete exceptionally.
  * </ul>
  */
-public interface AsyncUdpSocket {
+@ComponentInterface
+public interface IUdpSocket {
 	Promise<UdpPacket> receive();
 
 	Promise<Void> send(UdpPacket packet);

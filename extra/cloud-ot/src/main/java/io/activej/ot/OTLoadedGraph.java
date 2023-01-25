@@ -17,7 +17,7 @@
 package io.activej.ot;
 
 import io.activej.ot.exception.OTException;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -34,11 +34,11 @@ import static java.util.stream.Collectors.*;
 public class OTLoadedGraph<K, D> {
 	private final AtomicLong mergeId = new AtomicLong();
 
-	public OTLoadedGraph(IOTSystem<D> otSystem) {
+	public OTLoadedGraph(OTSystem<D> otSystem) {
 		this.otSystem = otSystem;
 	}
 
-	public OTLoadedGraph(IOTSystem<D> otSystem, @Nullable Function<K, String> idToString, @Nullable Function<D, String> diffToString) {
+	public OTLoadedGraph(OTSystem<D> otSystem, @Nullable Function<K, String> idToString, @Nullable Function<D, String> diffToString) {
 		this.otSystem = otSystem;
 		this.idToString = nonNullElse(idToString, this.idToString);
 		this.diffToString = nonNullElse(diffToString, this.diffToString);
@@ -70,7 +70,7 @@ public class OTLoadedGraph<K, D> {
 		}
 	}
 
-	private final IOTSystem<D> otSystem;
+	private final OTSystem<D> otSystem;
 
 	private final Map<K, Map<K, List<? extends D>>> child2parent = new HashMap<>();
 	private final Map<K, Map<K, List<? extends D>>> parent2child = new HashMap<>();

@@ -3,9 +3,9 @@ package io.activej.dataflow.stream;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.collector.AsyncCollector;
 import io.activej.dataflow.collector.Collector_Concat;
 import io.activej.dataflow.collector.Collector_Merge;
+import io.activej.dataflow.collector.ICollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -449,7 +449,7 @@ public final class DataflowTest {
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
-		AsyncCollector<TestItem> collector = Collector_Concat.create(Reactor.getCurrentReactor(), sortedDataset, client);
+		ICollector<TestItem> collector = Collector_Concat.create(Reactor.getCurrentReactor(), sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -517,7 +517,7 @@ public final class DataflowTest {
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
 		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = offsetLimit(sortedDataset, 3, 4);
 
-		AsyncCollector<TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), afterOffsetAndLimitApplied, client);
+		ICollector<TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), afterOffsetAndLimitApplied, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());

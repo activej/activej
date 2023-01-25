@@ -3,8 +3,8 @@ import dto.ExtractStringFunction;
 import dto.StringCount;
 import dto.StringCountReducer;
 import io.activej.config.Config;
-import io.activej.dataflow.collector.AsyncCollector;
 import io.activej.dataflow.collector.Collector_Merge;
+import io.activej.dataflow.collector.ICollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -69,7 +69,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 
 			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), simple(StringCount.class));
 
-			AsyncCollector<StringCount> collector = Collector_Merge.create(reactor, reducedItems, client, keyFunction, naturalOrder());
+			ICollector<StringCount> collector = Collector_Merge.create(reactor, reducedItems, client, keyFunction, naturalOrder());
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 

@@ -1,14 +1,14 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
 import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
 import io.activej.dataflow.collector.AbstractCollector;
-import io.activej.dataflow.collector.AsyncCollector;
 import io.activej.dataflow.collector.Collector_Merge;
 import io.activej.dataflow.collector.Collector_Union;
+import io.activej.dataflow.collector.ICollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.exception.DataflowException;
@@ -122,7 +122,7 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 			return StreamSupplier.of();
 		}
 
-		AsyncCollector<Record> calciteCollector = createCollector(dataset, limit);
+		ICollector<Record> calciteCollector = createCollector(dataset, limit);
 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
@@ -167,7 +167,7 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 
 	public String explainNodes(String query) throws SqlParseException, DataflowException {
 		Dataset<Record> dataset = convertToDataset(query);
-		AsyncCollector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
+		ICollector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		calciteCollector.compile(graph);
@@ -179,7 +179,7 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 			B extends AbstractCollector<Record, ?>.Builder<B, C>,
 			C extends AbstractCollector<Record, ?>
 			>
-	AsyncCollector<Record> createCollector(Dataset<Record> dataset, long limit) {
+	ICollector<Record> createCollector(Dataset<Record> dataset, long limit) {
 		//noinspection unchecked
 		B collectorBuilder = (B) (dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
 				Collector_Merge.builder(reactor, sortedDataset, client) :

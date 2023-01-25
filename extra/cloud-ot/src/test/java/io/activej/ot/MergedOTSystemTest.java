@@ -2,8 +2,8 @@ package io.activej.ot;
 
 import io.activej.common.tuple.Tuple3;
 import io.activej.ot.exception.TransformException;
-import io.activej.ot.system.IOTSystem;
 import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestSet;
 import io.activej.ot.utils.TestSetName;
@@ -22,7 +22,7 @@ import static io.activej.ot.utils.Utils.set;
 import static org.junit.Assert.*;
 
 public final class MergedOTSystemTest {
-	private static final IOTSystem<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> MERGED = mergeOtSystems(Tuple3::new,
+	private static final OTSystem<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> MERGED = mergeOtSystems(Tuple3::new,
 			Tuple3::value1, createAddIntSystem(),
 			Tuple3::value2, createTestSetSystem(),
 			Tuple3::value3, createTestSetNameSystem());
@@ -174,8 +174,8 @@ public final class MergedOTSystemTest {
 	}
 
 	// region helpers
-	private static IOTSystem<TestAdd> createAddIntSystem() {
-		return OTSystem.<TestAdd>builder()
+	private static OTSystem<TestAdd> createAddIntSystem() {
+		return OTSystemImpl.<TestAdd>builder()
 				.withEmptyPredicate(TestAdd.class, op -> op.getDelta() == 0)
 				.withInvertFunction(TestAdd.class, op -> List.of(add(-op.getDelta())))
 				.withSquashFunction(TestAdd.class, TestAdd.class, (first, second) -> add(first.getDelta() + second.getDelta()))
@@ -183,8 +183,8 @@ public final class MergedOTSystemTest {
 				.build();
 	}
 
-	private static IOTSystem<TestSet> createTestSetSystem() {
-		return OTSystem.<TestSet>builder()
+	private static OTSystem<TestSet> createTestSetSystem() {
+		return OTSystemImpl.<TestSet>builder()
 				.withEmptyPredicate(TestSet.class, op -> op.getPrev() == op.getNext())
 				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
 				.withSquashFunction(TestSet.class, TestSet.class, (first, second) -> set(first.getPrev(), second.getNext()))
@@ -196,8 +196,8 @@ public final class MergedOTSystemTest {
 				.build();
 	}
 
-	private static IOTSystem<TestSetName> createTestSetNameSystem() {
-		return OTSystem.<TestSetName>builder()
+	private static OTSystem<TestSetName> createTestSetNameSystem() {
+		return OTSystemImpl.<TestSetName>builder()
 				.withEmptyPredicate(TestSetName.class, op -> op.getPrev().equals(op.getNext()))
 				.withInvertFunction(TestSetName.class, op -> List.of(setName(op.getNext(), op.getPrev())))
 				.withSquashFunction(TestSetName.class, TestSetName.class, (first, second) -> setName(first.getPrev(), second.getNext()))

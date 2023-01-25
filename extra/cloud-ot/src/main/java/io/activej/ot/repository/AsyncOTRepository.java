@@ -17,8 +17,7 @@
 package io.activej.ot.repository;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.annotation.ComponentInterface;
-import io.activej.ot.IOTCommitFactory;
+import io.activej.ot.AsyncOTCommitFactory;
 import io.activej.ot.OTCommit;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -29,8 +28,7 @@ import java.util.stream.IntStream;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.*;
 
-@ComponentInterface
-public interface IOTRepository<K, D> extends IOTCommitFactory<K, D> {
+public interface AsyncOTRepository<K, D> extends AsyncOTCommitFactory<K, D> {
 	Promise<Void> push(Collection<OTCommit<K, D>> commits);
 
 	default Promise<Void> push(OTCommit<K, D> commit) {

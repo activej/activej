@@ -20,7 +20,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.TcpSocket.Inspector;
 import io.activej.promise.Promise;
@@ -204,7 +204,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		}
 	}
 
-	protected abstract void serve(AsyncTcpSocket socket, InetAddress remoteAddress);
+	protected abstract void serve(ITcpSocket socket, InetAddress remoteAddress);
 
 	protected void onListen() {
 	}
@@ -352,7 +352,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
-		AsyncTcpSocket socket;
+		ITcpSocket socket;
 		try {
 			TcpSocket tcpSocket = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;

@@ -20,7 +20,7 @@ import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
@@ -60,7 +60,7 @@ public final class LogToCubeTest extends CubeTestBase {
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
 				.build();
 
-		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 

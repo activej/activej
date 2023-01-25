@@ -17,8 +17,8 @@ import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepository_MySql;
-import io.activej.ot.system.IOTSystem;
-import io.activej.ot.uplink.IOTUplink.FetchData;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 
 public final class CubeUplinkMigrationServiceTest {
 
-	public static final IOTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
+	public static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
 	@ClassRule
 	public static EventloopRule eventloopRule = new EventloopRule();

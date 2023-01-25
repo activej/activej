@@ -14,10 +14,10 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.IOTRepository;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.repository.OTRepository_MySql;
-import io.activej.ot.system.IOTSystem;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.system.OTSystem;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -46,7 +46,7 @@ import static io.activej.test.TestUtils.dataSource;
 
 @RunWith(Parameterized.class)
 public abstract class CubeTestBase {
-	public static final IOTSystem<LogDiff<CubeDiff>> LOG_OT = LogOT.createLogOT(CubeOT.createCubeOT());
+	public static final OTSystem<LogDiff<CubeDiff>> LOG_OT = LogOT.createLogOT(CubeOT.createCubeOT());
 	public static final CubeDiffScheme<LogDiff<CubeDiff>> DIFF_SCHEME = CubeDiffScheme.ofLogDiffs();
 	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
 
@@ -66,7 +66,7 @@ public abstract class CubeTestBase {
 	public String testName;
 
 	@Parameter(1)
-	public UplinkFactory<IOTUplink<Long, LogDiff<CubeDiff>, ?>> uplinkFactory;
+	public UplinkFactory<AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> uplinkFactory;
 
 	public static final Executor EXECUTOR = Executors.newCachedThreadPool();
 	public static final DataSource DATA_SOURCE;
@@ -95,7 +95,7 @@ public abstract class CubeTestBase {
 							@Override
 							public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
 								Reactor reactor = cube.getReactor();
-								IOTRepository<Long, LogDiff<CubeDiff>> repository = OTRepository_MySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
+								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = OTRepository_MySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(JsonCodec_CubeDiff.create(cube)));
 								return OTUplink.create(reactor, repository, LOG_OT);
 							}
@@ -126,7 +126,7 @@ public abstract class CubeTestBase {
 		);
 	}
 
-	protected interface UplinkFactory<U extends IOTUplink<Long, LogDiff<CubeDiff>, ?>> {
+	protected interface UplinkFactory<U extends AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> {
 		default U create(Cube cube) {
 			U uplink = createUninitialized(cube);
 			initialize(uplink);

@@ -5,10 +5,10 @@ import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.ExplicitDescription;
-import io.activej.ot.IOTCommitFactory.DiffsWithLevel;
+import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import io.activej.ot.OTCommit;
-import io.activej.ot.system.IOTSystem;
 import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -37,8 +37,8 @@ public class Utils {
 		return new TestSet(prev, next);
 	}
 
-	public static IOTSystem<TestOp> createTestOp() {
-		return OTSystem.<TestOp>builder()
+	public static OTSystem<TestOp> createTestOp() {
+		return OTSystemImpl.<TestOp>builder()
 				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> of(add(right.getDelta()), add(left.getDelta())))
 				.withTransformFunction(TestAdd.class, TestSet.class, (left, right) -> left(set(right.getPrev() + left.getDelta(), right.getNext())))
 				.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {

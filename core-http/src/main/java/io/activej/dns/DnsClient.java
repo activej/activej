@@ -26,7 +26,7 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.udp.AsyncUdpSocket;
+import io.activej.net.socket.udp.IUdpSocket;
 import io.activej.net.socket.udp.UdpPacket;
 import io.activej.net.socket.udp.UdpSocket;
 import io.activej.promise.Promise;
@@ -69,7 +69,7 @@ public final class DnsClient extends AbstractNioReactive
 	private InetSocketAddress dnsServerAddress = GOOGLE_PUBLIC_DNS;
 	private Duration timeout = DEFAULT_TIMEOUT;
 
-	private @Nullable AsyncUdpSocket socket;
+	private @Nullable IUdpSocket socket;
 
 	private @Nullable UdpSocket.Inspector socketInspector;
 	private @Nullable Inspector inspector;
@@ -143,8 +143,8 @@ public final class DnsClient extends AbstractNioReactive
 		transactions.values().forEach(s -> s.setException(closeException));
 	}
 
-	private Promise<AsyncUdpSocket> getSocket() {
-		AsyncUdpSocket socket = this.socket;
+	private Promise<IUdpSocket> getSocket() {
+		IUdpSocket socket = this.socket;
 		if (socket != null) {
 			return Promise.of(socket);
 		}

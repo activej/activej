@@ -27,7 +27,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.NoCommitException;
 import io.activej.ot.repository.JsonIndentUtils.OnelineOutputStream;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
@@ -63,7 +63,7 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
 public final class OTRepository_MySql<D> extends AbstractReactive
-		implements IOTRepository<Long, D>, ReactiveJmxBeanWithStats {
+		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
@@ -75,7 +75,7 @@ public final class OTRepository_MySql<D> extends AbstractReactive
 	private final DataSource dataSource;
 	private final AsyncSupplier<Long> idGenerator;
 
-	private final IOTSystem<D> otSystem;
+	private final OTSystem<D> otSystem;
 
 	private final ReadObject<List<D>> decoder;
 	private final WriteObject<List<D>> encoder;
@@ -98,7 +98,7 @@ public final class OTRepository_MySql<D> extends AbstractReactive
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private OTRepository_MySql(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
@@ -109,48 +109,48 @@ public final class OTRepository_MySql<D> extends AbstractReactive
 	}
 
 	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).build();
 	}
 
 	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, F format) {
+			OTSystem<D> otSystem, F format) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format).build();
 	}
 
 	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, TypeT<? extends D> typeT) {
+			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT).build();
 	}
 
 	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, Class<? extends D> diffClass) {
+			OTSystem<D> otSystem, Class<? extends D> diffClass) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, diffClass).build();
 	}
 
 	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
 	}
 
 	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, F format) {
+			OTSystem<D> otSystem, F format) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format);
 	}
 
 	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, TypeT<? extends D> typeT) {
+			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
 	}
 
 	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, Class<? extends D> diffClass) {
+			OTSystem<D> otSystem, Class<? extends D> diffClass) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
 	private static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			IOTSystem<D> otSystem, Type diffType) {
+			OTSystem<D> otSystem, Type diffType) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
 		if (decoder == null || encoder == null) {

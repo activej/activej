@@ -19,12 +19,12 @@ package io.activej.ot.uplink;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
-import io.activej.ot.IOTCommitFactory.DiffsWithLevel;
+import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import io.activej.ot.OTCommit;
 import io.activej.ot.PollSanitizer;
 import io.activej.ot.reducers.DiffsReducer;
-import io.activej.ot.repository.IOTRepository;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.repository.AsyncOTRepository;
+import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -45,15 +45,15 @@ import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class OTUplink<K, D, PC> extends AbstractReactive
-		implements IOTUplink<K, D, PC> {
+		implements AsyncOTUplink<K, D, PC> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplink.class);
 
-	private final IOTSystem<D> otSystem;
-	private final IOTRepository<K, D> repository;
+	private final OTSystem<D> otSystem;
+	private final AsyncOTRepository<K, D> repository;
 	private final FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder;
 	private final FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder;
 
-	private OTUplink(Reactor reactor, IOTRepository<K, D> repository, IOTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
+	private OTUplink(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
 			FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder) {
 		super(reactor);
 		this.otSystem = otSystem;
@@ -62,16 +62,16 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 		this.protoCommitDecoder = protoCommitDecoder;
 	}
 
-	public static <K, D, C> OTUplink<K, D, C> create(Reactor reactor, IOTRepository<K, D> repository, IOTSystem<D> otSystem,
+	public static <K, D, C> OTUplink<K, D, C> create(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
 			FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit) {
 		return new OTUplink<>(reactor, repository, otSystem, commitToObject, objectToCommit);
 	}
 
-	public static <K, D> OTUplink<K, D, OTCommit<K, D>> create(Reactor reactor, IOTRepository<K, D> repository, IOTSystem<D> otSystem) {
+	public static <K, D> OTUplink<K, D, OTCommit<K, D>> create(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem) {
 		return new OTUplink<>(reactor, repository, otSystem, commit -> commit, object -> object);
 	}
 
-	public IOTRepository<K, D> getRepository() {
+	public AsyncOTRepository<K, D> getRepository() {
 		return repository;
 	}
 

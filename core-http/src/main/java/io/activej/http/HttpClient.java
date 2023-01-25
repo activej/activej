@@ -33,7 +33,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -538,7 +538,7 @@ public final class HttpClient extends AbstractNioReactive
 							String host = request.getUrl().getHost();
 							assert host != null;
 
-							AsyncTcpSocket socket = isSecure ?
+							ITcpSocket socket = isSecure ?
 									wrapClientSocket(reactor, tcpSocket,
 											host, request.getUrl().getPort(),
 											sslContext, sslExecutor) :

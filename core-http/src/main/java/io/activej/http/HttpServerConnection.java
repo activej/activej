@@ -24,7 +24,7 @@ import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpServer.Inspector;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket_Ssl;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -96,7 +96,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Reactor reactor, AsyncTcpSocket socket, InetAddress remoteAddress,
+	HttpServerConnection(Reactor reactor, ITcpSocket socket, InetAddress remoteAddress,
 			HttpServer server, AsyncServlet servlet) {
 		super(reactor, socket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;

@@ -18,7 +18,7 @@ import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
@@ -78,7 +78,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.build();
 
-		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);

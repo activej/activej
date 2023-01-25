@@ -18,6 +18,7 @@ package io.activej.net.socket.tcp;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ComponentInterface;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,8 @@ import org.jetbrains.annotations.Nullable;
  * call to {@link #read()} or {@link #write(ByteBuf)}<i/></li>
  * </ul>
  */
-public interface AsyncTcpSocket extends AsyncCloseable {
+@ComponentInterface
+public interface ITcpSocket extends AsyncCloseable {
 	/**
 	 * Operation to read some data from network. Returns a promise of a bytebuf that represents some data received
 	 * from network.

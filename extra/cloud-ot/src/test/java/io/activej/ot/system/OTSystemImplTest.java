@@ -3,7 +3,7 @@ package io.activej.ot.system;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.TransformResult;
-import io.activej.ot.repository.IOTRepository;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.OTState_TestOp;
@@ -24,8 +24,8 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public final class OTSystemTest {
-	private static final IOTSystem<TestOp> SYSTEM = createTestOp();
+public final class OTSystemImplTest {
+	private static final OTSystem<TestOp> SYSTEM = createTestOp();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -150,7 +150,7 @@ public final class OTSystemTest {
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new OTState_TestOp()));
 	}
 
-	private void pullAndThenMergeAndPush(IOTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
+	private void pullAndThenMergeAndPush(AsyncOTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
 		await(stateManager.checkout());
 
 		await(stateManager.sync());

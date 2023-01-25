@@ -11,7 +11,7 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private IAggregationChunkStorage<Long> chunkStorage;
 	private Cube.AggregationConfig dateAggregation;
 	private Cube.AggregationConfig advertiserDateAggregation;
-	private IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
+	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 	private Cube basicCube;
 	private Cube cube;
 

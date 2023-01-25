@@ -2,7 +2,7 @@ package io.activej.ot.uplink;
 
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.GraphExhaustedException;
-import io.activej.ot.uplink.IOTUplink.FetchData;
+import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.ot.utils.OTGraphBuilder;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.OTState_TestOp;
@@ -35,7 +35,7 @@ public class OTUplinkTest {
 
 	private final OTRepository_Stub<Integer, TestOp> REPOSITORY = OTRepository_Stub.create();
 
-	private IOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
+	private AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 
 	@Before
 	public void setUp() {

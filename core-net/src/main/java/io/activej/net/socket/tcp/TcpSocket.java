@@ -52,7 +52,7 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("WeakerAccess")
-public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSocket, NioChannelEventHandler {
+public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, NioChannelEventHandler {
 	private static final boolean CHECKS = Checks.isEnabled(TcpSocket.class);
 
 	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(TcpSocket.class, "debugReadOffset", 0);

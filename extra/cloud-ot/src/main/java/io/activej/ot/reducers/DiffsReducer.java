@@ -16,7 +16,7 @@
 
 package io.activej.ot.reducers;
 
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public interface DiffsReducer<A, D> {
 				concat(diffs, accumulatedDiffs));
 	}
 
-	static <D> DiffsReducer<List<D>, D> toSquashedList(IOTSystem<D> system) {
+	static <D> DiffsReducer<List<D>, D> toSquashedList(OTSystem<D> system) {
 		return of(new ArrayList<>(), (accumulatedDiffs, diffs) ->
 				system.squash(concat(diffs, accumulatedDiffs)));
 	}

@@ -1,8 +1,8 @@
 package io.activej.ot.utils;
 
-import io.activej.ot.IOTCommitFactory;
+import io.activej.ot.AsyncOTCommitFactory;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.IOTRepository;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 
@@ -17,9 +17,9 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
-		implements IOTRepository<K, D> {
+		implements AsyncOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
-	private IOTCommitFactory<K, D> commitFactory;
+	private AsyncOTCommitFactory<K, D> commitFactory;
 
 	public final Map<K, OTCommit<K, D>> commits = new LinkedHashMap<>();
 	public final Set<K> heads = new HashSet<>();
@@ -45,7 +45,7 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 		return new OTRepository_Stub<>(newIds::next);
 	}
 
-	public void setCommitFactory(IOTCommitFactory<K, D> commitFactory) {
+	public void setCommitFactory(AsyncOTCommitFactory<K, D> commitFactory) {
 		this.commitFactory = commitFactory;
 	}
 

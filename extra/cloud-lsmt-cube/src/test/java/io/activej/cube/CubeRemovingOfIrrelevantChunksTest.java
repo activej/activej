@@ -20,7 +20,7 @@ import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;
-	private IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
+	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 
 	@Before
 	public void before() throws Exception {

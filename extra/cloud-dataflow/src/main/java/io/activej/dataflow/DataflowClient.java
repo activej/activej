@@ -44,7 +44,7 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
@@ -174,7 +174,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		private final InetSocketAddress address;
 		private final IMessaging<DataflowResponse, DataflowRequest> messaging;
 
-		private Session(InetSocketAddress address, AsyncTcpSocket socket) {
+		private Session(InetSocketAddress address, ITcpSocket socket) {
 			this.address = address;
 			this.messaging = Messaging.create(socket, codec);
 		}

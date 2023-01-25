@@ -18,8 +18,8 @@ package io.activej.etl;
 
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
-import io.activej.ot.system.IOTSystem;
 import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.OTSystemImpl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,8 +32,8 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.*;
 
 public class LogOT {
-	public static <T> IOTSystem<LogDiff<T>> createLogOT(IOTSystem<T> otSystem) {
-		return OTSystem.<LogDiff<T>>builder()
+	public static <T> OTSystem<LogDiff<T>> createLogOT(OTSystem<T> otSystem) {
+		return OTSystemImpl.<LogDiff<T>>builder()
 				.withTransformFunction(LogDiff.class, LogDiff.class, (left, right) -> {
 					Set<String> intersection = intersection(left.getPositions().keySet(), right.getPositions().keySet());
 					if (intersection.isEmpty()) {

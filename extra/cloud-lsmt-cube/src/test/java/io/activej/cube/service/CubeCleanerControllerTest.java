@@ -17,7 +17,7 @@ import io.activej.etl.LogOT;
 import io.activej.fs.FileSystem;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepository_MySql;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.system.OTSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -44,7 +44,7 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 
 public class CubeCleanerControllerTest {
-	private static final IOTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
+	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();

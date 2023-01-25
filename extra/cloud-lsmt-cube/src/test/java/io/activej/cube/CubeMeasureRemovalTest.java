@@ -20,7 +20,7 @@ import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.IOTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
@@ -99,7 +99,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withRelation("banner", "campaign")
 				.build();
 
-		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -239,7 +239,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 							.withMeasures("impressions", "clicks", "conversions"))
 					.build();
 
-			IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
+			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
 			OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
@@ -265,7 +265,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 						.withMeasures("impressions"))
 				.build();
 
-		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));
@@ -299,7 +299,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 							.withMeasures("clicks"))
 					.build();
 
-			IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
+			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
 			OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
@@ -330,7 +330,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 						.withMeasures("clicks"))
 				.build();
 
-		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));

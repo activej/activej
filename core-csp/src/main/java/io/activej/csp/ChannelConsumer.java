@@ -26,7 +26,7 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -259,11 +259,11 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Wraps {@link AsyncTcpSocket#write(ByteBuf)} operation into {@link ChannelConsumer}.
+	 * Wraps {@link ITcpSocket#write(ByteBuf)} operation into {@link ChannelConsumer}.
 	 *
 	 * @return {@link ChannelConsumer} of ByteBufs that will be sent to network
 	 */
-	static ChannelConsumer<ByteBuf> ofSocket(AsyncTcpSocket socket) {
+	static ChannelConsumer<ByteBuf> ofSocket(ITcpSocket socket) {
 		return ChannelConsumer.of(socket::write, socket)
 				.withAcknowledgement(ack -> ack
 						.then(() -> socket.write(null)));

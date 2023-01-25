@@ -6,7 +6,7 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.reactor.net.ServerSocketSettings;
 
@@ -30,7 +30,7 @@ public final class TcpServerExample {
 		ServerSocketSettings socketSettings = ServerSocketSettings.createDefault();
 		eventloop.listen(address, socketSettings,
 				channel -> {
-					AsyncTcpSocket socket;
+					ITcpSocket socket;
 
 					try {
 						socket = TcpSocket.wrapChannel(eventloop, channel, null);

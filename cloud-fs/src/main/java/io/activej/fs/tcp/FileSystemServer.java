@@ -29,7 +29,7 @@ import io.activej.fs.tcp.messaging.Version;
 import io.activej.fs.util.RemoteFileSystemUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.nio.NioReactor;
@@ -109,7 +109,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		Messaging<FileSystemRequest, FileSystemResponse> messaging =
 				Messaging.create(socket, SERIALIZER);
 		messaging.receive()

@@ -18,14 +18,14 @@ package io.activej.ot;
 
 import io.activej.async.function.AsyncPredicate;
 import io.activej.common.ref.Ref;
-import io.activej.ot.IOTCommitFactory.DiffsWithLevel;
+import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.exception.OTException;
 import io.activej.ot.reducers.AbstractGraphReducer;
 import io.activej.ot.reducers.DiffsReducer;
 import io.activej.ot.reducers.GraphReducer;
-import io.activej.ot.repository.IOTRepository;
-import io.activej.ot.system.IOTSystem;
+import io.activej.ot.repository.AsyncOTRepository;
+import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -50,7 +50,7 @@ import static java.util.stream.Collectors.toSet;
 public final class OTAlgorithms {
 	private static final Logger logger = LoggerFactory.getLogger(OTAlgorithms.class);
 
-	public static <K, D, R> Promise<R> reduce(IOTRepository<K, D> repository, IOTSystem<D> system,
+	public static <K, D, R> Promise<R> reduce(AsyncOTRepository<K, D> repository, OTSystem<D> system,
 			Set<K> heads, GraphReducer<K, D, R> reducer) {
 		return toList(heads.stream().map(repository::loadCommit))
 				.then(headCommits -> {
@@ -61,7 +61,7 @@ public final class OTAlgorithms {
 				});
 	}
 
-	private static <K, D, R> void walkGraphImpl(IOTRepository<K, D> repository, GraphReducer<K, D, R> reducer,
+	private static <K, D, R> void walkGraphImpl(AsyncOTRepository<K, D> repository, GraphReducer<K, D, R> reducer,
 			PriorityQueue<OTCommit<K, D>> queue, Set<K> visited, SettablePromise<R> cb) {
 		OTCommit<K, D> commit = queue.peek();
 		if (commit == null) {
@@ -153,7 +153,7 @@ public final class OTAlgorithms {
 		}
 	}
 
-	public static <K, D, A> Promise<FindResult<K, A>> findParent(IOTRepository<K, D> repository, IOTSystem<D> system,
+	public static <K, D, A> Promise<FindResult<K, A>> findParent(AsyncOTRepository<K, D> repository, OTSystem<D> system,
 			Set<K> startNodes, DiffsReducer<A, D> diffsReducer, AsyncPredicate<OTCommit<K, D>> matchPredicate) {
 		return reduce(repository, system, startNodes,
 				new AbstractGraphReducer<>(diffsReducer) {
@@ -183,13 +183,13 @@ public final class OTAlgorithms {
 				});
 	}
 
-	public static <K, D> Promise<K> mergeAndPush(IOTRepository<K, D> repository, IOTSystem<D> system) {
+	public static <K, D> Promise<K> mergeAndPush(AsyncOTRepository<K, D> repository, OTSystem<D> system) {
 		return repository.getHeads()
 				.then(heads -> mergeAndPush(repository, system, heads))
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static <K, D> Promise<K> mergeAndPush(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads) {
+	public static <K, D> Promise<K> mergeAndPush(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		if (heads.size() == 1) return Promise.of(first(heads)); // nothing to merge
 		return merge(repository, system, heads)
 				.then(mergeCommit -> repository.push(mergeCommit)
@@ -197,19 +197,19 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static <K, D> Promise<K> mergeAndUpdateHeads(IOTRepository<K, D> repository, IOTSystem<D> system) {
+	public static <K, D> Promise<K> mergeAndUpdateHeads(AsyncOTRepository<K, D> repository, OTSystem<D> system) {
 		return repository.getHeads()
 				.then(heads -> mergeAndUpdateHeads(repository, system, heads));
 	}
 
-	public static <K, D> Promise<K> mergeAndUpdateHeads(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads) {
+	public static <K, D> Promise<K> mergeAndUpdateHeads(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return mergeAndPush(repository, system, heads)
 				.then(mergeId -> repository.updateHeads(difference(Set.of(mergeId), heads), difference(heads, Set.of(mergeId)))
 						.map($ -> mergeId))
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static <K, D> Promise<OTCommit<K, D>> merge(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads) {
+	public static <K, D> Promise<OTCommit<K, D>> merge(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		checkArgument(heads.size() >= 2, "Cannot merge less than 2 heads");
 		return repository.getLevels(heads)
 				.then(levels ->
@@ -232,7 +232,7 @@ public final class OTAlgorithms {
 										keysToMap(heads.stream(), head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head))))));
 	}
 
-	public static <K, D> Promise<Set<K>> findCut(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> startNodes,
+	public static <K, D> Promise<Set<K>> findCut(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,
 			Predicate<Collection<OTCommit<K, D>>> matchPredicate) {
 		return reduce(repository, system, startNodes,
 				new GraphReducer<>() {
@@ -253,19 +253,19 @@ public final class OTAlgorithms {
 				});
 	}
 
-	public static <K, D> Promise<K> findAnyCommonParent(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> startCut) {
+	public static <K, D> Promise<K> findAnyCommonParent(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startCut) {
 		return reduce(repository, system, startCut, new GraphReducer_FindAnyCommonParent<>(DiffsReducer.toVoid()))
 				.map(Map.Entry::getKey)
 				.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
-	public static <K, D> Promise<Set<K>> findAllCommonParents(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> startCut) {
+	public static <K, D> Promise<Set<K>> findAllCommonParents(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startCut) {
 		return reduce(repository, system, startCut, new GraphReducer_FindAllCommonParents<>(DiffsReducer.toVoid()))
 				.map(Map::keySet)
 				.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
-	public static <K, D> Promise<List<D>> diff(IOTRepository<K, D> repository, IOTSystem<D> system, K node1, K node2) {
+	public static <K, D> Promise<List<D>> diff(AsyncOTRepository<K, D> repository, OTSystem<D> system, K node1, K node2) {
 		if (node1.equals(node2)) return Promise.of(List.of());
 
 		Set<K> startCut = Set.of(node1, node2);
@@ -278,7 +278,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
-	public static <K, D> Promise<Set<K>> excludeParents(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> startNodes) {
+	public static <K, D> Promise<Set<K>> excludeParents(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes) {
 		checkArgument(!startNodes.isEmpty(), "Start nodes are empty");
 		if (startNodes.size() == 1) return Promise.of(startNodes);
 		return reduce(repository, system, startNodes,
@@ -337,7 +337,7 @@ public final class OTAlgorithms {
 		}
 	}
 
-	public static <K, D, A> Promise<Map<K, A>> reduceEdges(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads, K parentNode,
+	public static <K, D, A> Promise<Map<K, A>> reduceEdges(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, K parentNode,
 			DiffsReducer<A, D> diffAccumulator) {
 		return reduce(repository, system, heads, new AbstractGraphReducer<>(diffAccumulator) {
 			@Override
@@ -353,7 +353,7 @@ public final class OTAlgorithms {
 		});
 	}
 
-	public static <K, D> Promise<List<D>> checkout(IOTRepository<K, D> repository, IOTSystem<D> system) {
+	public static <K, D> Promise<List<D>> checkout(AsyncOTRepository<K, D> repository, OTSystem<D> system) {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads ->
@@ -364,7 +364,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static <K, D> Promise<List<D>> checkout(IOTRepository<K, D> repository, IOTSystem<D> system, K commitId) {
+	public static <K, D> Promise<List<D>> checkout(AsyncOTRepository<K, D> repository, OTSystem<D> system, K commitId) {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads ->
@@ -376,18 +376,18 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod(), commitId));
 	}
 
-	public static <K, D> Promise<Void> saveSnapshot(IOTRepository<K, D> repository, IOTSystem<D> system, K revisionId) {
+	public static <K, D> Promise<Void> saveSnapshot(AsyncOTRepository<K, D> repository, OTSystem<D> system, K revisionId) {
 		return checkout(repository, system, revisionId)
 				.then(diffs -> repository.saveSnapshot(revisionId, diffs));
 	}
 
 	private static class GraphReducer_Load<K, D> implements GraphReducer<K, D, OTLoadedGraph<K, D>> {
-		private final IOTSystem<D> system;
+		private final OTSystem<D> system;
 		private final OTLoadedGraph<K, D> graph;
 		private final Map<K, Set<K>> head2roots = new HashMap<>();
 		private final Map<K, Set<K>> root2heads = new HashMap<>();
 
-		private GraphReducer_Load(IOTSystem<D> system) {
+		private GraphReducer_Load(OTSystem<D> system) {
 			this.system = system;
 			this.graph = new OTLoadedGraph<>(system);
 		}
@@ -442,12 +442,12 @@ public final class OTAlgorithms {
 		}
 	}
 
-	public static <K, D> Promise<OTLoadedGraph<K, D>> loadForMerge(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads) {
+	public static <K, D> Promise<OTLoadedGraph<K, D>> loadForMerge(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return reduce(repository, system, heads, new GraphReducer_Load<>(system))
 				.whenComplete(toLogger(logger, thisMethod(), heads));
 	}
 
-	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads, OTLoadedGraph<K, D> graph) {
+	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, OTLoadedGraph<K, D> graph) {
 		return reduce(repository, system, heads,
 				commit -> {
 					if (graph.hasChild(commit.getId())) {
@@ -464,15 +464,15 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod(), heads, graph));
 	}
 
-	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads) {
+	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return loadGraph(repository, system, heads, new OTLoadedGraph<>(system));
 	}
 
-	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(IOTRepository<K, D> repository, IOTSystem<D> system, Set<K> heads, Function<K, String> idToString, Function<D, String> diffToString) {
+	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, Function<K, String> idToString, Function<D, String> diffToString) {
 		return loadGraph(repository, system, heads, new OTLoadedGraph<>(system, idToString, diffToString));
 	}
 
-	public static <K, D> Promise<Void> copy(IOTRepository<K, D> from, IOTRepository<K, D> to) {
+	public static <K, D> Promise<Void> copy(AsyncOTRepository<K, D> from, AsyncOTRepository<K, D> to) {
 		return from.getHeads()
 				.then(heads -> toList(heads.stream().map(from::loadCommit))
 						.then(commits -> {
