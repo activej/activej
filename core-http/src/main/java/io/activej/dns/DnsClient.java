@@ -139,8 +139,8 @@ public final class DnsClient extends AbstractNioReactive
 		}
 		socket.close();
 		socket = null;
-		AsyncCloseException asyncCloseException = new AsyncCloseException();
-		transactions.values().forEach(s -> s.setException(asyncCloseException));
+		AsyncCloseException closeException = new AsyncCloseException();
+		transactions.values().forEach(s -> s.setException(closeException));
 	}
 
 	private Promise<AsyncUdpSocket> getSocket() {

@@ -28,12 +28,12 @@ public final class AsyncBiFunctions {
 	}
 
 	@Contract(pure = true)
-	public static <T, U, R> AsyncBiFunction<T, U, R> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiFunction<T, U, R> asyncFunction) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncFunction);
+	public static <T, U, R> AsyncBiFunction<T, U, R> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiFunction<T, U, R> function) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), function);
 	}
 
 	@Contract(pure = true)
-	public static <T, U, R> AsyncBiFunction<T, U, R> ofExecutor(AsyncExecutor asyncExecutor, AsyncBiFunction<T, U, R> function) {
-		return (t, u) -> asyncExecutor.execute(() -> function.apply(t, u));
+	public static <T, U, R> AsyncBiFunction<T, U, R> ofExecutor(AsyncExecutor executor, AsyncBiFunction<T, U, R> function) {
+		return (t, u) -> executor.execute(() -> function.apply(t, u));
 	}
 }

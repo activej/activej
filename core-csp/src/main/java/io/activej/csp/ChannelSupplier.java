@@ -289,13 +289,13 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	/**
 	 * Creates and returns a new {@link AbstractChannelSupplier}
 	 * based on current ChannelSupplier and makes its promise
-	 * executed by the provided {@code asyncExecutor}.
+	 * executed by the provided {@code executor}.
 	 */
-	default ChannelSupplier<T> withExecutor(AsyncExecutor asyncExecutor) {
+	default ChannelSupplier<T> withExecutor(AsyncExecutor executor) {
 		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
-				return asyncExecutor.execute(ChannelSupplier.this::get);
+				return executor.execute(ChannelSupplier.this::get);
 			}
 		};
 	}

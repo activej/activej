@@ -53,12 +53,12 @@ public final class AsyncRunnables {
 	}
 
 	@Contract(pure = true)
-	public static AsyncRunnable buffer(int maxParallelCalls, int maxBufferedCalls, AsyncRunnable asyncRunnable) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncRunnable);
+	public static AsyncRunnable buffer(int maxParallelCalls, int maxBufferedCalls, AsyncRunnable runnable) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), runnable);
 	}
 
 	@Contract(pure = true)
-	public static AsyncRunnable ofExecutor(AsyncExecutor asyncExecutor, AsyncRunnable runnable) {
-		return () -> asyncExecutor.execute(runnable::run);
+	public static AsyncRunnable ofExecutor(AsyncExecutor executor, AsyncRunnable runnable) {
+		return () -> executor.execute(runnable::run);
 	}
 }

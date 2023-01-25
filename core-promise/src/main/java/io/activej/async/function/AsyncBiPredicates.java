@@ -34,13 +34,13 @@ public final class AsyncBiPredicates {
 	}
 
 	@Contract(pure = true)
-	public static <T, U> AsyncBiPredicate<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiPredicate<T, U> asyncPredicate) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncPredicate);
+	public static <T, U> AsyncBiPredicate<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiPredicate<T, U> predicate) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), predicate);
 	}
 
 	@Contract(pure = true)
-	public static <T, U> AsyncBiPredicate<T, U> ofExecutor(AsyncExecutor asyncExecutor, AsyncBiPredicate<T, U> predicate) {
-		return (t, u) -> asyncExecutor.execute(() -> predicate.test(t, u));
+	public static <T, U> AsyncBiPredicate<T, U> ofExecutor(AsyncExecutor executor, AsyncBiPredicate<T, U> predicate) {
+		return (t, u) -> executor.execute(() -> predicate.test(t, u));
 	}
 
 	/**
@@ -57,11 +57,11 @@ public final class AsyncBiPredicates {
 	 */
 	public static <T, U> AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
+			AsyncAccumulator<RefBoolean> accumulator = AsyncAccumulator.create(new RefBoolean(true));
 			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
-				asyncAccumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() && result));
+				accumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() && result));
 			}
-			return asyncAccumulator.run().map(RefBoolean::get);
+			return accumulator.run().map(RefBoolean::get);
 		};
 	}
 
@@ -124,11 +124,11 @@ public final class AsyncBiPredicates {
 	 */
 	public static <T, U> AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
+			AsyncAccumulator<RefBoolean> accumulator = AsyncAccumulator.create(new RefBoolean(false));
 			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
-				asyncAccumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() || result));
+				accumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() || result));
 			}
-			return asyncAccumulator.run().map(RefBoolean::get);
+			return accumulator.run().map(RefBoolean::get);
 		};
 	}
 

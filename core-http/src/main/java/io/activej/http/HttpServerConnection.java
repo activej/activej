@@ -96,9 +96,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Reactor reactor, AsyncTcpSocket asyncTcpSocket, InetAddress remoteAddress,
+	HttpServerConnection(Reactor reactor, AsyncTcpSocket socket, InetAddress remoteAddress,
 			HttpServer server, AsyncServlet servlet) {
-		super(reactor, asyncTcpSocket, server.maxBodySize);
+		super(reactor, socket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
 		this.server = server;
 		this.servlet = servlet;

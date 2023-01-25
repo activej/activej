@@ -516,17 +516,17 @@ public final class RpcClient extends AbstractNioReactive
 
 	private void connect(InetSocketAddress address) {
 		TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.whenResult(asyncTcpSocketImpl -> {
+				.whenResult(tcpSocket -> {
 					newConnections.remove(address);
 					if (!pendingConnections.contains(address) || stopPromise != null) {
-						asyncTcpSocketImpl.close();
+						tcpSocket.close();
 						return;
 					}
-					statsSocket.onConnect(asyncTcpSocketImpl);
-					asyncTcpSocketImpl.setInspector(statsSocket);
+					statsSocket.onConnect(tcpSocket);
+					tcpSocket.setInspector(statsSocket);
 					AsyncTcpSocket socket = sslContext == null ?
-							asyncTcpSocketImpl :
-							wrapClientSocket(reactor, asyncTcpSocketImpl, sslContext, sslExecutor);
+							tcpSocket :
+							wrapClientSocket(reactor, tcpSocket, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, responseSerializer, requestSerializer, defaultPacketSize,
 							autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 					RpcClientConnection connection = new RpcClientConnection(reactor, this, address, stream, keepAliveInterval.toMillis());

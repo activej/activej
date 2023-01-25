@@ -62,7 +62,7 @@ public final class HttpServerTest {
 				.build();
 	}
 
-	public HttpServer asyncHttpServer() {
+	public HttpServer httpServer() {
 		return HttpServer.builder(eventloop,
 						request ->
 								Promise.ofCallback(cb -> cb.post(
@@ -101,7 +101,7 @@ public final class HttpServerTest {
 	@Test
 	public void testKeepAlive_Http_1_0() throws Exception {
 		doTestKeepAlive_Http_1_0(blockingHttpServer());
-		doTestKeepAlive_Http_1_0(asyncHttpServer());
+		doTestKeepAlive_Http_1_0(httpServer());
 		doTestKeepAlive_Http_1_0(delayedHttpServer());
 	}
 
@@ -153,7 +153,7 @@ public final class HttpServerTest {
 	@Test
 	public void testKeepAlive_Http_1_1() throws Exception {
 		doTestKeepAlive_Http_1_1(blockingHttpServer());
-		doTestKeepAlive_Http_1_1(asyncHttpServer());
+		doTestKeepAlive_Http_1_1(httpServer());
 		doTestKeepAlive_Http_1_1(delayedHttpServer());
 	}
 
@@ -304,7 +304,7 @@ public final class HttpServerTest {
 	@Test
 	public void testPipelining() throws Exception {
 		doTestPipelining(blockingHttpServer());
-		doTestPipelining(asyncHttpServer());
+		doTestPipelining(httpServer());
 		doTestPipelining(delayedHttpServer());
 	}
 

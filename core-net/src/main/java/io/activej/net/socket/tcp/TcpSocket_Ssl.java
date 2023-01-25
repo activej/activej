@@ -62,40 +62,40 @@ public final class TcpSocket_Ssl extends AbstractNioReactive implements AsyncTcp
 	private @Nullable SettablePromise<Void> write;
 	private @Nullable Promise<Void> pendingUpstreamWrite;
 
-	private TcpSocket_Ssl(NioReactor reactor, AsyncTcpSocket asyncTcpSocket,
+	private TcpSocket_Ssl(NioReactor reactor, AsyncTcpSocket socket,
 			SSLEngine engine, Executor executor) {
 		super(reactor);
 		this.engine = engine;
 		this.executor = executor;
-		this.upstream = asyncTcpSocket;
+		this.upstream = socket;
 		startHandShake();
 	}
 
-	public static TcpSocket_Ssl wrapClientSocket(NioReactor reactor, AsyncTcpSocket asyncTcpSocket,
+	public static TcpSocket_Ssl wrapClientSocket(NioReactor reactor, AsyncTcpSocket socket,
 			String host, int port,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
 		sslEngine.setUseClientMode(true);
-		return create(reactor, asyncTcpSocket, sslEngine, executor);
+		return create(reactor, socket, sslEngine, executor);
 	}
 
-	public static TcpSocket_Ssl wrapClientSocket(NioReactor reactor, AsyncTcpSocket asyncTcpSocket,
+	public static TcpSocket_Ssl wrapClientSocket(NioReactor reactor, AsyncTcpSocket socket,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(true);
-		return create(reactor, asyncTcpSocket, sslEngine, executor);
+		return create(reactor, socket, sslEngine, executor);
 	}
 
-	public static TcpSocket_Ssl wrapServerSocket(NioReactor reactor, AsyncTcpSocket asyncTcpSocket,
+	public static TcpSocket_Ssl wrapServerSocket(NioReactor reactor, AsyncTcpSocket socket,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(false);
-		return create(reactor, asyncTcpSocket, sslEngine, executor);
+		return create(reactor, socket, sslEngine, executor);
 	}
 
-	public static TcpSocket_Ssl create(NioReactor reactor, AsyncTcpSocket asyncTcpSocket,
+	public static TcpSocket_Ssl create(NioReactor reactor, AsyncTcpSocket socket,
 			SSLEngine engine, Executor executor) {
-		return new TcpSocket_Ssl(reactor, asyncTcpSocket, engine, executor);
+		return new TcpSocket_Ssl(reactor, socket, engine, executor);
 	}
 
 	@Override

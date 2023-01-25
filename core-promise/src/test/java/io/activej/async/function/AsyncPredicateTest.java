@@ -35,7 +35,7 @@ public class AsyncPredicateTest {
 	}
 
 	@Test
-	public void asyncPredicate() {
+	public void predicate() {
 		AsyncPredicate<Integer> predicate = i -> async(i % 2 == 0);
 
 		assertTrue(await(predicate.test(0)));
@@ -43,7 +43,7 @@ public class AsyncPredicateTest {
 	}
 
 	@Test
-	public void asyncPredicateException() {
+	public void predicateException() {
 		ExpectedException expected = new ExpectedException();
 		AsyncPredicate<Integer> predicate = i -> Promise.ofException(expected);
 

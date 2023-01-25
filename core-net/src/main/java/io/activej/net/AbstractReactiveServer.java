@@ -352,22 +352,22 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
-		AsyncTcpSocket asyncTcpSocket;
+		AsyncTcpSocket socket;
 		try {
-			TcpSocket socketNio = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
+			TcpSocket tcpSocket = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
 			if (inspector != null) {
-				inspector.onConnect(socketNio);
-				socketNio.setInspector(inspector);
+				inspector.onConnect(tcpSocket);
+				tcpSocket.setInspector(inspector);
 			}
-			asyncTcpSocket = socketNio;
+			socket = tcpSocket;
 		} catch (IOException e) {
 			logger.warn("Failed to wrap channel {}", socketChannel, e);
 			reactor.closeChannel(socketChannel, null);
 			return;
 		}
-		asyncTcpSocket = ssl ? wrapServerSocket(reactor, asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
-		serve(asyncTcpSocket, remoteAddress);
+		socket = ssl ? wrapServerSocket(reactor, socket, sslContext, sslExecutor) : socket;
+		serve(socket, remoteAddress);
 	}
 
 	public ServerSocketSettings getServerSocketSettings() {

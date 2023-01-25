@@ -34,13 +34,13 @@ public final class AsyncPredicates {
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncPredicate<T> asyncPredicate) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncPredicate);
+	public static <T> AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncPredicate<T> predicate) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), predicate);
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncPredicate<T> ofExecutor(AsyncExecutor asyncExecutor, AsyncPredicate<T> predicate) {
-		return t -> asyncExecutor.execute(() -> predicate.test(t));
+	public static <T> AsyncPredicate<T> ofExecutor(AsyncExecutor executor, AsyncPredicate<T> predicate) {
+		return t -> executor.execute(() -> predicate.test(t));
 	}
 
 	/**
@@ -57,11 +57,11 @@ public final class AsyncPredicates {
 	 */
 	public static <T> AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
+			AsyncAccumulator<RefBoolean> accumulator = AsyncAccumulator.create(new RefBoolean(true));
 			for (AsyncPredicate<? super T> predicate : predicates) {
-				asyncAccumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() && result));
+				accumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() && result));
 			}
-			return asyncAccumulator.run().map(RefBoolean::get);
+			return accumulator.run().map(RefBoolean::get);
 		};
 	}
 
@@ -124,11 +124,11 @@ public final class AsyncPredicates {
 	 */
 	public static <T> AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
+			AsyncAccumulator<RefBoolean> accumulator = AsyncAccumulator.create(new RefBoolean(false));
 			for (AsyncPredicate<? super T> predicate : predicates) {
-				asyncAccumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() || result));
+				accumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() || result));
 			}
-			return asyncAccumulator.run().map(RefBoolean::get);
+			return accumulator.run().map(RefBoolean::get);
 		};
 	}
 

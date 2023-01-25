@@ -39,7 +39,7 @@ public class AsyncBiPredicateTest {
 	}
 
 	@Test
-	public void asyncPredicate() {
+	public void predicate() {
 		AsyncBiPredicate<Integer, Integer> predicate = (i1, i2) -> async((i1 + i2) % 2 == 0);
 
 		assertTrue(await(predicate.test(0, 0)));
@@ -51,7 +51,7 @@ public class AsyncBiPredicateTest {
 	}
 
 	@Test
-	public void asyncPredicateException() {
+	public void predicateException() {
 		ExpectedException expected = new ExpectedException();
 		AsyncBiPredicate<Integer, Integer> predicate = (i1, i2) -> Promise.ofException(expected);
 

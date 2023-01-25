@@ -24,8 +24,8 @@ import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.dns.IDnsClient;
 import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -528,23 +528,23 @@ public final class HttpClient extends AbstractNioReactive
 
 		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.then(
-						asyncTcpSocketImpl -> {
+						tcpSocket -> {
 							TcpSocket.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
 							if (socketInspector != null) {
-								socketInspector.onConnect(asyncTcpSocketImpl);
-								asyncTcpSocketImpl.setInspector(socketInspector);
+								socketInspector.onConnect(tcpSocket);
+								tcpSocket.setInspector(socketInspector);
 							}
 
 							String host = request.getUrl().getHost();
 							assert host != null;
 
-							AsyncTcpSocket asyncTcpSocket = isSecure ?
-									wrapClientSocket(reactor, asyncTcpSocketImpl,
+							AsyncTcpSocket socket = isSecure ?
+									wrapClientSocket(reactor, tcpSocket,
 											host, request.getUrl().getPort(),
 											sslContext, sslExecutor) :
-									asyncTcpSocketImpl;
+									tcpSocket;
 
-							HttpClientConnection connection = new HttpClientConnection(reactor, this, asyncTcpSocket, address);
+							HttpClientConnection connection = new HttpClientConnection(reactor, this, socket, address);
 
 							if (inspector != null) inspector.onConnect(request, connection);
 

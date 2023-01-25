@@ -28,12 +28,12 @@ public final class AsyncBiConsumers {
 	}
 
 	@Contract(pure = true)
-	public static <T, U> AsyncBiConsumer<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiConsumer<T, U> asyncConsumer) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncConsumer);
+	public static <T, U> AsyncBiConsumer<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiConsumer<T, U> consumer) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), consumer);
 	}
 
 	@Contract(pure = true)
-	public static <T, U> AsyncBiConsumer<T, U> ofExecutor(AsyncExecutor asyncExecutor, AsyncBiConsumer<T, U> consumer) {
-		return (t, u) -> asyncExecutor.execute(() -> consumer.accept(t, u));
+	public static <T, U> AsyncBiConsumer<T, U> ofExecutor(AsyncExecutor executor, AsyncBiConsumer<T, U> consumer) {
+		return (t, u) -> executor.execute(() -> consumer.accept(t, u));
 	}
 }

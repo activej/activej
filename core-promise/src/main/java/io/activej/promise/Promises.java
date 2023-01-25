@@ -1018,21 +1018,21 @@ public final class Promises {
 		}
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier) {
-		return retry(isResult(), asyncSupplier);
+	public static <T> Promise<T> retry(AsyncSupplier<T> supplier) {
+		return retry(isResult(), supplier);
 	}
 
-	public static <T> Promise<T> retry(BiPredicate<? super T, Exception> breakCondition, AsyncSupplier<T> asyncSupplier) {
-		return first(breakCondition, Stream.generate(() -> asyncSupplier));
+	public static <T> Promise<T> retry(BiPredicate<? super T, Exception> breakCondition, AsyncSupplier<T> supplier) {
+		return first(breakCondition, Stream.generate(() -> supplier));
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, RetryPolicy<?> retryPolicy) {
-		return retry(asyncSupplier, (v, e) -> e == null, retryPolicy);
+	public static <T> Promise<T> retry(AsyncSupplier<T> supplier, RetryPolicy<?> retryPolicy) {
+		return retry(supplier, (v, e) -> e == null, retryPolicy);
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Exception> breakCondition, RetryPolicy<?> retryPolicy) {
+	public static <T> Promise<T> retry(AsyncSupplier<T> supplier, BiPredicate<T, Exception> breakCondition, RetryPolicy<?> retryPolicy) {
 		return Promise.ofCallback(cb ->
-				retryImpl(asyncSupplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
+				retryImpl(supplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
 	}
 
 	private static <T> void retryImpl(AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition,
@@ -1186,14 +1186,14 @@ public final class Promises {
 		return asyncAccumulator.run().map(finisher);
 	}
 
-	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumerEx<A, T> combiner, Iterator<Promise<T>> promises) {
+	private static <T, A> void reduceImpl(AsyncAccumulator<A> accumulator, BiConsumerEx<A, T> combiner, Iterator<Promise<T>> promises) {
 		while (promises.hasNext()) {
 			Promise<T> promise = promises.next();
 			if (promise.isComplete()) {
-				asyncAccumulator.addPromise(promise, combiner);
+				accumulator.addPromise(promise, combiner);
 			} else {
-				asyncAccumulator.addPromise(
-						promise.whenResult(() -> reduceImpl(asyncAccumulator, combiner, promises)),
+				accumulator.addPromise(
+						promise.whenResult(() -> reduceImpl(accumulator, combiner, promises)),
 						combiner);
 				break;
 			}

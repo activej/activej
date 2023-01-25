@@ -28,12 +28,12 @@ public final class AsyncConsumers {
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncConsumer<T> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncConsumer<T> asyncConsumer) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncConsumer);
+	public static <T> AsyncConsumer<T> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncConsumer<T> consumer) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), consumer);
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncConsumer<T> ofExecutor(AsyncExecutor asyncExecutor, AsyncConsumer<T> consumer) {
-		return t -> asyncExecutor.execute(() -> consumer.accept(t));
+	public static <T> AsyncConsumer<T> ofExecutor(AsyncExecutor executor, AsyncConsumer<T> consumer) {
+		return t -> executor.execute(() -> consumer.accept(t));
 	}
 }

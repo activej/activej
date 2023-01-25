@@ -230,10 +230,10 @@ public final class SslReactive_TcpSocketTest {
 		serverThread.start();
 
 		Exception exception = awaitException(TcpSocket.connect(reactor, address)
-				.whenResult(asyncTcpSocket -> {
+				.whenResult(tcpSocket -> {
 					try {
 						// noinspection ConstantConditions - Imitating a suddenly closed channel
-						asyncTcpSocket.getSocketChannel().close();
+						tcpSocket.getSocketChannel().close();
 					} catch (IOException e) {
 						throw new AssertionError();
 					}

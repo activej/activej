@@ -103,8 +103,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 
-	HttpClientConnection(Reactor reactor, HttpClient client, AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
-		super(reactor, asyncTcpSocket, client.maxBodySize);
+	HttpClientConnection(Reactor reactor, HttpClient client, AsyncTcpSocket socket, InetSocketAddress remoteAddress) {
+		super(reactor, socket, client.maxBodySize);
 		this.client = client;
 		this.inspector = client.inspector;
 		this.remoteAddress = remoteAddress;

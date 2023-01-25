@@ -292,17 +292,17 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	/**
 	 * Creates a wrapper ChannelConsumer which executes current
 	 * ChannelConsumer's {@code accept(T value)} within the
-	 * {@code asyncExecutor}.
+	 * {@code executor}.
 	 *
-	 * @param asyncExecutor executes ChannelConsumer
+	 * @param executor executes ChannelConsumer
 	 * @return a wrapper of current ChannelConsumer which executes
-	 * in provided {@code asyncExecutor}
+	 * in provided {@code executor}
 	 */
-	default ChannelConsumer<T> withExecutor(AsyncExecutor asyncExecutor) {
+	default ChannelConsumer<T> withExecutor(AsyncExecutor executor) {
 		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
-				return asyncExecutor.execute(() -> ChannelConsumer.this.accept(value));
+				return executor.execute(() -> ChannelConsumer.this.accept(value));
 			}
 		};
 	}

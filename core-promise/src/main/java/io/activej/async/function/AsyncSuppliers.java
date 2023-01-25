@@ -61,13 +61,13 @@ public final class AsyncSuppliers {
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncSupplier<T> ofExecutor(AsyncExecutor asyncExecutor, AsyncSupplier<T> supplier) {
-		return () -> asyncExecutor.execute(supplier);
+	public static <T> AsyncSupplier<T> ofExecutor(AsyncExecutor executor, AsyncSupplier<T> supplier) {
+		return () -> executor.execute(supplier);
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncSupplier<T> prefetch(int count, AsyncSupplier<? extends T> asyncSupplier) {
-		return prefetch(count, asyncSupplier, asyncSupplier);
+	public static <T> AsyncSupplier<T> prefetch(int count, AsyncSupplier<? extends T> supplier) {
+		return prefetch(count, supplier, supplier);
 	}
 
 	@Contract(pure = true)

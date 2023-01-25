@@ -28,12 +28,12 @@ public final class AsyncFunctions {
 	}
 
 	@Contract(pure = true)
-	public static <T, R> AsyncFunction<T, R> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncFunction<T, R> asyncFunction) {
-		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncFunction);
+	public static <T, R> AsyncFunction<T, R> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncFunction<T, R> function) {
+		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), function);
 	}
 
 	@Contract(pure = true)
-	public static <T, R> AsyncFunction<T, R> ofExecutor(AsyncExecutor asyncExecutor, AsyncFunction<T, R> function) {
-		return t -> asyncExecutor.execute(() -> function.apply(t));
+	public static <T, R> AsyncFunction<T, R> ofExecutor(AsyncExecutor executor, AsyncFunction<T, R> function) {
+		return t -> executor.execute(() -> function.apply(t));
 	}
 }
