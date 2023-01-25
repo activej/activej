@@ -18,7 +18,7 @@ package io.activej.launchers.crdt.rpc;
 
 import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
-import io.activej.crdt.wal.AsyncWriteAheadLog;
+import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -75,7 +75,7 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	@Eager
 	@Named("WAL flush")
-	TaskScheduler walFlushScheduler(Reactor reactor, AsyncWriteAheadLog<K, S> wal, Config config) {
+	TaskScheduler walFlushScheduler(Reactor reactor, IWriteAheadLog<K, S> wal, Config config) {
 		return TaskScheduler.builder(reactor, wal::flush)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
 				.withInitialDelay(Duration.ofMinutes(1))

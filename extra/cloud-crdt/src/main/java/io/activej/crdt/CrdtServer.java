@@ -19,10 +19,10 @@ package io.activej.crdt;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -60,7 +60,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler = $ ->
 			new CrdtResponse.Handshake(null);
 
-	private final AsyncCrdtStorage<K, S> storage;
+	private final ICrdtStorage<K, S> storage;
 	private final BinarySerializer_CrdtData<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
@@ -88,7 +88,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private CrdtServer(NioReactor reactor, AsyncCrdtStorage<K, S> storage, BinarySerializer_CrdtData<K, S> serializer) {
+	private CrdtServer(NioReactor reactor, ICrdtStorage<K, S> storage, BinarySerializer_CrdtData<K, S> serializer) {
 		super(reactor);
 		this.storage = storage;
 		this.serializer = serializer;
@@ -98,7 +98,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 
 	public static <K extends Comparable<K>, S> CrdtServer<K, S>.Builder builder(
 			NioReactor reactor,
-			AsyncCrdtStorage<K, S> storage,
+			ICrdtStorage<K, S> storage,
 			BinarySerializer_CrdtData<K, S> serializer
 	) {
 		return new CrdtServer<>(reactor, storage, serializer).new Builder();
@@ -106,7 +106,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 
 	public static <K extends Comparable<K>, S> CrdtServer<K, S>.Builder builder(
 			NioReactor reactor,
-			AsyncCrdtStorage<K, S> storage,
+			ICrdtStorage<K, S> storage,
 			BinarySerializer<K> keySerializer,
 			BinarySerializer<S> stateSerializer
 	) {
@@ -166,7 +166,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 		throw new AssertionError();
 	}
 
-	private Promise<Void> handleHandshake(AsyncMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Handshake handshake) {
+	private Promise<Void> handleHandshake(IMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Handshake handshake) {
 		return messaging.send(handshakeHandler.apply(handshake))
 				.whenComplete(handshakePromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, handshake, this));

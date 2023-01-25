@@ -24,8 +24,8 @@ import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.system.OTSystem;
+import io.activej.ot.repository.IOTRepository;
+import io.activej.ot.system.IOTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
@@ -54,8 +54,8 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final OTSystem<D> otSystem;
-	private final AsyncOTRepository<K, D> repository;
+	private final IOTSystem<D> otSystem;
+	private final IOTRepository<K, D> repository;
 	private final AggregationChunkStorage<C> storage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
@@ -65,7 +65,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseBackupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeBackupController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage<C> storage) {
+			CubeDiffScheme<D> cubeDiffScheme, IOTRepository<K, D> repository, IOTSystem<D> otSystem, AggregationChunkStorage<C> storage) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -75,8 +75,8 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	public static <K, D, C> CubeBackupController<K, D, C> create(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
-			AsyncOTRepository<K, D> otRepository,
-			OTSystem<D> otSystem,
+			IOTRepository<K, D> otRepository,
+			IOTSystem<D> otSystem,
 			AggregationChunkStorage<C> storage) {
 		return new CubeBackupController<>(reactor, cubeDiffScheme, otRepository, otSystem, storage);
 	}

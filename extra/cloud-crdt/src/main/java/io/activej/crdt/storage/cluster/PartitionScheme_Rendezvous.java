@@ -1,8 +1,8 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
 import io.activej.rpc.client.sender.RpcStrategy_Sharding;
@@ -23,7 +23,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 	@SuppressWarnings("unchecked")
 	private Function<P, Object> partitionIdGetter = (Function<P, Object>) Function.identity();
 	private Function<P, RpcStrategy> rpcProvider;
-	private Function<P, AsyncCrdtStorage<?, ?>> crdtProvider;
+	private Function<P, ICrdtStorage<?, ?>> crdtProvider;
 
 	@SafeVarargs
 	public static <P> PartitionScheme_Rendezvous<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
@@ -54,7 +54,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 			return this;
 		}
 
-		public Builder withCrdtProvider(Function<P, AsyncCrdtStorage<?, ?>> crdtProvider) {
+		public Builder withCrdtProvider(Function<P, ICrdtStorage<?, ?>> crdtProvider) {
 			checkNotBuilt(this);
 			PartitionScheme_Rendezvous.this.crdtProvider = crdtProvider;
 			return this;
@@ -90,7 +90,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 	}
 
 	@Override
-	public AsyncCrdtStorage<?, ?> provideCrdtConnection(P partition) {
+	public ICrdtStorage<?, ?> provideCrdtConnection(P partition) {
 		return crdtProvider.apply(partition);
 	}
 

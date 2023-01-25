@@ -39,7 +39,7 @@ public class UiKernelServlets {
 
 	private static final String ID_PARAMETER_NAME = "id";
 
-	public static <K, R extends AbstractRecord<K>> Servlet_Routing apiServlet(Reactor reactor, AsyncGridModel<K, R> model, Gson gson) {
+	public static <K, R extends AbstractRecord<K>> Servlet_Routing apiServlet(Reactor reactor, IGridModel<K, R> model, Gson gson) {
 		return Servlet_Routing.create(reactor)
 				.map(POST, "/", create(model, gson))
 				.map(GET, "/", read(model, gson))
@@ -48,7 +48,7 @@ public class UiKernelServlets {
 				.map(GET, "/:" + ID_PARAMETER_NAME, get(model, gson));
 	}
 
-	public static <K, R extends AbstractRecord<K>> AsyncServlet read(AsyncGridModel<K, R> model, Gson gson) {
+	public static <K, R extends AbstractRecord<K>> AsyncServlet read(IGridModel<K, R> model, Gson gson) {
 		return request -> {
 			try {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
@@ -61,7 +61,7 @@ public class UiKernelServlets {
 		};
 	}
 
-	public static <K, R extends AbstractRecord<K>> AsyncServlet get(AsyncGridModel<K, R> model, Gson gson) {
+	public static <K, R extends AbstractRecord<K>> AsyncServlet get(IGridModel<K, R> model, Gson gson) {
 		return request -> {
 			try {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
@@ -75,7 +75,7 @@ public class UiKernelServlets {
 		};
 	}
 
-	public static <K, R extends AbstractRecord<K>> AsyncServlet create(AsyncGridModel<K, R> model, Gson gson) {
+	public static <K, R extends AbstractRecord<K>> AsyncServlet create(IGridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
 				.then(body -> {
 					try {
@@ -90,7 +90,7 @@ public class UiKernelServlets {
 				});
 	}
 
-	public static <K, R extends AbstractRecord<K>> AsyncServlet update(AsyncGridModel<K, R> model, Gson gson) {
+	public static <K, R extends AbstractRecord<K>> AsyncServlet update(IGridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
 				.then(body -> {
 					try {
@@ -105,7 +105,7 @@ public class UiKernelServlets {
 				});
 	}
 
-	public static <K, R extends AbstractRecord<K>> AsyncServlet delete(AsyncGridModel<K, R> model, Gson gson) {
+	public static <K, R extends AbstractRecord<K>> AsyncServlet delete(IGridModel<K, R> model, Gson gson) {
 		return request -> {
 			try {
 				K id = fromJson(gson, request.getPathParameter("id"), model.getIdType());

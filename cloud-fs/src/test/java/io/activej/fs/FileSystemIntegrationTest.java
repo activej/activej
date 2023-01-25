@@ -64,7 +64,7 @@ public final class FileSystemIntegrationTest {
 
 	private Path storage;
 	private FileSystemServer server;
-	private AsyncFileSystem fileSystem;
+	private IFileSystem fileSystem;
 
 	@Before
 	public void setup() throws IOException {

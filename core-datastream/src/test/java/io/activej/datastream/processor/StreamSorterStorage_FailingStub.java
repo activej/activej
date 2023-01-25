@@ -12,21 +12,21 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class StreamSorterStorage_FailingStub<T> extends ImplicitlyReactive
-		implements AsyncStreamSorterStorage<T> {
+		implements IStreamSorterStorage<T> {
 	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
-	private AsyncStreamSorterStorage<T> storage;
+	private IStreamSorterStorage<T> storage;
 
 	boolean failNewPartition;
 	boolean failWrite;
 	boolean failRead;
 	boolean failCleanup;
 
-	private StreamSorterStorage_FailingStub(AsyncStreamSorterStorage<T> storage) {
+	private StreamSorterStorage_FailingStub(IStreamSorterStorage<T> storage) {
 		this.storage = storage;
 	}
 
-	public static <T> StreamSorterStorage_FailingStub<T> create(AsyncStreamSorterStorage<T> storage) {
+	public static <T> StreamSorterStorage_FailingStub<T> create(IStreamSorterStorage<T> storage) {
 		return new StreamSorterStorage_FailingStub<>(storage);
 	}
 
@@ -54,7 +54,7 @@ public final class StreamSorterStorage_FailingStub<T> extends ImplicitlyReactive
 		return this;
 	}
 
-	public void setStorage(AsyncStreamSorterStorage<T> storage) {
+	public void setStorage(IStreamSorterStorage<T> storage) {
 		this.storage = storage;
 	}
 

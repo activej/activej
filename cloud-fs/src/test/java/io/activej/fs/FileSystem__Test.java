@@ -487,14 +487,14 @@ public final class FileSystem__Test {
 	public void testUploadToSameNewDir() {
 		String dir = "newDir";
 		Set<String> filenames = IntStream.range(0, 5)
-				.mapToObj(i -> dir + AsyncFileSystem.SEPARATOR + i + ".txt")
+				.mapToObj(i -> dir + IFileSystem.SEPARATOR + i + ".txt")
 				.collect(toSet());
 
 		await(Promises.all(filenames.stream()
 				.map(filename -> client.upload(filename)
 						.then(ChannelConsumer::acceptEndOfStream))));
 
-		Map<String, FileMetadata> files = await(client.list(dir + AsyncFileSystem.SEPARATOR + '*'));
+		Map<String, FileMetadata> files = await(client.list(dir + IFileSystem.SEPARATOR + '*'));
 		assertEquals(filenames, files.keySet());
 		for (FileMetadata meta : files.values()) {
 			assertEquals(0, meta.getSize());

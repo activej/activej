@@ -52,7 +52,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
- * from {@link AsyncHttpClient clients} and respond to them with
+ * from {@link IHttpClient clients} and respond to them with
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 public final class HttpServerConnection extends AbstractHttpConnection {
@@ -264,7 +264,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private void writeHttpResponse(HttpResponse httpResponse) {
-		boolean isWebSocket = AsyncWebSocket.ENABLED && isWebSocket();
+		boolean isWebSocket = IWebSocket.ENABLED && isWebSocket();
 		if (!isWebSocket || httpResponse.getCode() != 101) {
 			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
 			if (server.keepAliveTimeoutMillis == 0 ||
@@ -343,7 +343,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		request.flags |= MUST_LOAD_BODY;
 		request.body = body;
 		request.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
-		if (AsyncWebSocket.ENABLED && isWebSocket()) {
+		if (IWebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
 			request.setProtocol(socket instanceof TcpSocket_Ssl ? HTTPS : HTTP);
@@ -446,7 +446,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private void onHttpMessageComplete() {
 		assert !isClosed();
-		if (AsyncWebSocket.ENABLED && isWebSocket()) return;
+		if (IWebSocket.ENABLED && isWebSocket()) return;
 
 		if ((flags & KEEP_ALIVE) != 0 && server.keepAliveTimeoutMillis != 0) {
 			switchPool(server.poolKeepAlive);

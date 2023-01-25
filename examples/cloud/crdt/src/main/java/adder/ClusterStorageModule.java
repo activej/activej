@@ -6,7 +6,7 @@ import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.*;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.inject.annotation.Eager;
@@ -38,22 +38,22 @@ public final class ClusterStorageModule extends AbstractModule {
 
 	@Provides
 	CrdtStorage_Cluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
-			AsyncDiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
+			IDiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
 		return CrdtStorage_Cluster.create(reactor, discoveryService, crdtFunction);
 	}
 
 	@Provides
 	@Eager
 	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(NioReactor reactor,
-			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config) {
+			@Local ICrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config) {
 		return CrdtServer.builder(reactor, localStorage, serializer)
 				.initialize(ofAbstractServer(config.getChild("crdt.server")))
 				.build();
 	}
 
 	@Provides
-	AsyncDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
-			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config,
+	IDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
+			@Local ICrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config,
 			PartitionId localPartitionId) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return DiscoveryService_File.builder(reactor, pathToFile)

@@ -76,7 +76,7 @@ import static java.util.stream.Collectors.toSet;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class Aggregation extends AbstractReactive
-		implements AsyncAggregation, ReactiveJmxBeanWithStats {
+		implements IAggregation, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
@@ -87,7 +87,7 @@ public final class Aggregation extends AbstractReactive
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
-	private final AsyncAggregationChunkStorage<Object> aggregationChunkStorage;
+	private final IAggregationChunkStorage<Object> aggregationChunkStorage;
 	private final FrameFormat frameFormat;
 	private Path temporarySortDir;
 
@@ -112,7 +112,7 @@ public final class Aggregation extends AbstractReactive
 	private Exception consolidationLastError;
 
 	private Aggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
+			IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			OTState_Aggregation state) {
 		super(reactor);
 		this.executor = executor;
@@ -138,7 +138,7 @@ public final class Aggregation extends AbstractReactive
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
 	public static Builder builder(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat) {
+			IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat) {
 		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, null, null).new Builder();
 	}
 

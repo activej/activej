@@ -25,10 +25,10 @@ import java.io.OutputStream;
 import java.util.Optional;
 
 /**
- * An abstract {@link BytecodeStorage} that allows loading and saving bytecode
+ * An abstract {@link IBytecodeStorage} that allows loading and saving bytecode
  * using {@link InputStream} and {@link OutputStream}
  */
-public abstract class AbstractBytecodeStorage implements BytecodeStorage {
+public abstract class AbstractBytecodeStorage implements IBytecodeStorage {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final int DEFAULT_BUFFER_SIZE = 8192;

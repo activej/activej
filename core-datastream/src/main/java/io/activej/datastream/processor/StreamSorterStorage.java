@@ -53,7 +53,7 @@ import static java.lang.String.format;
  * @param <T> type of storing data
  */
 public final class StreamSorterStorage<T> extends ImplicitlyReactive
-		implements AsyncStreamSorterStorage<T> {
+		implements IStreamSorterStorage<T> {
 	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage.class);
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";

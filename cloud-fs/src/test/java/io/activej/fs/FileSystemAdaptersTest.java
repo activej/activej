@@ -37,7 +37,7 @@ public final class FileSystemAdaptersTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private AsyncFileSystem fileSystem;
+	private IFileSystem fileSystem;
 
 	@Before
 	public void setup() throws IOException {
@@ -47,11 +47,11 @@ public final class FileSystemAdaptersTest {
 		this.fileSystem = fileSystem;
 	}
 
-	private void upload(AsyncFileSystem fs, String filename) {
+	private void upload(IFileSystem fs, String filename) {
 		await(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
 	}
 
-	private void uploadForbidden(AsyncFileSystem fs, String filename) {
+	private void uploadForbidden(IFileSystem fs, String filename) {
 		Exception exception = awaitException(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
 		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
@@ -62,7 +62,7 @@ public final class FileSystemAdaptersTest {
 
 	@Test
 	public void addingPrefix() {
-		AsyncFileSystem prefixed = FileSystemAdapters.addPrefix(fileSystem, "prefix/");
+		IFileSystem prefixed = FileSystemAdapters.addPrefix(fileSystem, "prefix/");
 
 		upload(prefixed, "test.txt");
 		upload(prefixed, "deeper/test.txt");
@@ -72,7 +72,7 @@ public final class FileSystemAdaptersTest {
 
 	@Test
 	public void strippingPrefix() {
-		AsyncFileSystem prefixed = FileSystemAdapters.removePrefix(fileSystem, "prefix/");
+		IFileSystem prefixed = FileSystemAdapters.removePrefix(fileSystem, "prefix/");
 
 		upload(prefixed, "prefix/test.txt");
 		upload(prefixed, "prefix/deeper/test.txt");
@@ -89,12 +89,12 @@ public final class FileSystemAdaptersTest {
 
 	@Test
 	public void mountingClient() {
-		AsyncFileSystem root = FileSystemAdapters.subdirectory(fileSystem, "root");
-		AsyncFileSystem first = FileSystemAdapters.subdirectory(fileSystem, "first");
-		AsyncFileSystem second = FileSystemAdapters.subdirectory(fileSystem, "second");
-		AsyncFileSystem third = FileSystemAdapters.subdirectory(fileSystem, "third");
+		IFileSystem root = FileSystemAdapters.subdirectory(fileSystem, "root");
+		IFileSystem first = FileSystemAdapters.subdirectory(fileSystem, "first");
+		IFileSystem second = FileSystemAdapters.subdirectory(fileSystem, "second");
+		IFileSystem third = FileSystemAdapters.subdirectory(fileSystem, "third");
 
-		AsyncFileSystem mounted = FileSystemAdapters.mount(root, Map.of(
+		IFileSystem mounted = FileSystemAdapters.mount(root, Map.of(
 				"hello", first,
 				"test/inner", second,
 				"last", third));
@@ -115,7 +115,7 @@ public final class FileSystemAdaptersTest {
 
 	@Test
 	public void filterClient() {
-		AsyncFileSystem filtered = FileSystemAdapters.filter(fileSystem, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
+		IFileSystem filtered = FileSystemAdapters.filter(fileSystem, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
 
 		uploadForbidden(filtered, "test2.txt");
 		upload(filtered, "test22.txt");

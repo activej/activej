@@ -28,7 +28,7 @@ import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.http.AsyncWebSocket.Message.MessageType;
+import io.activej.http.IWebSocket.Message.MessageType;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -41,14 +41,14 @@ import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelSuppliers.prefetch;
-import static io.activej.http.AsyncWebSocket.Message.MessageType.TEXT;
+import static io.activej.http.IWebSocket.Message.MessageType.TEXT;
 import static io.activej.http.HttpUtils.frameToMessageType;
 import static io.activej.http.HttpUtils.getUTF8;
 import static io.activej.http.WebSocketConstants.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
+final class WebSocket extends AbstractAsyncCloseable implements IWebSocket {
 	private static final boolean CHECKS = Checks.isEnabled(WebSocket.class);
 
 	private final HttpRequest request;

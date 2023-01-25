@@ -28,8 +28,8 @@ import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
@@ -58,12 +58,12 @@ import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Cluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private final AsyncDiscoveryService<P> discoveryService;
+	private final IDiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
-	private final Map<P, AsyncCrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
+	private final Map<P, ICrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
 
 	private PartitionScheme<P> currentPartitionScheme;
 	private boolean forceStart;
@@ -91,20 +91,20 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	private final EventStats repartitionedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorage_Cluster(Reactor reactor, AsyncDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
+	private CrdtStorage_Cluster(Reactor reactor, IDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
 	}
 
 	public static <K extends Comparable<K>, S, P> CrdtStorage_Cluster<K, S, P> create(Reactor reactor,
-			AsyncDiscoveryService<P> discoveryService,
+			IDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
 		return CrdtStorage_Cluster.<K, S, P>builder(reactor, discoveryService, crdtFunction).build();
 	}
 
 	public static <K extends Comparable<K>, S, P> CrdtStorage_Cluster<K, S, P>.Builder builder(Reactor reactor,
-			AsyncDiscoveryService<P> discoveryService,
+			IDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
 		return new CrdtStorage_Cluster<K, S, P>(reactor, discoveryService, crdtFunction).new Builder();
 	}
@@ -172,7 +172,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		return execute(partitionScheme, AsyncCrdtStorage::upload)
+		return execute(partitionScheme, ICrdtStorage::upload)
 				.then(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
 					Sharder<K> sharder = partitionScheme.createSharder(alive);
@@ -208,7 +208,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		checkInReactorThread(this);
-		return getData(AsyncCrdtStorage::take)
+		return getData(ICrdtStorage::take)
 				.map(supplier -> supplier
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 						.transformWith(onItem(takenItems::recordEvent)));
@@ -218,7 +218,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = currentPartitionScheme;
-		return execute(partitionScheme, AsyncCrdtStorage::remove)
+		return execute(partitionScheme, ICrdtStorage::remove)
 				.map(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
 					Sharder<K> sharder = partitionScheme.createSharder(alive);
@@ -245,7 +245,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public Promise<Void> repartition(P sourcePartitionId) {
 		checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		AsyncCrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
+		ICrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
 
 		class Tuple {
 			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
@@ -264,7 +264,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 
 		return Promises.toTuple(Tuple::new,
 						source.take().toTry(),
-						execute(partitionScheme, AsyncCrdtStorage::upload))
+						execute(partitionScheme, ICrdtStorage::upload))
 				.whenResult(tuple -> {
 					if (!tuple.uploaders.containsKey(sourcePartitionId)) {
 						tuple.close();
@@ -314,7 +314,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public Promise<Void> ping() {
 		checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		return execute(partitionScheme, AsyncCrdtStorage::ping)
+		return execute(partitionScheme, ICrdtStorage::ping)
 				.whenResult(map -> {
 					Sharder<K> sharder = partitionScheme.createSharder(new ArrayList<>(map.keySet()));
 					if (sharder == null) {
@@ -324,7 +324,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 				.toVoid();
 	}
 
-	private <T> Promise<Map<P, T>> execute(PartitionScheme<P> partitionScheme, AsyncFunction<AsyncCrdtStorage<K, S>, T> method) {
+	private <T> Promise<Map<P, T>> execute(PartitionScheme<P> partitionScheme, AsyncFunction<ICrdtStorage<K, S>, T> method) {
 		Set<P> partitions = partitionScheme.getPartitions();
 		Map<P, T> map = new HashMap<>();
 		return Promises.all(
@@ -335,7 +335,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 				.map($ -> map);
 	}
 
-	private Promise<StreamSupplier<CrdtData<K, S>>> getData(AsyncFunction<AsyncCrdtStorage<K, S>, StreamSupplier<CrdtData<K, S>>> method) {
+	private Promise<StreamSupplier<CrdtData<K, S>>> getData(AsyncFunction<ICrdtStorage<K, S>, StreamSupplier<CrdtData<K, S>>> method) {
 		PartitionScheme<P> partitionScheme = currentPartitionScheme;
 		return execute(partitionScheme, method)
 				.map(map -> {
@@ -366,12 +366,12 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 		for (P partition : partitionScheme.getPartitions()) {
 			//noinspection unchecked
 			crdtStorages.computeIfAbsent(partition,
-					(Function) (Function<P, AsyncCrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
+					(Function) (Function<P, ICrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
 		}
 	}
 
 	@VisibleForTesting
-	Map<P, AsyncCrdtStorage<K, S>> getCrdtStorages() {
+	Map<P, ICrdtStorage<K, S>> getCrdtStorages() {
 		return crdtStorages;
 	}
 
@@ -411,7 +411,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	@JmxOperation
 	public void startDetailedMonitoring() {
 		detailedStats = true;
-		for (AsyncCrdtStorage<K, S> storage : crdtStorages.values()) {
+		for (ICrdtStorage<K, S> storage : crdtStorages.values()) {
 			if (storage instanceof CrdtStorage_Client<K, S> client) {
 				client.startDetailedMonitoring();
 			}
@@ -421,7 +421,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	@JmxOperation
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
-		for (AsyncCrdtStorage<K, S> storage : crdtStorages.values()) {
+		for (ICrdtStorage<K, S> storage : crdtStorages.values()) {
 			if (storage instanceof CrdtStorage_Client<K, S> client) {
 				client.stopDetailedMonitoring();
 			}

@@ -37,7 +37,7 @@ import io.activej.common.ref.Ref;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.CubeQuery.Ordering;
-import io.activej.cube.attributes.AsyncAttributeResolver;
+import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.function.MeasuresFunction;
@@ -52,7 +52,7 @@ import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
-import io.activej.etl.AsyncLogDataConsumer;
+import io.activej.etl.ILogDataConsumer;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -104,7 +104,7 @@ import static java.util.stream.Collectors.toList;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class Cube extends AbstractReactive
-		implements AsyncCube, OTState<CubeDiff>, ReactiveJmxBeanWithStats {
+		implements ICube, OTState<CubeDiff>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
@@ -112,7 +112,7 @@ public final class Cube extends AbstractReactive
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
-	private final AsyncAggregationChunkStorage aggregationChunkStorage;
+	private final IAggregationChunkStorage aggregationChunkStorage;
 
 	private FrameFormat sortFrameFormat = DEFAULT_SORT_FRAME_FORMAT;
 	private Path temporarySortDir;
@@ -125,9 +125,9 @@ public final class Cube extends AbstractReactive
 	private static final class AttributeResolverContainer {
 		private final List<String> attributes = new ArrayList<>();
 		private final List<String> dimensions;
-		private final AsyncAttributeResolver resolver;
+		private final IAttributeResolver resolver;
 
-		private AttributeResolverContainer(List<String> dimensions, AsyncAttributeResolver resolver) {
+		private AttributeResolverContainer(List<String> dimensions, IAttributeResolver resolver) {
 			this.dimensions = dimensions;
 			this.resolver = resolver;
 		}
@@ -255,7 +255,7 @@ public final class Cube extends AbstractReactive
 	private Exception queryLastError;
 
 	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage) {
+			IAggregationChunkStorage aggregationChunkStorage) {
 		super(reactor);
 		this.executor = executor;
 		this.classLoader = classLoader;
@@ -263,7 +263,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public static Builder builder(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage) {
+			IAggregationChunkStorage aggregationChunkStorage) {
 		return new Cube(reactor, executor, classLoader, aggregationChunkStorage).new Builder(new LinkedHashMap<>());
 	}
 
@@ -272,7 +272,7 @@ public final class Cube extends AbstractReactive
 
 		private Builder(Map<String, AggregationConfig> aggregationConfigs) {this.aggregationConfigs = aggregationConfigs;}
 
-		public Builder withAttribute(String attribute, AsyncAttributeResolver resolver) {
+		public Builder withAttribute(String attribute, IAttributeResolver resolver) {
 			checkNotBuilt(this);
 			checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);
 			int pos = attribute.indexOf('.');
@@ -557,20 +557,20 @@ public final class Cube extends AbstractReactive
 		}
 	}
 
-	public <T> AsyncLogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass) {
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass) {
 		return logStreamConsumer(inputClass, AggregationPredicates.alwaysTrue());
 	}
 
-	public <T> AsyncLogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass,
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass,
 			PredicateDef predicate) {
 		return logStreamConsumer(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass), predicate);
 	}
 
-	public <T> AsyncLogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields) {
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields) {
 		return logStreamConsumer(inputClass, dimensionFields, measureFields, AggregationPredicates.alwaysTrue());
 	}
 
-	public <T> AsyncLogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			PredicateDef predicate) {
 		checkInReactorThread(this);
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)

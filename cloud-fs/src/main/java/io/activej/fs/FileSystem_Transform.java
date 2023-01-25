@@ -41,15 +41,15 @@ import static java.util.stream.Collectors.toSet;
 /**
  * A file system that can be configured to transform paths and filename via mapping functions.
  * <p>
- * Inherits all the limitations of parent {@link AsyncFileSystem}
+ * Inherits all the limitations of parent {@link IFileSystem}
  */
-final class FileSystem_Transform implements AsyncFileSystem {
-	private final AsyncFileSystem parent;
+final class FileSystem_Transform implements IFileSystem {
+	private final IFileSystem parent;
 	private final Function<String, Optional<String>> into;
 	private final Function<String, Optional<String>> from;
 	private final Function<String, Optional<String>> globInto;
 
-	FileSystem_Transform(AsyncFileSystem parent, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
+	FileSystem_Transform(IFileSystem parent, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
 		this.parent = parent;
 		this.into = into;
 		this.from = from;

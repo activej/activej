@@ -2,7 +2,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 
 import java.net.InetSocketAddress;
@@ -24,7 +24,7 @@ public class ClientModule extends AbstractModule {
 	}
 
 	@Provides
-	AsyncRpcClient rpcClient(NioReactor reactor) {
+	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)

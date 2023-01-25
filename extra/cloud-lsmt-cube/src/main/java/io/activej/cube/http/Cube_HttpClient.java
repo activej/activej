@@ -19,11 +19,11 @@ package io.activej.cube.http;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.cube.AsyncCube;
+import io.activej.cube.ICube;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.CubeException;
-import io.activej.http.AsyncHttpClient;
+import io.activej.http.IHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
 import io.activej.promise.Promise;
@@ -41,11 +41,11 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class Cube_HttpClient implements AsyncCube {
+public final class Cube_HttpClient implements ICube {
 	private static final Logger logger = LoggerFactory.getLogger(Cube_HttpClient.class);
 
 	private final String url;
-	private final AsyncHttpClient httpClient;
+	private final IHttpClient httpClient;
 	private JsonCodec_QueryResult queryResultCodec;
 	private JsonCodec_AggregationPredicate aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
@@ -53,16 +53,16 @@ public final class Cube_HttpClient implements AsyncCube {
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private Cube_HttpClient(AsyncHttpClient httpClient, String url) {
+	private Cube_HttpClient(IHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 	}
 
-	public static Builder builder(AsyncHttpClient httpClient, String cubeServletUrl) {
+	public static Builder builder(IHttpClient httpClient, String cubeServletUrl) {
 		return new Cube_HttpClient(httpClient, cubeServletUrl).new Builder();
 	}
 
-	public static Builder builder(AsyncHttpClient httpClient, URI cubeServletUrl) {
+	public static Builder builder(IHttpClient httpClient, URI cubeServletUrl) {
 		return builder(httpClient, cubeServletUrl.toString());
 	}
 

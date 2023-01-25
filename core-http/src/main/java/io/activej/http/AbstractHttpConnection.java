@@ -371,7 +371,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		} else if (header == CONNECTION) {
 			flags = (byte) ((flags & ~KEEP_ALIVE) |
 					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
-		} else if (AsyncWebSocket.ENABLED && header == HttpHeaders.UPGRADE) {
+		} else if (IWebSocket.ENABLED && header == HttpHeaders.UPGRADE) {
 			flags |= equalsLowerCaseAscii(UPGRADE_WEBSOCKET, array, pos, len) ? WEB_SOCKET : 0;
 		} else if (header == TRANSFER_ENCODING) {
 			flags |= equalsLowerCaseAscii(TRANSFER_ENCODING_CHUNKED, array, pos, len) ? CHUNKED : 0;
@@ -515,7 +515,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		assert bodyStream != null;
 		httpMessage.bodyStream = null;
 
-		if (!AsyncWebSocket.ENABLED || !isWebSocket()) {
+		if (!IWebSocket.ENABLED || !isWebSocket()) {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
 				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
 				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
@@ -657,7 +657,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				", keepAlive=" + isKeepAlive() +
 				", gzipped=" + isGzipped() +
 				", chunked=" + isChunked() +
-				", webSocket=" + (AsyncWebSocket.ENABLED && isWebSocket()) +
+				", webSocket=" + (IWebSocket.ENABLED && isWebSocket()) +
 				", contentLengthRemaining=" + contentLength +
 				", poolTimestamp=" + poolTimestamp;
 	}

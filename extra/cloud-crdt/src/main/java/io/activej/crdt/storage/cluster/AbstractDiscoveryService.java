@@ -2,7 +2,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -15,11 +15,11 @@ import java.util.function.Function;
 import static io.activej.fs.util.JsonUtils.fromJson;
 
 public abstract class AbstractDiscoveryService extends AbstractReactive
-		implements AsyncDiscoveryService<PartitionId> {
+		implements IDiscoveryService<PartitionId> {
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;
-	protected @Nullable Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider;
+	protected @Nullable Function<PartitionId, ICrdtStorage<?, ?>> crdtProvider;
 
 	protected AbstractDiscoveryService(Reactor reactor) {
 		super(reactor);
@@ -29,7 +29,7 @@ public abstract class AbstractDiscoveryService extends AbstractReactive
 	public abstract class Builder<Self extends Builder<Self, D>, D extends AbstractDiscoveryService>
 			extends AbstractBuilder<Self, D> {
 
-		public final Self withCrdtProvider(Function<PartitionId, AsyncCrdtStorage<?, ?>> crdtProvider) {
+		public final Self withCrdtProvider(Function<PartitionId, ICrdtStorage<?, ?>> crdtProvider) {
 			AbstractDiscoveryService.this.crdtProvider = crdtProvider;
 			return (Self) this;
 		}

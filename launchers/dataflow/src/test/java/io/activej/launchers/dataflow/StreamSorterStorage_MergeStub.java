@@ -6,7 +6,7 @@ import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.AsyncStreamSorterStorage;
+import io.activej.datastream.processor.IStreamSorterStorage;
 import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 
@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Map;
 
 public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
-		implements AsyncStreamSorterStorage<T> {
+		implements IStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override
-		public <C> AsyncStreamSorterStorage<C> create(StreamSchema<C> streamSchema, Task context, Promise<Void> taskExecuted) {
+		public <C> IStreamSorterStorage<C> create(StreamSchema<C> streamSchema, Task context, Promise<Void> taskExecuted) {
 			return new StreamSorterStorage_MergeStub<>();
 		}
 	};

@@ -88,7 +88,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcServer
  */
 public final class RpcClient extends AbstractNioReactive
-		implements AsyncRpcClient, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IRpcClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final boolean CHECKS = Checks.isEnabled(RpcClient.class);
 
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
@@ -665,12 +665,12 @@ public final class RpcClient extends AbstractNioReactive
 		requestSender.sendRequest(request, cb);
 	}
 
-	public AsyncRpcClient adaptToAnotherReactor(NioReactor anotherReactor) {
+	public IRpcClient adaptToAnotherReactor(NioReactor anotherReactor) {
 		if (anotherReactor == this.reactor) {
 			return this;
 		}
 
-		return new AsyncRpcClient() {
+		return new IRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 				if (CHECKS) checkInReactorThread(anotherReactor);

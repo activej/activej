@@ -7,13 +7,13 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.FileSystem_HttpClient;
-import io.activej.http.AsyncHttpClient;
+import io.activej.http.IHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.net.AbstractReactiveServer;
@@ -67,7 +67,7 @@ public final class FileSystem_Cluster_Test {
 	private ExecutorService executor;
 	private List<HttpServer> servers;
 	private Path clientStorage;
-	private AsyncDiscoveryService discoveryService;
+	private IDiscoveryService discoveryService;
 	private FileSystemPartitions partitions;
 	private FileSystem_Cluster client;
 
@@ -79,10 +79,10 @@ public final class FileSystem_Cluster_Test {
 
 		Files.createDirectories(clientStorage);
 
-		Map<Object, AsyncFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, IFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		AsyncHttpClient httpClient = HttpClient.create(reactor);
+		IHttpClient httpClient = HttpClient.create(reactor);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();
@@ -119,7 +119,7 @@ public final class FileSystem_Cluster_Test {
 		partitions.put("dead_two", FileSystem_HttpClient.create(reactor, "http://localhost:" + 5556, httpClient));
 		partitions.put("dead_three", FileSystem_HttpClient.create(reactor, "http://localhost:" + 5557, httpClient));
 
-		discoveryService = AsyncDiscoveryService.constant(partitions);
+		discoveryService = IDiscoveryService.constant(partitions);
 		this.partitions = FileSystemPartitions.create(reactor, discoveryService);
 		client = FileSystem_Cluster.builder(reactor, this.partitions)
 				.withReplicationCount(REPLICATION_COUNT) // there are those 3 dead nodes added above

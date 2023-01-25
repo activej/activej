@@ -25,7 +25,7 @@ import java.util.List;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
-		implements AsyncAttributeResolver {
+		implements IAttributeResolver {
 
 	public AbstractAttributeResolver(Reactor reactor) {
 		super(reactor);

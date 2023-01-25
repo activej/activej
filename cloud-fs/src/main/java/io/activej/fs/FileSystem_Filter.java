@@ -41,14 +41,14 @@ import static java.util.stream.Collectors.*;
 /**
  * A file system that can be configured to forbid certain paths and filenames.
  * <p>
- * Inherits all the limitations of parent {@link AsyncFileSystem}
+ * Inherits all the limitations of parent {@link IFileSystem}
  */
-final class FileSystem_Filter implements AsyncFileSystem {
+final class FileSystem_Filter implements IFileSystem {
 
-	private final AsyncFileSystem parent;
+	private final IFileSystem parent;
 	private final Predicate<String> predicate;
 
-	FileSystem_Filter(AsyncFileSystem parent, Predicate<String> predicate) {
+	FileSystem_Filter(IFileSystem parent, Predicate<String> predicate) {
 		this.parent = parent;
 		this.predicate = predicate;
 	}

@@ -29,9 +29,9 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.cube.attributes.AsyncAttributeResolver;
-import io.activej.cube.attributes.AsyncAttributeResolver.AttributesFunction;
-import io.activej.cube.attributes.AsyncAttributeResolver.KeyFunction;
+import io.activej.cube.attributes.IAttributeResolver;
+import io.activej.cube.attributes.IAttributeResolver.AttributesFunction;
+import io.activej.cube.attributes.IAttributeResolver.KeyFunction;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
@@ -78,7 +78,7 @@ public final class Utils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <R> Promise<Void> resolveAttributes(List<R> results, AsyncAttributeResolver attributeResolver,
+	public static <R> Promise<Void> resolveAttributes(List<R> results, IAttributeResolver attributeResolver,
 			List<String> recordDimensions, List<String> recordAttributes,
 			Map<String, Object> fullySpecifiedDimensions,
 			Class<R> recordClass, DefiningClassLoader classLoader) {

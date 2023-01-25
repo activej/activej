@@ -32,7 +32,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.exception.OTException;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -64,7 +64,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 public final class OTUplink_CubeMySql extends AbstractReactive
-		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit> {
+		implements IOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplink_CubeMySql.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(OTUplink_CubeMySql.class, "smoothingWindow", Duration.ofMinutes(5));

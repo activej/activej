@@ -15,10 +15,10 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
@@ -78,14 +78,14 @@ public class CubeIntegrationTest extends CubeTestBase {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				frameFormat,
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),

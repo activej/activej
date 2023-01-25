@@ -23,7 +23,7 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
@@ -76,7 +76,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	private final Path path;
 	private final CrdtFunction<S> function;
 	private final BinarySerializer_CrdtData<K, S> serializer;
-	private final AsyncCrdtStorage<K, S> storage;
+	private final ICrdtStorage<K, S> storage;
 
 	private final PromiseStats uploadPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final ValueStats totalFilesUploaded = ValueStats.create(SMOOTHING_WINDOW);
@@ -88,7 +88,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	private @Nullable Path sortDir;
 	private int sortItemsInMemory = DEFAULT_SORT_ITEMS_IN_MEMORY;
 
-	private WalUploader(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+	private WalUploader(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, ICrdtStorage<K, S> storage) {
 		super(reactor);
 		this.executor = executor;
 		this.path = path;
@@ -97,19 +97,19 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 		this.storage = storage;
 	}
 
-	public static <K extends Comparable<K>, S> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, ICrdtStorage<K, S> storage) {
 		return builder(reactor, executor, path, function, serializer, storage).build();
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, BinarySerializer_CrdtData<K, S> serializer, ICrdtStorage<K, S> storage) {
 		return builder(reactor, executor, path, serializer, storage).build();
 	}
 
-	public static <K extends Comparable<K>, S> WalUploader<K, S>.Builder builder(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S> WalUploader<K, S>.Builder builder(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, BinarySerializer_CrdtData<K, S> serializer, ICrdtStorage<K, S> storage) {
 		return new WalUploader<>(reactor, executor, path, function, serializer, storage).new Builder();
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S>.Builder builder(Reactor reactor, Executor executor, Path path, BinarySerializer_CrdtData<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S>.Builder builder(Reactor reactor, Executor executor, Path path, BinarySerializer_CrdtData<K, S> serializer, ICrdtStorage<K, S> storage) {
 		return new WalUploader<>(reactor, executor, path, CrdtFunction.ofCrdtType(), serializer, storage).new Builder();
 	}
 

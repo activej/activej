@@ -22,7 +22,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.http.*;
@@ -50,20 +50,20 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * A client to the remote server with {@link FileSystemServlet}.
  * This client can be used to connect to publicly available servers.
  * <p>
- * Inherits all the limitations of {@link AsyncFileSystem} implementation located on server.
+ * Inherits all the limitations of {@link IFileSystem} implementation located on server.
  */
 public final class FileSystem_HttpClient extends AbstractReactive
-		implements AsyncFileSystem {
-	private final AsyncHttpClient client;
+		implements IFileSystem {
+	private final IHttpClient client;
 	private final String url;
 
-	private FileSystem_HttpClient(Reactor reactor, String url, AsyncHttpClient client) {
+	private FileSystem_HttpClient(Reactor reactor, String url, IHttpClient client) {
 		super(reactor);
 		this.url = url;
 		this.client = client;
 	}
 
-	public static FileSystem_HttpClient create(Reactor reactor, String url, AsyncHttpClient client) {
+	public static FileSystem_HttpClient create(Reactor reactor, String url, IHttpClient client) {
 		return new FileSystem_HttpClient(reactor, url.endsWith("/") ? url : url + '/', client);
 	}
 

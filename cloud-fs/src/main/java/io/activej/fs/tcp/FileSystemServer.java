@@ -18,9 +18,9 @@ package io.activej.fs.tcp;
 
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.tcp.messaging.FileSystemRequest;
@@ -47,7 +47,7 @@ import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 
 /**
  * An implementation of {@link AbstractReactiveServer} that works with {@link FileSystem_Remote} client.
- * It exposes some given {@link AsyncFileSystem} via TCP.
+ * It exposes some given {@link IFileSystem} via TCP.
  * <p>
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
@@ -59,7 +59,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 			RemoteFileSystemUtils.FS_RESPONSE_CODEC
 	);
 
-	private final AsyncFileSystem fileSystem;
+	private final IFileSystem fileSystem;
 
 	private Function<FileSystemRequest.Handshake, FileSystemResponse.Handshake> handshakeHandler = $ ->
 			new FileSystemResponse.Handshake(null);
@@ -85,12 +85,12 @@ public final class FileSystemServer extends AbstractReactiveServer {
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private FileSystemServer(NioReactor reactor, AsyncFileSystem fileSystem) {
+	private FileSystemServer(NioReactor reactor, IFileSystem fileSystem) {
 		super(reactor);
 		this.fileSystem = fileSystem;
 	}
 
-	public static Builder builder(NioReactor reactor, AsyncFileSystem fileSystem) {
+	public static Builder builder(NioReactor reactor, IFileSystem fileSystem) {
 		return new FileSystemServer(reactor, fileSystem).new Builder();
 	}
 
@@ -104,7 +104,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 		}
 	}
 
-	public AsyncFileSystem getFileSystem() {
+	public IFileSystem getFileSystem() {
 		return fileSystem;
 	}
 
@@ -176,14 +176,14 @@ public final class FileSystemServer extends AbstractReactiveServer {
 		throw new AssertionError();
 	}
 
-	private Promise<Void> handleHandshake(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Handshake
+	private Promise<Void> handleHandshake(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Handshake
 			handshake) {
 		return messaging.send(handshakeHandler.apply(handshake))
 				.whenComplete(handshakePromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, "handshake", handshake, this));
 	}
 
-	private Promise<Void> handleUpload(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Upload upload) {
+	private Promise<Void> handleUpload(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Upload upload) {
 		String name = upload.name();
 		long size = upload.size();
 		return (size == -1 ? fileSystem.upload(name) : fileSystem.upload(name, size))
@@ -202,7 +202,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 				.whenComplete(toLogger(logger, TRACE, "upload", upload, this));
 	}
 
-	private Promise<Void> handleAppend(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Append append) {
+	private Promise<Void> handleAppend(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Append append) {
 		String name = append.name();
 		long offset = append.offset();
 		return fileSystem.append(name, offset)
@@ -219,7 +219,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 
 	}
 
-	private Promise<Void> handleDownload(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Download download) {
+	private Promise<Void> handleDownload(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Download download) {
 		String name = download.name();
 		long offset = download.offset();
 		long limit = download.limit();
@@ -243,57 +243,57 @@ public final class FileSystemServer extends AbstractReactiveServer {
 				.whenComplete(downloadBeginPromise.recordStats());
 	}
 
-	private Promise<Void> handleCopy(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Copy copy) throws
+	private Promise<Void> handleCopy(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Copy copy) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.copy(copy.name(), copy.target()), FileSystemResponse.CopyFinished::new, copyPromise);
 	}
 
-	private Promise<Void> handleCopyAll(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.CopyAll copyAll) throws
+	private Promise<Void> handleCopyAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.CopyAll copyAll) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.copyAll(copyAll.sourceToTarget()), FileSystemResponse.CopyAllFinished::new, copyAllPromise);
 	}
 
-	private Promise<Void> handleMove(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Move move) throws
+	private Promise<Void> handleMove(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Move move) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.move(move.name(), move.target()), FileSystemResponse.MoveFinished::new, movePromise);
 	}
 
-	private Promise<Void> handleMoveAll(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.MoveAll moveAll) throws
+	private Promise<Void> handleMoveAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.MoveAll moveAll) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.moveAll(moveAll.sourceToTarget()), FileSystemResponse.MoveAllFinished::new, moveAllPromise);
 	}
 
-	private Promise<Void> handleDelete(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Delete delete) throws
+	private Promise<Void> handleDelete(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Delete delete) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.delete(delete.name()), FileSystemResponse.DeleteFinished::new, deletePromise);
 	}
 
-	private Promise<Void> handleDeleteAll(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.DeleteAll
+	private Promise<Void> handleDeleteAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.DeleteAll
 			deleteAll) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.deleteAll(deleteAll.toDelete()), FileSystemResponse.DeleteAllFinished::new, deleteAllPromise);
 	}
 
-	private Promise<Void> handleList(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.List list) throws
+	private Promise<Void> handleList(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.List list) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.list(list.glob()), FileSystemResponse.ListFinished::new, listPromise);
 	}
 
-	private Promise<Void> handleInfo(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Info info) throws
+	private Promise<Void> handleInfo(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Info info) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.info(info.name()), FileSystemResponse.InfoFinished::new, infoPromise);
 	}
 
-	private Promise<Void> handleInfoAll(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.InfoAll infoAll) throws
+	private Promise<Void> handleInfoAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.InfoAll infoAll) throws
 			Exception {
 		return simpleHandle(messaging, () -> fileSystem.infoAll(infoAll.names()), FileSystemResponse.InfoAllFinished::new, infoAllPromise);
 	}
 
-	private Promise<Void> handlePing(AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging) throws Exception {
+	private Promise<Void> handlePing(IMessaging<FileSystemRequest, FileSystemResponse> messaging) throws Exception {
 		return simpleHandle(messaging, fileSystem::ping, FileSystemResponse.Pong::new, pingPromise);
 	}
 
 	private Promise<Void> simpleHandle(
-			AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging,
+			IMessaging<FileSystemRequest, FileSystemResponse> messaging,
 			SupplierEx<Promise<Void>> action,
 			Supplier<FileSystemResponse> response,
 			PromiseStats stats
@@ -302,7 +302,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 	}
 
 	private <R> Promise<Void> simpleHandle(
-			AsyncMessaging<FileSystemRequest, FileSystemResponse> messaging,
+			IMessaging<FileSystemRequest, FileSystemResponse> messaging,
 			SupplierEx<Promise<R>> action,
 			Function<R, FileSystemResponse> response,
 			PromiseStats stats

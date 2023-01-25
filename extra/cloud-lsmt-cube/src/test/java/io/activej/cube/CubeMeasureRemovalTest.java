@@ -12,15 +12,15 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.AsyncLogDataConsumer;
+import io.activej.etl.ILogDataConsumer;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
@@ -49,8 +49,8 @@ import static org.junit.Assert.*;
 public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = FrameFormat_LZ4.create();
 
-	private AsyncAggregationChunkStorage<Long> aggregationChunkStorage;
-	private AsyncMultilog<LogItem> multilog;
+	private IAggregationChunkStorage<Long> aggregationChunkStorage;
+	private IMultilog<LogItem> multilog;
 	private Path aggregationsDir;
 	private Path logsDir;
 
@@ -76,7 +76,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	public void test() {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
@@ -99,11 +99,11 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withRelation("banner", "campaign")
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				FrameFormat_LZ4.create(),
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
@@ -239,12 +239,12 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 							.withMeasures("impressions", "clicks", "conversions"))
 					.build();
 
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
+			IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
 			OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-			AsyncLogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
+			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
 			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(reactor,
 					multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogOTState);
 
@@ -265,7 +265,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 						.withMeasures("impressions"))
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));
@@ -299,12 +299,12 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 							.withMeasures("clicks"))
 					.build();
 
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
+			IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
 			OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-			AsyncLogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
+			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
 
 			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(reactor,
 					multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogOTState);
@@ -330,7 +330,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 						.withMeasures("clicks"))
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));

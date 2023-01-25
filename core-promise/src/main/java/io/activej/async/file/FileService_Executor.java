@@ -28,7 +28,7 @@ import static io.activej.promise.Promise.ofBlocking;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class FileService_Executor extends AbstractReactive
-		implements AsyncFileService {
+		implements IFileService {
 	private final Executor executor;
 
 	public FileService_Executor(Reactor reactor, Executor executor) {

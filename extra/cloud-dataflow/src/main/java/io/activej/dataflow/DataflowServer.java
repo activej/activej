@@ -25,7 +25,7 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
@@ -125,7 +125,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 		}
 	}
 
-	private void sendResponse(AsyncMessaging<DataflowRequest, DataflowResponse> messaging, @Nullable Exception exception) {
+	private void sendResponse(IMessaging<DataflowRequest, DataflowResponse> messaging, @Nullable Exception exception) {
 		String error = null;
 		if (exception != null) {
 			error = exception.getClass().getSimpleName() + ": " + exception.getMessage();
@@ -169,7 +169,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
-		AsyncMessaging<DataflowRequest, DataflowResponse> messaging = Messaging.create(socket, codec);
+		IMessaging<DataflowRequest, DataflowResponse> messaging = Messaging.create(socket, codec);
 		messaging.receive()
 				.then(request -> {
 					if (!(request instanceof DataflowRequest.Handshake handshake)) {
@@ -187,7 +187,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 				});
 	}
 
-	private void dispatch(AsyncMessaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
+	private void dispatch(IMessaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
 		if (request instanceof Download download) handleDownload(messaging, download);
 		else if (request instanceof Execute execute) handleExecute(messaging, execute);
 		else if (request instanceof GetTasks getTasks) handleGetTasks(messaging, getTasks);
@@ -195,7 +195,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 			throw new DataflowException("Handshake was already performed");
 	}
 
-	private void handleDownload(AsyncMessaging<DataflowRequest, DataflowResponse> messaging, Download download) {
+	private void handleDownload(IMessaging<DataflowRequest, DataflowResponse> messaging, Download download) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Processing onDownload: {}, {}", download, messaging);
 		}
@@ -226,7 +226,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 		);
 	}
 
-	private void handleExecute(AsyncMessaging<DataflowRequest, DataflowResponse> messaging, Execute execute) {
+	private void handleExecute(IMessaging<DataflowRequest, DataflowResponse> messaging, Execute execute) {
 		long taskId = execute.taskId();
 		Task task = new Task(taskId, environment, execute.nodes());
 		try {
@@ -265,7 +265,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 				});
 	}
 
-	private void handleGetTasks(AsyncMessaging<DataflowRequest, DataflowResponse> messaging, GetTasks getTasks) {
+	private void handleGetTasks(IMessaging<DataflowRequest, DataflowResponse> messaging, GetTasks getTasks) {
 		Long taskId = getTasks.taskId();
 		if (taskId == null) {
 			messaging.send(partitionDataResponse())

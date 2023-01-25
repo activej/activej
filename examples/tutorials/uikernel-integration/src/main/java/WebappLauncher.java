@@ -6,7 +6,7 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
 import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -51,12 +51,12 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor, Config config) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, config.get(ofString(), "resources", DEFAULT_PATH_TO_RESOURCES));
+	IStaticLoader staticLoader(Reactor reactor, Executor executor, Config config) {
+		return IStaticLoader.ofClassPath(reactor, executor, config.get(ofString(), "resources", DEFAULT_PATH_TO_RESOURCES));
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
 		Servlet_Static staticServlet = Servlet_Static.builder(reactor, staticLoader)
 				.withIndexHtml()
 				.build();

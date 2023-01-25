@@ -27,7 +27,7 @@ import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
-import io.activej.http.AsyncWebSocket.Frame;
+import io.activej.http.IWebSocket.Frame;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 

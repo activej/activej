@@ -2,7 +2,7 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -24,12 +24,12 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 
 	//[START REGION_1]
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, RESOURCE_DIR);
+	IStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return IStaticLoader.ofClassPath(reactor, executor, RESOURCE_DIR);
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
 		return Servlet_Routing.create(reactor)
 				.map(POST, "/hello", request -> request.loadBody()
 						.map($ -> {

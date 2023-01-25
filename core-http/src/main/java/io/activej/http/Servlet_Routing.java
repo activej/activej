@@ -88,10 +88,10 @@ public final class Servlet_Routing extends AbstractReactive
 	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
 	@Contract("_, _ -> this")
-	public Servlet_Routing mapWebSocket(String path, Consumer<AsyncWebSocket> webSocketConsumer) {
+	public Servlet_Routing mapWebSocket(String path, Consumer<IWebSocket> webSocketConsumer) {
 		return mapWebSocket(path, new Servlet_WebSocket(reactor) {
 			@Override
-			protected void onWebSocket(AsyncWebSocket webSocket) {
+			protected void onWebSocket(IWebSocket webSocket) {
 				webSocketConsumer.accept(webSocket);
 			}
 		});

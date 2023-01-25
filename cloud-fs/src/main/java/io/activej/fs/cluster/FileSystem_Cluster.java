@@ -29,7 +29,7 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -59,11 +59,11 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
- * An implementation of {@link AsyncFileSystem} which operates on other partitions as a cluster.
+ * An implementation of {@link IFileSystem} which operates on other partitions as a cluster.
  * Contains some redundancy and fail-safety capabilities.
  * <p>
  * This implementation inherits the most strict limitations of all the file systems in cluster,
- * as well as defines several limitations over those specified in {@link AsyncFileSystem} interface:
+ * as well as defines several limitations over those specified in {@link IFileSystem} interface:
  * <ul>
  *     <li>Uploaded files should be immutable</li>
  *     <li>Deletion of files is not guaranteed</li>
@@ -72,7 +72,7 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  */
 public final class FileSystem_Cluster extends AbstractReactive
-		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem_Cluster.class);
 
 	private final FileSystemPartitions partitions;
@@ -221,28 +221,28 @@ public final class FileSystem_Cluster extends AbstractReactive
 	@Override
 	public Promise<Void> copy(String name, String target) {
 		checkInReactorThread(this);
-		return AsyncFileSystem.super.copy(name, target)
+		return IFileSystem.super.copy(name, target)
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
 		checkInReactorThread(this);
-		return AsyncFileSystem.super.copyAll(sourceToTarget)
+		return IFileSystem.super.copyAll(sourceToTarget)
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(String name, String target) {
 		checkInReactorThread(this);
-		return AsyncFileSystem.super.move(name, target)
+		return IFileSystem.super.move(name, target)
 				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
 		checkInReactorThread(this);
-		return AsyncFileSystem.super.moveAll(sourceToTarget)
+		return IFileSystem.super.moveAll(sourceToTarget)
 				.whenComplete(moveAllPromise.recordStats());
 	}
 
@@ -333,7 +333,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(
 			String name,
-			AsyncFunction<AsyncFileSystem, ChannelConsumer<ByteBuf>> action,
+			AsyncFunction<IFileSystem, ChannelConsumer<ByteBuf>> action,
 			ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer,
 			PromiseStats startStats,
 			PromiseStats finishStats) {
@@ -360,7 +360,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	private Promise<List<Container<ChannelConsumer<ByteBuf>>>> collect(
 			String name,
-			AsyncFunction<AsyncFileSystem, ChannelConsumer<ByteBuf>> action
+			AsyncFunction<IFileSystem, ChannelConsumer<ByteBuf>> action
 	) {
 		Iterator<Object> idIterator = partitions.select(name).iterator();
 		Set<ChannelConsumer<ByteBuf>> consumers = new HashSet<>();
@@ -385,12 +385,12 @@ public final class FileSystem_Cluster extends AbstractReactive
 				});
 	}
 
-	private <T> Promise<T> call(Object id, AsyncFunction<AsyncFileSystem, T> action) {
+	private <T> Promise<T> call(Object id, AsyncFunction<IFileSystem, T> action) {
 		return call(id, ($, fs) -> action.apply(fs));
 	}
 
-	private <T> Promise<T> call(Object id, AsyncBiFunction<Object, AsyncFileSystem, T> action) {
-		AsyncFileSystem fs = partitions.get(id);
+	private <T> Promise<T> call(Object id, AsyncBiFunction<Object, IFileSystem, T> action) {
+		IFileSystem fs = partitions.get(id);
 		if (fs == null) {  // marked as dead already by somebody
 			return Promise.ofException(new FileSystemIOException("Partition '" + id + "' is not alive"));
 		}
@@ -398,7 +398,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 				.whenException(partitions.wrapDeathFn(id));
 	}
 
-	private <T> Promise<List<Try<T>>> broadcast(AsyncBiFunction<Object, AsyncFileSystem, T> action, Consumer<T> cleanup) {
+	private <T> Promise<List<Try<T>>> broadcast(AsyncBiFunction<Object, IFileSystem, T> action, Consumer<T> cleanup) {
 		return ensureIsAlive()
 				.then(() -> Promise.ofCallback(cb ->
 						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
@@ -434,7 +434,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 		};
 	}
 
-	private <T> Promise<List<Try<T>>> broadcast(AsyncFunction<AsyncFileSystem, T> action) {
+	private <T> Promise<List<Try<T>>> broadcast(AsyncFunction<IFileSystem, T> action) {
 		return broadcast(($, fs) -> action.apply(fs), $ -> {});
 	}
 

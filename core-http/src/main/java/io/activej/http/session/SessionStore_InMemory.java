@@ -33,7 +33,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * A simple reference implementation of the session storage over a hash map.
  */
 public final class SessionStore_InMemory<T> extends AbstractReactive
-		implements AsyncSessionStore<T> {
+		implements ISessionStore<T> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;

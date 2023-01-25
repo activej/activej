@@ -19,8 +19,8 @@ package io.activej.cube.linear;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
-import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
-import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
+import io.activej.cube.linear.CubeBackupController.IChunksBackupService;
+import io.activej.cube.linear.CubeCleanerController.IChunksCleanerService;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -60,14 +60,14 @@ final class Utils {
 		return String.join(" ", measures);
 	}
 
-	static ChunksBackupService backupServiceOfStorage(AggregationChunkStorage<Long> storage) {
+	static IChunksBackupService backupServiceOfStorage(AggregationChunkStorage<Long> storage) {
 		return (revisionId, chunkIds) ->
 				execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
 						"Failed to backup chunks on storage ");
 	}
 
-	static ChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage<Long> storage) {
-		return new ChunksCleanerService() {
+	static IChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage<Long> storage) {
+		return new IChunksCleanerService() {
 			@Override
 			public void checkRequiredChunks(Set<Long> chunkIds) throws IOException {
 				execute(storage, () -> storage.checkRequiredChunks(chunkIds),

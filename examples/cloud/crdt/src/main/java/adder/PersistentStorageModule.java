@@ -3,13 +3,13 @@ package adder;
 import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
-import io.activej.crdt.wal.AsyncWriteAheadLog;
+import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
 import io.activej.crdt.wal.WriteAheadLog_File;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -29,7 +29,7 @@ import static io.activej.config.converter.ConfigConverters.ofReactorTaskSchedule
 public final class PersistentStorageModule extends AbstractModule {
 
 	@Provides
-	AsyncWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
+	IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
 			Reactor reactor,
 			Executor executor,
 			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
@@ -46,7 +46,7 @@ public final class PersistentStorageModule extends AbstractModule {
 			Executor executor,
 			CrdtFunction<DetailedSumsCrdtState> function,
 			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
-			AsyncCrdtStorage<Long, DetailedSumsCrdtState> storage,
+			ICrdtStorage<Long, DetailedSumsCrdtState> storage,
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
@@ -56,7 +56,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	CrdtStorage_FileSystem<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
-			AsyncFileSystem fs,
+			IFileSystem fs,
 			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
@@ -64,7 +64,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	AsyncFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
+	IFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
 		return FileSystem.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 

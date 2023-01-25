@@ -19,9 +19,9 @@ package io.activej.launchers.fs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
-import io.activej.fs.cluster.AsyncDiscoveryService;
+import io.activej.fs.cluster.IDiscoveryService;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.FileSystem_Cluster;
 import io.activej.fs.http.FileSystem_HttpClient;
@@ -58,17 +58,17 @@ public final class Initializers {
 				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
-	public static AsyncDiscoveryService constantDiscoveryService(NioReactor reactor, Config config) throws MalformedDataException {
+	public static IDiscoveryService constantDiscoveryService(NioReactor reactor, Config config) throws MalformedDataException {
 		return constantDiscoveryService(reactor, null, config);
 	}
 
-	public static AsyncDiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable AsyncFileSystem local, Config config) throws MalformedDataException {
-		Map<Object, AsyncFileSystem> partitions = new LinkedHashMap<>();
+	public static IDiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable IFileSystem local, Config config) throws MalformedDataException {
+		Map<Object, IFileSystem> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("fs.repartition.localPartitionId"), local);
 
 		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
 		for (String toAdd : partitionStrings) {
-			AsyncFileSystem client;
+			IFileSystem client;
 			if (toAdd.startsWith("http")) {
 				client = FileSystem_HttpClient.create(reactor, toAdd, HttpClient.create(reactor));
 			} else {
@@ -78,7 +78,7 @@ public final class Initializers {
 		}
 
 		checkState(!partitions.isEmpty(), "Cluster could not operate without partitions, config had none");
-		return AsyncDiscoveryService.constant(partitions);
+		return IDiscoveryService.constant(partitions);
 	}
 
 	public static Initializer<FileSystem_Cluster.Builder> ofClusterFileSystem(Config config) {

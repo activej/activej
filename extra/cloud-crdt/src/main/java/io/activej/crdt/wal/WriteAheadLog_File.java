@@ -70,7 +70,7 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
 public final class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(WriteAheadLog_File.class);
 
 	public static final String EXT_FINAL = ".wal";

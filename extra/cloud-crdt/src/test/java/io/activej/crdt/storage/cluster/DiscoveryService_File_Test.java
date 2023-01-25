@@ -2,7 +2,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.crdt.CrdtException;
-import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -308,7 +308,7 @@ public class DiscoveryService_File_Test {
 	}
 
 	private class DiscoveryService_Notifying extends ImplicitlyReactive
-			implements AsyncDiscoveryService<PartitionId> {
+			implements IDiscoveryService<PartitionId> {
 		private SettablePromise<Void> onChangePromise;
 
 		@Override

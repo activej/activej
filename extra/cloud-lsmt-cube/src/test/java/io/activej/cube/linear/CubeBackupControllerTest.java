@@ -12,13 +12,13 @@ import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
-import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
+import io.activej.cube.linear.CubeBackupController.IChunksBackupService;
 import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
@@ -64,7 +64,7 @@ public class CubeBackupControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private AsyncFileSystem fileSystem;
+	private IFileSystem fileSystem;
 	private OTUplink_CubeMySql uplink;
 	private CubeBackupController backupController;
 
@@ -98,7 +98,7 @@ public class CubeBackupControllerTest {
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests", "pubRequests"))
 				.build();
 
-		ChunksBackupService chunksBackupService = ChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
+		IChunksBackupService chunksBackupService = IChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
 		uplink = OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();
@@ -235,7 +235,7 @@ public class CubeBackupControllerTest {
 			throw new AssertionError(e);
 		}
 
-		String prefix = "backups" + AsyncFileSystem.SEPARATOR + backupId + AsyncFileSystem.SEPARATOR;
+		String prefix = "backups" + IFileSystem.SEPARATOR + backupId + IFileSystem.SEPARATOR;
 		Set<Long> actualChunks = await(() -> fileSystem.list(prefix + "*" + LOG))
 				.keySet()
 				.stream()

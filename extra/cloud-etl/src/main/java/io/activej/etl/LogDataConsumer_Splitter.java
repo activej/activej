@@ -31,13 +31,13 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("unchecked")
 public abstract class LogDataConsumer_Splitter<T, D> extends ImplicitlyReactive
-		implements AsyncLogDataConsumer<T, D> {
+		implements ILogDataConsumer<T, D> {
 
 	public final class Context {
-		private final List<AsyncLogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
+		private final List<ILogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
 		private Iterator<? extends StreamDataAcceptor<?>> acceptors;
 
-		public <X> StreamDataAcceptor<X> addOutput(AsyncLogDataConsumer<X, D> logDataConsumer) {
+		public <X> StreamDataAcceptor<X> addOutput(ILogDataConsumer<X, D> logDataConsumer) {
 			if (acceptors == null) {
 				// initial run, recording scheme
 				logDataConsumers.add(logDataConsumer);
@@ -63,9 +63,9 @@ public abstract class LogDataConsumer_Splitter<T, D> extends ImplicitlyReactive
 
 		checkState(!ctx.logDataConsumers.isEmpty());
 
-		for (AsyncLogDataConsumer<?, D> logDataConsumer : ctx.logDataConsumers) {
+		for (ILogDataConsumer<?, D> logDataConsumer : ctx.logDataConsumers) {
 			diffsAccumulator.addPromise(
-					splitter.newOutput().streamTo(((AsyncLogDataConsumer<Object, D>) logDataConsumer).consume()),
+					splitter.newOutput().streamTo(((ILogDataConsumer<Object, D>) logDataConsumer).consume()),
 					List::addAll);
 		}
 

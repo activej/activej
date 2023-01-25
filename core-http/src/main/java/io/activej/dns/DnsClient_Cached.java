@@ -40,37 +40,37 @@ import static io.activej.reactor.Reactor.checkInReactorThread;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 /**
- * Implementation of {@link AsyncDnsClient} that asynchronously
+ * Implementation of {@link IDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
 public final class DnsClient_Cached extends AbstractReactive
-		implements AsyncDnsClient, ReactiveJmxBean {
+		implements IDnsClient, ReactiveJmxBean {
 	private final Logger logger = LoggerFactory.getLogger(DnsClient_Cached.class);
 
-	private final AsyncDnsClient client;
+	private final IDnsClient client;
 
 	private DnsCache cache;
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private DnsClient_Cached(Reactor reactor, AsyncDnsClient client) {
+	private DnsClient_Cached(Reactor reactor, IDnsClient client) {
 		super(reactor);
 		this.client = client;
 	}
 
-	public static DnsClient_Cached create(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
+	public static DnsClient_Cached create(Reactor reactor, IDnsClient client, DnsCache cache) {
 		return builder(reactor, client)
 				.withCache(cache)
 				.build();
 	}
 
-	public static DnsClient_Cached create(Reactor reactor, AsyncDnsClient client) {
+	public static DnsClient_Cached create(Reactor reactor, IDnsClient client) {
 		return builder(reactor, client)
 				.withCache(DnsCache.create(reactor))
 				.build();
 	}
 
-	public static Builder builder(Reactor reactor, AsyncDnsClient client){
+	public static Builder builder(Reactor reactor, IDnsClient client){
 		return new DnsClient_Cached(reactor, client).new Builder();
 	}
 
@@ -102,15 +102,15 @@ public final class DnsClient_Cached extends AbstractReactive
 		}
 	}
 
-	public AsyncDnsClient adaptToAnotherReactor(Reactor anotherReactor) {
+	public IDnsClient adaptToAnotherReactor(Reactor anotherReactor) {
 		if (anotherReactor == reactor) {
 			return this;
 		}
-		return new AsyncDnsClient() {
+		return new IDnsClient() {
 			@Override
 			public Promise<DnsResponse> resolve(DnsQuery query) {
 				checkInReactorThread(anotherReactor);
-				DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
+				DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 				if (fromQuery != null) {
 					logger.trace("{} already contained an IP address within itself", query);
 					return Promise.of(fromQuery);
@@ -166,7 +166,7 @@ public final class DnsClient_Cached extends AbstractReactive
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
 		checkInReactorThread(this);
-		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
+		DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);

@@ -23,15 +23,15 @@ import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.IRpcClient;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
-		implements AsyncMemcacheClient<K, V> {
-	private final AsyncRpcClient rpcClient;
+		implements IMemcacheClient<K, V> {
+	private final IRpcClient rpcClient;
 
-	protected AbstractMemcacheClient(Reactor reactor, AsyncRpcClient rpcClient) {
+	protected AbstractMemcacheClient(Reactor reactor, IRpcClient rpcClient) {
 		super(reactor);
 		this.rpcClient = rpcClient;
 	}

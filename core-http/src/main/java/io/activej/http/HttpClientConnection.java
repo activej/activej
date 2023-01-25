@@ -202,7 +202,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		response.flags |= MUST_LOAD_BODY;
 		response.body = body;
 		response.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
-		if (AsyncWebSocket.ENABLED && isWebSocket()) {
+		if (IWebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
 		if (inspector != null) inspector.onHttpResponse(response);
@@ -267,7 +267,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				});
 	}
 
-	Promise<AsyncWebSocket> sendWebSocketRequest(HttpRequest request) {
+	Promise<IWebSocket> sendWebSocketRequest(HttpRequest request) {
 		assert !isClosed();
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;
@@ -304,7 +304,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 					bindWebSocketTransformers(encoder, decoder);
 
-					return Promise.of((AsyncWebSocket) new WebSocket(
+					return Promise.of((IWebSocket) new WebSocket(
 							request,
 							res,
 							res.takeBodyStream().transformWith(decoder),
@@ -350,7 +350,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	private void onHttpMessageComplete() {
-		if (AsyncWebSocket.ENABLED && isWebSocket()) return;
+		if (IWebSocket.ENABLED && isWebSocket()) return;
 
 		//noinspection ConstantConditions
 		response.recycle();

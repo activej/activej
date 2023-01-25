@@ -28,7 +28,7 @@ import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
@@ -43,7 +43,7 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Basic;
 import io.activej.datastream.stats.StreamStats_Detailed;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -74,14 +74,14 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorage_FileSystem.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_FileSystem.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
-	private final AsyncFileSystem fileSystem;
+	private final IFileSystem fileSystem;
 	private final CrdtFunction<S> function;
 	private final BinarySerializer<CrdtReducingData<K, S>> serializer;
 
@@ -113,7 +113,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 	private final PromiseStats consolidationStats = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorage_FileSystem(Reactor reactor, AsyncFileSystem fileSystem, BinarySerializer_CrdtData<K, S> serializer, CrdtFunction<S> function) {
+	private CrdtStorage_FileSystem(Reactor reactor, IFileSystem fileSystem, BinarySerializer_CrdtData<K, S> serializer, CrdtFunction<S> function) {
 		super(reactor);
 		this.fileSystem = fileSystem;
 		this.function = function;
@@ -121,7 +121,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorage_FileSystem<K, S> create(
-			Reactor reactor, AsyncFileSystem fileSystem,
+			Reactor reactor, IFileSystem fileSystem,
 			BinarySerializer_CrdtData<K, S> serializer,
 			CrdtFunction<S> function
 	) {
@@ -129,14 +129,14 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_FileSystem<K, S> create(
-			Reactor reactor, AsyncFileSystem fileSystem,
+			Reactor reactor, IFileSystem fileSystem,
 			BinarySerializer_CrdtData<K, S> serializer
 	) {
 		return builder(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).build();
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorage_FileSystem<K, S>.Builder builder(
-			Reactor reactor, AsyncFileSystem fileSystem,
+			Reactor reactor, IFileSystem fileSystem,
 			BinarySerializer_CrdtData<K, S> serializer,
 			CrdtFunction<S> function
 	) {
@@ -144,7 +144,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_FileSystem<K, S>.Builder builder(
-			Reactor reactor, AsyncFileSystem fileSystem,
+			Reactor reactor, IFileSystem fileSystem,
 			BinarySerializer_CrdtData<K, S> serializer
 	) {
 		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).new Builder();

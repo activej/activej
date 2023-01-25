@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.AsyncSqlDataflow;
+import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
@@ -239,7 +239,7 @@ public abstract class AbstractCalciteTest {
 
 	protected ExecutorService executor;
 	protected ExecutorService sortingExecutor;
-	protected AsyncSqlDataflow sqlDataflow;
+	protected ISqlDataflow sqlDataflow;
 	protected DataflowServer server1;
 	protected DataflowServer server2;
 	protected Injector server1Injector;
@@ -277,7 +277,7 @@ public abstract class AbstractCalciteTest {
 		Module clientModule = Modules.combine(createCommonClient(common), CalciteClientModule.create());
 		Injector clientInjector = Injector.of(clientModule);
 		clientInjector.createEagerInstances();
-		sqlDataflow = clientInjector.getInstance(AsyncSqlDataflow.class);
+		sqlDataflow = clientInjector.getInstance(ISqlDataflow.class);
 
 		Module serverModule = ModuleBuilder.create()
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)

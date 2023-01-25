@@ -20,7 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
@@ -45,7 +45,7 @@ import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 
 /**
- * An HTTP servlet that exposes some given {@link AsyncFileSystem}.
+ * An HTTP servlet that exposes some given {@link IFileSystem}.
  * <p>
  * Servlet is fully compatible with {@link FileSystem_HttpClient} client.
  * <p>
@@ -59,11 +59,11 @@ public final class FileSystemServlet {
 	private FileSystemServlet() {
 	}
 
-	public static Servlet_Routing create(Reactor reactor, AsyncFileSystem fs) {
+	public static Servlet_Routing create(Reactor reactor, IFileSystem fs) {
 		return create(reactor, fs, true);
 	}
 
-	public static Servlet_Routing create(Reactor reactor, AsyncFileSystem fs, boolean inline) {
+	public static Servlet_Routing create(Reactor reactor, IFileSystem fs, boolean inline) {
 		return Servlet_Routing.create(reactor)
 				.map(POST, "/" + UPLOAD + "/*", request -> {
 					String contentLength = request.getHeader(CONTENT_LENGTH);
@@ -147,7 +147,7 @@ public final class FileSystemServlet {
 						.map(voidResponseFn(), errorResponseFn()));
 	}
 
-	private static Promise<HttpResponse> rangeDownload(AsyncFileSystem fs, boolean inline, String name, String rangeHeader) {
+	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, boolean inline, String name, String rangeHeader) {
 		//noinspection ConstantConditions
 		return fs.info(name)
 				.whenResult(Objects::isNull, $ -> {

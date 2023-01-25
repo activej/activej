@@ -2,7 +2,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.config.Config;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
 import io.activej.inject.annotation.Eager;
@@ -29,7 +29,7 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 		return new AbstractModule() {
 			@Eager
 			@Provides
-			FileSystemServer fileSystemServer(NioReactor reactor, @Named("decorated") AsyncFileSystem decoratedFS, Config config) {
+			FileSystemServer fileSystemServer(NioReactor reactor, @Named("decorated") IFileSystem decoratedFS, Config config) {
 				return FileSystemServer.builder(reactor, decoratedFS)
 						.initialize(ofFileSystemServer(config.getChild("asyncfs")))
 						.build();
@@ -37,7 +37,7 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 
 			@Provides
 			@Named("decorated")
-			AsyncFileSystem decoratedFileSystem(AsyncFileSystem fs) {
+			IFileSystem decoratedFileSystem(IFileSystem fs) {
 				return new FileSystem_Logging(fs);
 			}
 		};
@@ -53,7 +53,7 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 	private static final class FileSystem_Logging extends ForwardingFileSystem {
 		private static final Logger logger = LoggerFactory.getLogger(FileSystem_Logging.class);
 
-		public FileSystem_Logging(AsyncFileSystem peer) {
+		public FileSystem_Logging(IFileSystem peer) {
 			super(peer);
 		}
 

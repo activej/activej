@@ -16,10 +16,10 @@ import java.util.concurrent.Executor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
- * Implementation of {@link AsyncUserDao} which uses generic SQL commands for operation
+ * Implementation of {@link IUserDao} which uses generic SQL commands for operation
  */
 public final class UserDao_Sql extends AbstractReactive
-		implements AsyncUserDao {
+		implements IUserDao {
 	private final DataSource dataSource;
 	private final Executor executor;
 

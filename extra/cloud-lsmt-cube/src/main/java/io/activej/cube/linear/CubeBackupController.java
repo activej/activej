@@ -55,7 +55,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	private static final String SQL_BACKUP_SCRIPT = "sql/backup.sql";
 
 	private final DataSource dataSource;
-	private final ChunksBackupService chunksBackupService;
+	private final IChunksBackupService chunksBackupService;
 
 	private String tableRevision = REVISION_TABLE;
 	private String tablePosition = POSITION_TABLE;
@@ -89,16 +89,16 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	private @Nullable Exception backupChunksException;
 	// endregion
 
-	private CubeBackupController(DataSource dataSource, ChunksBackupService chunksBackupService) {
+	private CubeBackupController(DataSource dataSource, IChunksBackupService chunksBackupService) {
 		this.dataSource = dataSource;
 		this.chunksBackupService = chunksBackupService;
 	}
 
-	public static CubeBackupController create(DataSource dataSource, ChunksBackupService chunksBackupService) {
+	public static CubeBackupController create(DataSource dataSource, IChunksBackupService chunksBackupService) {
 		return builder(dataSource, chunksBackupService).build();
 	}
 
-	public static Builder builder(DataSource dataSource, ChunksBackupService chunksBackupService) {
+	public static Builder builder(DataSource dataSource, IChunksBackupService chunksBackupService) {
 		return new CubeBackupController(dataSource, chunksBackupService).new Builder();
 	}
 
@@ -415,10 +415,10 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	// endregion
 
 	@ComponentInterface
-	public interface ChunksBackupService {
+	public interface IChunksBackupService {
 		void backup(long revisionId, Set<Long> chunkIds) throws IOException;
 
-		static ChunksBackupService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
+		static IChunksBackupService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
 			return Utils.backupServiceOfStorage(storage);
 		}
 	}

@@ -27,7 +27,7 @@ import io.activej.datastream.stats.StreamStats_Basic;
 import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -46,15 +46,15 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
- * Processes logs. Creates new aggregation logs and persists to {@link AsyncLogDataConsumer} .
+ * Processes logs. Creates new aggregation logs and persists to {@link ILogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public final class LogOTProcessor<T, D> extends AbstractReactive
 		implements ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
-	private final AsyncMultilog<T> multilog;
-	private final AsyncLogDataConsumer<T, D> logStreamConsumer;
+	private final IMultilog<T> multilog;
+	private final ILogDataConsumer<T, D> logStreamConsumer;
 
 	private final String log;
 	private final List<String> partitions;
@@ -69,7 +69,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogOTProcessor(Reactor reactor,
-			AsyncMultilog<T> multilog, AsyncLogDataConsumer<T, D> logStreamConsumer,
+			IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, OTState_Log<D> state) {
 		super(reactor);
 		this.multilog = multilog;
@@ -79,8 +79,8 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 		this.state = state;
 	}
 
-	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, AsyncMultilog<T> multilog,
-			AsyncLogDataConsumer<T, D> logStreamConsumer,
+	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, IMultilog<T> multilog,
+			ILogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, OTState_Log<D> state) {
 		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);
 	}

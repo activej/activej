@@ -18,16 +18,16 @@ package io.activej.aggregation.ot;
 
 import io.activej.ot.TransformResult;
 import io.activej.ot.TransformResult.ConflictResolution;
+import io.activej.ot.system.IOTSystem;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.system.OTSystemImpl;
 
 import java.util.List;
 
 import static io.activej.common.Utils.hasIntersection;
 
 public class AggregationOT {
-	public static OTSystem<AggregationDiff> createAggregationOT() {
-		return OTSystemImpl.<AggregationDiff>builder()
+	public static IOTSystem<AggregationDiff> createAggregationOT() {
+		return OTSystem.<AggregationDiff>builder()
 				.withTransformFunction(AggregationDiff.class, AggregationDiff.class, (left, right) -> {
 					if (!hasIntersection(left.getAddedChunks(), right.getAddedChunks()) && !hasIntersection(left.getRemovedChunks(), right.getRemovedChunks())) {
 						return TransformResult.of(right, left);

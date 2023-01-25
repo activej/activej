@@ -19,7 +19,7 @@ package io.activej.http;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.http.loader.ResourceIsADirectoryException;
 import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.promise.Promise;
@@ -49,7 +49,7 @@ public final class Servlet_Static extends AbstractReactive
 		implements AsyncServlet {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
-	private final AsyncStaticLoader resourceLoader;
+	private final IStaticLoader resourceLoader;
 	private Function<String, ContentType> contentTypeResolver = Servlet_Static::getContentType;
 	private Function<HttpRequest, @Nullable String> pathMapper = HttpRequest::getRelativePath;
 	private Supplier<HttpResponse> responseSupplier = HttpResponse::ok200;
@@ -57,28 +57,28 @@ public final class Servlet_Static extends AbstractReactive
 
 	private @Nullable String defaultResource;
 
-	private Servlet_Static(Reactor reactor, AsyncStaticLoader resourceLoader) {
+	private Servlet_Static(Reactor reactor, IStaticLoader resourceLoader) {
 		super(reactor);
 		this.resourceLoader = resourceLoader;
 	}
 
-	public static Servlet_Static create(Reactor reactor, AsyncStaticLoader resourceLoader) {
+	public static Servlet_Static create(Reactor reactor, IStaticLoader resourceLoader) {
 		return builder(reactor, resourceLoader).build();
 	}
 
-	public static Servlet_Static create(Reactor reactor, AsyncStaticLoader resourceLoader, String page) {
+	public static Servlet_Static create(Reactor reactor, IStaticLoader resourceLoader, String page) {
 		return builder(reactor, resourceLoader).withMappingTo(page).build();
 	}
 
 	public static Servlet_Static ofClassPath(Reactor reactor, Executor executor, String path) {
-		return builder(reactor, AsyncStaticLoader.ofClassPath(reactor, executor, path)).build();
+		return builder(reactor, IStaticLoader.ofClassPath(reactor, executor, path)).build();
 	}
 
 	public static Servlet_Static ofPath(Reactor reactor, Executor executor, Path path) {
-		return builder(reactor, AsyncStaticLoader.ofPath(reactor, executor, path)).build();
+		return builder(reactor, IStaticLoader.ofPath(reactor, executor, path)).build();
 	}
 
-	public static Builder builder(Reactor reactor, AsyncStaticLoader resourceLoader) {
+	public static Builder builder(Reactor reactor, IStaticLoader resourceLoader) {
 		return new Servlet_Static(reactor, resourceLoader).new Builder();
 	}
 

@@ -51,7 +51,7 @@ public final class RepartitionTest {
 
 		int replicationCount = 3;
 		CrdtStorage_Cluster<String, Long, String> cluster = CrdtStorage_Cluster.create(reactor,
-				AsyncDiscoveryService.of(
+				IDiscoveryService.of(
 						PartitionScheme_Rendezvous.<String>builder()
 								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 										.withReplicas(replicationCount)

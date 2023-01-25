@@ -6,7 +6,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.module.Module;
 import io.activej.launchers.dataflow.DataflowServerLauncher;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.reactor.Reactor;
 import misc.LogItem;
 import module.MultilogDataflowServerModule;
@@ -19,7 +19,7 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	Reactor reactor;
 
 	@Inject
-	AsyncMultilog<LogItem> multilog;
+	IMultilog<LogItem> multilog;
 
 	@Inject
 	@Named("partition")

@@ -28,9 +28,9 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.tcp.messaging.FileSystemRequest;
@@ -67,10 +67,10 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * <p>
  * <b>This client should only be used on private networks.</b>
  * <p>
- * Inherits all the limitations of {@link AsyncFileSystem} implementation located on {@link FileSystemServer}.
+ * Inherits all the limitations of {@link IFileSystem} implementation located on {@link FileSystemServer}.
  */
 public final class FileSystem_Remote extends AbstractNioReactive
-		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem_Remote.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(FileSystem_Remote.class, "connectTimeout", Duration.ZERO);
@@ -162,7 +162,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 				.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
-	private Promise<ChannelConsumer<ByteBuf>> doUpload(AsyncMessaging<FileSystemResponse, FileSystemRequest> messaging, String name, @Nullable Long size) {
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(IMessaging<FileSystemResponse, FileSystemRequest> messaging, String name, @Nullable Long size) {
 		return messaging.send(new FileSystemRequest.Upload(name, size == null ? -1 : size))
 				.then(messaging::receive)
 				.whenResult(validateFn(FileSystemResponse.UploadAck.class))
@@ -361,7 +361,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 				.whenComplete(connectPromise.recordStats());
 	}
 
-	private Promise<AsyncMessaging<FileSystemResponse, FileSystemRequest>> performHandshake(AsyncMessaging<FileSystemResponse, FileSystemRequest> messaging) {
+	private Promise<IMessaging<FileSystemResponse, FileSystemRequest>> performHandshake(IMessaging<FileSystemResponse, FileSystemRequest> messaging) {
 		return messaging.send(new FileSystemRequest.Handshake(FileSystemServer.VERSION))
 				.then(messaging::receive)
 				.map(castFn(FileSystemResponse.Handshake.class))

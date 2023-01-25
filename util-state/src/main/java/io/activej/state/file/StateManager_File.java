@@ -1,10 +1,10 @@
 package io.activej.state.file;
 
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.fs.BlockingFileSystem;
+import io.activej.fs.IBlockingFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.serializer.stream.*;
-import io.activej.state.StateManager;
+import io.activej.state.IStateManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -19,10 +19,10 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings({"unused", "unchecked"})
-public final class StateManager_File<T> implements StateManager<T, Long> {
+public final class StateManager_File<T> implements IStateManager<T, Long> {
 	public static final String DEFAULT_TEMP_DIR = ".temp/";
 
-	private final BlockingFileSystem fileSystem;
+	private final IBlockingFileSystem fileSystem;
 	private final FileNamingScheme fileNamingScheme;
 	private StreamEncoder<T> encoder;
 	private StreamDecoder<T> decoder;
@@ -30,12 +30,12 @@ public final class StateManager_File<T> implements StateManager<T, Long> {
 	private int maxSaveDiffs = 0;
 	private String tempDir = DEFAULT_TEMP_DIR;
 
-	private StateManager_File(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
+	private StateManager_File(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
 		this.fileSystem = fileSystem;
 		this.fileNamingScheme = fileNamingScheme;
 	}
 
-	public static <T> StateManager_File<T>.Builder builder(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
+	public static <T> StateManager_File<T>.Builder builder(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
 		return new StateManager_File<T>(fileSystem, fileNamingScheme).new Builder();
 	}
 

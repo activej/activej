@@ -1,7 +1,7 @@
 package io.activej.cube;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.AsyncAggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
@@ -59,7 +59,7 @@ public class StringDimensionTest {
 
 		FileSystem fs = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(),
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
 		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())

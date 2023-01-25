@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamSupplier;
 import io.activej.net.SimpleServer;
@@ -61,7 +61,7 @@ public final class MessagingTest {
 	private int listenPort;
 	private InetSocketAddress address;
 
-	private static void pong(AsyncMessaging<Integer, Integer> messaging) {
+	private static void pong(IMessaging<Integer, Integer> messaging) {
 		messaging.receive()
 				.thenIfElse(Objects::nonNull,
 						msg -> messaging.send(msg).whenResult(() -> pong(messaging)),
@@ -72,7 +72,7 @@ public final class MessagingTest {
 				.whenException(e -> messaging.close());
 	}
 
-	private static void ping(int n, AsyncMessaging<Integer, Integer> messaging) {
+	private static void ping(int n, IMessaging<Integer, Integer> messaging) {
 		messaging.send(n)
 				.then(messaging::receive)
 				.whenResult(msg -> {

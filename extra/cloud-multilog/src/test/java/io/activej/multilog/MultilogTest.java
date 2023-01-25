@@ -72,7 +72,7 @@ public class MultilogTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
+		IMultilog<String> multilog = Multilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
 		List<String> values = List.of("test1", "test2", "test3");
@@ -89,7 +89,7 @@ public class MultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.builder(reactor, fs,
+		IMultilog<String> multilog = Multilog.builder(reactor, fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER,
 						NAME_PARTITION_REMAINDER_SEQ)
@@ -121,7 +121,7 @@ public class MultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.builder(reactor, fs,
+		IMultilog<String> multilog = Multilog.builder(reactor, fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER,
 						NAME_PARTITION_REMAINDER_SEQ)
@@ -162,7 +162,7 @@ public class MultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = Multilog.builder(reactor, fs,
+		IMultilog<String> multilog = Multilog.builder(reactor, fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true)
@@ -199,7 +199,7 @@ public class MultilogTest {
 
 		await(fs.start());
 
-		AsyncMultilog<String> multilog = Multilog.builder(reactor,
+		IMultilog<String> multilog = Multilog.builder(reactor,
 						fs,
 						frameFormat,
 						BinarySerializers.UTF8_SERIALIZER,
@@ -238,7 +238,7 @@ public class MultilogTest {
 		assertEquals(position, await(supplierWithResult.getResult()).getPosition());
 	}
 
-	private static <T> List<T> readLog(AsyncMultilog<T> multilog, String partition) {
+	private static <T> List<T> readLog(IMultilog<T> multilog, String partition) {
 		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();
 		await(StreamSupplierWithResult.ofPromise(
 						multilog.read(partition, new LogFile("", 0), 0, null))

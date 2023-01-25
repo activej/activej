@@ -1,8 +1,8 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
-import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
+import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.cluster.IDiscoveryService;
 import io.activej.crdt.storage.cluster.CrdtStorage_Cluster;
 import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
@@ -40,7 +40,7 @@ public final class CrdtClusterExample {
 		//[START REGION_1]
 		// we create a list of 10 local partitions with string partition ids and string keys
 		// normally all of them would be network clients for remote partitions
-		Map<String, AsyncCrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
+		Map<String, ICrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
 		List<Promise<Void>> fsStartPromises = new ArrayList<>();
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
@@ -51,15 +51,15 @@ public final class CrdtClusterExample {
 		}
 
 		// grab a couple of them to work with
-		AsyncCrdtStorage<String, LWWSet<String>> partition3 = clients.get("partition3");
-		AsyncCrdtStorage<String, LWWSet<String>> partition6 = clients.get("partition6");
+		ICrdtStorage<String, LWWSet<String>> partition3 = clients.get("partition3");
+		ICrdtStorage<String, LWWSet<String>> partition6 = clients.get("partition6");
 
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
 		CrdtStorage_Cluster<String, LWWSet<String>, String> cluster = CrdtStorage_Cluster.<String, LWWSet<String>, String>create(
 				eventloop,
-				AsyncDiscoveryService.of(PartitionScheme_Rendezvous.<String>builder()
+				IDiscoveryService.of(PartitionScheme_Rendezvous.<String>builder()
 						.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 								.withReplicas(5)
 								.build())

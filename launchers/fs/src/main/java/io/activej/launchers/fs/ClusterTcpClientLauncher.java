@@ -21,8 +21,8 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFileSystem;
-import io.activej.fs.cluster.AsyncDiscoveryService;
+import io.activej.fs.IFileSystem;
+import io.activej.fs.cluster.IDiscoveryService;
 import io.activej.fs.cluster.FileSystemPartitions;
 import io.activej.fs.cluster.FileSystem_Cluster;
 import io.activej.http.AsyncServlet;
@@ -74,24 +74,24 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(Reactor reactor, AsyncFileSystem fileSystem) {
+	AsyncServlet guiServlet(Reactor reactor, IFileSystem fileSystem) {
 		return FileSystemGuiServlet.create(reactor, fileSystem, "Cluster FS Client");
 	}
 
 	@Provides
-	AsyncFileSystem fileSystem(Reactor reactor, FileSystemPartitions partitions, Config config) {
+	IFileSystem fileSystem(Reactor reactor, FileSystemPartitions partitions, Config config) {
 		return FileSystem_Cluster.builder(reactor, partitions)
 				.initialize(ofClusterFileSystem(config.getChild("fs.cluster")))
 				.build();
 	}
 
 	@Provides
-	AsyncDiscoveryService discoveryService(NioReactor reactor, Config config) throws MalformedDataException {
+	IDiscoveryService discoveryService(NioReactor reactor, Config config) throws MalformedDataException {
 		return Initializers.constantDiscoveryService(reactor, config.getChild("fs.cluster"));
 	}
 
 	@Provides
-	FileSystemPartitions fileSystemPartitions(Reactor reactor, AsyncDiscoveryService discoveryService) {
+	FileSystemPartitions fileSystemPartitions(Reactor reactor, IDiscoveryService discoveryService) {
 		return FileSystemPartitions.create(reactor, discoveryService);
 	}
 	//[END EXAMPLE]

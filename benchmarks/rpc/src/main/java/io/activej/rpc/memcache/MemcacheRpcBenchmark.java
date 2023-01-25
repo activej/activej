@@ -19,7 +19,7 @@ import io.activej.memcache.server.MemcacheServerModule;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 import io.activej.service.ServiceGraphModuleSettings;
@@ -71,7 +71,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts client only after it has started the server
-		return settings -> settings.addDependency(Key.of(AsyncRpcClient.class), Key.of(RpcServer.class));
+		return settings -> settings.addDependency(Key.of(IRpcClient.class), Key.of(RpcServer.class));
 	}
 
 	@Override

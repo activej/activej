@@ -20,8 +20,8 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationOT;
 import io.activej.ot.TransformResult;
 import io.activej.ot.exception.TransformException;
+import io.activej.ot.system.IOTSystem;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.system.OTSystemImpl;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,9 +31,9 @@ import java.util.Map;
 import static io.activej.common.Utils.union;
 
 public class CubeOT {
-	public static OTSystem<CubeDiff> createCubeOT() {
-		OTSystem<AggregationDiff> aggregationOTSystem = AggregationOT.createAggregationOT();
-		return OTSystemImpl.<CubeDiff>builder()
+	public static IOTSystem<CubeDiff> createCubeOT() {
+		IOTSystem<AggregationDiff> aggregationOTSystem = AggregationOT.createAggregationOT();
+		return OTSystem.<CubeDiff>builder()
 				.withTransformFunction(CubeDiff.class, CubeDiff.class, (left, right) -> {
 					Map<String, AggregationDiff> newOpsLeft = new LinkedHashMap<>();
 					Map<String, AggregationDiff> newOpsRight = new LinkedHashMap<>();

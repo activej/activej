@@ -77,9 +77,9 @@ public class LogDataConsumer_Splitter_Test {
 	}
 
 	private static class LogDataConsumer_SplitterStub<T, D> extends LogDataConsumer_Splitter<T, D> {
-		private final AsyncLogDataConsumer<T, D> logConsumer;
+		private final ILogDataConsumer<T, D> logConsumer;
 
-		private LogDataConsumer_SplitterStub(AsyncLogDataConsumer<T, D> logConsumer) {
+		private LogDataConsumer_SplitterStub(ILogDataConsumer<T, D> logConsumer) {
 			this.logConsumer = logConsumer;
 		}
 

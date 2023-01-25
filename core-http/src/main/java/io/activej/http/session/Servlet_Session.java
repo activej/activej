@@ -39,12 +39,12 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public final class Servlet_Session<T> extends AbstractReactive
 		implements AsyncServlet {
-	private final AsyncSessionStore<T> store;
+	private final ISessionStore<T> store;
 	private final Function<HttpRequest, String> sessionIdExtractor;
 	private final AsyncServlet publicServlet;
 	private final AsyncServlet privateServlet;
 
-	private Servlet_Session(Reactor reactor, AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor, AsyncServlet publicServlet, AsyncServlet privateServlet) {
+	private Servlet_Session(Reactor reactor, ISessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor, AsyncServlet publicServlet, AsyncServlet privateServlet) {
 		super(reactor);
 		this.store = store;
 		this.sessionIdExtractor = sessionIdExtractor;
@@ -52,13 +52,13 @@ public final class Servlet_Session<T> extends AbstractReactive
 		this.privateServlet = privateServlet;
 	}
 
-	public static <T> Servlet_Session<T> create(Reactor reactor, AsyncSessionStore<T> store, String sessionIdCookie,
+	public static <T> Servlet_Session<T> create(Reactor reactor, ISessionStore<T> store, String sessionIdCookie,
 			AsyncServlet publicServlet,
 			AsyncServlet privateServlet) {
 		return new Servlet_Session<>(reactor, store, request -> request.getCookie(sessionIdCookie), publicServlet, privateServlet);
 	}
 
-	public static <T> Servlet_Session<T> create(Reactor reactor, AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
+	public static <T> Servlet_Session<T> create(Reactor reactor, ISessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
 			AsyncServlet publicServlet,
 			AsyncServlet privateServlet) {
 		return new Servlet_Session<>(reactor, store, sessionIdExtractor, publicServlet, privateServlet);

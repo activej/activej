@@ -17,7 +17,7 @@
 package io.activej.csp.file;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.file.AsyncFileService;
+import io.activej.async.file.IFileService;
 import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -51,14 +51,14 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(8);
 
-	private final AsyncFileService fileService;
+	private final IFileService fileService;
 	private final FileChannel channel;
 
 	private int bufferSize = DEFAULT_BUFFER_SIZE.toInt();
 	private long position = 0;
 	private long limit = Long.MAX_VALUE;
 
-	private ChannelFileReader(AsyncFileService fileService, FileChannel channel) {
+	private ChannelFileReader(IFileService fileService, FileChannel channel) {
 		this.fileService = fileService;
 		this.channel = channel;
 	}
@@ -67,7 +67,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		return builder(reactor, executor, channel).build();
 	}
 
-	public static ChannelFileReader create(AsyncFileService fileService, FileChannel channel) {
+	public static ChannelFileReader create(IFileService fileService, FileChannel channel) {
 		return builder(fileService, channel).build();
 	}
 
@@ -92,7 +92,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		return builder(new FileService_Executor(reactor, executor), channel);
 	}
 
-	public static Builder builder(AsyncFileService fileService, FileChannel channel) {
+	public static Builder builder(IFileService fileService, FileChannel channel) {
 		return new ChannelFileReader(fileService, channel).new Builder();
 	}
 

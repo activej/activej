@@ -23,7 +23,7 @@ import io.activej.reactor.Reactor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class WriteAheadLog_Noop<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncWriteAheadLog<K, S> {
+		implements IWriteAheadLog<K, S> {
 
 	private WriteAheadLog_Noop(Reactor reactor) {
 		super(reactor);

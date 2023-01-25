@@ -9,7 +9,7 @@ import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
-import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
+import io.activej.cube.linear.CubeCleanerController.IChunksCleanerService;
 import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
@@ -91,7 +91,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		ChunksCleanerService cleanerService = ChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
+		IChunksCleanerService cleanerService = IChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		CubeCleanerController cleanerController = CubeCleanerController.builder(dataSource, cleanerService)
 				.withChunksCleanupDelay(Duration.ofMillis(0))
 				.build();
@@ -104,7 +104,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		ChunksCleanerService cleanerService = ChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
+		IChunksCleanerService cleanerService = IChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		CubeCleanerController cleanerController = CubeCleanerController.builder(dataSource, cleanerService)
 				.withChunksCleanupDelay(Duration.ofSeconds(10))
 				.build();

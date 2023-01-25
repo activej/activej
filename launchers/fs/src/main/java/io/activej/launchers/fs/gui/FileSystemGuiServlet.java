@@ -22,7 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.http.FileSystemServlet;
@@ -51,11 +51,11 @@ public final class FileSystemGuiServlet {
 	private FileSystemGuiServlet() {
 	}
 
-	public static Servlet_Routing create(Reactor reactor, AsyncFileSystem fs) {
+	public static Servlet_Routing create(Reactor reactor, IFileSystem fs) {
 		return create(reactor, fs, "ActiveJ FS");
 	}
 
-	public static Servlet_Routing create(Reactor reactor, AsyncFileSystem fs, String title) {
+	public static Servlet_Routing create(Reactor reactor, IFileSystem fs, String title) {
 		Mustache mustache = new DefaultMustacheFactory().compile("fs/gui/static/index.html");
 		Servlet_Routing fsServlet = FileSystemServlet.create(reactor, fs);
 

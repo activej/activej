@@ -61,7 +61,7 @@ public class AddedMeasuresTest {
 	private Executor executor;
 	private Reactor reactor;
 	private DefiningClassLoader classLoader;
-	private AsyncAggregationChunkStorage<Long> aggregationChunkStorage;
+	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 	private AggregationConfig basicConfig;
 	private List<CubeDiff> initialDiffs;
 

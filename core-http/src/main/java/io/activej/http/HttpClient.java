@@ -24,7 +24,7 @@ import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.dns.AsyncDnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.dns.DnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
@@ -67,7 +67,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Implementation of {@link AsyncHttpClient} that asynchronously connects
+ * Implementation of {@link IHttpClient} that asynchronously connects
  * to real HTTP servers and gets responses from them.
  * <p>
  * It is also an {@link ReactiveService} that needs its close method to be called
@@ -75,7 +75,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class HttpClient extends AbstractNioReactive
-		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IHttpClient, IWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(HttpClient.class);
 	private static final boolean CHECKS = Checks.isEnabled(HttpClient.class);
 
@@ -87,7 +87,7 @@ public final class HttpClient extends AbstractNioReactive
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient.class, "maxKeepAliveRequests", 0);
 
-	private AsyncDnsClient asyncDnsClient;
+	private IDnsClient asyncDnsClient;
 	private SocketSettings socketSettings = SocketSettings.createDefault();
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
@@ -285,7 +285,7 @@ public final class HttpClient extends AbstractNioReactive
 
 	private int inetAddressIdx = 0;
 
-	private HttpClient(NioReactor reactor, AsyncDnsClient asyncDnsClient) {
+	private HttpClient(NioReactor reactor, IDnsClient asynDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
@@ -295,7 +295,7 @@ public final class HttpClient extends AbstractNioReactive
 	}
 
 	public static Builder builder(NioReactor reactor) {
-		AsyncDnsClient defaultDnsClient = DnsClient.create(reactor);
+		IDnsClient defaultDnsClient = DnsClient.create(reactor);
 		return new HttpClient(reactor, defaultDnsClient).new Builder();
 	}
 
@@ -308,7 +308,7 @@ public final class HttpClient extends AbstractNioReactive
 			return this;
 		}
 
-		public Builder withDnsClient(AsyncDnsClient asyncDnsClient) {
+		public Builder withDnsClient(IDnsClient asyncDnsClient) {
 			checkNotBuilt(this);
 			HttpClient.this.asyncDnsClient = asyncDnsClient;
 			return this;
@@ -462,21 +462,21 @@ public final class HttpClient extends AbstractNioReactive
 	 * <p>
 	 * Sent request must not have a body or body stream.
 	 * <p>
-	 * After receiving a {@link AsyncWebSocket}, caller can inspect server response via calling {@link AsyncWebSocket#getResponse()}.
+	 * After receiving a {@link IWebSocket}, caller can inspect server response via calling {@link IWebSocket#getResponse()}.
 	 * If a response does not satisfy a caller, it may close the web socket with an appropriate exception.
 	 *
 	 * @param request web socket request
 	 * @return promise of a web socket
 	 */
 	@Override
-	public Promise<AsyncWebSocket> webSocketRequest(HttpRequest request) {
+	public Promise<IWebSocket> webSocketRequest(HttpRequest request) {
 		checkInReactorThread(this);
-		checkState(AsyncWebSocket.ENABLED, "Web sockets are disabled by application settings");
+		checkState(IWebSocket.ENABLED, "Web sockets are disabled by application settings");
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 
 		//noinspection unchecked
-		return (Promise<AsyncWebSocket>) doRequest(request, true);
+		return (Promise<IWebSocket>) doRequest(request, true);
 	}
 
 	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {

@@ -16,24 +16,211 @@
 
 package io.activej.ot.system;
 
-import io.activej.common.annotation.ComponentInterface;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.ot.TransformResult;
+import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.exception.TransformException;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.*;
 
-@ComponentInterface
-public interface OTSystem<D> {
+import static io.activej.common.Utils.concat;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 
-	TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws TransformException;
-
-	default TransformResult<D> transform(D leftDiff, D rightDiff) throws TransformException {
-		return transform(List.of(leftDiff), List.of(rightDiff));
+public final class OTSystem<D> implements IOTSystem<D> {
+	@FunctionalInterface
+	public interface TransformFunction<OP, L extends OP, R extends OP> {
+		TransformResult<? extends OP> transform(L left, R right) throws TransformException;
 	}
 
-	List<D> squash(List<? extends D> ops);
+	@FunctionalInterface
+	public interface SquashFunction<OP, OP1 extends OP, OP2 extends OP> {
+		@Nullable OP trySquash(OP1 op1, OP2 op2);
+	}
 
-	boolean isEmpty(D op);
+	@FunctionalInterface
+	public interface InvertFunction<OP, OP2 extends OP> {
+		List<? extends OP> invert(OP2 op);
+	}
 
-	<O extends D> List<D> invert(List<O> ops);
+	@FunctionalInterface
+	public interface EmptyPredicate<OP> {
+		boolean isEmpty(OP op);
+	}
+
+	private record KeyPair<O>(Class<? extends O> left, Class<? extends O> right) {}
+
+	private final Map<KeyPair<D>, TransformFunction<D, ?, ?>> transformers = new HashMap<>();
+	private final Map<KeyPair<D>, SquashFunction<D, ?, ?>> squashers = new HashMap<>();
+	private final Map<Class<? extends D>, InvertFunction<D, ? extends D>> inverters = new HashMap<>();
+	private final Map<Class<? extends D>, EmptyPredicate<? extends D>> emptyPredicates = new HashMap<>();
+
+	private OTSystem() {
+	}
+
+	public static <O> OTSystem<O> create() {
+		return OTSystem.<O>builder().build();
+	}
+
+	public static <O> OTSystem<O>.Builder builder() {
+		return new OTSystem<O>().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, OTSystem<D>> {
+		private Builder() {}
+
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		public <L extends D, R extends D> Builder withTransformFunction(Class<? super L> leftType, Class<? super R> rightType,
+				TransformFunction<D, L, R> transformer) {
+			checkNotBuilt(this);
+			transformers.put(new KeyPair(leftType, rightType), transformer);
+			if (leftType != rightType) {
+				transformers.put(new KeyPair(rightType, leftType), (TransformFunction<D, R, L>) (left, right) -> {
+					TransformResult<? extends D> transform = transformer.transform(right, left);
+					if (transform.hasConflict()) {
+						if (transform.resolution == ConflictResolution.LEFT)
+							return TransformResult.conflict(ConflictResolution.RIGHT);
+						if (transform.resolution == ConflictResolution.RIGHT)
+							return TransformResult.conflict(ConflictResolution.LEFT);
+						return transform;
+					}
+					return TransformResult.of(transform.right, transform.left);
+				});
+			}
+			return this;
+		}
+
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		public <O1 extends D, O2 extends D> Builder withSquashFunction(Class<? super O1> opType1, Class<? super O2> opType2,
+				SquashFunction<D, O1, O2> squashFunction) {
+			checkNotBuilt(this);
+			squashers.put(new KeyPair(opType1, opType2), squashFunction);
+			return this;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <O extends D> Builder withInvertFunction(Class<? super O> opType, InvertFunction<D, O> inverter) {
+			checkNotBuilt(this);
+			inverters.put((Class<D>) opType, inverter);
+			return this;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <O extends D> Builder withEmptyPredicate(Class<? super O> opType, EmptyPredicate<O> emptyChecker) {
+			checkNotBuilt(this);
+			emptyPredicates.put((Class<D>) opType, emptyChecker);
+			return this;
+		}
+
+		@Override
+		protected OTSystem<D> doBuild() {
+			return OTSystem.this;
+		}
+	}
+
+	@SuppressWarnings({"SimplifiableIfStatement", "unchecked"})
+	@Override
+	public boolean isEmpty(D op) {
+		if (emptyPredicates.isEmpty())
+			return false;
+		EmptyPredicate<D> emptyChecker = (EmptyPredicate<D>) emptyPredicates.get(op.getClass());
+		if (emptyChecker == null)
+			return false;
+		return emptyChecker.isEmpty(op);
+	}
+
+	@Override
+	public TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws TransformException {
+		TransformResult<D> transform = doTransform(leftDiffs, rightDiffs);
+		if (!transform.hasConflict())
+			return transform;
+		return resolveConflicts(leftDiffs, rightDiffs, transform);
+	}
+
+	private TransformResult<D> resolveConflicts(List<? extends D> leftDiffs, List<? extends D> rightDiffs, TransformResult<D> transform) {
+		if (transform.resolution == ConflictResolution.LEFT) {
+			return TransformResult.of(transform.resolution,
+					List.of(),
+					squash(concat(invert(rightDiffs).stream(), leftDiffs.stream()).collect(toList())));
+		}
+		if (transform.resolution == ConflictResolution.RIGHT) {
+			return TransformResult.of(transform.resolution,
+					squash(concat(invert(leftDiffs).stream(), rightDiffs.stream()).collect(toList())),
+					List.of());
+		}
+		throw new AssertionError();
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public TransformResult<D> doTransform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws TransformException {
+		if (leftDiffs.isEmpty() && rightDiffs.isEmpty())
+			return TransformResult.empty();
+		if (leftDiffs.isEmpty()) {
+			return TransformResult.left(rightDiffs);
+		}
+		if (rightDiffs.isEmpty()) {
+			return TransformResult.right(leftDiffs);
+		}
+		if (leftDiffs.size() == 1) {
+			D left = leftDiffs.get(0);
+			D right = rightDiffs.get(0);
+			KeyPair<D> key = new KeyPair(left.getClass(), right.getClass());
+			TransformFunction<D, D, D> transformer = (TransformFunction<D, D, D>) transformers.get(key);
+			TransformResult<D> transform1 = (TransformResult<D>) transformer.transform(left, right);
+			if (transform1.hasConflict()) return transform1;
+			TransformResult<D> transform2 = doTransform(transform1.right, rightDiffs.subList(1, rightDiffs.size()));
+			if (transform2.hasConflict()) return transform2;
+			return TransformResult.of(concat(transform1.left, transform2.left), transform2.right);
+		}
+		TransformResult<D> transform1 = doTransform(leftDiffs.subList(0, 1), rightDiffs);
+		if (transform1.hasConflict()) return transform1;
+		TransformResult<D> transform2 = doTransform(leftDiffs.subList(1, leftDiffs.size()), transform1.left);
+		if (transform2.hasConflict()) return transform2;
+		return TransformResult.of(transform2.left, concat(transform1.right, transform2.right));
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	@Override
+	public List<D> squash(List<? extends D> ops) {
+		if (squashers.isEmpty())
+			return (List<D>) ops;
+		List<D> result = new ArrayList<>();
+		Iterator<D> it = ((List<D>) ops).iterator();
+		if (!it.hasNext())
+			return List.of();
+		D cur = it.next();
+		while (it.hasNext()) {
+			D next = it.next();
+			KeyPair<D> key = new KeyPair(cur.getClass(), next.getClass());
+			SquashFunction<D, D, D> squashFunction = (SquashFunction<D, D, D>) squashers.get(key);
+			D squashed = squashFunction == null ? null : squashFunction.trySquash(cur, next);
+			if (squashed != null) {
+				cur = squashed;
+			} else {
+				if (!isEmpty(cur)) {
+					result.add(cur);
+				}
+				cur = next;
+			}
+		}
+		if (!isEmpty(cur)) {
+			result.add(cur);
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <O extends D> List<D> invert(List<O> ops) {
+		int size = ops.size();
+		List<D> result = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			O op = ops.get(size - i - 1);
+			InvertFunction<D, O> inverter = (InvertFunction<D, O>) inverters.get(op.getClass());
+			List<? extends D> inverted = inverter.invert(op);
+			result.addAll(inverted);
+		}
+		return result;
+	}
 }

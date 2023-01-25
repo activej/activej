@@ -7,7 +7,7 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.fs.exception.FileNotFoundException;
@@ -56,7 +56,7 @@ public final class FileSystemServletAndClientTest {
 
 	private Path storage;
 
-	private AsyncFileSystem fileSystem;
+	private IFileSystem fileSystem;
 
 	@Before
 	public void setUp() throws Exception {

@@ -21,7 +21,7 @@ import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.http.*;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
@@ -49,8 +49,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	@Provides
-	AsyncStaticLoader loader(Reactor reactor, Executor executor) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, "/");
+	IStaticLoader loader(Reactor reactor, Executor executor) {
+		return IStaticLoader.ofClassPath(reactor, executor, "/");
 	}
 
 	@Provides

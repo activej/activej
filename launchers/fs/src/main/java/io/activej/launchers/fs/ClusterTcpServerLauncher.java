@@ -19,8 +19,8 @@ package io.activej.launchers.fs;
 import io.activej.async.service.TaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.fs.AsyncFileSystem;
-import io.activej.fs.cluster.AsyncDiscoveryService;
+import io.activej.fs.IFileSystem;
+import io.activej.fs.cluster.IDiscoveryService;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.FileSystemPartitions;
 import io.activej.fs.cluster.ServerSelector;
@@ -79,14 +79,14 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	AsyncDiscoveryService discoveryService(NioReactor reactor,
-			AsyncFileSystem fileSystem,
+	IDiscoveryService discoveryService(NioReactor reactor,
+			IFileSystem fileSystem,
 			Config config) throws MalformedDataException {
 		return Initializers.constantDiscoveryService(reactor, fileSystem, config);
 	}
 
 	@Provides
-	FileSystemPartitions fileSystemPartitions(Reactor reactor, AsyncDiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
+	FileSystemPartitions fileSystemPartitions(Reactor reactor, IDiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
 		return FileSystemPartitions.builder(reactor, discoveryService)
 				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER))
 				.build();
@@ -97,7 +97,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			AsyncServlet guiServlet(AsyncFileSystem fs, ClusterRepartitionController controller) {
+			AsyncServlet guiServlet(IFileSystem fs, ClusterRepartitionController controller) {
 				return FileSystemGuiServlet.create(controller.getReactor(), fs, "Cluster server [" + controller.getLocalPartitionId() + ']');
 			}
 		};

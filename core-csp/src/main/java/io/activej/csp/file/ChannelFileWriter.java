@@ -16,7 +16,7 @@
 
 package io.activej.csp.file;
 
-import io.activej.async.file.AsyncFileService;
+import io.activej.async.file.IFileService;
 import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.builder.AbstractBuilder;
@@ -44,7 +44,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 	private static final OpenOption[] DEFAULT_OPTIONS = new OpenOption[]{WRITE, CREATE_NEW, APPEND};
 
-	private final AsyncFileService fileService;
+	private final IFileService fileService;
 	private final FileChannel channel;
 
 	private boolean forceOnClose = false;
@@ -54,7 +54,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 	private long position = 0;
 
-	private ChannelFileWriter(AsyncFileService fileService, FileChannel channel) {
+	private ChannelFileWriter(IFileService fileService, FileChannel channel) {
 		this.fileService = fileService;
 		this.channel = channel;
 	}
@@ -63,7 +63,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 		return builder(reactor, executor, channel).build();
 	}
 
-	public static ChannelFileWriter create(AsyncFileService fileService, FileChannel channel) {
+	public static ChannelFileWriter create(IFileService fileService, FileChannel channel) {
 		return builder(fileService, channel).build();
 	}
 
@@ -88,7 +88,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 		return builder(new FileService_Executor(reactor, executor), channel);
 	}
 
-	public static Builder builder(AsyncFileService fileService, FileChannel channel) {
+	public static Builder builder(IFileService fileService, FileChannel channel) {
 		return new ChannelFileWriter(fileService, channel).new Builder();
 	}
 

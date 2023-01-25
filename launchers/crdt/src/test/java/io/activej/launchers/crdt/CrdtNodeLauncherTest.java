@@ -1,10 +1,10 @@
 package io.activej.launchers.crdt;
 
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -32,15 +32,15 @@ public class CrdtNodeLauncherTest {
 
 			@Inject
 			@InMemory
-			AsyncCrdtStorage<String, Integer> inMemory;
+			ICrdtStorage<String, Integer> inMemory;
 
 			@Inject
 			@Persistent
-			AsyncCrdtStorage<String, Integer> persistent;
+			ICrdtStorage<String, Integer> persistent;
 
 			@Inject
 			@Cluster
-			AsyncCrdtStorage<String, Integer> cluster;
+			ICrdtStorage<String, Integer> cluster;
 
 			@Override
 			protected CrdtNodeLogicModule<String, Integer> getBusinessLogicModule() {
@@ -55,7 +55,7 @@ public class CrdtNodeLauncherTest {
 					}
 
 					@Provides
-					AsyncFileSystem fileSystem() {
+					IFileSystem fileSystem() {
 						return FileSystem.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
 					}
 				};

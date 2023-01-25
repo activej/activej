@@ -35,7 +35,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Detailed;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -60,12 +60,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
 public final class Multilog<T> extends AbstractReactive
-		implements AsyncMultilog<T>, ReactiveJmxBeanWithStats {
+		implements IMultilog<T>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Multilog.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final AsyncFileSystem fileSystem;
+	private final IFileSystem fileSystem;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
 
@@ -84,7 +84,7 @@ public final class Multilog<T> extends AbstractReactive
 			.withSizeCounter(forByteBufs())
 			.build();
 
-	private Multilog(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	private Multilog(Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		super(reactor);
 		this.fileSystem = fileSystem;
@@ -93,12 +93,12 @@ public final class Multilog<T> extends AbstractReactive
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> Multilog<T> create(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> Multilog<T> create(Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		return builder(reactor, fileSystem, frameFormat, serializer, namingScheme).build();
 	}
 
-	public static <T> Multilog<T>.Builder builder(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> Multilog<T>.Builder builder(Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		return new Multilog<>(reactor, fileSystem, frameFormat, serializer, namingScheme).new Builder();
 	}

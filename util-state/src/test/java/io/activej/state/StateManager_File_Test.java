@@ -1,6 +1,6 @@
 package io.activej.state;
 
-import io.activej.fs.LocalBlockingFileSystem;
+import io.activej.fs.BlockingFileSystem;
 import io.activej.serializer.stream.DiffStreamCodec;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
@@ -28,12 +28,12 @@ public class StateManager_File_Test {
 
 	private StateManager_File<Integer> manager;
 
-	private LocalBlockingFileSystem fileSystem;
+	private BlockingFileSystem fileSystem;
 
 	@Before
 	public void setUp() throws Exception {
 		Path storage = tmpFolder.newFolder().toPath();
-		fileSystem = LocalBlockingFileSystem.create(storage);
+		fileSystem = BlockingFileSystem.create(storage);
 		fileSystem.start();
 
 		manager = StateManager_File.<Integer>builder(fileSystem, NAMING_SCHEME)

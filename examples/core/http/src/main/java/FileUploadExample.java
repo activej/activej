@@ -4,7 +4,7 @@ import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.http.HttpResponse;
 import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
@@ -34,12 +34,12 @@ public final class FileUploadExample extends HttpServerLauncher {
 
 	//[START EXAMPLE]
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, "static/multipart/");
+	IStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return IStaticLoader.ofClassPath(reactor, executor, "static/multipart/");
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader, Executor executor) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Executor executor) {
 		return Servlet_Routing.create(reactor)
 				.map(GET, "/*", Servlet_Static.builder(reactor, staticLoader)
 						.withIndexHtml()

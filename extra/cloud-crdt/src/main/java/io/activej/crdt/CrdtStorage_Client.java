@@ -24,7 +24,7 @@ import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
@@ -56,7 +56,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_Client<K extends Comparable<K>, S> extends AbstractNioReactive
-		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorage_Client.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Client.class, "smoothingWindow", Duration.ofMinutes(1));
 

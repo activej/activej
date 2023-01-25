@@ -51,7 +51,7 @@ public class AggregationGroupReducerTest {
 
 		List<StreamConsumer> listConsumers = new ArrayList<>();
 		List items = new ArrayList();
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = new AsyncAggregationChunkStorage<>() {
+		IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
 			long chunkId;
 
 			@Override

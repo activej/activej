@@ -1,6 +1,6 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.Servlet_Static;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.reactor.Reactor;
@@ -17,12 +17,12 @@ public final class SvelteApplicationLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor){
-		return AsyncStaticLoader.ofClassPath(reactor, executor, "public");
+	IStaticLoader staticLoader(Reactor reactor, Executor executor){
+		return IStaticLoader.ofClassPath(reactor, executor, "public");
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
 		return Servlet_Static.builder(reactor, staticLoader)
 				.withIndexHtml()
 				.build();

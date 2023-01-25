@@ -1,6 +1,6 @@
 package io.activej.https;
 
-import io.activej.dns.AsyncDnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.dns.DnsClient;
 import io.activej.dns.DnsClient_Cached;
 import io.activej.http.*;
@@ -36,12 +36,12 @@ public final class TestHttpsClient {
 	public void testClient() throws NoSuchAlgorithmException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		AsyncDnsClient dnsClient = DnsClient_Cached.create(reactor, DnsClient.builder(reactor)
+		IDnsClient dnsClient = DnsClient_Cached.create(reactor, DnsClient.builder(reactor)
 				.withTimeout(Duration.ofMillis(500))
 				.withDnsServerAddress(inetAddress("8.8.8.8"))
 				.build());
 
-		AsyncHttpClient client = HttpClient.builder(reactor)
+		IHttpClient client = HttpClient.builder(reactor)
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor())
 				.build();

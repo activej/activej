@@ -1,7 +1,7 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.AsyncAggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
@@ -24,10 +24,10 @@ import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public final class CubeLogProcessorControllerTest extends CubeTestBase {
-	private AsyncMultilog<LogItem> multilog;
+	private IMultilog<LogItem> multilog;
 	private FileSystem logsFileSystem;
 	private CubeLogProcessorController<Long, Long> controller;
 
@@ -61,7 +61,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		FileSystem aggregationFS = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFS.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), aggregationFS);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
@@ -85,7 +85,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		OTState_Log<CubeDiff> logState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);

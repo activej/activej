@@ -28,14 +28,14 @@ import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 class StaticLoader_Cache extends AbstractReactive
-		implements AsyncStaticLoader {
+		implements IStaticLoader {
 	public static final byte[] NOT_FOUND = {};
 
-	private final AsyncStaticLoader resourceLoader;
+	private final IStaticLoader resourceLoader;
 	private final Function<String, byte[]> get;
 	private final BiConsumer<String, byte[]> put;
 
-	public StaticLoader_Cache(Reactor reactor, AsyncStaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
+	public StaticLoader_Cache(Reactor reactor, IStaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
 		super(reactor);
 		this.resourceLoader = resourceLoader;
 		this.get = get;

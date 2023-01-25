@@ -1,7 +1,7 @@
 package io.activej.loader;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -28,7 +28,7 @@ public class StaticLoaderTest {
 
 	@Test
 	public void testMap() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/")
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/")
 				.map(file -> file + ".txt");
 		ByteBuf file = await(staticLoader.load("testFile"));
 		assertTrue(file.readRemaining() > 0);
@@ -36,21 +36,21 @@ public class StaticLoaderTest {
 
 	@Test
 	public void testFileNotFoundClassPath() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/");
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/");
 		Exception exception = awaitException(staticLoader.load("unknownFile.txt"));
 		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
 
 	@Test
 	public void testFileNotFoundPath() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofPath(getCurrentReactor(), newCachedThreadPool(), Paths.get("/"));
+		IStaticLoader staticLoader = IStaticLoader.ofPath(getCurrentReactor(), newCachedThreadPool(), Paths.get("/"));
 		Exception exception = awaitException(staticLoader.load("unknownFile.txt"));
 		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
 
 	@Test
 	public void testLoadClassPathFile() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/");
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/");
 		ByteBuf file = await(staticLoader.load("testFile.txt"));
 		assertNotNull(file);
 		assertTrue(file.readRemaining() > 0);
@@ -58,7 +58,7 @@ public class StaticLoaderTest {
 
 	@Test
 	public void testFilterFileClassPath() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/")
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/")
 				.filter(file -> !file.equals("testFile.txt"));
 		Exception exception = awaitException(staticLoader.load("testFile.txt"));
 		assertThat(exception, instanceOf(ResourceNotFoundException.class));
@@ -66,7 +66,7 @@ public class StaticLoaderTest {
 
 	@Test
 	public void testClassPathWithDiffRoot() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/");
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/");
 		ByteBuf buf = await(staticLoader.load("/testFile.txt"));
 		assertNotNull(buf);
 		buf = await(staticLoader.load("/testFile.txt/"));
@@ -79,7 +79,7 @@ public class StaticLoaderTest {
 
 	@Test
 	public void testFilterFilePath() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofPath(getCurrentReactor(), newCachedThreadPool(), Paths.get("/"))
+		IStaticLoader staticLoader = IStaticLoader.ofPath(getCurrentReactor(), newCachedThreadPool(), Paths.get("/"))
 				.filter(file -> !file.equals("testFile.txt"));
 		Exception exception = awaitException(staticLoader.load("testFile.txt"));
 		assertThat(exception, instanceOf(ResourceNotFoundException.class));
@@ -87,7 +87,7 @@ public class StaticLoaderTest {
 
 	@Test
 	public void testClassPathWithDir() {
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "dir");
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "dir");
 		ByteBuf file = await(staticLoader.load("test.txt"));
 		assertNotNull(file);
 	}

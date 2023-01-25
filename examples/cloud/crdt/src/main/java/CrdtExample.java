@@ -1,7 +1,7 @@
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
@@ -54,7 +54,7 @@ public final class CrdtExample {
 
 		//[START REGION_3]
 		// now crate the client for that 'remote' storage
-		AsyncCrdtStorage<String, Integer> client =
+		ICrdtStorage<String, Integer> client =
 				CrdtStorage_Client.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
 
 		// and also create the local storage

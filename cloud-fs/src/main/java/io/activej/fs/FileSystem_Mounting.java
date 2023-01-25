@@ -40,24 +40,24 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * A file system that allows to mount several {@link AsyncFileSystem} implementations to correspond to different filenames.
+ * A file system that allows to mount several {@link IFileSystem} implementations to correspond to different filenames.
  * <p>
  * Inherits the most strict limitations of all the mounted file systems implementations and root file system.
  */
-final class FileSystem_Mounting implements AsyncFileSystem {
-	private final AsyncFileSystem root;
-	private final Map<String, AsyncFileSystem> mounts;
+final class FileSystem_Mounting implements IFileSystem {
+	private final IFileSystem root;
+	private final Map<String, IFileSystem> mounts;
 
-	FileSystem_Mounting(AsyncFileSystem root, Map<String, AsyncFileSystem> mounts) {
+	FileSystem_Mounting(IFileSystem root, Map<String, IFileSystem> mounts) {
 		this.root = root;
 		this.mounts = mounts;
 	}
 
-	private AsyncFileSystem findMount(String filename) {
+	private IFileSystem findMount(String filename) {
 		int idx = filename.lastIndexOf('/');
 		while (idx != -1) {
 			String path = filename.substring(0, idx);
-			AsyncFileSystem mount = mounts.get(path);
+			IFileSystem mount = mounts.get(path);
 			if (mount != null) {
 				return mount;
 			}
@@ -119,7 +119,7 @@ final class FileSystem_Mounting implements AsyncFileSystem {
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return transfer(sourceToTarget, AsyncFileSystem::copyAll, false);
+		return transfer(sourceToTarget, IFileSystem::copyAll, false);
 	}
 
 	@Override
@@ -132,7 +132,7 @@ final class FileSystem_Mounting implements AsyncFileSystem {
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return transfer(sourceToTarget, AsyncFileSystem::moveAll, true);
+		return transfer(sourceToTarget, IFileSystem::moveAll, true);
 	}
 
 	@Override
@@ -148,9 +148,9 @@ final class FileSystem_Mounting implements AsyncFileSystem {
 				.map(entry -> entry.getKey().deleteAll(entry.getValue())));
 	}
 
-	private Promise<Void> transfer(String source, String target, BiFunction<String, String, AsyncConsumer<AsyncFileSystem>> action, boolean deleteSource) {
-		AsyncFileSystem first = findMount(source);
-		AsyncFileSystem second = findMount(target);
+	private Promise<Void> transfer(String source, String target, BiFunction<String, String, AsyncConsumer<IFileSystem>> action, boolean deleteSource) {
+		IFileSystem first = findMount(source);
+		IFileSystem second = findMount(target);
 		if (first == second) {
 			return action.apply(source, target).accept(first);
 		}
@@ -159,16 +159,16 @@ final class FileSystem_Mounting implements AsyncFileSystem {
 				.then(() -> deleteSource ? first.delete(source) : Promise.complete());
 	}
 
-	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncBiConsumer<AsyncFileSystem, Map<String, String>> action, boolean deleteSource) {
+	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncBiConsumer<IFileSystem, Map<String, String>> action, boolean deleteSource) {
 		List<AsyncSupplier<Tuple2<String, Try<Void>>>> movePromises = new ArrayList<>();
 
-		Map<AsyncFileSystem, Map<String, String>> groupedBySameFileSystems = new IdentityHashMap<>();
+		Map<IFileSystem, Map<String, String>> groupedBySameFileSystems = new IdentityHashMap<>();
 
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			String target = entry.getValue();
-			AsyncFileSystem first = findMount(source);
-			AsyncFileSystem second = findMount(target);
+			IFileSystem first = findMount(source);
+			IFileSystem second = findMount(target);
 			if (first == second) {
 				groupedBySameFileSystems
 						.computeIfAbsent(first, $ -> new HashMap<>())
@@ -181,7 +181,7 @@ final class FileSystem_Mounting implements AsyncFileSystem {
 						.map(aTry -> new Tuple2<>(source, aTry)));
 			}
 		}
-		for (Map.Entry<AsyncFileSystem, Map<String, String>> entry : groupedBySameFileSystems.entrySet()) {
+		for (Map.Entry<IFileSystem, Map<String, String>> entry : groupedBySameFileSystems.entrySet()) {
 			movePromises.add(() -> action.accept(entry.getKey(), entry.getValue()).toTry().map(aTry -> new Tuple2<>("", aTry)));
 		}
 

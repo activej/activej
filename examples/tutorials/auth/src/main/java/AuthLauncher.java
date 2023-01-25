@@ -1,6 +1,6 @@
 import io.activej.http.*;
-import io.activej.http.loader.AsyncStaticLoader;
-import io.activej.http.session.AsyncSessionStore;
+import io.activej.http.loader.IStaticLoader;
+import io.activej.http.session.ISessionStore;
 import io.activej.http.session.Servlet_Session;
 import io.activej.http.session.SessionStore_InMemory;
 import io.activej.inject.annotation.Named;
@@ -33,19 +33,19 @@ public final class AuthLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, "site/");
+	IStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return IStaticLoader.ofClassPath(reactor, executor, "site/");
 	}
 
 	@Provides
-	AsyncSessionStore<String> sessionStore(Reactor reactor) {
+	ISessionStore<String> sessionStore(Reactor reactor) {
 		return SessionStore_InMemory.<String>builder(reactor)
 				.withLifetime(Duration.ofDays(30))
 				.build();
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncSessionStore<String> sessionStore,
+	AsyncServlet servlet(Reactor reactor, ISessionStore<String> sessionStore,
 			@Named("public") AsyncServlet publicServlet, @Named("private") AsyncServlet privateServlet) {
 		return Servlet_Session.create(reactor, sessionStore, SESSION_ID, publicServlet, privateServlet);
 	}
@@ -54,7 +54,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	//[START REGION_2]
 	@Provides
 	@Named("public")
-	AsyncServlet publicServlet(Reactor reactor, AuthService authService, AsyncSessionStore<String> store, AsyncStaticLoader staticLoader) {
+	AsyncServlet publicServlet(Reactor reactor, AuthService authService, ISessionStore<String> store, IStaticLoader staticLoader) {
 		Servlet_Static staticServlet = Servlet_Static.create(reactor, staticLoader, "errorPage.html");
 		return Servlet_Routing.create(reactor)
 				//[START REGION_3]
@@ -95,7 +95,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	//[START REGION_5]
 	@Provides
 	@Named("private")
-	AsyncServlet privateServlet(Reactor reactor, AsyncStaticLoader staticLoader) {
+	AsyncServlet privateServlet(Reactor reactor, IStaticLoader staticLoader) {
 		return Servlet_Routing.create(reactor)
 				//[START REGION_6]
 				.map("/", request -> HttpResponse.redirect302("/members"))

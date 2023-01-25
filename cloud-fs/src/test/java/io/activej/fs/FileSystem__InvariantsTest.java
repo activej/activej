@@ -68,8 +68,8 @@ public final class FileSystem__InvariantsTest {
 	private Path firstPath;
 	private Path secondPath;
 
-	private AsyncFileSystem first;
-	private AsyncFileSystem second;
+	private IFileSystem first;
+	private IFileSystem second;
 
 	@Before
 	public void setUp() throws Exception {
@@ -892,10 +892,10 @@ public final class FileSystem__InvariantsTest {
 
 	// Default methods are not overridden
 	private static class FileSystem_Default extends ImplicitlyReactive
-			implements AsyncFileSystem {
-		private final AsyncFileSystem peer;
+			implements IFileSystem {
+		private final IFileSystem peer;
 
-		private FileSystem_Default(AsyncFileSystem peer) {
+		private FileSystem_Default(IFileSystem peer) {
 			this.peer = peer;
 		}
 
@@ -936,7 +936,7 @@ public final class FileSystem__InvariantsTest {
 		}
 	}
 
-	private void both(Consumer<AsyncFileSystem> fsConsumer) {
+	private void both(Consumer<IFileSystem> fsConsumer) {
 		fsConsumer.accept(first);
 		fsConsumer.accept(second);
 	}

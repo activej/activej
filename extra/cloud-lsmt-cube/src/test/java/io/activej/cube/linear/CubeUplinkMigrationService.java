@@ -1,6 +1,6 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.AsyncAggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
@@ -17,10 +17,10 @@ import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTAlgorithms;
-import io.activej.ot.repository.AsyncOTRepository;
+import io.activej.ot.repository.IOTRepository;
 import io.activej.ot.repository.OTRepository_MySql;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.system.IOTSystem;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +42,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 final class CubeUplinkMigrationService {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMigrationService.class);
 
-	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
+	private static final IOTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
 	private final Eventloop eventloop = Eventloop.builder()
 			.withCurrentThread()
@@ -65,10 +65,10 @@ final class CubeUplinkMigrationService {
 	}
 
 	private void doMigrate(DataSource repoDataSource, DataSource uplinkDataSource, @Nullable Long startRevision) throws ExecutionException, InterruptedException {
-		AsyncOTRepository<Long, LogDiff<CubeDiff>> repo = createRepo(repoDataSource);
+		IOTRepository<Long, LogDiff<CubeDiff>> repo = createRepo(repoDataSource);
 		OTUplink_CubeMySql uplink = createUplink(uplinkDataSource);
 
-		CompletableFuture<AsyncOTUplink.FetchData<Long, LogDiff<CubeDiff>>> future = eventloop.submit(() ->
+		CompletableFuture<IOTUplink.FetchData<Long, LogDiff<CubeDiff>>> future = eventloop.submit(() ->
 				uplink.checkout()
 						.then(checkoutData -> {
 							if (checkoutData.getLevel() != 0 ||
@@ -110,7 +110,7 @@ final class CubeUplinkMigrationService {
 		service.doMigrate(repoDataSource, uplinkDataSource, startRevision);
 	}
 
-	private AsyncOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
+	private IOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
 		LogDiffCodec<CubeDiff> codec = LogDiffCodec.create(JsonCodec_CubeDiff.create(cube));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
 		return OTRepository_MySql.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
@@ -121,7 +121,7 @@ final class CubeUplinkMigrationService {
 	}
 
 	static Cube.Builder builderOfEmptyCube(Reactor reactor, Executor executor) {
-		return Cube.builder(reactor, executor, DefiningClassLoader.create(), new AsyncAggregationChunkStorage<Long>() {
+		return Cube.builder(reactor, executor, DefiningClassLoader.create(), new IAggregationChunkStorage<Long>() {
 					@Override
 					public Promise<Long> createId() {
 						throw new AssertionError();

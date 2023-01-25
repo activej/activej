@@ -71,7 +71,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final Cube cube;
 	private final OTStateManager<K, D> stateManager;
-	private final AsyncAggregationChunkStorage<C> aggregationChunkStorage;
+	private final IAggregationChunkStorage<C> aggregationChunkStorage;
 
 	private final Map<Aggregation, String> aggregationsMapReversed;
 
@@ -88,16 +88,16 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			.withRate()
 			.build();
 
-	private final Map<String, AsyncChunkLocker<Object>> lockers = new HashMap<>();
+	private final Map<String, IChunkLocker<Object>> lockers = new HashMap<>();
 
 	private Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
-	private Function<String, AsyncChunkLocker<C>> chunkLockerFactory = $ -> ChunkLocker_NoOp.create(reactor);
+	private Function<String, IChunkLocker<C>> chunkLockerFactory = $ -> ChunkLocker_NoOp.create(reactor);
 
 	private boolean consolidating;
 	private boolean cleaning;
 
 	CubeConsolidationController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager, AsyncAggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed) {
+			CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager, IAggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
@@ -110,7 +110,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			CubeDiffScheme<D> cubeDiffScheme,
 			Cube cube,
 			OTStateManager<K, D> stateManager,
-			AsyncAggregationChunkStorage<C> aggregationChunkStorage) {
+			IAggregationChunkStorage<C> aggregationChunkStorage) {
 		return builder(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage).build();
 	}
 
@@ -118,7 +118,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			CubeDiffScheme<D> cubeDiffScheme,
 			Cube cube,
 			OTStateManager<K, D> stateManager,
-			AsyncAggregationChunkStorage<C> aggregationChunkStorage) {
+			IAggregationChunkStorage<C> aggregationChunkStorage) {
 		Map<Aggregation, String> map = new IdentityHashMap<>();
 		for (String aggregationId : cube.getAggregationIds()) {
 			map.put(cube.getAggregation(aggregationId), aggregationId);
@@ -135,7 +135,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			return this;
 		}
 
-		public Builder withChunkLockerFactory(Function<String, AsyncChunkLocker<C>> factory) {
+		public Builder withChunkLockerFactory(Function<String, IChunkLocker<C>> factory) {
 			checkNotBuilt(this);
 			CubeConsolidationController.this.chunkLockerFactory = factory;
 			return this;
@@ -201,7 +201,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(String aggregationId,
 			AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn) {
-		AsyncChunkLocker<Object> locker = ensureLocker(aggregationId);
+		IChunkLocker<Object> locker = ensureLocker(aggregationId);
 		Aggregation aggregation = cube.getAggregation(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
@@ -294,9 +294,9 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		else logger.info("Consolidation finished. Launching consolidation task again.");
 	}
 
-	private AsyncChunkLocker<Object> ensureLocker(String aggregationId) {
+	private IChunkLocker<Object> ensureLocker(String aggregationId) {
 		//noinspection unchecked
-		return lockers.computeIfAbsent(aggregationId, $ -> (AsyncChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
+		return lockers.computeIfAbsent(aggregationId, $ -> (IChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
 	}
 
 	@JmxAttribute

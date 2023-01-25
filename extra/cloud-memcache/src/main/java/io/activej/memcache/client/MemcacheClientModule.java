@@ -25,7 +25,7 @@ import io.activej.memcache.protocol.SerializerDef_Slice;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
 import io.activej.serializer.SerializerFactory;
@@ -50,7 +50,7 @@ public class MemcacheClientModule extends AbstractModule {
 	}
 
 	@Provides
-	AsyncRpcClient rpcClient(NioReactor reactor, Config config, DefiningClassLoader classLoader) {
+	IRpcClient rpcClient(NioReactor reactor, Config config, DefiningClassLoader classLoader) {
 		return RpcClient.builder(reactor)
 				.withStrategy(
 						RpcStrategy_RendezvousHashing.builder(HASH_FUNCTION)
@@ -69,12 +69,12 @@ public class MemcacheClientModule extends AbstractModule {
 				.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", SocketSettings.createDefault()))
 				.withConnectTimeout(config.get(ofDuration(), "client.connectSettings.connectTimeout", Duration.ofSeconds(10)))
 				.withReconnectInterval(config.get(ofDuration(), "client.connectSettings.reconnectInterval", Duration.ofSeconds(1)))
-				.withLogger(getLogger(AsyncMemcacheClient.class))
+				.withLogger(getLogger(IMemcacheClient.class))
 				.build();
 	}
 
 	@Provides
-	MemcacheClient_Raw memcacheClient(Reactor reactor, AsyncRpcClient client) {
+	MemcacheClient_Raw memcacheClient(Reactor reactor, IRpcClient client) {
 		return MemcacheClient_Raw.create(reactor, client);
 	}
 

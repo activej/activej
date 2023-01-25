@@ -21,7 +21,7 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.fs.tcp.FileSystemServer;
 import io.activej.http.AsyncServlet;
@@ -63,7 +63,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Eager
 	@Provides
-	FileSystemServer fileSystemServer(NioReactor reactor, AsyncFileSystem fileSystem, Config config) {
+	FileSystemServer fileSystemServer(NioReactor reactor, IFileSystem fileSystem, Config config) {
 		return FileSystemServer.builder(reactor, fileSystem)
 				.initialize(ofFileSystemServer(config.getChild("fs")))
 				.build();
@@ -78,12 +78,12 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(Reactor reactor, AsyncFileSystem fileSystem) {
+	AsyncServlet guiServlet(Reactor reactor, IFileSystem fileSystem) {
 		return FileSystemGuiServlet.create(reactor, fileSystem);
 	}
 
 	@Provides
-	AsyncFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
+	IFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
 		return FileSystem.create(reactor, executor, config.get(ofPath(), "fs.path", DEFAULT_PATH));
 	}
 

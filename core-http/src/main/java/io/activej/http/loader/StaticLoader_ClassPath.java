@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 class StaticLoader_ClassPath extends AbstractReactive
-		implements AsyncStaticLoader {
+		implements IStaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
 	private final Executor executor;

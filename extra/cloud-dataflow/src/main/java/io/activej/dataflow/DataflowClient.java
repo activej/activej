@@ -23,7 +23,7 @@ import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.exception.DataflowStacklessException;
@@ -87,7 +87,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		return StreamSupplier.ofPromise(TcpSocket.connect(reactor, address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
-					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
 					return performHandshake(messaging)
 							.then(() -> messaging.send(new Download(streamId))
 									.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
@@ -172,7 +172,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	public class Session extends ImplicitlyReactive implements AsyncCloseable {
 		private final InetSocketAddress address;
-		private final AsyncMessaging<DataflowResponse, DataflowRequest> messaging;
+		private final IMessaging<DataflowResponse, DataflowRequest> messaging;
 
 		private Session(InetSocketAddress address, AsyncTcpSocket socket) {
 			this.address = address;
@@ -225,7 +225,7 @@ public final class DataflowClient extends AbstractNioReactive {
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}
 
-	public static Promise<Void> performHandshake(AsyncMessaging<DataflowResponse, DataflowRequest> messaging) {
+	public static Promise<Void> performHandshake(IMessaging<DataflowResponse, DataflowRequest> messaging) {
 		return messaging.send(new Handshake(DataflowServer.VERSION))
 				.then(messaging::receive)
 				.map(expectResponse(DataflowResponse.Handshake.class))

@@ -69,14 +69,14 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
- * An implementation of {@link AsyncFileSystem} which operates on a real underlying filesystem, no networking involved.
+ * An implementation of {@link IFileSystem} which operates on a real underlying filesystem, no networking involved.
  * <p>
  * Only permits file operations to be made within a specified storage path.
  * <p>
- * This implementation does not define new limitations, other than those defined in {@link AsyncFileSystem} interface.
+ * This implementation does not define new limitations, other than those defined in {@link IFileSystem} interface.
  */
 public final class FileSystem extends AbstractReactive
-		implements AsyncFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -199,7 +199,7 @@ public final class FileSystem extends AbstractReactive
 		}
 
 		/**
-		 * If set to {@code true}, each write to {@link AsyncFileSystem#append} consumer will be synchronously written to the storage device.
+		 * If set to {@code true}, each write to {@link IFileSystem#append} consumer will be synchronously written to the storage device.
 		 * <p>
 		 * <b>Note: significantly slows down appends</b>
 		 */

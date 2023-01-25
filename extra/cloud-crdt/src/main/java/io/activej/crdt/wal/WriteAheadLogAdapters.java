@@ -22,7 +22,7 @@ import static io.activej.common.Checks.checkArgument;
 
 public final class WriteAheadLogAdapters {
 
-	public static <K extends Comparable<K>, S> AsyncWriteAheadLog<K, S> flushOnUpdatesCount(AsyncWriteAheadLog<K, S> original, int updatesCount) {
+	public static <K extends Comparable<K>, S> IWriteAheadLog<K, S> flushOnUpdatesCount(IWriteAheadLog<K, S> original, int updatesCount) {
 		checkArgument(updatesCount > 0);
 
 		return new ForwardingWriteAheadLog<>(original) {

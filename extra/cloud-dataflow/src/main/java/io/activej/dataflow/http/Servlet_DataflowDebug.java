@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.exception.DataflowException;
@@ -36,7 +36,7 @@ import io.activej.dataflow.messaging.DataflowResponse.TaskDescription;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
 import io.activej.net.socket.tcp.TcpSocket;
@@ -70,8 +70,8 @@ public final class Servlet_DataflowDebug extends AbstractReactive implements Asy
 		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		objectMapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
 
-		AsyncStaticLoader staticLoader = AsyncStaticLoader.ofClassPath(reactor, executor, "debug");
-		
+		IStaticLoader staticLoader = IStaticLoader.ofClassPath(reactor, executor, "debug");
+
 		this.servlet = Servlet_Routing.create(reactor)
 				.map("/*", Servlet_Static.builder(reactor, staticLoader)
 						.withIndexHtml()
@@ -173,7 +173,7 @@ public final class Servlet_DataflowDebug extends AbstractReactive implements Asy
 	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
 		return TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
 							.then(() -> messaging.send(new GetTasks(null)))
 							.then(messaging::receive)
@@ -193,7 +193,7 @@ public final class Servlet_DataflowDebug extends AbstractReactive implements Asy
 	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
 		return TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
 							.then(() -> messaging.send(new GetTasks(taskId)))
 							.then($ -> messaging.receive())

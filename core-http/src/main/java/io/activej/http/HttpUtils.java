@@ -18,8 +18,8 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.http.AsyncWebSocket.Frame.FrameType;
-import io.activej.http.AsyncWebSocket.Message.MessageType;
+import io.activej.http.IWebSocket.Frame.FrameType;
+import io.activej.http.IWebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
 import io.activej.net.AbstractReactiveServer;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.http.AsyncWebSocket.Frame.FrameType.*;
+import static io.activej.http.IWebSocket.Frame.FrameType.*;
 import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
 import static io.activej.http.WebSocketConstants.MAGIC_STRING;

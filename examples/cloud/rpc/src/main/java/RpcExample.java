@@ -9,7 +9,7 @@ import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -26,7 +26,7 @@ public class RpcExample extends Launcher {
 	private static final int SERVICE_PORT = 34765;
 
 	@Inject
-	private AsyncRpcClient client;
+	private IRpcClient client;
 
 	@Inject
 	private RpcServer server;
@@ -50,7 +50,7 @@ public class RpcExample extends Launcher {
 	}
 
 	@Provides
-	AsyncRpcClient rpcClient(NioReactor reactor) {
+	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)))
@@ -60,7 +60,7 @@ public class RpcExample extends Launcher {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts client only after it started the server
-		return settings -> settings.addDependency(Key.of(AsyncRpcClient.class), Key.of(RpcServer.class));
+		return settings -> settings.addDependency(Key.of(IRpcClient.class), Key.of(RpcServer.class));
 	}
 
 	@Override

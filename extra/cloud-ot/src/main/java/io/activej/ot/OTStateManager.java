@@ -24,8 +24,8 @@ import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.ot.exception.TransformException;
-import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.system.IOTSystem;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.reactor.AbstractReactive;
@@ -52,8 +52,8 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		implements ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
-	private final OTSystem<D> otSystem;
-	private final AsyncOTUplink<K, D, Object> uplink;
+	private final IOTSystem<D> otSystem;
+	private final IOTUplink<K, D, Object> uplink;
 
 	private final AsyncSupplier<Boolean> fetch = AsyncSuppliers.reuse(this::doFetch);
 
@@ -78,20 +78,20 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	private boolean isPolling;
 
 	@SuppressWarnings("unchecked")
-	private OTStateManager(Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink, OTState<D> state) {
+	private OTStateManager(Reactor reactor, IOTSystem<D> otSystem, IOTUplink<K, D, ?> uplink, OTState<D> state) {
 		super(reactor);
 		this.otSystem = otSystem;
-		this.uplink = (AsyncOTUplink<K, D, Object>) uplink;
+		this.uplink = (IOTUplink<K, D, Object>) uplink;
 		this.state = state;
 	}
 
-	public static <K, D> OTStateManager<K, D> create(Reactor reactor, OTSystem<D> otSystem,
-			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
+	public static <K, D> OTStateManager<K, D> create(Reactor reactor, IOTSystem<D> otSystem,
+			IOTUplink<K, D, ?> repository, OTState<D> state) {
 		return builder(reactor, otSystem, repository, state).build();
 	}
 
-	public static <K, D> OTStateManager<K, D>.Builder builder(Reactor reactor, OTSystem<D> otSystem,
-			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
+	public static <K, D> OTStateManager<K, D>.Builder builder(Reactor reactor, IOTSystem<D> otSystem,
+			IOTUplink<K, D, ?> repository, OTState<D> state) {
 		return new OTStateManager<>(reactor, otSystem, repository, state).new Builder();
 	}
 
@@ -177,7 +177,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		return fetch.get();
 	}
 
-	private void updateOrigin(AsyncOTUplink.FetchData<K, D> fetchData) {
+	private void updateOrigin(IOTUplink.FetchData<K, D> fetchData) {
 		assert pendingProtoCommit == null;
 		originCommitId = fetchData.getCommitId();
 		originLevel = fetchData.getLevel();

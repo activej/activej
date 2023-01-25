@@ -6,7 +6,7 @@ import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
@@ -58,7 +58,7 @@ public final class TestDyingPartitions {
 	public void setUp() throws Exception {
 		servers = new LinkedHashMap<>();
 
-		Map<String, AsyncCrdtStorage<String, Integer>> clients = new HashMap<>();
+		Map<String, ICrdtStorage<String, Integer>> clients = new HashMap<>();
 
 		for (int i = 0; i < SERVER_COUNT; i++) {
 			int port = getFreePort();
@@ -76,7 +76,7 @@ public final class TestDyingPartitions {
 		}
 
 		cluster = CrdtStorage_Cluster.create(getCurrentReactor(),
-				AsyncDiscoveryService.of(
+				IDiscoveryService.of(
 						PartitionScheme_Rendezvous.<String>builder()
 								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 										.withReplicas(REPLICATION_COUNT)

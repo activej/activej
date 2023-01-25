@@ -19,13 +19,13 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
-import io.activej.http.AsyncHttpClient;
+import io.activej.http.IHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerFactory;
@@ -254,7 +254,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 				JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
 		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
@@ -283,14 +283,14 @@ public final class ReportingTest extends CubeTestBase {
 						.withMeasures(MEASURES.keySet()))
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(fileSystem.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				FrameFormat_LZ4.create(),
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
@@ -334,7 +334,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = HttpClient.builder(reactor)
+		IHttpClient httpClient = HttpClient.builder(reactor)
 				.withNoKeepAlive()
 				.build();
 		cubeHttp = Cube_HttpClient.builder(httpClient, "http://127.0.0.1:" + serverPort)

@@ -54,7 +54,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	private static final String SQL_CLEANUP_SCRIPT = "sql/cleanup.sql";
 
 	private final DataSource dataSource;
-	private final ChunksCleanerService chunksCleanerService;
+	private final IChunksCleanerService chunksCleanerService;
 
 	private Duration chunksCleanupDelay = CHUNKS_CLEANUP_DELAY;
 	private Duration cleanupOlderThan = CLEANUP_OLDER_THAN;
@@ -93,16 +93,16 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private CubeCleanerController(DataSource dataSource, ChunksCleanerService chunksCleanerService) {
+	private CubeCleanerController(DataSource dataSource, IChunksCleanerService chunksCleanerService) {
 		this.dataSource = dataSource;
 		this.chunksCleanerService = chunksCleanerService;
 	}
 
-	public static CubeCleanerController create(DataSource dataSource, ChunksCleanerService chunksCleanerService) {
+	public static CubeCleanerController create(DataSource dataSource, IChunksCleanerService chunksCleanerService) {
 		return builder(dataSource, chunksCleanerService).build();
 	}
 
-	public static Builder builder(DataSource dataSource, ChunksCleanerService chunksCleanerService) {
+	public static Builder builder(DataSource dataSource, IChunksCleanerService chunksCleanerService) {
 		return new CubeCleanerController(dataSource, chunksCleanerService).new Builder();
 	}
 
@@ -423,12 +423,12 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	// endregion
 
 	@ComponentInterface
-	public interface ChunksCleanerService {
+	public interface IChunksCleanerService {
 		void checkRequiredChunks(Set<Long> chunkIds) throws IOException;
 
 		void cleanup(Set<Long> chunkIds, Instant safePoint) throws IOException;
 
-		static ChunksCleanerService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
+		static IChunksCleanerService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
 			return Utils.cleanerServiceOfStorage(storage);
 		}
 	}

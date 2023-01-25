@@ -1,7 +1,7 @@
 package io.activej.cube;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.AsyncAggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.aggregation.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
@@ -17,10 +17,10 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,11 +58,11 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
 	private static final PredicateDef DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
-	private AsyncAggregationChunkStorage<Long> chunkStorage;
+	private IAggregationChunkStorage<Long> chunkStorage;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;
-	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
+	private IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 
 	@Before
 	public void before() throws Exception {
@@ -101,7 +101,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
 				frameFormat,
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),

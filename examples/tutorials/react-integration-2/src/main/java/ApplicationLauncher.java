@@ -6,7 +6,7 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.reactor.Reactor;
@@ -40,12 +40,12 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 	//[START REGION_2]
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, "build/");
+	IStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return IStaticLoader.ofClassPath(reactor, executor, "build/");
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader, RecordDAO recordDAO, DslJson<?> dslJson) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO, DslJson<?> dslJson) {
 		return Servlet_Routing.create(reactor)
 				.map("/*", Servlet_Static.builder(reactor, staticLoader)
 						.withIndexHtml()

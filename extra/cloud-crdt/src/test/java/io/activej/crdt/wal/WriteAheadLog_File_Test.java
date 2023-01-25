@@ -3,7 +3,7 @@ package io.activej.crdt.wal;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.GSet;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.csp.ChannelSupplier;
@@ -72,7 +72,7 @@ public class WriteAheadLog_File_Test {
 
 	private WalUploader<Long, GSet<Integer>> uploader;
 	private WriteAheadLog_File<Long, GSet<Integer>> wal;
-	private AsyncCrdtStorage<Long, GSet<Integer>> storage;
+	private ICrdtStorage<Long, GSet<Integer>> storage;
 	private Executor executor;
 	private Path path;
 

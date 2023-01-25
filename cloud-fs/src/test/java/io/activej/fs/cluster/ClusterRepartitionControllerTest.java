@@ -2,7 +2,7 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
@@ -57,7 +57,7 @@ public final class ClusterRepartitionControllerTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<FileSystemServer> servers = new ArrayList<>();
-		Map<Object, AsyncFileSystem> partitions = new HashMap<>();
+		Map<Object, IFileSystem> partitions = new HashMap<>();
 
 		Path storage = tmpFolder.newFolder().toPath();
 		Path localStorage = storage.resolve("local");
@@ -110,13 +110,13 @@ public final class ClusterRepartitionControllerTest {
 		failingServer.listen();
 		servers.add(failingServer);
 
-		AsyncDiscoveryService discoveryService = AsyncDiscoveryService.constant(partitions);
+		IDiscoveryService discoveryService = IDiscoveryService.constant(partitions);
 		FileSystemPartitions fileSystemPartitions = FileSystemPartitions.builder(reactor, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER)
 				.build();
 
-		Promise<Map<Object, AsyncFileSystem>> discoverPromise = discoveryService.discover().get();
-		Map<Object, AsyncFileSystem> discovered = discoverPromise.getResult();
+		Promise<Map<Object, IFileSystem>> discoverPromise = discoveryService.discover().get();
+		Map<Object, IFileSystem> discovered = discoverPromise.getResult();
 
 		ClusterRepartitionController controller = ClusterRepartitionController.builder(reactor, localPartitionId, fileSystemPartitions)
 				.withReplicationCount(partitions.size())    // full replication

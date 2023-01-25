@@ -33,7 +33,7 @@ import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.FileSystem_HttpClient;
@@ -263,7 +263,7 @@ public final class PartitionedStreamTest {
 
 		Set<String> allTargetItems = new HashSet<>();
 		for (int i = 0; i < targetFileSystemServers.size(); i++) {
-			AsyncFileSystem fs = createClient(getCurrentReactor(), targetFileSystemServers.get(i));
+			IFileSystem fs = createClient(getCurrentReactor(), targetFileSystemServers.get(i));
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
@@ -312,23 +312,23 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@Named("source")
-					List<AsyncFileSystem> sourceFileSystems(NioReactor reactor) {
+					List<IFileSystem> sourceFileSystems(NioReactor reactor) {
 						return createClients(reactor, sourceFileSystemServers);
 					}
 
 					@Provides
 					@Named("target")
-					List<AsyncFileSystem> targetFileSystems(NioReactor reactor) {
+					List<IFileSystem> targetFileSystems(NioReactor reactor) {
 						return createClients(reactor, targetFileSystemServers);
 					}
 
 					@Provides
 					@DatasetId("data source")
-					PartitionedStreamSupplierFactory<String> data(@Named("source") List<AsyncFileSystem> asyncFileSystems) {
+					PartitionedStreamSupplierFactory<String> data(@Named("source") List<IFileSystem> fileSystems) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamUnion<String> union = StreamUnion.create();
-							for (int i = partitionIndex; i < asyncFileSystems.size(); i += maxPartitions) {
-								ChannelSupplier.ofPromise(asyncFileSystems.get(i).download(SOURCE_FILENAME))
+							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
+								ChannelSupplier.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
 										.streamTo(union.newInput());
 							}
@@ -338,12 +338,12 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@DatasetId("sorted data source")
-					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<AsyncFileSystem> asyncFileSystems) {
+					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<IFileSystem> fileSystems) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamReducer<Integer, String, Void> merger = StreamReducer.create();
 
-							for (int i = partitionIndex; i < asyncFileSystems.size(); i += maxPartitions) {
-								ChannelSupplier.ofPromise(asyncFileSystems.get(i).download(SOURCE_FILENAME))
+							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
+								ChannelSupplier.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
 										.streamTo(merger.newInput(KEY_FUNCTION, mergeReducer()));
 							}
@@ -353,15 +353,15 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@DatasetId("data target")
-					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<AsyncFileSystem> asyncFileSystems) {
+					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<IFileSystem> fileSystems) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) ->
 									acceptors[item.hashCode() % acceptors.length].accept(item));
 
 							List<Promise<Void>> uploads = new ArrayList<>();
-							for (int i = partitionIndex; i < asyncFileSystems.size(); i += maxPartitions) {
+							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
 								uploads.add(splitter.newOutput()
-										.streamTo(ChannelConsumer.ofPromise(asyncFileSystems.get(i).upload(TARGET_FILENAME))
+										.streamTo(ChannelConsumer.ofPromise(fileSystems.get(i).upload(TARGET_FILENAME))
 												.transformWith(new CSVEncoder())));
 							}
 
@@ -408,13 +408,13 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<AsyncFileSystem> createClients(NioReactor reactor, List<HttpServer> servers) {
+	private static List<IFileSystem> createClients(NioReactor reactor, List<HttpServer> servers) {
 		return servers.stream()
 				.map(server -> createClient(reactor, server))
 				.collect(Collectors.toList());
 	}
 
-	private static AsyncFileSystem createClient(NioReactor reactor, HttpServer server) {
+	private static IFileSystem createClient(NioReactor reactor, HttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
 		return FileSystem_HttpClient.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
 	}

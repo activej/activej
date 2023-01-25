@@ -29,7 +29,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Used for testing.
  */
 public final class HttpClient_Stub extends ImplicitlyReactive
-		implements AsyncHttpClient {
+		implements IHttpClient {
 	private final AsyncServlet servlet;
 
 	private HttpClient_Stub(AsyncServlet servlet) {

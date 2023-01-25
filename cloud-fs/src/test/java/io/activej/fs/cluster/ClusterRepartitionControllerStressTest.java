@@ -1,7 +1,7 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.service.TaskScheduler;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.fs.tcp.FileSystemServer;
@@ -65,7 +65,7 @@ public final class ClusterRepartitionControllerStressTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, AsyncFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, IFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");
@@ -93,7 +93,7 @@ public final class ClusterRepartitionControllerStressTest {
 			servers.add(server);
 		}
 
-		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions));
+		this.partitions = FileSystemPartitions.create(reactor, IDiscoveryService.constant(partitions));
 
 		controller = ClusterRepartitionController.builder(reactor, localPartitionId, this.partitions)
 				.withReplicationCount(3)

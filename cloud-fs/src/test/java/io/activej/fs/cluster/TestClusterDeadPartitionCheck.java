@@ -4,7 +4,7 @@ import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.http.FileSystemServlet;
@@ -88,7 +88,7 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
+							public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
 								return FileSystem_Remote.create(reactor, address);
 							}
 
@@ -123,7 +123,7 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
+							public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
 								return FileSystem_HttpClient.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
 							}
 
@@ -159,7 +159,7 @@ public final class TestClusterDeadPartitionCheck {
 		executor = newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, AsyncFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, IFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 
@@ -191,7 +191,7 @@ public final class TestClusterDeadPartitionCheck {
 			startFuture.get();
 		}
 
-		this.partitions = FileSystemPartitions.builder(reactor, AsyncDiscoveryService.constant(partitions))
+		this.partitions = FileSystemPartitions.builder(reactor, IDiscoveryService.constant(partitions))
 				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()))
 				.build();
 		await(this.partitions.start());
@@ -333,7 +333,7 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private interface ClientServerFactory {
-		AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address);
+		IFileSystem createClient(NioReactor reactor, InetSocketAddress address);
 
 		AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address);
 

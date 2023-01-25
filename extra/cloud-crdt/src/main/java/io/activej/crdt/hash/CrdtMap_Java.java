@@ -19,7 +19,7 @@ package io.activej.crdt.hash;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -33,7 +33,7 @@ import java.util.function.BinaryOperator;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncCrdtMap<K, S>, ReactiveService {
+		implements ICrdtMap<K, S>, ReactiveService {
 	private final Map<K, S> map = new TreeMap<>();
 
 	private final BinaryOperator<S> mergeFn;
@@ -46,7 +46,7 @@ public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
 		this.refresh = Promise::complete;
 	}
 
-	public CrdtMap_Java(Reactor reactor, BinaryOperator<S> mergeFn, AsyncCrdtStorage<K, S> storage) {
+	public CrdtMap_Java(Reactor reactor, BinaryOperator<S> mergeFn, ICrdtStorage<K, S> storage) {
 		super(reactor);
 		this.mergeFn = mergeFn;
 		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
@@ -82,7 +82,7 @@ public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
 		return Promise.complete();
 	}
 
-	private Promise<Void> doRefresh(AsyncCrdtStorage<K, S> storage) {
+	private Promise<Void> doRefresh(ICrdtStorage<K, S> storage) {
 		assert storage != null;
 		return storage.download()
 				.then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));

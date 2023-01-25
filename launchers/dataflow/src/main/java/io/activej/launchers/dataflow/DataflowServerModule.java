@@ -14,7 +14,7 @@ import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.Node_Sort;
-import io.activej.datastream.processor.AsyncStreamSorterStorage;
+import io.activej.datastream.processor.IStreamSorterStorage;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Eager;
@@ -87,13 +87,13 @@ public final class DataflowServerModule extends AbstractModule {
 			int index;
 
 			@Override
-			public <T> AsyncStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted) {
+			public <T> IStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted) {
 				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
 				return StreamSorterStorage.create(executor, streamSchema.createSerializer(serializerLocator), FrameFormat_LZ4.create(), taskSortDir);
 			}
 
 			@Override
-			public <T> Promise<Void> cleanup(AsyncStreamSorterStorage<T> storage) {
+			public <T> Promise<Void> cleanup(IStreamSorterStorage<T> storage) {
 				assert storage instanceof StreamSorterStorage<T>;
 				StreamSorterStorage<T> storageImpl = (StreamSorterStorage<T>) storage;
 

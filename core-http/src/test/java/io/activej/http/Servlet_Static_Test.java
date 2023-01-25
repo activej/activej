@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -15,8 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.http.loader.AsyncStaticLoader.ofClassPath;
-import static io.activej.http.loader.AsyncStaticLoader.ofPath;
+import static io.activej.http.loader.IStaticLoader.ofClassPath;
+import static io.activej.http.loader.IStaticLoader.ofPath;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -99,7 +99,7 @@ public final class Servlet_Static_Test {
 	@Test
 	public void testRelativeClassPathWithInnerPath() {
 		Reactor reactor = getCurrentReactor();
-		AsyncStaticLoader resourceLoader = ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/dir/");
+		IStaticLoader resourceLoader = ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/dir/");
 		Servlet_Static staticServlet = Servlet_Static.create(reactor, resourceLoader);
 		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/test.txt")));
 		await(response.loadBody());
@@ -111,7 +111,7 @@ public final class Servlet_Static_Test {
 	@Test
 	public void testFileNotFoundRelativeClassPath() {
 		Reactor reactor = getCurrentReactor();
-		AsyncStaticLoader resourceLoader = ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/");
+		IStaticLoader resourceLoader = ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/");
 		Servlet_Static staticServlet = Servlet_Static.create(reactor, resourceLoader);
 		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
 

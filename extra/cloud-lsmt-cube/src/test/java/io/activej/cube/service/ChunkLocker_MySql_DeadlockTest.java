@@ -1,6 +1,6 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AsyncChunkLocker;
+import io.activej.aggregation.IChunkLocker;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.eventloop.Eventloop;
@@ -86,7 +86,7 @@ public class ChunkLocker_MySql_DeadlockTest {
 		t2.join();
 	}
 
-	private static Runnable run(AsyncChunkLocker<Long> locker) {
+	private static Runnable run(IChunkLocker<Long> locker) {
 		return () -> {
 			Eventloop eventloop = Eventloop.builder()
 					.withCurrentThread()
@@ -99,7 +99,7 @@ public class ChunkLocker_MySql_DeadlockTest {
 		};
 	}
 
-	private static void action(ThreadLocalRandom random, AsyncChunkLocker<Long> locker) {
+	private static void action(ThreadLocalRandom random, IChunkLocker<Long> locker) {
 		Set<Long> chunkIds = new HashSet<>();
 		for (int i = 0; i < 100; i++) {
 			chunkIds.add(random.nextLong(MAX_CHUNK_ID));

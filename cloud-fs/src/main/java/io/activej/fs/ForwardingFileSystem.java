@@ -26,15 +26,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An implementation of {@link AsyncFileSystem} that forwards all the calls to the underlying {@link AsyncFileSystem}.
+ * An implementation of {@link IFileSystem} that forwards all the calls to the underlying {@link IFileSystem}.
  * May be suitable for creating decorators that override certain behaviour of file system.
  * <p>
- * Inherits all the limitations of underlying {@link AsyncFileSystem}
+ * Inherits all the limitations of underlying {@link IFileSystem}
  */
-public abstract class ForwardingFileSystem implements AsyncFileSystem {
-	private final AsyncFileSystem peer;
+public abstract class ForwardingFileSystem implements IFileSystem {
+	private final IFileSystem peer;
 
-	protected ForwardingFileSystem(AsyncFileSystem peer) {
+	protected ForwardingFileSystem(IFileSystem peer) {
 		this.peer = peer;
 	}
 

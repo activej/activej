@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.http.HttpClient_Stub;
 import io.activej.http.Servlet_Routing;
@@ -184,7 +184,7 @@ public final class ApiTest {
 	}
 
 	private Servlet_Routing getServlet() {
-		return FileSystemServlet.create(Reactor.getCurrentReactor(), new AsyncFileSystem() {
+		return FileSystemServlet.create(Reactor.getCurrentReactor(), new IFileSystem() {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();
 				params.add(result);

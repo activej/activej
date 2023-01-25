@@ -21,7 +21,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.Stopwatch;
-import io.activej.cube.AsyncCube;
+import io.activej.cube.ICube;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.exception.QueryException;
 import io.activej.http.*;
@@ -48,22 +48,22 @@ import static java.util.stream.Collectors.toList;
 public final class Servlet_ReportingService extends Servlet_WithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Servlet_ReportingService.class);
 
-	private final AsyncCube cube;
+	private final ICube cube;
 	private JsonCodec_QueryResult queryResultCodec;
 	private JsonCodec_AggregationPredicate aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private Servlet_ReportingService(Reactor reactor, AsyncCube cube) {
+	private Servlet_ReportingService(Reactor reactor, ICube cube) {
 		super(reactor);
 		this.cube = cube;
 	}
 
-	public static Servlet_ReportingService create(Reactor reactor, AsyncCube cube) {
+	public static Servlet_ReportingService create(Reactor reactor, ICube cube) {
 		return builder(reactor, cube).build();
 	}
 
-	public static Servlet_Routing createRootServlet(Reactor reactor, AsyncCube cube) {
+	public static Servlet_Routing createRootServlet(Reactor reactor, ICube cube) {
 		return createRootServlet(
 				Servlet_ReportingService.create(reactor, cube));
 	}
@@ -73,7 +73,7 @@ public final class Servlet_ReportingService extends Servlet_WithStats {
 				.map(GET, "/", reportingServiceServlet);
 	}
 
-	public static Builder builder(Reactor reactor, AsyncCube cube) {
+	public static Builder builder(Reactor reactor, ICube cube) {
 		return new Servlet_ReportingService(reactor, cube).new Builder();
 	}
 

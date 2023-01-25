@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.dataflow.AsyncSqlDataflow;
+import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
@@ -46,7 +46,7 @@ import java.util.List;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataflow {
+public final class SqlDataflow extends AbstractReactive implements ISqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 

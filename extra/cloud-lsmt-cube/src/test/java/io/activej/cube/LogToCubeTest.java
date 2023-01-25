@@ -2,7 +2,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicates;
-import io.activej.aggregation.AsyncAggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
@@ -17,10 +17,10 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileSystem;
-import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.IOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
@@ -46,7 +46,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
@@ -60,7 +60,7 @@ public final class LogToCubeTest extends CubeTestBase {
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
 				.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		IOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
@@ -69,7 +69,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
-		AsyncMultilog<TestPubRequest> multilog = Multilog.create(reactor, fileSystem,
+		IMultilog<TestPubRequest> multilog = Multilog.create(reactor, fileSystem,
 				frameFormat,
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);

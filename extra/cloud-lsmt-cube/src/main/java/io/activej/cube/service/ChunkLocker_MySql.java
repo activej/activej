@@ -16,7 +16,7 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.AsyncChunkLocker;
+import io.activej.aggregation.IChunkLocker;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.common.ApplicationSettings;
@@ -45,7 +45,7 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
 public final class ChunkLocker_MySql<C> extends AbstractReactive
-		implements AsyncChunkLocker<C> {
+		implements IChunkLocker<C> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLocker_MySql.class);
 
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(ChunkLocker_MySql.class, "chunkTable", "cube_chunk");

@@ -25,16 +25,16 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toList;
 
-public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
+public final class MergedOTSystem<D, D1, D2> implements IOTSystem<D> {
 	private final TupleConstructor2<List<D1>, List<D2>, D> constructor;
 	private final Function<D, List<D1>> getter1;
-	private final OTSystem<D1> otSystem1;
+	private final IOTSystem<D1> otSystem1;
 	private final Function<D, List<D2>> getter2;
-	private final OTSystem<D2> otSystem2;
+	private final IOTSystem<D2> otSystem2;
 
 	private MergedOTSystem(TupleConstructor2<List<D1>, List<D2>, D> constructor,
-			Function<D, List<D1>> getter1, OTSystem<D1> otSystem1,
-			Function<D, List<D2>> getter2, OTSystem<D2> otSystem2) {
+			Function<D, List<D1>> getter1, IOTSystem<D1> otSystem1,
+			Function<D, List<D2>> getter2, IOTSystem<D2> otSystem2) {
 		this.constructor = constructor;
 		this.getter1 = getter1;
 		this.otSystem1 = otSystem1;
@@ -42,18 +42,18 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 		this.otSystem2 = otSystem2;
 	}
 
-	public static <D, D1, D2> OTSystem<D> mergeOtSystems(TupleConstructor2<List<D1>, List<D2>, D> constructor,
-			Function<D, List<D1>> getter1, OTSystem<D1> otSystem1,
-			Function<D, List<D2>> getter2, OTSystem<D2> otSystem2) {
+	public static <D, D1, D2> IOTSystem<D> mergeOtSystems(TupleConstructor2<List<D1>, List<D2>, D> constructor,
+			Function<D, List<D1>> getter1, IOTSystem<D1> otSystem1,
+			Function<D, List<D2>> getter2, IOTSystem<D2> otSystem2) {
 		return new MergedOTSystem<>(constructor, getter1, otSystem1, getter2, otSystem2);
 	}
 
-	public static <D, D1, D2, D3> OTSystem<D> mergeOtSystems(TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor,
-			Function<D, List<D1>> getter1, OTSystem<D1> otSystem1,
-			Function<D, List<D2>> getter2, OTSystem<D2> otSystem2,
-			Function<D, List<D3>> getter3, OTSystem<D3> otSystem3) {
+	public static <D, D1, D2, D3> IOTSystem<D> mergeOtSystems(TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor,
+			Function<D, List<D1>> getter1, IOTSystem<D1> otSystem1,
+			Function<D, List<D2>> getter2, IOTSystem<D2> otSystem2,
+			Function<D, List<D3>> getter3, IOTSystem<D3> otSystem3) {
 
-		OTSystem<Tuple2<List<D1>, List<D2>>> premerged = mergeOtSystems(Tuple2::new,
+		IOTSystem<Tuple2<List<D1>, List<D2>>> premerged = mergeOtSystems(Tuple2::new,
 				Tuple2::value1, otSystem1,
 				Tuple2::value2, otSystem2);
 
@@ -65,17 +65,17 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 				getter3, otSystem3);
 	}
 
-	public static <D, D1, D2, D3, D4> OTSystem<D> mergeOtSystems(TupleConstructor4<List<D1>, List<D2>, List<D3>, List<D4>, D> constructor,
-			Function<D, List<D1>> getter1, OTSystem<D1> otSystem1,
-			Function<D, List<D2>> getter2, OTSystem<D2> otSystem2,
-			Function<D, List<D3>> getter3, OTSystem<D3> otSystem3,
-			Function<D, List<D4>> getter4, OTSystem<D4> otSystem4) {
+	public static <D, D1, D2, D3, D4> IOTSystem<D> mergeOtSystems(TupleConstructor4<List<D1>, List<D2>, List<D3>, List<D4>, D> constructor,
+			Function<D, List<D1>> getter1, IOTSystem<D1> otSystem1,
+			Function<D, List<D2>> getter2, IOTSystem<D2> otSystem2,
+			Function<D, List<D3>> getter3, IOTSystem<D3> otSystem3,
+			Function<D, List<D4>> getter4, IOTSystem<D4> otSystem4) {
 
-		OTSystem<Tuple2<List<D1>, List<D2>>> premerged1 = mergeOtSystems(Tuple2::new,
+		IOTSystem<Tuple2<List<D1>, List<D2>>> premerged1 = mergeOtSystems(Tuple2::new,
 				Tuple2::value1, otSystem1,
 				Tuple2::value2, otSystem2);
 
-		OTSystem<Tuple2<List<D3>, List<D4>>> premerged2 = mergeOtSystems(Tuple2::new,
+		IOTSystem<Tuple2<List<D3>, List<D4>>> premerged2 = mergeOtSystems(Tuple2::new,
 				Tuple2::value1, otSystem3,
 				Tuple2::value2, otSystem4);
 
@@ -88,19 +88,19 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 				d -> combineLists2(getter3.apply(d), getter4.apply(d), Tuple2::new), premerged2);
 	}
 
-	public static <D, D1, D2, D3, D4, D5> OTSystem<D> mergeOtSystems(TupleConstructor5<List<D1>, List<D2>, List<D3>, List<D4>, List<D5>, D> constructor,
-			Function<D, List<D1>> getter1, OTSystem<D1> otSystem1,
-			Function<D, List<D2>> getter2, OTSystem<D2> otSystem2,
-			Function<D, List<D3>> getter3, OTSystem<D3> otSystem3,
-			Function<D, List<D4>> getter4, OTSystem<D4> otSystem4,
-			Function<D, List<D5>> getter5, OTSystem<D5> otSystem5) {
+	public static <D, D1, D2, D3, D4, D5> IOTSystem<D> mergeOtSystems(TupleConstructor5<List<D1>, List<D2>, List<D3>, List<D4>, List<D5>, D> constructor,
+			Function<D, List<D1>> getter1, IOTSystem<D1> otSystem1,
+			Function<D, List<D2>> getter2, IOTSystem<D2> otSystem2,
+			Function<D, List<D3>> getter3, IOTSystem<D3> otSystem3,
+			Function<D, List<D4>> getter4, IOTSystem<D4> otSystem4,
+			Function<D, List<D5>> getter5, IOTSystem<D5> otSystem5) {
 
-		OTSystem<Tuple3<List<D1>, List<D2>, List<D3>>> premerged1 = mergeOtSystems(Tuple3::new,
+		IOTSystem<Tuple3<List<D1>, List<D2>, List<D3>>> premerged1 = mergeOtSystems(Tuple3::new,
 				Tuple3::value1, otSystem1,
 				Tuple3::value2, otSystem2,
 				Tuple3::value3, otSystem3);
 
-		OTSystem<Tuple2<List<D4>, List<D5>>> premerged2 = mergeOtSystems(Tuple2::new,
+		IOTSystem<Tuple2<List<D4>, List<D5>>> premerged2 = mergeOtSystems(Tuple2::new,
 				Tuple2::value1, otSystem4,
 				Tuple2::value2, otSystem5);
 

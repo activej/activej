@@ -63,7 +63,7 @@ public class AggregationChunkStorageTest {
 		Path storageDir = temporaryFolder.newFolder().toPath();
 		FileSystem fs = FileSystem.create(reactor, newCachedThreadPool(), storageDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(
 				reactor,
 				JsonCodec_ChunkId.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc),

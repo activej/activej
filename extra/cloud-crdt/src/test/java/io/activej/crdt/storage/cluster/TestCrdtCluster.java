@@ -4,7 +4,7 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.AsyncCrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
@@ -49,7 +49,7 @@ public final class TestCrdtCluster {
 		BinarySerializer_CrdtData<String, Integer> serializer = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
 		List<CrdtServer<String, Integer>> servers = new ArrayList<>();
-		Map<String, AsyncCrdtStorage<String, Integer>> clients = new HashMap<>();
+		Map<String, ICrdtStorage<String, Integer>> clients = new HashMap<>();
 		Map<String, CrdtStorage_Map<String, Integer>> remoteStorages = new LinkedHashMap<>();
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorage_Map<String, Integer> storage = CrdtStorage_Map.create(reactor, ignoringTimestamp(Math::max));
@@ -83,7 +83,7 @@ public final class TestCrdtCluster {
 		}
 		CrdtStorage_Cluster<String, Integer, String> cluster = CrdtStorage_Cluster.create(
 				reactor,
-				AsyncDiscoveryService.of(
+				IDiscoveryService.of(
 						PartitionScheme_Rendezvous.<String>builder()
 								.withPartitionGroup(
 										RendezvousPartitionGroup.builder(clients.keySet())
@@ -116,7 +116,7 @@ public final class TestCrdtCluster {
 		NioReactor reactor = getCurrentReactor();
 
 		List<CrdtServer<String, Set<Integer>>> servers = new ArrayList<>();
-		Map<String, AsyncCrdtStorage<String, Set<Integer>>> clients = new HashMap<>();
+		Map<String, ICrdtStorage<String, Set<Integer>>> clients = new HashMap<>();
 
 		CrdtFunction<Set<Integer>> union = ignoringTimestamp((a, b) -> {
 			a.addAll(b);
@@ -158,7 +158,7 @@ public final class TestCrdtCluster {
 
 		CrdtStorage_Map<String, Set<Integer>> localStorage = CrdtStorage_Map.create(reactor, union);
 		CrdtStorage_Cluster<String, Set<Integer>, String> cluster = CrdtStorage_Cluster.create(reactor,
-				AsyncDiscoveryService.of(
+				IDiscoveryService.of(
 						PartitionScheme_Rendezvous.<String>builder()
 								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 										.withReplicas(REPLICATION_COUNT)

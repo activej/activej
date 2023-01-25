@@ -1,6 +1,6 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.Servlet_Static;
-import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -18,12 +18,12 @@ public final class StaticServletExample extends HttpServerLauncher {
 
 	//[START EXAMPLE]
 	@Provides
-	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
-		return AsyncStaticLoader.ofClassPath(reactor, executor, "static/site");
+	IStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return IStaticLoader.ofClassPath(reactor, executor, "static/site");
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
 		return Servlet_Static.builder(reactor, staticLoader)
 				.withIndexHtml()
 				.build();

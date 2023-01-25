@@ -22,7 +22,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.function.ConsumerEx;
-import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -51,32 +51,32 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	static final FileSystemException LOCAL_EXCEPTION = new FileSystemException("Local exception");
 
-	private final AsyncDiscoveryService discoveryService;
+	private final IDiscoveryService discoveryService;
 
-	private final Map<Object, AsyncFileSystem> alivePartitions = new HashMap<>();
-	private final Map<Object, AsyncFileSystem> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
+	private final Map<Object, IFileSystem> alivePartitions = new HashMap<>();
+	private final Map<Object, IFileSystem> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
 
-	private final Map<Object, AsyncFileSystem> deadPartitions = new HashMap<>();
-	private final Map<Object, AsyncFileSystem> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
+	private final Map<Object, IFileSystem> deadPartitions = new HashMap<>();
+	private final Map<Object, IFileSystem> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
 
 	private final AsyncRunnable checkAllPartitions = AsyncRunnables.reuse(this::doCheckAllPartitions);
 	private final AsyncRunnable checkDeadPartitions = AsyncRunnables.reuse(this::doCheckDeadPartitions);
 
-	private final Map<Object, AsyncFileSystem> partitions = new HashMap<>();
-	private final Map<Object, AsyncFileSystem> partitionsView = Collections.unmodifiableMap(partitions);
+	private final Map<Object, IFileSystem> partitions = new HashMap<>();
+	private final Map<Object, IFileSystem> partitionsView = Collections.unmodifiableMap(partitions);
 
 	private ServerSelector serverSelector = RENDEZVOUS_HASH_SHARDER;
 
-	private FileSystemPartitions(Reactor reactor, AsyncDiscoveryService discoveryService) {
+	private FileSystemPartitions(Reactor reactor, IDiscoveryService discoveryService) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 	}
 
-	public static FileSystemPartitions create(Reactor reactor, AsyncDiscoveryService discoveryService) {
+	public static FileSystemPartitions create(Reactor reactor, IDiscoveryService discoveryService) {
 		return builder(reactor, discoveryService).build();
 	}
 
-	public static Builder builder(Reactor reactor, AsyncDiscoveryService discoveryService) {
+	public static Builder builder(Reactor reactor, IDiscoveryService discoveryService) {
 		return new FileSystemPartitions(reactor, discoveryService).new Builder();
 	}
 
@@ -101,31 +101,31 @@ public final class FileSystemPartitions extends AbstractReactive
 	/**
 	 * Returns an unmodifiable view of all partitions
 	 */
-	public Map<Object, AsyncFileSystem> getPartitions() {
+	public Map<Object, IFileSystem> getPartitions() {
 		return partitionsView;
 	}
 
 	/**
 	 * Returns an unmodifiable view of alive partitions
 	 */
-	public Map<Object, AsyncFileSystem> getAlivePartitions() {
+	public Map<Object, IFileSystem> getAlivePartitions() {
 		return alivePartitionsView;
 	}
 
 	/**
 	 * Returns an unmodifiable view of dead partitions
 	 */
-	public Map<Object, AsyncFileSystem> getDeadPartitions() {
+	public Map<Object, IFileSystem> getDeadPartitions() {
 		return deadPartitionsView;
 	}
 
 	/**
-	 * Returns alive {@link AsyncFileSystem} by given id
+	 * Returns alive {@link IFileSystem} by given id
 	 *
-	 * @param partitionId id of {@link AsyncFileSystem}
-	 * @return alive {@link AsyncFileSystem}
+	 * @param partitionId id of {@link IFileSystem}
+	 * @return alive {@link IFileSystem}
 	 */
-	public @Nullable AsyncFileSystem get(Object partitionId) {
+	public @Nullable IFileSystem get(Object partitionId) {
 		return alivePartitions.get(partitionId);
 	}
 
@@ -165,7 +165,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	@SuppressWarnings("UnusedReturnValue")
 	public boolean markDead(Object partitionId, @Nullable Exception e) {
 		checkInReactorThread(this);
-		AsyncFileSystem partition = alivePartitions.remove(partitionId);
+		IFileSystem partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);
 			deadPartitions.put(partitionId, partition);
@@ -176,7 +176,7 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	public void markAlive(Object partitionId) {
 		checkInReactorThread(this);
-		AsyncFileSystem partition = deadPartitions.remove(partitionId);
+		IFileSystem partition = deadPartitions.remove(partitionId);
 		if (partition != null) {
 			logger.info("Partition {} is alive again!", partitionId);
 			alivePartitions.put(partitionId, partition);
@@ -218,7 +218,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	@Override
 	public Promise<?> start() {
 		checkInReactorThread(this);
-		AsyncSupplier<Map<Object, AsyncFileSystem>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<Map<Object, IFileSystem>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(result -> {
 					this.partitions.putAll(result);
@@ -239,7 +239,7 @@ public final class FileSystemPartitions extends AbstractReactive
 		return "FileSystemPartitions{partitions=" + partitions + ", deadPartitions=" + deadPartitions + '}';
 	}
 
-	private void rediscover(AsyncSupplier<Map<Object, AsyncFileSystem>> discoverySupplier) {
+	private void rediscover(AsyncSupplier<Map<Object, IFileSystem>> discoverySupplier) {
 		discoverySupplier.get()
 				.whenResult(result -> {
 					updatePartitions(result);
@@ -252,18 +252,18 @@ public final class FileSystemPartitions extends AbstractReactive
 				});
 	}
 
-	private void updatePartitions(Map<Object, AsyncFileSystem> newPartitions) {
+	private void updatePartitions(Map<Object, IFileSystem> newPartitions) {
 		this.partitions.clear();
 		this.partitions.putAll(newPartitions);
 
 		alivePartitions.keySet().retainAll(this.partitions.keySet());
 		deadPartitions.keySet().retainAll(this.partitions.keySet());
 
-		for (Map.Entry<Object, AsyncFileSystem> entry : this.partitions.entrySet()) {
+		for (Map.Entry<Object, IFileSystem> entry : this.partitions.entrySet()) {
 			Object partitionId = entry.getKey();
-			AsyncFileSystem fs = entry.getValue();
+			IFileSystem fs = entry.getValue();
 
-			AsyncFileSystem deadFS = deadPartitions.get(partitionId);
+			IFileSystem deadFS = deadPartitions.get(partitionId);
 			if (deadFS != null) {
 				if (deadFS == fs) continue;
 

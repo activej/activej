@@ -20,7 +20,7 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.SortingExecutor;
-import io.activej.datastream.processor.AsyncStreamSorterStorage;
+import io.activej.datastream.processor.IStreamSorterStorage;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.inject.Key;
 import io.activej.promise.Promise;
@@ -40,9 +40,9 @@ import java.util.function.Function;
 public final class Node_Sort<K, T> extends AbstractNode {
 
 	public interface StreamSorterStorageFactory {
-		<T> AsyncStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted);
+		<T> IStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted);
 
-		default <T> Promise<Void> cleanup(AsyncStreamSorterStorage<T> storage) {
+		default <T> Promise<Void> cleanup(IStreamSorterStorage<T> storage) {
 			return Promise.complete();
 		}
 	}
@@ -87,7 +87,7 @@ public final class Node_Sort<K, T> extends AbstractNode {
 	public void createAndBind(Task task) {
 		Executor executor = task.get(Key.of(Executor.class, SortingExecutor.class));
 		StreamSorterStorageFactory storageFactory = task.get(StreamSorterStorageFactory.class);
-		AsyncStreamSorterStorage<T> storage = storageFactory.create(streamSchema, task, task.getExecutionPromise());
+		IStreamSorterStorage<T> storage = storageFactory.create(streamSchema, task, task.getExecutionPromise());
 		StreamSorter<K, T> streamSorter = StreamSorter.builder(storage, keyFunction, keyComparator, deduplicate, itemsInMemorySize)
 				.withSortingExecutor(executor)
 				.build();

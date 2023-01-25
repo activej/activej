@@ -1,7 +1,7 @@
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncWebSocket;
-import io.activej.http.AsyncWebSocket.Message;
-import io.activej.http.AsyncWebSocketClient;
+import io.activej.http.IWebSocket;
+import io.activej.http.IWebSocket.Message;
+import io.activej.http.IWebSocketClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Inject;
@@ -27,7 +27,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 	NioReactor reactor;
 
 	@Inject
-	AsyncWebSocketClient client;
+	IWebSocketClient client;
 
 	@Provides
 	NioReactor reactor() {
@@ -35,7 +35,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 	}
 
 	@Provides
-	AsyncWebSocketClient client(NioReactor reactor) {
+	IWebSocketClient client(NioReactor reactor) {
 		return HttpClient.create(reactor);
 	}
 
@@ -50,7 +50,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 		String url = args.length != 0 ? args[0] : "ws://127.0.0.1:8080/";
 		System.out.println("\nConnecting to WebSocket at: " + url);
 
-		AsyncWebSocket webSocket = reactor.submit(() -> client.webSocketRequest(HttpRequest.get(url))).get();
+		IWebSocket webSocket = reactor.submit(() -> client.webSocketRequest(HttpRequest.get(url))).get();
 
 		Scanner scanIn = new Scanner(System.in);
 		while (true) {

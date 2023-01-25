@@ -33,7 +33,7 @@ public final class BytecodeStorage_File extends AbstractBytecodeStorage {
 	}
 
 	/**
-	 * Creates a new {@link BytecodeStorage} that saves/loads bytecode to/from a given directory
+	 * Creates a new {@link IBytecodeStorage} that saves/loads bytecode to/from a given directory
 	 *
 	 * @param storageDir a directory to load/store bytecode
 	 * @return a new instance of a {@code FileBytecodeStorage}

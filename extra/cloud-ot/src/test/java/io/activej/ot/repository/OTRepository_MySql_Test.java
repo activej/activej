@@ -7,7 +7,7 @@ import com.dslplatform.json.JsonWriter;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.ot.OTCommit;
-import io.activej.ot.system.OTSystem;
+import io.activej.ot.system.IOTSystem;
 import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 @Ignore
 public class OTRepository_MySql_Test {
-	private static final OTSystem<TestOp> SYSTEM = createTestOp();
+	private static final IOTSystem<TestOp> SYSTEM = createTestOp();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

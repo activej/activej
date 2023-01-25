@@ -30,7 +30,7 @@ import java.util.concurrent.Executor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 class StaticLoader_FileReader extends AbstractReactive
-		implements AsyncStaticLoader {
+		implements IStaticLoader {
 	private final Executor executor;
 	private final Path root;
 
@@ -40,7 +40,7 @@ class StaticLoader_FileReader extends AbstractReactive
 		this.root = root;
 	}
 
-	public static AsyncStaticLoader create(Reactor reactor, Executor executor, Path dir) {
+	public static IStaticLoader create(Reactor reactor, Executor executor, Path dir) {
 		return new StaticLoader_FileReader(reactor, executor, dir);
 	}
 
