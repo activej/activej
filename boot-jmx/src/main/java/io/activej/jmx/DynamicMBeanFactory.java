@@ -696,9 +696,9 @@ public final class DynamicMBeanFactory {
 	// endregion
 
 	// region helper classes
-	private record AttributeDescriptor(String name, Type type, Method getter, Method setter) {}
+	public record AttributeDescriptor(String name, Type type, Method getter, Method setter) {}
 
-	private record OperationKey(String name, String[] argTypes) {
+	public record OperationKey(String name, String[] argTypes) {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
@@ -718,7 +718,7 @@ public final class DynamicMBeanFactory {
 		}
 	}
 
-	private static final class DynamicMBeanAggregator implements DynamicMBean {
+	public static final class DynamicMBeanAggregator implements DynamicMBean {
 		private final MBeanInfo mBeanInfo;
 		private final JmxBeanAdapter adapter;
 		private final List<?> beans;
@@ -936,7 +936,7 @@ public final class DynamicMBeanFactory {
 		}
 	}
 
-	static class JmxCustomTypeAdapter<T> {
+	public static class JmxCustomTypeAdapter<T> {
 		public final @Nullable Function<String, T> from;
 		public final Function<T, String> to;
 

@@ -29,7 +29,7 @@ import static io.activej.codegen.util.Utils.exceptionInGeneratedClass;
 import static java.lang.String.format;
 import static org.objectweb.asm.Type.getType;
 
-final class Expression_StaticField implements Variable {
+public final class Expression_StaticField implements Variable {
 	private final @Nullable Class<?> owner;
 	private final String name;
 

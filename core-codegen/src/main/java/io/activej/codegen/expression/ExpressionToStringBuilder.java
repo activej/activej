@@ -75,7 +75,7 @@ final class Expression_ToString implements Expression {
 		return new Expression_ToString().new Builder();
 	}
 
-	final class Builder extends AbstractBuilder<Builder, Expression>
+	public final class Builder extends AbstractBuilder<Builder, Expression>
 			implements ExpressionToStringBuilder {
 		Builder() {}
 

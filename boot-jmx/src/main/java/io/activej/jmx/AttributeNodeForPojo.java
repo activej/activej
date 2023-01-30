@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
-final class AttributeNodeForPojo implements AttributeNode {
+public final class AttributeNodeForPojo implements AttributeNode {
 	private static final char ATTRIBUTE_NAME_SEPARATOR = '_';
 
 	private final String name;

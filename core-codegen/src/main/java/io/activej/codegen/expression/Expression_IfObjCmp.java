@@ -34,7 +34,7 @@ import static org.objectweb.asm.Type.INT_TYPE;
 /**
  * Defines methods for comparing functions
  */
-final class Expression_IfObjCmp implements Expression {
+public final class Expression_IfObjCmp implements Expression {
 	private final Expression left;
 	private final Expression right;
 	private final CompareOperation operation;

@@ -62,7 +62,7 @@ public abstract class KeyPattern<T> {
 	/**
 	 * A default subclass to be used by {@link #of KeyPattern.of*} and {@link #ofType KeyPattern.ofType*} constructors
 	 */
-	private static final class KeyPatternImpl<T> extends KeyPattern<T> {
+	public static final class KeyPatternImpl<T> extends KeyPattern<T> {
 		private KeyPatternImpl(Type type, Predicate<?> qualifierPredicate) {
 			super(type, qualifierPredicate);
 		}

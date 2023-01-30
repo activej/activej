@@ -27,7 +27,7 @@ import java.util.function.Function;
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-class CacheStaticLoader extends AbstractReactive
+public class CacheStaticLoader extends AbstractReactive
 		implements IStaticLoader {
 	public static final byte[] NOT_FOUND = {};
 

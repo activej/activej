@@ -80,7 +80,7 @@ public final class GCounterLong implements CrdtMergable<GCounterLong> {
 		return Long.toString(value());
 	}
 
-	private static class Serializer implements BinarySerializer<GCounterLong> {
+	public static class Serializer implements BinarySerializer<GCounterLong> {
 		@Override
 		public void encode(BinaryOutput out, GCounterLong item) {
 			long[] state = item.state;

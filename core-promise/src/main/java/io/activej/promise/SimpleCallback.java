@@ -18,4 +18,4 @@ package io.activej.promise;
 
 import io.activej.async.callback.Callback;
 
-interface SimpleCallback<T> extends Callback<T> {}
+public interface SimpleCallback<T> extends Callback<T> {}

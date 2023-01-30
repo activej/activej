@@ -88,7 +88,7 @@ public final class StreamConsumer_Switcher<T> extends AbstractStreamConsumer<T> 
 		pendingAcknowledgements.clear();
 	}
 
-	private class InternalSupplier extends AbstractStreamSupplier<T> {
+	public class InternalSupplier extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onStarted() {
 			pendingAcknowledgements.add(this);

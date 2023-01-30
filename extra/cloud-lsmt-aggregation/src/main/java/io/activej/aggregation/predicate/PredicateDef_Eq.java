@@ -31,7 +31,7 @@ import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Collections.singletonMap;
 
-final class PredicateDef_Eq implements PredicateDef {
+public final class PredicateDef_Eq implements PredicateDef {
 	private final String key;
 	private final Object value;
 

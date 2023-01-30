@@ -152,7 +152,7 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 		}
 	}
 
-	private static final class DistinctIterator<K, T> implements Iterator<T> {
+	public static final class DistinctIterator<K, T> implements Iterator<T> {
 		private final ArrayList<T> sortedList;
 		private final Function<T, K> keyFunction;
 		private final Comparator<K> keyComparator;
@@ -184,7 +184,7 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 		}
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
+	public final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 		private final List<Integer> partitionIds;
 
 		private ArrayList<T> list = new ArrayList<>();

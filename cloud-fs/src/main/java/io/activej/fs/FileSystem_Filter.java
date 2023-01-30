@@ -43,7 +43,7 @@ import static java.util.stream.Collectors.*;
  * <p>
  * Inherits all the limitations of parent {@link IFileSystem}
  */
-final class FileSystem_Filter implements IFileSystem {
+public final class FileSystem_Filter implements IFileSystem {
 
 	private final IFileSystem parent;
 	private final Predicate<String> predicate;

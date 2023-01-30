@@ -29,7 +29,7 @@ import static org.objectweb.asm.Type.VOID_TYPE;
 /**
  * Defines methods which allow to use several methods one after the other
  */
-final class Expression_Sequence implements Expression {
+public final class Expression_Sequence implements Expression {
 	final List<Expression> expressions;
 
 	Expression_Sequence(List<Expression> expressions) {

@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-final class Utils {
+public final class Utils {
 	static byte[] loadResource(String name) throws IOException {
 		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
 			assert stream != null;
@@ -93,7 +93,7 @@ final class Utils {
 		}
 	}
 
-	static class ChunkWithAggregationId {
+	public static class ChunkWithAggregationId {
 		private final AggregationChunk chunk;
 		private final String aggregationId;
 

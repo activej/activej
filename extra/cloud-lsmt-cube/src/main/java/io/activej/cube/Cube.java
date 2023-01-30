@@ -123,7 +123,7 @@ public final class Cube extends AbstractReactive
 	private final Map<String, Measure> measures = new LinkedHashMap<>();
 	private final Map<String, ComputedMeasure> computedMeasures = new LinkedHashMap<>();
 
-	private static final class AttributeResolverContainer {
+	public static final class AttributeResolverContainer {
 		private final List<String> attributes = new ArrayList<>();
 		private final List<String> dimensions;
 		private final IAttributeResolver resolver;
@@ -150,7 +150,7 @@ public final class Cube extends AbstractReactive
 	private int maxOverlappingChunksToProcessLogs = Cube.DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
 	private Duration maxIncrementalReloadPeriod = Aggregation.DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD;
 
-	static final class AggregationContainer {
+	public static final class AggregationContainer {
 		private final Aggregation aggregation;
 		private final List<String> measures;
 		private final PredicateDef predicate;
@@ -791,7 +791,7 @@ public final class Cube extends AbstractReactive
 		return compatibleAggregations;
 	}
 
-	static class AggregationContainerWithScore implements Comparable<AggregationContainerWithScore> {
+	public static class AggregationContainerWithScore implements Comparable<AggregationContainerWithScore> {
 		final AggregationContainer aggregationContainer;
 		final double score;
 
@@ -908,7 +908,7 @@ public final class Cube extends AbstractReactive
 		return classLoaderCache.getOrCreate(key);
 	}
 
-	private class RequestContext<R> {
+	public class RequestContext<R> {
 		DefiningClassLoader queryClassLoader;
 		CubeQuery query;
 

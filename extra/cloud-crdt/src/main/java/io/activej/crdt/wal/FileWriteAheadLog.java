@@ -310,7 +310,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 				});
 	}
 
-	private final class WalConsumer {
+	public final class WalConsumer {
 		private final AbstractStreamSupplier<CrdtData<K, S>> internalSupplier = new AbstractStreamSupplier<>() {
 			@Override
 			protected void onStarted() {

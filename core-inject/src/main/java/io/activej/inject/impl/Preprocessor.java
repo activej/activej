@@ -475,13 +475,13 @@ public final class Preprocessor {
 	}
 
 	@FunctionalInterface
-	interface MissingKeyHint {
+	public interface MissingKeyHint {
 
 		@Nullable String getHintFor(Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
 	}
 
 	@FunctionalInterface
-	interface ErrorHint {
+	public interface ErrorHint {
 
 		@Nullable String getHintFor(Entry<Key<?>, Binding<?>> keybind, Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
 	}
@@ -525,7 +525,7 @@ public final class Preprocessor {
 	);
 
 	@SuppressWarnings("rawtypes")
-	private static class InstanceProviderImpl<T> implements InstanceProvider<T> {
+	public static class InstanceProviderImpl<T> implements InstanceProvider<T> {
 		private final Key<T> key;
 		private final CompiledBinding<T> compiledBinding;
 		private final AtomicReferenceArray[] scopedInstances;
@@ -555,7 +555,7 @@ public final class Preprocessor {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static class InstanceInjectorImpl<T> implements InstanceInjector<T> {
+	public static class InstanceInjectorImpl<T> implements InstanceInjector<T> {
 		private final Key<T> key;
 		private final CompiledBindingInitializer<T> compiledBindingInitializer;
 		private final AtomicReferenceArray[] scopedInstances;

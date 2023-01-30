@@ -20,7 +20,7 @@ import io.activej.codegen.Context;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-final class Expression_Let implements Variable {
+public final class Expression_Let implements Variable {
 	private final Expression value;
 
 	Expression_Let(Expression value) {

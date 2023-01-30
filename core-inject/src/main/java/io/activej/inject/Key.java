@@ -61,7 +61,7 @@ public abstract class Key<T> {
 		this.qualifier = qualifier;
 	}
 
-	private static final class KeyImpl<T> extends Key<T> {
+	public static final class KeyImpl<T> extends Key<T> {
 		private KeyImpl(Type type, Object qualifier) {
 			super(type, qualifier);
 		}

@@ -171,7 +171,7 @@ public abstract class AbstractDataflowTable<T> extends AbstractTable implements 
 
 		protected abstract DT buildTable(RecordFunction<T> recordFunction, Function<RelDataTypeFactory, RelDataType> typeFactory);
 
-		private final class ColumnEntry<C> {
+		public final class ColumnEntry<C> {
 			private final Type type;
 			private final Function<T, C> getter;
 			private final Function<RelDataTypeFactory, RelDataType> typeFactory;

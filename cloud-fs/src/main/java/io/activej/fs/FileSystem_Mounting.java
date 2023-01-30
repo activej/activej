@@ -44,7 +44,7 @@ import static java.util.stream.Collectors.toSet;
  * <p>
  * Inherits the most strict limitations of all the mounted file systems implementations and root file system.
  */
-final class FileSystem_Mounting implements IFileSystem {
+public final class FileSystem_Mounting implements IFileSystem {
 	private final IFileSystem root;
 	private final Map<String, IFileSystem> mounts;
 

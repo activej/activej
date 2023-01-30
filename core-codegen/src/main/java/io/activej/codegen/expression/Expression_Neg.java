@@ -26,7 +26,7 @@ import static io.activej.codegen.util.TypeChecks.isPrimitive;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
 
-final class Expression_Neg implements Expression {
+public final class Expression_Neg implements Expression {
 	private final Expression arg;
 
 	Expression_Neg(Expression arg) {

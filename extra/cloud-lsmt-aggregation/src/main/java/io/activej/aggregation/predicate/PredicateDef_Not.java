@@ -24,7 +24,7 @@ import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.not;
 
-final class PredicateDef_Not implements PredicateDef {
+public final class PredicateDef_Not implements PredicateDef {
 	private final PredicateDef predicate;
 
 	PredicateDef_Not(PredicateDef predicate) {

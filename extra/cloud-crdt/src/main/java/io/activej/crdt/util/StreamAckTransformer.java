@@ -26,7 +26,7 @@ import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.function.UnaryOperator;
 
-final class StreamAckTransformer<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
+public final class StreamAckTransformer<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	private final Input input;
 	private final Output output;
 
@@ -51,7 +51,7 @@ final class StreamAckTransformer<T> extends ImplicitlyReactive implements Stream
 		return output;
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> {
+	public final class Input extends AbstractStreamConsumer<T> {
 		@Override
 		protected void onStarted() {
 			input.resume(output.getDataAcceptor());
@@ -63,7 +63,7 @@ final class StreamAckTransformer<T> extends ImplicitlyReactive implements Stream
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<T> {
+	public final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
 			input.resume(output.getDataAcceptor());

@@ -28,7 +28,7 @@ import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
 
-final class Expression_Iterate implements Expression {
+public final class Expression_Iterate implements Expression {
 	private final Expression from;
 	private final Expression to;
 	private final UnaryOperator<Expression> forVar;

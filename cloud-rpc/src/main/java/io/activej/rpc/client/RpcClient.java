@@ -694,14 +694,14 @@ public final class RpcClient extends AbstractNioReactive
 		return "RpcClient{" + connections + '}';
 	}
 
-	private static final class NoSenderAvailable implements RpcSender {
+	public static final class NoSenderAvailable implements RpcSender {
 		@Override
 		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			cb.accept(null, NO_SENDER_AVAILABLE_EXCEPTION);
 		}
 	}
 
-	private static final class RpcStrategy_NoServers implements RpcStrategy {
+	public static final class RpcStrategy_NoServers implements RpcStrategy {
 		@Override
 		public Set<InetSocketAddress> getAddresses() {
 			return Set.of();

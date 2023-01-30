@@ -62,7 +62,7 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 		return new AvaticaResultSetMetaData(statement, null, signature);
 	}
 
-	private static final class DataflowJdbc41Connection extends AvaticaConnection {
+	public static final class DataflowJdbc41Connection extends AvaticaConnection {
 		private DataflowJdbc41Connection(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) {
 			super(driver, factory, url, info);
 		}
@@ -73,13 +73,13 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 		}
 	}
 
-	private static class DataflowJdbc41DatabaseMetaData extends AvaticaDatabaseMetaData {
+	public static class DataflowJdbc41DatabaseMetaData extends AvaticaDatabaseMetaData {
 		private DataflowJdbc41DatabaseMetaData(AvaticaConnection connection) {
 			super(connection);
 		}
 	}
 
-	private static class DataflowJdbc41Statement extends AvaticaStatement {
+	public static class DataflowJdbc41Statement extends AvaticaStatement {
 		private DataflowJdbc41Statement(AvaticaConnection connection,
 				StatementHandle h, int resultSetType, int resultSetConcurrency,
 				int resultSetHoldability) {
@@ -88,7 +88,7 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 		}
 	}
 
-	private static class DataflowJdbc41PreparedStatement extends AvaticaPreparedStatement {
+	public static class DataflowJdbc41PreparedStatement extends AvaticaPreparedStatement {
 		DataflowJdbc41PreparedStatement(AvaticaConnection connection,
 				@Nullable StatementHandle h, Meta.Signature signature,
 				int resultSetType, int resultSetConcurrency, int resultSetHoldability)

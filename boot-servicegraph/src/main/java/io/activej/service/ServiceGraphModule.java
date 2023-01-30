@@ -197,7 +197,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		return this;
 	}
 
-	private static final class ServiceKey implements ServiceGraph.Key {
+	public static final class ServiceKey implements ServiceGraph.Key {
 		private final Key<?> key;
 		private final @Nullable WorkerPool workerPool;
 
@@ -478,7 +478,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		return new CombinedService(services);
 	}
 
-	private static class CombinedService implements Service {
+	public static class CombinedService implements Service {
 		private final List<Service> services;
 		private final List<Service> startedServices = new ArrayList<>();
 
@@ -601,7 +601,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		return serviceAdapter;
 	}
 
-	private static class CachedService implements Service {
+	public static class CachedService implements Service {
 		private final Service service;
 		private int started;
 		private CompletableFuture<?> startFuture;

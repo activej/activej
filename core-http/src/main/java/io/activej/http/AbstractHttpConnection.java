@@ -564,7 +564,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		poolTimestamp = reactor.currentTimeMillis();
 	}
 
-	protected abstract class ReadConsumer implements Callback<ByteBuf> {
+	public abstract class ReadConsumer implements Callback<ByteBuf> {
 		@Override
 		public void accept(ByteBuf buf, Exception e) {
 			assert !isClosed() || e != null;

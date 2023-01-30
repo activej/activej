@@ -452,7 +452,7 @@ public final class Aggregation extends AbstractReactive
 		return mergeSequences(queryKeys, measures, resultClass, sequenceStreams, queryClassLoader);
 	}
 
-	static final class SequenceStream<S> {
+	public static final class SequenceStream<S> {
 		final StreamSupplier<S> stream;
 		final List<String> fields;
 		final Class<S> type;

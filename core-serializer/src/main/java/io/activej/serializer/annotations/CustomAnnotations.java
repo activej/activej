@@ -41,7 +41,7 @@ public final class CustomAnnotations {
 		return new SerializerVarLengthImpl();
 	}
 
-	abstract static class AbstractSerializeAnnotation implements Annotation {
+	public abstract static class AbstractSerializeAnnotation implements Annotation {
 		@Override
 		public final Class<? extends Annotation> annotationType() {
 			throw new UnsupportedOperationException();
@@ -52,10 +52,10 @@ public final class CustomAnnotations {
 		}
 	}
 
-	static final class SerializerNullableImpl extends AbstractSerializeAnnotation implements SerializeNullable {
+	public static final class SerializerNullableImpl extends AbstractSerializeAnnotation implements SerializeNullable {
 	}
 
-	static final class SerializeFixedSizeImpl extends AbstractSerializeAnnotation implements SerializeFixedSize {
+	public static final class SerializeFixedSizeImpl extends AbstractSerializeAnnotation implements SerializeFixedSize {
 		final int value;
 
 		SerializeFixedSizeImpl(int value) {
@@ -68,7 +68,7 @@ public final class CustomAnnotations {
 		}
 	}
 
-	static final class SerializeClassImpl extends AbstractSerializeAnnotation implements SerializeClass {
+	public static final class SerializeClassImpl extends AbstractSerializeAnnotation implements SerializeClass {
 		final Class<? extends SerializerDef> value;
 		final Class<?>[] subclasses;
 		final String subclassesId;
@@ -109,7 +109,7 @@ public final class CustomAnnotations {
 		}
 	}
 
-	static final class SerializerStringFormatImpl extends AbstractSerializeAnnotation implements SerializeStringFormat {
+	public static final class SerializerStringFormatImpl extends AbstractSerializeAnnotation implements SerializeStringFormat {
 		final StringFormat stringFormat;
 
 		SerializerStringFormatImpl(StringFormat format) {
@@ -122,7 +122,7 @@ public final class CustomAnnotations {
 		}
 	}
 
-	static final class SerializerVarLengthImpl extends AbstractSerializeAnnotation implements SerializeVarLength {
+	public static final class SerializerVarLengthImpl extends AbstractSerializeAnnotation implements SerializeVarLength {
 	}
 
 }

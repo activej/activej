@@ -24,7 +24,7 @@ import net.jpountz.lz4.LZ4Compressor;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.csp.process.frames.FrameFormat_LZ4.*;
 
-final class BlockEncoder_LZ4 implements BlockEncoder {
+public final class BlockEncoder_LZ4 implements BlockEncoder {
 	private static final boolean CHECKS = Checks.isEnabled(BlockEncoder_LZ4.class);
 
 	private final LZ4Compressor compressor;

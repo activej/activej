@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @SuppressWarnings({"unchecked", "rawtypes", "Convert2Lambda"})
-class Bindings {
+public class Bindings {
 
 	public static class BindingToInstance<T> extends Binding<T> {
 		final T instance;

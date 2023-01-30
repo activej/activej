@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-final class LogStreamChunker extends AbstractCommunicatingProcess implements ChannelInput<ByteBuf> {
+public final class LogStreamChunker extends AbstractCommunicatingProcess implements ChannelInput<ByteBuf> {
 	private final CurrentTimeProvider currentTimeProvider;
 	private final IFileSystem fileSystem;
 	private final LogNamingScheme namingScheme;

@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Defines methods for using constructors from other classes
  */
-final class Expression_SuperConstructor implements Expression {
+public final class Expression_SuperConstructor implements Expression {
 	private final List<Expression> fields;
 
 	Expression_SuperConstructor(List<Expression> fields) {

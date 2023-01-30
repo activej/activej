@@ -92,7 +92,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 	private volatile long stopEnd;
 	private volatile Throwable stopException;
 
-	private static final class NodeStatus {
+	public static final class NodeStatus {
 		private static final NodeStatus DEFAULT = new NodeStatus();
 
 		volatile long startBegin;
@@ -103,7 +103,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		volatile long stopEnd;
 		volatile Throwable stopException;
 
-		private enum Operation {
+		public enum Operation {
 			NEW, STARTING, STARTED, STOPPING, STOPPED, EXCEPTION
 		}
 
@@ -478,7 +478,7 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		return null;
 	}
 
-	private record SlowestChain(List<Key> path, long sum) {
+	public record SlowestChain(List<Key> path, long sum) {
 		static final SlowestChain EMPTY = new SlowestChain(List.of(), 0);
 
 		SlowestChain concat(Key key, long time) {

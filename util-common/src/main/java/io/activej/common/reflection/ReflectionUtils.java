@@ -288,7 +288,7 @@ public final class ReflectionUtils {
 	}
 
 	@SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // other Object is always MethodSignature
-	private static final class MethodSignature {
+	public static final class MethodSignature {
 		final Method method;
 
 		MethodSignature(Method method) {

@@ -28,7 +28,7 @@ import static org.objectweb.asm.commons.InstructionAdapter.OBJECT_TYPE;
 /**
  * Defines method in order to cast a function to a type
  */
-final class Expression_Cast implements Expression {
+public final class Expression_Cast implements Expression {
 	static final Type SELF_TYPE = getType(Object.class);
 
 	private final Expression expression;

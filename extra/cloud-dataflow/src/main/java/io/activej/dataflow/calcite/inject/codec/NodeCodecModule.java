@@ -9,7 +9,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 
-final class NodeCodecModule extends AbstractModule {
+public final class NodeCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(15)
 	StreamCodec<Node_FilterableSupplierOfId<?>> filterableNodeSupplierOfId(

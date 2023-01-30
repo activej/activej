@@ -50,7 +50,7 @@ public final class WherePredicate_Like implements WherePredicate {
 		return pattern;
 	}
 
-	private record CompiledPattern(Pattern pattern, String original) {
+	public record CompiledPattern(Pattern pattern, String original) {
 	}
 
 	@Override

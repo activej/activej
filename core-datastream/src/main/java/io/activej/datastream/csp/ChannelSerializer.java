@@ -236,7 +236,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 		}
 	}
 
-	private final class Input implements StreamDataAcceptor<T> {
+	public final class Input implements StreamDataAcceptor<T> {
 		private final BinarySerializer<T> serializer;
 
 		private ByteBuf buf = null;

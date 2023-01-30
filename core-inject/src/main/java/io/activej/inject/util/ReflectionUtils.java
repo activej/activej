@@ -464,7 +464,7 @@ public final class ReflectionUtils {
 		return result;
 	}
 
-	private static class TemplatedProviderGenerator implements BindingGenerator<Object> {
+	public static class TemplatedProviderGenerator implements BindingGenerator<Object> {
 		private final Scope[] methodScope;
 		private final @Nullable Object qualifier;
 		private final Method method;

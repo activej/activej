@@ -44,7 +44,7 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 		}
 	};
 
-	private record Entry(Class<?> key, byte index, BinarySerializer<?> serializer, Entry next) {}
+	public record Entry(Class<?> key, byte index, BinarySerializer<?> serializer, Entry next) {}
 
 	private final BinarySerializer<?>[] serializers;
 	private final Entry[] serializersMap;

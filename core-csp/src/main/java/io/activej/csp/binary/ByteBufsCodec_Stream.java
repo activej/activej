@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-final class ByteBufsCodec_Stream<I, O> implements ByteBufsCodec<I, O> {
+public final class ByteBufsCodec_Stream<I, O> implements ByteBufsCodec<I, O> {
 	private final StreamDecoder<I> input;
 	private final StreamEncoder<O> output;
 

@@ -24,7 +24,7 @@ import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.getType;
 
-final class Expression_ArrayNew implements Expression {
+public final class Expression_ArrayNew implements Expression {
 	private final Class<?> type;
 	private final Expression length;
 

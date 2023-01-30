@@ -175,7 +175,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
-	private record Tuple<K, D, C>(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {}
+	public record Tuple<K, D, C>(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {}
 
 	private Promise<Void> trySaveSnapshotAndCleanupChunks(K checkpointNode) {
 		//noinspection OptionalGetWithoutIsPresent

@@ -33,7 +33,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-class ClassPathStaticLoader extends AbstractReactive
+public class ClassPathStaticLoader extends AbstractReactive
 		implements IStaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;

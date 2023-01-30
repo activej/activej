@@ -176,7 +176,7 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 		return new Sender(hashFn, sendersBuckets);
 	}
 
-	static final class Sender implements RpcSender {
+	public static final class Sender implements RpcSender {
 		private final ToIntFunction<Object> hashFunction;
 		private final @Nullable RpcSender[] hashBuckets;
 

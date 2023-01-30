@@ -70,7 +70,7 @@ public final class StreamSupplier_Blocking<T> extends AbstractStreamSupplier<T> 
 		queue.close();
 	}
 
-	private class Queue extends BlockingPutQueue<T> {
+	public class Queue extends BlockingPutQueue<T> {
 		public Queue(int capacity) {
 			super(capacity);
 		}

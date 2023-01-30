@@ -615,7 +615,7 @@ public class RelToDatasetConverter {
 		}
 	}
 
-	private static final class RepartitionToSingleDataset<K> extends LocallySortedDataset<K, Record> {
+	public static final class RepartitionToSingleDataset<K> extends LocallySortedDataset<K, Record> {
 		private final Dataset<Record> input;
 
 		private final int sharderNonce = ThreadLocalRandom.current().nextInt();
@@ -652,10 +652,10 @@ public class RelToDatasetConverter {
 		}
 	}
 
-	private record JoinKeyProjections(RecordProjectionFn leftKeyProjection, RecordProjectionFn rightKeyProjection) {
+	public record JoinKeyProjections(RecordProjectionFn leftKeyProjection, RecordProjectionFn rightKeyProjection) {
 	}
 
-	private final class ParamsCollector {
+	public final class ParamsCollector {
 		private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
 
 		public List<RexDynamicParam> getParams() {

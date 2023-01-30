@@ -32,7 +32,7 @@ import java.util.Objects;
 import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes")
-final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
+public final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 	private final @Nullable Method setter;
 	private final Class<?> type;
 	private final JmxReducer reducer;

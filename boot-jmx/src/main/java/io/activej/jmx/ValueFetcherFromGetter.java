@@ -19,7 +19,7 @@ package io.activej.jmx;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-final class ValueFetcherFromGetter implements ValueFetcher {
+public final class ValueFetcherFromGetter implements ValueFetcher {
 	private final Method getter;
 
 	public ValueFetcherFromGetter(Method getter) {

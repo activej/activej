@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
 
 import static io.activej.common.reflection.ReflectionUtils.*;
 
-class Utils {
+public class Utils {
 	static boolean isMBean(Class<?> clazz) {
 		return isJmxBean(clazz) || isStandardMBean(clazz) || isMXBean(clazz) || isDynamicMBean(clazz);
 	}

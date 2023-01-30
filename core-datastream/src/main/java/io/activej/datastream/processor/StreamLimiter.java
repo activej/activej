@@ -54,7 +54,7 @@ public final class StreamLimiter<T> extends ImplicitlyReactive implements Stream
 		return output;
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> {
+	public final class Input extends AbstractStreamConsumer<T> {
 		private long limit;
 
 		private Input(long limit) {
@@ -77,7 +77,7 @@ public final class StreamLimiter<T> extends ImplicitlyReactive implements Stream
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<T> {
+	public final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
 			sync();

@@ -12,7 +12,7 @@ import io.activej.serializer.stream.StreamCodecs;
 import static io.activej.dataflow.codec.Utils.INSTANT_STREAM_CODEC;
 import static io.activej.dataflow.codec.Utils.VERSION_STREAM_CODEC;
 
-final class DataflowResponseCodecsModule extends AbstractModule {
+public final class DataflowResponseCodecsModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new NodeStatCodecModule());

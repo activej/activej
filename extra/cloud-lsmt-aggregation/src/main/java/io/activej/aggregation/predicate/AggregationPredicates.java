@@ -32,7 +32,7 @@ import static io.activej.common.Checks.checkState;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AggregationPredicates {
 
-	record PredicateSimplifierKey<L extends PredicateDef, R extends PredicateDef>(
+	public record PredicateSimplifierKey<L extends PredicateDef, R extends PredicateDef>(
 			Class<L> leftType, Class<R> rightType) {
 	}
 

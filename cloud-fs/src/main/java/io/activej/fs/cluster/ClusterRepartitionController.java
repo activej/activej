@@ -18,14 +18,14 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.service.ReactiveService;
-import io.activej.common.collection.Try;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteRanger;
-import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.fs.exception.PathContainsFileException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -478,7 +478,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 							.findAny().orElse(infoResults.localMetadata)
 							.getSize());
 
-	private final class InfoResults implements Comparable<InfoResults> {
+	public final class InfoResults implements Comparable<InfoResults> {
 		final String name;
 		final FileMetadata localMetadata;
 		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();

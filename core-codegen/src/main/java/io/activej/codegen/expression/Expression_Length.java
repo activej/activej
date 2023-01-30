@@ -22,7 +22,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.util.TypeChecks.*;
 
-final class Expression_Length implements Expression {
+public final class Expression_Length implements Expression {
 	private final Expression value;
 
 	Expression_Length(Expression value) {

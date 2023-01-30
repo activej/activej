@@ -1,12 +1,12 @@
 package io.activej.dataflow.codec.module;
 
 import io.activej.dataflow.codec.Subtype;
-import io.activej.datastream.processor.StreamReducers.Reducer_Deduplicate;
-import io.activej.datastream.processor.StreamReducers.Reducer_Merge;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
+import io.activej.datastream.processor.StreamReducers.Reducer_Deduplicate;
+import io.activej.datastream.processor.StreamReducers.Reducer_Merge;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
@@ -17,7 +17,7 @@ import io.activej.serializer.stream.StreamOutput;
 
 import java.io.IOException;
 
-final class ReducerCodecModule extends AbstractModule {
+public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<Reducer_Merge<?, ?>> mergeReducer() {

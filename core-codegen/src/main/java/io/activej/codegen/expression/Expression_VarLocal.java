@@ -24,7 +24,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 /**
  * Defines methods which allow to create a local variable
  */
-final class Expression_VarLocal implements LocalVariable {
+public final class Expression_VarLocal implements LocalVariable {
 	private static final int VOID = -1;
 	static final Expression_VarLocal VAR_LOCAL_VOID = new Expression_VarLocal(VOID);
 

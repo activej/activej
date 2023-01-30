@@ -260,7 +260,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 	// endregion
 
-	private final class WalReducer implements StreamReducers.Reducer<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> {
+	public final class WalReducer implements StreamReducers.Reducer<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> {
 		@Override
 		public CrdtData<K, S> onFirstItem(StreamDataAcceptor<CrdtData<K, S>> stream, K key, CrdtData<K, S> firstValue) {
 			return firstValue;

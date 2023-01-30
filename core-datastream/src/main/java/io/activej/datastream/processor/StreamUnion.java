@@ -79,7 +79,7 @@ public final class StreamUnion<T> extends ImplicitlyReactive implements HasStrea
 		sync();
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> {
+	public final class Input extends AbstractStreamConsumer<T> {
 		@Override
 		protected void onStarted() {
 			sync();
@@ -91,7 +91,7 @@ public final class StreamUnion<T> extends ImplicitlyReactive implements HasStrea
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<T> {
+	public final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
 			sync();

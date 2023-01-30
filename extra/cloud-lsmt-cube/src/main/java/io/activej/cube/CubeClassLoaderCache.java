@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
-	record Key(Set<String> attributes, Set<String> measures, Set<String> filterDimensions) {}
+	public record Key(Set<String> attributes, Set<String> measures, Set<String> filterDimensions) {}
 
 	private final DefiningClassLoader rootClassLoader;
 	private final LinkedHashMap<Key, DefiningClassLoader> cache = new LinkedHashMap<>(16, 0.75f, false) {

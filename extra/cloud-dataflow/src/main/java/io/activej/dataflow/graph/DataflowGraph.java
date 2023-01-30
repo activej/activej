@@ -81,7 +81,7 @@ public final class DataflowGraph extends AbstractReactive {
 				.collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
 	}
 
-	private static class PartitionSession extends ImplicitlyReactive implements AsyncCloseable {
+	public static class PartitionSession extends ImplicitlyReactive implements AsyncCloseable {
 		private final Partition partition;
 		private final Session session;
 

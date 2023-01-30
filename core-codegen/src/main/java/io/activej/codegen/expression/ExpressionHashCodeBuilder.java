@@ -59,7 +59,7 @@ final class Expression_HashCode implements Expression {
 		return new Expression_HashCode().new Builder();
 	}
 
-	final class Builder extends AbstractBuilder<Builder, Expression>
+	public final class Builder extends AbstractBuilder<Builder, Expression>
 			implements ExpressionHashCodeBuilder {
 		Builder() {}
 

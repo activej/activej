@@ -652,11 +652,11 @@ public final class DataflowMeta extends LimitedMeta {
 		return result;
 	}
 
-	private record TransformationResult(List<RelDataTypeField> fields, ConversionResult conversionResult) {
+	public record TransformationResult(List<RelDataTypeField> fields, ConversionResult conversionResult) {
 
 	}
 
-	private record DatasetWithLimit(UnmaterializedDataset dataset, long limit) {
+	public record DatasetWithLimit(UnmaterializedDataset dataset, long limit) {
 
 	}
 }

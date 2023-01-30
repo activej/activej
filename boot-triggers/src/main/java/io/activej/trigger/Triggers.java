@@ -45,7 +45,7 @@ public final class Triggers implements ConcurrentJmxBean {
 	private Triggers() {
 	}
 
-	private record TriggerKey(String component, String name) {}
+	public record TriggerKey(String component, String name) {}
 
 	private final Map<Trigger, TriggerResult> suppressedResults = new LinkedHashMap<>();
 	private final Map<Trigger, TriggerResult> cachedResults = new LinkedHashMap<>();

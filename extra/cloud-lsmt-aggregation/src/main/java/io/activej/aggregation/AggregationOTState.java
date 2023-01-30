@@ -220,19 +220,19 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 		return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, result);
 	}
 
-	private enum PickingStrategy {
+	public enum PickingStrategy {
 		PARTITIONING,
 		HOT_SEGMENT,
 		MIN_KEY,
 		SIZE_FIX
 	}
 
-	private record PickedChunks(PickingStrategy strategy,
+	public record PickedChunks(PickingStrategy strategy,
 								@Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
 								List<AggregationChunk> chunks) {
 	}
 
-	private record ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {}
+	public record ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {}
 
 	@VisibleForTesting
 	@Nullable SortedMap<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> groupByPartition(int partitioningKeyLength) {

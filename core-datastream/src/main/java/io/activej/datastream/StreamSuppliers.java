@@ -27,9 +27,9 @@ import java.util.List;
 
 import static io.activej.common.Utils.nullify;
 
-final class StreamSuppliers {
+public final class StreamSuppliers {
 
-	static final class ClosingWithError<T> extends AbstractStreamSupplier<T> {
+	public static final class ClosingWithError<T> extends AbstractStreamSupplier<T> {
 		private Exception error;
 
 		ClosingWithError(Exception e) {
@@ -42,17 +42,17 @@ final class StreamSuppliers {
 		}
 	}
 
-	static final class Closing<T> extends AbstractStreamSupplier<T> {
+	public static final class Closing<T> extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onInit() {
 			sendEndOfStream();
 		}
 	}
 
-	static final class Idle<T> extends AbstractStreamSupplier<T> {
+	public static final class Idle<T> extends AbstractStreamSupplier<T> {
 	}
 
-	static final class OfIterator<T> extends AbstractStreamSupplier<T> {
+	public static final class OfIterator<T> extends AbstractStreamSupplier<T> {
 		private final Iterator<T> iterator;
 
 		/**
@@ -75,11 +75,11 @@ final class StreamSuppliers {
 		}
 	}
 
-	static final class OfPromise<T> extends AbstractStreamSupplier<T> {
+	public static final class OfPromise<T> extends AbstractStreamSupplier<T> {
 		private Promise<? extends StreamSupplier<T>> promise;
 		private final InternalConsumer internalConsumer = new InternalConsumer();
 
-		private class InternalConsumer extends AbstractStreamConsumer<T> {}
+		public class InternalConsumer extends AbstractStreamConsumer<T> {}
 
 		public OfPromise(Promise<? extends StreamSupplier<T>> promise) {
 			this.promise = promise;
@@ -120,11 +120,11 @@ final class StreamSuppliers {
 		}
 	}
 
-	static final class Concat<T> extends AbstractStreamSupplier<T> {
+	public static final class Concat<T> extends AbstractStreamSupplier<T> {
 		private ChannelSupplier<StreamSupplier<T>> iterator;
 		private InternalConsumer internalConsumer = new InternalConsumer();
 
-		private class InternalConsumer extends AbstractStreamConsumer<T> {}
+		public class InternalConsumer extends AbstractStreamConsumer<T> {}
 
 		Concat(ChannelSupplier<StreamSupplier<T>> iterator) {
 			this.iterator = iterator;
@@ -180,7 +180,7 @@ final class StreamSuppliers {
 		}
 	}
 
-	static final class OfChannelSupplier<T> extends AbstractStreamSupplier<T> {
+	public static final class OfChannelSupplier<T> extends AbstractStreamSupplier<T> {
 		private final ChannelSupplier<T> supplier;
 
 		public OfChannelSupplier(ChannelSupplier<T> supplier) {
@@ -211,7 +211,7 @@ final class StreamSuppliers {
 		}
 	}
 
-	static final class OfAnotherReactor<T> extends AbstractStreamSupplier<T> {
+	public static final class OfAnotherReactor<T> extends AbstractStreamSupplier<T> {
 		private static final int MAX_BUFFER_SIZE = 100;
 		private static final Iterator<?> END_OF_STREAM = Collections.emptyIterator();
 
@@ -303,7 +303,7 @@ final class StreamSuppliers {
 			this.iterator = null;
 		}
 
-		final class InternalConsumer extends AbstractStreamConsumer<T> {
+		public final class InternalConsumer extends AbstractStreamConsumer<T> {
 			private List<T> list = new ArrayList<>();
 			private final StreamDataAcceptor<T> toList = item -> {
 				list.add(item);

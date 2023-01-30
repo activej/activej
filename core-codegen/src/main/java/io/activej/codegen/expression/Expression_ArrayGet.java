@@ -22,7 +22,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.util.TypeChecks.*;
 
-final class Expression_ArrayGet implements Expression {
+public final class Expression_ArrayGet implements Expression {
 	private final Expression array;
 	private final Expression index;
 

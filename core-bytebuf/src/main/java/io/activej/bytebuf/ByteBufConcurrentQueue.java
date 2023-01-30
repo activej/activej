@@ -29,7 +29,7 @@ import static java.lang.Integer.numberOfLeadingZeros;
 /**
  * Optimized lock-free concurrent queue implementation for the {@link ByteBuf ByteBufs} that is used in {@link ByteBufPool}
  */
-final class ByteBufConcurrentQueue {
+public final class ByteBufConcurrentQueue {
 	private final AtomicLong pos = new AtomicLong(0);
 	private final AtomicReference<AtomicReferenceArray<ByteBuf>> array = new AtomicReference<>(new AtomicReferenceArray<>(1));
 	private final ConcurrentHashMap<Integer, ByteBuf> map = new ConcurrentHashMap<>();

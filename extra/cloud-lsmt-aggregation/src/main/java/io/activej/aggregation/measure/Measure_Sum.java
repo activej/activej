@@ -22,7 +22,7 @@ import io.activej.codegen.expression.Variable;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-final class Measure_Sum extends Measure {
+public final class Measure_Sum extends Measure {
 	@SuppressWarnings("rawtypes")
 	Measure_Sum(FieldType fieldType) {
 		super(fieldType);

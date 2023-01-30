@@ -98,7 +98,7 @@ public final class StreamSplitter<I, O> extends ImplicitlyReactive implements Ha
 		sync();
 	}
 
-	private final class Input extends AbstractStreamConsumer<I> {
+	public final class Input extends AbstractStreamConsumer<I> {
 		@Override
 		protected void onStarted() {
 			sync();

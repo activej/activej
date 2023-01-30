@@ -136,7 +136,7 @@ public final class FieldTypes {
 		return new FieldTypeDate(startDate);
 	}
 
-	private static final class FieldTypeDate extends FieldType<LocalDate> {
+	public static final class FieldTypeDate extends FieldType<LocalDate> {
 		private final LocalDate startDate;
 
 		FieldTypeDate() {

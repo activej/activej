@@ -99,7 +99,7 @@ public final class StreamBuffer<T> extends ImplicitlyReactive implements StreamT
 		return output;
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> {
+	public final class Input extends AbstractStreamConsumer<T> {
 		@Override
 		protected void onStarted() {
 			sync();
@@ -111,7 +111,7 @@ public final class StreamBuffer<T> extends ImplicitlyReactive implements StreamT
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<T> {
+	public final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
 			flush();

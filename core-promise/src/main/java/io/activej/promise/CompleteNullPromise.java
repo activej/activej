@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
  * Represents a {@link CompletePromise} with result that equals {@code null}.
  * Optimized for multiple reuse since its result never changes.
  */
-final class CompleteNullPromise<T> extends CompletePromise<T> {
+public final class CompleteNullPromise<T> extends CompletePromise<T> {
 	static final CompleteNullPromise<?> INSTANCE = new CompleteNullPromise<>();
 
 	@SuppressWarnings("unchecked")

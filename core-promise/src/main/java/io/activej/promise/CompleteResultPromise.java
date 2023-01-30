@@ -21,7 +21,7 @@ package io.activej.promise;
  *
  * @param <T> type of the result
  */
-final class CompleteResultPromise<T> extends CompletePromise<T> {
+public final class CompleteResultPromise<T> extends CompletePromise<T> {
 	private final T result;
 
 	public CompleteResultPromise(T result) {

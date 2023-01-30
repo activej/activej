@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-final class ThreadLocalReactor {
+public final class ThreadLocalReactor {
 	private static final ThreadLocal<Reactor> CURRENT_REACTOR = new ThreadLocal<>();
 
 	private static final String NO_CURRENT_REACTOR_ERROR =

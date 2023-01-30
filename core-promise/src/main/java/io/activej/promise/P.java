@@ -1,4 +1,4 @@
 package io.activej.promise;
 
-class P extends PromisePredicates {
+public class P extends PromisePredicates {
 }

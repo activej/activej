@@ -262,7 +262,7 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		fileSystem.move(tempFilename, filename);
 	}
 
-	private interface StreamOutputConsumer {
+	public interface StreamOutputConsumer {
 		void accept(StreamOutput outputStream) throws IOException;
 	}
 

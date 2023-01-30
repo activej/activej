@@ -30,7 +30,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Defines methods to create a constant value
  */
-final class Expression_Constant implements ConstantExpression {
+public final class Expression_Constant implements ConstantExpression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
 	private final Object value;

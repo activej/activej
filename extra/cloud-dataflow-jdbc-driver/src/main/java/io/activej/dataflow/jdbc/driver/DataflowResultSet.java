@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.calcite.avatica.remote.JsonService.MAPPER;
 
-class DataflowResultSet extends AvaticaResultSet {
+public class DataflowResultSet extends AvaticaResultSet {
 
 	private static final TypeFactory TYPE_FACTORY = TypeFactory.defaultInstance();
 	private static final Map<String, JavaType> JAVA_TYPE_CACHE = new ConcurrentHashMap<>();
@@ -145,6 +145,6 @@ class DataflowResultSet extends AvaticaResultSet {
 		throw new UnsupportedOperationException("java.sql.Time is not supported");
 	}
 
-	private record MapTypes(JavaType keyType, JavaType valueType) {
+	public record MapTypes(JavaType keyType, JavaType valueType) {
 	}
 }

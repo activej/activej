@@ -30,7 +30,7 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 /**
  * Defines methods for using logical 'and' for boolean type
  */
-final class Expression_BooleanAnd implements Expression {
+public final class Expression_BooleanAnd implements Expression {
 	private final List<Expression> expressions;
 
 	Expression_BooleanAnd(List<Expression> expressions) {

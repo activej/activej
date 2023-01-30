@@ -9,7 +9,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 
-final class OperandCodecModule extends AbstractModule {
+public final class OperandCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<Operand_Scalar> operandScalar() {

@@ -14,7 +14,7 @@ import io.activej.serializer.stream.StreamCodecs;
 import static io.activej.dataflow.codec.Utils.STREAM_ID_STREAM_CODEC;
 import static io.activej.dataflow.codec.Utils.VERSION_STREAM_CODEC;
 
-final class DataflowRequestCodecsModule extends AbstractModule {
+public final class DataflowRequestCodecsModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new NodeCodecModule());

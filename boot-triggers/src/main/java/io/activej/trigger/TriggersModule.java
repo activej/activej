@@ -47,7 +47,7 @@ public final class TriggersModule extends AbstractModule {
 	private final Map<Class<?>, Set<TriggerConfig<?>>> classSettings = new LinkedHashMap<>();
 	private final Map<Key<?>, Set<TriggerConfig<?>>> keySettings = new LinkedHashMap<>();
 
-	private record TriggerConfig<T>(Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
+	public record TriggerConfig<T>(Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
 
 		@Override
 		public boolean equals(Object o) {
@@ -64,7 +64,7 @@ public final class TriggersModule extends AbstractModule {
 		}
 	}
 
-	private record TriggerRegistryRecord(Severity severity, String name, Supplier<TriggerResult> triggerFunction) {}
+	public record TriggerRegistryRecord(Severity severity, String name, Supplier<TriggerResult> triggerFunction) {}
 
 	private TriggersModule() {
 	}

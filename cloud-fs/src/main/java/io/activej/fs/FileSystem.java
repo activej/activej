@@ -703,12 +703,12 @@ public final class FileSystem extends AbstractReactive
 	}
 
 	@FunctionalInterface
-	private interface IOScalarRunnable {
+	public interface IOScalarRunnable {
 		void run() throws IOException, FileSystemScalarException;
 	}
 
 	@FunctionalInterface
-	private interface IOScalarBiConsumer {
+	public interface IOScalarBiConsumer {
 		void accept(Path first, Path second) throws IOException, FileSystemScalarException;
 	}
 

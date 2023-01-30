@@ -26,7 +26,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Defines methods for using constructors from other classes
  */
-final class Expression_Constructor implements Expression {
+public final class Expression_Constructor implements Expression {
 	private final Class<?> type;
 	private final List<Expression> fields;
 

@@ -121,7 +121,7 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 		}
 	}
 
-	private static final class DependencyToken {}
+	public static final class DependencyToken {}
 
 	// createTest is always called after runChild
 	@Override

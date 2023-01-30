@@ -57,7 +57,7 @@ public final class PNCounterLong implements CrdtMergable<PNCounterLong> {
 		return Long.toString(value());
 	}
 
-	private static class Serializer implements BinarySerializer<PNCounterLong> {
+	public static class Serializer implements BinarySerializer<PNCounterLong> {
 		@Override
 		public void encode(BinaryOutput out, PNCounterLong item) {
 			GCounterLong.SERIALIZER.encode(out, item.p);

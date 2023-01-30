@@ -22,7 +22,7 @@ import org.objectweb.asm.Type;
 /**
  * Defines method which allow taking current instance
  */
-final class Expression_VarThis implements Expression {
+public final class Expression_VarThis implements Expression {
 	@Override
 	public Type load(Context ctx) {
 		ctx.getGeneratorAdapter().loadThis();

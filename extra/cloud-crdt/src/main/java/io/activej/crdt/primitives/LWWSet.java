@@ -186,7 +186,7 @@ public final class LWWSet<E> implements Set<E>, CrdtType<LWWSet<E>> {
 				.collect(Collectors.joining(", ", "[", "]"));
 	}
 
-	private static final class Timestamps {
+	public static final class Timestamps {
 		long added, removed;
 
 		Timestamps(long added, long removed) {

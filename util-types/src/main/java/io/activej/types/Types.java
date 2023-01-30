@@ -212,7 +212,7 @@ public class Types {
 		return new ParameterizedTypeImpl(null, rawType, parameters);
 	}
 
-	static final class ParameterizedTypeImpl implements ParameterizedType {
+	public static final class ParameterizedTypeImpl implements ParameterizedType {
 		private final @Nullable Type ownerType;
 		private final Type rawType;
 		private final Type[] actualTypeArguments;
@@ -304,7 +304,7 @@ public class Types {
 		return new WildcardTypeImpl(NO_TYPES, new Type[]{lowerBound});
 	}
 
-	static class WildcardTypeImpl implements WildcardType {
+	public static class WildcardTypeImpl implements WildcardType {
 		private final Type[] upperBounds;
 		private final Type[] lowerBounds;
 
@@ -358,7 +358,7 @@ public class Types {
 		return new GenericArrayTypeImpl(componentType);
 	}
 
-	static final class GenericArrayTypeImpl implements GenericArrayType {
+	public static final class GenericArrayTypeImpl implements GenericArrayType {
 		private final Type componentType;
 
 		GenericArrayTypeImpl(Type componentType) {

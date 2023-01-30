@@ -26,7 +26,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 import static java.util.stream.Collectors.*;
 
-final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
+public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 	private static final String KEY_COLUMN_NAME = "> key";
 	private static final String VALUE_COLUMN_NAME = "value";
 	private static final String EMPTY_COLUMN_NAME = "default";

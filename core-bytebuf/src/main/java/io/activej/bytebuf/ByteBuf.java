@@ -56,7 +56,7 @@ public class ByteBuf implements Recyclable {
 	 * <p>
 	 * You still have to recycle original {@code ByteBuf} as well as all of its slices.
 	 */
-	static final class ByteBufSlice extends ByteBuf {
+	public static final class ByteBufSlice extends ByteBuf {
 		private final ByteBuf root;
 
 		private ByteBufSlice(ByteBuf buf, int head, int tail) {

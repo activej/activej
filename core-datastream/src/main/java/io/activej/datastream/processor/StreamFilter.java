@@ -69,7 +69,7 @@ public abstract class StreamFilter<I, O> extends ImplicitlyReactive implements S
 		return output;
 	}
 
-	private final class Input extends AbstractStreamConsumer<I> {
+	public final class Input extends AbstractStreamConsumer<I> {
 		@Override
 		protected void onStarted() {
 			StreamFilter.this.onStarted(output::send);
@@ -83,7 +83,7 @@ public abstract class StreamFilter<I, O> extends ImplicitlyReactive implements S
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<O> {
+	public final class Output extends AbstractStreamSupplier<O> {
 		@Override
 		protected void onResumed() {
 			sync();

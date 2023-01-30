@@ -28,7 +28,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
 import static io.activej.codegen.expression.Expressions.*;
 
-final class PredicateDef_Gt implements PredicateDef {
+public final class PredicateDef_Gt implements PredicateDef {
 	private final String key;
 	private final Comparable<Object> value;
 

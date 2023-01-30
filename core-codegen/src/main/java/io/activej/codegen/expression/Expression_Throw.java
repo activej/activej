@@ -22,7 +22,7 @@ import org.objectweb.asm.Type;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isObject;
 
-final class Expression_Throw implements Expression {
+public final class Expression_Throw implements Expression {
 	private final Expression exceptionExpression;
 
 	Expression_Throw(Expression exceptionExpression) {

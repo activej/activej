@@ -42,7 +42,7 @@ public final class RingBuffer implements RingBufferMBean {
 	/**
 	 * The main class for the caching the byte-arrays
 	 */
-	private static class Buffer {
+	public static class Buffer {
 		private final byte[] array;
 		private final IntLongHashMap indexInt = new IntLongHashMap();
 		private final LongLongHashMap indexLong = new LongLongHashMap();

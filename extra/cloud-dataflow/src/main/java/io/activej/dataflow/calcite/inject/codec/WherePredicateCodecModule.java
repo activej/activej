@@ -8,7 +8,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 
-final class WherePredicateCodecModule extends AbstractModule {
+public final class WherePredicateCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<WherePredicate_And> andPredicate(

@@ -25,7 +25,7 @@ import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.is;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
-final class Expression_Loop implements Expression {
+public final class Expression_Loop implements Expression {
 	private final Expression condition;
 	private final Expression body;
 

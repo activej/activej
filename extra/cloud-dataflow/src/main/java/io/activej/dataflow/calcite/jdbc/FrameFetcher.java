@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-final class FrameFetcher implements AsyncCloseable {
+public final class FrameFetcher implements AsyncCloseable {
 	private final StreamConsumer_Blocking<Record> blockingConsumer;
 	private final int columnSize;
 

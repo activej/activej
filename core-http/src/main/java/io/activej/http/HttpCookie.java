@@ -34,7 +34,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * This class represents an abstraction for HTTP Cookie with fast parsing algorithms.
  */
 public final class HttpCookie {
-	private abstract static class AvHandler {
+	public abstract static class AvHandler {
 		protected abstract void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException;
 	}
 

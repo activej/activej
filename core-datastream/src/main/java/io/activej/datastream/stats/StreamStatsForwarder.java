@@ -51,7 +51,7 @@ public final class StreamStatsForwarder<T> extends ImplicitlyReactive implements
 		return output;
 	}
 
-	protected final class Input extends AbstractStreamConsumer<T> {
+	public final class Input extends AbstractStreamConsumer<T> {
 		@Override
 		protected void onStarted() {
 			stats.onStarted();
@@ -73,7 +73,7 @@ public final class StreamStatsForwarder<T> extends ImplicitlyReactive implements
 		}
 	}
 
-	protected final class Output extends AbstractStreamSupplier<T> {
+	public final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
 			stats.onResume();

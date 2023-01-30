@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-final class HttpHeadersMultimap<K, V> {
+public final class HttpHeadersMultimap<K, V> {
 	static final int INITIAL_SIZE = ApplicationSettings.getInt(HttpHeadersMultimap.class, "initialSize", 8);
 
 	Object[] kvPairs = new Object[INITIAL_SIZE];

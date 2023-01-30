@@ -121,7 +121,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		}
 	}
 
-	private class ScheduledCallback<O> implements Runnable, Callback<O> {
+	public class ScheduledCallback<O> implements Runnable, Callback<O> {
 		ScheduledRunnable scheduledRunnable;
 		final Callback<O> cb;
 		final int cookie;
@@ -363,7 +363,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		connectionStats.refresh(timestamp);
 	}
 
-	private final class JmxConnectionMonitoringResultCallback<T> implements Callback<T> {
+	public final class JmxConnectionMonitoringResultCallback<T> implements Callback<T> {
 		private final Stopwatch stopwatch;
 		private final Callback<T> callback;
 		private final RpcRequestStats requestStatsPerClass;

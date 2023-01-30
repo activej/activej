@@ -16,7 +16,7 @@
 
 package io.activej.jmx;
 
-final class ValueFetcherDirect implements ValueFetcher {
+public final class ValueFetcherDirect implements ValueFetcher {
 
 	@Override
 	public Object fetchFrom(Object source) {

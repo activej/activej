@@ -46,7 +46,7 @@ public final class WebSocketConstants {
 
 	static final String MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-	enum OpCode {
+	public enum OpCode {
 		OP_CONTINUATION((byte) 0x0),
 		OP_TEXT((byte) 0x1),
 		OP_BINARY((byte) 0x2),

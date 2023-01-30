@@ -19,7 +19,7 @@ package io.activej.http;
 import io.activej.async.exception.AsyncTimeoutException;
 import org.jetbrains.annotations.Nullable;
 
-final class ConnectionsLinkedList {
+public final class ConnectionsLinkedList {
 	private int size;
 
 	private @Nullable AbstractHttpConnection first;

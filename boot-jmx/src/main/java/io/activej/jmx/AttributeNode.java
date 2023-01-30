@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-interface AttributeNode {
+public interface AttributeNode {
 	String getName();
 
 	Set<String> getAllAttributes();

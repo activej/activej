@@ -24,7 +24,7 @@ import java.util.*;
 import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.common.Utils.first;
 
-final class PredicateDef_Or implements PredicateDef {
+public final class PredicateDef_Or implements PredicateDef {
 	private final List<PredicateDef> predicates;
 
 	PredicateDef_Or(List<PredicateDef> predicates) {

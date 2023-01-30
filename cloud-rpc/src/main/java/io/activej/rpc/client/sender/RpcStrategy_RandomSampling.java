@@ -90,7 +90,7 @@ public final class RpcStrategy_RandomSampling implements RpcStrategy {
 		return new RandomSamplingSender(senderToWeight, seed, totalWeight);
 	}
 
-	private static final class RandomSamplingSender implements RpcSender {
+	public static final class RandomSamplingSender implements RpcSender {
 		private final RpcSender[] senders;
 		private final int[] cumulativeWeights;
 

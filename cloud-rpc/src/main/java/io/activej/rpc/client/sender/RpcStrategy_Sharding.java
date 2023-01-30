@@ -98,7 +98,7 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 		return new Sender(shardingFunction, subSenders);
 	}
 
-	private static final class Sender implements RpcSender {
+	public static final class Sender implements RpcSender {
 		static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
 
 		private final ToIntFunction<Object> shardingFunction;

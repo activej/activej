@@ -298,7 +298,7 @@ public final class DnsCache extends AbstractReactive {
 				.collect(Collectors.toList());
 	}
 
-	private class RecordFormatter {
+	public class RecordFormatter {
 		final String domain;
 		final CachedDnsQueryResult result;
 
@@ -420,7 +420,7 @@ public final class DnsCache extends AbstractReactive {
 		}
 	}
 
-	static final class CachedDnsQueryResult implements Comparable<CachedDnsQueryResult> {
+	public static final class CachedDnsQueryResult implements Comparable<CachedDnsQueryResult> {
 		@Nullable DnsResponse response;
 		final long expirationTime;
 

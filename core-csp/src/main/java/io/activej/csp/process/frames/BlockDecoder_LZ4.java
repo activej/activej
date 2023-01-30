@@ -30,7 +30,7 @@ import java.util.Arrays;
 
 import static io.activej.csp.process.frames.FrameFormat_LZ4.*;
 
-final class BlockDecoder_LZ4 implements BlockDecoder {
+public final class BlockDecoder_LZ4 implements BlockDecoder {
 	private static final int LAST_BLOCK_INT = 0xffffffff;
 
 	private final LZ4FastDecompressor decompressor;
@@ -129,7 +129,7 @@ final class BlockDecoder_LZ4 implements BlockDecoder {
 		return buf;
 	}
 
-	private static final class ByteScanner_Int implements ByteBufs.ByteScanner {
+	public static final class ByteScanner_Int implements ByteBufs.ByteScanner {
 		int value;
 
 		@Override

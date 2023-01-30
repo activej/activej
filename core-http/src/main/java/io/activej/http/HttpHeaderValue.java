@@ -144,7 +144,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfContentType extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfContentType extends HttpHeaderValue {
 		private final ContentType type;
 
 		HttpHeaderValueOfContentType(ContentType type) {
@@ -169,7 +169,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfAcceptMediaTypes extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfAcceptMediaTypes extends HttpHeaderValue {
 		private final List<AcceptMediaType> types;
 
 		HttpHeaderValueOfAcceptMediaTypes(List<AcceptMediaType> types) {
@@ -198,7 +198,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfSimpleCookies extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfSimpleCookies extends HttpHeaderValue {
 		final List<HttpCookie> cookies;
 
 		HttpHeaderValueOfSimpleCookies(List<HttpCookie> cookies) {
@@ -229,7 +229,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfSetCookies extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfSetCookies extends HttpHeaderValue {
 		final HttpCookie cookie;
 
 		HttpHeaderValueOfSetCookies(HttpCookie cookie) {
@@ -261,7 +261,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfCharsets extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfCharsets extends HttpHeaderValue {
 		private final List<AcceptCharset> charsets;
 
 		HttpHeaderValueOfCharsets(List<AcceptCharset> charsets) {
@@ -290,7 +290,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfDate extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfDate extends HttpHeaderValue {
 		private final long epochSeconds;
 
 		HttpHeaderValueOfDate(long epochSeconds) {
@@ -315,7 +315,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfUnsignedDecimal extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfUnsignedDecimal extends HttpHeaderValue {
 		private final int value;
 
 		HttpHeaderValueOfUnsignedDecimal(int value) {
@@ -338,7 +338,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfString extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfString extends HttpHeaderValue {
 		private final String string;
 
 		HttpHeaderValueOfString(String string) {
@@ -361,7 +361,7 @@ public abstract class HttpHeaderValue {
 		}
 	}
 
-	static final class HttpHeaderValueOfBytes extends HttpHeaderValue {
+	public static final class HttpHeaderValueOfBytes extends HttpHeaderValue {
 		private final byte[] array;
 		private final int offset;
 		private final int size;

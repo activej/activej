@@ -27,7 +27,7 @@ import static io.activej.codegen.util.Utils.isWrapperType;
 import static io.activej.codegen.util.Utils.unwrap;
 import static org.objectweb.asm.Type.getType;
 
-final class Expression_ArithmeticOp implements Expression {
+public final class Expression_ArithmeticOp implements Expression {
 	private final ArithmeticOperation op;
 	private final Expression left;
 	private final Expression right;

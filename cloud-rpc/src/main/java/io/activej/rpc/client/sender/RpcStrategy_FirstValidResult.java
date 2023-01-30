@@ -96,7 +96,7 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		return new Sender(senders, resultValidator, noValidResultException);
 	}
 
-	static final class Sender implements RpcSender {
+	public static final class Sender implements RpcSender {
 		private final RpcSender[] subSenders;
 		private final Predicate<?> resultValidator;
 		private final @Nullable Exception noValidResultException;
@@ -119,7 +119,7 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		}
 	}
 
-	static final class FirstResultCallback<T> implements Callback<T> {
+	public static final class FirstResultCallback<T> implements Callback<T> {
 		private int expectedCalls;
 		private final Predicate<T> resultValidator;
 		private final Callback<T> cb;

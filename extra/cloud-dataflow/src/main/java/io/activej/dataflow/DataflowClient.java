@@ -112,7 +112,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		return download(address, streamId, streamSchema, ChannelTransformer.identity());
 	}
 
-	private static class StreamTraceCounter<T> implements StreamSupplierTransformer<T, StreamSupplier<T>> {
+	public static class StreamTraceCounter<T> implements StreamSupplierTransformer<T, StreamSupplier<T>> {
 		private final StreamId streamId;
 		private final InetSocketAddress address;
 		private int count = 0;
@@ -138,7 +138,7 @@ public final class DataflowClient extends AbstractNioReactive {
 			return output;
 		}
 
-		private final class Input extends AbstractStreamConsumer<T> {
+		public final class Input extends AbstractStreamConsumer<T> {
 			@Override
 			protected void onEndOfStream() {
 				output.sendEndOfStream();
@@ -150,7 +150,7 @@ public final class DataflowClient extends AbstractNioReactive {
 			}
 		}
 
-		private final class Output extends AbstractStreamSupplier<T> {
+		public final class Output extends AbstractStreamSupplier<T> {
 			@Override
 			protected void onResumed() {
 				StreamDataAcceptor<T> dataAcceptor = getDataAcceptor();

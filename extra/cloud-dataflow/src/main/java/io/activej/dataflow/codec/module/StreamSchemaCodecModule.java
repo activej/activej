@@ -8,7 +8,7 @@ import io.activej.serializer.stream.StreamCodec;
 
 import static io.activej.dataflow.codec.Utils.CLASS_STREAM_CODEC;
 
-final class StreamSchemaCodecModule extends AbstractModule {
+public final class StreamSchemaCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<StreamSchemas.StreamSchema_Simple<?>> simpleStreamSchema() {

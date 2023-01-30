@@ -40,7 +40,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow taking property according to the name
  */
-final class Expression_Property implements Variable {
+public final class Expression_Property implements Variable {
 	private final Expression owner;
 	private final String property;
 

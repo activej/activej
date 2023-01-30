@@ -23,7 +23,7 @@ import java.util.List;
 
 import static org.objectweb.asm.Type.getType;
 
-final class Expression_StaticCall implements Expression {
+public final class Expression_StaticCall implements Expression {
 	private final Class<?> owner;
 	private final String name;
 	private final List<Expression> arguments;

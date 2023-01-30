@@ -80,7 +80,7 @@ public final class GCounterInt implements CrdtMergable<GCounterInt> {
 		return Integer.toString(value());
 	}
 
-	private static class Serializer implements BinarySerializer<GCounterInt> {
+	public static class Serializer implements BinarySerializer<GCounterInt> {
 		@Override
 		public void encode(BinaryOutput out, GCounterInt item) {
 			int[] state = item.state;

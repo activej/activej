@@ -39,7 +39,7 @@ import static org.objectweb.asm.Type.*;
 
 public final class SerializerDef_Class extends AbstractSerializerDef {
 
-	private static final class FieldDef {
+	public static final class FieldDef {
 		private Field field;
 		private Method method;
 		private int versionAdded = -1;

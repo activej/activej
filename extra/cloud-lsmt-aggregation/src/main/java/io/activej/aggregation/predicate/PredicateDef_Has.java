@@ -27,7 +27,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.property;
 import static io.activej.codegen.expression.Expressions.value;
 
-final class PredicateDef_Has implements PredicateDef {
+public final class PredicateDef_Has implements PredicateDef {
 	private final String key;
 
 	PredicateDef_Has(String key) {

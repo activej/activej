@@ -7,7 +7,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.stream.StreamCodec;
 
-final class StreamSchemaCodecModule extends AbstractModule {
+public final class StreamSchemaCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(1)
 	StreamCodec<StreamSchema_Record> recordStreamSchema(StreamCodec<RecordScheme> recordSchemeStreamCodec) {

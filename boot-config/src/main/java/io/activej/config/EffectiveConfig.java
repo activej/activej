@@ -29,7 +29,7 @@ import static java.lang.Math.min;
 import static java.nio.file.StandardOpenOption.*;
 
 public final class EffectiveConfig implements Config {
-	private static final class CallsRegistry {
+	public static final class CallsRegistry {
 		final Map<String, String> calls = new HashMap<>();
 		final Map<String, String> defaultCalls = new HashMap<>();
 		final Map<String, String> all;

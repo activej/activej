@@ -13,7 +13,7 @@ import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 
-final class ReducerCodecModule extends AbstractModule {
+public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(6)
 	StreamCodec<Reducer_Named> namedReducer(DataflowSchema dataflowSchema) {

@@ -30,7 +30,7 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 /**
  * Defines methods for using logical 'or' for boolean type
  */
-final class Expression_BooleanOr implements Expression {
+public final class Expression_BooleanOr implements Expression {
 	private final List<Expression> expressions;
 
 	Expression_BooleanOr(List<Expression> expressions) {

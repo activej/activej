@@ -1,8 +1,8 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
@@ -3163,7 +3163,7 @@ public abstract class AbstractCalciteTest {
 		return result;
 	}
 
-	protected interface ParamsSetter {
+	public interface ParamsSetter {
 		void setValues(PreparedStatement stmt) throws SQLException;
 	}
 

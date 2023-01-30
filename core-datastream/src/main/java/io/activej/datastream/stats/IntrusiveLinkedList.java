@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
-final class IntrusiveLinkedList<T> implements Iterable<T> {
+public final class IntrusiveLinkedList<T> implements Iterable<T> {
 
 	@SuppressWarnings("NullableProblems")
 	@Override

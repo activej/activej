@@ -34,7 +34,7 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * Represents a {@code Promise} which is completed with an exception.
  */
 @SuppressWarnings("unchecked")
-final class CompleteExceptionallyPromise<T> implements Promise<T> {
+public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	private final Exception exception;
 
 	public CompleteExceptionallyPromise(Exception e) {

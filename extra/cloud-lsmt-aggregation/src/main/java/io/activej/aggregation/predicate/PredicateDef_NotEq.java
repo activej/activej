@@ -30,7 +30,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.codegen.expression.Expressions.*;
 
-final class PredicateDef_NotEq implements PredicateDef {
+public final class PredicateDef_NotEq implements PredicateDef {
 	private final String key;
 	private final Object value;
 

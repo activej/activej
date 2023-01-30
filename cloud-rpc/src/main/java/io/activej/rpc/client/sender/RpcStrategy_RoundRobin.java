@@ -82,7 +82,7 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 		return new Sender(subSenders);
 	}
 
-	private static final class Sender implements RpcSender {
+	public static final class Sender implements RpcSender {
 		private int nextSender;
 		private final RpcSender[] subSenders;
 

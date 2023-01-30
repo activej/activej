@@ -39,7 +39,7 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
-final class CubeUplinkMigrationService {
+public final class CubeUplinkMigrationService {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMigrationService.class);
 
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());

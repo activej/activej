@@ -8,7 +8,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 
-final class FieldReducerCodecModule extends AbstractModule {
+public final class FieldReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<MaxReducer<?>> maxReducer() {

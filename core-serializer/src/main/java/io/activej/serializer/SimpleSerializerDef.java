@@ -69,7 +69,7 @@ public abstract class SimpleSerializerDef<T> extends AbstractSerializerDef {
 		return SERIALIZER_EXPRESSION_CACHE.computeIfAbsent(cacheKey, $ -> value(createSerializer(version, compatibilityLevel), BinarySerializer.class));
 	}
 
-	private static final class CacheKey {
+	public static final class CacheKey {
 		private final int version;
 		private final CompatibilityLevel level;
 

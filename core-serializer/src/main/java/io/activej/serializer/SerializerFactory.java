@@ -1123,7 +1123,7 @@ public final class SerializerFactory {
 		return SerializeProfiles.DEFAULT_VERSION;
 	}
 
-	private static final class FoundSerializer implements Comparable<FoundSerializer> {
+	public static final class FoundSerializer implements Comparable<FoundSerializer> {
 		final Object methodOrField;
 		int order;
 		int index;
@@ -1179,7 +1179,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private static class ForwardingSerializerDefImpl extends ForwardingSerializerDef {
+	public static class ForwardingSerializerDefImpl extends ForwardingSerializerDef {
 		SerializerDef serializerDef;
 
 		@Override

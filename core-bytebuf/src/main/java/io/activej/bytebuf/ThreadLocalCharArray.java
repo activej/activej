@@ -16,7 +16,7 @@
 
 package io.activej.bytebuf;
 
-final class ThreadLocalCharArray {
+public final class ThreadLocalCharArray {
 	private ThreadLocalCharArray() {
 	}
 

@@ -23,7 +23,7 @@ import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-final class PredicateDef_In implements PredicateDef {
+public final class PredicateDef_In implements PredicateDef {
 	private final String key;
 	private final SortedSet<Object> values;
 

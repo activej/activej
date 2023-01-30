@@ -28,7 +28,7 @@ import io.activej.inject.util.Trie;
 import java.util.Map;
 import java.util.Set;
 
-final class SimpleModule implements Module {
+public final class SimpleModule implements Module {
 	private final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings;
 	private final Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers;
 	private final Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators;

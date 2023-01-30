@@ -36,7 +36,7 @@ public final class UrlParser {
 	public static final byte SLASH = '/';
 	public static final byte QUESTION_MARK = '?';
 
-	private class QueryParamIterator implements Iterator<QueryParameter> {
+	public class QueryParamIterator implements Iterator<QueryParameter> {
 		private int i = 0;
 
 		@Override

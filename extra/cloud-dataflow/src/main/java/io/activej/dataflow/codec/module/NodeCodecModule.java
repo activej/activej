@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 import static io.activej.dataflow.codec.Utils.STREAM_ID_STREAM_CODEC;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-final class NodeCodecModule extends AbstractModule {
+public final class NodeCodecModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new ReducerCodecModule());

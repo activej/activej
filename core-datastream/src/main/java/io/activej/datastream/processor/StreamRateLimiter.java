@@ -107,7 +107,7 @@ public final class StreamRateLimiter<T> extends ImplicitlyReactive implements St
 		return output;
 	}
 
-	private final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
+	public final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 		@Override
 		protected void onStarted() {
 			lastRefillTimestamp = reactor.currentTimeMillis();
@@ -150,7 +150,7 @@ public final class StreamRateLimiter<T> extends ImplicitlyReactive implements St
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<T> {
+	public final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
 			if (input.isEndOfStream()) {

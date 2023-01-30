@@ -16,7 +16,7 @@
 
 package io.activej.jmx;
 
-class SetterException extends Exception {
+public class SetterException extends Exception {
 	private final Exception causedException;
 
 	public SetterException(Exception causedException) {

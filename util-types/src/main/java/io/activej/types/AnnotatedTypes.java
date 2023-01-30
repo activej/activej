@@ -245,7 +245,7 @@ public class AnnotatedTypes {
 		return path;
 	}
 
-	static class AnnotatedTypeImpl implements AnnotatedType {
+	public static class AnnotatedTypeImpl implements AnnotatedType {
 		protected final Type type;
 		protected final Annotation[] annotations;
 
@@ -288,7 +288,7 @@ public class AnnotatedTypes {
 		}
 	}
 
-	static class AnnotatedTypeVariableImpl extends AnnotatedTypeImpl implements AnnotatedTypeVariable {
+	public static class AnnotatedTypeVariableImpl extends AnnotatedTypeImpl implements AnnotatedTypeVariable {
 		private final AnnotatedType[] bounds;
 
 		public AnnotatedTypeVariableImpl(Type type, Annotation[] annotations, AnnotatedType[] bounds) {
@@ -302,7 +302,7 @@ public class AnnotatedTypes {
 		}
 	}
 
-	static class AnnotatedParameterizedTypeImpl extends AnnotatedTypeImpl implements AnnotatedParameterizedType {
+	public static class AnnotatedParameterizedTypeImpl extends AnnotatedTypeImpl implements AnnotatedParameterizedType {
 		protected final AnnotatedType[] typeArguments;
 
 		AnnotatedParameterizedTypeImpl(Type type, Annotation[] annotations, AnnotatedType[] typeArguments) {
@@ -326,7 +326,7 @@ public class AnnotatedTypes {
 		}
 	}
 
-	static class AnnotatedArrayTypeImpl extends AnnotatedTypeImpl implements AnnotatedArrayType {
+	public static class AnnotatedArrayTypeImpl extends AnnotatedTypeImpl implements AnnotatedArrayType {
 		private final AnnotatedType componentType;
 
 		AnnotatedArrayTypeImpl(Type type, Annotation[] annotations, AnnotatedType componentType) {
@@ -340,7 +340,7 @@ public class AnnotatedTypes {
 		}
 	}
 
-	static class AnnotatedWildcardTypeImpl extends AnnotatedTypeImpl implements AnnotatedWildcardType {
+	public static class AnnotatedWildcardTypeImpl extends AnnotatedTypeImpl implements AnnotatedWildcardType {
 		private final AnnotatedType[] upperBounds;
 		private final AnnotatedType[] lowerBounds;
 

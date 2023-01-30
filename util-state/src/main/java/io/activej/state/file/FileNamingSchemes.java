@@ -12,7 +12,7 @@ public class FileNamingSchemes {
 		return new FileNamingSchemeImplImpl2(prefix, suffix, diffPrefix, diffSuffix, diffSeparator);
 	}
 
-	private static class FileNamingSchemeImpl implements FileNamingScheme {
+	public static class FileNamingSchemeImpl implements FileNamingScheme {
 		private final String prefix;
 		private final String suffix;
 
@@ -64,7 +64,7 @@ public class FileNamingSchemes {
 		}
 	}
 
-	private static class FileNamingSchemeImplImpl2 extends FileNamingSchemeImpl {
+	public static class FileNamingSchemeImplImpl2 extends FileNamingSchemeImpl {
 		private final String diffPrefix;
 		private final String diffSuffix;
 		private final char diffSeparator;

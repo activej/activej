@@ -9,7 +9,7 @@ import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import org.apache.calcite.rel.core.JoinRelType;
 
-final class LeftJoinerCodecModule extends AbstractModule {
+public final class LeftJoinerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<LeftJoiner_Record> leftJoinerStreamCodec(StreamCodec<RecordScheme> recordSchemeStreamCodec) {

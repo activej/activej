@@ -36,14 +36,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.http.IWebSocket.Frame.FrameType.*;
 import static io.activej.http.HttpUtils.frameToOpType;
+import static io.activej.http.IWebSocket.Frame.FrameType.*;
 import static io.activej.http.WebSocketConstants.*;
 import static io.activej.http.WebSocketConstants.OpCode.OP_CLOSE;
 import static io.activej.http.WebSocketConstants.OpCode.OP_PONG;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
+public final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf> {
 	private static final boolean CHECKS = Checks.isEnabled(WebSocketFramesToBufs.class);
 

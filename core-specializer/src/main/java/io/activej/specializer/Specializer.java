@@ -95,7 +95,7 @@ public final class Specializer {
 	}
 
 	@SuppressWarnings("PointlessBooleanExpression")
-	final class Specialization {
+	public final class Specialization {
 		public static final String THIS = "$this";
 
 		final Object instance;

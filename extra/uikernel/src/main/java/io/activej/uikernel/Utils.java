@@ -26,7 +26,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-class Utils {
+public class Utils {
 	static <K, R extends AbstractRecord<K>> List<R> deserializeUpdateRequest(Gson gson, String json, Class<R> type, Class<K> idType) throws MalformedDataException {
 		List<R> result = new ArrayList<>();
 		JsonArray root = fromJson(gson, json, JsonArray.class);

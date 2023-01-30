@@ -22,7 +22,7 @@ import io.activej.codegen.expression.Variable;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-final class Measure_Min extends Measure {
+public final class Measure_Min extends Measure {
 	@SuppressWarnings("rawtypes")
 	Measure_Min(FieldType fieldType) {
 		super(fieldType);

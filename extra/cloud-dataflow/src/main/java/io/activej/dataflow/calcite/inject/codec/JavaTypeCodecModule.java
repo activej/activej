@@ -12,7 +12,7 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-final class JavaTypeCodecModule extends AbstractModule {
+public final class JavaTypeCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<Class<?>> cls() {

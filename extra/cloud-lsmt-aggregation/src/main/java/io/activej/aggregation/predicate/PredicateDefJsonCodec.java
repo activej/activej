@@ -428,6 +428,6 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return has(attribute);
 	}
 
-	private record AttributeAndValue(String attribute, Comparable<?> value) {
+	public record AttributeAndValue(String attribute, Comparable<?> value) {
 	}
 }

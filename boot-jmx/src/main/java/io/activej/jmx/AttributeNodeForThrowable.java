@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
+public final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 	private static final String THROWABLE_TYPE_KEY = "type";
 	private static final String THROWABLE_MESSAGE_KEY = "message";
 	private static final String THROWABLE_STACK_TRACE_KEY = "stackTrace";

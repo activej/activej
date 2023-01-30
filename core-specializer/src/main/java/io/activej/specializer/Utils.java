@@ -25,7 +25,7 @@ import java.util.function.UnaryOperator;
 
 import static java.lang.System.identityHashCode;
 
-class Utils {
+public class Utils {
 
 	static Class<?> getBoxedType(Class<?> type) {
 		if (byte.class == type) return Byte.class;
@@ -61,7 +61,7 @@ class Utils {
 		return stackOwnerClazz;
 	}
 
-	static final class IdentityKey<T> {
+	public static final class IdentityKey<T> {
 		private final T value;
 
 		IdentityKey(T value) {this.value = value;}
@@ -93,7 +93,7 @@ class Utils {
 	}
 
 	@SuppressWarnings("unused") // A private class that should only be accessed via Reflection API
-	private static class InjectorSpecializer implements UnaryOperator<Object> {
+	public static class InjectorSpecializer implements UnaryOperator<Object> {
 		private final Specializer specializer;
 
 		public InjectorSpecializer() {

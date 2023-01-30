@@ -20,7 +20,7 @@ import io.activej.common.Checks;
 
 import static io.activej.common.Checks.checkArgument;
 
-final class AddressLinkedList {
+public final class AddressLinkedList {
 	private static final boolean CHECKS = Checks.isEnabled(AddressLinkedList.class);
 
 	private HttpClientConnection first;

@@ -29,7 +29,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 @Deprecated
-final class BlockEncoder_LZ4Legacy implements BlockEncoder {
+public final class BlockEncoder_LZ4Legacy implements BlockEncoder {
 	private static final boolean CHECKS = Checks.isEnabled(BlockEncoder_LZ4Legacy.class);
 
 	private static final int MIN_BLOCK_SIZE = 64;

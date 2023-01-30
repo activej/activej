@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 import static io.activej.common.Utils.not;
 
-class Utils {
+public class Utils {
 	static final String MEASURES_PARAM = "measures";
 	static final String ATTRIBUTES_PARAM = "attributes";
 	static final String WHERE_PARAM = "where";

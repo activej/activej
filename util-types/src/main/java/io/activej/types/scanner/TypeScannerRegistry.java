@@ -254,7 +254,7 @@ public final class TypeScannerRegistry<R> {
 	private @Nullable Mapping<R> mappingFn = null;
 	private final List<MappingEntry<R>> entries = new ArrayList<>();
 
-	private record MappingEntry<R>(Type type, Mapping<R> fn) {}
+	public record MappingEntry<R>(Type type, Mapping<R> fn) {}
 
 	private TypeScannerRegistry() {
 	}

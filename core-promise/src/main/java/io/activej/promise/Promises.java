@@ -1214,7 +1214,7 @@ public final class Promises {
 	}
 
 	// region helper classes
-	private static final class PromiseAll<T> extends NextPromise<T, Void> {
+	public static final class PromiseAll<T> extends NextPromise<T, Void> {
 		int countdown = 1;
 
 		@Override
@@ -1235,7 +1235,7 @@ public final class Promises {
 		}
 	}
 
-	private static final class PromiseAny<T> extends NextPromise<T, T> {
+	public static final class PromiseAny<T> extends NextPromise<T, T> {
 		private final BiPredicate<? super T, ? super Exception> predicate;
 		int countdown = 1;
 
@@ -1263,7 +1263,7 @@ public final class Promises {
 		}
 	}
 
-	private static final class PromisesToList<T> extends AbstractPromise<List<T>> {
+	public static final class PromisesToList<T> extends AbstractPromise<List<T>> {
 		Object[] array;
 		int countdown;
 		int size;

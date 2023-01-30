@@ -26,7 +26,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 import static java.util.Collections.singletonMap;
 
-abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
+public abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 	protected final String name;
 	private final String description;
 	protected final ValueFetcher fetcher;

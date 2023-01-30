@@ -21,7 +21,7 @@ import org.objectweb.asm.Type;
 
 import java.util.List;
 
-final class Expression_StaticCallSelf implements Expression {
+public final class Expression_StaticCallSelf implements Expression {
 	private final String methodName;
 	private final List<Expression> arguments;
 

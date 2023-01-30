@@ -28,7 +28,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Set;
 
 @SuppressWarnings("ConstantConditions")
-class JsonCodecs {
+public class JsonCodecs {
 	static final JsonCodec<String> STRING_CODEC = JsonCodec.of(JsonReader::readString, JsonWriter::writeString);
 	static final JsonCodec<Short> SHORT_CODEC = JsonCodec.of(NumberConverter::deserializeShort, (writer, value) -> NumberConverter.serialize(value, writer));
 	static final JsonCodec<Integer> INTEGER_CODEC = JsonCodec.of(NumberConverter::deserializeInt, (writer, value) -> NumberConverter.serialize(value, writer));

@@ -11,7 +11,7 @@ import io.activej.serializer.stream.StreamCodecs;
 
 import java.util.List;
 
-final class RecordReducerCodecModule extends AbstractModule {
+public final class RecordReducerCodecModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(new FieldReducerCodecModule());

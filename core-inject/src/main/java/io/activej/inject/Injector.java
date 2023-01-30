@@ -60,7 +60,7 @@ import static java.util.stream.Collectors.toMap;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "rawtypes"})
 public final class Injector implements ResourceLocator {
-	private record ScopeLocalData(Scope[] scope,
+	public record ScopeLocalData(Scope[] scope,
 								  Map<Key<?>, Binding<?>> bindings,
 								  Map<Key<?>, CompiledBinding<?>> compiledBindings,
 								  Map<Key<?>, Integer> slotMapping, int slots,

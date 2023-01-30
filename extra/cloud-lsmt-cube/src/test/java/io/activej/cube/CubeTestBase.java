@@ -126,7 +126,7 @@ public abstract class CubeTestBase {
 		);
 	}
 
-	protected interface UplinkFactory<U extends AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> {
+	public interface UplinkFactory<U extends AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> {
 		default U create(Cube cube) {
 			U uplink = createUninitialized(cube);
 			initialize(uplink);

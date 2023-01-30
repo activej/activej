@@ -49,7 +49,7 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		boolean isEmpty(OP op);
 	}
 
-	private record KeyPair<O>(Class<? extends O> left, Class<? extends O> right) {}
+	public record KeyPair<O>(Class<? extends O> left, Class<? extends O> right) {}
 
 	private final Map<KeyPair<D>, TransformFunction<D, ?, ?>> transformers = new HashMap<>();
 	private final Map<KeyPair<D>, SquashFunction<D, ?, ?>> squashers = new HashMap<>();

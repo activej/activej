@@ -367,7 +367,7 @@ public final class ServiceAdapters {
 	}
 
 	@FunctionalInterface
-	private interface Action<T> {
+	public interface Action<T> {
 		CompletableFuture<?> doAction(ServiceAdapter<T> serviceAdapter, T instance, Executor executor);
 	}
 

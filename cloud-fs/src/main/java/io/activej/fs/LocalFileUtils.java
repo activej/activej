@@ -17,8 +17,8 @@
 package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FileSystemStructureException;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.GlobException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -340,7 +340,7 @@ public final class LocalFileUtils {
 	}
 
 	@FunctionalInterface
-	private interface Walker {
+	public interface Walker {
 		void accept(Path path) throws IOException;
 	}
 

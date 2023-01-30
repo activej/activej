@@ -12,7 +12,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 
-final class FunctionCodecModule extends AbstractModule {
+public final class FunctionCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<RecordFunction_Named<?>> namedRecordFunction(DataflowSchema schema) {

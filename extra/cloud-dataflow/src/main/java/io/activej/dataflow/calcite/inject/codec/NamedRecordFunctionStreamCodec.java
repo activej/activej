@@ -11,7 +11,7 @@ import io.activej.serializer.stream.StreamOutput;
 
 import java.io.IOException;
 
-final class NamedRecordFunctionStreamCodec implements StreamCodec<RecordFunction_Named<?>> {
+public final class NamedRecordFunctionStreamCodec implements StreamCodec<RecordFunction_Named<?>> {
 	private static final StreamCodec<String> STRING_STREAM_CODEC = StreamCodecs.ofString();
 
 	private final DataflowSchema dataflowSchema;

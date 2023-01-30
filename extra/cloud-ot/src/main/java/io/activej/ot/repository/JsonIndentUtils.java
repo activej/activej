@@ -23,7 +23,7 @@ public class JsonIndentUtils {
 		return new OnelinedWriteObject<>(writeObject);
 	}
 
-	private static class IndentedWriteObject<T> implements WriteObject<T> {
+	public static class IndentedWriteObject<T> implements WriteObject<T> {
 		private final WriteObject<T> writeObject;
 
 		public IndentedWriteObject(WriteObject<T> writeObject) {
@@ -45,7 +45,7 @@ public class JsonIndentUtils {
 		}
 	}
 
-	private static class OnelinedWriteObject<T> implements WriteObject<T> {
+	public static class OnelinedWriteObject<T> implements WriteObject<T> {
 		private final WriteObject<T> writeObject;
 
 		public OnelinedWriteObject(WriteObject<T> writeObject) {
@@ -67,7 +67,7 @@ public class JsonIndentUtils {
 		}
 	}
 
-	static final class OnelineOutputStream extends OutputStream {
+	public static final class OnelineOutputStream extends OutputStream {
 		private final OutputStream out;
 
 		private boolean inString = false;

@@ -34,7 +34,7 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * Represents a completed {@code Promise} with a result of unspecified type.
  */
 @SuppressWarnings("unchecked")
-abstract class CompletePromise<T> implements Promise<T> {
+public abstract class CompletePromise<T> implements Promise<T> {
 	static {
 		Recyclers.register(CompletePromise.class, promise -> Recyclers.recycle(promise.getResult()));
 	}

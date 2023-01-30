@@ -39,7 +39,7 @@ import static java.lang.System.currentTimeMillis;
 public final class StreamRegistry<V> implements Iterable<V> {
 	private final IntrusiveLinkedList<Entry<V>> list = new IntrusiveLinkedList<>();
 
-	private static class Entry<T> {
+	public static class Entry<T> {
 		private final long timestamp;
 		private final T operation;
 

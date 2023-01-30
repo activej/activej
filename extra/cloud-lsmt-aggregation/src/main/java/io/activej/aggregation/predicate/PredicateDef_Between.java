@@ -28,7 +28,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 
-final class PredicateDef_Between implements PredicateDef {
+public final class PredicateDef_Between implements PredicateDef {
 	private final String key;
 	private final Comparable<Object> from;
 	private final Comparable<Object> to;

@@ -32,7 +32,7 @@ import java.util.zip.Checksum;
 import static io.activej.csp.process.frames.FrameFormat_LZ4Legacy.*;
 
 @Deprecated
-final class BlockDecoder_LZ4Legacy implements BlockDecoder {
+public final class BlockDecoder_LZ4Legacy implements BlockDecoder {
 	private final LZ4FastDecompressor decompressor;
 	private final Checksum checksum;
 	private final boolean ignoreMissingEndOfStreamBlock;
@@ -155,7 +155,7 @@ final class BlockDecoder_LZ4Legacy implements BlockDecoder {
 		}
 	}
 
-	private static final class ByteScanner_IntLe implements ByteBufs.ByteScanner {
+	public static final class ByteScanner_IntLe implements ByteBufs.ByteScanner {
 		int value;
 
 		@Override

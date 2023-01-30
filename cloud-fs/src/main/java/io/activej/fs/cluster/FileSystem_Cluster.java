@@ -29,8 +29,8 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -438,7 +438,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 		return broadcast(($, fs) -> action.apply(fs), $ -> {});
 	}
 
-	private record Container<T>(Object id, T value) {}
+	public record Container<T>(Object id, T value) {}
 
 	// region JMX
 	@JmxAttribute

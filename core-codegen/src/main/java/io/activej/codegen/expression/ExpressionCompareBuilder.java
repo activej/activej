@@ -46,7 +46,7 @@ public interface ExpressionCompareBuilder extends Builder<Expression> {
 final class Expression_Compare implements Expression {
 	private final List<Pair> pairs = new ArrayList<>();
 
-	private record Pair(Expression left, Expression right, boolean nullable) {}
+	public record Pair(Expression left, Expression right, boolean nullable) {}
 
 	private Expression_Compare() {
 	}
@@ -55,7 +55,7 @@ final class Expression_Compare implements Expression {
 		return new Expression_Compare().new Builder();
 	}
 
-	final class Builder extends AbstractBuilder<Builder, Expression>
+	public final class Builder extends AbstractBuilder<Builder, Expression>
 			implements ExpressionCompareBuilder {
 		Builder() {}
 

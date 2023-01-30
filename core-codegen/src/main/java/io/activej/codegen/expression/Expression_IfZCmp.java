@@ -26,7 +26,7 @@ import static io.activej.codegen.util.TypeChecks.checkType;
 import static org.objectweb.asm.Type.BOOLEAN;
 import static org.objectweb.asm.Type.INT;
 
-final class Expression_IfZCmp implements Expression {
+public final class Expression_IfZCmp implements Expression {
 	private final Expression value;
 	private final CompareOperation operation;
 	private final Expression expressionTrue;

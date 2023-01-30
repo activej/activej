@@ -37,7 +37,7 @@ public final class StreamCounter<T> extends StreamFilter<T, T> {
 		return acceptor.itemCount;
 	}
 
-	private class CounterDataAcceptor implements StreamDataAcceptor<T> {
+	public class CounterDataAcceptor implements StreamDataAcceptor<T> {
 		private final StreamDataAcceptor<T> output;
 		private long itemCount;
 

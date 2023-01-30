@@ -9,7 +9,7 @@ import org.apache.calcite.avatica.remote.TypedValue;
 import java.util.List;
 import java.util.Map;
 
-abstract class LimitedMeta implements Meta {
+public abstract class LimitedMeta implements Meta {
 	@Override
 	public Map<DatabaseProperty, Object> getDatabaseProperties(ConnectionHandle ch) {
 		throw new UnsupportedOperationException();

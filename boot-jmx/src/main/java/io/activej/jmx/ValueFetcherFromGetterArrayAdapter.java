@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-final class ValueFetcherFromGetterArrayAdapter implements ValueFetcher {
+public final class ValueFetcherFromGetterArrayAdapter implements ValueFetcher {
 	private final Method getter;
 
 	public ValueFetcherFromGetterArrayAdapter(Method getter) {

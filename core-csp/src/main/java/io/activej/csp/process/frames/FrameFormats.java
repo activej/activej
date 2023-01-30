@@ -83,7 +83,7 @@ public class FrameFormats {
 	}
 
 	// region implementations
-	private static final class FrameFormat_Compound implements FrameFormat {
+	public static final class FrameFormat_Compound implements FrameFormat {
 		private final List<FrameFormat> formats = new ArrayList<>();
 
 		FrameFormat_Compound(FrameFormat mainFormat, List<FrameFormat> otherFormats) {
@@ -149,7 +149,7 @@ public class FrameFormats {
 		}
 	}
 
-	private static final class FrameFormat_Identity implements FrameFormat {
+	public static final class FrameFormat_Identity implements FrameFormat {
 		@Override
 		public BlockEncoder createEncoder() {
 			return new BlockEncoder() {
@@ -190,7 +190,7 @@ public class FrameFormats {
 		}
 	}
 
-	private static final class FrameFormat_SizePrefixed implements FrameFormat {
+	public static final class FrameFormat_SizePrefixed implements FrameFormat {
 		private static final byte[] ZERO_BYTE_ARRAY = {0};
 
 		@Override
@@ -246,7 +246,7 @@ public class FrameFormats {
 			};
 		}
 
-		private static final class ByteScanner_Length implements ByteBufs.ByteScanner {
+		public static final class ByteScanner_Length implements ByteBufs.ByteScanner {
 			int value;
 
 			@Override
@@ -262,7 +262,7 @@ public class FrameFormats {
 		}
 	}
 
-	private static final class MagicNumberAdapter implements FrameFormat {
+	public static final class MagicNumberAdapter implements FrameFormat {
 		private final FrameFormat peerFormat;
 		private final byte[] magicNumber;
 		private final ByteBufsDecoder<byte[]> magicNumberValidator;

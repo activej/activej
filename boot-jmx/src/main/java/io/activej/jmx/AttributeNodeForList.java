@@ -30,7 +30,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 import static java.lang.String.format;
 
-final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
+public final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	private final AttributeNode subNode;
 	private final ArrayType<?> arrayType;
 	private final boolean isListOfJmxRefreshables;

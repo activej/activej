@@ -22,9 +22,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FileSystemBatchException;
 import io.activej.fs.exception.FileSystemScalarException;
+import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.util.RemoteFileSystemUtils;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +43,7 @@ import static java.util.stream.Collectors.toSet;
  * <p>
  * Inherits all the limitations of parent {@link IFileSystem}
  */
-final class FileSystem_Transform implements IFileSystem {
+public final class FileSystem_Transform implements IFileSystem {
 	private final IFileSystem parent;
 	private final Function<String, Optional<String>> into;
 	private final Function<String, Optional<String>> from;

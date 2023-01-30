@@ -32,16 +32,16 @@ import java.util.stream.Collector;
 import static io.activej.common.Utils.nullify;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
-final class StreamConsumers {
+public final class StreamConsumers {
 
-	static final class Idle<T> extends AbstractStreamConsumer<T> {
+	public static final class Idle<T> extends AbstractStreamConsumer<T> {
 		@Override
 		protected void onEndOfStream() {
 			acknowledge();
 		}
 	}
 
-	static final class Skip<T> extends AbstractStreamConsumer<T> {
+	public static final class Skip<T> extends AbstractStreamConsumer<T> {
 		@Override
 		protected void onStarted() {
 			resume(item -> {});
@@ -53,7 +53,7 @@ final class StreamConsumers {
 		}
 	}
 
-	static final class OfConsumer<T> extends AbstractStreamConsumer<T> {
+	public static final class OfConsumer<T> extends AbstractStreamConsumer<T> {
 		private final ConsumerEx<T> consumer;
 
 		OfConsumer(ConsumerEx<T> consumer) {
@@ -78,7 +78,7 @@ final class StreamConsumers {
 		}
 	}
 
-	static final class ClosingWithError<T> extends AbstractStreamConsumer<T> {
+	public static final class ClosingWithError<T> extends AbstractStreamConsumer<T> {
 		private Exception error;
 
 		ClosingWithError(Exception e) {
@@ -91,11 +91,11 @@ final class StreamConsumers {
 		}
 	}
 
-	static final class OfPromise<T> extends AbstractStreamConsumer<T> {
+	public static final class OfPromise<T> extends AbstractStreamConsumer<T> {
 		private Promise<? extends StreamConsumer<T>> promise;
 		private final InternalSupplier internalSupplier = new InternalSupplier();
 
-		private class InternalSupplier extends AbstractStreamSupplier<T> {
+		public class InternalSupplier extends AbstractStreamSupplier<T> {
 			@Override
 			protected void onResumed() {
 				OfPromise.this.resume(getDataAcceptor());
@@ -136,7 +136,7 @@ final class StreamConsumers {
 		}
 	}
 
-	static final class OfChannelConsumer<T> extends AbstractStreamConsumer<T> {
+	public static final class OfChannelConsumer<T> extends AbstractStreamConsumer<T> {
 		private final ChannelConsumer<T> consumer;
 		private boolean working;
 
@@ -188,7 +188,7 @@ final class StreamConsumers {
 		}
 	}
 
-	static final class ToCollector<T, A, R> extends AbstractStreamConsumer<T> {
+	public static final class ToCollector<T, A, R> extends AbstractStreamConsumer<T> {
 		private final SettablePromise<R> resultPromise = new SettablePromise<>();
 		private final Collector<T, A, R> collector;
 		private A accumulator;
@@ -231,7 +231,7 @@ final class StreamConsumers {
 
 	}
 
-	static final class OfAnotherReactor<T> extends AbstractStreamConsumer<T> {
+	public static final class OfAnotherReactor<T> extends AbstractStreamConsumer<T> {
 		private static final int MAX_BUFFER_SIZE = 100;
 		private static final Iterator<?> END_OF_STREAM = Collections.emptyIterator();
 
@@ -320,7 +320,7 @@ final class StreamConsumers {
 			this.list = null;
 		}
 
-		final class InternalSupplier extends AbstractStreamSupplier<T> {
+		public final class InternalSupplier extends AbstractStreamSupplier<T> {
 			volatile Iterator<T> iterator;
 			volatile boolean isReady;
 			volatile boolean wakingUp;

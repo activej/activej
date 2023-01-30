@@ -138,7 +138,7 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 		return new StreamLeftJoin<>(keyComparator, leftKeyFunction, rightKeyFunction, leftJoiner);
 	}
 
-	private final class Input<I> extends AbstractStreamConsumer<I> implements StreamDataAcceptor<I> {
+	public final class Input<I> extends AbstractStreamConsumer<I> implements StreamDataAcceptor<I> {
 		private final Deque<I> deque;
 
 		public Input(Deque<I> deque) {
@@ -173,7 +173,7 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<V> {
+	public final class Output extends AbstractStreamSupplier<V> {
 
 		void join() {
 			resume();

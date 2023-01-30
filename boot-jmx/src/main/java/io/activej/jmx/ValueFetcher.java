@@ -16,6 +16,6 @@
 
 package io.activej.jmx;
 
-interface ValueFetcher {
+public interface ValueFetcher {
 	Object fetchFrom(Object source);
 }

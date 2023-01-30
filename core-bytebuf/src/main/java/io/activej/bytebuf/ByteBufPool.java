@@ -568,7 +568,7 @@ public final class ByteBufPool {
 	}
 
 	// region watchdog
-	private static final class SlabStats {
+	public static final class SlabStats {
 		double estimatedMin;
 		int evictedTotal;
 		int evictedLast;

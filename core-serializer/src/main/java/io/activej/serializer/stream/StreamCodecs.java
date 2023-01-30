@@ -680,7 +680,7 @@ public final class StreamCodecs {
 	}
 
 	public static class SubtypeBuilder<T> {
-		private record SubclassEntry<T>(byte idx, StreamCodec<T> codec) {}
+		public record SubclassEntry<T>(byte idx, StreamCodec<T> codec) {}
 
 		private final Map<Class<?>, SubclassEntry<? extends T>> encoders = new HashMap<>();
 		private final List<StreamDecoder<? extends T>> decoders = new ArrayList<>();
@@ -778,7 +778,7 @@ public final class StreamCodecs {
 		return (length + 2) / 3 * 4;
 	}
 
-	static class OfBinarySerializer<T> implements StreamCodec<T> {
+	public static class OfBinarySerializer<T> implements StreamCodec<T> {
 		private static final int MAX_SIZE = 1 << 28; // 256MB
 		public static final int DEFAULT_ESTIMATED_SIZE = 1;
 
@@ -958,7 +958,7 @@ public final class StreamCodecs {
 
 	}
 
-	protected static abstract class AbstractArrayStreamCodec<T> implements StreamCodec<T> {
+	public static abstract class AbstractArrayStreamCodec<T> implements StreamCodec<T> {
 		protected final int minElementSize;
 		protected final int maxElementSize;
 

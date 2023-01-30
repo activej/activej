@@ -25,7 +25,7 @@ import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 
-final class Expression_IfNonNull implements Expression {
+public final class Expression_IfNonNull implements Expression {
 	private final Expression expression;
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;

@@ -304,7 +304,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod(), startNodes));
 	}
 
-	private static final class GraphReducer_FindAnyCommonParent<K, D, A> extends AbstractGraphReducer<K, D, A, Map.Entry<K, Map<K, A>>> {
+	public static final class GraphReducer_FindAnyCommonParent<K, D, A> extends AbstractGraphReducer<K, D, A, Map.Entry<K, Map<K, A>>> {
 		private GraphReducer_FindAnyCommonParent(DiffsReducer<A, D> diffsReducer) {
 			super(diffsReducer);
 		}
@@ -320,7 +320,7 @@ public final class OTAlgorithms {
 		}
 	}
 
-	private static final class GraphReducer_FindAllCommonParents<K, D, A> extends AbstractGraphReducer<K, D, A, Map<K, Map<K, A>>> {
+	public static final class GraphReducer_FindAllCommonParents<K, D, A> extends AbstractGraphReducer<K, D, A, Map<K, Map<K, A>>> {
 		private GraphReducer_FindAllCommonParents(DiffsReducer<A, D> diffsReducer) {
 			super(diffsReducer);
 		}
@@ -381,7 +381,7 @@ public final class OTAlgorithms {
 				.then(diffs -> repository.saveSnapshot(revisionId, diffs));
 	}
 
-	private static class GraphReducer_Load<K, D> implements GraphReducer<K, D, OTLoadedGraph<K, D>> {
+	public static class GraphReducer_Load<K, D> implements GraphReducer<K, D, OTLoadedGraph<K, D>> {
 		private final OTSystem<D> system;
 		private final OTLoadedGraph<K, D> graph;
 		private final Map<K, Set<K>> head2roots = new HashMap<>();

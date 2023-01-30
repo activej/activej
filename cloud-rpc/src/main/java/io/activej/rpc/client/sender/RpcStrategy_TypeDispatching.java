@@ -94,7 +94,7 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 		return new Sender(typeToSender, defaultSender);
 	}
 
-	static final class Sender implements RpcSender {
+	public static final class Sender implements RpcSender {
 		static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
 
 		private final HashMap<Class<?>, RpcSender> typeToSender;

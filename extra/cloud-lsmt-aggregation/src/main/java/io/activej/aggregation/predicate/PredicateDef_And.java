@@ -28,7 +28,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.common.Utils.first;
 
-final class PredicateDef_And implements PredicateDef {
+public final class PredicateDef_And implements PredicateDef {
 	private final List<PredicateDef> predicates;
 
 	PredicateDef_And(List<PredicateDef> predicates) {

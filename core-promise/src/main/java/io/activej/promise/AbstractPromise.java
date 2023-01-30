@@ -38,7 +38,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
-abstract class AbstractPromise<T> implements Promise<T> {
+public abstract class AbstractPromise<T> implements Promise<T> {
 	static {
 		Recyclers.register(AbstractPromise.class, promise -> promise.whenResult(Recyclers::recycle));
 	}
@@ -1532,7 +1532,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	private static class PromiseCombine<T, V, U> extends NextPromise<T, V> {
+	public static class PromiseCombine<T, V, U> extends NextPromise<T, V> {
 		final BiFunctionEx<? super T, ? super U, ? extends V> fn;
 		@Nullable T thisResult = (T) NO_RESULT;
 		@Nullable U otherResult = (U) NO_RESULT;
@@ -1617,7 +1617,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		return null;
 	}
 
-	private static class PromiseBoth<T> extends NextPromise<T, Void> {
+	public static class PromiseBoth<T> extends NextPromise<T, Void> {
 		int counter = 2;
 
 		@Override
@@ -1660,7 +1660,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		return resultPromise;
 	}
 
-	private static final class EitherPromise<T> extends NextPromise<T, T> {
+	public static final class EitherPromise<T> extends NextPromise<T, T> {
 		int errors = 2;
 
 		@Override
@@ -1769,7 +1769,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		return future;
 	}
 
-	private static class CallbackList<T> implements Callback<T> {
+	public static class CallbackList<T> implements Callback<T> {
 		private int index = 2;
 		private Callback<? super T>[] callbacks = new Callback[4];
 

@@ -491,7 +491,7 @@ public final class Context {
 				.allMatch(i -> to[i].isAssignableFrom(from[i]));
 	}
 
-	private static final class SelfOrClass {
+	public static final class SelfOrClass {
 		final Class<?> implementation;
 		final List<Class<?>> interfaces;
 

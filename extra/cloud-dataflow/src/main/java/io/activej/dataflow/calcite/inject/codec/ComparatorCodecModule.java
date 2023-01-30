@@ -10,7 +10,7 @@ import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
-final class ComparatorCodecModule extends AbstractModule {
+public final class ComparatorCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<RecordSortComparator> recordSortComparator() {

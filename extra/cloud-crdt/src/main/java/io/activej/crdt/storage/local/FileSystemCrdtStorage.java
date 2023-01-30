@@ -357,7 +357,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		};
 	}
 
-	record CrdtReducingData<K extends Comparable<K>, S>(K key, @Nullable S state, long timestamp) {
+	public record CrdtReducingData<K extends Comparable<K>, S>(K key, @Nullable S state, long timestamp) {
 		static <K extends Comparable<K>, S> CrdtReducingData<K, S> ofData(CrdtData<K, S> data) {
 			return new CrdtReducingData<>(data.getKey(), data.getState(), data.getTimestamp());
 		}
@@ -367,7 +367,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		}
 	}
 
-	static class CrdtAccumulator<S> {
+	public static class CrdtAccumulator<S> {
 		final Set<CrdtEntry<S>> entries = new HashSet<>();
 		private long tombstoneTimestamp;
 
@@ -380,9 +380,9 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		}
 	}
 
-	record CrdtEntry<S>(S state, long timestamp) {}
+	public record CrdtEntry<S>(S state, long timestamp) {}
 
-	private final class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
+	public final class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
 		final boolean includeTombstones;
 
 		CrdtReducer(boolean includeTombstones) {
@@ -433,7 +433,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		}
 	}
 
-	private static final class NonEmptyFilter<T> extends StreamFilter<T, T> {
+	public static final class NonEmptyFilter<T> extends StreamFilter<T, T> {
 		private final Runnable onNonEmpty;
 		private boolean empty = true;
 

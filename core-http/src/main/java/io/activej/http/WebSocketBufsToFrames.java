@@ -41,7 +41,7 @@ import static io.activej.http.WebSocketConstants.*;
 import static io.activej.http.WebSocketConstants.OpCode.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
+public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
 
 	private static final byte OP_CODE_MASK = 0b00001111;

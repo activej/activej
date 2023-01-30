@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class ComputedMeasures {
-	private static final class E extends Expressions {}
+	public static final class E extends Expressions {}
 
 	public abstract static class AbstractComputedMeasure implements ComputedMeasure {
 		protected final Set<ComputedMeasure> dependencies;
@@ -62,7 +62,7 @@ public class ComputedMeasures {
 		}
 	}
 
-	private abstract static class AbstractArithmeticMeasure extends AbstractComputedMeasure {
+	public abstract static class AbstractArithmeticMeasure extends AbstractComputedMeasure {
 		public AbstractArithmeticMeasure(ComputedMeasure... dependencies) {
 			super(dependencies);
 		}
@@ -179,7 +179,7 @@ public class ComputedMeasures {
 		return mul(div(numerator, denominator), value(100));
 	}
 
-	private static final class ValueComputedMeasure implements ComputedMeasure {
+	public static final class ValueComputedMeasure implements ComputedMeasure {
 		private final Object value;
 
 		public ValueComputedMeasure(Object value) {this.value = value;}
@@ -213,7 +213,7 @@ public class ComputedMeasures {
 		}
 	}
 
-	private static final class MeasureComputedMeasure implements ComputedMeasure {
+	public static final class MeasureComputedMeasure implements ComputedMeasure {
 		private final String measureId;
 
 		public MeasureComputedMeasure(String measureId) {this.measureId = measureId;}

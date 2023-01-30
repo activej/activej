@@ -38,7 +38,7 @@ import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
 
-final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
+public final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";
 	private static final String ATTRIBUTES_FIELD = "attributes";
 	private static final String FILTER_ATTRIBUTES_FIELD = "filterAttributes";

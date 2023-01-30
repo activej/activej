@@ -102,7 +102,7 @@ public final class InMemorySessionStore<T> extends AbstractReactive
 		return sessionLifetime;
 	}
 
-	private class TWithTimestamp {
+	public class TWithTimestamp {
 		final T value;
 		long timestamp;
 

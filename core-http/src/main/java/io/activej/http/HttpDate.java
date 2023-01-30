@@ -21,7 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpUtils.*;
 
-final class HttpDate {
+public final class HttpDate {
 	private static final int HOUR_SECONDS = 60 * 60;
 	private static final int DAY_SECONDS = 24 * HOUR_SECONDS;
 	private static final int YEAR_SECONDS = 365 * DAY_SECONDS;

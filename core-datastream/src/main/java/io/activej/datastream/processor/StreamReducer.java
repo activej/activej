@@ -235,7 +235,7 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 		}
 	}
 
-	private final class Output extends AbstractStreamSupplier<O> {
+	public final class Output extends AbstractStreamSupplier<O> {
 		void reduce() {
 			resume();
 		}

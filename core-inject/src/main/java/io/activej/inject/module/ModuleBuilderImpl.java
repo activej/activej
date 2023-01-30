@@ -36,7 +36,7 @@ import static io.activej.inject.util.Utils.*;
 import static io.activej.types.Types.parameterizedType;
 
 @SuppressWarnings("UnusedReturnValue")
-final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
+public final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	private final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings = Trie.leaf(new HashMap<>());
 	private final Map<KeyPattern<?>, Set<BindingGenerator<?>>> bindingGenerators = new HashMap<>();
 	private final Map<KeyPattern<?>, Set<BindingTransformer<?>>> bindingTransformers = new HashMap<>();
@@ -230,7 +230,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 		return name + "(at " + (location != null ? location : "<unknown module location>") + ')';
 	}
 
-	private static final class BindingDesc {
+	public static final class BindingDesc {
 		private final Key<?> key;
 		private Binding<?> binding;
 		private Scope[] scope;

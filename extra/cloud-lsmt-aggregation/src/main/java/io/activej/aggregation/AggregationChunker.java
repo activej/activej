@@ -80,7 +80,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		return result;
 	}
 
-	private class ChunkWriter extends ForwardingStreamConsumer<T> implements StreamDataAcceptor<T> {
+	public class ChunkWriter extends ForwardingStreamConsumer<T> implements StreamDataAcceptor<T> {
 		private final SettablePromise<AggregationChunk> result = new SettablePromise<>();
 		private final int chunkSize;
 		private final PartitionPredicate<T> partitionPredicate;

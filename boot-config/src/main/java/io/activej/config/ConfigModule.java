@@ -49,7 +49,7 @@ public final class ConfigModule extends AbstractModule {
 	private Path effectiveConfigPath;
 	private Consumer<String> effectiveConfigConsumer;
 
-	static final class ProtectedConfig implements Config {
+	public static final class ProtectedConfig implements Config {
 		private final Config config;
 		private final Map<String, Config> children;
 		private final AtomicBoolean started;

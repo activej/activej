@@ -36,7 +36,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-final class ChannelByteCombiner extends AbstractCommunicatingProcess
+public final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		implements WithChannelInputs<ByteBuf>, WithChannelOutput<ChannelByteCombiner, ByteBuf> {
 
 	private final List<ChannelSupplier<ByteBuf>> inputs = new ArrayList<>();

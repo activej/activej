@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.*;
 
-final class PredicateDef_RegExp implements PredicateDef {
+public final class PredicateDef_RegExp implements PredicateDef {
 	private final String key;
 	private final Pattern regexp;
 

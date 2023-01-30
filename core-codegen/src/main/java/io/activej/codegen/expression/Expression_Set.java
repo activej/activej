@@ -25,7 +25,7 @@ import static io.activej.codegen.util.TypeChecks.isAssignable;
 /**
  * Defines methods which allow setting fields
  */
-final class Expression_Set implements Expression {
+public final class Expression_Set implements Expression {
 	private final StoreDef to;
 	private final Expression from;
 
