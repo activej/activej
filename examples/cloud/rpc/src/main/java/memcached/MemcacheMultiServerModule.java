@@ -5,7 +5,7 @@ import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.memcache.protocol.SerializerDef_Slice;
+import io.activej.memcache.protocol.SliceSerializerDef;
 import io.activej.memcache.server.RingBuffer;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
@@ -68,7 +68,7 @@ public class MemcacheMultiServerModule extends AbstractModule {
 				.withMessageTypes(
 						classLoader,
 						SerializerFactory.builder()
-								.with(Slice.class, ctx -> new SerializerDef_Slice())
+								.with(Slice.class, ctx -> new SliceSerializerDef())
 								.build(),
 						MESSAGE_TYPES)
 				.withListenAddresses(address)

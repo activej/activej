@@ -13,7 +13,7 @@ import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.memcache.client.MemcacheClientModule;
-import io.activej.memcache.client.MemcacheClient_Raw;
+import io.activej.memcache.client.RawMemcacheClient;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.server.MemcacheServerModule;
 import io.activej.promise.Promise;
@@ -50,7 +50,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	Reactor reactor;
 
 	@Inject
-	MemcacheClient_Raw client;
+	RawMemcacheClient client;
 
 	@Inject
 	RpcServer server;

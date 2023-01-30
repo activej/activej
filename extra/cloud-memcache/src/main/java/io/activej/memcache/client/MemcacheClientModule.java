@@ -21,7 +21,7 @@ import io.activej.config.Config;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
-import io.activej.memcache.protocol.SerializerDef_Slice;
+import io.activej.memcache.protocol.SliceSerializerDef;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
@@ -60,7 +60,7 @@ public class MemcacheClientModule extends AbstractModule {
 				.withMessageTypes(
 						classLoader,
 						SerializerFactory.builder()
-								.with(Slice.class, ctx -> new SerializerDef_Slice())
+								.with(Slice.class, ctx -> new SliceSerializerDef())
 								.build(),
 						MESSAGE_TYPES)
 				.withStreamProtocol(
@@ -74,8 +74,8 @@ public class MemcacheClientModule extends AbstractModule {
 	}
 
 	@Provides
-	MemcacheClient_Raw memcacheClient(Reactor reactor, IRpcClient client) {
-		return MemcacheClient_Raw.create(reactor, client);
+	RawMemcacheClient memcacheClient(Reactor reactor, IRpcClient client) {
+		return RawMemcacheClient.create(reactor, client);
 	}
 
 }

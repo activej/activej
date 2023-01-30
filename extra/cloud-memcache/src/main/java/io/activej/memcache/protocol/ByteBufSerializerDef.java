@@ -32,16 +32,16 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 @SuppressWarnings("unused")
-public class SerializerDef_ByteBuf extends AbstractSerializerDef implements SerializerDefWithNullable {
+public class ByteBufSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean writeWithRecycle;
 	private final boolean wrap;
 	private final boolean nullable;
 
-	public SerializerDef_ByteBuf(boolean writeWithRecycle, boolean wrap) {
+	public ByteBufSerializerDef(boolean writeWithRecycle, boolean wrap) {
 		this(writeWithRecycle, wrap, false);
 	}
 
-	private SerializerDef_ByteBuf(boolean writeWithRecycle, boolean wrap, boolean nullable) {
+	private ByteBufSerializerDef(boolean writeWithRecycle, boolean wrap, boolean nullable) {
 		this.writeWithRecycle = writeWithRecycle;
 		this.wrap = wrap;
 		this.nullable = nullable;
@@ -52,7 +52,7 @@ public class SerializerDef_ByteBuf extends AbstractSerializerDef implements Seri
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDef_Nullable(this);
 		}
-		return new SerializerDef_ByteBuf(writeWithRecycle, wrap, true);
+		return new ByteBufSerializerDef(writeWithRecycle, wrap, true);
 	}
 
 	@Override
@@ -63,14 +63,14 @@ public class SerializerDef_ByteBuf extends AbstractSerializerDef implements Seri
 	@Override
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos,
-				staticCall(SerializerDef_ByteBuf.class,
+				staticCall(ByteBufSerializerDef.class,
 						"write" + (writeWithRecycle ? "Recycle" : "") + (nullable ? "Nullable" : ""),
 						buf, pos, cast(value, ByteBuf.class)));
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticCall(SerializerDef_ByteBuf.class,
+		return staticCall(ByteBufSerializerDef.class,
 				"read" + (wrap ? "Slice" : "") + (nullable ? "Nullable" : ""),
 				in);
 	}

@@ -31,14 +31,14 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 @SuppressWarnings("unused")
-public class SerializerDef_Slice extends AbstractSerializerDef implements SerializerDefWithNullable {
+public class SliceSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean nullable;
 
-	public SerializerDef_Slice() {
+	public SliceSerializerDef() {
 		this.nullable = false;
 	}
 
-	SerializerDef_Slice(boolean nullable) {
+	SliceSerializerDef(boolean nullable) {
 		this.nullable = nullable;
 	}
 
@@ -50,14 +50,14 @@ public class SerializerDef_Slice extends AbstractSerializerDef implements Serial
 	@Override
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos,
-				staticCall(SerializerDef_Slice.class,
+				staticCall(SliceSerializerDef.class,
 						"write" + (nullable ? "Nullable" : ""),
 						buf, pos, cast(value, Slice.class)));
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return staticCall(SerializerDef_Slice.class,
+		return staticCall(SliceSerializerDef.class,
 				"read" + (nullable ? "Nullable" : ""),
 				in);
 	}
@@ -100,6 +100,6 @@ public class SerializerDef_Slice extends AbstractSerializerDef implements Serial
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return new SerializerDef_Nullable(this);
 		}
-		return new SerializerDef_Slice(true);
+		return new SliceSerializerDef(true);
 	}
 }

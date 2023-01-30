@@ -20,13 +20,13 @@ import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.IRpcClient;
 
-public class MemcacheClient_Raw extends AbstractMemcacheClient<byte[], Slice> {
-	private MemcacheClient_Raw(Reactor reactor, IRpcClient rpcClient) {
+public class RawMemcacheClient extends AbstractMemcacheClient<byte[], Slice> {
+	private RawMemcacheClient(Reactor reactor, IRpcClient rpcClient) {
 		super(reactor, rpcClient);
 	}
 
-	public static MemcacheClient_Raw create(Reactor reactor, IRpcClient rpcClient) {
-		return new MemcacheClient_Raw(reactor, rpcClient);
+	public static RawMemcacheClient create(Reactor reactor, IRpcClient rpcClient) {
+		return new RawMemcacheClient(reactor, rpcClient);
 	}
 
 	@Override

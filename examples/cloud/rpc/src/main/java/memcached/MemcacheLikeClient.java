@@ -9,7 +9,7 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.launcher.Launcher;
 import io.activej.memcache.client.MemcacheClientModule;
-import io.activej.memcache.client.MemcacheClient_Raw;
+import io.activej.memcache.client.RawMemcacheClient;
 import io.activej.promise.Promises;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
@@ -28,7 +28,7 @@ public class MemcacheLikeClient extends Launcher {
 	}
 
 	@Provides
-	RawMemcacheClientAdapter rawMemcacheClientAdapter(MemcacheClient_Raw client) {
+	RawMemcacheClientAdapter rawMemcacheClientAdapter(RawMemcacheClient client) {
 		return new RawMemcacheClientAdapter(client);
 	}
 
