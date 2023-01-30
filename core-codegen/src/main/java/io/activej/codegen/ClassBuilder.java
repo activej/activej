@@ -39,7 +39,6 @@ import static io.activej.codegen.DefiningClassLoader.createInstance;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
 import static io.activej.codegen.util.Utils.isJvmPrimitive;
-import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
@@ -315,27 +314,15 @@ public final class ClassBuilder<T> {
 		 */
 		public Builder withStaticFinalField(String field, Class<?> type, Expression value) {
 			checkNotBuilt(this);
-			checkArgument(!(value instanceof ConstantExpression), "For constants use ClassBuilder#withConstant");
 			fields.put(field, type);
 			fieldsStatic.add(field);
 			fieldsFinal.add(field);
 			fieldExpressions.put(field, value);
-			return this;
-		}
-
-		/**
-		 * Adds a new constant for a class
-		 *
-		 * @param field name of the field
-		 * @param type  type of the field
-		 * @param value a constant expression for the new static final field
-		 */
-		public Builder withConstant(String field, Class<?> type, ConstantExpression value) {
-			checkNotBuilt(this);
-			fields.put(field, type);
-			fieldsStatic.add(field);
-			fieldsFinal.add(field);
-			fieldConstants.put(field, value);
+			if (value instanceof ConstantExpression constantExpression) {
+				fieldConstants.put(field, constantExpression);
+			} else {
+				fieldExpressions.put(field, value);
+			}
 			return this;
 		}
 
