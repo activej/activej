@@ -22,9 +22,9 @@ import io.activej.codegen.expression.Variable;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-public final class MeasureSum extends Measure {
+final class Measure_Min extends Measure {
 	@SuppressWarnings("rawtypes")
-	MeasureSum(FieldType fieldType) {
+	Measure_Min(FieldType fieldType) {
 		super(fieldType);
 	}
 
@@ -39,14 +39,15 @@ public final class MeasureSum extends Measure {
 	}
 
 	@Override
-	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
+	public Expression initAccumulatorWithAccumulator(Variable accumulator,
+			Expression firstAccumulator) {
 		return set(accumulator, firstAccumulator);
 	}
 
 	@Override
 	public Expression reduce(Variable accumulator,
 			Variable nextAccumulator) {
-		return set(accumulator, add(accumulator, nextAccumulator));
+		return set(accumulator, staticCall(Math.class, "min", accumulator, nextAccumulator));
 	}
 
 	@Override
@@ -58,6 +59,6 @@ public final class MeasureSum extends Measure {
 	@Override
 	public Expression accumulate(Variable accumulator,
 			Variable nextValue) {
-		return set(accumulator, add(accumulator, nextValue));
+		return set(accumulator, staticCall(Math.class, "min", accumulator, nextValue));
 	}
 }

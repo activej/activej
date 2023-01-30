@@ -1,7 +1,7 @@
 package io.activej.cube.service;
 
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.ChunksAlreadyLockedException;
-import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -46,8 +46,8 @@ public class ChunkLocker_MySql_Test {
 		Executor executor = Executors.newSingleThreadExecutor();
 
 		Reactor reactor = Reactor.getCurrentReactor();
-		lockerA = ChunkLocker_MySql.create(reactor, executor, dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID);
-		lockerB = ChunkLocker_MySql.create(reactor, executor, dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID);
+		lockerA = ChunkLocker_MySql.create(reactor, executor, dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID);
+		lockerB = ChunkLocker_MySql.create(reactor, executor, dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID);
 
 		lockerA.initialize();
 		lockerA.truncateTables();

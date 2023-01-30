@@ -21,7 +21,7 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.ot.JsonCodec_AggregationDiff;
+import io.activej.aggregation.ot.AggregationDiffJsonCodec;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.cube.Cube;
 
@@ -33,18 +33,18 @@ import java.util.Map;
 import static com.dslplatform.json.JsonWriter.*;
 
 public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff> {
-	private final Map<String, JsonCodec_AggregationDiff> aggregationDiffCodecs;
+	private final Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs;
 
-	private JsonCodec_CubeDiff(Map<String, JsonCodec_AggregationDiff> aggregationDiffCodecs) {
+	private JsonCodec_CubeDiff(Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs) {
 		this.aggregationDiffCodecs = aggregationDiffCodecs;
 	}
 
 	public static JsonCodec_CubeDiff create(Cube cube) {
-		Map<String, JsonCodec_AggregationDiff> aggregationDiffCodecs = new LinkedHashMap<>();
+		Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs = new LinkedHashMap<>();
 
 		for (String aggregationId : cube.getAggregationIds()) {
 			Aggregation aggregation = cube.getAggregation(aggregationId);
-			JsonCodec_AggregationDiff aggregationDiffCodec = JsonCodec_AggregationDiff.create(aggregation.getStructure());
+			AggregationDiffJsonCodec aggregationDiffCodec = AggregationDiffJsonCodec.create(aggregation.getStructure());
 			aggregationDiffCodecs.put(aggregationId, aggregationDiffCodec);
 		}
 		return new JsonCodec_CubeDiff(aggregationDiffCodecs);
@@ -59,10 +59,10 @@ public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff> {
 			return;
 		}
 
-		Iterator<Map.Entry<String, JsonCodec_AggregationDiff>> iterator = aggregationDiffCodecs.entrySet().iterator();
+		Iterator<Map.Entry<String, AggregationDiffJsonCodec>> iterator = aggregationDiffCodecs.entrySet().iterator();
 		boolean first = true;
 		while (true) {
-			Map.Entry<String, JsonCodec_AggregationDiff> entry = iterator.next();
+			Map.Entry<String, AggregationDiffJsonCodec> entry = iterator.next();
 			AggregationDiff aggregationDiff = cubeDiff.get(entry.getKey());
 			if (aggregationDiff != null) {
 				if (!first) {
@@ -90,7 +90,7 @@ public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff> {
 
 		Map<String, AggregationDiff> map = new LinkedHashMap<>();
 		String aggregation = reader.readKey();
-		JsonCodec_AggregationDiff aggregationDiffCodec = aggregationDiffCodecs.get(aggregation);
+		AggregationDiffJsonCodec aggregationDiffCodec = aggregationDiffCodecs.get(aggregation);
 		if (aggregationDiffCodec == null) {
 			throw ParsingException.create("Unknown aggregation: " + aggregation, true);
 		}

@@ -17,11 +17,13 @@
 package io.activej.cube;
 
 import io.activej.aggregation.*;
-import io.activej.aggregation.OTState_Aggregation.ConsolidationDebugInfo;
+import io.activej.aggregation.AggregationOTState.ConsolidationDebugInfo;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
@@ -82,8 +84,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.AggregationPredicates.between;
-import static io.activej.aggregation.AggregationPredicates.eq;
+import static io.activej.aggregation.predicate.AggregationPredicates.between;
+import static io.activej.aggregation.predicate.AggregationPredicates.eq;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
@@ -410,7 +412,7 @@ public final class Cube extends AbstractReactive
 
 		private void addAggregation(AggregationConfig aggregationConfig) {
 			Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat)
-					.withStructure(AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+					.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 							.initialize(s -> {
 								for (String dimensionId : aggregationConfig.dimensions) {
 									s.withKey(dimensionId, dimensionTypes.get(dimensionId));

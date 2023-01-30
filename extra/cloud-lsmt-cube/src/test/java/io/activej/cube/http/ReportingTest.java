@@ -41,9 +41,9 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.ComputedMeasures.*;
@@ -255,7 +255,7 @@ public final class ReportingTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-				JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
+				ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
 		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))

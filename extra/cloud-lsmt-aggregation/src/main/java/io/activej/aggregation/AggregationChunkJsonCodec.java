@@ -27,30 +27,30 @@ import java.util.Set;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class JsonCodec_AggregationChunk implements JsonCodec<AggregationChunk> {
+public final class AggregationChunkJsonCodec implements JsonCodec<AggregationChunk> {
 	public static final String ID = "id";
 	public static final String MIN = "min";
 	public static final String MAX = "max";
 	public static final String COUNT = "count";
 	public static final String MEASURES = "measures";
 
-	private final JsonCodec_ChunkId<Object> chunkIdCodec;
+	private final ChunkIdJsonCodec<Object> chunkIdCodec;
 	private final JsonCodec<PrimaryKey> primaryKeyFormat;
 	private final Set<String> allowedMeasures;
 
 	@SuppressWarnings("unchecked")
-	private JsonCodec_AggregationChunk(JsonCodec_ChunkId<?> chunkIdCodec,
+	private AggregationChunkJsonCodec(ChunkIdJsonCodec<?> chunkIdCodec,
 			JsonCodec<PrimaryKey> primaryKeyFormat,
 			Set<String> allowedMeasures) {
-		this.chunkIdCodec = (JsonCodec_ChunkId<Object>) chunkIdCodec;
+		this.chunkIdCodec = (ChunkIdJsonCodec<Object>) chunkIdCodec;
 		this.primaryKeyFormat = primaryKeyFormat;
 		this.allowedMeasures = allowedMeasures;
 	}
 
-	public static JsonCodec_AggregationChunk create(JsonCodec_ChunkId<?> chunkIdCodec,
+	public static AggregationChunkJsonCodec create(ChunkIdJsonCodec<?> chunkIdCodec,
 			JsonCodec<PrimaryKey> primaryKeyCodec,
 			Set<String> allowedMeasures) {
-		return new JsonCodec_AggregationChunk(chunkIdCodec, primaryKeyCodec, allowedMeasures);
+		return new AggregationChunkJsonCodec(chunkIdCodec, primaryKeyCodec, allowedMeasures);
 	}
 
 	@Override

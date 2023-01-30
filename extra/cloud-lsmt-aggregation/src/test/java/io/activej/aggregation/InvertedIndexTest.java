@@ -96,10 +96,10 @@ public class InvertedIndexTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
-				.withStructure(AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+				.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 						.withKey("word", ofString())
 						.withMeasure("documents", union(ofInt()))
 						.build())

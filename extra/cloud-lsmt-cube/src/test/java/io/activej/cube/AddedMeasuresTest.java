@@ -74,7 +74,7 @@ public class AddedMeasuresTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		basicConfig = id(AGGREGATION_ID)
 				.withDimensions("siteId")
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue");

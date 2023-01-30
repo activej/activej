@@ -1,4 +1,4 @@
-package io.activej.aggregation;
+package io.activej.aggregation.predicate;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.ClassBuilder;
@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
 import static org.junit.Assert.*;

@@ -1,18 +1,17 @@
-package io.activej.cube.http;
+package io.activej.aggregation.predicate;
 
-import io.activej.aggregation.PredicateDef;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
 import java.util.Map;
 import java.util.Objects;
 
-import static io.activej.aggregation.AggregationPredicates.*;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJson;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.aggregation.util.Utils.fromJson;
+import static io.activej.aggregation.util.Utils.toJson;
 
-public class JsonCodec_PredicateDef_Test {
-	private static final JsonCodec_AggregationPredicate CODEC = JsonCodec_AggregationPredicate.create(
+public class PredicateDefJsonCodecTest {
+	private static final PredicateDefJsonCodec CODEC = PredicateDefJsonCodec.create(
 			Map.of(
 					"campaign", int.class,
 					"site", String.class,

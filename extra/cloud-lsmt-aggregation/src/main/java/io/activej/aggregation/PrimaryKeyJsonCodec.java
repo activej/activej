@@ -26,22 +26,22 @@ import java.io.IOException;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class JsonCodec_PrimaryKey implements JsonCodec<PrimaryKey> {
+public class PrimaryKeyJsonCodec implements JsonCodec<PrimaryKey> {
 	private final JsonCodec<Object>[] codecs;
 
-	private JsonCodec_PrimaryKey(JsonCodec<Object>[] codecs) {
+	private PrimaryKeyJsonCodec(JsonCodec<Object>[] codecs) {
 		this.codecs = codecs;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static JsonCodec_PrimaryKey create(AggregationStructure structure) {
+	public static PrimaryKeyJsonCodec create(AggregationStructure structure) {
 		JsonCodec<Object>[] codecs = new JsonCodec[structure.getKeys().size()];
 		for (int i = 0; i < structure.getKeys().size(); i++) {
 			String key = structure.getKeys().get(i);
 			FieldType<?> keyType = structure.getKeyTypes().get(key);
 			codecs[i] = (JsonCodec<Object>) keyType.getInternalCodec();
 		}
-		return new JsonCodec_PrimaryKey(codecs);
+		return new PrimaryKeyJsonCodec(codecs);
 	}
 
 	@Override

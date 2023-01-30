@@ -24,15 +24,15 @@ import java.util.Set;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class ChunkLocker_NoOp<C> extends AbstractReactive
+public final class NoOpChunkLocker<C> extends AbstractReactive
 		implements IChunkLocker<C> {
 
-	private ChunkLocker_NoOp(Reactor reactor) {
+	private NoOpChunkLocker(Reactor reactor) {
 		super(reactor);
 	}
 
-	public static <C> ChunkLocker_NoOp<C> create(Reactor reactor) {
-		return new ChunkLocker_NoOp<>(reactor);
+	public static <C> NoOpChunkLocker<C> create(Reactor reactor) {
+		return new NoOpChunkLocker<>(reactor);
 	}
 
 	@Override

@@ -33,10 +33,10 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static com.dslplatform.json.JsonWriter.*;
+import static io.activej.aggregation.util.Utils.getJsonCodec;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
-import static io.activej.cube.Utils.getJsonCodec;
 
 final class JsonCodec_QueryResult implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";

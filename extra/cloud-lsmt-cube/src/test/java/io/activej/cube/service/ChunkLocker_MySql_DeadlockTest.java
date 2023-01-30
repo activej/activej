@@ -1,8 +1,8 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.IChunkLocker;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.ChunksAlreadyLockedException;
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.IChunkLocker;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -43,10 +43,10 @@ public class ChunkLocker_MySql_DeadlockTest {
 		DataSource dataSource = dataSource("test.properties");
 
 		Reactor reactor = Reactor.getCurrentReactor();
-		lockerA = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID)
+		lockerA = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
 				.withLockedTtl(Duration.ofSeconds(1))
 				.build();
-		lockerB = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, JsonCodec_ChunkId.ofLong(), AGGREGATION_ID)
+		lockerB = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
 				.withLockedTtl(Duration.ofSeconds(1))
 				.build();
 

@@ -85,7 +85,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
 
-	private final JsonCodec_ChunkId<C> chunkIdCodec;
+	private final ChunkIdJsonCodec<C> chunkIdCodec;
 	private final AsyncSupplier<C> idGenerator;
 	private final FrameFormat frameFormat;
 
@@ -138,7 +138,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage(Reactor reactor, JsonCodec_ChunkId<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
+	private AggregationChunkStorage(Reactor reactor, ChunkIdJsonCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
 		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
@@ -147,13 +147,13 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
-			JsonCodec_ChunkId<C> chunkIdCodec,
+			ChunkIdJsonCodec<C> chunkIdCodec,
 			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
 		return builder(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).build();
 	}
 
 	public static <C> AggregationChunkStorage<C>.Builder builder(Reactor reactor,
-			JsonCodec_ChunkId<C> chunkIdCodec,
+			ChunkIdJsonCodec<C> chunkIdCodec,
 			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
 		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).new Builder();
 	}

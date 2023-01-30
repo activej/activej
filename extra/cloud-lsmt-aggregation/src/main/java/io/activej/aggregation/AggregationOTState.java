@@ -16,10 +16,11 @@
 
 package io.activej.aggregation;
 
-import io.activej.aggregation.AggregationPredicates.RangeScan;
 import io.activej.aggregation.RangeTree.Segment;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.aggregation.predicate.AggregationPredicates.RangeScan;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.common.Utils;
 import io.activej.ot.OTState;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.AggregationPredicates.toRangeScan;
+import static io.activej.aggregation.predicate.AggregationPredicates.toRangeScan;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.intersection;
 import static java.util.Collections.unmodifiableMap;
@@ -40,8 +41,8 @@ import static java.util.Collections.unmodifiableMap;
  * Represents aggregation metadata. Chunks are stored in an index (represented by an array of {@link RangeTree}) for efficient search.
  * Provides methods for managing index, querying for chunks by key, searching for chunks that are available for consolidation.
  */
-public final class OTState_Aggregation implements OTState<AggregationDiff> {
-	private static final Logger logger = LoggerFactory.getLogger(OTState_Aggregation.class);
+public final class AggregationOTState implements OTState<AggregationDiff> {
+	private static final Logger logger = LoggerFactory.getLogger(AggregationOTState.class);
 
 	private final AggregationStructure aggregation;
 
@@ -50,7 +51,7 @@ public final class OTState_Aggregation implements OTState<AggregationDiff> {
 
 	private static final Comparator<AggregationChunk> MIN_KEY_ASCENDING_COMPARATOR = Comparator.comparing(AggregationChunk::getMinPrimaryKey);
 
-	OTState_Aggregation(AggregationStructure aggregation) {
+	AggregationOTState(AggregationStructure aggregation) {
 		this.aggregation = aggregation;
 		initIndex();
 	}

@@ -2,7 +2,7 @@ package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
@@ -18,8 +18,8 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promises;
@@ -87,7 +87,7 @@ public class CubeBackupControllerTest {
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		fileSystem = fs;
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), fs);
 		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())

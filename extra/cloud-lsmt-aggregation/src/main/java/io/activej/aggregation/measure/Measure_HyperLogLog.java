@@ -30,16 +30,12 @@ import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.isWrapperType;
 import static org.objectweb.asm.Type.*;
 
-public final class MeasureHyperLogLog extends Measure {
+final class Measure_HyperLogLog extends Measure {
 	private final int registers;
 
-	private MeasureHyperLogLog(int registers) {
+	Measure_HyperLogLog(int registers) {
 		super(FieldTypes.ofHyperLogLog());
 		this.registers = registers;
-	}
-
-	public static MeasureHyperLogLog create(int registers) {
-		return new MeasureHyperLogLog(registers);
 	}
 
 	@Override
@@ -79,14 +75,14 @@ public final class MeasureHyperLogLog extends Measure {
 	}
 
 	private static Expression add(Expression accumulator, Expression value) {
-		return new Expression_HyperLogLog(value, accumulator);
+		return new HyperLogLogExpression(value, accumulator);
 	}
 
-	private static class Expression_HyperLogLog implements Expression {
+	private static class HyperLogLogExpression implements Expression {
 		private final Expression value;
 		private final Expression accumulator;
 
-		public Expression_HyperLogLog(Expression value, Expression accumulator) {
+		public HyperLogLogExpression(Expression value, Expression accumulator) {
 			this.value = value;
 			this.accumulator = accumulator;
 		}

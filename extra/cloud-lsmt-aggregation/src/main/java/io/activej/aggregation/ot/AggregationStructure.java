@@ -16,7 +16,7 @@
 
 package io.activej.aggregation.ot;
 
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.common.builder.AbstractBuilder;
@@ -30,17 +30,17 @@ import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes")
 public final class AggregationStructure {
-	private final JsonCodec_ChunkId<?> chunkIdCodec;
+	private final ChunkIdJsonCodec<?> chunkIdCodec;
 	private final Map<String, FieldType> keyTypes = new LinkedHashMap<>();
 	private final Map<String, FieldType> measureTypes = new LinkedHashMap<>();
 	private final List<String> partitioningKey = new ArrayList<>();
 	private final Map<String, Measure> measures = new LinkedHashMap<>();
 
-	private AggregationStructure(JsonCodec_ChunkId<?> chunkIdCodec) {
+	private AggregationStructure(ChunkIdJsonCodec<?> chunkIdCodec) {
 		this.chunkIdCodec = chunkIdCodec;
 	}
 
-	public static Builder builder(JsonCodec_ChunkId<?> chunkIdCodec) {
+	public static Builder builder(ChunkIdJsonCodec<?> chunkIdCodec) {
 		return new AggregationStructure(chunkIdCodec).new Builder();
 	}
 
@@ -112,7 +112,7 @@ public final class AggregationStructure {
 		}
 	}
 
-	public JsonCodec_ChunkId<?> getChunkIdCodec() {
+	public ChunkIdJsonCodec<?> getChunkIdCodec() {
 		return chunkIdCodec;
 	}
 

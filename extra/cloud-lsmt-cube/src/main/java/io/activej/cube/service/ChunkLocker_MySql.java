@@ -16,9 +16,9 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.IChunkLocker;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.ChunksAlreadyLockedException;
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.IChunkLocker;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
@@ -54,7 +54,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 
 	private final Executor executor;
 	private final DataSource dataSource;
-	private final JsonCodec_ChunkId<C> idCodec;
+	private final ChunkIdJsonCodec<C> idCodec;
 	private final String aggregationId;
 
 	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
@@ -66,7 +66,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
-			JsonCodec_ChunkId<C> idCodec,
+			ChunkIdJsonCodec<C> idCodec,
 			String aggregationId
 	) {
 		super(reactor);
@@ -80,7 +80,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
-			JsonCodec_ChunkId<C> idCodec,
+			ChunkIdJsonCodec<C> idCodec,
 			String aggregationId
 	) {
 		return builder(reactor, executor, dataSource, idCodec, aggregationId).build();
@@ -90,7 +90,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
-			JsonCodec_ChunkId<C> idCodec,
+			ChunkIdJsonCodec<C> idCodec,
 			String aggregationId
 	) {
 		return new ChunkLocker_MySql<>(reactor, executor, dataSource, idCodec, aggregationId).new Builder();

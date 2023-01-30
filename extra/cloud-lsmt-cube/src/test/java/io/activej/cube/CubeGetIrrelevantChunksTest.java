@@ -2,6 +2,8 @@ package io.activej.cube;
 
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
@@ -24,10 +26,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
+import static io.activej.aggregation.predicate.AggregationPredicates.gt;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
@@ -71,7 +73,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		chunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")

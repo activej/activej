@@ -24,14 +24,14 @@ import io.activej.common.exception.MalformedDataException;
 
 import java.io.IOException;
 
-public interface JsonCodec_ChunkId<C> extends JsonCodec<C> {
+public interface ChunkIdJsonCodec<C> extends JsonCodec<C> {
 	String toFileName(C chunkId);
 
 	C fromFileName(String chunkFileName) throws MalformedDataException;
 
 	@SuppressWarnings("NullableProblems")
-	static JsonCodec_ChunkId<Long> ofLong() {
-		return new JsonCodec_ChunkId<>() {
+	static ChunkIdJsonCodec<Long> ofLong() {
+		return new ChunkIdJsonCodec<>() {
 			@Override
 			public String toFileName(Long chunkId) {
 				return chunkId.toString();
@@ -59,8 +59,8 @@ public interface JsonCodec_ChunkId<C> extends JsonCodec<C> {
 	}
 
 	@SuppressWarnings("NullableProblems")
-	static JsonCodec_ChunkId<String> ofString() {
-		return new JsonCodec_ChunkId<>() {
+	static ChunkIdJsonCodec<String> ofString() {
+		return new ChunkIdJsonCodec<>() {
 			@Override
 			public String toFileName(String chunkId) {
 				return chunkId;

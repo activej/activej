@@ -21,26 +21,26 @@ import io.activej.aggregation.fieldtype.FieldTypes;
 
 public class Measures {
 	public static Measure sum(FieldType<?> ofType) {
-		return new MeasureSum(ofType);
+		return new Measure_Sum(ofType);
 	}
 
 	public static Measure min(FieldType<?> ofType) {
-		return new MeasureMin(ofType);
+		return new Measure_Min(ofType);
 	}
 
 	public static Measure max(FieldType<?> ofType) {
-		return new MeasureMax(ofType);
+		return new Measure_Max(ofType);
 	}
 
 	public static Measure count(FieldType<?> ofType) {
-		return new MeasureCount(ofType);
+		return new Measure_Count(ofType);
 	}
 
 	public static Measure hyperLogLog(int registers) {
-		return MeasureHyperLogLog.create(registers);
+		return new Measure_HyperLogLog(registers);
 	}
 
 	public static Measure union(FieldType<?> fieldType) {
-		return new MeasureUnion(FieldTypes.ofSet(fieldType));
+		return new Measure_Union(FieldTypes.ofSet(fieldType));
 	}
 }

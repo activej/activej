@@ -16,16 +16,17 @@
 
 package io.activej.cube.http;
 
+import io.activej.aggregation.predicate.PredicateDefJsonCodec;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.cube.ICube;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
+import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.CubeException;
-import io.activej.http.IHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
+import io.activej.http.IHttpClient;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +36,9 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static io.activej.aggregation.util.Utils.fromJson;
+import static io.activej.aggregation.util.Utils.toJson;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -47,7 +48,7 @@ public final class Cube_HttpClient implements ICube {
 	private final String url;
 	private final IHttpClient httpClient;
 	private JsonCodec_QueryResult queryResultCodec;
-	private JsonCodec_AggregationPredicate aggregationPredicateCodec;
+	private PredicateDefJsonCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
 
@@ -93,9 +94,9 @@ public final class Cube_HttpClient implements ICube {
 		}
 	}
 
-	private JsonCodec_AggregationPredicate getAggregationPredicateCodec() {
+	private PredicateDefJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = JsonCodec_AggregationPredicate.create(attributeTypes, measureTypes);
+			aggregationPredicateCodec = PredicateDefJsonCodec.create(attributeTypes, measureTypes);
 		}
 		return aggregationPredicateCodec;
 	}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation;
+package io.activej.aggregation.predicate;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
@@ -22,19 +22,37 @@ import io.activej.codegen.expression.Expression;
 import java.util.Map;
 import java.util.Set;
 
-public interface PredicateDef {
+import static io.activej.codegen.expression.Expressions.value;
 
-	PredicateDef simplify();
+final class PredicateDef_AlwaysTrue implements PredicateDef {
+	static final PredicateDef_AlwaysTrue instance = new PredicateDef_AlwaysTrue();
 
-	Set<String> getDimensions();
-
-	Map<String, Object> getFullySpecifiedDimensions();
-
-	Expression createPredicate(Expression record, @SuppressWarnings("rawtypes") Map<String, FieldType> fields);
+	private PredicateDef_AlwaysTrue() {
+	}
 
 	@Override
-	boolean equals(Object o);
+	public PredicateDef simplify() {
+		return this;
+	}
 
 	@Override
-	int hashCode();
+	public Set<String> getDimensions() {
+		return Set.of();
+	}
+
+	@Override
+	public Map<String, Object> getFullySpecifiedDimensions() {
+		return Map.of();
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+		return value(true);
+	}
+
+	@Override
+	public String toString() {
+		return "TRUE";
+	}
 }

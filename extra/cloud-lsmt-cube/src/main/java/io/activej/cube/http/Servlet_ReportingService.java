@@ -16,13 +16,14 @@
 
 package io.activej.cube.http;
 
+import io.activej.aggregation.predicate.PredicateDefJsonCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.Stopwatch;
-import io.activej.cube.ICube;
 import io.activej.cube.CubeQuery;
+import io.activej.cube.ICube;
 import io.activej.cube.exception.QueryException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
@@ -34,10 +35,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static io.activej.aggregation.util.Utils.fromJson;
+import static io.activej.aggregation.util.Utils.toJsonBuf;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.not;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJsonBuf;
 import static io.activej.cube.http.Utils.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
@@ -50,7 +51,7 @@ public final class Servlet_ReportingService extends Servlet_WithStats {
 
 	private final ICube cube;
 	private JsonCodec_QueryResult queryResultCodec;
-	private JsonCodec_AggregationPredicate aggregationPredicateCodec;
+	private PredicateDefJsonCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
@@ -92,9 +93,9 @@ public final class Servlet_ReportingService extends Servlet_WithStats {
 		}
 	}
 
-	private JsonCodec_AggregationPredicate getAggregationPredicateCodec() {
+	private PredicateDefJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = JsonCodec_AggregationPredicate.create(cube.getAttributeTypes(), cube.getMeasureTypes());
+			aggregationPredicateCodec = PredicateDefJsonCodec.create(cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}

@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.cube.http;
+package io.activej.aggregation.predicate;
 
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.AggregationPredicates;
-import io.activej.aggregation.PredicateDef;
 import io.activej.aggregation.util.JsonCodec;
 
 import java.io.IOException;
@@ -31,11 +29,11 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static com.dslplatform.json.JsonWriter.*;
-import static io.activej.aggregation.AggregationPredicates.*;
-import static io.activej.cube.Utils.getJsonCodec;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.aggregation.util.Utils.getJsonCodec;
 
 @SuppressWarnings("rawtypes")
-final class JsonCodec_AggregationPredicate implements JsonCodec<PredicateDef> {
+public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
 	public static final String EQ = "eq";
@@ -62,11 +60,11 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<PredicateDef> {
 	public static final String IN_SIGN = "IN";
 	private final Map<String, JsonCodec<Object>> attributeFormats;
 
-	private JsonCodec_AggregationPredicate(Map<String, JsonCodec<Object>> attributeFormats) {
+	private PredicateDefJsonCodec(Map<String, JsonCodec<Object>> attributeFormats) {
 		this.attributeFormats = attributeFormats;
 	}
 
-	public static JsonCodec_AggregationPredicate create(Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
+	public static PredicateDefJsonCodec create(Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
 			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()).nullable());
@@ -74,7 +72,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<PredicateDef> {
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
 			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
 		}
-		return new JsonCodec_AggregationPredicate(attributeCodecs);
+		return new PredicateDefJsonCodec(attributeCodecs);
 	}
 
 	private void writeEq(JsonWriter writer, PredicateDef_Eq predicate) {

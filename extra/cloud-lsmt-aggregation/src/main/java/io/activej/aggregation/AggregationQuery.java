@@ -16,6 +16,8 @@
 
 package io.activej.aggregation;
 
+import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.common.builder.AbstractBuilder;
 
 import java.util.ArrayList;

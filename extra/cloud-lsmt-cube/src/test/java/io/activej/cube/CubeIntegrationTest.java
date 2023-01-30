@@ -2,7 +2,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
@@ -29,9 +29,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
+import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
@@ -55,7 +55,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 				.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())

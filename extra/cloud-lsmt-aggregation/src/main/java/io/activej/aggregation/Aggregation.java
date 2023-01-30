@@ -21,6 +21,8 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
@@ -93,7 +95,7 @@ public final class Aggregation extends AbstractReactive
 
 	private final AggregationStructure structure;
 
-	private OTState_Aggregation state;
+	private AggregationOTState state;
 
 	// settings
 	private int chunkSize = DEFAULT_CHUNK_SIZE;
@@ -113,7 +115,7 @@ public final class Aggregation extends AbstractReactive
 
 	private Aggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
-			OTState_Aggregation state) {
+			AggregationOTState state) {
 		super(reactor);
 		this.executor = executor;
 		this.classLoader = classLoader;
@@ -147,7 +149,7 @@ public final class Aggregation extends AbstractReactive
 
 		public Builder withStructure(AggregationStructure structure) {
 			checkNotBuilt(this);
-			return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new OTState_Aggregation(structure)).new Builder();
+			return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationOTState(structure)).new Builder();
 		}
 
 		public Builder withChunkSize(int chunkSize) {
@@ -209,16 +211,16 @@ public final class Aggregation extends AbstractReactive
 		return structure;
 	}
 
-	public OTState_Aggregation getState() {
+	public AggregationOTState getState() {
 		return state;
 	}
 
-	public void setState(OTState_Aggregation state) {
+	public void setState(AggregationOTState state) {
 		this.state = state;
 	}
 
-	public OTState_Aggregation detachState() {
-		OTState_Aggregation state = this.state;
+	public AggregationOTState detachState() {
+		AggregationOTState state = this.state;
 		//noinspection AssignmentToNull - in the lifecycle of a component field is not nullable
 		this.state = null;
 		return state;

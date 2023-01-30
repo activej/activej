@@ -19,9 +19,9 @@ package io.activej.aggregation.ot;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.JsonCodec_AggregationChunk;
-import io.activej.aggregation.JsonCodec_PrimaryKey;
+import io.activej.aggregation.AggregationChunkJsonCodec;
 import io.activej.aggregation.PrimaryKey;
+import io.activej.aggregation.PrimaryKeyJsonCodec;
 import io.activej.aggregation.util.JsonCodec;
 
 import java.io.IOException;
@@ -30,23 +30,23 @@ import java.util.Set;
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.ot.repository.JsonIndentUtils.oneline;
 
-public class JsonCodec_AggregationDiff implements JsonCodec<AggregationDiff> {
+public class AggregationDiffJsonCodec implements JsonCodec<AggregationDiff> {
 	public static final String ADDED = "added";
 	public static final String REMOVED = "removed";
 
 	private final JsonCodec<Set<AggregationChunk>> aggregationChunksCodec;
 
-	private JsonCodec_AggregationDiff(JsonCodec_AggregationChunk aggregationChunkCodec) {
+	private AggregationDiffJsonCodec(AggregationChunkJsonCodec aggregationChunkCodec) {
 		this.aggregationChunksCodec = JsonCodec.of(
 				reader -> ((JsonReader<?>) reader).readSet(aggregationChunkCodec),
 				(writer, value) -> writer.serialize(value, oneline(aggregationChunkCodec))
 		);
 	}
 
-	public static JsonCodec_AggregationDiff create(AggregationStructure structure) {
+	public static AggregationDiffJsonCodec create(AggregationStructure structure) {
 		Set<String> allowedMeasures = structure.getMeasureTypes().keySet();
-		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodec_PrimaryKey.create(structure);
-		return new JsonCodec_AggregationDiff(JsonCodec_AggregationChunk.create(structure.getChunkIdCodec(), primaryKeyCodec, allowedMeasures));
+		JsonCodec<PrimaryKey> primaryKeyCodec = PrimaryKeyJsonCodec.create(structure);
+		return new AggregationDiffJsonCodec(AggregationChunkJsonCodec.create(structure.getChunkIdCodec(), primaryKeyCodec, allowedMeasures));
 	}
 
 	@Override

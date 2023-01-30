@@ -15,8 +15,8 @@ import static org.junit.Assert.assertNull;
 public class ConsolidationChunkSelectionTest {
 	@Test
 	public void testRangeExpansion() {
-		OTState_Aggregation state = new OTState_Aggregation(
-				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+		AggregationOTState state = new AggregationOTState(
+				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 						.withKey("key", ofInt())
 						.build());
 
@@ -50,8 +50,8 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testMinKeyStrategy() {
-		OTState_Aggregation state = new OTState_Aggregation(
-				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+		AggregationOTState state = new AggregationOTState(
+				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 						.withKey("key", ofInt())
 						.build());
 
@@ -76,8 +76,8 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testSizeFixStrategy() {
-		OTState_Aggregation state = new OTState_Aggregation(
-				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+		AggregationOTState state = new AggregationOTState(
+				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 						.withKey("key", ofInt())
 						.build());
 
@@ -107,8 +107,8 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testGroupingByPartition() {
-		OTState_Aggregation state = new OTState_Aggregation(
-				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+		AggregationOTState state = new AggregationOTState(
+				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 						.withKey("key", ofInt())
 						.build());
 

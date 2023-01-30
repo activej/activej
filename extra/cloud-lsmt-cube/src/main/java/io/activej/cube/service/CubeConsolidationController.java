@@ -91,7 +91,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final Map<String, IChunkLocker<Object>> lockers = new HashMap<>();
 
 	private Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
-	private Function<String, IChunkLocker<C>> chunkLockerFactory = $ -> ChunkLocker_NoOp.create(reactor);
+	private Function<String, IChunkLocker<C>> chunkLockerFactory = $ -> NoOpChunkLocker.create(reactor);
 
 	private boolean consolidating;
 	private boolean cleaning;

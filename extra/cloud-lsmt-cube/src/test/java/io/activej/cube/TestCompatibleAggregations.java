@@ -1,9 +1,9 @@
 package io.activej.cube;
 
 import io.activej.aggregation.Aggregation;
-import io.activej.aggregation.PredicateDef;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.cube.Cube.AggregationConfig;
 import io.activej.cube.Cube.AggregationContainer;
 import org.junit.Before;
@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static java.util.stream.Stream.of;

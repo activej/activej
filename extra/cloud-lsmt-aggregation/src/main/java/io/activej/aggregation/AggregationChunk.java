@@ -16,11 +16,13 @@
 
 package io.activej.aggregation;
 
+import io.activej.aggregation.predicate.PredicateDef;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static io.activej.aggregation.AggregationPredicates.*;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableList;
 
 public class AggregationChunk {

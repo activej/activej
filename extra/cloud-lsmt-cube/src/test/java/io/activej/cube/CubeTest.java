@@ -1,6 +1,11 @@
 package io.activej.cube;
 
-import io.activej.aggregation.*;
+import io.activej.aggregation.Aggregation;
+import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ChunkIdJsonCodec;
+import io.activej.aggregation.IAggregationChunkStorage;
+import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
@@ -12,9 +17,9 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileSystem;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.FileSystem_HttpClient;
-import io.activej.http.IHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
+import io.activej.http.IHttpClient;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.nio.NioReactor;
@@ -33,10 +38,10 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
@@ -76,7 +81,7 @@ public final class CubeTest {
 		listenPort = getFreePort();
 		FileSystem fs = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
-		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
@@ -149,7 +154,7 @@ public final class CubeTest {
 		HttpServer server1 = startServer(executor, serverStorage);
 		IHttpClient httpClient = HttpClient.create(getCurrentReactor());
 		FileSystem_HttpClient storage = FileSystem_HttpClient.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
-		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
@@ -433,7 +438,7 @@ public final class CubeTest {
 
 		FileSystem storage = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
@@ -449,7 +454,7 @@ public final class CubeTest {
 
 		FileSystem storage = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,

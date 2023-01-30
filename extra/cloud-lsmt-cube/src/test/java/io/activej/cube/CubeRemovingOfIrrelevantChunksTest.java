@@ -1,9 +1,9 @@
 package io.activej.cube;
 
 import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.JsonCodec_ChunkId;
-import io.activej.aggregation.PredicateDef;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
@@ -35,10 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
-import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
+import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.aggregation.predicate.AggregationPredicates.gt;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
@@ -74,7 +74,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		chunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")

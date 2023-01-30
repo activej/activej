@@ -1,9 +1,9 @@
 package io.activej.cube;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.AggregationPredicates;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
@@ -27,9 +27,9 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.util.List;
 
-import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
+import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
@@ -46,7 +46,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())

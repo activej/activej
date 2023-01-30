@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.OTState_Aggregation;
+import io.activej.aggregation.AggregationOTState;
 import io.activej.aggregation.PrimaryKey;
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 77, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 22);
 
-		assertTrue(OTState_Aggregation.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertTrue(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 
 	@Test
@@ -27,7 +27,7 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 77, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 22);
 
-		assertFalse(OTState_Aggregation.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertFalse(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 
 	@Test
@@ -38,7 +38,7 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 77, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 22);
 
-		assertFalse(OTState_Aggregation.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertFalse(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 
 	@Test
@@ -49,6 +49,6 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 80, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 90);
 
-		assertTrue(OTState_Aggregation.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertTrue(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 }

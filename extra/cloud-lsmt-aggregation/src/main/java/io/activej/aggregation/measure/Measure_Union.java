@@ -24,9 +24,9 @@ import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-public final class MeasureUnion extends Measure {
+final class Measure_Union extends Measure {
 	@SuppressWarnings("rawtypes")
-	MeasureUnion(FieldType fieldType) {
+	Measure_Union(FieldType fieldType) {
 		super(fieldType);
 	}
 

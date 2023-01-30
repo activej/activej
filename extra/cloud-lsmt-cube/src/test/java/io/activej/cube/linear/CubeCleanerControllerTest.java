@@ -1,7 +1,7 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
@@ -64,7 +64,7 @@ public class CubeCleanerControllerTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
-		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), fs);
 		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())

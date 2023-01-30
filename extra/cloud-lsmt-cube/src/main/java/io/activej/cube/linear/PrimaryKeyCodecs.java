@@ -17,8 +17,8 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.Aggregation;
-import io.activej.aggregation.JsonCodec_PrimaryKey;
 import io.activej.aggregation.PrimaryKey;
+import io.activej.aggregation.PrimaryKeyJsonCodec;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.cube.Cube;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ public final class PrimaryKeyCodecs {
 		Map<String, JsonCodec<PrimaryKey>> codecMap = new HashMap<>();
 		for (String aggregationId : cube.getAggregationIds()) {
 			Aggregation aggregation = cube.getAggregation(aggregationId);
-			codecMap.put(aggregationId, JsonCodec_PrimaryKey.create(aggregation.getStructure()));
+			codecMap.put(aggregationId, PrimaryKeyJsonCodec.create(aggregation.getStructure()));
 		}
 		return new PrimaryKeyCodecs(codecMap::get);
 	}

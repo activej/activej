@@ -49,12 +49,12 @@ public final class AggregationChunkerTest {
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private final AggregationStructure structure = AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+	private final AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
 			.withKey("key", ofInt())
 			.withMeasure("value", sum(ofInt()))
 			.withMeasure("timestamp", sum(ofLong()))
 			.build();
-	private final OTState_Aggregation state = new OTState_Aggregation(structure);
+	private final AggregationOTState state = new AggregationOTState(structure);
 
 	@Test
 	public void test() {

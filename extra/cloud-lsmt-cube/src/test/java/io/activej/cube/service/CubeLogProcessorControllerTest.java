@@ -1,8 +1,8 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
@@ -61,7 +61,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		FileSystem aggregationFS = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFS.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), aggregationFS);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
