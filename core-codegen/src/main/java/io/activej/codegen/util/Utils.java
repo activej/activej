@@ -162,4 +162,8 @@ public final class Utils {
 		String setting = getStringSetting(cls, key, null);
 		return setting == null ? defaultValue : Paths.get(setting);
 	}
+
+	public static boolean isJvmPrimitive(Object value) {
+		return value.getClass() == String.class || Primitives.isWrapperType(value.getClass());
+	}
 }

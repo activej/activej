@@ -30,7 +30,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Defines methods to create a constant value
  */
-public final class Expression_Constant implements Expression {
+final class Expression_Constant implements ConstantExpression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
 	private final Object value;
@@ -55,12 +55,19 @@ public final class Expression_Constant implements Expression {
 
 	}
 
+	@Override
 	public Object getValue() {
 		return value;
 	}
 
+	@Override
 	public Class<?> getValueClass() {
 		return cls == null ? value.getClass() : cls;
+	}
+
+	@Override
+	public int getId() {
+		return id;
 	}
 
 	@Override
@@ -106,13 +113,5 @@ public final class Expression_Constant implements Expression {
 			g.getStatic(ctx.getSelfType(), field, getType(getValueClass()));
 		}
 		return type;
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public boolean isJvmPrimitive() {
-		return value.getClass() == String.class || Primitives.isWrapperType(value.getClass());
 	}
 }

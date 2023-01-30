@@ -159,7 +159,7 @@ public final class RecordScheme {
 		this.factory = builder.classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordFactory.class, recordClass),
 				() -> ClassBuilder.builder(RecordFactory.class)
-						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
+						.withConstant("SCHEME", RecordScheme.class, value(this))
 						.withMethod("create", Record.class, List.of(),
 								constructor(recordClass, staticField("SCHEME")))
 						.build());

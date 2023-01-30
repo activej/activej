@@ -16,8 +16,8 @@
 
 package io.activej.codegen;
 
+import io.activej.codegen.expression.ConstantExpression;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expression_Constant;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.common.builder.AbstractBuilder;
@@ -38,6 +38,8 @@ import java.util.stream.Stream;
 import static io.activej.codegen.DefiningClassLoader.createInstance;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
+import static io.activej.codegen.util.Utils.isJvmPrimitive;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
@@ -69,6 +71,7 @@ public final class ClassBuilder<T> {
 	final Set<String> fieldsFinal = new HashSet<>();
 	final Set<String> fieldsStatic = new HashSet<>();
 	final Map<String, Expression> fieldExpressions = new HashMap<>();
+	final Map<String, ConstantExpression> fieldConstants = new HashMap<>();
 
 	final Map<Method, Expression> methods = new LinkedHashMap<>();
 	final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
@@ -312,10 +315,27 @@ public final class ClassBuilder<T> {
 		 */
 		public Builder withStaticFinalField(String field, Class<?> type, Expression value) {
 			checkNotBuilt(this);
+			checkArgument(!(value instanceof ConstantExpression), "For constants use ClassBuilder#withConstant");
 			fields.put(field, type);
 			fieldsStatic.add(field);
 			fieldsFinal.add(field);
 			fieldExpressions.put(field, value);
+			return this;
+		}
+
+		/**
+		 * Adds a new constant for a class
+		 *
+		 * @param field name of the field
+		 * @param type  type of the field
+		 * @param value a constant expression for the new static final field
+		 */
+		public Builder withConstant(String field, Class<?> type, ConstantExpression value) {
+			checkNotBuilt(this);
+			fields.put(field, type);
+			fieldsStatic.add(field);
+			fieldsFinal.add(field);
+			fieldConstants.put(field, value);
 			return this;
 		}
 
@@ -409,7 +429,7 @@ public final class ClassBuilder<T> {
 				getInternalName(superclass),
 				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
 
-		Map<String, Expression_Constant> constantMap = new LinkedHashMap<>();
+		Map<String, ConstantExpression> constantMap = new LinkedHashMap<>();
 
 		Map<Method, Expression> constructors = new LinkedHashMap<>(this.constructors);
 		if (constructors.isEmpty()) {
@@ -471,15 +491,14 @@ public final class ClassBuilder<T> {
 
 			Context ctx = new Context(classLoader, this, g, classType, m, constantMap);
 
-			for (Map.Entry<String, Expression> entry : this.fieldExpressions.entrySet()) {
+			for (Map.Entry<String, ConstantExpression> entry : this.fieldConstants.entrySet()) {
 				String field = entry.getKey();
-				if (!this.fieldsStatic.contains(field)) continue;
-				Expression expression = entry.getValue();
+				ConstantExpression expression = entry.getValue();
 
-				if (expression instanceof Expression_Constant expressionConstant && !expressionConstant.isJvmPrimitive()) {
-					STATIC_CONSTANTS.put(expressionConstant.getId(), expressionConstant.getValue());
+				if (!isJvmPrimitive(expression.getValue())) {
+					STATIC_CONSTANTS.put(expression.getId(), expression.getValue());
 					Expressions.set(staticField(field), cast(
-									staticCall(ClassBuilder.class, "getStaticConstant", value(((Expression_Constant) expression).getId())),
+									staticCall(ClassBuilder.class, "getStaticConstant", value(expression.getId())),
 									this.fields.get(field)))
 							.load(ctx);
 				} else {
@@ -487,14 +506,14 @@ public final class ClassBuilder<T> {
 				}
 			}
 
-			for (Map.Entry<String, Expression_Constant> entry : constantMap.entrySet()) {
+			for (Map.Entry<String, ConstantExpression> entry : constantMap.entrySet()) {
 				String field = entry.getKey();
-				Expression_Constant expression = entry.getValue();
+				ConstantExpression expression = entry.getValue();
 
 				cw.visitField(ACC_PUBLIC + ACC_STATIC + ACC_FINAL,
 						field, getType(expression.getValueClass()).getDescriptor(), null, null);
 
-				checkState(!expression.isJvmPrimitive());
+				checkState(!isJvmPrimitive(expression.getValue()));
 				STATIC_CONSTANTS.put(expression.getId(), expression.getValue());
 				Type typeFrom = staticCall(ClassBuilder.class, "getStaticConstant", value(expression.getId())).load(ctx);
 				g.checkCast(getType(expression.getValueClass()));
@@ -533,12 +552,10 @@ public final class ClassBuilder<T> {
 			}
 
 			private void cleanup() {
-				for (Expression expression : fieldExpressions.values()) {
-					if (expression instanceof Expression_Constant) {
-						STATIC_CONSTANTS.remove(((Expression_Constant) expression).getId());
-					}
+				for (Map.Entry<String, ConstantExpression> entry : fieldConstants.entrySet()) {
+					STATIC_CONSTANTS.remove(entry.getValue().getId());
 				}
-				for (Expression_Constant expression : constantMap.values()) {
+				for (ConstantExpression expression : constantMap.values()) {
 					STATIC_CONSTANTS.remove(expression.getId());
 				}
 			}

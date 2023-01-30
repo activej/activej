@@ -16,8 +16,8 @@
 
 package io.activej.codegen;
 
+import io.activej.codegen.expression.ConstantExpression;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expression_Constant;
 import io.activej.codegen.expression.LocalVariable;
 import io.activej.codegen.util.TypeChecks;
 import org.jetbrains.annotations.Nullable;
@@ -58,13 +58,13 @@ public final class Context {
 
 	private Set<Method> accessibleMethods;
 	private final Map<Object, LocalVariable> varLocals = new HashMap<>();
-	private final Map<String, Expression_Constant> constantMap;
+	private final Map<String, ConstantExpression> constantMap;
 
 	public Context(ClassLoader classLoader, ClassBuilder<?> builder,
 			GeneratorAdapter g,
 			Type selfType,
 			Method method,
-			Map<String, Expression_Constant> constantMap) {
+			Map<String, ConstantExpression> constantMap) {
 		this.classLoader = classLoader;
 		this.classBuilder = builder;
 		this.g = g;
@@ -77,7 +77,7 @@ public final class Context {
 		return classLoader;
 	}
 
-	public void setConstant(String field, Expression_Constant value) {
+	public void setConstant(String field, ConstantExpression value) {
 		constantMap.put(field, value);
 	}
 
