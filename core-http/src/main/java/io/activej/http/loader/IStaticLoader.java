@@ -18,7 +18,7 @@ package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.http.Servlet_Static;
+import io.activej.http.StaticServlet;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * Represents the 'predefined storage' for the {@link Servlet_Static StaticServlet}.
+ * Represents the 'predefined storage' for the {@link StaticServlet StaticServlet}.
  */
 @ComponentInterface
 public interface IStaticLoader {
@@ -71,19 +71,19 @@ public interface IStaticLoader {
 	}
 
 	static IStaticLoader cacheOf(Reactor reactor, IStaticLoader loader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
-		return new StaticLoader_Cache(reactor, loader, get, put);
+		return new CacheStaticLoader(reactor, loader, get, put);
 	}
 
 	static IStaticLoader ofClassPath(Reactor reactor, Executor executor, String root) {
-		return StaticLoader_ClassPath.create(reactor, executor, root);
+		return ClassPathStaticLoader.create(reactor, executor, root);
 	}
 
 	static IStaticLoader ofClassPath(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
-		return StaticLoader_ClassPath.create(reactor, executor, classLoader, root);
+		return ClassPathStaticLoader.create(reactor, executor, classLoader, root);
 	}
 
 	static IStaticLoader ofPath(Reactor reactor, Executor executor, Path dir) {
-		return StaticLoader_FileReader.create(reactor, executor, dir);
+		return new FileReaderStaticLoader(reactor, executor, dir);
 	}
 
 }

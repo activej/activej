@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 /**
- * Basic session storage for the {@link Servlet_Session}.
+ * Basic session storage for the {@link SessionServlet}.
  */
 @ComponentInterface
 public interface ISessionStore<T> {

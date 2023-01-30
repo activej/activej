@@ -22,7 +22,7 @@ import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
-import io.activej.http.session.Servlet_Session;
+import io.activej.http.session.SessionServlet;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
 import org.intellij.lang.annotations.MagicConstant;
@@ -300,7 +300,7 @@ public abstract class HttpMessage {
 	/**
 	 * Attaches an arbitrary object to this message by its type.
 	 * This is used for context management.
-	 * For example some {@link Servlet_Session wrapper auth servlet} could
+	 * For example some {@link SessionServlet wrapper auth servlet} could
 	 * add some kind of session data here.
 	 */
 	public <T> void attach(Type type, T extra) {

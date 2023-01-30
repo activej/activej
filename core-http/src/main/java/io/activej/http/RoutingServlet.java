@@ -39,8 +39,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * This servlet allows building complex servlet trees, routing requests between them by the HTTP paths.
  */
-public final class Servlet_Routing extends AbstractReactive
-		implements AsyncServlet, WithInitializer<Servlet_Routing> {
+public final class RoutingServlet extends AbstractReactive
+		implements AsyncServlet, WithInitializer<RoutingServlet> {
 	private static final String ROOT = "/";
 	private static final String STAR = "*";
 	private static final String WILDCARD = "/" + STAR;
@@ -51,19 +51,19 @@ public final class Servlet_Routing extends AbstractReactive
 	private final AsyncServlet[] rootServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
 	private final AsyncServlet[] fallbackServlets = new AsyncServlet[ANY_HTTP_ORDINAL + 1];
 
-	private final Map<String, Servlet_Routing> routes = new HashMap<>();
-	private final Map<String, Servlet_Routing> parameters = new HashMap<>();
+	private final Map<String, RoutingServlet> routes = new HashMap<>();
+	private final Map<String, RoutingServlet> parameters = new HashMap<>();
 
-	private Servlet_Routing(Reactor reactor) {
+	private RoutingServlet(Reactor reactor) {
 		super(reactor);
 	}
 
-	public static Servlet_Routing create(Reactor reactor) {
-		return new Servlet_Routing(reactor);
+	public static RoutingServlet create(Reactor reactor) {
+		return new RoutingServlet(reactor);
 	}
 
-	public static Servlet_Routing wrap(Reactor reactor, AsyncServlet servlet) {
-		Servlet_Routing wrapper = new Servlet_Routing(reactor);
+	public static RoutingServlet wrap(Reactor reactor, AsyncServlet servlet) {
+		RoutingServlet wrapper = new RoutingServlet(reactor);
 		wrapper.fallbackServlets[ANY_HTTP_ORDINAL] = servlet;
 		return wrapper;
 	}
@@ -71,7 +71,7 @@ public final class Servlet_Routing extends AbstractReactive
 	/**
 	 * Maps given servlet on some path. Fails when such path already has a servlet mapped to it.
 	 */
-	public Servlet_Routing map(String path, AsyncServlet servlet) {
+	public RoutingServlet map(String path, AsyncServlet servlet) {
 		return map(null, path, servlet);
 	}
 
@@ -79,7 +79,7 @@ public final class Servlet_Routing extends AbstractReactive
 	 * @see #map(HttpMethod, String, AsyncServlet)
 	 */
 	@Contract("_, _, _ -> this")
-	public Servlet_Routing map(@Nullable HttpMethod method, String path, AsyncServlet servlet) {
+	public RoutingServlet map(@Nullable HttpMethod method, String path, AsyncServlet servlet) {
 		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet);
 	}
 
@@ -88,8 +88,8 @@ public final class Servlet_Routing extends AbstractReactive
 	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
 	@Contract("_, _ -> this")
-	public Servlet_Routing mapWebSocket(String path, Consumer<IWebSocket> webSocketConsumer) {
-		return mapWebSocket(path, new Servlet_WebSocket(reactor) {
+	public RoutingServlet mapWebSocket(String path, Consumer<IWebSocket> webSocketConsumer) {
+		return mapWebSocket(path, new WebSocketServlet(reactor) {
 			@Override
 			protected void onWebSocket(IWebSocket webSocket) {
 				webSocketConsumer.accept(webSocket);
@@ -98,12 +98,12 @@ public final class Servlet_Routing extends AbstractReactive
 	}
 
 	@Contract("_, _ -> this")
-	public Servlet_Routing mapWebSocket(String path, Servlet_WebSocket servlet) {
+	public RoutingServlet mapWebSocket(String path, WebSocketServlet servlet) {
 		return doMap(WS_ORDINAL, path, servlet);
 	}
 
 	@Contract("_, _, _ -> this")
-	private Servlet_Routing doMap(int ordinal, String path, AsyncServlet servlet) {
+	private RoutingServlet doMap(int ordinal, String path, AsyncServlet servlet) {
 		checkArgument(path.startsWith(ROOT) && (path.endsWith(WILDCARD) || !path.contains(STAR)), "Invalid path: " + path);
 		if (path.endsWith(WILDCARD)) {
 			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet);
@@ -134,7 +134,7 @@ public final class Servlet_Routing extends AbstractReactive
 		}
 	}
 
-	public @Nullable Servlet_Routing getSubtree(String path) {
+	public @Nullable RoutingServlet getSubtree(String path) {
 		return getOrCreateSubtree(path, (servlet, name) ->
 				name.startsWith(":") ?
 						servlet.parameters.get(name.substring(1)) :
@@ -142,13 +142,13 @@ public final class Servlet_Routing extends AbstractReactive
 	}
 
 	@Contract("_ -> new")
-	public Servlet_Routing merge(Servlet_Routing servlet) {
+	public RoutingServlet merge(RoutingServlet servlet) {
 		return merge(ROOT, servlet);
 	}
 
 	@Contract("_, _ -> new")
-	public Servlet_Routing merge(String path, Servlet_Routing servlet) {
-		Servlet_Routing merged = new Servlet_Routing(servlet.reactor);
+	public RoutingServlet merge(String path, RoutingServlet servlet) {
+		RoutingServlet merged = new RoutingServlet(servlet.reactor);
 		mergeInto(merged, this);
 		mergeInto(merged.makeSubtree(path), servlet);
 		return merged;
@@ -194,7 +194,7 @@ public final class Servlet_Routing extends AbstractReactive
 			}
 		} else {
 			int position = request.getPos();
-			Servlet_Routing transit = routes.get(urlPart);
+			RoutingServlet transit = routes.get(urlPart);
 			if (transit != null) {
 				Promise<HttpResponse> result = transit.tryServe(request);
 				if (result != null) {
@@ -202,7 +202,7 @@ public final class Servlet_Routing extends AbstractReactive
 				}
 				request.setPos(position);
 			}
-			for (Entry<String, Servlet_Routing> entry : parameters.entrySet()) {
+			for (Entry<String, RoutingServlet> entry : parameters.entrySet()) {
 				String key = entry.getKey();
 				request.putPathParameter(key, urlPart);
 				Promise<HttpResponse> result = entry.getValue().tryServe(request);
@@ -222,18 +222,18 @@ public final class Servlet_Routing extends AbstractReactive
 		return null;
 	}
 
-	private Servlet_Routing makeSubtree(String path) {
+	private RoutingServlet makeSubtree(String path) {
 		return getOrCreateSubtree(path, (servlet, name) ->
 				name.startsWith(":") ?
-						servlet.parameters.computeIfAbsent(name.substring(1), $ -> new Servlet_Routing(reactor)) :
-						servlet.routes.computeIfAbsent(name, $ -> new Servlet_Routing(reactor)));
+						servlet.parameters.computeIfAbsent(name.substring(1), $ -> new RoutingServlet(reactor)) :
+						servlet.routes.computeIfAbsent(name, $ -> new RoutingServlet(reactor)));
 	}
 
-	private Servlet_Routing getOrCreateSubtree(String path, BiFunction<Servlet_Routing, String, @Nullable Servlet_Routing> childGetter) {
+	private RoutingServlet getOrCreateSubtree(String path, BiFunction<RoutingServlet, String, @Nullable RoutingServlet> childGetter) {
 		if (path.isEmpty() || path.equals(ROOT)) {
 			return this;
 		}
-		Servlet_Routing sub = this;
+		RoutingServlet sub = this;
 		int slash = path.indexOf('/', 1);
 		String remainingPath = path;
 		while (true) {
@@ -256,29 +256,29 @@ public final class Servlet_Routing extends AbstractReactive
 		}
 	}
 
-	public static Servlet_Routing merge(Servlet_Routing first, Servlet_Routing second) {
+	public static RoutingServlet merge(RoutingServlet first, RoutingServlet second) {
 		checkArgument(first.reactor == second.reactor, "Different reactors");
-		Servlet_Routing merged = new Servlet_Routing(first.reactor);
+		RoutingServlet merged = new RoutingServlet(first.reactor);
 		mergeInto(merged, first);
 		mergeInto(merged, second);
 		return merged;
 	}
 
-	public static Servlet_Routing merge(Servlet_Routing... servlets) {
+	public static RoutingServlet merge(RoutingServlet... servlets) {
 		checkArgument(servlets.length > 1, "Nothing to merge");
 		Reactor firstReactor = servlets[0].reactor;
 		for (int i = 1; i < servlets.length; i++) {
 			checkArgument(firstReactor == servlets[i].reactor, "Different reactors");
 		}
 
-		Servlet_Routing merged = new Servlet_Routing(firstReactor);
-		for (Servlet_Routing servlet : servlets) {
+		RoutingServlet merged = new RoutingServlet(firstReactor);
+		for (RoutingServlet servlet : servlets) {
 			mergeInto(merged, servlet);
 		}
 		return merged;
 	}
 
-	private static void mergeInto(Servlet_Routing into, Servlet_Routing from) {
+	private static void mergeInto(RoutingServlet into, RoutingServlet from) {
 		for (int i = 0; i < from.rootServlets.length; i++) {
 			AsyncServlet rootServlet = from.rootServlets[i];
 			if (rootServlet != null) {

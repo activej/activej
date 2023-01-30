@@ -43,9 +43,9 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * Implementation of {@link IDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class DnsClient_Cached extends AbstractReactive
+public final class CachedDnsClient extends AbstractReactive
 		implements IDnsClient, ReactiveJmxBean {
-	private final Logger logger = LoggerFactory.getLogger(DnsClient_Cached.class);
+	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
 
 	private final IDnsClient client;
 
@@ -53,33 +53,33 @@ public final class DnsClient_Cached extends AbstractReactive
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private DnsClient_Cached(Reactor reactor, IDnsClient client) {
+	private CachedDnsClient(Reactor reactor, IDnsClient client) {
 		super(reactor);
 		this.client = client;
 	}
 
-	public static DnsClient_Cached create(Reactor reactor, IDnsClient client, DnsCache cache) {
+	public static CachedDnsClient create(Reactor reactor, IDnsClient client, DnsCache cache) {
 		return builder(reactor, client)
 				.withCache(cache)
 				.build();
 	}
 
-	public static DnsClient_Cached create(Reactor reactor, IDnsClient client) {
+	public static CachedDnsClient create(Reactor reactor, IDnsClient client) {
 		return builder(reactor, client)
 				.withCache(DnsCache.create(reactor))
 				.build();
 	}
 
 	public static Builder builder(Reactor reactor, IDnsClient client){
-		return new DnsClient_Cached(reactor, client).new Builder();
+		return new CachedDnsClient(reactor, client).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, DnsClient_Cached> {
+	public final class Builder extends AbstractBuilder<Builder, CachedDnsClient> {
 		private Builder() {}
 
 		public Builder withCache(DnsCache cache) {
 			checkNotBuilt(this);
-			DnsClient_Cached.this.cache = cache;
+			CachedDnsClient.this.cache = cache;
 			return this;
 		}
 
@@ -97,8 +97,8 @@ public final class DnsClient_Cached extends AbstractReactive
 		}
 
 		@Override
-		protected DnsClient_Cached doBuild() {
-			return DnsClient_Cached.this;
+		protected CachedDnsClient doBuild() {
+			return CachedDnsClient.this;
 		}
 	}
 
@@ -127,7 +127,7 @@ public final class DnsClient_Cached extends AbstractReactive
 				anotherReactor.startExternalTask(); // keep other reactor alive while we wait for an answer in main one
 				return Promise.ofCallback(cb ->
 						reactor.execute(() ->
-								DnsClient_Cached.this.resolve(query)
+								CachedDnsClient.this.resolve(query)
 										.run((result, e) -> {
 											anotherReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
 											anotherReactor.completeExternalTask();
@@ -137,7 +137,7 @@ public final class DnsClient_Cached extends AbstractReactive
 			@Override
 			public void close() {
 				checkInReactorThread(anotherReactor);
-				reactor.execute(DnsClient_Cached.this::close);
+				reactor.execute(CachedDnsClient.this::close);
 			}
 		};
 	}

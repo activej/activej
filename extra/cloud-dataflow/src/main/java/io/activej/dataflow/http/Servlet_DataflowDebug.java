@@ -72,11 +72,11 @@ public final class Servlet_DataflowDebug extends AbstractReactive implements Asy
 
 		IStaticLoader staticLoader = IStaticLoader.ofClassPath(reactor, executor, "debug");
 
-		this.servlet = Servlet_Routing.create(reactor)
-				.map("/*", Servlet_Static.builder(reactor, staticLoader)
+		this.servlet = RoutingServlet.create(reactor)
+				.map("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()
 						.build())
-				.map("/api/*", Servlet_Routing.create(reactor)
+				.map("/api/*", RoutingServlet.create(reactor)
 						.map(GET, "/partitions", request -> ok200()
 								.withJson(objectMapper.writeValueAsString(partitions.stream()
 										.map(Partition::getAddress)

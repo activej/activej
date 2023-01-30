@@ -60,7 +60,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 			MapCrdtStorage<K, S> client,
 			OptionalDependency<BackupService<K, S>> backupServiceOpt
 	) {
-		Servlet_Routing servlet = Servlet_Routing.create(reactor)
+		RoutingServlet servlet = RoutingServlet.create(reactor)
 				.map(POST, "/", request -> request.loadBody()
 						.map(body -> {
 							try {

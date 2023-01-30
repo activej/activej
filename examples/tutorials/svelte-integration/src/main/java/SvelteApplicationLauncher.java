@@ -1,5 +1,5 @@
 import io.activej.http.AsyncServlet;
-import io.activej.http.Servlet_Static;
+import io.activej.http.StaticServlet;
 import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -23,7 +23,7 @@ public final class SvelteApplicationLauncher extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
-		return Servlet_Static.builder(reactor, staticLoader)
+		return StaticServlet.builder(reactor, staticLoader)
 				.withIndexHtml()
 				.build();
 	}

@@ -28,7 +28,7 @@ import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
-import io.activej.http.Servlet_Routing;
+import io.activej.http.RoutingServlet;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
@@ -51,19 +51,19 @@ public final class FileSystemGuiServlet {
 	private FileSystemGuiServlet() {
 	}
 
-	public static Servlet_Routing create(Reactor reactor, IFileSystem fs) {
+	public static RoutingServlet create(Reactor reactor, IFileSystem fs) {
 		return create(reactor, fs, "ActiveJ FS");
 	}
 
-	public static Servlet_Routing create(Reactor reactor, IFileSystem fs, String title) {
+	public static RoutingServlet create(Reactor reactor, IFileSystem fs, String title) {
 		Mustache mustache = new DefaultMustacheFactory().compile("fs/gui/static/index.html");
-		Servlet_Routing fsServlet = FileSystemServlet.create(reactor, fs);
+		RoutingServlet fsServlet = FileSystemServlet.create(reactor, fs);
 
-		Servlet_Routing uploadServlet = fsServlet.getSubtree("/" + UPLOAD);
-		Servlet_Routing downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
+		RoutingServlet uploadServlet = fsServlet.getSubtree("/" + UPLOAD);
+		RoutingServlet downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
 		assert uploadServlet != null && downloadServlet != null;
 
-		return Servlet_Routing.create(reactor)
+		return RoutingServlet.create(reactor)
 				.map("/api/upload", uploadServlet)
 				.map("/api/download/*", downloadServlet)
 				.map(POST, "/api/newDir", request -> request.loadBody()

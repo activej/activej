@@ -28,16 +28,16 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.
  * Used for testing.
  */
-public final class HttpClient_Stub extends ImplicitlyReactive
+public final class StubHttpClient extends ImplicitlyReactive
 		implements IHttpClient {
 	private final AsyncServlet servlet;
 
-	private HttpClient_Stub(AsyncServlet servlet) {
+	private StubHttpClient(AsyncServlet servlet) {
 		this.servlet = servlet;
 	}
 
-	public static HttpClient_Stub of(AsyncServlet servlet) {
-		return new HttpClient_Stub(servlet);
+	public static StubHttpClient of(AsyncServlet servlet) {
+		return new StubHttpClient(servlet);
 	}
 
 	@Override

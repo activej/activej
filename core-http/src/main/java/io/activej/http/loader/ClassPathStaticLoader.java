@@ -33,7 +33,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-class StaticLoader_ClassPath extends AbstractReactive
+class ClassPathStaticLoader extends AbstractReactive
 		implements IStaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
@@ -41,18 +41,18 @@ class StaticLoader_ClassPath extends AbstractReactive
 	private final ClassLoader classLoader;
 	private final String root;
 
-	private StaticLoader_ClassPath(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
+	private ClassPathStaticLoader(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
 		super(reactor);
 		this.root = root;
 		this.executor = executor;
 		this.classLoader = classLoader;
 	}
 
-	public static StaticLoader_ClassPath create(Reactor reactor, Executor executor, String root) {
+	static ClassPathStaticLoader create(Reactor reactor, Executor executor, String root) {
 		return create(reactor, executor, Thread.currentThread().getContextClassLoader(), root);
 	}
 
-	public static StaticLoader_ClassPath create(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
+	static ClassPathStaticLoader create(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
 		if (root.startsWith(ROOT)) {
 			root = root.substring(ROOT_OFFSET);
 		}
@@ -60,7 +60,7 @@ class StaticLoader_ClassPath extends AbstractReactive
 			root = root + ROOT;
 		}
 
-		return new StaticLoader_ClassPath(reactor, executor, classLoader, root);
+		return new ClassPathStaticLoader(reactor, executor, classLoader, root);
 	}
 
 	@Override

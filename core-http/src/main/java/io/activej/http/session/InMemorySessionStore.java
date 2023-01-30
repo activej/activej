@@ -32,7 +32,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 /**
  * A simple reference implementation of the session storage over a hash map.
  */
-public final class SessionStore_InMemory<T> extends AbstractReactive
+public final class InMemorySessionStore<T> extends AbstractReactive
 		implements ISessionStore<T> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
@@ -40,30 +40,30 @@ public final class SessionStore_InMemory<T> extends AbstractReactive
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private SessionStore_InMemory(Reactor reactor) {
+	private InMemorySessionStore(Reactor reactor) {
 		super(reactor);
 	}
 
-	public static <T> SessionStore_InMemory<T> create(Reactor reactor) {
-		return SessionStore_InMemory.<T>builder(reactor).build();
+	public static <T> InMemorySessionStore<T> create(Reactor reactor) {
+		return InMemorySessionStore.<T>builder(reactor).build();
 	}
 
-	public static <T> SessionStore_InMemory<T>.Builder builder(Reactor reactor) {
-		return new SessionStore_InMemory<T>(reactor).new Builder();
+	public static <T> InMemorySessionStore<T>.Builder builder(Reactor reactor) {
+		return new InMemorySessionStore<T>(reactor).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, SessionStore_InMemory<T>> {
+	public final class Builder extends AbstractBuilder<Builder, InMemorySessionStore<T>> {
 		private Builder() {}
 
 		public Builder withLifetime(Duration sessionLifetime) {
 			checkNotBuilt(this);
-			SessionStore_InMemory.this.sessionLifetime = sessionLifetime;
+			InMemorySessionStore.this.sessionLifetime = sessionLifetime;
 			return this;
 		}
 
 		@Override
-		protected SessionStore_InMemory<T> doBuild() {
-			return SessionStore_InMemory.this;
+		protected InMemorySessionStore<T> doBuild() {
+			return InMemorySessionStore.this;
 		}
 	}
 

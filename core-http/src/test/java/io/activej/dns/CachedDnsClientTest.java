@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.*;
 
 @Ignore
-public final class DnsClient_Cached_Test {
+public final class CachedDnsClientTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -33,7 +33,7 @@ public final class DnsClient_Cached_Test {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
-	private DnsClient_Cached cachedDnsClient;
+	private CachedDnsClient cachedDnsClient;
 	private static final int DNS_SERVER_PORT = 53;
 
 	private static final InetSocketAddress UNREACHABLE_DNS = new InetSocketAddress("8.0.8.8", DNS_SERVER_PORT);
@@ -42,7 +42,7 @@ public final class DnsClient_Cached_Test {
 	@Before
 	public void setUp() {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		cachedDnsClient = DnsClient_Cached.create(reactor, DnsClient.builder(reactor)
+		cachedDnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor)
 				.withDnsServerAddress(LOCAL_DNS)
 				.build());
 	}

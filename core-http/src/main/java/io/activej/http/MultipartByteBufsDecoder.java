@@ -29,7 +29,7 @@ import io.activej.csp.ChannelConsumers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
-import io.activej.http.ByteBufsDecoder_Multipart.MultipartFrame;
+import io.activej.http.MultipartByteBufsDecoder.MultipartFrame;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,8 +49,8 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Util class that allows to decode some binary channel (mainly, the request body stream) into a channel of multipart frames.
  */
-public final class ByteBufsDecoder_Multipart implements ByteBufsDecoder<MultipartFrame> {
-	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(ByteBufsDecoder_Multipart.class, "maxMetaBuffer", kilobytes(4)).toInt();
+public final class MultipartByteBufsDecoder implements ByteBufsDecoder<MultipartFrame> {
+	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartByteBufsDecoder.class, "maxMetaBuffer", kilobytes(4)).toInt();
 	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
 
 	private @Nullable List<String> readingHeaders = null;
@@ -58,13 +58,13 @@ public final class ByteBufsDecoder_Multipart implements ByteBufsDecoder<Multipar
 	private final byte[] boundary;
 	private final byte[] lastBoundary;
 
-	private ByteBufsDecoder_Multipart(String boundary) {
+	private MultipartByteBufsDecoder(String boundary) {
 		this.boundary = ("--" + boundary).getBytes(UTF_8);
 		this.lastBoundary = ("--" + boundary + "--").getBytes(UTF_8);
 	}
 
-	public static ByteBufsDecoder_Multipart create(String boundary) {
-		return new ByteBufsDecoder_Multipart(boundary);
+	public static MultipartByteBufsDecoder create(String boundary) {
+		return new MultipartByteBufsDecoder(boundary);
 	}
 
 	/**

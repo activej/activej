@@ -5,7 +5,7 @@ import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.common.collection.Either;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.Servlet_Routing;
+import io.activej.http.RoutingServlet;
 import io.activej.http.decoder.DecodeErrors;
 import io.activej.http.decoder.Decoder;
 import io.activej.http.decoder.Mapper;
@@ -58,7 +58,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, ContactDAO contactDAO) {
 		Mustache contactListView = new DefaultMustacheFactory().compile("static/contactList.html");
-		return Servlet_Routing.create(reactor)
+		return RoutingServlet.create(reactor)
 				.map("/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list()))))
 				.map(POST, "/add", request -> request.loadBody()

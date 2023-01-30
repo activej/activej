@@ -6,8 +6,8 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
-import io.activej.http.HttpClient_Stub;
-import io.activej.http.Servlet_Routing;
+import io.activej.http.StubHttpClient;
+import io.activej.http.RoutingServlet;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -41,7 +41,7 @@ public final class ApiTest {
 
 	private static final long dataSize = 799;
 
-	private final HttpClient_Stub stubClient = HttpClient_Stub.of(getServlet());
+	private final StubHttpClient stubClient = StubHttpClient.of(getServlet());
 	private final FileSystem_HttpClient client = FileSystem_HttpClient.create(getCurrentReactor(), "http://localhost", stubClient);
 
 	private final LinkedList<Object> params = new LinkedList<>();
@@ -183,7 +183,7 @@ public final class ApiTest {
 		assertTrue(params.isEmpty());
 	}
 
-	private Servlet_Routing getServlet() {
+	private RoutingServlet getServlet() {
 		return FileSystemServlet.create(Reactor.getCurrentReactor(), new IFileSystem() {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();

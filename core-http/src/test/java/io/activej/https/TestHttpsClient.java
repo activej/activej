@@ -2,7 +2,7 @@ package io.activej.https;
 
 import io.activej.dns.IDnsClient;
 import io.activej.dns.DnsClient;
-import io.activej.dns.DnsClient_Cached;
+import io.activej.dns.CachedDnsClient;
 import io.activej.http.*;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -36,7 +36,7 @@ public final class TestHttpsClient {
 	public void testClient() throws NoSuchAlgorithmException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		IDnsClient dnsClient = DnsClient_Cached.create(reactor, DnsClient.builder(reactor)
+		IDnsClient dnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor)
 				.withTimeout(Duration.ofMillis(500))
 				.withDnsServerAddress(inetAddress("8.8.8.8"))
 				.build());

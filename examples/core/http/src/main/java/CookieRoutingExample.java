@@ -1,6 +1,6 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.Servlet_Routing;
+import io.activej.http.RoutingServlet;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -21,7 +21,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
-		return Servlet_Routing.create(reactor)
+		return RoutingServlet.create(reactor)
 				.map("/*", request -> {
 					String servletNumberCookie = request.getCookie(COOKIE);
 					if (servletNumberCookie == null) {

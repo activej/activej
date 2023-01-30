@@ -23,7 +23,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FileSystemException;
-import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
+import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -59,12 +59,12 @@ public final class FileSystemServlet {
 	private FileSystemServlet() {
 	}
 
-	public static Servlet_Routing create(Reactor reactor, IFileSystem fs) {
+	public static RoutingServlet create(Reactor reactor, IFileSystem fs) {
 		return create(reactor, fs, true);
 	}
 
-	public static Servlet_Routing create(Reactor reactor, IFileSystem fs, boolean inline) {
-		return Servlet_Routing.create(reactor)
+	public static RoutingServlet create(Reactor reactor, IFileSystem fs, boolean inline) {
+		return RoutingServlet.create(reactor)
 				.map(POST, "/" + UPLOAD + "/*", request -> {
 					String contentLength = request.getHeader(CONTENT_LENGTH);
 					Long size = contentLength == null ? null : Long.valueOf(contentLength);

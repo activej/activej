@@ -29,19 +29,15 @@ import java.util.concurrent.Executor;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-class StaticLoader_FileReader extends AbstractReactive
+class FileReaderStaticLoader extends AbstractReactive
 		implements IStaticLoader {
 	private final Executor executor;
 	private final Path root;
 
-	private StaticLoader_FileReader(Reactor reactor, Executor executor, Path root) {
+	FileReaderStaticLoader(Reactor reactor, Executor executor, Path root) {
 		super(reactor);
 		this.executor = executor;
 		this.root = root;
-	}
-
-	public static IStaticLoader create(Reactor reactor, Executor executor, Path dir) {
-		return new StaticLoader_FileReader(reactor, executor, dir);
 	}
 
 	@Override

@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.mapping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public final class ByteBufsDecoder_Multipart_Test {
+public final class MultipartByteBufsDecoderTest {
 	private static final String BOUNDARY = "--test-boundary-123";
 	private static final String CRLF = "\r\n";
 
@@ -66,7 +66,7 @@ public final class ByteBufsDecoder_Multipart_Test {
 		List<Map<String, String>> headers = new ArrayList<>();
 
 		String res = await(BinaryChannelSupplier.of(ChannelSupplier.ofList(split))
-				.decodeStream(ByteBufsDecoder_Multipart.create(BOUNDARY.substring(2)))
+				.decodeStream(MultipartByteBufsDecoder.create(BOUNDARY.substring(2)))
 				.toCollector(mapping(frame -> {
 					if (frame.isData()) {
 						return frame.getData().asString(UTF_8);
@@ -97,9 +97,9 @@ public final class ByteBufsDecoder_Multipart_Test {
 	public void testSplitOnlyLastPart() {
 		// last boundary
 		ByteBuf buf = ByteBufStrings.wrapUtf8(BOUNDARY + "--" + CRLF);
-		ByteBufsDecoder_Multipart decoder = ByteBufsDecoder_Multipart.create(BOUNDARY.substring(2));
+		MultipartByteBufsDecoder decoder = MultipartByteBufsDecoder.create(BOUNDARY.substring(2));
 
-		await(decoder.split(ChannelSupplier.of(buf), new ByteBufsDecoder_Multipart.AsyncMultipartDataHandler() {
+		await(decoder.split(ChannelSupplier.of(buf), new MultipartByteBufsDecoder.AsyncMultipartDataHandler() {
 			@Override
 			public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 				return Promise.ofException(new ExpectedException());

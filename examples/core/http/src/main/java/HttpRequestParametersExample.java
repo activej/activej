@@ -1,7 +1,7 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.Servlet_Routing;
-import io.activej.http.Servlet_Static;
+import io.activej.http.RoutingServlet;
+import io.activej.http.StaticServlet;
 import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
@@ -30,7 +30,7 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
-		return Servlet_Routing.create(reactor)
+		return RoutingServlet.create(reactor)
 				.map(POST, "/hello", request -> request.loadBody()
 						.map($ -> {
 							String name = request.getPostParameters().get("name");
@@ -42,7 +42,7 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 					return HttpResponse.ok200()
 							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>");
 				})
-				.map("/*", Servlet_Static.builder(reactor, staticLoader)
+				.map("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()
 						.build());
 	}

@@ -46,10 +46,10 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
  * exceptionally.
  */
-public abstract class Servlet_WebSocket extends AbstractReactive
+public abstract class WebSocketServlet extends AbstractReactive
 		implements AsyncServlet {
 
-	protected Servlet_WebSocket(Reactor reactor) {
+	protected WebSocketServlet(Reactor reactor) {
 		super(reactor);
 		checkState(IWebSocket.ENABLED, "Web sockets are disabled by application settings");
 	}

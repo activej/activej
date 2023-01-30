@@ -45,44 +45,44 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 /**
  * This servlet allows return HTTP responses by HTTP paths from some predefined storage, mainly the filesystem.
  */
-public final class Servlet_Static extends AbstractReactive
+public final class StaticServlet extends AbstractReactive
 		implements AsyncServlet {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
 	private final IStaticLoader resourceLoader;
-	private Function<String, ContentType> contentTypeResolver = Servlet_Static::getContentType;
+	private Function<String, ContentType> contentTypeResolver = StaticServlet::getContentType;
 	private Function<HttpRequest, @Nullable String> pathMapper = HttpRequest::getRelativePath;
 	private Supplier<HttpResponse> responseSupplier = HttpResponse::ok200;
 	private final Set<String> indexResources = new LinkedHashSet<>();
 
 	private @Nullable String defaultResource;
 
-	private Servlet_Static(Reactor reactor, IStaticLoader resourceLoader) {
+	private StaticServlet(Reactor reactor, IStaticLoader resourceLoader) {
 		super(reactor);
 		this.resourceLoader = resourceLoader;
 	}
 
-	public static Servlet_Static create(Reactor reactor, IStaticLoader resourceLoader) {
+	public static StaticServlet create(Reactor reactor, IStaticLoader resourceLoader) {
 		return builder(reactor, resourceLoader).build();
 	}
 
-	public static Servlet_Static create(Reactor reactor, IStaticLoader resourceLoader, String page) {
+	public static StaticServlet create(Reactor reactor, IStaticLoader resourceLoader, String page) {
 		return builder(reactor, resourceLoader).withMappingTo(page).build();
 	}
 
-	public static Servlet_Static ofClassPath(Reactor reactor, Executor executor, String path) {
+	public static StaticServlet ofClassPath(Reactor reactor, Executor executor, String path) {
 		return builder(reactor, IStaticLoader.ofClassPath(reactor, executor, path)).build();
 	}
 
-	public static Servlet_Static ofPath(Reactor reactor, Executor executor, Path path) {
+	public static StaticServlet ofPath(Reactor reactor, Executor executor, Path path) {
 		return builder(reactor, IStaticLoader.ofPath(reactor, executor, path)).build();
 	}
 
 	public static Builder builder(Reactor reactor, IStaticLoader resourceLoader) {
-		return new Servlet_Static(reactor, resourceLoader).new Builder();
+		return new StaticServlet(reactor, resourceLoader).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Servlet_Static>{
+	public final class Builder extends AbstractBuilder<Builder, StaticServlet>{
 		private Builder() {}
 
 		@SuppressWarnings("UnusedReturnValue")
@@ -93,7 +93,7 @@ public final class Servlet_Static extends AbstractReactive
 
 		public Builder withContentTypeResolver(Function<String, ContentType> contentTypeResolver) {
 			checkNotBuilt(this);
-			Servlet_Static.this.contentTypeResolver = contentTypeResolver;
+			StaticServlet.this.contentTypeResolver = contentTypeResolver;
 			return this;
 		}
 
@@ -106,7 +106,7 @@ public final class Servlet_Static extends AbstractReactive
 		public Builder withMappingTo(String path) {
 			checkNotBuilt(this);
 			//noinspection RedundantCast - it does not compile without the cast
-			if (Servlet_Static.this.contentTypeResolver == (Function<String, ContentType>) Servlet_Static::getContentType) {
+			if (StaticServlet.this.contentTypeResolver == (Function<String, ContentType>) StaticServlet::getContentType) {
 				withContentType(getContentType(path));
 			}
 			return withMapping($ -> path);
@@ -114,31 +114,31 @@ public final class Servlet_Static extends AbstractReactive
 
 		public Builder withMappingNotFoundTo(String defaultResource) {
 			checkNotBuilt(this);
-			Servlet_Static.this.defaultResource = defaultResource;
+			StaticServlet.this.defaultResource = defaultResource;
 			return this;
 		}
 
 		public Builder withIndexResources(String... indexResources) {
 			checkNotBuilt(this);
-			Servlet_Static.this.indexResources.addAll(List.of(indexResources));
+			StaticServlet.this.indexResources.addAll(List.of(indexResources));
 			return this;
 		}
 
 		public Builder withIndexHtml() {
 			checkNotBuilt(this);
-			Servlet_Static.this.indexResources.add("index.html");
+			StaticServlet.this.indexResources.add("index.html");
 			return this;
 		}
 
 		public Builder withResponse(Supplier<HttpResponse> responseSupplier) {
 			checkNotBuilt(this);
-			Servlet_Static.this.responseSupplier = responseSupplier;
+			StaticServlet.this.responseSupplier = responseSupplier;
 			return this;
 		}
 
 		@Override
-		protected Servlet_Static doBuild() {
-			return Servlet_Static.this;
+		protected StaticServlet doBuild() {
+			return StaticServlet.this;
 		}
 	}
 

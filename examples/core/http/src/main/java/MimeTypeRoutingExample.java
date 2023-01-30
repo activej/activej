@@ -20,7 +20,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("Image") AsyncServlet imageServlet, @Named("Text") AsyncServlet textServlet) {
-		return Servlet_Routing.create(reactor)
+		return RoutingServlet.create(reactor)
 				.map(HttpMethod.POST, "/*", request -> {
 					String contentType = request.getHeader(HttpHeaders.CONTENT_TYPE);
 					if (contentType == null) {

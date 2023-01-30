@@ -17,7 +17,7 @@ public final class GzipCompressingBehaviourExample {
 				.withFatalErrorHandler(rethrow())
 				.withCurrentThread()
 				.build();
-		Servlet_Routing servlet = Servlet_Routing.create(eventloop)
+		RoutingServlet servlet = RoutingServlet.create(eventloop)
 				// always responds in gzip
 				.map(GET, "/gzip/",
 						request -> HttpResponse.ok200().withBodyGzipCompression().withBody(encodeAscii("Hello!")))

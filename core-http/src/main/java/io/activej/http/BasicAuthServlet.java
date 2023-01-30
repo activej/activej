@@ -42,7 +42,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Also the credentials are {@link HttpRequest#attach attached} to the request so that the private servlet
  * could then receive and use it.
  */
-public final class Servlet_BasicAuth extends AbstractReactive
+public final class BasicAuthServlet extends AbstractReactive
 		implements AsyncServlet {
 
 	public static final BiPredicate<String, String> SILLY = (login, pass) -> true;
@@ -59,7 +59,7 @@ public final class Servlet_BasicAuth extends AbstractReactive
 					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody("Authentication is required".getBytes(UTF_8));
 
-	private Servlet_BasicAuth(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+	private BasicAuthServlet(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
 		super(reactor);
 		this.next = next;
 		this.credentialsLookup = credentialsLookup;
@@ -67,26 +67,26 @@ public final class Servlet_BasicAuth extends AbstractReactive
 		challenge = PREFIX + "realm=\"" + realm + "\", charset=\"UTF-8\"";
 	}
 
-	public static Servlet_BasicAuth create(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+	public static BasicAuthServlet create(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
 		return builder(reactor, next, realm, credentialsLookup).build();
 	}
 
 	public static Builder builder(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
-		return new Servlet_BasicAuth(reactor, next, realm, credentialsLookup).new Builder();
+		return new BasicAuthServlet(reactor, next, realm, credentialsLookup).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Servlet_BasicAuth> {
+	public final class Builder extends AbstractBuilder<Builder, BasicAuthServlet> {
 		private Builder() {}
 
 		public Builder withFailureResponse(UnaryOperator<HttpResponse> failureResponse) {
 			checkNotBuilt(this);
-			Servlet_BasicAuth.this.failureResponse = failureResponse;
+			BasicAuthServlet.this.failureResponse = failureResponse;
 			return this;
 		}
 
 		@Override
-		protected Servlet_BasicAuth doBuild() {
-			return Servlet_BasicAuth.this;
+		protected BasicAuthServlet doBuild() {
+			return BasicAuthServlet.this;
 		}
 	}
 

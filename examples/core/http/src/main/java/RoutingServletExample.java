@@ -1,6 +1,6 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.Servlet_Routing;
+import io.activej.http.RoutingServlet;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -12,7 +12,7 @@ public final class RoutingServletExample extends HttpServerLauncher {
 	//[START REGION_1]
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
-		return Servlet_Routing.create(reactor)
+		return RoutingServlet.create(reactor)
 				//[START REGION_2]
 				.map(GET, "/", request ->
 						HttpResponse.ok200()

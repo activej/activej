@@ -46,7 +46,7 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static java.util.stream.Collectors.toList;
 
-public final class ReportingServiceServlet extends Servlet_WithStats {
+public final class ReportingServiceServlet extends ServletWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
 	private final ICube cube;
@@ -64,13 +64,13 @@ public final class ReportingServiceServlet extends Servlet_WithStats {
 		return builder(reactor, cube).build();
 	}
 
-	public static Servlet_Routing createRootServlet(Reactor reactor, ICube cube) {
+	public static RoutingServlet createRootServlet(Reactor reactor, ICube cube) {
 		return createRootServlet(
 				ReportingServiceServlet.create(reactor, cube));
 	}
 
-	public static Servlet_Routing createRootServlet(ReportingServiceServlet reportingServiceServlet) {
-		return Servlet_Routing.create(reportingServiceServlet.reactor)
+	public static RoutingServlet createRootServlet(ReportingServiceServlet reportingServiceServlet) {
+		return RoutingServlet.create(reportingServiceServlet.reactor)
 				.map(GET, "/", reportingServiceServlet);
 	}
 

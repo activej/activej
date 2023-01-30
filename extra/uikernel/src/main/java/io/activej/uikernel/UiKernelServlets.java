@@ -39,8 +39,8 @@ public class UiKernelServlets {
 
 	private static final String ID_PARAMETER_NAME = "id";
 
-	public static <K, R extends AbstractRecord<K>> Servlet_Routing apiServlet(Reactor reactor, IGridModel<K, R> model, Gson gson) {
-		return Servlet_Routing.create(reactor)
+	public static <K, R extends AbstractRecord<K>> RoutingServlet apiServlet(Reactor reactor, IGridModel<K, R> model, Gson gson) {
+		return RoutingServlet.create(reactor)
 				.map(POST, "/", create(model, gson))
 				.map(GET, "/", read(model, gson))
 				.map(PUT, "/", update(model, gson))
