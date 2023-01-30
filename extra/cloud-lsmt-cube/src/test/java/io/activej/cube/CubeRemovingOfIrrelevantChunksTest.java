@@ -15,7 +15,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
@@ -94,7 +94,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withAggregation(campaignBannerDateAggregation)
 				.build();
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(basicCube);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
@@ -152,7 +152,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
 				.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
 				.build();
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, OTState_Log.create(cube));
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cube));
 		await(stateManager.checkout());
 
 		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =

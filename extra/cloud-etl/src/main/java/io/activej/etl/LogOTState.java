@@ -25,17 +25,17 @@ import java.util.Map;
 import static io.activej.common.Checks.checkState;
 import static java.util.Collections.unmodifiableMap;
 
-public final class OTState_Log<D> implements OTState<LogDiff<D>> {
+public final class LogOTState<D> implements OTState<LogDiff<D>> {
 
 	private final Map<String, LogPosition> positions = new HashMap<>();
 	private final OTState<D> dataState;
 
-	private OTState_Log(OTState<D> dataState) {
+	private LogOTState(OTState<D> dataState) {
 		this.dataState = dataState;
 	}
 
-	public static <D> OTState_Log<D> create(OTState<D> dataState) {
-		return new OTState_Log<>(dataState);
+	public static <D> LogOTState<D> create(OTState<D> dataState) {
+		return new LogOTState<>(dataState);
 	}
 
 	public Map<String, LogPosition> getPositions() {

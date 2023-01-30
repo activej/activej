@@ -27,7 +27,7 @@ import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -83,7 +83,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C> create(Reactor reactor,
-			OTState_Log<CubeDiff> state,
+			LogOTState<CubeDiff> state,
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 			IAggregationChunkStorage<C> chunkStorage,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors) {
@@ -91,7 +91,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C>.Builder builder(Reactor reactor,
-			OTState_Log<CubeDiff> state,
+			LogOTState<CubeDiff> state,
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 			IAggregationChunkStorage<C> chunkStorage,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors) {

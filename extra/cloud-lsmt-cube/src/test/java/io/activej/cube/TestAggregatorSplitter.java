@@ -5,7 +5,7 @@ import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.bean.TestPubRequest.TestEnum;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.etl.LogDataConsumer_Splitter;
+import io.activej.etl.SplitterLogDataConsumer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +15,7 @@ import static io.activej.common.Utils.keysToMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 
-public class TestAggregatorSplitter extends LogDataConsumer_Splitter<TestPubRequest, CubeDiff> {
+public class TestAggregatorSplitter extends SplitterLogDataConsumer<TestPubRequest, CubeDiff> {
 	private final Cube cube;
 
 	public TestAggregatorSplitter(Cube cube) {

@@ -21,7 +21,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
@@ -87,7 +87,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		OTState_Log<CubeDiff> logState = OTState_Log.create(cube);
+		LogOTState<CubeDiff> logState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);

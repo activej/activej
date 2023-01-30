@@ -30,7 +30,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("unchecked")
-public abstract class LogDataConsumer_Splitter<T, D> extends ImplicitlyReactive
+public abstract class SplitterLogDataConsumer<T, D> extends ImplicitlyReactive
 		implements ILogDataConsumer<T, D> {
 
 	public final class Context {

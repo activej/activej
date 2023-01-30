@@ -59,7 +59,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	private final String log;
 	private final List<String> partitions;
 
-	private final OTState_Log<D> state;
+	private final LogOTState<D> state;
 
 	// JMX
 	private boolean enabled = true;
@@ -70,7 +70,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 
 	private LogOTProcessor(Reactor reactor,
 			IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer,
-			String log, List<String> partitions, OTState_Log<D> state) {
+			String log, List<String> partitions, LogOTState<D> state) {
 		super(reactor);
 		this.multilog = multilog;
 		this.logStreamConsumer = logStreamConsumer;
@@ -81,7 +81,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 
 	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, IMultilog<T> multilog,
 			ILogDataConsumer<T, D> logStreamConsumer,
-			String log, List<String> partitions, OTState_Log<D> state) {
+			String log, List<String> partitions, LogOTState<D> state) {
 		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);
 	}
 

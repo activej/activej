@@ -10,7 +10,7 @@ import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileSystem;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
@@ -88,7 +88,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.withAggregation(advertiserDateAggregation)
 				.build();
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(basicCube);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
 		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 		await(stateManager.checkout());
@@ -172,7 +172,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 		assertEquals(expectedChunks, basicCube.getAllChunks());
 
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, OTState_Log.create(cube));
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cube));
 		await(stateManager.checkout());
 
 		Set<Object> irrelevantChunks = cube.getIrrelevantChunks()

@@ -15,7 +15,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
@@ -64,7 +64,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);

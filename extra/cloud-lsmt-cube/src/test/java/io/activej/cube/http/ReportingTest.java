@@ -14,10 +14,10 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.LogDataConsumer_Splitter;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
+import io.activej.etl.SplitterLogDataConsumer;
 import io.activej.fs.FileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
@@ -213,7 +213,7 @@ public final class ReportingTest extends CubeTestBase {
 		}
 	}
 
-	public static class LogItemSplitter extends LogDataConsumer_Splitter<LogItem, CubeDiff> {
+	public static class LogItemSplitter extends SplitterLogDataConsumer<LogItem, CubeDiff> {
 		private final Cube cube;
 
 		public LogItemSplitter(Cube cube) {
@@ -285,7 +285,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());

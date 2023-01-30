@@ -13,7 +13,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
@@ -80,7 +80,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);

@@ -15,7 +15,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.OTState_Log;
+import io.activej.etl.LogOTState;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
@@ -109,7 +109,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor, multilog,
@@ -153,7 +153,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withRelation("banner", "campaign")
 				.build();
 
-		OTState_Log<CubeDiff> cubeDiffLogOTState1 = OTState_Log.create(cube);
+		LogOTState<CubeDiff> cubeDiffLogOTState1 = LogOTState.create(cube);
 		logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState1);
 
 		logOTProcessor = LogOTProcessor.create(reactor, multilog, cube.logStreamConsumer(LogItem.class),
@@ -241,7 +241,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
-			OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube1);
+			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
@@ -301,7 +301,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
 
-			OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube1);
+			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
