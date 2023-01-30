@@ -40,7 +40,7 @@ public class DefiningClassLoaderTest {
 				new Object[]{"File bytecode storage", (Supplier<DefiningClassLoader>) () -> {
 					try {
 						return DefiningClassLoader.builder()
-								.withBytecodeStorage(BytecodeStorage_File.create(temporaryFolder.newFolder().toPath()))
+								.withBytecodeStorage(FileBytecodeStorage.create(temporaryFolder.newFolder().toPath()))
 								.build();
 					} catch (IOException e) {
 						throw new RuntimeException(e);

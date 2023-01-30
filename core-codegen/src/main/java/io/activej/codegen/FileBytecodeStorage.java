@@ -23,12 +23,12 @@ import java.util.Optional;
 /**
  * A bytecode storage that uses file system to save/load bytecode
  */
-public final class BytecodeStorage_File extends AbstractBytecodeStorage {
+public final class FileBytecodeStorage extends AbstractBytecodeStorage {
 	private static final String CLASS_FILE_EXTENSION = ".class";
 
 	private final Path storageDir;
 
-	private BytecodeStorage_File(Path storageDir) {
+	private FileBytecodeStorage(Path storageDir) {
 		this.storageDir = storageDir;
 	}
 
@@ -38,8 +38,8 @@ public final class BytecodeStorage_File extends AbstractBytecodeStorage {
 	 * @param storageDir a directory to load/store bytecode
 	 * @return a new instance of a {@code FileBytecodeStorage}
 	 */
-	public static BytecodeStorage_File create(Path storageDir) {
-		return new BytecodeStorage_File(storageDir);
+	public static FileBytecodeStorage create(Path storageDir) {
+		return new FileBytecodeStorage(storageDir);
 	}
 
 	@Override
