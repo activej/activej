@@ -1,11 +1,11 @@
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.dns.IDnsClient;
 import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.IHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
+import io.activej.http.IHttpClient;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;

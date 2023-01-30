@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.cube.http;
 
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
+import io.activej.aggregation.predicate.*;
 import io.activej.aggregation.util.JsonCodec;
 
 import java.io.IOException;
@@ -30,7 +31,7 @@ import java.util.regex.PatternSyntaxException;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.aggregation.util.Utils.getJsonCodec;
+import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("rawtypes")
 public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {

@@ -27,16 +27,16 @@ public final class PredicateDef_In implements PredicateDef {
 	private final String key;
 	private final SortedSet<Object> values;
 
-	PredicateDef_In(String key, SortedSet<Object> values) {
+	public PredicateDef_In(String key, SortedSet<Object> values) {
 		this.key = key;
 		this.values = values;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	SortedSet<Object> getValues() {
+	public SortedSet<Object> getValues() {
 		return values;
 	}
 

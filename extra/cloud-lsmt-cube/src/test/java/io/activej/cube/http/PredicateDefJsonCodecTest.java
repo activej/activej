@@ -1,5 +1,6 @@
-package io.activej.aggregation.predicate;
+package io.activej.cube.http;
 
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
@@ -7,8 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.aggregation.util.Utils.fromJson;
-import static io.activej.aggregation.util.Utils.toJson;
+import static io.activej.cube.Utils.fromJson;
+import static io.activej.cube.Utils.toJson;
 
 public class PredicateDefJsonCodecTest {
 	private static final PredicateDefJsonCodec CODEC = PredicateDefJsonCodec.create(

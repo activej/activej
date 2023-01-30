@@ -31,11 +31,11 @@ import static io.activej.common.Utils.first;
 public final class PredicateDef_And implements PredicateDef {
 	private final List<PredicateDef> predicates;
 
-	PredicateDef_And(List<PredicateDef> predicates) {
+	public PredicateDef_And(List<PredicateDef> predicates) {
 		this.predicates = predicates;
 	}
 
-	List<PredicateDef> getPredicates() {
+	public List<PredicateDef> getPredicates() {
 		return predicates;
 	}
 

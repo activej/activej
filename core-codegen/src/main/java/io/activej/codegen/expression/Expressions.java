@@ -18,6 +18,7 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.operation.ArithmeticOperation;
 import io.activej.codegen.operation.CompareOperation;
+import io.activej.common.builder.Builder;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
@@ -937,5 +938,41 @@ public class Expressions {
 
 	public static Expression rightProperty(Class<?> type, String property) {
 		return property(cast(arg(1), type), property);
+	}
+
+	public interface ExpressionCompareBuilder extends Builder<Expression> {
+		ExpressionCompareBuilder with(Expression left, Expression right);
+
+		ExpressionCompareBuilder with(Expression left, Expression right, boolean nullable);
+	}
+
+	public interface ExpressionHashCodeBuilder extends Builder<Expression> {
+		ExpressionHashCodeBuilder with(Expression expression);
+
+		ExpressionHashCodeBuilder withField(String field);
+
+		ExpressionHashCodeBuilder withFields(List<String> fields);
+
+		ExpressionHashCodeBuilder withFields(String... fields);
+	}
+
+	public interface ExpressionToStringBuilder extends Builder<Expression> {
+		ExpressionToStringBuilder withBeginTag(String begin);
+
+		ExpressionToStringBuilder withEndTag(String end);
+
+		ExpressionToStringBuilder withNameSeparator(String nameSeparator);
+
+		ExpressionToStringBuilder withValueSeparator(String valueSeparator);
+
+		ExpressionToStringBuilder with(String label, Expression expression);
+
+		ExpressionToStringBuilder with(Expression expression);
+
+		ExpressionToStringBuilder withField(String field);
+
+		ExpressionToStringBuilder withFields(List<String> fields);
+
+		ExpressionToStringBuilder withFields(String... fields);
 	}
 }

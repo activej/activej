@@ -16,7 +16,6 @@
 
 package io.activej.cube.http;
 
-import io.activej.aggregation.predicate.PredicateDefJsonCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
@@ -35,10 +34,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static io.activej.aggregation.util.Utils.fromJson;
-import static io.activej.aggregation.util.Utils.toJsonBuf;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.not;
+import static io.activej.cube.Utils.fromJson;
+import static io.activej.cube.Utils.toJsonBuf;
 import static io.activej.cube.http.Utils.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;

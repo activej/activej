@@ -1,9 +1,9 @@
 import io.activej.eventloop.Eventloop;
+import io.activej.http.HttpClient;
+import io.activej.http.HttpRequest;
 import io.activej.http.IWebSocket;
 import io.activej.http.IWebSocket.Message;
 import io.activej.http.IWebSocketClient;
-import io.activej.http.HttpClient;
-import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;

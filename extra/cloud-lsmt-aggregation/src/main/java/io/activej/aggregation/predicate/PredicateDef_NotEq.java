@@ -34,16 +34,16 @@ public final class PredicateDef_NotEq implements PredicateDef {
 	private final String key;
 	private final Object value;
 
-	PredicateDef_NotEq(String key, Object value) {
+	public PredicateDef_NotEq(String key, Object value) {
 		this.key = key;
 		this.value = value;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	Object getValue() {
+	public Object getValue() {
 		return value;
 	}
 

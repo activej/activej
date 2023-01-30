@@ -1,8 +1,8 @@
 package io.activej.http;
 
 import io.activej.common.StringFormatUtils;
-import io.activej.dns.IDnsClient;
 import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;

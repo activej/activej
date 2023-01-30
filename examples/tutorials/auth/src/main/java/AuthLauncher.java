@@ -1,8 +1,8 @@
 import io.activej.http.*;
 import io.activej.http.loader.IStaticLoader;
 import io.activej.http.session.ISessionStore;
-import io.activej.http.session.SessionServlet;
 import io.activej.http.session.InMemorySessionStore;
+import io.activej.http.session.SessionServlet;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;

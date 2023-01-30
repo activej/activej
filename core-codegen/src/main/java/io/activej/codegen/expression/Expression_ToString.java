@@ -17,8 +17,8 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.codegen.expression.Expressions.ExpressionToStringBuilder;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.common.builder.Builder;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -40,28 +40,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow to create a string
  */
-
-public interface ExpressionToStringBuilder extends Builder<Expression> {
-	ExpressionToStringBuilder withBeginTag(String begin);
-
-	ExpressionToStringBuilder withEndTag(String end);
-
-	ExpressionToStringBuilder withNameSeparator(String nameSeparator);
-
-	ExpressionToStringBuilder withValueSeparator(String valueSeparator);
-
-	ExpressionToStringBuilder with(String label, Expression expression);
-
-	ExpressionToStringBuilder with(Expression expression);
-
-	ExpressionToStringBuilder withField(String field);
-
-	ExpressionToStringBuilder withFields(List<String> fields);
-
-	ExpressionToStringBuilder withFields(String... fields);
-}
-
-final class Expression_ToString implements Expression {
+public final class Expression_ToString implements Expression {
 	private String begin = "{";
 	private String end = "}";
 	private @Nullable String nameSeparator = ": ";
@@ -77,7 +56,7 @@ final class Expression_ToString implements Expression {
 
 	public final class Builder extends AbstractBuilder<Builder, Expression>
 			implements ExpressionToStringBuilder {
-		Builder() {}
+		private Builder() {}
 
 		@Override
 		public Builder withBeginTag(String begin) {

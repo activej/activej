@@ -33,21 +33,21 @@ public final class PredicateDef_Between implements PredicateDef {
 	private final Comparable<Object> from;
 	private final Comparable<Object> to;
 
-	PredicateDef_Between(String key, Comparable<Object> from, Comparable<Object> to) {
+	public PredicateDef_Between(String key, Comparable<Object> from, Comparable<Object> to) {
 		this.key = key;
 		this.from = from;
 		this.to = to;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	Comparable<Object> getFrom() {
+	public Comparable<Object> getFrom() {
 		return from;
 	}
 
-	Comparable<Object> getTo() {
+	public Comparable<Object> getTo() {
 		return to;
 	}
 

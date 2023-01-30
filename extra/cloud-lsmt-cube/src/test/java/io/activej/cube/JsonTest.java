@@ -1,11 +1,11 @@
-package io.activej.aggregation;
+package io.activej.cube;
 
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.StringConverter;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
-import static io.activej.aggregation.util.Utils.fromJson;
+import static io.activej.cube.Utils.fromJson;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 

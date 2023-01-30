@@ -3,8 +3,8 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.crdt.storage.cluster.PartitionId;
-import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;

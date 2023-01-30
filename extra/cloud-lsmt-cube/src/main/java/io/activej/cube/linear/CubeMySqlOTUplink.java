@@ -50,11 +50,11 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.LongStream;
 
-import static io.activej.aggregation.util.Utils.fromJson;
-import static io.activej.aggregation.util.Utils.toJson;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
+import static io.activej.cube.Utils.fromJson;
+import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.linear.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;

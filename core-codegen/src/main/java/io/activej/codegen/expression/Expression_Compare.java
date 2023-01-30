@@ -17,8 +17,8 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.codegen.expression.Expressions.ExpressionCompareBuilder;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.common.builder.Builder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -36,14 +36,7 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 /**
  * Defines methods to compare some fields
  */
-
-public interface ExpressionCompareBuilder extends Builder<Expression> {
-	ExpressionCompareBuilder with(Expression left, Expression right);
-
-	ExpressionCompareBuilder with(Expression left, Expression right, boolean nullable);
-}
-
-final class Expression_Compare implements Expression {
+public final class Expression_Compare implements Expression {
 	private final List<Pair> pairs = new ArrayList<>();
 
 	public record Pair(Expression left, Expression right, boolean nullable) {}
@@ -57,7 +50,7 @@ final class Expression_Compare implements Expression {
 
 	public final class Builder extends AbstractBuilder<Builder, Expression>
 			implements ExpressionCompareBuilder {
-		Builder() {}
+		private Builder() {}
 
 		@Override
 		public Builder with(Expression left, Expression right) {

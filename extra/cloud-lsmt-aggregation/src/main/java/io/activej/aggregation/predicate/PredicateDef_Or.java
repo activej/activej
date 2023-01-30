@@ -27,11 +27,11 @@ import static io.activej.common.Utils.first;
 public final class PredicateDef_Or implements PredicateDef {
 	private final List<PredicateDef> predicates;
 
-	PredicateDef_Or(List<PredicateDef> predicates) {
+	public PredicateDef_Or(List<PredicateDef> predicates) {
 		this.predicates = predicates;
 	}
 
-	List<PredicateDef> getPredicates() {
+	public List<PredicateDef> getPredicates() {
 		return predicates;
 	}
 

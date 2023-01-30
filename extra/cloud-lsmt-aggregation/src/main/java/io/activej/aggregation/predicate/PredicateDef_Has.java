@@ -30,11 +30,11 @@ import static io.activej.codegen.expression.Expressions.value;
 public final class PredicateDef_Has implements PredicateDef {
 	private final String key;
 
-	PredicateDef_Has(String key) {
+	public PredicateDef_Has(String key) {
 		this.key = key;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 

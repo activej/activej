@@ -1,8 +1,8 @@
 package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowSqlValidator;
 import io.activej.dataflow.calcite.RelToDatasetConverter;

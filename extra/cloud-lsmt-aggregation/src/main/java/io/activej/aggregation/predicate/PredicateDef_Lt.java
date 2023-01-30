@@ -32,16 +32,16 @@ public final class PredicateDef_Lt implements PredicateDef {
 	private final String key;
 	private final Comparable<Object> value;
 
-	PredicateDef_Lt(String key, Comparable<Object> value) {
+	public PredicateDef_Lt(String key, Comparable<Object> value) {
 		this.key = key;
 		this.value = value;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	Comparable<Object> getValue() {
+	public Comparable<Object> getValue() {
 		return value;
 	}
 

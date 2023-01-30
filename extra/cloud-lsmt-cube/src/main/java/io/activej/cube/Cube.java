@@ -31,7 +31,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.ExpressionCompareBuilder;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.builder.AbstractBuilder;

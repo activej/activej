@@ -16,11 +16,6 @@
 
 package io.activej.aggregation.util;
 
-import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.ParsingException;
-import com.dslplatform.json.runtime.Settings;
 import io.activej.aggregation.Aggregate;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.annotation.Key;
@@ -28,21 +23,16 @@ import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.impl.SerializerDef_Class;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -53,7 +43,6 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.common.reflection.ReflectionUtils.extractFieldNameFromGetter;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class Utils {
@@ -346,63 +335,5 @@ public class Utils {
 
 	public static <C> Set<C> collectChunkIds(Collection<AggregationChunk> chunks) {
 		return (Set<C>) chunks.stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet());
-	}
-
-
-	public static final DslJson<?> CUBE_DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
-	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newWriter);
-	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newReader);
-
-	@SuppressWarnings("unchecked")
-	public static JsonCodec<Object> getJsonCodec(Type type) {
-		JsonReader.ReadObject<Object> readObject = (JsonReader.ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
-		if (readObject == null) {
-			throw new IllegalArgumentException("Cannot serialize " + type);
-		}
-		JsonWriter.WriteObject<Object> writeObject = (JsonWriter.WriteObject<Object>) CUBE_DSL_JSON.tryFindWriter(type);
-		if (writeObject == null) {
-			throw new IllegalArgumentException("Cannot deserialize " + type);
-		}
-		return JsonCodec.of(readObject, writeObject);
-	}
-
-	public static <T> String toJson(JsonWriter.WriteObject<T> writeObject, @Nullable T object) {
-		return toJsonWriter(writeObject, object).toString();
-	}
-
-	public static <T> ByteBuf toJsonBuf(JsonWriter.WriteObject<T> writeObject, @Nullable T object) {
-		return ByteBuf.wrapForReading(toJsonWriter(writeObject, object).toByteArray());
-	}
-
-	private static <T> JsonWriter toJsonWriter(JsonWriter.WriteObject<T> writeObject, @Nullable T object) {
-		JsonWriter jsonWriter = WRITERS.get();
-		jsonWriter.reset();
-		writeObject.write(jsonWriter, object);
-		return jsonWriter;
-	}
-
-	public static <T> T fromJson(JsonReader.ReadObject<T> readObject, ByteBuf jsonBuf) throws MalformedDataException {
-		return fromJson(readObject, jsonBuf.getArray());
-	}
-
-	public static <T> T fromJson(JsonReader.ReadObject<T> readObject, String json) throws MalformedDataException {
-		return fromJson(readObject, json.getBytes(UTF_8));
-	}
-
-	private static <T> T fromJson(JsonReader.ReadObject<T> readObject, byte[] bytes) throws MalformedDataException {
-		JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
-		try {
-			jsonReader.getNextToken();
-			T deserialized = readObject.read(jsonReader);
-			if (jsonReader.length() != jsonReader.getCurrentIndex()) {
-				String unexpectedData = jsonReader.toString().substring(jsonReader.getCurrentIndex());
-				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
-			}
-			return deserialized;
-		} catch (ParsingException e) {
-			throw new MalformedDataException(e);
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
 	}
 }

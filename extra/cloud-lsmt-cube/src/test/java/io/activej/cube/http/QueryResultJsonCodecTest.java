@@ -10,9 +10,9 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.aggregation.util.Utils.fromJson;
-import static io.activej.aggregation.util.Utils.toJson;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
+import static io.activej.cube.Utils.fromJson;
+import static io.activej.cube.Utils.toJson;
 import static org.junit.Assert.assertEquals;
 
 public class QueryResultJsonCodecTest {

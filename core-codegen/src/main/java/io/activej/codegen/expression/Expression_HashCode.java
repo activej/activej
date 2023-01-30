@@ -17,8 +17,8 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.codegen.expression.Expressions.ExpressionHashCodeBuilder;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.common.builder.Builder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -38,18 +38,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods for hashing some fields
  */
-
-public interface ExpressionHashCodeBuilder extends Builder<Expression> {
-	ExpressionHashCodeBuilder with(Expression expression);
-
-	ExpressionHashCodeBuilder withField(String field);
-
-	ExpressionHashCodeBuilder withFields(List<String> fields);
-
-	ExpressionHashCodeBuilder withFields(String... fields);
-}
-
-final class Expression_HashCode implements Expression {
+public final class Expression_HashCode implements Expression {
 	private final List<Expression> arguments = new ArrayList<>();
 
 	private Expression_HashCode() {
@@ -61,7 +50,7 @@ final class Expression_HashCode implements Expression {
 
 	public final class Builder extends AbstractBuilder<Builder, Expression>
 			implements ExpressionHashCodeBuilder {
-		Builder() {}
+		private Builder() {}
 
 		@Override
 		public Builder with(Expression expression) {

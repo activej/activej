@@ -32,20 +32,20 @@ public final class PredicateDef_RegExp implements PredicateDef {
 	private final String key;
 	private final Pattern regexp;
 
-	PredicateDef_RegExp(String key, Pattern regexp) {
+	public PredicateDef_RegExp(String key, Pattern regexp) {
 		this.key = key;
 		this.regexp = regexp;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	String getRegexp() {
+	public String getRegexp() {
 		return regexp.pattern();
 	}
 
-	Pattern getRegexpPattern() {
+	public Pattern getRegexpPattern() {
 		return regexp;
 	}
 

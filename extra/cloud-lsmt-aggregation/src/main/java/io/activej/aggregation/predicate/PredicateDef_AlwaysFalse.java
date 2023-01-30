@@ -27,9 +27,6 @@ import static io.activej.codegen.expression.Expressions.value;
 public final class PredicateDef_AlwaysFalse implements PredicateDef {
 	static final PredicateDef_AlwaysFalse instance = new PredicateDef_AlwaysFalse();
 
-	private PredicateDef_AlwaysFalse() {
-	}
-
 	@Override
 	public PredicateDef simplify() {
 		return this;

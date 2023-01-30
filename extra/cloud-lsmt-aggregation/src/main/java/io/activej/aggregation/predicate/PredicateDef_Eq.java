@@ -35,16 +35,16 @@ public final class PredicateDef_Eq implements PredicateDef {
 	private final String key;
 	private final Object value;
 
-	PredicateDef_Eq(String key, Object value) {
+	public PredicateDef_Eq(String key, Object value) {
 		this.key = key;
 		this.value = value;
 	}
 
-	String getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	Object getValue() {
+	public Object getValue() {
 		return value;
 	}
 

@@ -1,9 +1,9 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.service.TaskScheduler;
-import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
 import io.activej.fs.tcp.FileSystem_Remote;
 import io.activej.net.AbstractReactiveServer;

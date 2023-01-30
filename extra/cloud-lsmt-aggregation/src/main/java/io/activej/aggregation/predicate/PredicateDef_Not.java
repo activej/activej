@@ -27,11 +27,11 @@ import static io.activej.codegen.expression.Expressions.not;
 public final class PredicateDef_Not implements PredicateDef {
 	private final PredicateDef predicate;
 
-	PredicateDef_Not(PredicateDef predicate) {
+	public PredicateDef_Not(PredicateDef predicate) {
 		this.predicate = predicate;
 	}
 
-	PredicateDef getPredicate() {
+	public PredicateDef getPredicate() {
 		return predicate;
 	}
 
