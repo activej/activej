@@ -27,11 +27,11 @@ import java.util.concurrent.Executor;
 import static io.activej.promise.Promise.ofBlocking;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class FileService_Executor extends AbstractReactive
+public final class ExecutorFileService extends AbstractReactive
 		implements IFileService {
 	private final Executor executor;
 
-	public FileService_Executor(Reactor reactor, Executor executor) {
+	public ExecutorFileService(Reactor reactor, Executor executor) {
 		super(reactor);
 		this.executor = executor;
 	}

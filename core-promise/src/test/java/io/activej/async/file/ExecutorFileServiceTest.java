@@ -22,11 +22,11 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public final class FileService_Executor_Test {
+public final class ExecutorFileServiceTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private final FileService_Executor service = new FileService_Executor(Reactor.getCurrentReactor(), Executors.newCachedThreadPool());
+	private final ExecutorFileService service = new ExecutorFileService(Reactor.getCurrentReactor(), Executors.newCachedThreadPool());
 
 	static {
 		System.setProperty("AsyncFileService.aio", "false");

@@ -17,8 +17,8 @@
 package io.activej.csp.file;
 
 import io.activej.async.exception.AsyncCloseException;
+import io.activej.async.file.ExecutorFileService;
 import io.activej.async.file.IFileService;
-import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
@@ -89,7 +89,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	}
 
 	public static Builder builder(Reactor reactor, Executor executor, FileChannel channel) {
-		return builder(new FileService_Executor(reactor, executor), channel);
+		return builder(new ExecutorFileService(reactor, executor), channel);
 	}
 
 	public static Builder builder(IFileService fileService, FileChannel channel) {

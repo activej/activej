@@ -1,5 +1,5 @@
+import io.activej.async.file.ExecutorFileService;
 import io.activej.async.file.IFileService;
-import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
@@ -24,7 +24,7 @@ public final class AsyncFileServiceExample {
 			.withCurrentThread()
 			.build();
 	private static final ExecutorService EXECUTOR_SERVICE = newCachedThreadPool();
-	private static final IFileService FILE_SERVICE = new FileService_Executor(EVENTLOOP, EXECUTOR_SERVICE);
+	private static final IFileService FILE_SERVICE = new ExecutorFileService(EVENTLOOP, EXECUTOR_SERVICE);
 	private static final Path PATH;
 
 	static {
