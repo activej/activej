@@ -1,7 +1,6 @@
 package module;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowTable;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.AbstractModule;
@@ -18,7 +17,7 @@ public class MultilogDataflowSchemaModule extends AbstractModule {
 	}
 
 	@ProvidesIntoSet
-	AbstractDataflowTable<LogItem> logItemTable(DefiningClassLoader classLoader) {
+	DataflowTable<LogItem> logItemTable(DefiningClassLoader classLoader) {
 		return DataflowTable.builder(classLoader, LOG_ITEM_TABLE_NAME, LogItem.class)
 				.withColumn("date", int.class, logItem -> logItem.date)
 				.withColumn("advertiser", int.class, logItem -> logItem.advertiser)
