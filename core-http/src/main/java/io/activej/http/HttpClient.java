@@ -61,7 +61,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
-import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
+import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;

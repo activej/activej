@@ -65,7 +65,7 @@ import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
-import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
+import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
 import static java.util.stream.Collectors.toList;

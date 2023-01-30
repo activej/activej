@@ -47,8 +47,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
+import static io.activej.net.socket.tcp.SslTcpSocket.wrapServerSocket;
 import static io.activej.net.socket.tcp.TcpSocket.wrapChannel;
-import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapServerSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;

@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
+import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**

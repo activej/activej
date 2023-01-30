@@ -25,7 +25,7 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpServer.Inspector;
 import io.activej.net.socket.tcp.ITcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Ssl;
+import io.activej.net.socket.tcp.SslTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
@@ -346,7 +346,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (IWebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
-			request.setProtocol(socket instanceof TcpSocket_Ssl ? HTTPS : HTTP);
+			request.setProtocol(socket instanceof SslTcpSocket ? HTTPS : HTTP);
 		}
 		request.setRemoteAddress(remoteAddress);
 
@@ -412,7 +412,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = sanitize(concat(ofReadBufSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
-			request.setProtocol(socket instanceof TcpSocket_Ssl ? WSS : WS);
+			request.setProtocol(socket instanceof SslTcpSocket ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;
 			return true;
 		} else {
