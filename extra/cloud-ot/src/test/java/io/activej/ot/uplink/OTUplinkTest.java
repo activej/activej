@@ -4,9 +4,9 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.ot.utils.OTGraphBuilder;
-import io.activej.ot.utils.OTRepository_Stub;
-import io.activej.ot.utils.OTState_TestOp;
+import io.activej.ot.utils.StubOTRepository;
 import io.activej.ot.utils.TestOp;
+import io.activej.ot.utils.TestOpOTState;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
@@ -28,12 +28,12 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public class OTUplinkTest {
-	private static final OTState_TestOp state = new OTState_TestOp();
+	private static final TestOpOTState state = new TestOpOTState();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private final OTRepository_Stub<Integer, TestOp> REPOSITORY = OTRepository_Stub.create();
+	private final StubOTRepository<Integer, TestOp> REPOSITORY = StubOTRepository.create();
 
 	private AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 

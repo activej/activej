@@ -8,9 +8,9 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
+import io.activej.ot.utils.TestOpOTState;
 import io.activej.ot.utils.TestSet;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
@@ -39,13 +39,13 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 @Ignore
-public class OTRepository_MySql_Test {
+public class MySqlOTRepositoryTest {
 	private static final OTSystem<TestOp> SYSTEM = createTestOp();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private OTRepository_MySql<TestOp> repository;
+	private MySqlOTRepository<TestOp> repository;
 	private RefLong id = new RefLong(0);
 
 	static {
@@ -55,7 +55,7 @@ public class OTRepository_MySql_Test {
 
 	@Before
 	public void before() throws IOException, SQLException {
-		repository = OTRepository_MySql.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
+		repository = MySqlOTRepository.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
 				AsyncSupplier.of(id::inc),
 				createTestOp(), TestOp.class);
 		repository.initialize();
@@ -68,7 +68,7 @@ public class OTRepository_MySql_Test {
 	}
 
 	private static int apply(List<TestOp> testOps) {
-		OTState_TestOp testOpState = new OTState_TestOp();
+		TestOpOTState testOpState = new TestOpOTState();
 		testOps.forEach(testOpState::apply);
 		return testOpState.getValue();
 	}

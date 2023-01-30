@@ -2,7 +2,7 @@ package io.activej.ot;
 
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.utils.OTGraphBuilder;
-import io.activej.ot.utils.OTRepository_Stub;
+import io.activej.ot.utils.StubOTRepository;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.Utils;
 import io.activej.test.rules.EventloopRule;
@@ -68,7 +68,7 @@ public class OTMergeAlgorithmTest {
 	}
 
 	private void doTestLoadAndMerge(Set<String> heads, Consumer<OTGraphBuilder<String, TestOp>> graphBuilder, TestAcceptor testAcceptor) throws Exception {
-		OTRepository_Stub<String, TestOp> repository = OTRepository_Stub.create();
+		StubOTRepository<String, TestOp> repository = StubOTRepository.create();
 		repository.setGraph(graphBuilder);
 
 		OTLoadedGraph<String, TestOp> graph = await(loadForMerge(repository, system, heads));

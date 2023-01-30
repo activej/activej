@@ -2,7 +2,7 @@ package io.activej.ot.utils;
 
 import io.activej.ot.OTState;
 
-public class OTState_TestOp implements OTState<TestOp> {
+public class TestOpOTState implements OTState<TestOp> {
 	private int value;
 
 	@Override

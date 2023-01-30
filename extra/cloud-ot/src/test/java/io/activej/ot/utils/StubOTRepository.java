@@ -16,7 +16,7 @@ import static io.activej.common.Utils.not;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
+public final class StubOTRepository<K, D> extends ImplicitlyReactive
 		implements AsyncOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
 	private AsyncOTCommitFactory<K, D> commitFactory;
@@ -25,24 +25,24 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 	public final Set<K> heads = new HashSet<>();
 	public final Map<K, List<D>> snapshots = new LinkedHashMap<>();
 
-	private OTRepository_Stub(Supplier<K> revisionIdSupplier) {
+	private StubOTRepository(Supplier<K> revisionIdSupplier) {
 		this.revisionIdSupplier = revisionIdSupplier;
 	}
 
-	public static <K, D> OTRepository_Stub<K, D> create() {
-		return new OTRepository_Stub<>(null);
+	public static <K, D> StubOTRepository<K, D> create() {
+		return new StubOTRepository<>(null);
 	}
 
-	public static <K, D> OTRepository_Stub<K, D> create(Stream<K> newIds) {
+	public static <K, D> StubOTRepository<K, D> create(Stream<K> newIds) {
 		return create(newIds.iterator());
 	}
 
-	public static <K, D> OTRepository_Stub<K, D> create(Iterable<K> newIds) {
+	public static <K, D> StubOTRepository<K, D> create(Iterable<K> newIds) {
 		return create(newIds.iterator());
 	}
 
-	public static <K, D> OTRepository_Stub<K, D> create(Iterator<K> newIds) {
-		return new OTRepository_Stub<>(newIds::next);
+	public static <K, D> StubOTRepository<K, D> create(Iterator<K> newIds) {
+		return new StubOTRepository<>(newIds::next);
 	}
 
 	public void setCommitFactory(AsyncOTCommitFactory<K, D> commitFactory) {

@@ -62,7 +62,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public final class OTRepository_MySql<D> extends AbstractReactive
+public final class MySqlOTRepository<D> extends AbstractReactive
 		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
@@ -97,7 +97,7 @@ public final class OTRepository_MySql<D> extends AbstractReactive
 	private final PromiseStats promiseLoadSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	private OTRepository_MySql(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	private MySqlOTRepository(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		super(reactor);
 		this.executor = executor;
@@ -108,77 +108,77 @@ public final class OTRepository_MySql<D> extends AbstractReactive
 		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
 	}
 
-	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).build();
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, F format) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format).build();
 	}
 
-	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT).build();
 	}
 
-	public static <D> OTRepository_MySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Class<? extends D> diffClass) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, diffClass).build();
 	}
 
-	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
-		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
+		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, F format) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format);
 	}
 
-	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
 	}
 
-	public static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Class<? extends D> diffClass) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <D> OTRepository_MySql<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	private static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Type diffType) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
 		if (decoder == null || encoder == null) {
 			throw new IllegalArgumentException("Unknown type: " + diffType);
 		}
-		return new OTRepository_MySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
+		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, OTRepository_MySql<D>> {
+	public final class Builder extends AbstractBuilder<Builder, MySqlOTRepository<D>> {
 		private Builder() {}
 
 		public Builder withCreatedBy(String createdBy) {
 			checkNotBuilt(this);
-			OTRepository_MySql.this.createdBy = createdBy;
+			MySqlOTRepository.this.createdBy = createdBy;
 			return this;
 		}
 
 		public Builder withCustomTableNames(String tableRevision, String tableDiffs, @Nullable String tableBackup) {
 			checkNotBuilt(this);
-			OTRepository_MySql.this.tableRevision = tableRevision;
-			OTRepository_MySql.this.tableDiffs = tableDiffs;
-			OTRepository_MySql.this.tableBackup = tableBackup;
+			MySqlOTRepository.this.tableRevision = tableRevision;
+			MySqlOTRepository.this.tableDiffs = tableDiffs;
+			MySqlOTRepository.this.tableBackup = tableBackup;
 			return this;
 		}
 
 		@Override
-		protected OTRepository_MySql<D> doBuild() {
-			return OTRepository_MySql.this;
+		protected MySqlOTRepository<D> doBuild() {
+			return MySqlOTRepository.this;
 		}
 	}
 

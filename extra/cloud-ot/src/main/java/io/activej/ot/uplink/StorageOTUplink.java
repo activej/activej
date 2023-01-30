@@ -18,7 +18,7 @@ package io.activej.ot.uplink;
 
 import io.activej.ot.TransformResult;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplink_Storage.AsyncStorage.SyncData;
+import io.activej.ot.uplink.StorageOTUplink.AsyncStorage.SyncData;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -36,8 +36,8 @@ import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("WeakerAccess")
-public final class OTUplink_Storage<K, D> extends AbstractReactive
-		implements AsyncOTUplink<Long, D, OTUplink_Storage.ProtoCommit<D>> {
+public final class StorageOTUplink<K, D> extends AbstractReactive
+		implements AsyncOTUplink<Long, D, StorageOTUplink.ProtoCommit<D>> {
 
 	public static final long FIRST_COMMIT_ID = 1L;
 	public static final int NO_LEVEL = 0;
@@ -145,7 +145,7 @@ public final class OTUplink_Storage<K, D> extends AbstractReactive
 	private final OTSystem<D> otSystem;
 	private final AsyncOTUplink<K, D, Object> uplink;
 
-	private OTUplink_Storage(Reactor reactor, AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
+	private StorageOTUplink(Reactor reactor, AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
 		super(reactor);
 		this.otSystem = otSystem;
 		this.storage = storage;

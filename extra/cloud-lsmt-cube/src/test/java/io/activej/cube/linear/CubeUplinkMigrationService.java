@@ -8,8 +8,8 @@ import io.activej.common.Utils;
 import io.activej.cube.Cube;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeOT;
 import io.activej.cube.ot.CubeDiffJsonCodec;
+import io.activej.cube.ot.CubeOT;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
@@ -18,7 +18,7 @@ import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTAlgorithms;
 import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.repository.OTRepository_MySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
@@ -113,7 +113,7 @@ final class CubeUplinkMigrationService {
 	private AsyncOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
 		LogDiffCodec<CubeDiff> codec = LogDiffCodec.create(CubeDiffJsonCodec.create(cube));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
-		return OTRepository_MySql.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
+		return MySqlOTRepository.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
 	}
 
 	private CubeMySqlOTUplink createUplink(DataSource dataSource) {

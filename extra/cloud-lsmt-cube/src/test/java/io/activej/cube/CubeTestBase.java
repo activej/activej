@@ -3,19 +3,19 @@ package io.activej.cube;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.linear.CubeMySqlOTUplink;
+import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.linear.PrimaryKeyCodecs;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
-import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.repository.OTRepository_MySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.ot.uplink.OTUplink;
@@ -95,14 +95,14 @@ public abstract class CubeTestBase {
 							@Override
 							public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
 								Reactor reactor = cube.getReactor();
-								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = OTRepository_MySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
+								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
 								return OTUplink.create(reactor, repository, LOG_OT);
 							}
 
 							@Override
 							public void initialize(OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink) {
-								noFail(() -> initializeRepository((OTRepository_MySql<LogDiff<CubeDiff>>) uplink.getRepository()));
+								noFail(() -> initializeRepository((MySqlOTRepository<LogDiff<CubeDiff>>) uplink.getRepository()));
 							}
 						}},
 

@@ -9,7 +9,7 @@ import io.activej.etl.LogOTProcessor;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTState;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepository_MySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
 
@@ -28,7 +28,7 @@ public final class TestUtils {
 		});
 	}
 
-	public static void initializeRepository(OTRepository_MySql<LogDiff<CubeDiff>> repository) {
+	public static void initializeRepository(MySqlOTRepository<LogDiff<CubeDiff>> repository) {
 		noFail(() -> {
 			repository.initialize();
 			repository.truncateTables();
