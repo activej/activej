@@ -38,6 +38,17 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods for hashing some fields
  */
+
+public interface ExpressionHashCodeBuilder extends Builder<Expression> {
+	ExpressionHashCodeBuilder with(Expression expression);
+
+	ExpressionHashCodeBuilder withField(String field);
+
+	ExpressionHashCodeBuilder withFields(List<String> fields);
+
+	ExpressionHashCodeBuilder withFields(String... fields);
+}
+
 final class Expression_HashCode implements Expression {
 	private final List<Expression> arguments = new ArrayList<>();
 
@@ -150,14 +161,4 @@ final class Expression_HashCode implements Expression {
 
 		return INT_TYPE;
 	}
-}
-
-public interface ExpressionHashCodeBuilder extends Builder<Expression> {
-	ExpressionHashCodeBuilder with(Expression expression);
-
-	ExpressionHashCodeBuilder withField(String field);
-
-	ExpressionHashCodeBuilder withFields(List<String> fields);
-
-	ExpressionHashCodeBuilder withFields(String... fields);
 }

@@ -36,6 +36,13 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 /**
  * Defines methods to compare some fields
  */
+
+public interface ExpressionCompareBuilder extends Builder<Expression> {
+	ExpressionCompareBuilder with(Expression left, Expression right);
+
+	ExpressionCompareBuilder with(Expression left, Expression right, boolean nullable);
+}
+
 final class Expression_Compare implements Expression {
 	private final List<Pair> pairs = new ArrayList<>();
 
@@ -143,10 +150,3 @@ final class Expression_Compare implements Expression {
 		return INT_TYPE;
 	}
 }
-
-public interface ExpressionCompareBuilder extends Builder<Expression> {
-	ExpressionCompareBuilder with(Expression left, Expression right);
-
-	ExpressionCompareBuilder with(Expression left, Expression right, boolean nullable);
-}
-
