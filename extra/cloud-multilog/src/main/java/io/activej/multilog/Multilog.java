@@ -204,7 +204,7 @@ public final class Multilog<T> extends AbstractReactive
 			final Stopwatch sw = Stopwatch.createUnstarted();
 
 			final Iterator<LogPosition> it = logFiles.iterator();
-			final FrameFormat_Counting countingFormat = new FrameFormat_Counting(frameFormat);
+			final CountingFrameFormat countingFormat = new CountingFrameFormat(frameFormat);
 			LogPosition currentPosition;
 
 			@Override

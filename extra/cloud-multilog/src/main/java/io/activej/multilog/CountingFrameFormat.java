@@ -24,13 +24,13 @@ import io.activej.csp.process.frames.BlockEncoder;
 import io.activej.csp.process.frames.FrameFormat;
 import org.jetbrains.annotations.Nullable;
 
-final class FrameFormat_Counting implements FrameFormat {
+final class CountingFrameFormat implements FrameFormat {
 	private final FrameFormat frameFormat;
 
 	private long blockOffset;
 	private long innerOffset;
 
-	public FrameFormat_Counting(FrameFormat frameFormat) {
+	public CountingFrameFormat(FrameFormat frameFormat) {
 		this.frameFormat = frameFormat;
 	}
 
