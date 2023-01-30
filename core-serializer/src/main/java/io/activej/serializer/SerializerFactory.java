@@ -234,17 +234,17 @@ public final class SerializerFactory {
 				}
 
 				if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
-					serializerDef = ((SerializerDef_WithVarLength) serializerDef).ensureVarLength();
+					serializerDef = ((SerializerDefWithVarLength) serializerDef).ensureVarLength();
 				}
 
 				SerializeFixedSize annotationFixedSize;
 				if ((annotationFixedSize = getAnnotation(SerializeFixedSize.class, ctx.getAnnotations())) != null) {
-					serializerDef = ((SerializerDef_WithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
+					serializerDef = ((SerializerDefWithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
 				}
 
 				if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
-					serializerDef = serializerDef instanceof SerializerDef_WithNullable ?
-							((SerializerDef_WithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDef_Nullable(serializerDef);
+					serializerDef = serializerDef instanceof SerializerDefWithNullable ?
+							((SerializerDefWithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDef_Nullable(serializerDef);
 				}
 
 				return serializerDef;

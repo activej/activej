@@ -29,7 +29,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public final class SerializerDef_ByteBuffer extends AbstractSerializerDef implements SerializerDef_WithNullable {
+public final class SerializerDef_ByteBuffer extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean wrapped;
 	private final boolean nullable;
 

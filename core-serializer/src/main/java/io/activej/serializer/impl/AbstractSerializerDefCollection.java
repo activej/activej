@@ -28,7 +28,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public abstract class AbstractSerializerDefCollection extends AbstractSerializerDef implements SerializerDef_WithNullable {
+public abstract class AbstractSerializerDefCollection extends AbstractSerializerDef implements SerializerDefWithNullable {
 	protected final SerializerDef valueSerializer;
 	protected final Class<?> encodeType;
 	protected final Class<?> decodeType;

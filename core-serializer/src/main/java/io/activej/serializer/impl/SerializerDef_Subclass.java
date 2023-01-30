@@ -31,7 +31,7 @@ import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 
-public final class SerializerDef_Subclass extends AbstractSerializerDef implements SerializerDef_WithNullable {
+public final class SerializerDef_Subclass extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private static final int LOOKUP_SWITCH_THRESHOLD = 10;
 	private final Class<?> dataType;
 	private final LinkedHashMap<Class<?>, SerializerDef> subclassSerializers;

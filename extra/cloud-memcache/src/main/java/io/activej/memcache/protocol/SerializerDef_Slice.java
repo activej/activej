@@ -23,15 +23,15 @@ import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
+import io.activej.serializer.impl.SerializerDefWithNullable;
 import io.activej.serializer.impl.SerializerDef_Nullable;
-import io.activej.serializer.impl.SerializerDef_WithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 @SuppressWarnings("unused")
-public class SerializerDef_Slice extends AbstractSerializerDef implements SerializerDef_WithNullable {
+public class SerializerDef_Slice extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean nullable;
 
 	public SerializerDef_Slice() {

@@ -26,7 +26,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public final class SerializerDef_Enum extends AbstractSerializerDef implements SerializerDef_WithNullable {
+public final class SerializerDef_Enum extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final Class<? extends Enum<?>> enumType;
 	private final boolean nullable;
 

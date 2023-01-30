@@ -26,7 +26,7 @@ import static io.activej.serializer.CompatibilityLevel.LEVEL_4;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 
-public final class SerializerDef_Boolean extends SerializerDef_Primitive implements SerializerDef_WithNullable {
+public final class SerializerDef_Boolean extends SerializerDef_Primitive implements SerializerDefWithNullable {
 	public static final byte NULLABLE_NULL = 0b00;
 	public static final byte NULLABLE_FALSE = 0b10;
 	public static final byte NULLABLE_TRUE = 0b11;

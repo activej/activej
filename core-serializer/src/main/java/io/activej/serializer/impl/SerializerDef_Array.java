@@ -26,7 +26,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public final class SerializerDef_Array extends AbstractSerializerDef implements SerializerDef_WithNullable, SerializerDef_WithFixedSize {
+public final class SerializerDef_Array extends AbstractSerializerDef implements SerializerDefWithNullable, SerializerDefWithFixedSize {
 	private final SerializerDef valueSerializer;
 	private final int fixedSize;
 	private final Class<?> type;

@@ -18,6 +18,6 @@ package io.activej.serializer.impl;
 
 import io.activej.serializer.SerializerDef;
 
-public interface SerializerDef_WithVarLength extends SerializerDef {
-	SerializerDef ensureVarLength();
+public interface SerializerDefWithFixedSize extends SerializerDef {
+	SerializerDef ensureFixedSize(int fixedSize);
 }

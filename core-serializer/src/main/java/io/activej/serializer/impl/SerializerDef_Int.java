@@ -24,7 +24,7 @@ import io.activej.serializer.SerializerDef;
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public final class SerializerDef_Int extends SerializerDef_Primitive implements SerializerDef_WithVarLength {
+public final class SerializerDef_Int extends SerializerDef_Primitive implements SerializerDefWithVarLength {
 	private final boolean varLength;
 
 	public SerializerDef_Int() {

@@ -29,7 +29,7 @@ import static io.activej.serializer.StringFormat.ISO_8859_1;
 import static io.activej.serializer.StringFormat.UTF8;
 import static io.activej.serializer.util.Utils.get;
 
-public final class SerializerDef_String extends AbstractSerializerDef implements SerializerDef_WithNullable {
+public final class SerializerDef_String extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final StringFormat format;
 	private final boolean nullable;
 
