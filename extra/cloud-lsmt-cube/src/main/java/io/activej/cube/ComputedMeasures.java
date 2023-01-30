@@ -78,11 +78,11 @@ public class ComputedMeasures {
 	}
 
 	public static ComputedMeasure value(Object value) {
-		return new ComputedMeasure_Value(value);
+		return new ValueComputedMeasure(value);
 	}
 
 	public static ComputedMeasure measure(String measureId) {
-		return new ComputedMeasure_Measure(measureId);
+		return new MeasureComputedMeasure(measureId);
 	}
 
 	public static ComputedMeasure add(ComputedMeasure measure1, ComputedMeasure measure2) {
@@ -179,10 +179,10 @@ public class ComputedMeasures {
 		return mul(div(numerator, denominator), value(100));
 	}
 
-	private static final class ComputedMeasure_Value implements ComputedMeasure {
+	private static final class ValueComputedMeasure implements ComputedMeasure {
 		private final Object value;
 
-		public ComputedMeasure_Value(Object value) {this.value = value;}
+		public ValueComputedMeasure(Object value) {this.value = value;}
 
 		@Override
 		public Class<?> getType(Map<String, Measure> storedMeasures) {
@@ -203,7 +203,7 @@ public class ComputedMeasures {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
-			ComputedMeasure_Value other = (ComputedMeasure_Value) o;
+			ValueComputedMeasure other = (ValueComputedMeasure) o;
 			return Objects.equals(value, other.value);
 		}
 
@@ -213,10 +213,10 @@ public class ComputedMeasures {
 		}
 	}
 
-	private static final class ComputedMeasure_Measure implements ComputedMeasure {
+	private static final class MeasureComputedMeasure implements ComputedMeasure {
 		private final String measureId;
 
-		public ComputedMeasure_Measure(String measureId) {this.measureId = measureId;}
+		public MeasureComputedMeasure(String measureId) {this.measureId = measureId;}
 
 		@Override
 		public Class<?> getType(Map<String, Measure> storedMeasures) {
@@ -237,7 +237,7 @@ public class ComputedMeasures {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
-			ComputedMeasure_Measure other = (ComputedMeasure_Measure) o;
+			MeasureComputedMeasure other = (MeasureComputedMeasure) o;
 			return measureId.equals(other.measureId);
 		}
 

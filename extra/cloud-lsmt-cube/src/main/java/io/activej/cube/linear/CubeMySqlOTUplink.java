@@ -63,14 +63,14 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTUplink_CubeMySql extends AbstractReactive
-		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit> {
-	private static final Logger logger = LoggerFactory.getLogger(OTUplink_CubeMySql.class);
+public final class CubeMySqlOTUplink extends AbstractReactive
+		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeMySqlOTUplink.UplinkProtoCommit> {
+	private static final Logger logger = LoggerFactory.getLogger(CubeMySqlOTUplink.class);
 
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(OTUplink_CubeMySql.class, "smoothingWindow", Duration.ofMinutes(5));
-	public static final String REVISION_TABLE = ApplicationSettings.getString(OTUplink_CubeMySql.class, "revisionTable", "cube_revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(OTUplink_CubeMySql.class, "positionTable", "cube_position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(OTUplink_CubeMySql.class, "chunkTable", "cube_chunk");
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeMySqlOTUplink.class, "smoothingWindow", Duration.ofMinutes(5));
+	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "revisionTable", "cube_revision");
+	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "positionTable", "cube_position");
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "chunkTable", "cube_chunk");
 
 	public static final long ROOT_REVISION = 0L;
 
@@ -95,47 +95,47 @@ public final class OTUplink_CubeMySql extends AbstractReactive
 	private final PromiseStats promisePush = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private OTUplink_CubeMySql(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+	private CubeMySqlOTUplink(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
 		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.primaryKeyCodecs = primaryKeyCodecs;
 	}
 
-	public static OTUplink_CubeMySql create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+	public static CubeMySqlOTUplink create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
 		return builder(reactor, executor, dataSource, primaryKeyCodecs).build();
 	}
 
 	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
-		return new OTUplink_CubeMySql(reactor, executor, dataSource, primaryKeyCodecs).new Builder();
+		return new CubeMySqlOTUplink(reactor, executor, dataSource, primaryKeyCodecs).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, OTUplink_CubeMySql> {
+	public final class Builder extends AbstractBuilder<Builder, CubeMySqlOTUplink> {
 		private Builder() {}
 
 		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
 			checkNotBuilt(this);
-			OTUplink_CubeMySql.this.measuresValidator = measuresValidator;
+			CubeMySqlOTUplink.this.measuresValidator = measuresValidator;
 			return this;
 		}
 
 		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
 			checkNotBuilt(this);
-			OTUplink_CubeMySql.this.tableRevision = tableRevision;
-			OTUplink_CubeMySql.this.tablePosition = tablePosition;
-			OTUplink_CubeMySql.this.tableChunk = tableChunk;
+			CubeMySqlOTUplink.this.tableRevision = tableRevision;
+			CubeMySqlOTUplink.this.tablePosition = tablePosition;
+			CubeMySqlOTUplink.this.tableChunk = tableChunk;
 			return this;
 		}
 
 		public Builder withCreatedBy(String createdBy) {
 			checkNotBuilt(this);
-			OTUplink_CubeMySql.this.createdBy = createdBy;
+			CubeMySqlOTUplink.this.createdBy = createdBy;
 			return this;
 		}
 
 		@Override
-		protected OTUplink_CubeMySql doBuild() {
-			return OTUplink_CubeMySql.this;
+		protected CubeMySqlOTUplink doBuild() {
+			return CubeMySqlOTUplink.this;
 		}
 	}
 

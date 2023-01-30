@@ -13,7 +13,7 @@ import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeBackupController.IChunksBackupService;
-import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
+import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
@@ -65,7 +65,7 @@ public class CubeBackupControllerTest {
 	private Thread eventloopThread;
 	private DataSource dataSource;
 	private IFileSystem fileSystem;
-	private OTUplink_CubeMySql uplink;
+	private CubeMySqlOTUplink uplink;
 	private CubeBackupController backupController;
 
 	@Before
@@ -100,7 +100,7 @@ public class CubeBackupControllerTest {
 
 		IChunksBackupService chunksBackupService = IChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
-		uplink = OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();
 		backupController.truncateTables();
 	}

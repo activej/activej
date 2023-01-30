@@ -44,13 +44,13 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
-public final class ChunkLocker_MySql<C> extends AbstractReactive
+public final class MySqlChunkLocker<C> extends AbstractReactive
 		implements IChunkLocker<C> {
-	private static final Logger logger = LoggerFactory.getLogger(ChunkLocker_MySql.class);
+	private static final Logger logger = LoggerFactory.getLogger(MySqlChunkLocker.class);
 
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(ChunkLocker_MySql.class, "chunkTable", "cube_chunk");
-	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLocker_MySql.class, "lockTtl", Duration.ofMinutes(5));
-	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(ChunkLocker_MySql.class, "lockedBy", null);
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(MySqlChunkLocker.class, "chunkTable", "cube_chunk");
+	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(MySqlChunkLocker.class, "lockTtl", Duration.ofMinutes(5));
+	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(MySqlChunkLocker.class, "lockedBy", null);
 
 	private final Executor executor;
 	private final DataSource dataSource;
@@ -62,7 +62,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 	private String tableChunk = CHUNK_TABLE;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
-	private ChunkLocker_MySql(
+	private MySqlChunkLocker(
 			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
@@ -76,7 +76,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 		this.aggregationId = aggregationId;
 	}
 
-	public static <C> ChunkLocker_MySql<C> create(
+	public static <C> MySqlChunkLocker<C> create(
 			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
@@ -86,40 +86,40 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 		return builder(reactor, executor, dataSource, idCodec, aggregationId).build();
 	}
 
-	public static <C> ChunkLocker_MySql<C>.Builder builder(
+	public static <C> MySqlChunkLocker<C>.Builder builder(
 			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
 			ChunkIdJsonCodec<C> idCodec,
 			String aggregationId
 	) {
-		return new ChunkLocker_MySql<>(reactor, executor, dataSource, idCodec, aggregationId).new Builder();
+		return new MySqlChunkLocker<>(reactor, executor, dataSource, idCodec, aggregationId).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ChunkLocker_MySql<C>> {
+	public final class Builder extends AbstractBuilder<Builder, MySqlChunkLocker<C>> {
 		private Builder() {}
 
 		public Builder withLockTableName(String tableLock) {
 			checkNotBuilt(this);
-			ChunkLocker_MySql.this.tableChunk = tableLock;
+			MySqlChunkLocker.this.tableChunk = tableLock;
 			return this;
 		}
 
 		public Builder withLockedBy(String lockedBy) {
 			checkNotBuilt(this);
-			ChunkLocker_MySql.this.lockedBy = lockedBy;
+			MySqlChunkLocker.this.lockedBy = lockedBy;
 			return this;
 		}
 
 		public Builder withLockedTtl(Duration lockTtl) {
 			checkNotBuilt(this);
-			ChunkLocker_MySql.this.lockTtlSeconds = lockTtl.getSeconds();
+			MySqlChunkLocker.this.lockTtlSeconds = lockTtl.getSeconds();
 			return this;
 		}
 
 		@Override
-		protected ChunkLocker_MySql<C> doBuild() {
-			return ChunkLocker_MySql.this;
+		protected MySqlChunkLocker<C> doBuild() {
+			return MySqlChunkLocker.this;
 		}
 	}
 

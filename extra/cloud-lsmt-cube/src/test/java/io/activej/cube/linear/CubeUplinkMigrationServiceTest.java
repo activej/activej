@@ -8,7 +8,7 @@ import io.activej.common.ref.RefLong;
 import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
-import io.activej.cube.ot.JsonCodec_CubeDiff;
+import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
@@ -56,7 +56,7 @@ public final class CubeUplinkMigrationServiceTest {
 	private Cube cube;
 
 	private OTRepository_MySql<LogDiff<CubeDiff>> repo;
-	private OTUplink_CubeMySql uplink;
+	private CubeMySqlOTUplink uplink;
 
 	@Before
 	public void setUp() throws Exception {
@@ -80,13 +80,13 @@ public final class CubeUplinkMigrationServiceTest {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.build();
 
-		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(JsonCodec_CubeDiff.create(cube));
+		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(CubeDiffJsonCodec.create(cube));
 
 		repo = OTRepository_MySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofCube(cube);
-		uplink = OTUplink_CubeMySql.builder(reactor, executor, dataSource, codecs)
+		uplink = CubeMySqlOTUplink.builder(reactor, executor, dataSource, codecs)
 				.withMeasuresValidator(MeasuresValidator.ofCube(cube))
 				.build();
 

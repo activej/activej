@@ -2,7 +2,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.cube.linear.OTUplink_CubeMySql;
+import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toSet;
 
 public final class TestUtils {
 
-	public static void initializeUplink(OTUplink_CubeMySql uplink) {
+	public static void initializeUplink(CubeMySqlOTUplink uplink) {
 		noFail(() -> {
 			uplink.initialize();
 			uplink.truncateTables();

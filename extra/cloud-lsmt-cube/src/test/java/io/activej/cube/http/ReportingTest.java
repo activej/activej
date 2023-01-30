@@ -63,7 +63,7 @@ public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
 	private HttpServer cubeHttpServer;
-	private Cube_HttpClient cubeHttp;
+	private HttpClientCube cubeHttp;
 	private Cube cube;
 	private int serverPort;
 
@@ -100,8 +100,8 @@ public final class ReportingTest extends CubeTestBase {
 			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
 			Map.entry("errors", sum(ofLong()))));
 
-	private static class AttributeResolver_Advertiser extends AbstractAttributeResolver<Integer, String> {
-		public AttributeResolver_Advertiser(Reactor reactor) {
+	private static class AdvertiserAttributeResolver extends AbstractAttributeResolver<Integer, String> {
+		public AdvertiserAttributeResolver(Reactor reactor) {
 			super(reactor);
 		}
 
@@ -263,7 +263,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign")
 				.withRelation("site", "affiliate")
-				.withAttribute("advertiser.name", new AttributeResolver_Advertiser(reactor))
+				.withAttribute("advertiser.name", new AdvertiserAttributeResolver(reactor))
 				.withComputedMeasure("ctr", percent(measure("clicks"), measure("impressions")))
 				.withComputedMeasure("uniqueUserPercent", percent(div(measure("uniqueUserIdsCount"), measure("eventCount"))))
 				.withComputedMeasure("errorsPercent", percent(div(measure("errors"), measure("impressions"))))
@@ -337,7 +337,7 @@ public final class ReportingTest extends CubeTestBase {
 		IHttpClient httpClient = HttpClient.builder(reactor)
 				.withNoKeepAlive()
 				.build();
-		cubeHttp = Cube_HttpClient.builder(httpClient, "http://127.0.0.1:" + serverPort)
+		cubeHttp = HttpClientCube.builder(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)
@@ -361,7 +361,7 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	private HttpServer startHttpServer() {
-		HttpServer server = HttpServer.builder(reactor, Servlet_ReportingService.createRootServlet(reactor, cube))
+		HttpServer server = HttpServer.builder(reactor, ReportingServiceServlet.createRootServlet(reactor, cube))
 				.withListenPort(serverPort)
 				.withAcceptOnce()
 				.build();

@@ -15,11 +15,11 @@ import static io.activej.aggregation.util.Utils.toJson;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static org.junit.Assert.assertEquals;
 
-public class JsonCodec_QueryResult_Test {
+public class QueryResultJsonCodecTest {
 
 	@Test
 	public void test() throws MalformedDataException {
-		JsonCodec_QueryResult codec = JsonCodec_QueryResult.create(DefiningClassLoader.create(),
+		QueryResultJsonCodec codec = QueryResultJsonCodec.create(DefiningClassLoader.create(),
 				Map.of(
 						"campaign", int.class,
 						"site", String.class),

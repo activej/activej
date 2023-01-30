@@ -32,14 +32,14 @@ import java.util.Map;
 
 import static com.dslplatform.json.JsonWriter.*;
 
-public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff> {
+public class CubeDiffJsonCodec implements JsonCodec<CubeDiff> {
 	private final Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs;
 
-	private JsonCodec_CubeDiff(Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs) {
+	private CubeDiffJsonCodec(Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs) {
 		this.aggregationDiffCodecs = aggregationDiffCodecs;
 	}
 
-	public static JsonCodec_CubeDiff create(Cube cube) {
+	public static CubeDiffJsonCodec create(Cube cube) {
 		Map<String, AggregationDiffJsonCodec> aggregationDiffCodecs = new LinkedHashMap<>();
 
 		for (String aggregationId : cube.getAggregationIds()) {
@@ -47,7 +47,7 @@ public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff> {
 			AggregationDiffJsonCodec aggregationDiffCodec = AggregationDiffJsonCodec.create(aggregation.getStructure());
 			aggregationDiffCodecs.put(aggregationId, aggregationDiffCodec);
 		}
-		return new JsonCodec_CubeDiff(aggregationDiffCodecs);
+		return new CubeDiffJsonCodec(aggregationDiffCodecs);
 	}
 
 	@Override

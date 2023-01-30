@@ -10,7 +10,7 @@ import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeCleanerController.IChunksCleanerService;
-import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
+import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.test.rules.ByteBufRule;
@@ -43,7 +43,7 @@ public class CubeCleanerControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private OTUplink_CubeMySql uplink;
+	private CubeMySqlOTUplink uplink;
 	private AggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
@@ -75,7 +75,7 @@ public class CubeCleanerControllerTest {
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
 				.build();
 
-		uplink = OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		uplink.initialize();
 		uplink.truncateTables();
 	}

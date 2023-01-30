@@ -25,28 +25,28 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.LongStream;
 
 import static io.activej.common.exception.FatalErrorHandler.haltOnError;
-import static io.activej.cube.service.ChunkLocker_MySql.CHUNK_TABLE;
+import static io.activej.cube.service.MySqlChunkLocker.CHUNK_TABLE;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 
-public class ChunkLocker_MySql_DeadlockTest {
+public class ChunkLockerMySqlDeadlockTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 	public static final String AGGREGATION_ID = "test_aggregation";
 	public static final int MAX_CHUNK_ID = 1000;
 
-	private ChunkLocker_MySql<Long> lockerA;
-	private ChunkLocker_MySql<Long> lockerB;
+	private MySqlChunkLocker<Long> lockerA;
+	private MySqlChunkLocker<Long> lockerB;
 
 	@Before
 	public void before() throws IOException, SQLException {
 		DataSource dataSource = dataSource("test.properties");
 
 		Reactor reactor = Reactor.getCurrentReactor();
-		lockerA = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
+		lockerA = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
 				.withLockedTtl(Duration.ofSeconds(1))
 				.build();
-		lockerB = ChunkLocker_MySql.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
+		lockerB = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
 				.withLockedTtl(Duration.ofSeconds(1))
 				.build();
 

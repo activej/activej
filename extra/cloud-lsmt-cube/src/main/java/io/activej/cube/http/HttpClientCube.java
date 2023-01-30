@@ -42,37 +42,37 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class Cube_HttpClient implements ICube {
-	private static final Logger logger = LoggerFactory.getLogger(Cube_HttpClient.class);
+public final class HttpClientCube implements ICube {
+	private static final Logger logger = LoggerFactory.getLogger(HttpClientCube.class);
 
 	private final String url;
 	private final IHttpClient httpClient;
-	private JsonCodec_QueryResult queryResultCodec;
+	private QueryResultJsonCodec queryResultCodec;
 	private PredicateDefJsonCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private Cube_HttpClient(IHttpClient httpClient, String url) {
+	private HttpClientCube(IHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 	}
 
 	public static Builder builder(IHttpClient httpClient, String cubeServletUrl) {
-		return new Cube_HttpClient(httpClient, cubeServletUrl).new Builder();
+		return new HttpClientCube(httpClient, cubeServletUrl).new Builder();
 	}
 
 	public static Builder builder(IHttpClient httpClient, URI cubeServletUrl) {
 		return builder(httpClient, cubeServletUrl.toString());
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Cube_HttpClient> {
+	public final class Builder extends AbstractBuilder<Builder, HttpClientCube> {
 		private Builder() {}
 
 		public Builder withClassLoader(DefiningClassLoader classLoader) {
 			checkNotBuilt(this);
-			Cube_HttpClient.this.classLoader = classLoader;
+			HttpClientCube.this.classLoader = classLoader;
 			return this;
 		}
 
@@ -89,8 +89,8 @@ public final class Cube_HttpClient implements ICube {
 		}
 
 		@Override
-		protected Cube_HttpClient doBuild() {
-			return Cube_HttpClient.this;
+		protected HttpClientCube doBuild() {
+			return HttpClientCube.this;
 		}
 	}
 
@@ -101,9 +101,9 @@ public final class Cube_HttpClient implements ICube {
 		return aggregationPredicateCodec;
 	}
 
-	private JsonCodec_QueryResult getQueryResultCodec() {
+	private QueryResultJsonCodec getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = JsonCodec_QueryResult.create(classLoader, attributeTypes, measureTypes);
+			queryResultCodec = QueryResultJsonCodec.create(classLoader, attributeTypes, measureTypes);
 		}
 		return queryResultCodec;
 	}

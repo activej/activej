@@ -10,7 +10,7 @@ import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
-import io.activej.cube.ot.JsonCodec_CubeDiff;
+import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
@@ -80,7 +80,7 @@ public class CubeCleanerControllerTest {
 				.build();
 
 		repository = OTRepository_MySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
-				OT_SYSTEM, LogDiffCodec.create(JsonCodec_CubeDiff.create(cube)));
+				OT_SYSTEM, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
 		repository.initialize();
 		repository.truncateTables();
 	}

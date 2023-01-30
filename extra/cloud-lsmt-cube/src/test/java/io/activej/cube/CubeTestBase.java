@@ -4,12 +4,12 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.cube.linear.MeasuresValidator;
-import io.activej.cube.linear.OTUplink_CubeMySql;
+import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.linear.PrimaryKeyCodecs;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
-import io.activej.cube.ot.JsonCodec_CubeDiff;
+import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
@@ -96,7 +96,7 @@ public abstract class CubeTestBase {
 							public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
 								Reactor reactor = cube.getReactor();
 								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = OTRepository_MySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
-										LOG_OT, LogDiffCodec.create(JsonCodec_CubeDiff.create(cube)));
+										LOG_OT, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
 								return OTUplink.create(reactor, repository, LOG_OT);
 							}
 
@@ -109,16 +109,16 @@ public abstract class CubeTestBase {
 				// Linear
 				new Object[]{
 						"Linear graph",
-						new UplinkFactory<OTUplink_CubeMySql>() {
+						new UplinkFactory<CubeMySqlOTUplink>() {
 							@Override
-							public OTUplink_CubeMySql createUninitialized(Cube cube) {
-								return OTUplink_CubeMySql.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
+							public CubeMySqlOTUplink createUninitialized(Cube cube) {
+								return CubeMySqlOTUplink.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
 										.withMeasuresValidator(MeasuresValidator.ofCube(cube))
 										.build();
 							}
 
 							@Override
-							public void initialize(OTUplink_CubeMySql uplink) {
+							public void initialize(CubeMySqlOTUplink uplink) {
 								noFail(() -> initializeUplink(uplink));
 							}
 						}

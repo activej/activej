@@ -46,50 +46,50 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static java.util.stream.Collectors.toList;
 
-public final class Servlet_ReportingService extends Servlet_WithStats {
-	private static final Logger logger = LoggerFactory.getLogger(Servlet_ReportingService.class);
+public final class ReportingServiceServlet extends Servlet_WithStats {
+	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
 	private final ICube cube;
-	private JsonCodec_QueryResult queryResultCodec;
+	private QueryResultJsonCodec queryResultCodec;
 	private PredicateDefJsonCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private Servlet_ReportingService(Reactor reactor, ICube cube) {
+	private ReportingServiceServlet(Reactor reactor, ICube cube) {
 		super(reactor);
 		this.cube = cube;
 	}
 
-	public static Servlet_ReportingService create(Reactor reactor, ICube cube) {
+	public static ReportingServiceServlet create(Reactor reactor, ICube cube) {
 		return builder(reactor, cube).build();
 	}
 
 	public static Servlet_Routing createRootServlet(Reactor reactor, ICube cube) {
 		return createRootServlet(
-				Servlet_ReportingService.create(reactor, cube));
+				ReportingServiceServlet.create(reactor, cube));
 	}
 
-	public static Servlet_Routing createRootServlet(Servlet_ReportingService reportingServiceServlet) {
+	public static Servlet_Routing createRootServlet(ReportingServiceServlet reportingServiceServlet) {
 		return Servlet_Routing.create(reportingServiceServlet.reactor)
 				.map(GET, "/", reportingServiceServlet);
 	}
 
 	public static Builder builder(Reactor reactor, ICube cube) {
-		return new Servlet_ReportingService(reactor, cube).new Builder();
+		return new ReportingServiceServlet(reactor, cube).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Servlet_ReportingService> {
+	public final class Builder extends AbstractBuilder<Builder, ReportingServiceServlet> {
 		private Builder() {}
 
 		public Builder withClassLoader(DefiningClassLoader classLoader) {
 			checkNotBuilt(this);
-			Servlet_ReportingService.this.classLoader = classLoader;
+			ReportingServiceServlet.this.classLoader = classLoader;
 			return this;
 		}
 
 		@Override
-		protected Servlet_ReportingService doBuild() {
-			return Servlet_ReportingService.this;
+		protected ReportingServiceServlet doBuild() {
+			return ReportingServiceServlet.this;
 		}
 	}
 
@@ -100,9 +100,9 @@ public final class Servlet_ReportingService extends Servlet_WithStats {
 		return aggregationPredicateCodec;
 	}
 
-	private JsonCodec_QueryResult getQueryResultCodec() {
+	private QueryResultJsonCodec getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = JsonCodec_QueryResult.create(classLoader, cube.getAttributeTypes(), cube.getMeasureTypes());
+			queryResultCodec = QueryResultJsonCodec.create(classLoader, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return queryResultCodec;
 	}

@@ -7,7 +7,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.exception.StateFarAheadException;
-import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
+import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
@@ -37,7 +37,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.intersection;
 import static io.activej.cube.TestUtils.initializeUplink;
-import static io.activej.cube.linear.OTUplink_CubeMySql_Test.SimplePositionDiff.diff;
+import static io.activej.cube.linear.CubeMySqlOTUplinkTest.SimplePositionDiff.diff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
@@ -47,7 +47,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class OTUplink_CubeMySql_Test {
+public class CubeMySqlOTUplinkTest {
 	public static final Random RANDOM = ThreadLocalRandom.current();
 
 	private static final List<String> MEASURES = List.of("a", "b", "c", "d");
@@ -60,7 +60,7 @@ public class OTUplink_CubeMySql_Test {
 	public static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
 	private DataSource dataSource;
-	private OTUplink_CubeMySql uplink;
+	private CubeMySqlOTUplink uplink;
 
 	@SuppressWarnings({"unchecked", "rawtypes", "ConstantConditions"})
 	@Before
@@ -73,7 +73,7 @@ public class OTUplink_CubeMySql_Test {
 		);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofLookUp($ -> primaryKeyCodec);
-		uplink = OTUplink_CubeMySql.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), dataSource, codecs);
+		uplink = CubeMySqlOTUplink.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), dataSource, codecs);
 
 		initializeUplink(uplink);
 	}
@@ -169,7 +169,7 @@ public class OTUplink_CubeMySql_Test {
 
 		FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.checkout());
 
-		OTState_Stub state = new OTState_Stub();
+		StubOTState state = new StubOTState();
 		fetchData.getDiffs().forEach(state::apply);
 
 		assertTrue(state.positions.isEmpty());
@@ -569,7 +569,7 @@ public class OTUplink_CubeMySql_Test {
 
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute("DELETE FROM " + OTUplink_CubeMySql.REVISION_TABLE +
+				statement.execute("DELETE FROM " + CubeMySqlOTUplink.REVISION_TABLE +
 						" WHERE `revision` IN (0,1,2)");
 			}
 		}
@@ -633,8 +633,8 @@ public class OTUplink_CubeMySql_Test {
 	}
 
 	private static void assertDiffs(List<LogDiff<CubeDiff>> expected, List<LogDiff<CubeDiff>> actual) {
-		OTState_Stub left = new OTState_Stub();
-		OTState_Stub right = new OTState_Stub();
+		StubOTState left = new StubOTState();
+		StubOTState right = new StubOTState();
 
 		expected.forEach(left::apply);
 		actual.forEach(right::apply);
@@ -688,7 +688,7 @@ public class OTUplink_CubeMySql_Test {
 		return diffs;
 	}
 
-	private static final class OTState_Stub implements OTState<LogDiff<CubeDiff>> {
+	private static final class StubOTState implements OTState<LogDiff<CubeDiff>> {
 		final Map<String, LogPosition> positions = new HashMap<>();
 		final Map<String, Set<AggregationChunk>> chunks = new HashMap<>();
 

@@ -38,7 +38,7 @@ import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.cube.ReportType.*;
 
-final class JsonCodec_QueryResult implements JsonCodec<QueryResult> {
+final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
 	private static final String MEASURES_FIELD = "measures";
 	private static final String ATTRIBUTES_FIELD = "attributes";
 	private static final String FILTER_ATTRIBUTES_FIELD = "filterAttributes";
@@ -56,7 +56,7 @@ final class JsonCodec_QueryResult implements JsonCodec<QueryResult> {
 
 	private final DefiningClassLoader classLoader;
 
-	private JsonCodec_QueryResult(DefiningClassLoader classLoader,
+	private QueryResultJsonCodec(DefiningClassLoader classLoader,
 			Map<String, JsonCodec<Object>> attributeCodecs, Map<String, JsonCodec<Object>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
 		this.classLoader = classLoader;
 		this.attributeCodecs = attributeCodecs;
@@ -65,7 +65,7 @@ final class JsonCodec_QueryResult implements JsonCodec<QueryResult> {
 		this.measureTypes = measureTypes;
 	}
 
-	public static JsonCodec_QueryResult create(DefiningClassLoader classLoader,
+	public static QueryResultJsonCodec create(DefiningClassLoader classLoader,
 			Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		Map<String, JsonCodec<Object>> measureCodecs = new LinkedHashMap<>();
@@ -79,7 +79,7 @@ final class JsonCodec_QueryResult implements JsonCodec<QueryResult> {
 			measureCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
 			measureRawTypes.put(entry.getKey(), Types.getRawType(entry.getValue()));
 		}
-		return new JsonCodec_QueryResult(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
+		return new QueryResultJsonCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}
 
 	@Override

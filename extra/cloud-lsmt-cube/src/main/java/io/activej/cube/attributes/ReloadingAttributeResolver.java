@@ -33,7 +33,7 @@ import java.util.Map;
 import static io.activej.common.Utils.nullify;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttributeResolver<K, A>
+public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A>
 		implements ReactiveService, ReactiveJmxBean {
 	private long timestamp;
 	private long reloadPeriod;
@@ -49,7 +49,7 @@ public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttribut
 			.withUnit("milliseconds")
 			.build();
 
-	protected AttributeResolver_Reloading(Reactor reactor) {
+	protected ReloadingAttributeResolver(Reactor reactor) {
 		super(reactor);
 	}
 
