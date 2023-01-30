@@ -1,8 +1,8 @@
 package io.activej.state.file;
 
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.fs.IBlockingFileSystem;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IBlockingFileSystem;
 import io.activej.serializer.stream.*;
 import io.activej.state.IStateManager;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +19,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings({"unused", "unchecked"})
-public final class StateManager_File<T> implements IStateManager<T, Long> {
+public final class FileStateManager<T> implements IStateManager<T, Long> {
 	public static final String DEFAULT_TEMP_DIR = ".temp/";
 
 	private final IBlockingFileSystem fileSystem;
@@ -30,55 +30,55 @@ public final class StateManager_File<T> implements IStateManager<T, Long> {
 	private int maxSaveDiffs = 0;
 	private String tempDir = DEFAULT_TEMP_DIR;
 
-	private StateManager_File(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
+	private FileStateManager(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
 		this.fileSystem = fileSystem;
 		this.fileNamingScheme = fileNamingScheme;
 	}
 
-	public static <T> StateManager_File<T>.Builder builder(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
-		return new StateManager_File<T>(fileSystem, fileNamingScheme).new Builder();
+	public static <T> FileStateManager<T>.Builder builder(IBlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme) {
+		return new FileStateManager<T>(fileSystem, fileNamingScheme).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, StateManager_File<T>> {
+	public final class Builder extends AbstractBuilder<Builder, FileStateManager<T>> {
 		private Builder() {}
 
 		public Builder withEncoder(StreamEncoder<T> encoder) {
 			checkNotBuilt(this);
-			StateManager_File.this.encoder = encoder;
+			FileStateManager.this.encoder = encoder;
 			return this;
 		}
 
 		public Builder withDecoder(StreamDecoder<T> decoder) {
 			checkNotBuilt(this);
-			StateManager_File.this.decoder = decoder;
+			FileStateManager.this.decoder = decoder;
 			return this;
 		}
 
 		public Builder withCodec(StreamCodec<T> codec) {
 			checkNotBuilt(this);
-			StateManager_File.this.encoder = codec;
-			StateManager_File.this.decoder = codec;
+			FileStateManager.this.encoder = codec;
+			FileStateManager.this.decoder = codec;
 			return this;
 		}
 
 		public Builder withMaxSaveDiffs(int maxSaveDiffs) {
 			checkNotBuilt(this);
 			checkArgument(maxSaveDiffs >= 0);
-			StateManager_File.this.maxSaveDiffs = maxSaveDiffs;
+			FileStateManager.this.maxSaveDiffs = maxSaveDiffs;
 			return this;
 		}
 
 		public Builder withTempDir(String tempDir) {
 			checkNotBuilt(this);
 			checkArgument(!tempDir.isEmpty() && !tempDir.equals("/"), "Temporary directory cannot be same as main directory");
-			StateManager_File.this.tempDir = tempDir.endsWith("/") ? tempDir : tempDir + '/';
+			FileStateManager.this.tempDir = tempDir.endsWith("/") ? tempDir : tempDir + '/';
 			return this;
 		}
 
 		@Override
-		protected StateManager_File<T> doBuild() {
+		protected FileStateManager<T> doBuild() {
 			checkState(encoder != null || decoder != null, "Neither encoder nor decoder are set");
-			return StateManager_File.this;
+			return FileStateManager.this;
 		}
 	}
 

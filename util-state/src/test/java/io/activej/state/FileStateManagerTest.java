@@ -7,7 +7,7 @@ import io.activej.serializer.stream.StreamOutput;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
 import io.activej.state.file.FileState;
-import io.activej.state.file.StateManager_File;
+import io.activej.state.file.FileStateManager;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,14 +19,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
 
-public class StateManager_File_Test {
+public class FileStateManagerTest {
 
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
 	public static final FileNamingScheme NAMING_SCHEME = FileNamingSchemes.create("", "", "", "", '-');
 
-	private StateManager_File<Integer> manager;
+	private FileStateManager<Integer> manager;
 
 	private BlockingFileSystem fileSystem;
 
@@ -36,7 +36,7 @@ public class StateManager_File_Test {
 		fileSystem = BlockingFileSystem.create(storage);
 		fileSystem.start();
 
-		manager = StateManager_File.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
 				.withCodec(new IntegerCodec())
 				.build();
 	}
@@ -58,7 +58,7 @@ public class StateManager_File_Test {
 
 	@Test
 	public void saveAndLoadWithRevisions() throws IOException {
-		manager = StateManager_File.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
 				.withCodec(new IntegerCodec())
 				.withMaxSaveDiffs(3)
 				.build();
@@ -99,7 +99,7 @@ public class StateManager_File_Test {
 	@Test
 	public void getLastDiffRevision() throws IOException {
 		int maxSaveDiffs = 3;
-		manager = StateManager_File.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
 				.withCodec(new IntegerCodec())
 				.withMaxSaveDiffs(maxSaveDiffs)
 				.build();
@@ -136,7 +136,7 @@ public class StateManager_File_Test {
 	@Test
 	public void uploadsAreAtomic() throws IOException {
 		IOException expectedException = new IOException("Failed");
-		manager = StateManager_File.<Integer>builder(fileSystem, NAMING_SCHEME)
+		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
 				.withEncoder((stream, item) -> {
 					stream.writeInt(1); // some header
 					if (item <= 100) {
