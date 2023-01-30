@@ -34,23 +34,23 @@ import java.util.function.Consumer;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardWatchEventKinds.*;
 
-public final class DiscoveryService_File extends AbstractDiscoveryService {
+public final class FileDiscoveryService extends AbstractDiscoveryService {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
 
 	private final WatchService watchService;
 	private final Path pathToFile;
 
-	private DiscoveryService_File(Reactor reactor, WatchService watchService, Path pathToFile) {
+	private FileDiscoveryService(Reactor reactor, WatchService watchService, Path pathToFile) {
 		super(reactor);
 		this.watchService = watchService;
 		this.pathToFile = pathToFile;
 	}
 
-	public static DiscoveryService_File create(Reactor reactor, WatchService watchService, Path pathToFile) throws CrdtException {
+	public static FileDiscoveryService create(Reactor reactor, WatchService watchService, Path pathToFile) throws CrdtException {
 		return builder(reactor, watchService, pathToFile).build();
 	}
 
-	public static DiscoveryService_File create(Reactor reactor, Path pathToFile) throws CrdtException {
+	public static FileDiscoveryService create(Reactor reactor, Path pathToFile) throws CrdtException {
 		return builder(reactor, pathToFile).build();
 	}
 
@@ -61,7 +61,7 @@ public final class DiscoveryService_File extends AbstractDiscoveryService {
 		if (Files.isDirectory(pathToFile)) {
 			throw new CrdtException("File is a directory: " + pathToFile);
 		}
-		return new DiscoveryService_File(reactor, watchService, pathToFile).new Builder();
+		return new FileDiscoveryService(reactor, watchService, pathToFile).new Builder();
 	}
 
 	public static Builder builder(Reactor reactor, Path pathToFile) throws CrdtException {
@@ -74,7 +74,7 @@ public final class DiscoveryService_File extends AbstractDiscoveryService {
 		return builder(reactor, watchService, pathToFile);
 	}
 
-	public final class Builder extends AbstractDiscoveryService.Builder<Builder, DiscoveryService_File>{
+	public final class Builder extends AbstractDiscoveryService.Builder<Builder, FileDiscoveryService>{
 		private Builder() {}
 	}
 

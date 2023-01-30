@@ -3,7 +3,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
-import io.activej.crdt.storage.local.CrdtStorage_Map;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
@@ -30,7 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
-public class DiscoveryService_File_Test {
+public class FileDiscoveryServiceTest {
 
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -39,7 +39,7 @@ public class DiscoveryService_File_Test {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private Path file;
-	private DiscoveryService_File discoveryService;
+	private FileDiscoveryService discoveryService;
 	private WatchService watchService;
 
 	private static final byte[] TEST_PARTITIONS_1 = ("[" +
@@ -146,7 +146,7 @@ public class DiscoveryService_File_Test {
 		file = temporaryFolder.newFile().toPath();
 		Files.writeString(file, "[]");
 		watchService = file.getFileSystem().newWatchService();
-		discoveryService = DiscoveryService_File.create(getCurrentReactor(), watchService, file);
+		discoveryService = FileDiscoveryService.create(getCurrentReactor(), watchService, file);
 	}
 
 	@Test
@@ -225,15 +225,15 @@ public class DiscoveryService_File_Test {
 
 	@Test
 	public void testPartitionChange() throws IOException, CrdtException {
-		discoveryService = DiscoveryService_File.builder(getCurrentReactor(), watchService, file)
-				.withCrdtProvider(partitionId -> CrdtStorage_Map.create(getCurrentReactor()))
+		discoveryService = FileDiscoveryService.builder(getCurrentReactor(), watchService, file)
+				.withCrdtProvider(partitionId -> MapCrdtStorage.create(getCurrentReactor()))
 				.build();
 
 		Files.write(file, TEST_PARTITIONS_1);
 
-		DiscoveryService_Notifying notifyingDiscoveryService = new DiscoveryService_Notifying();
+		NotifyingDiscoveryService notifyingDiscoveryService = new NotifyingDiscoveryService();
 
-		CrdtStorage_Cluster<String, Integer, PartitionId> cluster = CrdtStorage_Cluster.create(getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
+		ClusterCrdtStorage<String, Integer, PartitionId> cluster = ClusterCrdtStorage.create(getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
 				.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()
@@ -254,7 +254,7 @@ public class DiscoveryService_File_Test {
 	}
 
 	private void assertTestPartitions1(PartitionScheme<PartitionId> partitionScheme) {
-		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = ((PartitionScheme_Rendezvous<PartitionId>) partitionScheme).getPartitionGroups();
+		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = ((RendezvousPartitionScheme<PartitionId>) partitionScheme).getPartitionGroups();
 		assertEquals(2, partitionGroups.size());
 		RendezvousPartitionGroup<PartitionId> group1 = partitionGroups.get(0);
 		assertEquals(2, group1.getReplicaCount());
@@ -275,7 +275,7 @@ public class DiscoveryService_File_Test {
 	}
 
 	private void assertTestPartitions2(PartitionScheme<PartitionId> partitionScheme) {
-		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = ((PartitionScheme_Rendezvous<PartitionId>) partitionScheme).getPartitionGroups();
+		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = ((RendezvousPartitionScheme<PartitionId>) partitionScheme).getPartitionGroups();
 		assertEquals(2, partitionGroups.size());
 		RendezvousPartitionGroup<PartitionId> group1 = partitionGroups.get(0);
 		assertEquals(1, group1.getReplicaCount());
@@ -295,7 +295,7 @@ public class DiscoveryService_File_Test {
 	}
 
 	private void assertTestPartitions3(PartitionScheme<PartitionId> partitionScheme) {
-		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = ((PartitionScheme_Rendezvous<PartitionId>) partitionScheme).getPartitionGroups();
+		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = ((RendezvousPartitionScheme<PartitionId>) partitionScheme).getPartitionGroups();
 		assertEquals(1, partitionGroups.size());
 		RendezvousPartitionGroup<PartitionId> group1 = partitionGroups.get(0);
 		assertEquals(1, group1.getReplicaCount());
@@ -307,7 +307,7 @@ public class DiscoveryService_File_Test {
 		), group1.getPartitionIds());
 	}
 
-	private class DiscoveryService_Notifying extends ImplicitlyReactive
+	private final class NotifyingDiscoveryService extends ImplicitlyReactive
 			implements IDiscoveryService<PartitionId> {
 		private SettablePromise<Void> onChangePromise;
 

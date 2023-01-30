@@ -25,8 +25,8 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 
-public final class Sharder_RendezvousHash<K> implements Sharder<K> {
-	public static final int NUMBER_OF_BUCKETS = ApplicationSettings.getInt(Sharder_RendezvousHash.class, "numberOfBuckets", 512);
+public final class RendezvousHashSharder<K> implements Sharder<K> {
+	public static final int NUMBER_OF_BUCKETS = ApplicationSettings.getInt(RendezvousHashSharder.class, "numberOfBuckets", 512);
 
 	static {
 		checkArgument((NUMBER_OF_BUCKETS & (NUMBER_OF_BUCKETS - 1)) == 0, "Number of buckets must be a power of two");
@@ -35,12 +35,12 @@ public final class Sharder_RendezvousHash<K> implements Sharder<K> {
 	final int[][] buckets;
 	final ToIntFunction<K> keyHashFn;
 
-	private Sharder_RendezvousHash(int[][] buckets, ToIntFunction<K> keyHashFn) {
+	private RendezvousHashSharder(int[][] buckets, ToIntFunction<K> keyHashFn) {
 		this.buckets = buckets;
 		this.keyHashFn = keyHashFn;
 	}
 
-	public static <K extends Comparable<K>, P> Sharder_RendezvousHash<K> create(
+	public static <K extends Comparable<K>, P> RendezvousHashSharder<K> create(
 			ToIntFunction<K> keyHashFn, ToIntFunction<P> partitionIdHashCode,
 			Set<P> partitions, List<P> partitionsAlive, int shards, boolean repartition) {
 		Map<P, Integer> partitionsAliveMap = new HashMap<>();
@@ -95,10 +95,10 @@ public final class Sharder_RendezvousHash<K> implements Sharder<K> {
 			buckets[bucket] = Arrays.copyOf(buf, n);
 			Arrays.sort(buckets[bucket]);
 		}
-		return new Sharder_RendezvousHash<>(buckets, keyHashFn);
+		return new RendezvousHashSharder<>(buckets, keyHashFn);
 	}
 
-	static <K> Sharder<K> unionOf(List<Sharder_RendezvousHash<K>> sharders) {
+	static <K> Sharder<K> unionOf(List<RendezvousHashSharder<K>> sharders) {
 		if (sharders.isEmpty()) return Sharder.none();
 		if (sharders.size() == 1) return sharders.get(0);
 		int[][] buckets = new int[sharders.get(0).buckets.length][];
@@ -106,7 +106,7 @@ public final class Sharder_RendezvousHash<K> implements Sharder<K> {
 		int[] buf = new int[0];
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			int pos = 0;
-			for (Sharder_RendezvousHash<K> sharder : sharders) {
+			for (RendezvousHashSharder<K> sharder : sharders) {
 				int[] selected = sharder.buckets[bucket];
 				NEXT:
 				for (int idx : selected) {
@@ -119,7 +119,7 @@ public final class Sharder_RendezvousHash<K> implements Sharder<K> {
 			}
 			buckets[bucket] = Arrays.copyOf(buf, pos);
 		}
-		return new Sharder_RendezvousHash<>(buckets, keyHashFn);
+		return new RendezvousHashSharder<>(buckets, keyHashFn);
 	}
 
 	@Override

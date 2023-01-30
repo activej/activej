@@ -2,11 +2,11 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorage_Client;
+import io.activej.crdt.RemoteCrdtStorage;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorage_Map;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.storage.local.MapCrdtStorage;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.net.AbstractReactiveServer;
@@ -46,29 +46,29 @@ public final class TestCrdtCluster {
 	public void testUpload() throws IOException {
 		NioReactor reactor = getCurrentReactor();
 
-		BinarySerializer_CrdtData<String, Integer> serializer = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER);
+		CrdtDataBinarySerializer<String, Integer> serializer = new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
 		List<CrdtServer<String, Integer>> servers = new ArrayList<>();
 		Map<String, ICrdtStorage<String, Integer>> clients = new HashMap<>();
-		Map<String, CrdtStorage_Map<String, Integer>> remoteStorages = new LinkedHashMap<>();
+		Map<String, MapCrdtStorage<String, Integer>> remoteStorages = new LinkedHashMap<>();
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			CrdtStorage_Map<String, Integer> storage = CrdtStorage_Map.create(reactor, ignoringTimestamp(Math::max));
+			MapCrdtStorage<String, Integer> storage = MapCrdtStorage.create(reactor, ignoringTimestamp(Math::max));
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, Integer> server = CrdtServer.builder(reactor, storage, serializer)
 					.withListenAddresses(address)
 					.build();
 			server.listen();
 			servers.add(server);
-			clients.put("server_" + i, CrdtStorage_Client.create(reactor, address, serializer));
+			clients.put("server_" + i, RemoteCrdtStorage.create(reactor, address, serializer));
 			remoteStorages.put("server_" + i, storage);
 		}
-		clients.put("dead_one", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5555), serializer)
+		clients.put("dead_one", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5555), serializer)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.build());
-		clients.put("dead_two", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5556), serializer)
+		clients.put("dead_two", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5556), serializer)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.build());
-		clients.put("dead_three", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5557), serializer)
+		clients.put("dead_three", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5557), serializer)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.build());
 
@@ -77,14 +77,14 @@ public final class TestCrdtCluster {
 		for (int i = 0; i < 25; i++) {
 			data.add(new CrdtData<>((char) (i + 97) + "", now, i + 1));
 		}
-		CrdtStorage_Map<String, Integer> localStorage = CrdtStorage_Map.create(reactor, ignoringTimestamp(Math::max));
+		MapCrdtStorage<String, Integer> localStorage = MapCrdtStorage.create(reactor, ignoringTimestamp(Math::max));
 		for (CrdtData<String, Integer> datum : data) {
 			localStorage.put(datum);
 		}
-		CrdtStorage_Cluster<String, Integer, String> cluster = CrdtStorage_Cluster.create(
+		ClusterCrdtStorage<String, Integer, String> cluster = ClusterCrdtStorage.create(
 				reactor,
 				IDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>builder()
+						RendezvousPartitionScheme.<String>builder()
 								.withPartitionGroup(
 										RendezvousPartitionGroup.builder(clients.keySet())
 												.withReplicas(REPLICATION_COUNT)
@@ -122,14 +122,14 @@ public final class TestCrdtCluster {
 			a.addAll(b);
 			return a;
 		});
-		BinarySerializer_CrdtData<String, Set<Integer>> serializer = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SET_SERIALIZER);
+		CrdtDataBinarySerializer<String, Set<Integer>> serializer = new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SET_SERIALIZER);
 
 		String key1 = "test_1";
 		String key2 = "test_2";
 		String key3 = "test_3";
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			CrdtStorage_Map<String, Set<Integer>> storage = CrdtStorage_Map.create(reactor, union);
+			MapCrdtStorage<String, Set<Integer>> storage = MapCrdtStorage.create(reactor, union);
 
 			storage.put(key1, Set.of(i));
 			storage.put(key2, Set.of(i / 2));
@@ -141,25 +141,25 @@ public final class TestCrdtCluster {
 					.build();
 			server.listen();
 			servers.add(server);
-			clients.put("server_" + i, CrdtStorage_Client.builder(reactor, address, serializer)
+			clients.put("server_" + i, RemoteCrdtStorage.builder(reactor, address, serializer)
 					.withConnectTimeout(Duration.ofSeconds(1))
 					.build());
 		}
 
-		clients.put("dead_one", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5555), serializer)
+		clients.put("dead_one", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5555), serializer)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.build());
-		clients.put("dead_two", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5556), serializer)
+		clients.put("dead_two", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5556), serializer)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.build());
-		clients.put("dead_three", CrdtStorage_Client.builder(reactor, new InetSocketAddress(5557), serializer)
+		clients.put("dead_three", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5557), serializer)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.build());
 
-		CrdtStorage_Map<String, Set<Integer>> localStorage = CrdtStorage_Map.create(reactor, union);
-		CrdtStorage_Cluster<String, Set<Integer>, String> cluster = CrdtStorage_Cluster.create(reactor,
+		MapCrdtStorage<String, Set<Integer>> localStorage = MapCrdtStorage.create(reactor, union);
+		ClusterCrdtStorage<String, Set<Integer>, String> cluster = ClusterCrdtStorage.create(reactor,
 				IDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>builder()
+						RendezvousPartitionScheme.<String>builder()
 								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 										.withReplicas(REPLICATION_COUNT)
 										.withRepartition(true)

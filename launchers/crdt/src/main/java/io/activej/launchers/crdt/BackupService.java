@@ -17,8 +17,8 @@
 package io.activej.launchers.crdt;
 
 import io.activej.async.service.ReactiveService;
-import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
-import io.activej.crdt.storage.local.CrdtStorage_Map;
+import io.activej.crdt.storage.local.FileSystemCrdtStorage;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -28,14 +28,14 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class BackupService<K extends Comparable<K>, S> extends AbstractReactive implements ReactiveService {
-	private final CrdtStorage_Map<K, S> inMemory;
-	private final CrdtStorage_FileSystem<K, S> localFiles;
+	private final MapCrdtStorage<K, S> inMemory;
+	private final FileSystemCrdtStorage<K, S> localFiles;
 
 	private long lastTimestamp = 0;
 
 	private @Nullable Promise<Void> backupPromise = null;
 
-	public BackupService(Reactor reactor, CrdtStorage_Map<K, S> inMemory, CrdtStorage_FileSystem<K, S> localFiles) {
+	public BackupService(Reactor reactor, MapCrdtStorage<K, S> inMemory, FileSystemCrdtStorage<K, S> localFiles) {
 		super(reactor);
 		this.inMemory = inMemory;
 		this.localFiles = localFiles;

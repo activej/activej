@@ -3,11 +3,11 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.IDiscoveryService;
-import io.activej.crdt.storage.cluster.CrdtStorage_Cluster;
-import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
+import io.activej.crdt.storage.cluster.ClusterCrdtStorage;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
-import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.storage.local.FileSystemCrdtStorage;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
@@ -28,8 +28,8 @@ import java.util.concurrent.Executors;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 
 public final class CrdtClusterExample {
-	private static final BinarySerializer_CrdtData<String, LWWSet<String>> SERIALIZER =
-			new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
+	private static final CrdtDataBinarySerializer<String, LWWSet<String>> SERIALIZER =
+			new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
 
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.builder()
@@ -47,7 +47,7 @@ public final class CrdtClusterExample {
 			Path storage = Files.createTempDirectory("storage_" + id);
 			FileSystem fs = FileSystem.create(eventloop, executor, storage);
 			fsStartPromises.add(fs.start());
-			clients.put(id, CrdtStorage_FileSystem.create(eventloop, fs, SERIALIZER));
+			clients.put(id, FileSystemCrdtStorage.create(eventloop, fs, SERIALIZER));
 		}
 
 		// grab a couple of them to work with
@@ -57,9 +57,9 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		CrdtStorage_Cluster<String, LWWSet<String>, String> cluster = CrdtStorage_Cluster.<String, LWWSet<String>, String>create(
+		ClusterCrdtStorage<String, LWWSet<String>, String> cluster = ClusterCrdtStorage.<String, LWWSet<String>, String>create(
 				eventloop,
-				IDiscoveryService.of(PartitionScheme_Rendezvous.<String>builder()
+				IDiscoveryService.of(RendezvousPartitionScheme.<String>builder()
 						.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 								.withReplicas(5)
 								.build())

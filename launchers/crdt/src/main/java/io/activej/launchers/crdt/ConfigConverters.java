@@ -20,7 +20,7 @@ import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.SimpleConfigConverter;
 import io.activej.crdt.storage.cluster.PartitionId;
-import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.Contract;
@@ -37,17 +37,17 @@ import static io.activej.config.converter.ConfigConverters.*;
 public final class ConfigConverters {
 
 	/**
-	 * Config converter to create a {@link PartitionScheme_Rendezvous.Builder} out of a {@link Config}
+	 * Config converter to create a {@link RendezvousPartitionScheme.Builder} out of a {@link Config}
 	 * that is useful for creating {@link RpcStrategy} on a client side
 	 *
-	 * @return a config converter for {@link PartitionScheme_Rendezvous.Builder}
+	 * @return a config converter for {@link RendezvousPartitionScheme.Builder}
 	 */
-	public static <P> ConfigConverter<PartitionScheme_Rendezvous<P>.Builder> ofRendezvousPartitionSchemeBuilder(
+	public static <P> ConfigConverter<RendezvousPartitionScheme<P>.Builder> ofRendezvousPartitionSchemeBuilder(
 			ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<>() {
 			@Override
-			public PartitionScheme_Rendezvous<P>.Builder get(Config config) {
+			public RendezvousPartitionScheme<P>.Builder get(Config config) {
 				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
 
 				List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
@@ -55,12 +55,12 @@ public final class ConfigConverters {
 					partitionGroups.add(ofPartitionGroup(partitionIdConverter).get(partitionGroupConfig));
 				}
 
-				return PartitionScheme_Rendezvous.builder(partitionGroups);
+				return RendezvousPartitionScheme.builder(partitionGroups);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public PartitionScheme_Rendezvous<P>.Builder get(Config config, @Nullable PartitionScheme_Rendezvous<P>.Builder defaultValue) {
+			public RendezvousPartitionScheme<P>.Builder get(Config config, @Nullable RendezvousPartitionScheme<P>.Builder defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {
@@ -71,17 +71,17 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * Config converter to create a {@link PartitionScheme_Rendezvous} out of a {@link Config}
+	 * Config converter to create a {@link RendezvousPartitionScheme} out of a {@link Config}
 	 * that is useful for creating {@link RpcStrategy} on a client side
 	 *
-	 * @return a config converter for {@link PartitionScheme_Rendezvous}
+	 * @return a config converter for {@link RendezvousPartitionScheme}
 	 */
-	public static <P> ConfigConverter<PartitionScheme_Rendezvous<P>> ofRendezvousPartitionScheme(
+	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
 			ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<>() {
 			@Override
-			public PartitionScheme_Rendezvous<P> get(Config config) {
+			public RendezvousPartitionScheme<P> get(Config config) {
 				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
 
 				List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
@@ -89,12 +89,12 @@ public final class ConfigConverters {
 					partitionGroups.add(ofPartitionGroup(partitionIdConverter).get(partitionGroupConfig));
 				}
 
-				return PartitionScheme_Rendezvous.create(partitionGroups);
+				return RendezvousPartitionScheme.create(partitionGroups);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public PartitionScheme_Rendezvous<P> get(Config config, @Nullable PartitionScheme_Rendezvous<P> defaultValue) {
+			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {

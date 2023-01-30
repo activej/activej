@@ -20,7 +20,7 @@ import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
@@ -61,7 +61,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 			new CrdtResponse.Handshake(null);
 
 	private final ICrdtStorage<K, S> storage;
-	private final BinarySerializer_CrdtData<K, S> serializer;
+	private final CrdtDataBinarySerializer<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
 	// region JMX
@@ -88,7 +88,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private CrdtServer(NioReactor reactor, ICrdtStorage<K, S> storage, BinarySerializer_CrdtData<K, S> serializer) {
+	private CrdtServer(NioReactor reactor, ICrdtStorage<K, S> storage, CrdtDataBinarySerializer<K, S> serializer) {
 		super(reactor);
 		this.storage = storage;
 		this.serializer = serializer;
@@ -99,7 +99,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	public static <K extends Comparable<K>, S> CrdtServer<K, S>.Builder builder(
 			NioReactor reactor,
 			ICrdtStorage<K, S> storage,
-			BinarySerializer_CrdtData<K, S> serializer
+			CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return new CrdtServer<>(reactor, storage, serializer).new Builder();
 	}
@@ -110,7 +110,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 			BinarySerializer<K> keySerializer,
 			BinarySerializer<S> stateSerializer
 	) {
-		return new CrdtServer<>(reactor, storage, new BinarySerializer_CrdtData<>(keySerializer, stateSerializer)).new Builder();
+		return new CrdtServer<>(reactor, storage, new CrdtDataBinarySerializer<>(keySerializer, stateSerializer)).new Builder();
 	}
 
 	public final class Builder extends AbstractReactiveServer.Builder<Builder, CrdtServer<K, S>> {

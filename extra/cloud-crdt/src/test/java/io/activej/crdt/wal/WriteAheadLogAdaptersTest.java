@@ -18,7 +18,7 @@ public class WriteAheadLogAdaptersTest {
 
 	@Test
 	public void testFlushOnUpdatesCount() {
-		WriteAheadLog_Stub walStub = new WriteAheadLog_Stub();
+		StubWriteAheadLog walStub = new StubWriteAheadLog();
 		int updatesCount = 100;
 		IWriteAheadLog<Integer, Integer> wal = WriteAheadLogAdapters.flushOnUpdatesCount(walStub, updatesCount);
 
@@ -33,7 +33,7 @@ public class WriteAheadLogAdaptersTest {
 		}
 	}
 
-	private static final class WriteAheadLog_Stub extends ImplicitlyReactive
+	private static final class StubWriteAheadLog extends ImplicitlyReactive
 			implements IWriteAheadLog<Integer, Integer> {
 		private int updatesCount;
 

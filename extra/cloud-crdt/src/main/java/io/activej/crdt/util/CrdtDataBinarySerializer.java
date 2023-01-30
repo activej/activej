@@ -20,14 +20,14 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.serializer.*;
 
-public final class BinarySerializer_CrdtData<K extends Comparable<K>, S> implements BinarySerializer<CrdtData<K, S>> {
+public final class CrdtDataBinarySerializer<K extends Comparable<K>, S> implements BinarySerializer<CrdtData<K, S>> {
 	public static final BinarySerializer<Long> TIMESTAMP_SERIALIZER = BinarySerializers.LONG_SERIALIZER;
 
 	private final BinarySerializer<K> keySerializer;
 	private final BinarySerializer<S> stateSerializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
-	public BinarySerializer_CrdtData(BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+	public CrdtDataBinarySerializer(BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
 		this.keySerializer = keySerializer;
 		this.stateSerializer = stateSerializer;
 		this.tombstoneSerializer = createTombstoneSerializer(keySerializer);

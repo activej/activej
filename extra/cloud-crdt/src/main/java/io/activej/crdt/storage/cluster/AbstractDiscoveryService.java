@@ -45,9 +45,9 @@ public abstract class AbstractDiscoveryService extends AbstractReactive
 		}
 	}
 
-	protected final PartitionScheme_Rendezvous<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
+	protected final RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
 		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
-		PartitionScheme_Rendezvous<PartitionId>.Builder schemeBuilder = PartitionScheme_Rendezvous.builder(partitionGroups)
+		RendezvousPartitionScheme<PartitionId>.Builder schemeBuilder = RendezvousPartitionScheme.builder(partitionGroups)
 				.withPartitionIdGetter(PartitionId::getId);
 
 		if (rpcProvider != null) schemeBuilder.withRpcProvider(rpcProvider);

@@ -35,7 +35,7 @@ import java.util.concurrent.Executor;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import static io.activej.crdt.wal.WriteAheadLog_File.EXT_FINAL;
+import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
 import static java.util.stream.Collectors.toList;
 
 public final class Utils {

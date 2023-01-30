@@ -25,7 +25,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.collection.Try;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
-import io.activej.crdt.CrdtStorage_Client;
+import io.activej.crdt.RemoteCrdtStorage;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
@@ -57,9 +57,9 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends AbstractReactive
+public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends AbstractReactive
 		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Cluster.class, "smoothingWindow", Duration.ofMinutes(1));
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(ClusterCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final IDiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
@@ -91,36 +91,36 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	private final EventStats repartitionedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorage_Cluster(Reactor reactor, IDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
+	private ClusterCrdtStorage(Reactor reactor, IDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtStorage_Cluster<K, S, P> create(Reactor reactor,
+	public static <K extends Comparable<K>, S, P> ClusterCrdtStorage<K, S, P> create(Reactor reactor,
 			IDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
-		return CrdtStorage_Cluster.<K, S, P>builder(reactor, discoveryService, crdtFunction).build();
+		return ClusterCrdtStorage.<K, S, P>builder(reactor, discoveryService, crdtFunction).build();
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtStorage_Cluster<K, S, P>.Builder builder(Reactor reactor,
+	public static <K extends Comparable<K>, S, P> ClusterCrdtStorage<K, S, P>.Builder builder(Reactor reactor,
 			IDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
-		return new CrdtStorage_Cluster<K, S, P>(reactor, discoveryService, crdtFunction).new Builder();
+		return new ClusterCrdtStorage<K, S, P>(reactor, discoveryService, crdtFunction).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_Cluster<K, S, P>> {
+	public final class Builder extends AbstractBuilder<Builder, ClusterCrdtStorage<K, S, P>> {
 		private Builder() {}
 
 		public Builder withForceStart(boolean forceStart) {
 			checkNotBuilt(this);
-			CrdtStorage_Cluster.this.forceStart = forceStart;
+			ClusterCrdtStorage.this.forceStart = forceStart;
 			return this;
 		}
 
 		@Override
-		protected CrdtStorage_Cluster<K, S, P> doBuild() {
-			return CrdtStorage_Cluster.this;
+		protected ClusterCrdtStorage<K, S, P> doBuild() {
+			return ClusterCrdtStorage.this;
 		}
 	}
 
@@ -412,7 +412,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public void startDetailedMonitoring() {
 		detailedStats = true;
 		for (ICrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorage_Client<K, S> client) {
+			if (storage instanceof RemoteCrdtStorage<K, S> client) {
 				client.startDetailedMonitoring();
 			}
 		}
@@ -422,7 +422,7 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
 		for (ICrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorage_Client<K, S> client) {
+			if (storage instanceof RemoteCrdtStorage<K, S> client) {
 				client.stopDetailedMonitoring();
 			}
 		}
@@ -479,10 +479,10 @@ public final class CrdtStorage_Cluster<K extends Comparable<K>, S, P> extends Ab
 	}
 
 	@JmxAttribute
-	public Map<P, CrdtStorage_Client> getCrdtStorageClients() {
+	public Map<P, RemoteCrdtStorage> getCrdtStorageClients() {
 		return crdtStorages.entrySet().stream()
-				.filter(entry -> entry.getValue() instanceof CrdtStorage_Client)
-				.collect(toMap(Map.Entry::getKey, e -> (CrdtStorage_Client) e.getValue()));
+				.filter(entry -> entry.getValue() instanceof RemoteCrdtStorage)
+				.collect(toMap(Map.Entry::getKey, e -> (RemoteCrdtStorage) e.getValue()));
 	}
 
 	@JmxAttribute

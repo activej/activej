@@ -4,11 +4,11 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorage_Client;
+import io.activej.crdt.RemoteCrdtStorage;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorage_Map;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.storage.local.MapCrdtStorage;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
@@ -43,7 +43,7 @@ public final class TestDyingPartitions {
 	private static final int SERVER_COUNT = 5;
 	private static final int REPLICATION_COUNT = 3;
 	private static final CrdtFunction<Integer> CRDT_FUNCTION = ignoringTimestamp(Integer::max);
-	private static final BinarySerializer_CrdtData<String, Integer> SERIALIZER = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER);
+	private static final CrdtDataBinarySerializer<String, Integer> SERIALIZER = new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -52,7 +52,7 @@ public final class TestDyingPartitions {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Map<Integer, AbstractReactiveServer> servers;
-	private CrdtStorage_Cluster<String, Integer, String> cluster;
+	private ClusterCrdtStorage<String, Integer, String> cluster;
 
 	@Before
 	public void setUp() throws Exception {
@@ -63,7 +63,7 @@ public final class TestDyingPartitions {
 		for (int i = 0; i < SERVER_COUNT; i++) {
 			int port = getFreePort();
 			Eventloop eventloop = Eventloop.create();
-			CrdtStorage_Map<String, Integer> storage = CrdtStorage_Map.create(eventloop, CRDT_FUNCTION);
+			MapCrdtStorage<String, Integer> storage = MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
 			InetSocketAddress address = new InetSocketAddress(port);
 			CrdtServer<String, Integer> server = CrdtServer.builder(eventloop, storage, SERIALIZER)
 					.withListenAddresses(address)
@@ -72,12 +72,12 @@ public final class TestDyingPartitions {
 			assertNull(servers.put(port, server));
 			new Thread(eventloop).start();
 
-			clients.put("server_" + i, CrdtStorage_Client.create(Reactor.getCurrentReactor(), address, SERIALIZER));
+			clients.put("server_" + i, RemoteCrdtStorage.create(Reactor.getCurrentReactor(), address, SERIALIZER));
 		}
 
-		cluster = CrdtStorage_Cluster.create(getCurrentReactor(),
+		cluster = ClusterCrdtStorage.create(getCurrentReactor(),
 				IDiscoveryService.of(
-						PartitionScheme_Rendezvous.<String>builder()
+						RendezvousPartitionScheme.<String>builder()
 								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
 										.withReplicas(REPLICATION_COUNT)
 										.withRepartition(true)

@@ -4,11 +4,11 @@ import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.storage.local.FileSystemCrdtStorage;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
-import io.activej.crdt.wal.WriteAheadLog_File;
+import io.activej.crdt.wal.FileWriteAheadLog;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Eager;
@@ -32,12 +32,12 @@ public final class PersistentStorageModule extends AbstractModule {
 	IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
 			Reactor reactor,
 			Executor executor,
-			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
+			CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
 			WalUploader<Long, DetailedSumsCrdtState> uploader,
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
-		return WriteAheadLog_File.create(reactor, executor, walPath, serializer, uploader);
+		return FileWriteAheadLog.create(reactor, executor, walPath, serializer, uploader);
 	}
 
 	@Provides
@@ -45,7 +45,7 @@ public final class PersistentStorageModule extends AbstractModule {
 			Reactor reactor,
 			Executor executor,
 			CrdtFunction<DetailedSumsCrdtState> function,
-			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
+			CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
 			ICrdtStorage<Long, DetailedSumsCrdtState> storage,
 			Config config
 	) {
@@ -54,13 +54,13 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtStorage_FileSystem<Long, DetailedSumsCrdtState> storage(
+	FileSystemCrdtStorage<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
 			IFileSystem fs,
-			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
+			CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
-		return CrdtStorage_FileSystem.create(reactor, fs, serializer, function);
+		return FileSystemCrdtStorage.create(reactor, fs, serializer, function);
 	}
 
 	@Provides
@@ -76,7 +76,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	@Named("consolidate")
 	@Eager
-	TaskScheduler consolidateScheduler(Reactor reactor, CrdtStorage_FileSystem<Long, DetailedSumsCrdtState> storageFileSystem, Config config) {
+	TaskScheduler consolidateScheduler(Reactor reactor, FileSystemCrdtStorage<Long, DetailedSumsCrdtState> storageFileSystem, Config config) {
 		return TaskScheduler.builder(reactor, storageFileSystem::consolidate)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
 				.withInitialDelay(Duration.ofSeconds(10))

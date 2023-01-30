@@ -6,7 +6,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.storage.cluster.IDiscoveryService;
-import io.activej.crdt.storage.cluster.DiscoveryService_File;
+import io.activej.crdt.storage.cluster.FileDiscoveryService;
 import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -60,7 +60,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Provides
 	IDiscoveryService<PartitionId> discoveryServiceDiscoveryService(Reactor reactor, Config config) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
-		return DiscoveryService_File.builder(reactor, pathToFile)
+		return FileDiscoveryService.builder(reactor, pathToFile)
 				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())))
 				.build();
 	}

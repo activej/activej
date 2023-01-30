@@ -29,7 +29,7 @@ import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
 import io.activej.datastream.StreamConsumer;
@@ -43,8 +43,8 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Basic;
 import io.activej.datastream.stats.StreamStats_Detailed;
-import io.activej.fs.IFileSystem;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -68,16 +68,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Utils.entriesToMap;
-import static io.activej.crdt.util.BinarySerializer_CrdtData.TIMESTAMP_SERIALIZER;
+import static io.activej.crdt.util.CrdtDataBinarySerializer.TIMESTAMP_SERIALIZER;
 import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends AbstractReactive
+public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends AbstractReactive
 		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(CrdtStorage_FileSystem.class);
+	private static final Logger logger = LoggerFactory.getLogger(FileSystemCrdtStorage.class);
 
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_FileSystem.class, "smoothingWindow", Duration.ofMinutes(1));
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(FileSystemCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
@@ -113,61 +113,61 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 	private final PromiseStats consolidationStats = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorage_FileSystem(Reactor reactor, IFileSystem fileSystem, BinarySerializer_CrdtData<K, S> serializer, CrdtFunction<S> function) {
+	private FileSystemCrdtStorage(Reactor reactor, IFileSystem fileSystem, CrdtDataBinarySerializer<K, S> serializer, CrdtFunction<S> function) {
 		super(reactor);
 		this.fileSystem = fileSystem;
 		this.function = function;
 		this.serializer = createSerializer(serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_FileSystem<K, S> create(
+	public static <K extends Comparable<K>, S> FileSystemCrdtStorage<K, S> create(
 			Reactor reactor, IFileSystem fileSystem,
-			BinarySerializer_CrdtData<K, S> serializer,
+			CrdtDataBinarySerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
 		return builder(reactor, fileSystem, serializer, function).build();
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_FileSystem<K, S> create(
+	public static <K extends Comparable<K>, S extends CrdtType<S>> FileSystemCrdtStorage<K, S> create(
 			Reactor reactor, IFileSystem fileSystem,
-			BinarySerializer_CrdtData<K, S> serializer
+			CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return builder(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).build();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_FileSystem<K, S>.Builder builder(
+	public static <K extends Comparable<K>, S> FileSystemCrdtStorage<K, S>.Builder builder(
 			Reactor reactor, IFileSystem fileSystem,
-			BinarySerializer_CrdtData<K, S> serializer,
+			CrdtDataBinarySerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, function).new Builder();
+		return new FileSystemCrdtStorage<>(reactor, fileSystem, serializer, function).new Builder();
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorage_FileSystem<K, S>.Builder builder(
+	public static <K extends Comparable<K>, S extends CrdtType<S>> FileSystemCrdtStorage<K, S>.Builder builder(
 			Reactor reactor, IFileSystem fileSystem,
-			BinarySerializer_CrdtData<K, S> serializer
+			CrdtDataBinarySerializer<K, S> serializer
 	) {
-		return new CrdtStorage_FileSystem<>(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).new Builder();
+		return new FileSystemCrdtStorage<>(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_FileSystem<K, S>> {
+	public final class Builder extends AbstractBuilder<Builder, FileSystemCrdtStorage<K, S>> {
 		private Builder() {}
 
 		public Builder withNamingStrategy(Supplier<String> namingStrategy) {
 			checkNotBuilt(this);
-			CrdtStorage_FileSystem.this.namingStrategy = namingStrategy;
+			FileSystemCrdtStorage.this.namingStrategy = namingStrategy;
 			return this;
 		}
 
 		public Builder withFilter(CrdtFilter<S> filter) {
 			checkNotBuilt(this);
-			CrdtStorage_FileSystem.this.filter = filter;
+			FileSystemCrdtStorage.this.filter = filter;
 			return this;
 		}
 
 		@Override
-		protected CrdtStorage_FileSystem<K, S> doBuild() {
-			return CrdtStorage_FileSystem.this;
+		protected FileSystemCrdtStorage<K, S> doBuild() {
+			return FileSystemCrdtStorage.this;
 		}
 	}
 
@@ -227,7 +227,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 				.map(suppliers -> {
 					StreamReducer<K, CrdtReducingData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
 
-					suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new Reducer_Crdt(includeTombstones))));
+					suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new CrdtReducer(includeTombstones))));
 
 					return reducer.getOutput()
 							.withEndOfStream(eos -> eos
@@ -276,7 +276,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 				.map(fileMap -> taken == null ?
 						fileMap :
 						entriesToMap(fileMap.entrySet().stream().filter(entry -> !taken.contains(entry.getKey()))))
-				.map(CrdtStorage_FileSystem::pickFilesForConsolidation)
+				.map(FileSystemCrdtStorage::pickFilesForConsolidation)
 				.then(filesToConsolidate -> {
 					if (filesToConsolidate.isEmpty()) {
 						logger.info("No files to consolidate");
@@ -335,7 +335,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 						.streamTo(consumerPromise));
 	}
 
-	private static <K extends Comparable<K>, S> BinarySerializer<CrdtReducingData<K, S>> createSerializer(BinarySerializer_CrdtData<K, S> serializer) {
+	private static <K extends Comparable<K>, S> BinarySerializer<CrdtReducingData<K, S>> createSerializer(CrdtDataBinarySerializer<K, S> serializer) {
 		BinarySerializer<K> keySerializer = serializer.getKeySerializer();
 		BinarySerializer<@Nullable S> stateSerializer = BinarySerializers.ofNullable(serializer.getStateSerializer());
 		return new BinarySerializer<>() {
@@ -382,10 +382,10 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	record CrdtEntry<S>(S state, long timestamp) {}
 
-	class Reducer_Crdt implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
+	private final class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
 		final boolean includeTombstones;
 
-		Reducer_Crdt(boolean includeTombstones) {
+		CrdtReducer(boolean includeTombstones) {
 			this.includeTombstones = includeTombstones;
 		}
 

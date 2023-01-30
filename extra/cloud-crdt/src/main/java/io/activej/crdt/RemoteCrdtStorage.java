@@ -25,7 +25,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
@@ -55,10 +55,10 @@ import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorage_Client<K extends Comparable<K>, S> extends AbstractNioReactive
+public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends AbstractNioReactive
 		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
-	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorage_Client.class, "connectTimeout", Duration.ZERO);
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorage_Client.class, "smoothingWindow", Duration.ofMinutes(1));
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "connectTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
 			Utils.CRDT_RESPONSE_CODEC,
@@ -66,7 +66,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	);
 
 	private final InetSocketAddress address;
-	private final BinarySerializer_CrdtData<K, S> serializer;
+	private final CrdtDataBinarySerializer<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
@@ -90,7 +90,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	private final EventStats removedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorage_Client(NioReactor reactor, InetSocketAddress address, BinarySerializer_CrdtData<K, S> serializer) {
+	private RemoteCrdtStorage(NioReactor reactor, InetSocketAddress address, CrdtDataBinarySerializer<K, S> serializer) {
 		super(reactor);
 		this.address = address;
 		this.serializer = serializer;
@@ -98,15 +98,15 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S> create(
+	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S> create(
 			NioReactor reactor,
 			InetSocketAddress address,
-			BinarySerializer_CrdtData<K, S> serializer
+			CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return builder(reactor, address, serializer).build();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S> create(
+	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S> create(
 			NioReactor reactor,
 			InetSocketAddress address,
 			BinarySerializer<K> keySerializer,
@@ -115,42 +115,42 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 		return builder(reactor, address, keySerializer, stateSerializer).build();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S>.Builder builder(
+	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S>.Builder builder(
 			NioReactor reactor,
 			InetSocketAddress address,
-			BinarySerializer_CrdtData<K, S> serializer
+			CrdtDataBinarySerializer<K, S> serializer
 	) {
-		return new CrdtStorage_Client<>(reactor, address, serializer).new Builder();
+		return new RemoteCrdtStorage<>(reactor, address, serializer).new Builder();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorage_Client<K, S>.Builder builder(
+	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S>.Builder builder(
 			NioReactor reactor,
 			InetSocketAddress address,
 			BinarySerializer<K> keySerializer,
 			BinarySerializer<S> stateSerializer
 	) {
-		BinarySerializer_CrdtData<K, S> serializer = new BinarySerializer_CrdtData<>(keySerializer, stateSerializer);
-		return new CrdtStorage_Client<>(reactor, address, serializer).new Builder();
+		CrdtDataBinarySerializer<K, S> serializer = new CrdtDataBinarySerializer<>(keySerializer, stateSerializer);
+		return new RemoteCrdtStorage<>(reactor, address, serializer).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CrdtStorage_Client<K, S>> {
+	public final class Builder extends AbstractBuilder<Builder, RemoteCrdtStorage<K, S>> {
 		private Builder() {}
 
 		public Builder withConnectTimeout(Duration connectTimeout) {
 			checkNotBuilt(this);
-			CrdtStorage_Client.this.connectTimeoutMillis = connectTimeout.toMillis();
+			RemoteCrdtStorage.this.connectTimeoutMillis = connectTimeout.toMillis();
 			return this;
 		}
 
 		public Builder withSocketSettings(SocketSettings socketSettings) {
 			checkNotBuilt(this);
-			CrdtStorage_Client.this.socketSettings = socketSettings;
+			RemoteCrdtStorage.this.socketSettings = socketSettings;
 			return this;
 		}
 
 		@Override
-		protected CrdtStorage_Client<K, S> doBuild() {
-			return CrdtStorage_Client.this;
+		protected RemoteCrdtStorage<K, S> doBuild() {
+			return RemoteCrdtStorage.this;
 		}
 	}
 
@@ -162,7 +162,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		checkInReactorThread(this);
 		return connect()
-				.then(CrdtStorage_Client::performHandshake)
+				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Upload())
 						.mapException(e -> new CrdtException("Failed to send 'Upload' request", e))
 						.map($ -> messaging.sendBinaryStream()
@@ -183,7 +183,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		checkInReactorThread(this);
 		return connect()
-				.then(CrdtStorage_Client::performHandshake)
+				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
 						.mapException(e -> new CrdtException("Failed to send 'Download' request", e))
 						.then(() -> messaging.receive()
@@ -205,7 +205,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		checkInReactorThread(this);
 		return connect()
-				.then(CrdtStorage_Client::performHandshake)
+				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Take())
 						.mapException(e -> new CrdtException("Failed to send 'Take' request", e))
 						.then(() -> messaging.receive()
@@ -230,7 +230,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		checkInReactorThread(this);
 		return connect()
-				.then(CrdtStorage_Client::performHandshake)
+				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Remove())
 						.mapException(e -> new CrdtException("Failed to send 'Remove' request", e))
 						.map($ -> {
@@ -253,7 +253,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 	public Promise<Void> ping() {
 		checkInReactorThread(this);
 		return connect()
-				.then(CrdtStorage_Client::performHandshake)
+				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Ping())
 						.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
 						.then(() -> messaging.receive()

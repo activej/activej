@@ -32,7 +32,7 @@ import java.util.function.BinaryOperator;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
+public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 		implements ICrdtMap<K, S>, ReactiveService {
 	private final Map<K, S> map = new TreeMap<>();
 
@@ -40,13 +40,13 @@ public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
 
 	private final AsyncRunnable refresh;
 
-	public CrdtMap_Java(Reactor reactor, BinaryOperator<S> mergeFn) {
+	public JavaCrdtMap(Reactor reactor, BinaryOperator<S> mergeFn) {
 		super(reactor);
 		this.mergeFn = mergeFn;
 		this.refresh = Promise::complete;
 	}
 
-	public CrdtMap_Java(Reactor reactor, BinaryOperator<S> mergeFn, ICrdtStorage<K, S> storage) {
+	public JavaCrdtMap(Reactor reactor, BinaryOperator<S> mergeFn, ICrdtStorage<K, S> storage) {
 		super(reactor);
 		this.mergeFn = mergeFn;
 		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));

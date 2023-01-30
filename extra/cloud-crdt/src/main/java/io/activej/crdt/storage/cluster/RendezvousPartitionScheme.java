@@ -14,10 +14,10 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.difference;
-import static io.activej.crdt.storage.cluster.Sharder_RendezvousHash.NUMBER_OF_BUCKETS;
+import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
 import static java.util.stream.Collectors.toSet;
 
-public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
+public final class RendezvousPartitionScheme<P> implements PartitionScheme<P> {
 	private final List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
 	private ToIntFunction<?> keyHashFn = Object::hashCode;
 	@SuppressWarnings("unchecked")
@@ -26,61 +26,61 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 	private Function<P, ICrdtStorage<?, ?>> crdtProvider;
 
 	@SafeVarargs
-	public static <P> PartitionScheme_Rendezvous<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
+	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
 		return builder(partitionGroups).build();
 	}
 
-	public static <P> PartitionScheme_Rendezvous<P> create(List<RendezvousPartitionGroup<P>> partitionGroups) {
+	public static <P> RendezvousPartitionScheme<P> create(List<RendezvousPartitionGroup<P>> partitionGroups) {
 		return builder(partitionGroups).build();
 	}
 
 	@SafeVarargs
-	public static <P> PartitionScheme_Rendezvous<P>.Builder builder(RendezvousPartitionGroup<P>... partitionGroups) {
+	public static <P> RendezvousPartitionScheme<P>.Builder builder(RendezvousPartitionGroup<P>... partitionGroups) {
 		return builder(List.of(partitionGroups));
 	}
 
-	public static <P> PartitionScheme_Rendezvous<P>.Builder builder(List<RendezvousPartitionGroup<P>> partitionGroups) {
-		PartitionScheme_Rendezvous<P> scheme = new PartitionScheme_Rendezvous<>();
+	public static <P> RendezvousPartitionScheme<P>.Builder builder(List<RendezvousPartitionGroup<P>> partitionGroups) {
+		RendezvousPartitionScheme<P> scheme = new RendezvousPartitionScheme<>();
 		scheme.partitionGroups.addAll(partitionGroups);
 		return scheme.new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, PartitionScheme_Rendezvous<P>> {
+	public final class Builder extends AbstractBuilder<Builder, RendezvousPartitionScheme<P>> {
 		private Builder() {}
 
 		public Builder withPartitionIdGetter(Function<P, Object> partitionIdGetter) {
 			checkNotBuilt(this);
-			PartitionScheme_Rendezvous.this.partitionIdGetter = partitionIdGetter;
+			RendezvousPartitionScheme.this.partitionIdGetter = partitionIdGetter;
 			return this;
 		}
 
 		public Builder withCrdtProvider(Function<P, ICrdtStorage<?, ?>> crdtProvider) {
 			checkNotBuilt(this);
-			PartitionScheme_Rendezvous.this.crdtProvider = crdtProvider;
+			RendezvousPartitionScheme.this.crdtProvider = crdtProvider;
 			return this;
 		}
 
 		public Builder withRpcProvider(Function<P, RpcStrategy> rpcProvider) {
 			checkNotBuilt(this);
-			PartitionScheme_Rendezvous.this.rpcProvider = rpcProvider;
+			RendezvousPartitionScheme.this.rpcProvider = rpcProvider;
 			return this;
 		}
 
 		public Builder withPartitionGroup(RendezvousPartitionGroup<P> partitionGroup) {
 			checkNotBuilt(this);
-			PartitionScheme_Rendezvous.this.partitionGroups.add(partitionGroup);
+			RendezvousPartitionScheme.this.partitionGroups.add(partitionGroup);
 			return this;
 		}
 
 		public <K extends Comparable<K>> Builder withKeyHashFn(ToIntFunction<K> keyHashFn) {
 			checkNotBuilt(this);
-			PartitionScheme_Rendezvous.this.keyHashFn = keyHashFn;
+			RendezvousPartitionScheme.this.keyHashFn = keyHashFn;
 			return this;
 		}
 
 		@Override
-		protected PartitionScheme_Rendezvous<P> doBuild() {
-			return PartitionScheme_Rendezvous.this;
+		protected RendezvousPartitionScheme<P> doBuild() {
+			return RendezvousPartitionScheme.this;
 		}
 	}
 
@@ -102,7 +102,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 	@Override
 	public <K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive) {
 		Set<P> aliveSet = new HashSet<>(alive);
-		List<Sharder_RendezvousHash<K>> sharders = new ArrayList<>();
+		List<RendezvousHashSharder<K>> sharders = new ArrayList<>();
 		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
 			int deadPartitions = difference(partitionGroup.getPartitionIds(), aliveSet).size();
 
@@ -112,7 +112,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 			} else if (deadPartitions != 0) return null;
 
 			//noinspection unchecked
-			Sharder_RendezvousHash<K> sharder = Sharder_RendezvousHash.create(
+			RendezvousHashSharder<K> sharder = RendezvousHashSharder.create(
 					((ToIntFunction<K>) keyHashFn),
 					p -> partitionIdGetter.apply(p).hashCode(),
 					partitionGroup.getPartitionIds(),
@@ -120,7 +120,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 					partitionGroup.getReplicaCount(), partitionGroup.isRepartition());
 			sharders.add(sharder);
 		}
-		return Sharder_RendezvousHash.unionOf(sharders);
+		return RendezvousHashSharder.unionOf(sharders);
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P> {
 					RpcStrategy_RendezvousHashing.builder(req ->
 									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 							.withBuckets(NUMBER_OF_BUCKETS)
-							.withHashBucketFn((p, bucket) -> Sharder_RendezvousHash.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
+							.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
 							.initialize(rendezvousHashing -> {
 								for (P partitionId : partitionGroup.getPartitionIds()) {
 									rendezvousHashing.withShard(partitionId, provideRpcConnection(partitionId));

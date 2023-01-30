@@ -1,7 +1,7 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.storage.local.FileSystemCrdtStorage;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
@@ -47,12 +47,12 @@ public final class CrdtFileSystemConsolidationExample {
 		CrdtFunction<Set<Integer>> crdtFunction = CrdtFunction.ignoringTimestamp(CrdtFileSystemConsolidationExample::union);
 
 		// same with serializer for the timestamp container of the set of integers
-		BinarySerializer_CrdtData<String, Set<Integer>> serializer =
-				new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
+		CrdtDataBinarySerializer<String, Set<Integer>> serializer =
+				new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 		// create an FS-based CRDT client
-		CrdtStorage_FileSystem<String, Set<Integer>> client =
-				CrdtStorage_FileSystem.create(eventloop, fsClient, serializer, crdtFunction);
+		FileSystemCrdtStorage<String, Set<Integer>> client =
+				FileSystemCrdtStorage.create(eventloop, fsClient, serializer, crdtFunction);
 		//[END REGION_1]
 
 		// wait for LocalActiveFs instance to start

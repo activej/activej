@@ -1,7 +1,7 @@
 package io.activej.launchers.crdt;
 
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.inject.annotation.Provides;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
@@ -27,7 +27,7 @@ public class CrdtFileServerLauncherTest {
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
 						CrdtFunction.ignoringTimestamp(Integer::max),
-						new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
+						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
 						Integer.class
 				);

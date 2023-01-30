@@ -2,9 +2,9 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
-import io.activej.crdt.CrdtStorage_Client;
+import io.activej.crdt.RemoteCrdtStorage;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.IFileSystem;
@@ -83,7 +83,7 @@ public final class CrdtClusterTest {
 				CrdtDescriptor<String, Integer> descriptor() {
 					return new CrdtDescriptor<>(
 							ignoringTimestamp(Integer::max),
-							new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
+							new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 							String.class,
 							Integer.class);
 				}
@@ -153,7 +153,7 @@ public final class CrdtClusterTest {
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
 						ignoringTimestamp(Integer::max),
-						new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
+						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
 						Integer.class);
 			}
@@ -191,7 +191,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithStreams() {
-		ICrdtStorage<String, Integer> client = CrdtStorage_Client.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
+		ICrdtStorage<String, Integer> client = RemoteCrdtStorage.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -206,7 +206,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void downloadStuff() {
-		ICrdtStorage<String, Integer> client = CrdtStorage_Client.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
+		ICrdtStorage<String, Integer> client = RemoteCrdtStorage.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(System.out::println))));
 	}

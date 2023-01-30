@@ -18,11 +18,11 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorage_Client;
+import io.activej.crdt.RemoteCrdtStorage;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.*;
-import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
-import io.activej.crdt.storage.local.CrdtStorage_Map;
+import io.activej.crdt.storage.local.FileSystemCrdtStorage;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.IFileSystem;
 import io.activej.inject.Key;
@@ -57,37 +57,37 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		Type supertype = Types.parameterizedType(ICrdtStorage.class, typeArguments);
 
 		bind(Key.ofType(supertype, InMemory.class))
-				.to(Key.ofType(Types.parameterizedType(CrdtStorage_Map.class, typeArguments)));
+				.to(Key.ofType(Types.parameterizedType(MapCrdtStorage.class, typeArguments)));
 		bind(Key.ofType(supertype, Persistent.class))
-				.to(Key.ofType(Types.parameterizedType(CrdtStorage_FileSystem.class, typeArguments)));
+				.to(Key.ofType(Types.parameterizedType(FileSystemCrdtStorage.class, typeArguments)));
 		Type[] clusterStorageTypes = Arrays.copyOf(typeArguments, 3);
 		clusterStorageTypes[2] = PartitionId.class;
 
 		bind((Key<?>) Key.ofType(supertype, Cluster.class))
-				.to(Key.ofType(Types.parameterizedType(CrdtStorage_Cluster.class, clusterStorageTypes)));
+				.to(Key.ofType(Types.parameterizedType(ClusterCrdtStorage.class, clusterStorageTypes)));
 	}
 
 	@Provides
-	CrdtStorage_Map<K, S> runtimeCrdtClient(Reactor reactor, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorage_Map.create(reactor, descriptor.crdtFunction());
+	MapCrdtStorage<K, S> runtimeCrdtClient(Reactor reactor, CrdtDescriptor<K, S> descriptor) {
+		return MapCrdtStorage.create(reactor, descriptor.crdtFunction());
 	}
 
 	@Provides
-	CrdtStorage_FileSystem<K, S> fileSystemCrdtClient(Reactor reactor, IFileSystem fileSystem, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorage_FileSystem.create(reactor, fileSystem, descriptor.serializer(), descriptor.crdtFunction());
+	FileSystemCrdtStorage<K, S> fileSystemCrdtClient(Reactor reactor, IFileSystem fileSystem, CrdtDescriptor<K, S> descriptor) {
+		return FileSystemCrdtStorage.create(reactor, fileSystem, descriptor.serializer(), descriptor.crdtFunction());
 	}
 
 	@Provides
 	IDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
-			PartitionId localPartitionId, CrdtStorage_Map<K, S> localCrdtStorage, CrdtDescriptor<K, S> descriptor,
+			PartitionId localPartitionId, MapCrdtStorage<K, S> localCrdtStorage, CrdtDescriptor<K, S> descriptor,
 			Config config) {
-		PartitionScheme_Rendezvous<PartitionId> scheme = config.get(ofRendezvousPartitionSchemeBuilder(ofPartitionId()), "crdt.cluster")
+		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionSchemeBuilder(ofPartitionId()), "crdt.cluster")
 				.withPartitionIdGetter(PartitionId::getId)
 				.withCrdtProvider(partitionId -> {
 					if (partitionId.equals(localPartitionId)) return localCrdtStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
-					return CrdtStorage_Client.create(reactor, crdtAddress, descriptor.serializer());
+					return RemoteCrdtStorage.create(reactor, crdtAddress, descriptor.serializer());
 				})
 				.build();
 
@@ -100,20 +100,20 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	CrdtStorage_Cluster<K, S, PartitionId> clusterCrdtClient(Reactor reactor,
+	ClusterCrdtStorage<K, S, PartitionId> clusterCrdtClient(Reactor reactor,
 			IDiscoveryService<PartitionId> discoveryService, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorage_Cluster.create(reactor, discoveryService, descriptor.crdtFunction());
+		return ClusterCrdtStorage.create(reactor, discoveryService, descriptor.crdtFunction());
 	}
 
 	@Provides
-	CrdtRepartitionController<K, S, PartitionId> crdtRepartitionController(Reactor reactor, CrdtStorage_Cluster<K, S, PartitionId> clusterClient,
+	CrdtRepartitionController<K, S, PartitionId> crdtRepartitionController(Reactor reactor, ClusterCrdtStorage<K, S, PartitionId> clusterClient,
 			Config config) {
 		return CrdtRepartitionController.create(reactor, clusterClient, config.get(ofPartitionId(), "crdt.cluster.localPartitionId"));
 	}
 
 	@Provides
 	CrdtServer<K, S> crdtServer(NioReactor reactor,
-			CrdtStorage_Map<K, S> client, CrdtDescriptor<K, S> descriptor, PartitionId localPartitionId,
+			MapCrdtStorage<K, S> client, CrdtDescriptor<K, S> descriptor, PartitionId localPartitionId,
 			Config config) {
 		return CrdtServer.builder(reactor, client, descriptor.serializer())
 				.initialize(ofAbstractServer(config.getChild("crdt.server")))
@@ -124,7 +124,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	@Cluster
 	CrdtServer<K, S> clusterServer(NioReactor reactor,
-			CrdtStorage_Cluster<K, S, PartitionId> client, CrdtDescriptor<K, S> descriptor,
+			ClusterCrdtStorage<K, S, PartitionId> client, CrdtDescriptor<K, S> descriptor,
 			Config config) {
 		return CrdtServer.builder(reactor, client, descriptor.serializer())
 				.initialize(ofAbstractServer(config.getChild("crdt.cluster.server")))

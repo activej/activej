@@ -3,7 +3,7 @@ package io.activej.crdt.storage.local;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
@@ -32,9 +32,9 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.*;
 import static org.junit.Assert.*;
 
-public final class CrdtStorage_FileSystem_Test {
-	private static final CrdtFunction<Set<Integer>> CRDT_FUNCTION = ignoringTimestamp(CrdtStorage_FileSystem_Test::union);
-	private static final BinarySerializer_CrdtData<String, Set<Integer>> SERIALIZER = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
+public final class FileSystemCrdtStorageTest {
+	private static final CrdtFunction<Set<Integer>> CRDT_FUNCTION = ignoringTimestamp(FileSystemCrdtStorageTest::union);
+	private static final CrdtDataBinarySerializer<String, Set<Integer>> SERIALIZER = new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -46,13 +46,13 @@ public final class CrdtStorage_FileSystem_Test {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private FileSystem fileSystem;
-	private CrdtStorage_FileSystem<String, Set<Integer>> client;
+	private FileSystemCrdtStorage<String, Set<Integer>> client;
 
 	@Before
 	public void setup() throws IOException {
 		Reactor reactor = getCurrentReactor();
 		fileSystem = FileSystem.create(reactor, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
-		client = CrdtStorage_FileSystem.create(reactor, fileSystem, SERIALIZER, CRDT_FUNCTION);
+		client = FileSystemCrdtStorage.create(reactor, fileSystem, SERIALIZER, CRDT_FUNCTION);
 		await(fileSystem.start());
 		await(client.start());
 	}
@@ -211,7 +211,7 @@ public final class CrdtStorage_FileSystem_Test {
 
 	private static void testPickFilesForConsolidation(Set<String> expected, Map<String, Integer> fileToSizeMap) {
 		Map<String, FileMetadata> files = transformMap(fileToSizeMap, size -> FileMetadata.of(size, 0));
-		Set<String> filesForConsolidation = CrdtStorage_FileSystem.pickFilesForConsolidation(files);
+		Set<String> filesForConsolidation = FileSystemCrdtStorage.pickFilesForConsolidation(files);
 
 		assertEquals(expected, filesForConsolidation);
 	}

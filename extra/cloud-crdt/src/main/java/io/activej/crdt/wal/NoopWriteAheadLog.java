@@ -22,15 +22,15 @@ import io.activej.reactor.Reactor;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public class WriteAheadLog_Noop<K extends Comparable<K>, S> extends AbstractReactive
+public class NoopWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
 		implements IWriteAheadLog<K, S> {
 
-	private WriteAheadLog_Noop(Reactor reactor) {
+	private NoopWriteAheadLog(Reactor reactor) {
 		super(reactor);
 	}
 
-	public static <K extends Comparable<K>, S> WriteAheadLog_Noop<K, S> create(Reactor reactor) {
-		return new WriteAheadLog_Noop<K, S>(reactor);
+	public static <K extends Comparable<K>, S> NoopWriteAheadLog<K, S> create(Reactor reactor) {
+		return new NoopWriteAheadLog<K, S>(reactor);
 	}
 
 	@Override

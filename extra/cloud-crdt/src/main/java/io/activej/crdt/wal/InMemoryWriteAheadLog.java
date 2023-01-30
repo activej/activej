@@ -39,9 +39,9 @@ import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends AbstractReactive
+public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
 		implements IWriteAheadLog<K, S>, ReactiveService {
-	private static final Logger logger = LoggerFactory.getLogger(WriteAheadLog_InMemory.class);
+	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
 
@@ -52,40 +52,40 @@ public final class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends Ab
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private WriteAheadLog_InMemory(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
+	private InMemoryWriteAheadLog(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
 		super(reactor);
 		this.function = function;
 		this.storage = storage;
 	}
 
-	public static <K extends Comparable<K>, S> WriteAheadLog_InMemory<K, S> create(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S> InMemoryWriteAheadLog<K, S> create(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
 		return builder(reactor, function, storage).build();
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> WriteAheadLog_InMemory<K, S> create(Reactor reactor, ICrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S extends CrdtType<S>> InMemoryWriteAheadLog<K, S> create(Reactor reactor, ICrdtStorage<K, S> storage) {
 		return builder(reactor, CrdtFunction.ofCrdtType(), storage).build();
 	}
 
-	public static <K extends Comparable<K>, S> WriteAheadLog_InMemory<K, S>.Builder builder(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
-		return new WriteAheadLog_InMemory<>(reactor, function, storage).new Builder();
+	public static <K extends Comparable<K>, S> InMemoryWriteAheadLog<K, S>.Builder builder(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
+		return new InMemoryWriteAheadLog<>(reactor, function, storage).new Builder();
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> WriteAheadLog_InMemory<K, S>.Builder builder(Reactor reactor, ICrdtStorage<K, S> storage) {
-		return new WriteAheadLog_InMemory<>(reactor, CrdtFunction.ofCrdtType(), storage).new Builder();
+	public static <K extends Comparable<K>, S extends CrdtType<S>> InMemoryWriteAheadLog<K, S>.Builder builder(Reactor reactor, ICrdtStorage<K, S> storage) {
+		return new InMemoryWriteAheadLog<>(reactor, CrdtFunction.ofCrdtType(), storage).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, WriteAheadLog_InMemory<K, S>> {
+	public final class Builder extends AbstractBuilder<Builder, InMemoryWriteAheadLog<K, S>> {
 		private Builder() {}
 
 		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
 			checkNotBuilt(this);
-			WriteAheadLog_InMemory.this.now = now;
+			InMemoryWriteAheadLog.this.now = now;
 			return this;
 		}
 
 		@Override
-		protected WriteAheadLog_InMemory<K, S> doBuild() {
-			return WriteAheadLog_InMemory.this;
+		protected InMemoryWriteAheadLog<K, S> doBuild() {
+			return InMemoryWriteAheadLog.this;
 		}
 	}
 

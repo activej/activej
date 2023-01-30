@@ -4,8 +4,8 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.GSet;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.storage.local.FileSystemCrdtStorage;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
@@ -36,8 +36,8 @@ import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.first;
-import static io.activej.crdt.wal.WriteAheadLog_File.EXT_FINAL;
-import static io.activej.crdt.wal.WriteAheadLog_File.FRAME_FORMAT;
+import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
+import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
@@ -46,7 +46,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
-public class WriteAheadLog_File_Test {
+public class FileWriteAheadLogTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -57,7 +57,7 @@ public class WriteAheadLog_File_Test {
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-	private final BinarySerializer_CrdtData<Long, GSet<Integer>> serializer = new BinarySerializer_CrdtData<>(LONG_SERIALIZER, new GSet.Serializer<>(INT_SERIALIZER));
+	private final CrdtDataBinarySerializer<Long, GSet<Integer>> serializer = new CrdtDataBinarySerializer<>(LONG_SERIALIZER, new GSet.Serializer<>(INT_SERIALIZER));
 	private final CrdtFunction<GSet<Integer>> function = new CrdtFunction<>() {
 		@Override
 		public GSet<Integer> merge(GSet<Integer> first, long firstTimestamp, GSet<Integer> second, long secondTimestamp) {
@@ -71,7 +71,7 @@ public class WriteAheadLog_File_Test {
 	};
 
 	private WalUploader<Long, GSet<Integer>> uploader;
-	private WriteAheadLog_File<Long, GSet<Integer>> wal;
+	private FileWriteAheadLog<Long, GSet<Integer>> wal;
 	private ICrdtStorage<Long, GSet<Integer>> storage;
 	private Executor executor;
 	private Path path;
@@ -83,16 +83,16 @@ public class WriteAheadLog_File_Test {
 		path = temporaryFolder.newFolder().toPath();
 		FileSystem storageFS = FileSystem.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFS.start());
-		storage = CrdtStorage_FileSystem.create(reactor, storageFS, serializer, function);
+		storage = FileSystemCrdtStorage.create(reactor, storageFS, serializer, function);
 		uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);
-		wal = WriteAheadLog_File.builder(reactor, executor, path, serializer, uploader)
+		wal = FileWriteAheadLog.builder(reactor, executor, path, serializer, uploader)
 				.withCurrentTimeProvider(reactor)
 				.build();
 	}
 
 	@Test
 	public void singleFlushSequential() {
-		wal = WriteAheadLog_File.builder(getCurrentReactor(), executor, path, serializer, uploader)
+		wal = FileWriteAheadLog.builder(getCurrentReactor(), executor, path, serializer, uploader)
 				.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
 				.build();
 		await(wal.start());
@@ -135,7 +135,7 @@ public class WriteAheadLog_File_Test {
 
 	@Test
 	public void multipleFlushesSequential() {
-		wal = WriteAheadLog_File.builder(getCurrentReactor(), executor, path, serializer, uploader)
+		wal = FileWriteAheadLog.builder(getCurrentReactor(), executor, path, serializer, uploader)
 				.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
 				.build();
 		await(wal.start());

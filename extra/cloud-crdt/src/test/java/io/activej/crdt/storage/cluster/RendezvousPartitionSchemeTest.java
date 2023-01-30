@@ -9,11 +9,11 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
-public class PartitionScheme_Rendezvous_Test {
+public class RendezvousPartitionSchemeTest {
 
 	@Test
 	public void testSameIds() {
-		PartitionScheme<PartitionId> partitionings = PartitionScheme_Rendezvous.<PartitionId>builder()
+		PartitionScheme<PartitionId> partitionings = RendezvousPartitionScheme.<PartitionId>builder()
 				.withPartitionGroup(RendezvousPartitionGroup.builder(
 								Set.of(
 										PartitionId.of("a", new InetSocketAddress(9001), new InetSocketAddress(8001)),

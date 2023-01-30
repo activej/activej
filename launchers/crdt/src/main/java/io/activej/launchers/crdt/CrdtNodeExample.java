@@ -18,7 +18,7 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.util.BinarySerializer_CrdtData;
+import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.FileSystem;
 import io.activej.http.HttpServer;
@@ -53,7 +53,7 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
 						CrdtFunction.ignoringTimestamp(Integer::max),
-						new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
+						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
 						Integer.class);
 			}

@@ -1,7 +1,7 @@
 package io.activej.crdt.util;
 
 import io.activej.common.ref.RefInt;
-import io.activej.crdt.storage.cluster.Sharder_RendezvousHash;
+import io.activej.crdt.storage.cluster.RendezvousHashSharder;
 import org.junit.Test;
 
 import java.util.*;
@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class Sharder_Rendezvous_HashTest {
+public class RendezvousHashSharderTest {
 
 	@Test
 	public void testSharder() {
@@ -22,7 +22,7 @@ public class Sharder_Rendezvous_HashTest {
 				Stream.of("one", "two", "three", "four", "five"),
 				s -> index.value++);
 		Set<String> alive = new HashSet<>(partitionsWithIndexes.keySet());
-		Sharder_RendezvousHash<Integer> sharder1 = Sharder_RendezvousHash.create(
+		RendezvousHashSharder<Integer> sharder1 = RendezvousHashSharder.create(
 				Object::hashCode, Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
@@ -41,7 +41,7 @@ public class Sharder_Rendezvous_HashTest {
 		alive.remove("five");
 		int fiveId = partitionsWithIndexes.remove("five");
 
-		Sharder_RendezvousHash<Integer> sharder2 = Sharder_RendezvousHash.create(
+		RendezvousHashSharder<Integer> sharder2 = RendezvousHashSharder.create(
 				Object::hashCode, Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
@@ -69,7 +69,7 @@ public class Sharder_Rendezvous_HashTest {
 
 		alive.remove("four");
 
-		Sharder_RendezvousHash<Integer> sharder3 = Sharder_RendezvousHash.create(
+		RendezvousHashSharder<Integer> sharder3 = RendezvousHashSharder.create(
 				Object::hashCode, Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, true);
 
