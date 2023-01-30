@@ -24,7 +24,7 @@ import java.util.function.Function;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public abstract class ConfigConverter_Simple<T> implements ConfigConverter<T> {
+public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 	@Override
 	public final T get(Config config) {
 		return fromString(checkNotNull(config.getValue()));
@@ -40,8 +40,8 @@ public abstract class ConfigConverter_Simple<T> implements ConfigConverter<T> {
 
 	protected abstract String toString(T value);
 
-	public static <T> ConfigConverter_Simple<T> of(FunctionEx<String, T> fromStringFn, Function<T, String> toStringFn) {
-		return new ConfigConverter_Simple<>() {
+	public static <T> SimpleConfigConverter<T> of(FunctionEx<String, T> fromStringFn, Function<T, String> toStringFn) {
+		return new SimpleConfigConverter<>() {
 			@Override
 			protected T fromString(String string) {
 				try {

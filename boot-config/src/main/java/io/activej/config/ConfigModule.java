@@ -49,17 +49,17 @@ public final class ConfigModule extends AbstractModule {
 	private Path effectiveConfigPath;
 	private Consumer<String> effectiveConfigConsumer;
 
-	static final class Config_Protected implements Config {
+	static final class ProtectedConfig implements Config {
 		private final Config config;
 		private final Map<String, Config> children;
 		private final AtomicBoolean started;
 
-		Config_Protected(Config config, AtomicBoolean started) {
+		ProtectedConfig(Config config, AtomicBoolean started) {
 			this.config = config;
 			this.started = started;
 			this.children = new LinkedHashMap<>();
 			config.getChildren().forEach((key, value) ->
-					this.children.put(key, new Config_Protected(value, started)));
+					this.children.put(key, new ProtectedConfig(value, started)));
 		}
 
 		@Override
@@ -82,7 +82,7 @@ public final class ConfigModule extends AbstractModule {
 		@Override
 		public Config provideNoKeyChild(String key) {
 			checkArgument(!children.containsKey(key), "Children already contain key '%s'", key);
-			return new Config_Protected(config.provideNoKeyChild(key), started);
+			return new ProtectedConfig(config.provideNoKeyChild(key), started);
 		}
 	}
 
@@ -150,15 +150,15 @@ public final class ConfigModule extends AbstractModule {
 					.mapInstance(List.of(completionStageKey), (args, config) -> {
 						CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];
 						AtomicBoolean started = new AtomicBoolean();
-						Config_Protected protectedConfig = new Config_Protected(Config_FullPath.wrap(config), started);
-						Config_Effective effectiveConfig = Config_Effective.wrap(protectedConfig);
+						ProtectedConfig protectedConfig = new ProtectedConfig(FullPathConfig.wrap(config), started);
+						EffectiveConfig effectiveConfig = EffectiveConfig.wrap(protectedConfig);
 						onStart.thenRun(() -> save(effectiveConfig, started));
 						return effectiveConfig;
 					});
 		});
 	}
 
-	private void save(Config_Effective effectiveConfig, AtomicBoolean started) {
+	private void save(EffectiveConfig effectiveConfig, AtomicBoolean started) {
 		started.set(true);
 		if (effectiveConfigPath != null) {
 			logger.info("Saving effective config to {}", effectiveConfigPath);

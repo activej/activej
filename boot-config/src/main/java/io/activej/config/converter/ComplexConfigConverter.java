@@ -19,10 +19,10 @@ package io.activej.config.converter;
 import io.activej.config.Config;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class ConfigConverter_Complex<T> implements ConfigConverter<T> {
+public abstract class ComplexConfigConverter<T> implements ConfigConverter<T> {
 	private final T defaultValue;
 
-	protected ConfigConverter_Complex(T defaultValue) {
+	protected ComplexConfigConverter(T defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 

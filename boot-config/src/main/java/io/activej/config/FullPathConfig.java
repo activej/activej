@@ -23,21 +23,21 @@ import java.util.NoSuchElementException;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.Config.concatPath;
 
-public final class Config_FullPath implements Config {
+public final class FullPathConfig implements Config {
 	private final String path;
 	private final Config config;
 	private final Map<String, Config> children;
 
-	private Config_FullPath(String path, Config config) {
+	private FullPathConfig(String path, Config config) {
 		this.path = path;
 		this.config = config;
 		this.children = new LinkedHashMap<>();
 		config.getChildren().forEach((key, value) ->
-				this.children.put(key, new Config_FullPath(concatPath(this.path, key), value)));
+				this.children.put(key, new FullPathConfig(concatPath(this.path, key), value)));
 	}
 
-	public static Config_FullPath wrap(Config config) {
-		return new Config_FullPath("", config);
+	public static FullPathConfig wrap(Config config) {
+		return new FullPathConfig("", config);
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public final class Config_FullPath implements Config {
 	@Override
 	public Config provideNoKeyChild(String key) {
 		checkArgument(!children.containsKey(key), "Children already contain key '%s'", key);
-		return new Config_FullPath(concatPath(path, key), config.provideNoKeyChild(key));
+		return new FullPathConfig(concatPath(path, key), config.provideNoKeyChild(key));
 	}
 
 }

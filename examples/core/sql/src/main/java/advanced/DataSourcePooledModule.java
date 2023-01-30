@@ -1,6 +1,6 @@
 package advanced;
 
-import advanced.util.ConfigConverter_Hikari;
+import advanced.util.HikariConfigConverter;
 import com.zaxxer.hikari.HikariDataSource;
 import io.activej.config.Config;
 import io.activej.inject.annotation.Provides;
@@ -19,7 +19,7 @@ public final class DataSourcePooledModule extends AbstractModule {
 
 	@Provides
 	DataSource dataSource(Config config) {
-		ConfigConverter_Hikari converter = ConfigConverter_Hikari.builder()
+		HikariConfigConverter converter = HikariConfigConverter.builder()
 				.withAllowMultiQueries()
 				.build();
 		return new HikariDataSource(config.get(converter, "hikari"));

@@ -414,7 +414,7 @@ public interface Config {
 	 * @return new {@code Config} with given value
 	 */
 	static <T> Config ofValue(ConfigConverter<T> configConverter, T value) {
-		Config_Effective effectiveConfig = Config_Effective.wrap(Config.create());
+		EffectiveConfig effectiveConfig = EffectiveConfig.wrap(Config.create());
 		configConverter.get(effectiveConfig, value);
 		return ofMap(effectiveConfig.getEffectiveDefaults());
 	}

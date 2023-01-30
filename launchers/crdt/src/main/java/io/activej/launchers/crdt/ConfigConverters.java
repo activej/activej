@@ -18,7 +18,7 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
-import io.activej.config.converter.ConfigConverter_Simple;
+import io.activej.config.converter.SimpleConfigConverter;
 import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
@@ -131,7 +131,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<PartitionId> ofPartitionId() {
-		return ConfigConverter_Simple.of(PartitionId::parseString, PartitionId::toString);
+		return SimpleConfigConverter.of(PartitionId::parseString, PartitionId::toString);
 	}
 
 }

@@ -20,11 +20,11 @@ import static io.activej.config.converter.ConfigConverters.ofServerSocketSetting
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 
-public class Config_Effective_Test {
+public class EffectiveConfigTest {
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-	private Config_Effective config;
+	private EffectiveConfig config;
 
 	@Before
 	public void setUp() {
@@ -46,7 +46,7 @@ public class Config_Effective_Test {
 		root.put("DataBase", dbConfig);
 		root.put("Server", serverConfig);
 
-		config = Config_Effective.wrap(Config.ofConfigs(root));
+		config = EffectiveConfig.wrap(Config.ofConfigs(root));
 	}
 
 	@Test
@@ -67,7 +67,7 @@ public class Config_Effective_Test {
 
 	@Test
 	public void testCompoundConfig() {
-		config = Config_Effective.wrap(
+		config = EffectiveConfig.wrap(
 				Config.create()
 						.with("Server.socketSettings.backlog", "10")
 						.with("Server.socketSettings.receiveBufferSize", "10")
@@ -93,7 +93,7 @@ public class Config_Effective_Test {
 				## a.b.a = value3
 				""";
 
-		Config_Effective config = Config_Effective.wrap(
+		EffectiveConfig config = EffectiveConfig.wrap(
 				Config.create()
 						.with("a.a.b", "value1")
 						.with("a.a.c", "value2")

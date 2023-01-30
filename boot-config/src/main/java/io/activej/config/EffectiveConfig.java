@@ -28,7 +28,7 @@ import static io.activej.config.Config.concatPath;
 import static java.lang.Math.min;
 import static java.nio.file.StandardOpenOption.*;
 
-public final class Config_Effective implements Config {
+public final class EffectiveConfig implements Config {
 	private static final class CallsRegistry {
 		final Map<String, String> calls = new HashMap<>();
 		final Map<String, String> defaultCalls = new HashMap<>();
@@ -54,22 +54,22 @@ public final class Config_Effective implements Config {
 	private final CallsRegistry callsRegistry;
 
 	// creators
-	private Config_Effective(String path, Config config, CallsRegistry callsRegistry) {
+	private EffectiveConfig(String path, Config config, CallsRegistry callsRegistry) {
 		this.config = config;
 		this.path = path;
 		this.callsRegistry = callsRegistry;
 		this.children = new LinkedHashMap<>();
 		for (Map.Entry<String, Config> entry : config.getChildren().entrySet()) {
 			this.children.put(entry.getKey(),
-					new Config_Effective(concatPath(this.path, entry.getKey()), entry.getValue(), this.callsRegistry));
+					new EffectiveConfig(concatPath(this.path, entry.getKey()), entry.getValue(), this.callsRegistry));
 		}
 	}
 
-	public static Config_Effective wrap(Config config) {
+	public static EffectiveConfig wrap(Config config) {
 		Map<String, String> allProperties = new LinkedHashMap<>(); // same order as inserted in config
 		fetchAllConfigs(config, "", allProperties);
 		CallsRegistry callsRegistry = new CallsRegistry(allProperties);
-		return new Config_Effective("", config, callsRegistry);
+		return new EffectiveConfig("", config, callsRegistry);
 	}
 
 	private static void fetchAllConfigs(Config config, String prefix, Map<String, String> container) {
@@ -114,7 +114,7 @@ public final class Config_Effective implements Config {
 	@Override
 	public Config provideNoKeyChild(String key) {
 		checkArgument(!children.containsKey(key), "Children already contain key '%s'", key);
-		return new Config_Effective(concatPath(path, key), config.provideNoKeyChild(key), callsRegistry);
+		return new EffectiveConfig(concatPath(path, key), config.provideNoKeyChild(key), callsRegistry);
 	}
 
 	@Override

@@ -3,54 +3,54 @@ package advanced.util;
 import com.zaxxer.hikari.HikariConfig;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.config.Config;
-import io.activej.config.converter.ConfigConverter_Complex;
+import io.activej.config.converter.ComplexConfigConverter;
 
 import java.util.Map;
 
 import static io.activej.config.Config.ifNotDefault;
 import static io.activej.config.converter.ConfigConverters.*;
 
-public final class ConfigConverter_Hikari extends ConfigConverter_Complex<HikariConfig> {
+public final class HikariConfigConverter extends ComplexConfigConverter<HikariConfig> {
 	private String poolName;
 	private boolean notSafeSql;
 	private boolean allowMultiQueries;
 
-	private ConfigConverter_Hikari() {
+	private HikariConfigConverter() {
 		super(new HikariConfig());
 	}
 
-	public static ConfigConverter_Hikari create() {
+	public static HikariConfigConverter create() {
 		return builder().build();
 	}
 
 	public static Builder builder() {
-		return new ConfigConverter_Hikari().new Builder();
+		return new HikariConfigConverter().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ConfigConverter_Hikari>{
+	public final class Builder extends AbstractBuilder<Builder, HikariConfigConverter>{
 		private Builder() {}
 
 		public Builder withPoolName(String poolName) {
 			checkNotBuilt(this);
-			ConfigConverter_Hikari.this.poolName = poolName;
+			HikariConfigConverter.this.poolName = poolName;
 			return this;
 		}
 
 		public Builder withNotSafeSql() {
 			checkNotBuilt(this);
-			ConfigConverter_Hikari.this.notSafeSql = true;
+			HikariConfigConverter.this.notSafeSql = true;
 			return this;
 		}
 
 		public Builder withAllowMultiQueries() {
 			checkNotBuilt(this);
-			ConfigConverter_Hikari.this.allowMultiQueries = true;
+			HikariConfigConverter.this.allowMultiQueries = true;
 			return this;
 		}
 
 		@Override
-		protected ConfigConverter_Hikari doBuild() {
-			return ConfigConverter_Hikari.this;
+		protected HikariConfigConverter doBuild() {
+			return HikariConfigConverter.this;
 		}
 	}
 
