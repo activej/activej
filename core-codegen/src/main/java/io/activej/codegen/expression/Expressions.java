@@ -188,7 +188,7 @@ public class Expressions {
 	 * @return new instance of the Property
 	 */
 	public static Variable property(Expression owner, String property) {
-		return new Property(owner, property);
+		return new Expression_Property(owner, property);
 	}
 
 	/**
@@ -228,7 +228,25 @@ public class Expressions {
 	 * @return new instance of the VarArg
 	 */
 	public static Variable arg(int argument) {
-		return new VarArg(argument);
+		return new Expression_VarArg(argument);
+	}
+
+	/**
+	 * Creates a local variable
+	 *
+	 * @param local index of local variable
+	 * @return new instance of the local variable
+	 */
+	public static LocalVariable local(int local) {
+		return new Expression_VarLocal(local);
+	}
+	/**
+	 * Creates a void local variable
+	 *
+	 * @return void local variable
+	 */
+	public static LocalVariable localVoid() {
+		return Expression_VarLocal.VAR_LOCAL_VOID;
 	}
 
 	/**

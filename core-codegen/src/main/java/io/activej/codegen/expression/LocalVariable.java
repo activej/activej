@@ -17,30 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Type;
 
-final class Expression_Let implements Variable {
-	private final Expression value;
-
-	Expression_Let(Expression value) {
-		this.value = value;
-	}
-
-	@Override
-	public Type load(Context ctx) {
-		LocalVariable var = ctx.ensureLocal(this, value);
-		return var.load(ctx);
-	}
-
-	@Override
-	public @Nullable Object beginStore(Context ctx) {
-		return null;
-	}
-
-	@Override
-	public void store(Context ctx, Object storeContext, Type type) {
-		LocalVariable var = ctx.ensureLocal(this, value);
-		var.store(ctx, storeContext, type);
-	}
+public interface LocalVariable extends Variable {
+	void store(Context ctx);
 }

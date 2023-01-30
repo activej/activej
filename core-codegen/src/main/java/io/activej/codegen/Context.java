@@ -18,7 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expression_Constant;
-import io.activej.codegen.expression.VarLocal;
+import io.activej.codegen.expression.LocalVariable;
 import io.activej.codegen.util.TypeChecks;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -57,7 +57,7 @@ public final class Context {
 	private final Method method;
 
 	private Set<Method> accessibleMethods;
-	private final Map<Object, VarLocal> varLocals = new HashMap<>();
+	private final Map<Object, LocalVariable> varLocals = new HashMap<>();
 	private final Map<String, Expression_Constant> constantMap;
 
 	public Context(ClassLoader classLoader, ClassBuilder<?> builder,
@@ -131,23 +131,23 @@ public final class Context {
 		return method;
 	}
 
-	public VarLocal newLocal(Type type) {
-		if (type == Type.VOID_TYPE) return VarLocal.VAR_LOCAL_VOID;
+	public LocalVariable newLocal(Type type) {
+		if (type == Type.VOID_TYPE) return localVoid();
 		int local = getGeneratorAdapter().newLocal(type);
-		return new VarLocal(local);
+		return local(local);
 	}
 
-	public VarLocal ensureLocal(Object key, Expression expression) {
-		VarLocal varLocal = varLocals.get(key);
+	public LocalVariable ensureLocal(Object key, Expression expression) {
+		LocalVariable varLocal = varLocals.get(key);
 		if (varLocal == null) {
 			Type type = expression.load(this);
 			checkType(type, isNotThrow());
 
 			if (type == Type.VOID_TYPE) {
-				varLocal = VarLocal.VAR_LOCAL_VOID;
+				varLocal = localVoid();
 			} else {
 				int local = getGeneratorAdapter().newLocal(type);
-				varLocal = new VarLocal(local);
+				varLocal = local(local);
 				g.storeLocal(local);
 			}
 			varLocals.put(key, varLocal);

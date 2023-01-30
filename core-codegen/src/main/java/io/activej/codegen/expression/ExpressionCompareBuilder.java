@@ -97,10 +97,10 @@ final class Expression_Compare implements Expression {
 				g.ifZCmp(NE, labelReturn);
 				g.pop();
 			} else {
-				VarLocal varRight = ctx.newLocal(rightPropertyType);
+				LocalVariable varRight = ctx.newLocal(rightPropertyType);
 				varRight.store(ctx);
 
-				VarLocal varLeft = ctx.newLocal(leftPropertyType);
+				LocalVariable varLeft = ctx.newLocal(leftPropertyType);
 				varLeft.store(ctx);
 
 				Label continueLabel = new Label();

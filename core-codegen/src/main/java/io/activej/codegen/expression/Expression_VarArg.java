@@ -23,10 +23,10 @@ import org.objectweb.asm.Type;
 /**
  * Defines method which allow taking argument according to their ordinal number
  */
-final class VarArg implements Variable {
+final class Expression_VarArg implements Variable {
 	private final int argument;
 
-	VarArg(int argument) {
+	Expression_VarArg(int argument) {
 		this.argument = argument;
 	}
 

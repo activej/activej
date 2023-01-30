@@ -45,7 +45,7 @@ final class Expression_Iterate implements Expression {
 		Label labelLoop = new Label();
 		Label labelExit = new Label();
 
-		VarLocal to = ctx.newLocal(INT_TYPE);
+		LocalVariable to = ctx.newLocal(INT_TYPE);
 		Type toType = this.to.load(ctx);
 		checkType(toType, isWidenedToInt());
 
@@ -54,7 +54,7 @@ final class Expression_Iterate implements Expression {
 		Type fromType = from.load(ctx);
 		checkType(fromType, isWidenedToInt());
 
-		VarLocal it = ctx.newLocal(INT_TYPE);
+		LocalVariable it = ctx.newLocal(INT_TYPE);
 		it.store(ctx);
 
 		g.mark(labelLoop);

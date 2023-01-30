@@ -24,13 +24,13 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 /**
  * Defines methods which allow to create a local variable
  */
-public final class VarLocal implements Variable {
+final class Expression_VarLocal implements LocalVariable {
 	private static final int VOID = -1;
-	public static final VarLocal VAR_LOCAL_VOID = new VarLocal(VOID);
+	static final Expression_VarLocal VAR_LOCAL_VOID = new Expression_VarLocal(VOID);
 
 	private final int local;
 
-	public VarLocal(int local) {
+	Expression_VarLocal(int local) {
 		this.local = local;
 	}
 
