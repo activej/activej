@@ -4,13 +4,14 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public abstract class RecordProjection implements UnaryOperator<Record>, BiConsumer<Record, Record> {
 	private final RecordScheme schemeFrom;
@@ -76,7 +77,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 								superConstructor(arg(0), arg(1)))
 						.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
 							for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
-								seq.add(Expression.set(
+								seq.add(Expressions.set(
 										schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), entry.getKey()),
 										entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
 								));

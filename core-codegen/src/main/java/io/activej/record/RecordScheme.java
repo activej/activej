@@ -20,6 +20,7 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
@@ -116,7 +117,7 @@ public final class RecordScheme {
 			recordGetters[recordGettersMap.size()] = recordGetter;
 			recordGettersMap.put(field, recordGetter);
 
-			Expression set = Expression.set(property, arg(1));
+			Expression set = Expressions.set(property, arg(1));
 			RecordSetter<?> recordSetter = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordSetter.class, recordClass, field),
 					() -> ClassBuilder.builder(RecordSetter.class)
@@ -268,7 +269,7 @@ public final class RecordScheme {
 		}
 
 		private Variable property(Expression record, String field) {
-			return Expression.property(record, getClassField(field));
+			return Expressions.property(record, getClassField(field));
 		}
 
 		private int size() {
@@ -309,7 +310,7 @@ public final class RecordScheme {
 	}
 
 	public Variable property(Expression record, String field) {
-		return Expression.property(record, getRecordClassField(field));
+		return Expressions.property(record, getRecordClassField(field));
 	}
 
 	public List<String> getFields() {

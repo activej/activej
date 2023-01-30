@@ -19,6 +19,7 @@ package io.activej.serializer;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.annotations.*;
@@ -42,7 +43,7 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.SerializerDef.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
@@ -734,7 +735,7 @@ public final class SerializerFactory {
 							POS));
 				}
 				String finalMethodName = methodName;
-				return (buf, pos, value) -> Expression.set(pos, staticCallSelf(finalMethodName, buf, pos, value));
+				return (buf, pos, value) -> Expressions.set(pos, staticCallSelf(finalMethodName, buf, pos, value));
 			}
 		};
 	}

@@ -21,7 +21,7 @@ import io.activej.codegen.expression.Variable;
 
 import java.util.Set;
 
-import static io.activej.codegen.expression.Expression.arg;
+import static io.activej.codegen.expression.Expressions.arg;
 
 /**
  * Represents a serializer and deserializer of a particular class to byte arrays

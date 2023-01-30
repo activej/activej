@@ -19,11 +19,12 @@ package io.activej.aggregation.measure;
 import io.activej.aggregation.fieldtype.FieldTypes;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.isWrapperType;
@@ -48,13 +49,13 @@ public final class MeasureHyperLogLog extends Measure {
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return Expression.set(accumulator, constructor(HyperLogLog.class, value(registers)));
+		return Expressions.set(accumulator, constructor(HyperLogLog.class, value(registers)));
 	}
 
 	@Override
 	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
 		return sequence(
-				Expression.set(accumulator, constructor(HyperLogLog.class, value(registers))),
+				Expressions.set(accumulator, constructor(HyperLogLog.class, value(registers))),
 				call(accumulator, "union", firstAccumulator));
 	}
 
@@ -68,7 +69,7 @@ public final class MeasureHyperLogLog extends Measure {
 	public Expression initAccumulatorWithValue(Variable accumulator,
 			Variable firstValue) {
 		return sequence(
-				Expression.set(accumulator, constructor(HyperLogLog.class, value(registers))),
+				Expressions.set(accumulator, constructor(HyperLogLog.class, value(registers))),
 				add(accumulator, firstValue));
 	}
 

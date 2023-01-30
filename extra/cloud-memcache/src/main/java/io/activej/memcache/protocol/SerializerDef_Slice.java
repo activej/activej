@@ -27,7 +27,7 @@ import io.activej.serializer.impl.SerializerDef_Nullable;
 import io.activej.serializer.impl.SerializerDef_WithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 
 @SuppressWarnings("unused")

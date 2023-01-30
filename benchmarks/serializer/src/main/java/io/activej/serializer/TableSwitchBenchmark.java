@@ -3,6 +3,7 @@ package io.activej.serializer;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.infra.Blackhole;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.get;
 
 //@State(Scope.Benchmark)
@@ -59,7 +60,7 @@ public class TableSwitchBenchmark {
 							cases.put(i, value("X" + i));
 						}
 
-						return Expression.tableSwitch(arg(0), cases, value("---"));
+						return Expressions.tableSwitch(arg(0), cases, value("---"));
 					}))
 			.build()
 			.defineClassAndCreateInstance(DefiningClassLoader.create());
@@ -83,7 +84,7 @@ public class TableSwitchBenchmark {
 						for (int i = 0; i < keys.length; i++) {
 							cases.put(System.identityHashCode(keys[i]), value("X" + i));
 						}
-						return Expression.tableSwitch(key, cases, value("---"));
+						return Expressions.tableSwitch(key, cases, value("---"));
 					}))
 			.build()
 			.defineClassAndCreateInstance(DefiningClassLoader.create());

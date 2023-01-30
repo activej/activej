@@ -19,6 +19,7 @@ package io.activej.aggregation.fieldtype;
 import io.activej.aggregation.measure.HyperLogLog;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import static io.activej.aggregation.fieldtype.JsonCodecs.*;
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -41,7 +42,7 @@ public final class FieldTypes {
 		return new FieldType<>(byte.class, new SerializerDef_Byte(false), BYTE_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
-				return Expression.staticCall(Byte.class, "toString", value);
+				return Expressions.staticCall(Byte.class, "toString", value);
 			}
 		};
 	}
@@ -50,7 +51,7 @@ public final class FieldTypes {
 		return new FieldType<>(short.class, new SerializerDef_Short(false), SHORT_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
-				return Expression.staticCall(Short.class, "toString", value);
+				return Expressions.staticCall(Short.class, "toString", value);
 			}
 		};
 	}

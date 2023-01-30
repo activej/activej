@@ -25,7 +25,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
 public final class SerializerDef_Set extends SerializerDef_RegularCollection {

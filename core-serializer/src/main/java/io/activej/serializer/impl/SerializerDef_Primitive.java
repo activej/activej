@@ -22,7 +22,7 @@ import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.codegen.expression.Expression.cast;
+import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.types.Primitives.wrap;
 
 public abstract class SerializerDef_Primitive extends AbstractSerializerDef implements SerializerDef {

@@ -22,7 +22,7 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.function.BinaryOperator;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public class SerializerDef_RegularMap extends AbstractSerializerDefMap {
 	public SerializerDef_RegularMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType) {

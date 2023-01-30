@@ -25,7 +25,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
 public final class SerializerDef_Map extends SerializerDef_RegularMap {

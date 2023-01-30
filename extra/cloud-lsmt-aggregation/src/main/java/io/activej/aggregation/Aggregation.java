@@ -57,8 +57,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.aggregation.util.Utils.*;
-import static io.activej.codegen.expression.Expression.arg;
-import static io.activej.codegen.expression.Expression.cast;
+import static io.activej.codegen.expression.Expressions.arg;
+import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.*;

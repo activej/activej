@@ -33,11 +33,15 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow to concat arguments into a string
  */
-final class Expression_Concat implements Expression {
+public final class Expression_Concat implements Expression {
 	private final List<Expression> arguments;
 
-	Expression_Concat(List<Expression> arguments) {
+	private Expression_Concat(List<Expression> arguments) {
 		this.arguments = arguments;
+	}
+
+	public static Expression_Concat create(List<Expression> arguments) {
+		return new Expression_Concat(arguments);
 	}
 
 	@Override

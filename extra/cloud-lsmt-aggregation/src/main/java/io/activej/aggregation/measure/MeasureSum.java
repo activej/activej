@@ -20,7 +20,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public final class MeasureSum extends Measure {
 	@SuppressWarnings("rawtypes")

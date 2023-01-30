@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expression.call;
-import static io.activej.codegen.expression.Expression.value;
+import static io.activej.codegen.expression.Expressions.call;
+import static io.activej.codegen.expression.Expressions.value;
 import static io.activej.common.Checks.checkArgument;
 
 public final class RecordProjectionFn implements UnaryOperator<Record> {

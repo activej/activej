@@ -1,7 +1,7 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public final class CodegenExpressionsExample {
 	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();

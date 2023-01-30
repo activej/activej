@@ -22,7 +22,7 @@ import io.activej.codegen.expression.Variable;
 
 import java.util.*;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public final class MeasureUnion extends Measure {
 	@SuppressWarnings("rawtypes")

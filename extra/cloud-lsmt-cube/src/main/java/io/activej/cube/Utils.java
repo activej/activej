@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 

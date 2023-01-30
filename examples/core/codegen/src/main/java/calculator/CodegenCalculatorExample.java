@@ -3,6 +3,7 @@ package calculator;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import org.jparsec.OperatorTable;
 import org.jparsec.Parser;
 import org.jparsec.Parsers;
@@ -21,9 +22,9 @@ public final class CodegenCalculatorExample {
 	private static final Terminals DELIMITERS = Terminals.operators("+", "-", "*", "/", "%", "^", "(", ")", "x");
 	private static final Parser<?> LEXER = DELIMITERS.tokenizer().cast().or(DecimalLiteral.TOKENIZER);
 
-	private static final Parser<Expression> NUMBER = DecimalLiteral.PARSER.map(s -> Expression.value(Double.parseDouble(s)));
+	private static final Parser<Expression> NUMBER = DecimalLiteral.PARSER.map(s -> Expressions.value(Double.parseDouble(s)));
 
-	private static final Parser<Expression> UNKNOWN = DELIMITERS.token("x").retn(Expression.arg(0));
+	private static final Parser<Expression> UNKNOWN = DELIMITERS.token("x").retn(Expressions.arg(0));
 
 	private static final Parser.Reference<Expression> EXPRESSION_REF = Parser.newReference();
 
@@ -38,13 +39,13 @@ public final class CodegenCalculatorExample {
 
 	//[START REGION_1]
 	private static final Parser<Expression> EXPRESSION = new OperatorTable<Expression>()
-			.infixl(DELIMITERS.token("+").retn(Expression::add), 10)
-			.infixl(DELIMITERS.token("-").retn(Expression::sub), 10)
-			.infixl(DELIMITERS.token("*").retn(Expression::mul), 20)
-			.infixl(DELIMITERS.token("/").retn(Expression::div), 20)
-			.infixl(DELIMITERS.token("%").retn(Expression::rem), 20)
-			.prefix(DELIMITERS.token("-").retn(Expression::neg), 30)
-			.infixr(DELIMITERS.token("^").retn((left, right) -> Expression.staticCall(Math.class, "pow", left, right)), 40)
+			.infixl(DELIMITERS.token("+").retn(Expressions::add), 10)
+			.infixl(DELIMITERS.token("-").retn(Expressions::sub), 10)
+			.infixl(DELIMITERS.token("*").retn(Expressions::mul), 20)
+			.infixl(DELIMITERS.token("/").retn(Expressions::div), 20)
+			.infixl(DELIMITERS.token("%").retn(Expressions::rem), 20)
+			.prefix(DELIMITERS.token("-").retn(Expressions::neg), 30)
+			.infixr(DELIMITERS.token("^").retn((left, right) -> Expressions.staticCall(Math.class, "pow", left, right)), 40)
 			.build(ATOM);
 
 	//[END REGION_1]

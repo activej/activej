@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public final class SerializerDef_List extends SerializerDef_RegularCollection {
 	public SerializerDef_List(SerializerDef valueSerializer) {

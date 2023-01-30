@@ -39,7 +39,11 @@ import static org.objectweb.asm.commons.Method.getMethod;
 public final class Expression_HashCode implements Expression {
 	private final List<Expression> arguments = new ArrayList<>();
 
-	Expression_HashCode() {
+	private Expression_HashCode() {
+	}
+
+	public static Expression_HashCode create() {
+		return new Expression_HashCode();
 	}
 
 	public Expression_HashCode with(Expression expression) {
@@ -48,7 +52,7 @@ public final class Expression_HashCode implements Expression {
 	}
 
 	public Expression_HashCode withField(String field) {
-		return with(Expression.property(Expression.self(), field));
+		return with(Expressions.property(Expressions.self(), field));
 	}
 
 	public Expression_HashCode withFields(List<String> fields) {

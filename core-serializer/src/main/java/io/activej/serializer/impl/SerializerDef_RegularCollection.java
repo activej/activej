@@ -22,7 +22,7 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 
 public class SerializerDef_RegularCollection extends AbstractSerializerDefCollection {
 

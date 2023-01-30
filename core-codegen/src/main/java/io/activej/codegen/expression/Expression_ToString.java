@@ -27,8 +27,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.codegen.expression.Expression.property;
-import static io.activej.codegen.expression.Expression.self;
+import static io.activej.codegen.expression.Expressions.property;
+import static io.activej.codegen.expression.Expressions.self;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.*;
@@ -39,24 +39,26 @@ import static org.objectweb.asm.commons.Method.getMethod;
  * Defines methods which allow to create a string
  */
 public final class Expression_ToString implements Expression {
-	private final String begin;
-	private final String end;
-	private final @Nullable String nameSeparator;
-	private final String valueSeparator;
+	private String begin = "{";
+	private String end = "}";
+	private @Nullable String nameSeparator = ": ";
+	private String valueSeparator = ", ";
 	private final Map<Object, Expression> arguments = new LinkedHashMap<>();
 
-	Expression_ToString() {
-		this.begin = "{";
-		this.end = "}";
-		this.nameSeparator = ": ";
-		this.valueSeparator = ", ";
+	private Expression_ToString() {
 	}
 
-	Expression_ToString(String begin, String end, @Nullable String nameSeparator, String valueSeparator) {
-		this.begin = begin;
-		this.end = end;
-		this.nameSeparator = nameSeparator;
-		this.valueSeparator = valueSeparator;
+	public static Expression_ToString create() {
+		return new Expression_ToString();
+	}
+
+	public static Expression_ToString create(String begin, String end, @Nullable String nameSeparator, String valueSeparator) {
+		Expression_ToString expression = new Expression_ToString();
+		expression.begin = begin;
+		expression.end = end;
+		expression.nameSeparator = nameSeparator;
+		expression.valueSeparator = valueSeparator;
+		return expression;
 	}
 
 	public Expression_ToString with(String label, Expression expression) {

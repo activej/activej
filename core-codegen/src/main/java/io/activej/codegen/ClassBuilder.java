@@ -18,6 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expression_Constant;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -35,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.DefiningClassLoader.createInstance;
-import static io.activej.codegen.expression.Expression.*;
+import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
 import static io.activej.common.Checks.checkState;
 import static java.util.stream.Collectors.toList;
@@ -477,12 +478,12 @@ public final class ClassBuilder<T> {
 
 				if (expression instanceof Expression_Constant expressionConstant && !expressionConstant.isJvmPrimitive()) {
 					STATIC_CONSTANTS.put(expressionConstant.getId(), expressionConstant.getValue());
-					Expression.set(staticField(field), cast(
+					Expressions.set(staticField(field), cast(
 									staticCall(ClassBuilder.class, "getStaticConstant", value(((Expression_Constant) expression).getId())),
 									this.fields.get(field)))
 							.load(ctx);
 				} else {
-					Expression.set(staticField(field), expression).load(ctx);
+					Expressions.set(staticField(field), expression).load(ctx);
 				}
 			}
 
