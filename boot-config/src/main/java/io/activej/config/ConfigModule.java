@@ -150,7 +150,7 @@ public final class ConfigModule extends AbstractModule {
 					.mapInstance(List.of(completionStageKey), (args, config) -> {
 						CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];
 						AtomicBoolean started = new AtomicBoolean();
-						Config_Protected protectedConfig = new Config_Protected(Config_WithFullPath.wrap(config), started);
+						Config_Protected protectedConfig = new Config_Protected(Config_FullPath.wrap(config), started);
 						Config_Effective effectiveConfig = Config_Effective.wrap(protectedConfig);
 						onStart.thenRun(() -> save(effectiveConfig, started));
 						return effectiveConfig;
