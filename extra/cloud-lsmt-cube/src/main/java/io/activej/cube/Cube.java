@@ -29,7 +29,8 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expression_Compare;
+import io.activej.codegen.expression.ExpressionCompareBuilder;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
@@ -84,8 +85,6 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.between;
 import static io.activej.aggregation.AggregationPredicates.eq;
 import static io.activej.aggregation.util.Utils.*;
-import static io.activej.codegen.expression.Expression_Compare.leftProperty;
-import static io.activej.codegen.expression.Expression_Compare.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -1117,18 +1116,18 @@ public final class Cube extends AbstractReactive
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
 					() -> ClassBuilder.builder(Comparator.class)
 							.withMethod("compare", get(() -> {
-								Expression_Compare comparator = Expression_Compare.create();
+								ExpressionCompareBuilder compareBuilder = Expressions.compareBuilder();
 								for (Ordering ordering : query.getOrderings()) {
 									String field = ordering.getField();
 									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
 										String property = field.replace('.', '$');
-										comparator.with(
+										compareBuilder.with(
 												ordering.isAsc() ? leftProperty(resultClass, property) : rightProperty(resultClass, property),
 												ordering.isAsc() ? rightProperty(resultClass, property) : leftProperty(resultClass, property),
 												true);
 									}
 								}
-								return comparator;
+								return compareBuilder.build();
 							}))
 							.build()
 			);

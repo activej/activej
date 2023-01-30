@@ -14,8 +14,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
-import static io.activej.codegen.expression.Expression_Compare.leftProperty;
-import static io.activej.codegen.expression.Expression_Compare.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -127,9 +125,10 @@ public class ExpressionTest {
 				.withField("x", int.class)
 				.withField("y", Long.class)
 				.withMethod("compare", int.class, List.of(TestPojo.class, TestPojo.class),
-						Expression_Compare.create()
+						compareBuilder()
 								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
-								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
+								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2"))
+								.build())
 				.withMethod("int compareTo(io.activej.codegen.expression.ExpressionTest$Test)",
 						comparableImpl("x"))
 				.withMethod("equals",
@@ -140,9 +139,10 @@ public class ExpressionTest {
 				.withMethod("test",
 						add(arg(0), value(1L)))
 				.withMethod("hash",
-						Expression_HashCode.create()
+						hashCodeBuilder()
 								.with(property(arg(0), "property1"))
-								.with(property(arg(0), "property2")))
+								.with(property(arg(0), "property2"))
+								.build())
 				.withMethod("property1",
 						property(arg(0), "property1"))
 				.withMethod("setter", sequence(
@@ -167,10 +167,11 @@ public class ExpressionTest {
 				.withMethod("getPojoproperty1",
 						call(arg(0), "getproperty1"))
 				.withMethod("toString",
-						Expression_ToString.create()
+						toStringBuilder()
 								.withField("x")
 								.with(value("test"))
-								.with("labelY", property(self(), "y")))
+								.with("labelY", property(self(), "y"))
+								.build())
 				.build()
 				.defineClass(CLASS_LOADER);
 		Test test = testClass.getDeclaredConstructor().newInstance();
@@ -221,14 +222,15 @@ public class ExpressionTest {
 	public void test2() throws ReflectiveOperationException {
 		Class<Test2> testClass = ClassBuilder.builder(Test2.class)
 				.withMethod("hash",
-						Expression_HashCode.create()
+						hashCodeBuilder()
 								.with(property(arg(0), "property1"))
 								.with(property(arg(0), "property2"))
 								.with(property(arg(0), "property3"))
 								.with(property(arg(0), "property4"))
 								.with(property(arg(0), "property5"))
 								.with(property(arg(0), "property6"))
-								.with(property(arg(0), "property7")))
+								.with(property(arg(0), "property7"))
+								.build())
 				.build()
 				.defineClass(CLASS_LOADER);
 
@@ -243,9 +245,10 @@ public class ExpressionTest {
 	public void testComparator() {
 		Comparator<TestPojo> comparator = ClassBuilder.builder(Comparator.class)
 				.withMethod("compare",
-						Expression_Compare.create()
+						compareBuilder()
 								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
-								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
+								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2"))
+								.build())
 				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		assertEquals(0, comparator.compare(new TestPojo(1, 10), new TestPojo(1, 10)));
@@ -701,9 +704,10 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testComparatorNullable() {
 		Comparator<StringHolder> generatedComparator = ClassBuilder.builder(Comparator.class)
-				.withMethod("compare", Expression_Compare.create()
+				.withMethod("compare", compareBuilder()
 						.with(leftProperty(StringHolder.class, "string1"), rightProperty(StringHolder.class, "string1"), true)
-						.with(leftProperty(StringHolder.class, "string2"), rightProperty(StringHolder.class, "string2"), true))
+						.with(leftProperty(StringHolder.class, "string2"), rightProperty(StringHolder.class, "string2"), true)
+						.build())
 				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -722,9 +726,10 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testComparatorInterface() {
 		Comparator<InterfaceHolder> generatedComparator = ClassBuilder.builder(Comparator.class)
-				.withMethod("compare", Expression_Compare.create()
+				.withMethod("compare", compareBuilder()
 						.with(leftProperty(InterfaceHolder.class, "interface1"), rightProperty(InterfaceHolder.class, "interface1"), true)
-						.with(leftProperty(InterfaceHolder.class, "interface2"), rightProperty(InterfaceHolder.class, "interface2"), false))
+						.with(leftProperty(InterfaceHolder.class, "interface2"), rightProperty(InterfaceHolder.class, "interface2"), false)
+						.build())
 				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -871,8 +876,9 @@ public class ExpressionTest {
 		B instance = ClassBuilder.builder(B.class)
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
-						Expression_ToString.create()
-								.with(call(self(), "b")))
+						toStringBuilder()
+								.with(call(self(), "b"))
+								.build())
 				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -886,8 +892,9 @@ public class ExpressionTest {
 		TestInterfaceWrapper wrapper = ClassBuilder.builder(TestInterfaceWrapper.class)
 				.withMethod("getTestInterface", value(value))
 				.withMethod("toString",
-						Expression_ToString.create()
-								.with(call(self(), "getTestInterface")))
+						toStringBuilder()
+								.with(call(self(), "getTestInterface"))
+								.build())
 				.build()
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -901,8 +908,9 @@ public class ExpressionTest {
 		B instance = ClassBuilder.builder(B.class)
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
-						Expression_ToString.create()
-								.with(call(self(), "b")))
+						toStringBuilder()
+								.with(call(self(), "b"))
+								.build())
 				.build()
 				.defineClassAndCreateInstance(DefiningClassLoader.builder()
 						.withDebugOutputDir(dir.toPath())

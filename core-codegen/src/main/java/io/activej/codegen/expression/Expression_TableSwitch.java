@@ -27,7 +27,7 @@ import java.util.Arrays;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
-class Expression_TableSwitch implements Expression {
+final class Expression_TableSwitch implements Expression {
 	private final Expression value;
 	private final int[] keys;
 	private final Expression[] matchExpressions;

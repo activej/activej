@@ -17,6 +17,8 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.builder.Builder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -36,34 +38,52 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods for hashing some fields
  */
-public final class Expression_HashCode implements Expression {
+final class Expression_HashCode implements Expression {
 	private final List<Expression> arguments = new ArrayList<>();
 
 	private Expression_HashCode() {
 	}
 
-	public static Expression_HashCode create() {
-		return new Expression_HashCode();
+	static Builder builder() {
+		return new Expression_HashCode().new Builder();
 	}
 
-	public Expression_HashCode with(Expression expression) {
-		this.arguments.add(expression);
-		return this;
-	}
+	final class Builder extends AbstractBuilder<Builder, Expression>
+			implements ExpressionHashCodeBuilder {
+		Builder() {}
 
-	public Expression_HashCode withField(String field) {
-		return with(Expressions.property(Expressions.self(), field));
-	}
-
-	public Expression_HashCode withFields(List<String> fields) {
-		for (String field : fields) {
-			withField(field);
+		@Override
+		public Builder with(Expression expression) {
+			checkNotBuilt(this);
+			Expression_HashCode.this.arguments.add(expression);
+			return this;
 		}
-		return this;
-	}
 
-	public Expression_HashCode withFields(String... fields) {
-		return withFields(List.of(fields));
+		@Override
+		public Builder withField(String field) {
+			checkNotBuilt(this);
+			return with(Expressions.property(Expressions.self(), field));
+		}
+
+		@Override
+		public Builder withFields(List<String> fields) {
+			checkNotBuilt(this);
+			for (String field : fields) {
+				withField(field);
+			}
+			return this;
+		}
+
+		@Override
+		public Builder withFields(String... fields) {
+			checkNotBuilt(this);
+			return withFields(List.of(fields));
+		}
+
+		@Override
+		protected Expression doBuild() {
+			return Expression_HashCode.this;
+		}
 	}
 
 	@Override
@@ -130,4 +150,14 @@ public final class Expression_HashCode implements Expression {
 
 		return INT_TYPE;
 	}
+}
+
+public interface ExpressionHashCodeBuilder extends Builder<Expression> {
+	ExpressionHashCodeBuilder with(Expression expression);
+
+	ExpressionHashCodeBuilder withField(String field);
+
+	ExpressionHashCodeBuilder withFields(List<String> fields);
+
+	ExpressionHashCodeBuilder withFields(String... fields);
 }

@@ -30,7 +30,6 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expression_Cast.SELF_TYPE;
-import static io.activej.codegen.expression.Expression_Compare.*;
 import static io.activej.codegen.operation.CompareOperation.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
@@ -813,7 +812,7 @@ public class Expressions {
 	 */
 	public static Expression concat(List<Expression> arguments) {
 		if (arguments.isEmpty()) return value("");
-		return Expression_Concat.create(arguments);
+		return new Expression_Concat(arguments);
 	}
 
 	/**
@@ -832,11 +831,19 @@ public class Expressions {
 	}
 
 	public static Expression hashCodeImpl(List<String> fields) {
-		return Expression_HashCode.create().withFields(fields);
+		return hashCodeBuilder()
+				.withFields(fields)
+				.build();
 	}
 
 	public static Expression hashCodeImpl(String... fields) {
-		return Expression_HashCode.create().withFields(fields);
+		return hashCodeBuilder()
+				.withFields(fields)
+				.build();
+	}
+
+	public static ExpressionHashCodeBuilder hashCodeBuilder() {
+		return Expression_HashCode.builder();
 	}
 
 	public static Expression equalsImpl(List<String> fields) {
@@ -859,23 +866,27 @@ public class Expressions {
 	}
 
 	public static Expression toStringImpl(List<String> fields) {
-		Expression_ToString toString = Expression_ToString.create();
+		Expression_ToString.Builder builder = Expression_ToString.builder();
 		for (String field : fields) {
-			toString.with(field, property(self(), field));
+			builder.with(field, property(self(), field));
 		}
-		return toString;
+		return builder.build();
 	}
 
 	public static Expression toStringImpl(String... fields) {
 		return toStringImpl(List.of(fields));
 	}
 
+	public static ExpressionToStringBuilder toStringBuilder() {
+		return Expression_ToString.builder();
+	}
+
 	public static Expression comparableImpl(List<String> fields) {
-		Expression_Compare comparator = Expression_Compare.create();
+		ExpressionCompareBuilder builder = compareBuilder();
 		for (String field : fields) {
-			comparator.with(thisProperty(field), thatProperty(field), true);
+			builder.with(thisProperty(field), thatProperty(field), true);
 		}
-		return comparator;
+		return builder.build();
 	}
 
 	public static Expression comparableImpl(String... fields) {
@@ -883,11 +894,30 @@ public class Expressions {
 	}
 
 	public static Expression comparatorImpl(Class<?> type, List<String> fields) {
-		Expression_Compare comparator = Expression_Compare.create();
+		ExpressionCompareBuilder builder = compareBuilder();
 		for (String field : fields) {
-			comparator.with(leftProperty(type, field), rightProperty(type, field), true);
+			builder.with(leftProperty(type, field), rightProperty(type, field), true);
 		}
-		return comparator;
+		return builder.build();
 	}
 
+	public static ExpressionCompareBuilder compareBuilder() {
+		return Expression_Compare.builder();
+	}
+
+	public static Expression thisProperty(String property) {
+		return property(self(), property);
+	}
+
+	public static Expression thatProperty(String property) {
+		return property(castIntoSelf(arg(0)), property);
+	}
+
+	public static Expression leftProperty(Class<?> type, String property) {
+		return property(cast(arg(0), type), property);
+	}
+
+	public static Expression rightProperty(Class<?> type, String property) {
+		return property(cast(arg(1), type), property);
+	}
 }

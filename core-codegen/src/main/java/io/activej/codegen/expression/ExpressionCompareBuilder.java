@@ -17,6 +17,8 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.builder.Builder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -25,52 +27,48 @@ import org.objectweb.asm.commons.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isAssignable;
-import static io.activej.codegen.util.Utils.isPrimitiveType;
-import static io.activej.codegen.util.Utils.wrap;
+import static io.activej.codegen.util.Utils.*;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 
 /**
  * Defines methods to compare some fields
  */
-public final class Expression_Equals implements Expression {
+final class Expression_Compare implements Expression {
 	private final List<Pair> pairs = new ArrayList<>();
 
 	private record Pair(Expression left, Expression right, boolean nullable) {}
 
-	private Expression_Equals() {
+	private Expression_Compare() {
 	}
 
-	public static Expression_Equals create() {
-		return new Expression_Equals();
+	static Builder builder() {
+		return new Expression_Compare().new Builder();
 	}
 
-	public Expression_Equals with(Expression left, Expression right) {
-		return with(left, right, false);
-	}
+	final class Builder extends AbstractBuilder<Builder, Expression>
+			implements ExpressionCompareBuilder {
+		Builder() {}
 
-	public Expression_Equals with(Expression left, Expression right, boolean nullable) {
-		this.pairs.add(new Pair(left, right, nullable));
-		return this;
-	}
+		@Override
+		public Builder with(Expression left, Expression right) {
+			checkNotBuilt(this);
+			return with(left, right, false);
+		}
 
-	public static Expression thisProperty(String property) {
-		return property(self(), property);
-	}
+		@Override
+		public Builder with(Expression left, Expression right, boolean nullable) {
+			checkNotBuilt(this);
+			Expression_Compare.this.pairs.add(new Expression_Compare.Pair(left, right, nullable));
+			return this;
+		}
 
-	public static Expression thatProperty(String property) {
-		return property(castIntoSelf(arg(0)), property);
-	}
-
-	public static Expression leftProperty(Class<?> type, String property) {
-		return property(cast(arg(0), type), property);
-	}
-
-	public static Expression rightProperty(Class<?> type, String property) {
-		return property(cast(arg(1), type), property);
+		@Override
+		protected Expression doBuild() {
+			return Expression_Compare.this;
+		}
 	}
 
 	@Override
@@ -94,7 +92,7 @@ public final class Expression_Equals implements Expression {
 				g.ifZCmp(NE, labelReturn);
 				g.pop();
 			} else if (!pair.nullable) {
-				g.invokeVirtual(leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
+				invokeVirtualOrInterface(ctx, leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
 				g.dup();
 				g.ifZCmp(NE, labelReturn);
 				g.pop();
@@ -129,7 +127,7 @@ public final class Expression_Equals implements Expression {
 				varLeft.load(ctx);
 				varRight.load(ctx);
 
-				g.invokeVirtual(leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
+				invokeVirtualOrInterface(ctx, leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
 				g.dup();
 				g.ifZCmp(NE, labelReturn);
 				g.pop();
@@ -145,3 +143,10 @@ public final class Expression_Equals implements Expression {
 		return INT_TYPE;
 	}
 }
+
+public interface ExpressionCompareBuilder extends Builder<Expression> {
+	ExpressionCompareBuilder with(Expression left, Expression right);
+
+	ExpressionCompareBuilder with(Expression left, Expression right, boolean nullable);
+}
+

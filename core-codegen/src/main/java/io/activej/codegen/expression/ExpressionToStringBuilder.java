@@ -17,6 +17,8 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.builder.Builder;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -38,7 +40,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow to create a string
  */
-public final class Expression_ToString implements Expression {
+final class Expression_ToString implements Expression {
 	private String begin = "{";
 	private String end = "}";
 	private @Nullable String nameSeparator = ": ";
@@ -48,43 +50,82 @@ public final class Expression_ToString implements Expression {
 	private Expression_ToString() {
 	}
 
-	public static Expression_ToString create() {
-		return new Expression_ToString();
+	static Builder builder() {
+		return new Expression_ToString().new Builder();
 	}
 
-	public static Expression_ToString create(String begin, String end, @Nullable String nameSeparator, String valueSeparator) {
-		Expression_ToString expression = new Expression_ToString();
-		expression.begin = begin;
-		expression.end = end;
-		expression.nameSeparator = nameSeparator;
-		expression.valueSeparator = valueSeparator;
-		return expression;
-	}
+	final class Builder extends AbstractBuilder<Builder, Expression>
+			implements ExpressionToStringBuilder {
+		Builder() {}
 
-	public Expression_ToString with(String label, Expression expression) {
-		this.arguments.put(label, expression);
-		return this;
-	}
-
-	public Expression_ToString with(Expression expression) {
-		this.arguments.put(arguments.size() + 1, expression);
-		return this;
-	}
-
-	public Expression_ToString withField(String field) {
-		this.arguments.put(field, property(self(), field));
-		return this;
-	}
-
-	public Expression_ToString withFields(List<String> fields) {
-		for (String field : fields) {
-			withField(field);
+		@Override
+		public Builder withBeginTag(String begin) {
+			checkNotBuilt(this);
+			Expression_ToString.this.begin = begin;
+			return this;
 		}
-		return this;
-	}
 
-	public Expression_ToString withFields(String... fields) {
-		return withFields(List.of(fields));
+		@Override
+		public Builder withEndTag(String end) {
+			checkNotBuilt(this);
+			Expression_ToString.this.end = end;
+			return this;
+		}
+
+		@Override
+		public Builder withNameSeparator(String nameSeparator) {
+			checkNotBuilt(this);
+			Expression_ToString.this.nameSeparator = nameSeparator;
+			return this;
+		}
+
+		@Override
+		public Builder withValueSeparator(String valueSeparator) {
+			checkNotBuilt(this);
+			Expression_ToString.this.valueSeparator = valueSeparator;
+			return this;
+		}
+
+		@Override
+		public Builder with(String label, Expression expression) {
+			checkNotBuilt(this);
+			Expression_ToString.this.arguments.put(label, expression);
+			return this;
+		}
+
+		@Override
+		public Builder with(Expression expression) {
+			checkNotBuilt(this);
+			Expression_ToString.this.arguments.put(arguments.size() + 1, expression);
+			return this;
+		}
+
+		@Override
+		public Builder withField(String field) {
+			checkNotBuilt(this);
+			Expression_ToString.this.arguments.put(field, property(self(), field));
+			return this;
+		}
+
+		@Override
+		public Builder withFields(List<String> fields) {
+			checkNotBuilt(this);
+			for (String field : fields) {
+				withField(field);
+			}
+			return this;
+		}
+
+		@Override
+		public Builder withFields(String... fields) {
+			checkNotBuilt(this);
+			return withFields(List.of(fields));
+		}
+
+		@Override
+		protected Expression doBuild() {
+			return Expression_ToString.this;
+		}
 	}
 
 	@Override
@@ -144,4 +185,24 @@ public final class Expression_ToString implements Expression {
 		g.invokeVirtual(getType(StringBuilder.class), getMethod("String toString()"));
 		return getType(String.class);
 	}
+}
+
+public interface ExpressionToStringBuilder extends Builder<Expression> {
+	ExpressionToStringBuilder withBeginTag(String begin);
+
+	ExpressionToStringBuilder withEndTag(String end);
+
+	ExpressionToStringBuilder withNameSeparator(String nameSeparator);
+
+	ExpressionToStringBuilder withValueSeparator(String valueSeparator);
+
+	ExpressionToStringBuilder with(String label, Expression expression);
+
+	ExpressionToStringBuilder with(Expression expression);
+
+	ExpressionToStringBuilder withField(String field);
+
+	ExpressionToStringBuilder withFields(List<String> fields);
+
+	ExpressionToStringBuilder withFields(String... fields);
 }
