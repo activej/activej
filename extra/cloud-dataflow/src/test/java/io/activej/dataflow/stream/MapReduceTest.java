@@ -2,15 +2,15 @@ package io.activej.dataflow.stream;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.collector.Collector_Merge;
 import io.activej.dataflow.collector.ICollector;
+import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.inject.Injector;
@@ -36,7 +36,7 @@ import java.util.function.Function;
 import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
+import static io.activej.dataflow.helper.MergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.*;
 import static io.activej.promise.TestUtils.await;
@@ -145,9 +145,9 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		ICollector<StringCount> collector = Collector_Merge.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder());
+		ICollector<StringCount> collector = MergeCollector.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder());
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
-		StreamConsumer_ToList<StringCount> resultConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create();
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 

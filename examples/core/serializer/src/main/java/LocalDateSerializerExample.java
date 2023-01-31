@@ -24,7 +24,7 @@ public final class LocalDateSerializerExample {
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
 				SerializerFactory.builder()
-						.with(LocalDate.class, ctx -> new SerializerDef_LocalDate())
+						.with(LocalDate.class, ctx -> new LocalDateSerializerDef())
 						.build()
 						.create(classLoader, LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
@@ -61,7 +61,7 @@ public final class LocalDateSerializerExample {
 	//[END HOLDER]
 
 	//[START SERIALIZER]
-	public static class SerializerDef_LocalDate extends SimpleSerializerDef<LocalDate> {
+	public static class LocalDateSerializerDef extends SimpleSerializerDef<LocalDate> {
 		@Override
 		protected BinarySerializer<LocalDate> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
 			return new BinarySerializer<>() {

@@ -65,7 +65,7 @@ public final class TestBlockingFileSystemInvariants {
 		BlockingFileSystem.Builder secondFileSystemBuilder = BlockingFileSystem.builder(secondPath);
 		BlockingFileSystem secondFileSystem = initializer.apply(secondFileSystemBuilder).build();
 		secondFileSystem.start();
-		second = new BlockingFileSystem_Default(secondFileSystem);
+		second = new DefaultBlockingFileSystem(secondFileSystem);
 
 		initializeDirs(List.of(
 				"file",
@@ -908,10 +908,10 @@ public final class TestBlockingFileSystemInvariants {
 	// endregion
 
 	// Default methods are not overridden
-	private static class BlockingFileSystem_Default implements IBlockingFileSystem {
+	private static class DefaultBlockingFileSystem implements IBlockingFileSystem {
 		private final IBlockingFileSystem peer;
 
-		private BlockingFileSystem_Default(IBlockingFileSystem peer) {
+		private DefaultBlockingFileSystem(IBlockingFileSystem peer) {
 			this.peer = peer;
 		}
 

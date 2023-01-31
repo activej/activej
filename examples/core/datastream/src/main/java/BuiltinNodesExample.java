@@ -1,5 +1,5 @@
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
@@ -19,7 +19,7 @@ public final class BuiltinNodesExample {
 
 		StreamFilter<Integer, Integer> filter = StreamFilter.create(input -> input % 2 == 1);
 
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		supplier.transformWith(filter).streamTo(consumer);
 
@@ -36,9 +36,9 @@ public final class BuiltinNodesExample {
 		StreamSplitter<Integer, Integer> sharder = StreamSplitter.create(
 				(item, acceptors) -> acceptors[hashSharder.applyAsInt(item)].accept(item));
 
-		StreamConsumer_ToList<Integer> first = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> second = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> third = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> first = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> second = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> third = ToListStreamConsumer.create();
 
 		sharder.newOutput().streamTo(first);
 		sharder.newOutput().streamTo(second);
@@ -61,7 +61,7 @@ public final class BuiltinNodesExample {
 		StreamFilter<Integer, String> simpleMap = StreamFilter.mapper(x -> x + " times ten = " + x * 10);
 
 		//creating a consumer which converts received values to list
-		StreamConsumer_ToList<String> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<String> consumer = ToListStreamConsumer.create();
 
 		//applying the mapper to supplier and streaming the result to consumer
 		supplier.transformWith(simpleMap).streamTo(consumer);
@@ -82,7 +82,7 @@ public final class BuiltinNodesExample {
 		StreamUnion<Integer> streamUnion = StreamUnion.create();
 
 		//creating a consumer which converts received values to list
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		//stream the sources into new inputs of the unifier
 		source0.streamTo(streamUnion.newInput());

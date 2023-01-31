@@ -2725,7 +2725,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testUTF8Charset() {
 		BinarySerializer<StringHolder> serializer = SerializerFactory.builder()
-				.with(StringHolder.class, ctx -> new SerializerDef_StringHolder())
+				.with(StringHolder.class, ctx -> new StringHolderSerializerDef())
 				.build()
 				.create(DEFINING_CLASS_LOADER, StringHolder.class);
 
@@ -2780,7 +2780,7 @@ public class BinarySerializerTest {
 		}
 	}
 
-	public static final class SerializerDef_StringHolder extends SimpleSerializerDef<StringHolder> {
+	public static final class StringHolderSerializerDef extends SimpleSerializerDef<StringHolder> {
 		@Override
 		protected BinarySerializer<StringHolder> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
 			return new BinarySerializer<>() {

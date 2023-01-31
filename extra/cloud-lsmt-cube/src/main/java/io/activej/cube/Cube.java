@@ -37,7 +37,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.exception.CubeException;
@@ -108,7 +108,7 @@ public final class Cube extends AbstractReactive
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
-	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = FrameFormat_LZ4.create();
+	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;

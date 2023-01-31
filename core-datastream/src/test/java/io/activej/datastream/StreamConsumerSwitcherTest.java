@@ -27,14 +27,14 @@ public class StreamConsumerSwitcherTest {
 
 	@Test
 	public void testSwitching() {
-		List<StreamConsumer_ToList<Integer>> consumers = IntStream.range(0, 10)
-				.mapToObj($ -> StreamConsumer_ToList.<Integer>create())
+		List<ToListStreamConsumer<Integer>> consumers = IntStream.range(0, 10)
+				.mapToObj($ -> ToListStreamConsumer.<Integer>create())
 				.toList();
-		StreamConsumer_Switcher<Integer> switcher = StreamConsumer_Switcher.create();
+		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
-			final Iterator<StreamConsumer_ToList<Integer>> iterator = consumers.iterator();
+			final Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
 
 			@Override
 			protected void onStarted() {
@@ -73,10 +73,10 @@ public class StreamConsumerSwitcherTest {
 	public void testSwitchingToClosedStream() {
 		ExpectedException expectedException = new ExpectedException();
 
-		StreamConsumer_Switcher<Integer> switcher = StreamConsumer_Switcher.create();
-		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
+		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
 		StreamConsumer<Integer> consumerClosed = StreamConsumer.closingWithError(expectedException);
-		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
@@ -121,8 +121,8 @@ public class StreamConsumerSwitcherTest {
 
 	@Test
 	public void testSwitchingAfterSwitcherIsDone() {
-		StreamConsumer_Switcher<Integer> switcher = StreamConsumer_Switcher.create();
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		switcher.switchTo(consumer);
 
@@ -138,7 +138,7 @@ public class StreamConsumerSwitcherTest {
 	public void testSwitchingAfterSwitcherIsClosed() {
 		ExpectedException expectedException = new ExpectedException();
 
-		StreamConsumer_Switcher<Integer> switcher = StreamConsumer_Switcher.create();
+		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
 		switcher.closeEx(expectedException);
 
 		assertSame(expectedException, awaitException(StreamSupplier.of(1, 2, 3, 4).streamTo(switcher)));
@@ -148,8 +148,8 @@ public class StreamConsumerSwitcherTest {
 
 	@Test
 	public void testSwitchingBeforeSwitcherIsBound() {
-		StreamConsumer_Switcher<Integer> switcher = StreamConsumer_Switcher.create();
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		switcher.switchTo(consumer);
 
@@ -165,9 +165,9 @@ public class StreamConsumerSwitcherTest {
 	public void testSwitchingToSlowConsumer() {
 		ArrayList<Integer> list1 = new ArrayList<>();
 		ArrayList<Integer> list2 = new ArrayList<>();
-		List<StreamConsumer<Integer>> consumers = List.of(StreamConsumer_ToList.create(list1),
-				StreamConsumer.ofPromise(Promises.delay(Duration.ofMillis(1), StreamConsumer_ToList.create(list2))));
-		StreamConsumer_Switcher<Integer> switcher = StreamConsumer_Switcher.create();
+		List<StreamConsumer<Integer>> consumers = List.of(ToListStreamConsumer.create(list1),
+				StreamConsumer.ofPromise(Promises.delay(Duration.ofMillis(1), ToListStreamConsumer.create(list2))));
+		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);

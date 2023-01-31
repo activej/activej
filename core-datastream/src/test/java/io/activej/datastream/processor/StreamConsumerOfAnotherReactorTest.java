@@ -1,9 +1,9 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.TestUtils.CountingStreamConsumer;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
@@ -55,7 +55,7 @@ public class StreamConsumerOfAnotherReactorTest {
 	@Test
 	public void testStreaming() throws ExecutionException, InterruptedException {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5);
-		StreamConsumer_ToList<Integer> listConsumer = fromAnotherEventloop(StreamConsumer_ToList::create);
+		ToListStreamConsumer<Integer> listConsumer = fromAnotherEventloop(ToListStreamConsumer::create);
 		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, listConsumer);
 
 		await(supplier.streamTo(consumer.transformWith(randomlySuspending())));
@@ -69,7 +69,7 @@ public class StreamConsumerOfAnotherReactorTest {
 	public void testSupplierException() throws ExecutionException, InterruptedException {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> supplier = StreamSupplier.concat(StreamSupplier.of(1, 2, 3), StreamSupplier.closingWithError(expectedException), StreamSupplier.of(4, 5, 6));
-		StreamConsumer_ToList<Integer> listConsumer = fromAnotherEventloop(StreamConsumer_ToList::create);
+		ToListStreamConsumer<Integer> listConsumer = fromAnotherEventloop(ToListStreamConsumer::create);
 		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, listConsumer);
 
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
@@ -83,7 +83,7 @@ public class StreamConsumerOfAnotherReactorTest {
 	public void testConsumerException() throws ExecutionException, InterruptedException {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5);
-		StreamConsumer_ToList<Integer> listConsumer = fromAnotherEventloop(StreamConsumer_ToList::create);
+		ToListStreamConsumer<Integer> listConsumer = fromAnotherEventloop(ToListStreamConsumer::create);
 		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, listConsumer)
 				.transformWith(decorate(promise -> promise
 						.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))

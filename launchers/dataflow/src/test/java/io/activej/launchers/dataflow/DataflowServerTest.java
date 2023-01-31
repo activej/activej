@@ -3,7 +3,7 @@ package io.activej.launchers.dataflow;
 import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.collector.Collector_Concat;
+import io.activej.dataflow.collector.ConcatCollector;
 import io.activej.dataflow.collector.ICollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
@@ -16,8 +16,8 @@ import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.inject.Injector;
@@ -49,7 +49,7 @@ import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.launchers.dataflow.StreamSorterStorage_MergeStub.FACTORY_STUB;
+import static io.activej.launchers.dataflow.MergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -196,9 +196,9 @@ public class DataflowServerTest {
 		Dataset<String> items = datasetOfId("items", simple(String.class));
 		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
-		ICollector<StringCount> collector = Collector_Concat.create(Reactor.getCurrentReactor(), reducedItems, client);
+		ICollector<StringCount> collector = ConcatCollector.create(Reactor.getCurrentReactor(), reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
-		StreamConsumer_ToList<StringCount> resultConsumer = StreamConsumer_ToList.create(result);
+		ToListStreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create(result);
 
 		return graph.execute().both(resultSupplier.streamTo(resultConsumer))
 				.whenException(resultConsumer::closeEx);
@@ -388,7 +388,7 @@ public class DataflowServerTest {
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).to(reactor ->
 											Reactor.executeWithReactor(reactor, () ->
-													StreamConsumer_ToList.create(result)),
+													ToListStreamConsumer.create(result)),
 									NioReactor.class)
 							.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 							.build());

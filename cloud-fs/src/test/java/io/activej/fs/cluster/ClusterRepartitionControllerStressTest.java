@@ -5,7 +5,7 @@ import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
-import io.activej.fs.tcp.FileSystem_Remote;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -82,7 +82,7 @@ public final class ClusterRepartitionControllerStressTest {
 
 			Files.createDirectories(serverStorages[i]);
 
-			partitions.put("server_" + i, FileSystem_Remote.create(reactor, address));
+			partitions.put("server_" + i, RemoteFileSystem.create(reactor, address));
 
 			FileSystem fileSystem = FileSystem.create(reactor, executor, serverStorages[i]);
 			await(fileSystem.start());

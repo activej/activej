@@ -1,6 +1,6 @@
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.tcp.FileSystem_Remote;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -36,7 +36,7 @@ public final class FileUploadExample extends Launcher {
 	}
 
 	@Inject
-	private FileSystem_Remote client;
+	private RemoteFileSystem client;
 
 	@Inject
 	private NioReactor reactor;
@@ -47,8 +47,8 @@ public final class FileUploadExample extends Launcher {
 	}
 
 	@Provides
-	FileSystem_Remote remoteFileSystem(NioReactor reactor) {
-		return FileSystem_Remote.create(reactor, new InetSocketAddress(SERVER_PORT));
+	RemoteFileSystem remoteFileSystem(NioReactor reactor) {
+		return RemoteFileSystem.create(reactor, new InetSocketAddress(SERVER_PORT));
 	}
 
 	@Override

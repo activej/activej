@@ -21,8 +21,8 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufs.ByteScanner;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.Utils.ByteScanner_Int;
-import io.activej.csp.binary.Utils.ByteScanner_VarInt;
+import io.activej.csp.binary.Utils.IntByteScanner;
+import io.activej.csp.binary.Utils.VarIntByteScanner;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
@@ -115,11 +115,11 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofIntSizePrefixedBytes(int maxSize) {
-		ByteScanner_Int scanner = new ByteScanner_Int();
+		IntByteScanner scanner = new IntByteScanner();
 		return bufs -> {
 			if (bufs.scanBytes(scanner) == 0) return null;
 
-			int size = scanner.result;
+			int size = scanner.getValue();
 
 			if (size < 0) throw new InvalidSizeException("Invalid size of bytes to be read, should be greater than 0");
 			if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
@@ -166,7 +166,7 @@ public interface ByteBufsDecoder<T> {
 	}
 
 	static ByteBufsDecoder<ByteBuf> ofVarIntSizePrefixedBytes(int maxSize) {
-		ByteScanner_VarInt scanner = new ByteScanner_VarInt();
+		VarIntByteScanner scanner = new VarIntByteScanner();
 		return bufs -> {
 			int bytes = bufs.scanBytes(scanner);
 

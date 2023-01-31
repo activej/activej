@@ -61,19 +61,19 @@ public interface StreamStats<T> extends
 		return consumer; // TODO
 	}
 
-	static <T> StreamStats_Basic<T> basic() {
-		return new StreamStats_Basic<>();
+	static <T> BasicStreamStats<T> basic() {
+		return new BasicStreamStats<>();
 	}
 
-	static <T> StreamStats_Basic<T>.Builder basicBuilder() {
-		return new StreamStats_Basic<T>().new Builder();
+	static <T> BasicStreamStats<T>.Builder basicBuilder() {
+		return new BasicStreamStats<T>().new Builder();
 	}
 
-	static <T> StreamStats_Detailed<T> detailed() {
-		return new StreamStats_Detailed<>();
+	static <T> DetailedStreamStats<T> detailed() {
+		return new DetailedStreamStats<>();
 	}
 
-	static <T> StreamStats_Detailed<T>.Builder detailedBuilder() {
-		return new StreamStats_Detailed<T>().new Builder();
+	static <T> DetailedStreamStats<T>.Builder detailedBuilder() {
+		return new DetailedStreamStats<T>().new Builder();
 	}
 }

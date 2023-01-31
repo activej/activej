@@ -1,9 +1,9 @@
 package io.activej.etl;
 
 import io.activej.datastream.StreamConsumerWithResult;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -32,14 +32,14 @@ public class SplitterLogDataConsumerTest {
 
 	@Test
 	public void testConsumes() {
-		List<StreamConsumer_ToList<Integer>> consumers = List.of(
-				StreamConsumer_ToList.create(),
-				StreamConsumer_ToList.create());
+		List<ToListStreamConsumer<Integer>> consumers = List.of(
+				ToListStreamConsumer.create(),
+				ToListStreamConsumer.create());
 
-		Iterator<StreamConsumer_ToList<Integer>> iterator = consumers.iterator();
+		Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
 		SplitterLogDataConsumer<Integer, Integer> splitter =
 				new StubSplitter<>(() -> {
-					StreamConsumer_ToList<Integer> next = iterator.next();
+					ToListStreamConsumer<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
 				});
 
@@ -49,14 +49,14 @@ public class SplitterLogDataConsumerTest {
 
 	@Test
 	public void testConsumersWithSuspend() {
-		List<StreamConsumer_ToList<Integer>> consumers = List.of(
-				StreamConsumer_ToList.create(),
-				StreamConsumer_ToList.create());
+		List<ToListStreamConsumer<Integer>> consumers = List.of(
+				ToListStreamConsumer.create(),
+				ToListStreamConsumer.create());
 
-		Iterator<StreamConsumer_ToList<Integer>> iterator = consumers.iterator();
+		Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
 		SplitterLogDataConsumer<Integer, Integer> splitter =
 				new StubSplitter<>(() -> {
-					StreamConsumer_ToList<Integer> next = iterator.next();
+					ToListStreamConsumer<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
 				});
 

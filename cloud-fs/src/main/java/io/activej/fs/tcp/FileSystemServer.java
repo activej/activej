@@ -46,7 +46,7 @@ import static io.activej.fs.util.RemoteFileSystemUtils.castError;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 
 /**
- * An implementation of {@link AbstractReactiveServer} that works with {@link FileSystem_Remote} client.
+ * An implementation of {@link AbstractReactiveServer} that works with {@link RemoteFileSystem} client.
  * It exposes some given {@link IFileSystem} via TCP.
  * <p>
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>

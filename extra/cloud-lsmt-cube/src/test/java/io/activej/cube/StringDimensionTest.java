@@ -6,13 +6,13 @@ import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
 import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -60,7 +60,7 @@ public class StringDimensionTest {
 		FileSystem fs = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(),
-				AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
+				AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
 		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())
 				.withDimension("key2", ofInt())
@@ -86,7 +86,7 @@ public class StringDimensionTest {
 		cube.apply(consumer1Result);
 		cube.apply(consumer2Result);
 
-		StreamConsumer_ToList<DataItemResultString> consumerToList = StreamConsumer_ToList.create();
+		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();
 		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 						and(eq("key1", "str2"), eq("key2", 3)),
 						DataItemResultString.class, DefiningClassLoader.create(classLoader))

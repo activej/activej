@@ -8,9 +8,9 @@ import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.FileSystem_HttpClient;
+import io.activej.fs.http.HttpClientFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
-import io.activej.fs.tcp.FileSystem_Remote;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.net.AbstractReactiveServer;
@@ -89,7 +89,7 @@ public final class TestClusterDeadPartitionCheck {
 						new ClientServerFactory() {
 							@Override
 							public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-								return FileSystem_Remote.create(reactor, address);
+								return RemoteFileSystem.create(reactor, address);
 							}
 
 							@Override
@@ -124,7 +124,7 @@ public final class TestClusterDeadPartitionCheck {
 						new ClientServerFactory() {
 							@Override
 							public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-								return FileSystem_HttpClient.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
+								return HttpClientFileSystem.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
 							}
 
 							@Override
@@ -150,7 +150,7 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private FileSystemPartitions partitions;
-	private FileSystem_Cluster fileSystemCluster;
+	private ClusterFileSystem fileSystemCluster;
 
 	@Before
 	public void setup() throws IOException, ExecutionException, InterruptedException {
@@ -195,7 +195,7 @@ public final class TestClusterDeadPartitionCheck {
 				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()))
 				.build();
 		await(this.partitions.start());
-		this.fileSystemCluster = FileSystem_Cluster.builder(reactor, this.partitions)
+		this.fileSystemCluster = ClusterFileSystem.builder(reactor, this.partitions)
 				.withReplicationCount(CLIENT_SERVER_PAIRS / 2)
 				.build();
 	}

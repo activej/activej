@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-public final class Operand_MapGet extends Operand_Function<Operand_MapGet> {
+public final class Operand_MapGet extends FunctionOperand<Operand_MapGet> {
 	private final Operand<?> mapOperand;
 	private final Operand<?> keyOperand;
 

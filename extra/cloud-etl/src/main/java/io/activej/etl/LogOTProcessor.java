@@ -22,9 +22,9 @@ import io.activej.async.service.ReactiveService;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.datastream.processor.StreamUnion;
+import io.activej.datastream.stats.BasicStreamStats;
+import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
-import io.activej.datastream.stats.StreamStats_Basic;
-import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.multilog.IMultilog;
@@ -64,8 +64,8 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	// JMX
 	private boolean enabled = true;
 	private boolean detailed;
-	private final StreamStats_Basic<T> streamStatsBasic = StreamStats.basic();
-	private final StreamStats_Detailed<T> streamStatsDetailed = StreamStats.detailed();
+	private final BasicStreamStats<T> streamStatsBasic = StreamStats.basic();
+	private final DetailedStreamStats<T> streamStatsDetailed = StreamStats.detailed();
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogOTProcessor(Reactor reactor,
@@ -165,12 +165,12 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getStreamStatsBasic() {
+	public BasicStreamStats getStreamStatsBasic() {
 		return streamStatsBasic;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getStreamStatsDetailed() {
+	public DetailedStreamStats getStreamStatsDetailed() {
 		return streamStatsDetailed;
 	}
 

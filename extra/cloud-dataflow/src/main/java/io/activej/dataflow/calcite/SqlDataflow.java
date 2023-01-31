@@ -6,9 +6,9 @@ import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
 import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
 import io.activej.dataflow.collector.AbstractCollector;
-import io.activej.dataflow.collector.Collector_Merge;
-import io.activej.dataflow.collector.Collector_Union;
 import io.activej.dataflow.collector.ICollector;
+import io.activej.dataflow.collector.MergeCollector;
+import io.activej.dataflow.collector.UnionCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.exception.DataflowException;
@@ -182,8 +182,8 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 	ICollector<Record> createCollector(Dataset<Record> dataset, long limit) {
 		//noinspection unchecked
 		B collectorBuilder = (B) (dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
-				Collector_Merge.builder(reactor, sortedDataset, client) :
-				Collector_Union.builder(reactor, dataset, client));
+				MergeCollector.builder(reactor, sortedDataset, client) :
+				UnionCollector.builder(reactor, dataset, client));
 
 		if (limit != StreamLimiter.NO_LIMIT) {
 			collectorBuilder.withLimit(limit);

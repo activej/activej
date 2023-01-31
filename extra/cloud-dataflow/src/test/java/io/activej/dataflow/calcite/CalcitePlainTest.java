@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.datastream.StreamConsumer_ToList;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.record.Record;
 import org.junit.Assume;
 
@@ -18,7 +18,7 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 
 	@Override
 	protected QueryResult query(String sql) {
-		StreamConsumer_ToList<Record> resultConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Record> resultConsumer = ToListStreamConsumer.create();
 
 		List<Record> records = await(sqlDataflow.query(sql)
 				.then(supplier -> supplier.streamTo(resultConsumer))

@@ -108,7 +108,7 @@ public final class RpcClient extends AbstractNioReactive
 	private SSLContext sslContext;
 	private Executor sslExecutor;
 
-	private RpcStrategy strategy = new RpcStrategy_NoServers();
+	private RpcStrategy strategy = new NoServersRpcStrategy();
 	private final Set<InetSocketAddress> pendingConnections = new HashSet<>();
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
 
@@ -701,7 +701,7 @@ public final class RpcClient extends AbstractNioReactive
 		}
 	}
 
-	public static final class RpcStrategy_NoServers implements RpcStrategy {
+	public static final class NoServersRpcStrategy implements RpcStrategy {
 		@Override
 		public Set<InetSocketAddress> getAddresses() {
 			return Set.of();

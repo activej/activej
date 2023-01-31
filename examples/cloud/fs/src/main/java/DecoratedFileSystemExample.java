@@ -38,7 +38,7 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 			@Provides
 			@Named("decorated")
 			IFileSystem decoratedFileSystem(IFileSystem fs) {
-				return new FileSystem_Logging(fs);
+				return new LoggingFileSystem(fs);
 			}
 		};
 	}
@@ -50,10 +50,10 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 	}
 
 	//[START WRAPPER]
-	private static final class FileSystem_Logging extends ForwardingFileSystem {
-		private static final Logger logger = LoggerFactory.getLogger(FileSystem_Logging.class);
+	private static final class LoggingFileSystem extends ForwardingFileSystem {
+		private static final Logger logger = LoggerFactory.getLogger(LoggingFileSystem.class);
 
-		public FileSystem_Logging(IFileSystem peer) {
+		public LoggingFileSystem(IFileSystem peer) {
 			super(peer);
 		}
 

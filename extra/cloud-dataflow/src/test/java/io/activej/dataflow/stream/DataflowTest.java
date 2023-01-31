@@ -3,9 +3,9 @@ package io.activej.dataflow.stream;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.collector.Collector_Concat;
-import io.activej.dataflow.collector.Collector_Merge;
+import io.activej.dataflow.collector.ConcatCollector;
 import io.activej.dataflow.collector.ICollector;
+import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -13,7 +13,7 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.http.Servlet_DataflowDebug;
+import io.activej.dataflow.http.DataflowDebugServlet;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetIdModule;
@@ -21,10 +21,10 @@ import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.datastream.processor.StreamReducers.Reducer_Merge;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -58,7 +58,7 @@ import java.util.function.Predicate;
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
+import static io.activej.dataflow.helper.MergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
@@ -103,8 +103,8 @@ public final class DataflowTest {
 				.install(createSerializersModule())
 				.build();
 
-		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
@@ -160,11 +160,11 @@ public final class DataflowTest {
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.build();
 
-		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
@@ -242,9 +242,9 @@ public final class DataflowTest {
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
-		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result3 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result3 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -342,8 +342,8 @@ public final class DataflowTest {
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
-		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -399,7 +399,7 @@ public final class DataflowTest {
 
 	@Test
 	public void testCollector() throws Exception {
-		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> resultConsumer = ToListStreamConsumer.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
@@ -449,7 +449,7 @@ public final class DataflowTest {
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
-		ICollector<TestItem> collector = Collector_Concat.create(Reactor.getCurrentReactor(), sortedDataset, client);
+		ICollector<TestItem> collector = ConcatCollector.create(Reactor.getCurrentReactor(), sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -465,14 +465,14 @@ public final class DataflowTest {
 
 	@Test
 	public void testOffsetLimit() throws Exception {
-		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> resultConsumer = ToListStreamConsumer.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -517,7 +517,7 @@ public final class DataflowTest {
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
 		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = offsetLimit(sortedDataset, 3, 4);
 
-		ICollector<TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), afterOffsetAndLimitApplied, client);
+		ICollector<TestItem> collector = MergeCollector.create(Reactor.getCurrentReactor(), afterOffsetAndLimitApplied, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -541,8 +541,8 @@ public final class DataflowTest {
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
-		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
@@ -585,14 +585,14 @@ public final class DataflowTest {
 
 	@Test
 	public void testUnion() throws Exception {
-		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> resultConsumer = ToListStreamConsumer.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -644,7 +644,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> union = union(sorted1, sorted2);
 
-		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), union, client);
+		MergeCollector<Long, TestItem> collector = MergeCollector.create(Reactor.getCurrentReactor(), union, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -669,14 +669,14 @@ public final class DataflowTest {
 
 	@Test
 	public void testUnionAll() throws Exception {
-		StreamConsumer_ToList<TestItem> resultConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> resultConsumer = ToListStreamConsumer.create();
 
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -728,7 +728,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> sortedUnion = repartitionSort(localSort(union, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
 
-		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), sortedUnion, client);
+		MergeCollector<Long, TestItem> collector = MergeCollector.create(Reactor.getCurrentReactor(), sortedUnion, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -830,7 +830,7 @@ public final class DataflowTest {
 					@Provides
 					HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 							List<Partition> partitions, Injector env, @Named("debugPort") OptionalDependency<Integer> listenPort) {
-						HttpServer.Builder builder = HttpServer.builder(reactor, new Servlet_DataflowDebug(reactor, partitions, executor, codec, env));
+						HttpServer.Builder builder = HttpServer.builder(reactor, new DataflowDebugServlet(reactor, partitions, executor, codec, env));
 						if (listenPort.isPresent()) {
 							builder.withListenPort(listenPort.get());
 						}

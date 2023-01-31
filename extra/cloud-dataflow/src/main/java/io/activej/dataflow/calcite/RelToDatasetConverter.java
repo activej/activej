@@ -5,7 +5,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
-import io.activej.dataflow.calcite.join.LeftJoiner_Record;
+import io.activej.dataflow.calcite.join.RecordLeftJoiner;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.Operand_RecordField;
 import io.activej.dataflow.calcite.operand.Operand_Scalar;
@@ -139,7 +139,7 @@ public class RelToDatasetConverter {
 
 					if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset) ||
 							!(locallySortedDataset.keyComparator() instanceof RecordSortComparator)) {
-						return Datasets.map(materialized, materializedFn, StreamSchema_Record.create(toScheme));
+						return Datasets.map(materialized, materializedFn, RecordStreamSchema.create(toScheme));
 					}
 
 					boolean needsRepartition = doesNeedRepartition(projections, scheme.size(), locallySortedDataset);
@@ -187,7 +187,7 @@ public class RelToDatasetConverter {
 			Class<Object> type = (Class<Object>) dataflowTable.getType();
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, StreamSchemas.simple(type));
 
-			Dataset<Record> mapped = Datasets.map(dataset, new RecordFunction_Named<>(id, mapper), StreamSchema_Record.create(scheme));
+			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), RecordStreamSchema.create(scheme));
 			Dataset<Record> filtered = needsFiltering ?
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
@@ -211,9 +211,9 @@ public class RelToDatasetConverter {
 			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
 			Reducer<Record, Record, Record, ?> providedReducer = dataflowPartitionedTable.getReducer();
-			Reducer<Record, Record, Record, ?> reducer = new Reducer_Named(id, (Reducer<Record, Record, Record, Object>) providedReducer);
+			Reducer<Record, Record, Record, ?> reducer = new NamedReducer(id, (Reducer<Record, Record, Record, Object>) providedReducer);
 
-			return Datasets.repartitionReduce(locallySortedDataset, reducer, StreamSchema_Record.create(scheme));
+			return Datasets.repartitionReduce(locallySortedDataset, reducer, RecordStreamSchema.create(scheme));
 		});
 	}
 
@@ -231,7 +231,7 @@ public class RelToDatasetConverter {
 		RecordScheme rightScheme = right.getScheme();
 
 		List<String> fieldNames = join.getRowType().getFieldNames();
-		LeftJoiner_Record joiner = LeftJoiner_Record.create(join.getJoinType(), leftScheme, rightScheme, fieldNames);
+		RecordLeftJoiner joiner = RecordLeftJoiner.create(join.getJoinType(), leftScheme, rightScheme, fieldNames);
 
 		JoinKeyProjections joinKeyProjections = getJoinKeyProjections(leftScheme, rightScheme, join);
 
@@ -249,7 +249,7 @@ public class RelToDatasetConverter {
 							sortedLeft,
 							sortedRight,
 							joiner,
-							StreamSchema_Record.create(resultSchema),
+							RecordStreamSchema.create(resultSchema),
 							joinKeyProjections.leftKeyProjection
 					);
 				});
@@ -310,9 +310,9 @@ public class RelToDatasetConverter {
 				outputScheme,
 				params -> Datasets.sortReduceRepartitionReduce(current.materialize(params), recordReducer,
 						Record.class, keyFunction, RecordKeyComparator.getInstance(),
-						StreamSchema_Record.create(accumulatorScheme),
+						RecordStreamSchema.create(accumulatorScheme),
 						keyFunction,
-						StreamSchema_Record.create(outputScheme)));
+						RecordStreamSchema.create(outputScheme)));
 	}
 
 	private static Function<Record, Record> getKeyFunction(List<Integer> indices) {
@@ -338,7 +338,7 @@ public class RelToDatasetConverter {
 			if (scheme == null) {
 				scheme = projectionFn.getToScheme(RecordScheme.builder(classLoader).build(), null);
 			}
-			singleDatasets.add(Datasets.map(singleDummyDataset, projectionFn, StreamSchema_Record.create(scheme)));
+			singleDatasets.add(Datasets.map(singleDummyDataset, projectionFn, RecordStreamSchema.create(scheme)));
 		}
 
 		assert scheme != null;
@@ -367,7 +367,7 @@ public class RelToDatasetConverter {
 			Dataset<Record> rightDataset = right.materialize(params);
 
 			// Make sure field names match
-			rightDataset = Datasets.map(rightDataset, RecordProjectionFn.rename(left.getScheme()), StreamSchema_Record.create(left.getScheme()));
+			rightDataset = Datasets.map(rightDataset, RecordProjectionFn.rename(left.getScheme()), RecordStreamSchema.create(left.getScheme()));
 
 			if (union.all) {
 				return Datasets.unionAll(leftDataset, rightDataset);
@@ -523,7 +523,7 @@ public class RelToDatasetConverter {
 		if (kind == SqlKind.LITERAL) {
 			RexLiteral literal = (RexLiteral) conditionNode;
 			if (literal.isAlwaysFalse()) {
-				return UnmaterializedDataset.of(dataset.getScheme(), $ -> Datasets.empty(StreamSchema_Record.create(dataset.getScheme())));
+				return UnmaterializedDataset.of(dataset.getScheme(), $ -> Datasets.empty(RecordStreamSchema.create(dataset.getScheme())));
 			} else //noinspection StatementWithEmptyBody
 				if (literal.isAlwaysTrue()) {
 					// Do nothing
@@ -584,7 +584,7 @@ public class RelToDatasetConverter {
 	}
 
 	private static <K> SortedDataset<K, Record> mapAsSorted(RecordScheme toScheme, RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
-		Dataset<Record> mapped = Datasets.map(locallySortedDataset, projectionFn, StreamSchema_Record.create(toScheme));
+		Dataset<Record> mapped = Datasets.map(locallySortedDataset, projectionFn, RecordStreamSchema.create(toScheme));
 		Class<K> keyType = locallySortedDataset.keyType();
 		Function<Record, K> keyFunction = locallySortedDataset.keyFunction();
 		return Datasets.castToSorted(mapped, keyType, keyFunction, locallySortedDataset.keyComparator());
@@ -592,7 +592,7 @@ public class RelToDatasetConverter {
 
 	private static <K> Dataset<Record> repartitionMap(RecordScheme toScheme, RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
 		Dataset<Record> repartitioned = new RepartitionToSingleDataset<>(locallySortedDataset);
-		return Datasets.map(repartitioned, projectionFn, StreamSchema_Record.create(toScheme));
+		return Datasets.map(repartitioned, projectionFn, RecordStreamSchema.create(toScheme));
 	}
 
 	public interface UnmaterializedDataset {

@@ -57,7 +57,7 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 	/**
 	 * Represents a left joiner that produces only left inner joins
 	 */
-	public abstract static class LeftJoiner_LeftInner<K, L, R, V> implements LeftJoiner<K, L, R, V> {
+	public abstract static class LeftInnerLeftJoiner<K, L, R, V> implements LeftJoiner<K, L, R, V> {
 		/**
 		 * Left outer join does nothing for absence null fields in result left inner join
 		 */
@@ -69,7 +69,7 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 	/**
 	 * Simple implementation of Joiner, which does left inner and left outer join
 	 */
-	public abstract static class LeftJoiner_Value<K, L, R, V> implements LeftJoiner<K, L, R, V> {
+	public abstract static class ValueLeftJoiner<K, L, R, V> implements LeftJoiner<K, L, R, V> {
 		/**
 		 * Method which contains implementation for left inner join.
 		 */

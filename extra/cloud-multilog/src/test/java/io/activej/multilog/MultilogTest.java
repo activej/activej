@@ -5,12 +5,12 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteRanger;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
-import io.activej.csp.process.frames.FrameFormat_LZ4Legacy;
+import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
@@ -62,8 +62,8 @@ public class MultilogTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"LZ4 format", FrameFormat_LZ4.create(), 8},
-				new Object[]{"Legacy LZ4 format", FrameFormat_LZ4Legacy.create(), 21}
+				new Object[]{"LZ4 format", LZ4FrameFormat.create(), 8},
+				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), 21}
 		);
 	}
 
@@ -174,7 +174,7 @@ public class MultilogTest {
 
 		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
 
-		StreamConsumer_ToList<String> listConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<String> listConsumer = ToListStreamConsumer.create();
 		await(fs.list("*" + partition + "*")
 				.then(map -> {
 					PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
@@ -217,7 +217,7 @@ public class MultilogTest {
 		StreamSupplierWithResult<String, LogPosition> supplierWithResult = StreamSupplierWithResult.ofPromise(
 				multilog.read(testPartition, new LogFile("", 0), 0, null));
 
-		StreamConsumer_ToList<String> consumerToList = StreamConsumer_ToList.create();
+		ToListStreamConsumer<String> consumerToList = ToListStreamConsumer.create();
 		await(supplierWithResult.getSupplier().streamTo(consumerToList));
 
 		assertEquals(values, consumerToList.getList());
@@ -230,7 +230,7 @@ public class MultilogTest {
 		supplierWithResult = StreamSupplierWithResult.ofPromise(
 				multilog.read(testPartition, pos.getLogFile(), position, null));
 
-		consumerToList = StreamConsumer_ToList.create();
+		consumerToList = ToListStreamConsumer.create();
 		await(supplierWithResult.getSupplier().streamTo(consumerToList));
 
 		assertTrue(consumerToList.getList().isEmpty());
@@ -239,7 +239,7 @@ public class MultilogTest {
 	}
 
 	private static <T> List<T> readLog(IMultilog<T> multilog, String partition) {
-		StreamConsumer_ToList<T> listConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<T> listConsumer = ToListStreamConsumer.create();
 		await(StreamSupplierWithResult.ofPromise(
 						multilog.read(partition, new LogFile("", 0), 0, null))
 				.getSupplier()

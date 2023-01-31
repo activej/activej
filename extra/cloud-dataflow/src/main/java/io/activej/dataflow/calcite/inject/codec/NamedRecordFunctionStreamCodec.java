@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.table.AbstractDataflowTable;
-import io.activej.dataflow.calcite.utils.RecordFunction_Named;
+import io.activej.dataflow.calcite.utils.NamedRecordFunction;
 import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
@@ -11,7 +11,7 @@ import io.activej.serializer.stream.StreamOutput;
 
 import java.io.IOException;
 
-public final class NamedRecordFunctionStreamCodec implements StreamCodec<RecordFunction_Named<?>> {
+public final class NamedRecordFunctionStreamCodec implements StreamCodec<NamedRecordFunction<?>> {
 	private static final StreamCodec<String> STRING_STREAM_CODEC = StreamCodecs.ofString();
 
 	private final DataflowSchema dataflowSchema;
@@ -21,17 +21,17 @@ public final class NamedRecordFunctionStreamCodec implements StreamCodec<RecordF
 	}
 
 	@Override
-	public void encode(StreamOutput out, RecordFunction_Named<?> namedRecordFunction) throws IOException {
+	public void encode(StreamOutput out, NamedRecordFunction<?> namedRecordFunction) throws IOException {
 		STRING_STREAM_CODEC.encode(out, namedRecordFunction.getTableName());
 	}
 
 	@Override
-	public RecordFunction_Named<?> decode(StreamInput in) throws IOException {
+	public NamedRecordFunction<?> decode(StreamInput in) throws IOException {
 		String tableName = STRING_STREAM_CODEC.decode(in);
 		AbstractDataflowTable<?> dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
 		if (dataflowTable == null) {
 			throw new CorruptedDataException("Unknown table: " + tableName);
 		}
-		return new RecordFunction_Named<>(tableName, dataflowTable.getRecordFunction());
+		return new NamedRecordFunction<>(tableName, dataflowTable.getRecordFunction());
 	}
 }

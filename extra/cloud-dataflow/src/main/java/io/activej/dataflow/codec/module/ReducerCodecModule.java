@@ -1,12 +1,12 @@
 package io.activej.dataflow.codec.module;
 
 import io.activej.dataflow.codec.Subtype;
+import io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
-import io.activej.datastream.processor.StreamReducers.Reducer_Deduplicate;
-import io.activej.datastream.processor.StreamReducers.Reducer_Merge;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
@@ -20,14 +20,14 @@ import java.io.IOException;
 public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
-	StreamCodec<Reducer_Merge<?, ?>> mergeReducer() {
-		return StreamCodecs.singleton(new Reducer_Merge<>());
+	StreamCodec<MergeReducer<?, ?>> mergeReducer() {
+		return StreamCodecs.singleton(new MergeReducer<>());
 	}
 
 	@Provides
 	@Subtype(1)
-	StreamCodec<Reducer_Deduplicate<?, ?>> deduplicateReducer() {
-		return StreamCodecs.singleton(new Reducer_Deduplicate<>());
+	StreamCodec<DeduplicateReducer<?, ?>> deduplicateReducer() {
+		return StreamCodecs.singleton(new DeduplicateReducer<>());
 	}
 
 	@Provides

@@ -10,13 +10,13 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileSystem;
 import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.FileSystem_HttpClient;
+import io.activej.fs.http.HttpClientFileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.IHttpClient;
@@ -67,7 +67,7 @@ public final class CubeTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private static final FrameFormat FRAME_FORMAT = FrameFormat_LZ4.create();
+	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private final DefiningClassLoader classLoader = create();
 	private final Executor executor = newSingleThreadExecutor();
@@ -153,7 +153,7 @@ public final class CubeTest {
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		HttpServer server1 = startServer(executor, serverStorage);
 		IHttpClient httpClient = HttpClient.create(getCurrentReactor());
-		FileSystem_HttpClient storage = FileSystem_HttpClient.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
+		HttpClientFileSystem storage = HttpClientFileSystem.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
 		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 

@@ -8,7 +8,7 @@ import org.apache.calcite.rex.RexDynamicParam;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class Operand_IfNull extends Operand_Function<Operand_IfNull> {
+public final class Operand_IfNull extends FunctionOperand<Operand_IfNull> {
 	private final Operand<?> checkedOperand;
 	private final Operand<?> defaultValueOperand;
 

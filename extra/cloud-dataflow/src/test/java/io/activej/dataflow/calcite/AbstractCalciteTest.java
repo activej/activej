@@ -50,7 +50,7 @@ import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_2;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.OFF;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.ON;
-import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
+import static io.activej.dataflow.helper.MergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.*;
 import static org.junit.Assert.assertEquals;
@@ -2803,7 +2803,7 @@ public abstract class AbstractCalciteTest {
 				.withColumn("firstName", String.class, Student::firstName)
 				.withColumn("lastName", String.class, Student::lastName)
 				.withColumn("dept", int.class, Student::dept)
-				.withReducer(new Reducer_Student())
+				.withReducer(new StudentReducer())
 				.build();
 	}
 
@@ -3167,7 +3167,7 @@ public abstract class AbstractCalciteTest {
 		void setValues(PreparedStatement stmt) throws SQLException;
 	}
 
-	public static final class Reducer_Student extends StreamReducers.Reducer_BinaryAccumulator<Record, Record> {
+	public static final class StudentReducer extends StreamReducers.BinaryAccumulatorReducer<Record, Record> {
 		@Override
 		protected Record combine(Record key, Record nextValue, Record accumulator) {
 			return nextValue.getInt("dept") > accumulator.getInt("dept") ? nextValue : accumulator;

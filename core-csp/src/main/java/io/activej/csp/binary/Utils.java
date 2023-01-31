@@ -55,7 +55,7 @@ public class Utils {
 		};
 	}
 
-	public static class ByteScanner_VarInt implements ByteBufs.ByteScanner {
+	public static class VarIntByteScanner implements ByteBufs.ByteScanner {
 		int result;
 
 		@Override
@@ -71,13 +71,17 @@ public class Utils {
 		}
 	}
 
-	public static class ByteScanner_Int implements ByteBufs.ByteScanner {
-		int result;
+	public static class IntByteScanner implements ByteBufs.ByteScanner {
+		private int value;
 
 		@Override
 		public boolean consume(int index, byte b) {
-			result = result << 8 | b & 0xFF;
+			value = value << 8 | b & 0xFF;
 			return index == 3;
+		}
+
+		public int getValue() {
+			return value;
 		}
 	}
 }

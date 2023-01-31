@@ -66,7 +66,7 @@ public final class FileSystemServletAndClientTest {
 		FileSystem fileSystem = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fileSystem.start());
 		AsyncServlet servlet = FileSystemServlet.create(reactor, fileSystem);
-		this.fileSystem = FileSystem_HttpClient.create(reactor, "http://localhost", StubHttpClient.of(servlet));
+		this.fileSystem = HttpClientFileSystem.create(reactor, "http://localhost", StubHttpClient.of(servlet));
 
 		initializeDirs();
 	}

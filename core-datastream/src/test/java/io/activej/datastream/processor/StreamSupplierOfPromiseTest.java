@@ -1,8 +1,8 @@
 package io.activej.datastream.processor;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -28,7 +28,7 @@ public class StreamSupplierOfPromiseTest {
 	public void testOfPromise() {
 		StreamSupplier<Integer> delayedSupplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofPromise(Promise.complete().async().map($ -> delayedSupplier));
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 		await(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertEndOfStream(supplier, consumer);
@@ -41,7 +41,7 @@ public class StreamSupplierOfPromiseTest {
 		StreamSupplier<Integer> delayedSupplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		StreamSupplier<Integer> supplier = StreamSupplier.ofPromise(Promise.complete().async().map($ -> delayedSupplier));
 		supplier.close();
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertThat(exception, instanceOf(AsyncCloseException.class));
@@ -55,7 +55,7 @@ public class StreamSupplierOfPromiseTest {
 		StreamSupplier<Integer> delayedSupplier = StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		delayedSupplier.close();
 		StreamSupplier<Integer> supplier = StreamSupplier.ofPromise(Promise.complete().async().map($ -> delayedSupplier));
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertThat(exception, instanceOf(AsyncCloseException.class));

@@ -84,7 +84,7 @@ public final class ChannelConsumers {
 	}
 
 	public static <T extends Recyclable> ChannelConsumer<T> recycling() {
-		return new ChannelConsumer_Recycling<>();
+		return new RecyclingChannelConsumer<>();
 	}
 
 	/**

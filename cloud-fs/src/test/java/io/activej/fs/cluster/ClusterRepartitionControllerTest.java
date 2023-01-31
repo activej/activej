@@ -6,7 +6,7 @@ import io.activej.fs.FileSystem;
 import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.tcp.FileSystemServer;
-import io.activej.fs.tcp.FileSystem_Remote;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -80,14 +80,14 @@ public final class ClusterRepartitionControllerTest {
 		InetSocketAddress regularPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path regularPath = storage.resolve("regular");
 		Files.createDirectories(regularPath);
-		partitions.put("regular", FileSystem_Remote.create(reactor, regularPartitionAddress));
+		partitions.put("regular", RemoteFileSystem.create(reactor, regularPartitionAddress));
 		FileSystem fileSystem = FileSystem.create(reactor, executor, regularPath);
 		await(fileSystem.start());
 
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
-		partitions.put("failing", FileSystem_Remote.create(reactor, failingPartitionAddress));
+		partitions.put("failing", RemoteFileSystem.create(reactor, failingPartitionAddress));
 		FileSystem peer = FileSystem.create(reactor, executor, failingPath);
 		await(peer.start());
 

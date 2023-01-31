@@ -13,7 +13,7 @@ import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.tcp.FileSystemServer;
-import io.activej.fs.tcp.FileSystem_Remote;
+import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -78,7 +78,7 @@ public final class FileSystemIntegrationTest {
 				.withListenAddress(address)
 				.build();
 		server.listen();
-		fileSystem = FileSystem_Remote.create(Reactor.getCurrentReactor(), address);
+		fileSystem = RemoteFileSystem.create(Reactor.getCurrentReactor(), address);
 	}
 
 	@Test

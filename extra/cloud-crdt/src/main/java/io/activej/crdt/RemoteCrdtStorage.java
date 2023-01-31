@@ -34,9 +34,9 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.stats.BasicStreamStats;
+import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
-import io.activej.datastream.stats.StreamStats_Basic;
-import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -75,14 +75,14 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	// region JMX
 	private boolean detailedStats;
 
-	private final StreamStats_Basic<CrdtData<K, S>> uploadStats = StreamStats.basic();
-	private final StreamStats_Detailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
-	private final StreamStats_Basic<CrdtData<K, S>> downloadStats = StreamStats.basic();
-	private final StreamStats_Detailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
-	private final StreamStats_Basic<CrdtData<K, S>> takeStats = StreamStats.basic();
-	private final StreamStats_Detailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
-	private final StreamStats_Basic<CrdtTombstone<K>> removeStats = StreamStats.basic();
-	private final StreamStats_Detailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
+	private final BasicStreamStats<CrdtData<K, S>> uploadStats = StreamStats.basic();
+	private final DetailedStreamStats<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
+	private final BasicStreamStats<CrdtData<K, S>> downloadStats = StreamStats.basic();
+	private final DetailedStreamStats<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
+	private final BasicStreamStats<CrdtData<K, S>> takeStats = StreamStats.basic();
+	private final DetailedStreamStats<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
+	private final BasicStreamStats<CrdtTombstone<K>> removeStats = StreamStats.basic();
+	private final DetailedStreamStats<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 
 	private final EventStats uploadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats downloadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -325,42 +325,42 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getUploadStats() {
+	public BasicStreamStats getUploadStats() {
 		return uploadStats;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getUploadStatsDetailed() {
+	public DetailedStreamStats getUploadStatsDetailed() {
 		return uploadStatsDetailed;
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getDownloadStats() {
+	public BasicStreamStats getDownloadStats() {
 		return downloadStats;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getDownloadStatsDetailed() {
+	public DetailedStreamStats getDownloadStatsDetailed() {
 		return downloadStatsDetailed;
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getTakeStats() {
+	public BasicStreamStats getTakeStats() {
 		return takeStats;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getTakeStatsDetailed() {
+	public DetailedStreamStats getTakeStatsDetailed() {
 		return takeStatsDetailed;
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getRemoveStats() {
+	public BasicStreamStats getRemoveStats() {
 		return removeStats;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getRemoveStatsDetailed() {
+	public DetailedStreamStats getRemoveStatsDetailed() {
 		return removeStatsDetailed;
 	}
 

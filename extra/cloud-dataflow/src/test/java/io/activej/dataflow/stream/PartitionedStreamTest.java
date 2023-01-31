@@ -27,8 +27,8 @@ import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
@@ -36,7 +36,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.http.FileSystemServlet;
-import io.activej.fs.http.FileSystem_HttpClient;
+import io.activej.fs.http.HttpClientFileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
@@ -267,7 +267,7 @@ public final class PartitionedStreamTest {
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
-							.streamTo(StreamConsumer_ToList.create(items))));
+							.streamTo(ToListStreamConsumer.create(items))));
 			for (String item : items) {
 				allTargetItems.add(item);
 				Integer value = KEY_FUNCTION.apply(item);
@@ -416,7 +416,7 @@ public final class PartitionedStreamTest {
 
 	private static IFileSystem createClient(NioReactor reactor, HttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return FileSystem_HttpClient.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
+		return HttpClientFileSystem.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {

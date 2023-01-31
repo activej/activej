@@ -62,22 +62,22 @@ public class FrameFormatTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"LZ4 format", FrameFormat_LZ4.create(), false, true},
-				new Object[]{"Legacy LZ4 format", FrameFormat_LZ4Legacy.create(), false, true},
+				new Object[]{"LZ4 format", LZ4FrameFormat.create(), false, true},
+				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), false, true},
 
 				new Object[]{"Size prefixed", FrameFormats.sizePrefixed(), false, true},
 				new Object[]{"Identity", FrameFormats.identity(), true, true},
 
-				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(FrameFormat_LZ4.create(), FrameFormat_LZ4Legacy.create()), false, true},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(FrameFormat_LZ4Legacy.create(), FrameFormat_LZ4.create()), false, true},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(FrameFormat_LZ4Legacy.create(), FrameFormat_LZ4Legacy.create()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(FrameFormat_LZ4.create(), FrameFormat_LZ4.create()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(FrameFormat_LZ4.create(), FrameFormats.identity()), true, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(LZ4FrameFormat.create(), LZ4LegacyFrameFormat.create()), false, true},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(LZ4LegacyFrameFormat.create(), LZ4FrameFormat.create()), false, true},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(LZ4LegacyFrameFormat.create(), LZ4LegacyFrameFormat.create()), false, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(LZ4FrameFormat.create(), LZ4FrameFormat.create()), false, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(LZ4FrameFormat.create(), FrameFormats.identity()), true, true},
 
 				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER), false, true},
 				new Object[]{"With random magic number: Identity", withMagicNumber(identity(), RANDOM_MAGIC_NUMBER), true, false},
-				new Object[]{"With random magic number: LZ4", withMagicNumber(FrameFormat_LZ4.create(), RANDOM_MAGIC_NUMBER), false, true},
-				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(FrameFormat_LZ4Legacy.create(), RANDOM_MAGIC_NUMBER), false, true}
+				new Object[]{"With random magic number: LZ4", withMagicNumber(LZ4FrameFormat.create(), RANDOM_MAGIC_NUMBER), false, true},
+				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(LZ4LegacyFrameFormat.create(), RANDOM_MAGIC_NUMBER), false, true}
 		);
 	}
 

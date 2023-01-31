@@ -4,8 +4,8 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.Node_Upload;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -37,7 +37,7 @@ public final class PartitionedCollector<T> {
 			ArrayList<T> partitionItems = new ArrayList<>();
 			List<T> prev = result.put(partition, partitionItems);
 			checkState(prev == null, "Partition provides multiple channels");
-			streamingPromises.add(supplier.streamTo(StreamConsumer_ToList.create(partitionItems)));
+			streamingPromises.add(supplier.streamTo(ToListStreamConsumer.create(partitionItems)));
 		}
 		return Promises.all(streamingPromises)
 				.map($ -> result);

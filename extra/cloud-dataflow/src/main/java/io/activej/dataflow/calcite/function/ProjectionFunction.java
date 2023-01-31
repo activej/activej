@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.function;
 
+import io.activej.dataflow.calcite.operand.FunctionOperand;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.Operand_Function;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
@@ -18,5 +18,5 @@ public abstract class ProjectionFunction extends SqlFunction {
 		super(name, kind, returnTypeInference, operandTypeInference, operandTypeChecker, category);
 	}
 
-	public abstract Operand_Function<?> toOperandFunction(List<Operand<?>> operands);
+	public abstract FunctionOperand<?> toOperandFunction(List<Operand<?>> operands);
 }

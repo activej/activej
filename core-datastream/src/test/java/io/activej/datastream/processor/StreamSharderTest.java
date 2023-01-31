@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
@@ -29,8 +29,8 @@ public class StreamSharderTest {
 				(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
 
 		StreamSupplier<Integer> source = StreamSupplier.of(1, 2, 3, 4);
-		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		await(
 				source.streamTo(streamSharder.getInput()),
@@ -54,8 +54,8 @@ public class StreamSharderTest {
 				(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
 
 		StreamSupplier<Integer> source = StreamSupplier.of(1, 2, 3, 4);
-		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		await(
 				source.streamTo(streamSharder.getInput()),
@@ -81,8 +81,8 @@ public class StreamSharderTest {
 
 		StreamSupplier<Integer> source = StreamSupplier.of(1, 2, 3, 4);
 
-		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
@@ -117,8 +117,8 @@ public class StreamSharderTest {
 				StreamSupplier.closingWithError(exception)
 		);
 
-		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		Exception e = awaitException(
 				source.streamTo(streamSharder.getInput()),

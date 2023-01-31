@@ -63,7 +63,7 @@ public interface ByteBufsCodec<I, O> {
 	}
 
 	static <I, O> ByteBufsCodec<I, O> ofStreamCodecs(StreamDecoder<I> decoder, StreamEncoder<O> encoder) {
-		return new ByteBufsCodec_Stream<>(decoder, encoder);
+		return new StreamByteBufsCodec<>(decoder, encoder);
 	}
 
 	static <T> ByteBufsCodec<T, T> ofStreamCodecs(StreamCodec<T> codec) {

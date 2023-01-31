@@ -22,8 +22,8 @@ import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.ForwardingStreamConsumer;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumer_Switcher;
 import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.SwitcherStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> {
-	private final StreamConsumer_Switcher<T> switcher;
+	private final SwitcherStreamConsumer<T> switcher;
 	private final SettablePromise<List<AggregationChunk>> result = new SettablePromise<>();
 
 	private final AggregationStructure aggregation;
@@ -44,7 +44,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 
 	private final int chunkSize;
 
-	private AggregationChunker(StreamConsumer_Switcher<T> switcher,
+	private AggregationChunker(SwitcherStreamConsumer<T> switcher,
 			AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
 			IAggregationChunkStorage<C> storage,
@@ -70,7 +70,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 			DefiningClassLoader classLoader,
 			int chunkSize) {
 
-		StreamConsumer_Switcher<T> switcher = StreamConsumer_Switcher.create();
+		SwitcherStreamConsumer<T> switcher = SwitcherStreamConsumer.create();
 		AggregationChunker<C, T> chunker = new AggregationChunker<>(switcher, aggregation, fields, recordClass, partitionPredicate, storage, classLoader, chunkSize);
 		chunker.startNewChunk();
 		return chunker;

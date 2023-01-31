@@ -32,9 +32,9 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
-import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
@@ -77,10 +77,10 @@ public final class Multilog<T> extends AbstractReactive
 	private final StreamRegistry<String> streamReads = StreamRegistry.create();
 	private final StreamRegistry<String> streamWrites = StreamRegistry.create();
 
-	private final StreamStats_Detailed<ByteBuf> streamReadStats = StreamStats.<ByteBuf>detailedBuilder()
+	private final DetailedStreamStats<ByteBuf> streamReadStats = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
-	private final StreamStats_Detailed<ByteBuf> streamWriteStats = StreamStats.<ByteBuf>detailedBuilder()
+	private final DetailedStreamStats<ByteBuf> streamWriteStats = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
 

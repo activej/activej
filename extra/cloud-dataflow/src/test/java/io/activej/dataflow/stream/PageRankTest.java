@@ -9,10 +9,10 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.processor.StreamLeftJoin.LeftInnerLeftJoiner;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
-import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner_LeftInner;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
@@ -42,7 +42,7 @@ import java.util.function.Function;
 import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
+import static io.activej.dataflow.helper.MergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.*;
 import static io.activej.promise.TestUtils.await;
@@ -182,7 +182,7 @@ public class PageRankTest {
 		}
 	}
 
-	public static class LeftJoiner_PageRank extends LeftJoiner_LeftInner<Long, Page, Rank, Rank> {
+	public static class PageRankLeftJoiner extends LeftInnerLeftJoiner<Long, Page, Rank, Rank> {
 		@Override
 		public void onInnerJoin(Long key, Page page, Rank rank, StreamDataAcceptor<Rank> output) {
 			page.disperse(rank, output);
@@ -190,7 +190,7 @@ public class PageRankTest {
 	}
 
 	private static SortedDataset<Long, Rank> pageRankIteration(SortedDataset<Long, Page> pages, SortedDataset<Long, Rank> ranks) {
-		Dataset<Rank> updates = join(pages, ranks, new LeftJoiner_PageRank(), simple(Rank.class), new RankKeyFunction());
+		Dataset<Rank> updates = join(pages, ranks, new PageRankLeftJoiner(), simple(Rank.class), new RankKeyFunction());
 
 		Dataset<Rank> newRanks = sortReduceRepartitionReduce(updates, new RankAccumulatorReducer(),
 				Long.class, new RankKeyFunction(), new LongComparator(),
@@ -295,12 +295,12 @@ public class PageRankTest {
 	public void test() throws Exception {
 		Module common = createModule(new Partition(address1), new Partition(address2));
 
-		StreamConsumer_ToList<Rank> result1 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Rank> result1 = ToListStreamConsumer.create();
 		DataflowServer server1 = launchServer(address1, List.of(
 				new Page(1, new long[]{1, 2, 3}),
 				new Page(3, new long[]{1})), result1);
 
-		StreamConsumer_ToList<Rank> result2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Rank> result2 = ToListStreamConsumer.create();
 		DataflowServer server2 = launchServer(address2, List.of(new Page(2, new long[]{1})), result2);
 
 		DataflowGraph graph = Injector.of(createCommonClient(common)).getInstance(DataflowGraph.class);
@@ -338,7 +338,7 @@ public class PageRankTest {
 
 				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new LongComparator()))
 
-				.bind(new Key<StreamCodec<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new LeftJoiner_PageRank()))
+				.bind(new Key<StreamCodec<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new PageRankLeftJoiner()))
 
 				.bind(new Key<StreamCodec<ReducerToResult<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new RankAccumulatorReducer()))
 

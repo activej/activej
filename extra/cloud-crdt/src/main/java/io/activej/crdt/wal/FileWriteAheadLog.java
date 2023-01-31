@@ -29,7 +29,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -75,7 +75,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 	public static final String EXT_FINAL = ".wal";
 	public static final String EXT_CURRENT = ".current";
-	public static final FrameFormat FRAME_FORMAT = FrameFormat_LZ4.create();
+	public static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private static final Duration SMOOTHING_WINDOW = ApplicationSettings.getDuration(FileWriteAheadLog.class, "smoothingWindow", Duration.ofMinutes(5));
 

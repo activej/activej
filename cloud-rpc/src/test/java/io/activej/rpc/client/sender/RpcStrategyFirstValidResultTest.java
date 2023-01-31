@@ -69,9 +69,9 @@ public class RpcStrategyFirstValidResultTest {
 
 	@Test
 	public void itShouldCallOnResultWithNullIfAllSendersReturnedNullAndValidatorAndExceptionAreNotSpecified() throws ExecutionException, InterruptedException {
-		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithNull();
-		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithNull();
-		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithNull();
+		RpcStrategy strategy1 = new RequestSenderOnResultWithNullRpcStrategy();
+		RpcStrategy strategy2 = new RequestSenderOnResultWithNullRpcStrategy();
+		RpcStrategy strategy3 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(strategy1, strategy2, strategy3);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
@@ -86,9 +86,9 @@ public class RpcStrategyFirstValidResultTest {
 	@Test(expected = ExpectedException.class)
 	public void itShouldCallOnExceptionIfAllSendersReturnsNullAndValidatorIsDefaultButExceptionIsSpecified() throws Exception {
 		// default validator should check whether result is not null
-		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithNull();
-		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithNull();
-		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithNull();
+		RpcStrategy strategy1 = new RequestSenderOnResultWithNullRpcStrategy();
+		RpcStrategy strategy2 = new RequestSenderOnResultWithNullRpcStrategy();
+		RpcStrategy strategy3 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.builder(strategy1, strategy2, strategy3)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
 				.build();
@@ -108,9 +108,9 @@ public class RpcStrategyFirstValidResultTest {
 	public void itShouldUseCustomValidatorIfItIsSpecified() throws ExecutionException, InterruptedException {
 		int invalidKey = 1;
 		int validKey = 2;
-		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
-		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithValue(validKey);
-		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
+		RpcStrategy strategy1 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
+		RpcStrategy strategy2 = new RequestSenderOnResultWithValueRpcStrategy(validKey);
+		RpcStrategy strategy3 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.builder(strategy1, strategy2, strategy3)
 				.withResultValidator((Predicate<Integer>) input -> input == validKey)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
@@ -127,9 +127,9 @@ public class RpcStrategyFirstValidResultTest {
 	public void itShouldCallOnExceptionIfNoSenderReturnsValidResultButExceptionWasSpecified() throws ExecutionException, InterruptedException {
 		int invalidKey = 1;
 		int validKey = 2;
-		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
-		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
-		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
+		RpcStrategy strategy1 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
+		RpcStrategy strategy2 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
+		RpcStrategy strategy3 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.builder(strategy1, strategy2, strategy3)
 				.withResultValidator((Predicate<Integer>) input -> input == validKey)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
@@ -179,7 +179,7 @@ public class RpcStrategyFirstValidResultTest {
 		}
 	}
 
-	static final class RpcStrategy_RequestSenderOnResultWithNull implements RpcStrategy {
+	static final class RequestSenderOnResultWithNullRpcStrategy implements RpcStrategy {
 		@Override
 		public Set<InetSocketAddress> getAddresses() {
 			throw new UnsupportedOperationException();
@@ -191,10 +191,10 @@ public class RpcStrategyFirstValidResultTest {
 		}
 	}
 
-	static final class RpcStrategy_RequestSenderOnResultWithValue implements RpcStrategy {
+	static final class RequestSenderOnResultWithValueRpcStrategy implements RpcStrategy {
 		private final Object data;
 
-		public RpcStrategy_RequestSenderOnResultWithValue(Object data) {
+		public RequestSenderOnResultWithValueRpcStrategy(Object data) {
 			this.data = data;
 		}
 

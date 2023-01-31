@@ -1,7 +1,7 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class ConsumerToListTest {
 
 	@Test
 	public void emptyListTest() {
-		StreamConsumer_ToList<String> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<String> consumer = ToListStreamConsumer.create();
 
 		List<String> testList2 = new ArrayList<>();
 		testList2.add("a");
@@ -41,7 +41,7 @@ public class ConsumerToListTest {
 		testList1.add(1);
 		testList1.add(2);
 		testList1.add(3);
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create(testList1);
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create(testList1);
 
 		List<Integer> testList2 = new ArrayList<>();
 		testList2.add(4);

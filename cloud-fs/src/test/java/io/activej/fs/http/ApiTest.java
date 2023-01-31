@@ -42,7 +42,7 @@ public final class ApiTest {
 	private static final long dataSize = 799;
 
 	private final StubHttpClient stubClient = StubHttpClient.of(getServlet());
-	private final FileSystem_HttpClient client = FileSystem_HttpClient.create(getCurrentReactor(), "http://localhost", stubClient);
+	private final HttpClientFileSystem client = HttpClientFileSystem.create(getCurrentReactor(), "http://localhost", stubClient);
 
 	private final LinkedList<Object> params = new LinkedList<>();
 

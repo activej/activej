@@ -3,14 +3,14 @@ import dto.ExtractStringFunction;
 import dto.StringCount;
 import dto.StringCountReducer;
 import io.activej.config.Config;
-import io.activej.dataflow.collector.Collector_Merge;
 import io.activej.dataflow.collector.ICollector;
+import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -42,7 +42,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 		return ModuleBuilder.create()
 				.install(new DataflowSerializersModule())
 
-				.bind(StreamSorterStorageFactory.class).toInstance(StreamSorterStorage_MergeStub.FACTORY_STUB)
+				.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
 
 				.bind(Config.class).toInstance(
 						Config.create()
@@ -69,11 +69,11 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 
 			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), simple(StringCount.class));
 
-			ICollector<StringCount> collector = Collector_Merge.create(reactor, reducedItems, client, keyFunction, naturalOrder());
+			ICollector<StringCount> collector = MergeCollector.create(reactor, reducedItems, client, keyFunction, naturalOrder());
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 
-			StreamConsumer_ToList<StringCount> resultConsumer = StreamConsumer_ToList.create();
+			ToListStreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create();
 
 			System.out.println("\n *** Dataset graph:\n");
 			System.out.println(reducedItems.toGraphViz());

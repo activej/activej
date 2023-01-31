@@ -6,7 +6,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.EventloopRule;
 import io.activej.test.time.TestCurrentTimeProvider;
-import io.activej.test.time.TestCurrentTimeProvider.CurrentTimeProvider_TimeSequence;
+import io.activej.test.time.TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testEmpty() {
-		CurrentTimeProvider_TimeSequence timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
+		TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
@@ -50,7 +50,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testHalfFull() {
-		CurrentTimeProvider_TimeSequence timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
+		TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
@@ -75,7 +75,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testFull() {
-		CurrentTimeProvider_TimeSequence timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
+		TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()

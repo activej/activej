@@ -56,7 +56,7 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Gson gson, PersonGridModel model, Config config) {
 		StaticServlet staticServlet = StaticServlet.builder(reactor, staticLoader)
 				.withIndexHtml()
 				.build();

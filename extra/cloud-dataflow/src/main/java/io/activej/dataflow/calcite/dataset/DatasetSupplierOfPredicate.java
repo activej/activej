@@ -16,7 +16,7 @@
 
 package io.activej.dataflow.calcite.dataset;
 
-import io.activej.dataflow.calcite.node.Node_FilterableSupplierOfId;
+import io.activej.dataflow.calcite.node.FilterableSupplierNode;
 import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
@@ -53,7 +53,7 @@ public final class DatasetSupplierOfPredicate<T> extends Dataset<T> {
 		int index = context.generateNodeIndex();
 		for (int i = 0, size = partitions.size(); i < size; i++) {
 			Partition partition = partitions.get(i);
-			Node_FilterableSupplierOfId<T> node = new Node_FilterableSupplierOfId<>(index, id, predicate, i, size);
+			FilterableSupplierNode<T> node = new FilterableSupplierNode<>(index, id, predicate, i, size);
 			graph.addNode(partition, node);
 			outputStreamIds.add(node.getOutput());
 		}

@@ -9,7 +9,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class Operand_ListGet extends Operand_Function<Operand_ListGet> {
+public final class Operand_ListGet extends FunctionOperand<Operand_ListGet> {
 	private final Operand<?> listOperand;
 	private final Operand<?> indexOperand;
 

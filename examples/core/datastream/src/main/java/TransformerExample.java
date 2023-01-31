@@ -65,7 +65,7 @@ public final class TransformerExample extends ImplicitlyReactive implements Stre
 
 		StreamSupplier<String> source = StreamSupplier.of("testdata", "testdata1", "testdata1000");
 		TransformerExample transformer = new TransformerExample();
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		source.transformWith(transformer).streamTo(consumer);
 		consumer.getResult().whenResult(v -> System.out.println(v));

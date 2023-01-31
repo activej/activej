@@ -47,7 +47,7 @@ import static io.activej.http.HttpMethod.POST;
 /**
  * An HTTP servlet that exposes some given {@link IFileSystem}.
  * <p>
- * Servlet is fully compatible with {@link FileSystem_HttpClient} client.
+ * Servlet is fully compatible with {@link HttpClientFileSystem} client.
  * <p>
  * It also defines additional endpoints that can be useful for accessing via web browser,
  * such as uploading multiple files using <i>multipart/form-data</i> content type

@@ -19,15 +19,15 @@ public class RpcStrategyRandomSamplingTest {
 	public void distributesRequestsProperlyAccordingToWeights() {
 		// init subStrategies
 		RpcSenderStub sender_1 = new RpcSenderStub();
-		RpcStrategy_Stub strategy_1 = new RpcStrategy_Stub(sender_1);
+		StubRpcStrategy strategy_1 = new StubRpcStrategy(sender_1);
 		int strategy_1_weight = 2;
 
 		RpcSenderStub sender_2 = new RpcSenderStub();
-		RpcStrategy_Stub strategy_2 = new RpcStrategy_Stub(sender_2);
+		StubRpcStrategy strategy_2 = new StubRpcStrategy(sender_2);
 		int strategy_2_weight = 3;
 
 		RpcSenderStub sender_3 = new RpcSenderStub();
-		RpcStrategy_Stub strategy_3 = new RpcStrategy_Stub(sender_3);
+		StubRpcStrategy strategy_3 = new StubRpcStrategy(sender_3);
 		int strategy_3_weight = 7;
 
 		// init RandomSamplingStrategy
@@ -65,15 +65,15 @@ public class RpcStrategyRandomSamplingTest {
 	public void doesNotSendRequestsToStrategiesWithWeightZero() {
 		// init subStrategies
 		RpcSenderStub sender_1 = new RpcSenderStub();
-		RpcStrategy_Stub strategy_1 = new RpcStrategy_Stub(sender_1);
+		StubRpcStrategy strategy_1 = new StubRpcStrategy(sender_1);
 		int strategy_1_weight = 2;
 
 		RpcSenderStub sender_2 = new RpcSenderStub();
-		RpcStrategy_Stub strategy_2 = new RpcStrategy_Stub(sender_2);
+		StubRpcStrategy strategy_2 = new StubRpcStrategy(sender_2);
 		int zero_weight = 0;
 
 		RpcSenderStub sender_3 = new RpcSenderStub();
-		RpcStrategy_Stub strategy_3 = new RpcStrategy_Stub(sender_3);
+		StubRpcStrategy strategy_3 = new StubRpcStrategy(sender_3);
 		int strategy_3_weight = 8;
 
 		// init RandomSamplingStrategy
@@ -97,10 +97,10 @@ public class RpcStrategyRandomSamplingTest {
 
 	}
 
-	private static final class RpcStrategy_Stub implements RpcStrategy {
+	private static final class StubRpcStrategy implements RpcStrategy {
 		private final RpcSender sender;
 
-		public RpcStrategy_Stub(RpcSender sender) {
+		public StubRpcStrategy(RpcSender sender) {
 			this.sender = sender;
 		}
 

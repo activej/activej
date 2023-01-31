@@ -26,7 +26,7 @@ public class StreamRateLimiterTest {
 
 	@Test
 	public void testEmpty() {
-		TestCurrentTimeProvider.CurrentTimeProvider_TimeSequence timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
+		TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
@@ -49,7 +49,7 @@ public class StreamRateLimiterTest {
 
 	@Test
 	public void testHalfFull() {
-		TestCurrentTimeProvider.CurrentTimeProvider_TimeSequence timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
+		TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
@@ -74,7 +74,7 @@ public class StreamRateLimiterTest {
 
 	@Test
 	public void testFull() {
-		TestCurrentTimeProvider.CurrentTimeProvider_TimeSequence timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
+		TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()

@@ -7,7 +7,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
@@ -255,7 +255,7 @@ public final class ReportingTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-				ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
+				ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
 		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
@@ -292,7 +292,7 @@ public final class ReportingTest extends CubeTestBase {
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
-				FrameFormat_LZ4.create(),
+				LZ4FrameFormat.create(),
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

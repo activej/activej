@@ -1,9 +1,9 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
@@ -35,8 +35,8 @@ public class StreamSplitterTest {
 						acceptor.accept(item);
 					}
 				});
-		StreamConsumer_ToList<Integer> consumerToList1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumerToList2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumerToList1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumerToList2 = ToListStreamConsumer.create();
 
 		await(
 				source.streamTo(streamConcat.getInput()),
@@ -61,10 +61,10 @@ public class StreamSplitterTest {
 					}
 				});
 
-		StreamConsumer_ToList<Integer> consumerToList1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumerToList2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumerToList1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumerToList2 = ToListStreamConsumer.create();
 
-		StreamConsumer_ToList<Integer> badConsumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> badConsumer = ToListStreamConsumer.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
@@ -110,9 +110,9 @@ public class StreamSplitterTest {
 					}
 				});
 
-		StreamConsumer_ToList<Integer> consumer1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumer2 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<Integer> consumer3 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
+		ToListStreamConsumer<Integer> consumer3 = ToListStreamConsumer.create();
 
 		Exception e = awaitException(
 				source.streamTo(splitter.getInput()),

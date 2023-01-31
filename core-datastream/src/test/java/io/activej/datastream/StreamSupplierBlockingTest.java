@@ -19,13 +19,13 @@ public class StreamSupplierBlockingTest {
 	public void testSupplier() throws InterruptedException, ExecutionException {
 		Eventloop reactor = Eventloop.create();
 
-		StreamSupplier_Blocking<Integer> supplier = Reactor.executeWithReactor(reactor,
-				() -> StreamSupplier_Blocking.create());
+		BlockingStreamSupplier<Integer> supplier = Reactor.executeWithReactor(reactor,
+				() -> BlockingStreamSupplier.create());
 
 		List<Integer> original = IntStream.range(0, 1000).boxed().toList();
 
 		CompletableFuture<List<Integer>> listFuture = reactor.submit(() -> {
-			StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+			ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 			return supplier.streamTo(consumer.transformWith(TestStreamTransformers.randomlySuspending()))
 					.map($ -> consumer.getList());
 		});
@@ -50,8 +50,8 @@ public class StreamSupplierBlockingTest {
 	public void testSupplierPreemptiveAcknowledge() throws InterruptedException, ExecutionException {
 		Eventloop reactor = Eventloop.create();
 
-		StreamSupplier_Blocking<Integer> supplier = Reactor.executeWithReactor(reactor,
-				() -> StreamSupplier_Blocking.create());
+		BlockingStreamSupplier<Integer> supplier = Reactor.executeWithReactor(reactor,
+				() -> BlockingStreamSupplier.create());
 
 		List<Integer> original = IntStream.range(0, 1000).boxed().toList();
 		List<Integer> result = new ArrayList<>();
@@ -90,8 +90,8 @@ public class StreamSupplierBlockingTest {
 
 		Eventloop reactor = Eventloop.create();
 
-		StreamSupplier_Blocking<Integer> supplier = Reactor.executeWithReactor(reactor,
-				() -> StreamSupplier_Blocking.create());
+		BlockingStreamSupplier<Integer> supplier = Reactor.executeWithReactor(reactor,
+				() -> BlockingStreamSupplier.create());
 
 		List<Integer> original = IntStream.range(0, 1000).boxed().toList();
 		List<Integer> result = new ArrayList<>();

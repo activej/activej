@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.utils;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
-import io.activej.dataflow.calcite.StreamSchema_Record;
+import io.activej.dataflow.calcite.RecordStreamSchema;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
@@ -39,7 +39,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public final class Utils {
 
-	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = StreamSchema_Record.create(RecordScheme.builder().build());
+	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = RecordStreamSchema.create(RecordScheme.builder().build());
 
 	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StreamCodec.create((scale, bytes) -> {
 				BigInteger unscaledValue = new BigInteger(bytes);

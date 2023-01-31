@@ -11,9 +11,9 @@ import static io.activej.dataflow.codec.Utils.CLASS_STREAM_CODEC;
 public final class StreamSchemaCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
-	StreamCodec<StreamSchemas.StreamSchema_Simple<?>> simpleStreamSchema() {
+	StreamCodec<StreamSchemas.SimpleStreamSchema<?>> simpleStreamSchema() {
 		return StreamCodec.create(StreamSchemas::simple,
-				StreamSchemas.StreamSchema_Simple::getCls, CLASS_STREAM_CODEC
+				StreamSchemas.SimpleStreamSchema::getCls, CLASS_STREAM_CODEC
 		);
 	}
 }

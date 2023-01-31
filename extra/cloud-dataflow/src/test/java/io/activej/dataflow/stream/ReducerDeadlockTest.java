@@ -7,9 +7,9 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
-import io.activej.datastream.StreamConsumer_ToList;
+import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.datastream.processor.StreamReducers.Reducer_Merge;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -73,11 +73,11 @@ public class ReducerDeadlockTest {
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
 				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Reducer_Merge.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.build();
 
-		StreamConsumer_ToList<TestItem> result1 = StreamConsumer_ToList.create();
-		StreamConsumer_ToList<TestItem> result2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
+		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 

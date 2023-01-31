@@ -35,9 +35,9 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.stats.BasicStreamStats;
+import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
-import io.activej.datastream.stats.StreamStats_Basic;
-import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.fs.IFileSystem;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -108,24 +108,24 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private boolean detailed;
 
-	private final StreamStats_Detailed<ByteBuf> readFile = StreamStats.<ByteBuf>detailedBuilder()
+	private final DetailedStreamStats<ByteBuf> readFile = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
-	private final StreamStats_Detailed<ByteBuf> readDecompress = StreamStats.<ByteBuf>detailedBuilder()
+	private final DetailedStreamStats<ByteBuf> readDecompress = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
-	private final StreamStats_Basic<?> readDeserialize = StreamStats.basic();
-	private final StreamStats_Detailed<?> readDeserializeDetailed = StreamStats.detailed();
+	private final BasicStreamStats<?> readDeserialize = StreamStats.basic();
+	private final DetailedStreamStats<?> readDeserializeDetailed = StreamStats.detailed();
 
-	private final StreamStats_Basic<?> writeSerialize = StreamStats.basic();
-	private final StreamStats_Detailed<?> writeSerializeDetailed = StreamStats.detailed();
-	private final StreamStats_Detailed<ByteBuf> writeCompress = StreamStats.<ByteBuf>detailedBuilder()
+	private final BasicStreamStats<?> writeSerialize = StreamStats.basic();
+	private final DetailedStreamStats<?> writeSerializeDetailed = StreamStats.detailed();
+	private final DetailedStreamStats<ByteBuf> writeCompress = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
-	private final StreamStats_Detailed<ByteBuf> writeChunker = StreamStats.<ByteBuf>detailedBuilder()
+	private final DetailedStreamStats<ByteBuf> writeChunker = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
-	private final StreamStats_Detailed<ByteBuf> writeFile = StreamStats.<ByteBuf>detailedBuilder()
+	private final DetailedStreamStats<ByteBuf> writeFile = StreamStats.<ByteBuf>detailedBuilder()
 			.withSizeCounter(forByteBufs())
 			.build();
 
@@ -426,47 +426,47 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getReadFile() {
+	public DetailedStreamStats getReadFile() {
 		return readFile;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getReadDecompress() {
+	public DetailedStreamStats getReadDecompress() {
 		return readDecompress;
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getReadDeserialize() {
+	public BasicStreamStats getReadDeserialize() {
 		return readDeserialize;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getReadDeserializeDetailed() {
+	public DetailedStreamStats getReadDeserializeDetailed() {
 		return readDeserializeDetailed;
 	}
 
 	@JmxAttribute
-	public StreamStats_Basic getWriteSerialize() {
+	public BasicStreamStats getWriteSerialize() {
 		return writeSerialize;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getWriteSerializeDetailed() {
+	public DetailedStreamStats getWriteSerializeDetailed() {
 		return writeSerializeDetailed;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getWriteCompress() {
+	public DetailedStreamStats getWriteCompress() {
 		return writeCompress;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getWriteChunker() {
+	public DetailedStreamStats getWriteChunker() {
 		return writeChunker;
 	}
 
 	@JmxAttribute
-	public StreamStats_Detailed getWriteFile() {
+	public DetailedStreamStats getWriteFile() {
 		return writeFile;
 	}
 

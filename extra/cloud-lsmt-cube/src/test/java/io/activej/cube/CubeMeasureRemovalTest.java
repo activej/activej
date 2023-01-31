@@ -7,11 +7,11 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
@@ -47,7 +47,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class CubeMeasureRemovalTest extends CubeTestBase {
-	private static final FrameFormat FRAME_FORMAT = FrameFormat_LZ4.create();
+	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 	private IMultilog<LogItem> multilog;
@@ -67,7 +67,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		await(fileSystem.start());
 		multilog = Multilog.create(reactor,
 				fileSystem,
-				FrameFormat_LZ4.create(),
+				LZ4FrameFormat.create(),
 				serializer,
 				NAME_PARTITION_REMAINDER_SEQ);
 	}
@@ -105,7 +105,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
-				FrameFormat_LZ4.create(),
+				LZ4FrameFormat.create(),
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
@@ -185,7 +185,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		Map<Integer, Long> map = Stream.concat(listOfRandomLogItems1.stream(), listOfRandomLogItems2.stream())
 				.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
-		StreamConsumer_ToList<LogItem> queryResultConsumer2 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<LogItem> queryResultConsumer2 = ToListStreamConsumer.create();
 		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
 				queryResultConsumer2));
 
@@ -213,7 +213,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
 		// Query
-		StreamConsumer_ToList<LogItem> queryResultConsumer3 = StreamConsumer_ToList.create();
+		ToListStreamConsumer<LogItem> queryResultConsumer3 = ToListStreamConsumer.create();
 		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 				.streamTo(queryResultConsumer3));
 		List<LogItem> queryResult3 = queryResultConsumer3.getList();

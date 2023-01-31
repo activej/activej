@@ -20,7 +20,7 @@ public class StreamStatsForwarderTest {
 
 	@Test
 	public void testDetailedStats() {
-		StreamStats_Detailed<Integer> stats = StreamStats.<Integer>detailedBuilder()
+		DetailedStreamStats<Integer> stats = StreamStats.<Integer>detailedBuilder()
 				.withSizeCounter(number -> number)
 				.build();
 
@@ -35,7 +35,7 @@ public class StreamStatsForwarderTest {
 
 	@Test
 	public void testOnErrorStats() {
-		StreamStats_Basic<Integer> stats = StreamStats.basic();
+		BasicStreamStats<Integer> stats = StreamStats.basic();
 		Exception exception = new Exception("Test");
 
 		Exception e = awaitException(StreamSupplier.of(1, 2, 3, 4, 5)

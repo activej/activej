@@ -5,7 +5,7 @@ import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.utils.IdentityFunction;
-import io.activej.dataflow.calcite.utils.RecordFunction_Named;
+import io.activej.dataflow.calcite.utils.NamedRecordFunction;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -15,7 +15,7 @@ import io.activej.serializer.stream.StreamCodecs;
 public final class FunctionCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
-	StreamCodec<RecordFunction_Named<?>> namedRecordFunction(DataflowSchema schema) {
+	StreamCodec<NamedRecordFunction<?>> namedRecordFunction(DataflowSchema schema) {
 		return new NamedRecordFunctionStreamCodec(schema);
 	}
 

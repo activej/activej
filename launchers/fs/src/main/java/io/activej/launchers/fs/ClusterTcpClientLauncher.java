@@ -22,8 +22,8 @@ import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.IFileSystem;
+import io.activej.fs.cluster.ClusterFileSystem;
 import io.activej.fs.cluster.FileSystemPartitions;
-import io.activej.fs.cluster.FileSystem_Cluster;
 import io.activej.fs.cluster.IDiscoveryService;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
@@ -80,7 +80,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 
 	@Provides
 	IFileSystem fileSystem(Reactor reactor, FileSystemPartitions partitions, Config config) {
-		return FileSystem_Cluster.builder(reactor, partitions)
+		return ClusterFileSystem.builder(reactor, partitions)
 				.initialize(ofClusterFileSystem(config.getChild("fs.cluster")))
 				.build();
 	}

@@ -1,8 +1,8 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumer_ToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.ToListStreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
@@ -29,7 +29,7 @@ public class StreamFilterTest {
 	public void test1() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6);
 		StreamFilter<Integer, Integer> filter = StreamFilter.create(input -> input % 2 == 1);
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(supplier.transformWith(filter)
 				.streamTo(consumer.transformWith(randomlySuspending())));
@@ -44,7 +44,7 @@ public class StreamFilterTest {
 	public void testWithError() {
 		StreamSupplier<Integer> source = StreamSupplier.of(1, 2, 3, 4, 5, 6);
 		StreamFilter<Integer, Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(source.transformWith(streamFilter)
@@ -69,7 +69,7 @@ public class StreamFilterTest {
 
 		StreamFilter<Integer, Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
 
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		Exception e = awaitException(source.transformWith(streamFilter)
 				.streamTo(consumer.transformWith(randomlySuspending())));
@@ -85,7 +85,7 @@ public class StreamFilterTest {
 	public void testFilterConsumer() {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5, 6);
 		StreamFilter<Integer, Integer> filter = StreamFilter.create(input -> input % 2 == 1);
-		StreamConsumer_ToList<Integer> consumer = StreamConsumer_ToList.create();
+		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		StreamConsumer<Integer> transformedConsumer = consumer
 				.transformWith(filter)

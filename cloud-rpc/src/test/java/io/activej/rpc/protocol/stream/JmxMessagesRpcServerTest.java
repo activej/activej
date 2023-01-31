@@ -1,6 +1,6 @@
 package io.activej.rpc.protocol.stream;
 
-import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JmxMessagesRpcServerTest {
-	private static final FrameFormat_LZ4 FRAME_FORMAT = FrameFormat_LZ4.create();
+	private static final LZ4FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
