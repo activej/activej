@@ -31,13 +31,16 @@ import java.util.Set;
 import static io.activej.common.Checks.checkState;
 
 public final class RpcStrategy_TypeDispatching implements RpcStrategy {
-	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy = new HashMap<>();
-	private RpcStrategy defaultStrategy;
+	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy;
+	private @Nullable RpcStrategy defaultStrategy;
 
-	private RpcStrategy_TypeDispatching() {}
+	public RpcStrategy_TypeDispatching(Map<Class<?>, RpcStrategy> dataTypeToStrategy, @Nullable RpcStrategy defaultStrategy) {
+		this.dataTypeToStrategy = dataTypeToStrategy;
+		this.defaultStrategy = defaultStrategy;
+	}
 
 	public static Builder builder() {
-		return new RpcStrategy_TypeDispatching().new Builder();
+		return new RpcStrategy_TypeDispatching(new HashMap<>(), null).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_TypeDispatching> {
@@ -64,13 +67,23 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 		}
 	}
 
+	public Map<Class<?>, RpcStrategy> getDataTypeToStrategy() {
+		return dataTypeToStrategy;
+	}
+
+	public @Nullable RpcStrategy getDefaultStrategy() {
+		return defaultStrategy;
+	}
+
 	@Override
 	public Set<InetSocketAddress> getAddresses() {
 		HashSet<InetSocketAddress> result = new HashSet<>();
 		for (RpcStrategy strategy : dataTypeToStrategy.values()) {
 			result.addAll(strategy.getAddresses());
 		}
-		result.addAll(defaultStrategy.getAddresses());
+		if (defaultStrategy != null) {
+			result.addAll(defaultStrategy.getAddresses());
+		}
 		return result;
 	}
 

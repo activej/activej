@@ -3,9 +3,9 @@ package io.activej.crdt.storage.cluster;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
+import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
-import io.activej.rpc.client.sender.RpcStrategy_Sharding;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -145,7 +145,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P> {
 							.build());
 		}
 		final int count = rendezvousHashings.size();
-		return RpcStrategy_Sharding.create(item -> keyGetter.apply(item).hashCode() % count, rendezvousHashings);
+		return RpcStrategies.sharding(item -> keyGetter.apply(item).hashCode() % count, rendezvousHashings);
 	}
 
 	@Override

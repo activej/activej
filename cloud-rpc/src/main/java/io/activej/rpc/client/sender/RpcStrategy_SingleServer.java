@@ -24,12 +24,8 @@ import java.util.Set;
 public final class RpcStrategy_SingleServer implements RpcStrategy {
 	private final InetSocketAddress address;
 
-	private RpcStrategy_SingleServer(InetSocketAddress address) {
+	public RpcStrategy_SingleServer(InetSocketAddress address) {
 		this.address = address;
-	}
-
-	public static RpcStrategy_SingleServer of(InetSocketAddress address) {
-		return new RpcStrategy_SingleServer(address);
 	}
 
 	@Override

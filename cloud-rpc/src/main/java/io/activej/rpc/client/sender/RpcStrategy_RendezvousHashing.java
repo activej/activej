@@ -33,25 +33,39 @@ import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 
 public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
-	private static final int DEFAULT_BUCKET_CAPACITY = 2048;
-	private static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->
+	public static final int DEFAULT_BUCKET_CAPACITY = 2048;
+	public static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->
 			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
-	private static final int DEFAULT_MIN_ACTIVE_SHARDS = 1;
-	private static final int DEFAULT_MAX_RESHARDINGS = Integer.MAX_VALUE;
+	public static final int DEFAULT_MIN_ACTIVE_SHARDS = 1;
+	public static final int DEFAULT_MAX_RESHARDINGS = Integer.MAX_VALUE;
 
-	private final Map<Object, RpcStrategy> shards = new HashMap<>();
 	private final ToIntFunction<?> hashFn;
-	private ToLongBiFunction<Object, Integer> hashBucketFn = DEFAULT_HASH_BUCKET_FN;
-	private int buckets = DEFAULT_BUCKET_CAPACITY;
-	private int minActiveShards = DEFAULT_MIN_ACTIVE_SHARDS;
-	private int reshardings = DEFAULT_MAX_RESHARDINGS;
+	private final Map<Object, RpcStrategy> shards;
+	private ToLongBiFunction<Object, Integer> hashBucketFn;
+	private int buckets;
+	private int minActiveShards;
+	private int reshardings;
 
-	private RpcStrategy_RendezvousHashing(ToIntFunction<?> hashFn) {
+	public RpcStrategy_RendezvousHashing(
+			ToIntFunction<?> hashFn,
+			Map<Object, RpcStrategy> shards,
+			ToLongBiFunction<Object, Integer> hashBucketFn,
+			int buckets,
+			int minActiveShards,
+			int reshardings
+	) {
 		this.hashFn = hashFn;
+		this.shards = shards;
+		this.hashBucketFn = hashBucketFn;
+		this.buckets = buckets;
+		this.minActiveShards = minActiveShards;
+		this.reshardings = reshardings;
 	}
 
 	public static <T> Builder builder(ToIntFunction<T> hashFn) {
-		return new RpcStrategy_RendezvousHashing(hashFn).new Builder();
+		return new RpcStrategy_RendezvousHashing(
+				hashFn, new HashMap<>(), DEFAULT_HASH_BUCKET_FN,
+				DEFAULT_BUCKET_CAPACITY, DEFAULT_MIN_ACTIVE_SHARDS, DEFAULT_MAX_RESHARDINGS).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RendezvousHashing> {
@@ -104,6 +118,30 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 		protected RpcStrategy_RendezvousHashing doBuild() {
 			return RpcStrategy_RendezvousHashing.this;
 		}
+	}
+
+	public ToIntFunction<?> getHashFn() {
+		return hashFn;
+	}
+
+	public Map<Object, RpcStrategy> getShards() {
+		return shards;
+	}
+
+	public ToLongBiFunction<Object, Integer> getHashBucketFn() {
+		return hashBucketFn;
+	}
+
+	public int getBuckets() {
+		return buckets;
+	}
+
+	public int getMinActiveShards() {
+		return minActiveShards;
+	}
+
+	public int getReshardings() {
+		return reshardings;
 	}
 
 	@Override

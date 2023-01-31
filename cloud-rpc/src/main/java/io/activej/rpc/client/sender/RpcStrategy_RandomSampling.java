@@ -26,13 +26,17 @@ import java.util.*;
 import static io.activej.common.Checks.checkArgument;
 
 public final class RpcStrategy_RandomSampling implements RpcStrategy {
-	private Random random = new Random();
-	private final Map<RpcStrategy, Double> strategyToWeight = new HashMap<>();
+	private final Map<RpcStrategy, Double> strategyToWeight;
 
-	private RpcStrategy_RandomSampling() {}
+	private Random random;
+
+	public RpcStrategy_RandomSampling(Random random, Map<RpcStrategy, Double> strategyToWeight) {
+		this.random = random;
+		this.strategyToWeight = strategyToWeight;
+	}
 
 	public static Builder builder() {
-		return new RpcStrategy_RandomSampling().new Builder();
+		return new RpcStrategy_RandomSampling(new Random(), new HashMap<>()).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RandomSampling> {
@@ -56,6 +60,14 @@ public final class RpcStrategy_RandomSampling implements RpcStrategy {
 		protected RpcStrategy_RandomSampling doBuild() {
 			return RpcStrategy_RandomSampling.this;
 		}
+	}
+
+	public Map<RpcStrategy, Double> getStrategyToWeight() {
+		return strategyToWeight;
+	}
+
+	public Random getRandom() {
+		return random;
 	}
 
 	@Override

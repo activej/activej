@@ -29,7 +29,7 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 	private int minActiveSubStrategies;
 
-	private RpcStrategy_RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
+	public RpcStrategy_RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
@@ -63,6 +63,14 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 		protected RpcStrategy_RoundRobin doBuild() {
 			return RpcStrategy_RoundRobin.this;
 		}
+	}
+
+	public List<? extends RpcStrategy> getList() {
+		return list;
+	}
+
+	public int getMinActiveSubStrategies() {
+		return minActiveSubStrategies;
 	}
 
 	@Override

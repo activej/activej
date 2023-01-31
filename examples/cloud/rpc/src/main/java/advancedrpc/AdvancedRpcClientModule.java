@@ -8,8 +8,8 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategy_FirstAvailable;
 import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
 
 import java.net.InetSocketAddress;
@@ -42,7 +42,7 @@ public class AdvancedRpcClientModule extends AbstractModule {
 				ConfigConverters.ofInetSocketAddress(), ","), "client.addresses");
 		checkState(inetAddresses.size() == 4);
 
-		return RpcStrategy_FirstAvailable.of(
+		return RpcStrategies.firstAvailable(
 				RpcStrategy_RendezvousHashing.builder(Object::hashCode)
 						.withShard(1, server(inetAddresses.get(0)))
 						.withShard(2, server(inetAddresses.get(1)))

@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
 import static io.activej.rpc.client.sender.Callbacks.forFuture;
 import static io.activej.rpc.client.sender.RpcStrategies.servers;
+import static io.activej.rpc.client.sender.RpcStrategies.sharding;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -39,7 +40,7 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
-		RpcStrategy shardingStrategy = RpcStrategy_Sharding.create(
+		RpcStrategy shardingStrategy = sharding(
 				(Integer item) -> item % shardsAmount,
 				servers(address1, address2, address3));
 		RpcSender senderSharding;
@@ -69,7 +70,7 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
-		RpcStrategy shardingStrategy = RpcStrategy_Sharding.create(
+		RpcStrategy shardingStrategy = sharding(
 				(Integer item) -> item % shardsAmount,
 				servers(address1, address2, address3));
 

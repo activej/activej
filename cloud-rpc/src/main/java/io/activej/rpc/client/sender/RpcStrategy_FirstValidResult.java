@@ -28,26 +28,30 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public final class RpcStrategy_FirstValidResult implements RpcStrategy {
-	static final Predicate<?> DEFAULT_RESULT_VALIDATOR = Objects::nonNull;
+	public static final Predicate<?> DEFAULT_RESULT_VALIDATOR = Objects::nonNull;
 
 	private final List<? extends RpcStrategy> list;
 
 	private Predicate<?> resultValidator;
 	private @Nullable Exception noValidResultException;
 
-	private RpcStrategy_FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
+	public RpcStrategy_FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
 			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
 	}
 
-	public static RpcStrategy_FirstValidResult of(List<RpcStrategy> list, Predicate<?> resultValidator, @Nullable Exception noValidResultException) {
-		return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException);
+	public List<? extends RpcStrategy> getList() {
+		return list;
 	}
 
-	public static RpcStrategy_FirstValidResult create(RpcStrategy... list) {
-		return builder(list).build();
+	public Predicate<?> getResultValidator() {
+		return resultValidator;
+	}
+
+	public @Nullable Exception getNoValidResultException() {
+		return noValidResultException;
 	}
 
 	public static RpcStrategy_FirstValidResult create(List<? extends RpcStrategy> list) {

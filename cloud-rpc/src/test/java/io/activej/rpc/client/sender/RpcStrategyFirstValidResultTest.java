@@ -16,6 +16,7 @@ import java.util.function.Predicate;
 
 import static io.activej.rpc.client.sender.Callbacks.forFuture;
 import static io.activej.rpc.client.sender.Callbacks.ignore;
+import static io.activej.rpc.client.sender.RpcStrategies.firstValidResult;
 import static io.activej.rpc.client.sender.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
@@ -43,7 +44,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(servers(address1, address2, address3));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2, address3));
 		int callsAmountIterationOne = 10;
 		int callsAmountIterationTwo = 25;
 		RpcSender senderToAll;
@@ -72,7 +73,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy strategy2 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy strategy3 = new RequestSenderOnResultWithNullRpcStrategy();
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(strategy1, strategy2, strategy3);
+		RpcStrategy firstValidResult = firstValidResult(strategy1, strategy2, strategy3);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
 
@@ -146,7 +147,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
 		pool.put(address2, connection);
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(servers(address1, address2));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2));
 		assertNotNull(firstValidResult.createSender(pool));
 	}
 
@@ -154,7 +155,7 @@ public class RpcStrategyFirstValidResultTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(servers(address1, address2, address3));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2, address3));
 		assertNull(firstValidResult.createSender(pool));
 	}
 

@@ -34,14 +34,10 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 	private final ToIntFunction<?> shardingFunction;
 	private int minActiveSubStrategies;
 
-	private RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<? extends RpcStrategy> list, int minActiveSubStrategies) {
+	public RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
-	}
-
-	public static <T> RpcStrategy_Sharding of(ToIntFunction<T> shardingFunction, List<RpcStrategy> strategies, int minActiveSubStrategies) {
-		return new RpcStrategy_Sharding(shardingFunction, strategies, minActiveSubStrategies);
 	}
 
 	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
@@ -73,6 +69,18 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 		protected RpcStrategy_Sharding doBuild() {
 			return RpcStrategy_Sharding.this;
 		}
+	}
+
+	public List<? extends RpcStrategy> getList() {
+		return list;
+	}
+
+	public ToIntFunction<?> getShardingFunction() {
+		return shardingFunction;
+	}
+
+	public int getMinActiveSubStrategies() {
+		return minActiveSubStrategies;
 	}
 
 	@Override

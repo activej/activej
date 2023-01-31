@@ -92,7 +92,7 @@ public final class RpcBlockingTest {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(
-						RpcStrategy_RoundRobin.create(
+						RpcStrategies.roundRobin(
 								server(address1),
 								RpcStrategy_Sharding.builder(
 												(HelloRequest item) -> {
