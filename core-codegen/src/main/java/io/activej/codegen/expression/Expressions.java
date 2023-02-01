@@ -18,7 +18,6 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.operation.ArithmeticOperation;
 import io.activej.codegen.operation.CompareOperation;
-import io.activej.common.builder.Builder;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public class Expressions {
 		List<Expression> list = new ArrayList<>(parts.size());
 		for (Expression part : parts) {
 			if (part instanceof Expression_Sequence) {
-				list.addAll(((Expression_Sequence) part).expressions);
+				list.addAll(((Expression_Sequence) part).getExpressions());
 			} else {
 				list.add(part);
 			}
@@ -850,19 +849,15 @@ public class Expressions {
 	}
 
 	public static Expression hashCodeImpl(List<String> fields) {
-		return hashCodeBuilder()
+		return Expression_HashCode.builder()
 				.withFields(fields)
 				.build();
 	}
 
 	public static Expression hashCodeImpl(String... fields) {
-		return hashCodeBuilder()
+		return Expression_HashCode.builder()
 				.withFields(fields)
 				.build();
-	}
-
-	public static ExpressionHashCodeBuilder hashCodeBuilder() {
-		return Expression_HashCode.builder();
 	}
 
 	public static Expression equalsImpl(List<String> fields) {
@@ -896,12 +891,8 @@ public class Expressions {
 		return toStringImpl(List.of(fields));
 	}
 
-	public static ExpressionToStringBuilder toStringBuilder() {
-		return Expression_ToString.builder();
-	}
-
 	public static Expression comparableImpl(List<String> fields) {
-		ExpressionCompareBuilder builder = compareBuilder();
+		Expression_Compare.Builder builder = Expression_Compare.builder();
 		for (String field : fields) {
 			builder.with(thisProperty(field), thatProperty(field), true);
 		}
@@ -913,15 +904,11 @@ public class Expressions {
 	}
 
 	public static Expression comparatorImpl(Class<?> type, List<String> fields) {
-		ExpressionCompareBuilder builder = compareBuilder();
+		Expression_Compare.Builder builder = Expression_Compare.builder();
 		for (String field : fields) {
 			builder.with(leftProperty(type, field), rightProperty(type, field), true);
 		}
 		return builder.build();
-	}
-
-	public static ExpressionCompareBuilder compareBuilder() {
-		return Expression_Compare.builder();
 	}
 
 	public static Expression thisProperty(String property) {
@@ -938,41 +925,5 @@ public class Expressions {
 
 	public static Expression rightProperty(Class<?> type, String property) {
 		return property(cast(arg(1), type), property);
-	}
-
-	public interface ExpressionCompareBuilder extends Builder<Expression> {
-		ExpressionCompareBuilder with(Expression left, Expression right);
-
-		ExpressionCompareBuilder with(Expression left, Expression right, boolean nullable);
-	}
-
-	public interface ExpressionHashCodeBuilder extends Builder<Expression> {
-		ExpressionHashCodeBuilder with(Expression expression);
-
-		ExpressionHashCodeBuilder withField(String field);
-
-		ExpressionHashCodeBuilder withFields(List<String> fields);
-
-		ExpressionHashCodeBuilder withFields(String... fields);
-	}
-
-	public interface ExpressionToStringBuilder extends Builder<Expression> {
-		ExpressionToStringBuilder withBeginTag(String begin);
-
-		ExpressionToStringBuilder withEndTag(String end);
-
-		ExpressionToStringBuilder withNameSeparator(String nameSeparator);
-
-		ExpressionToStringBuilder withValueSeparator(String valueSeparator);
-
-		ExpressionToStringBuilder with(String label, Expression expression);
-
-		ExpressionToStringBuilder with(Expression expression);
-
-		ExpressionToStringBuilder withField(String field);
-
-		ExpressionToStringBuilder withFields(List<String> fields);
-
-		ExpressionToStringBuilder withFields(String... fields);
 	}
 }

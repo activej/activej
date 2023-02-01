@@ -30,10 +30,22 @@ public final class Expression_IfNull implements Expression {
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;
 
-	Expression_IfNull(Expression expression, Expression expressionTrue, Expression expressionFalse) {
+	public Expression_IfNull(Expression expression, Expression expressionTrue, Expression expressionFalse) {
 		this.expression = expression;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
+	}
+
+	public Expression getExpression() {
+		return expression;
+	}
+
+	public Expression getExpressionTrue() {
+		return expressionTrue;
+	}
+
+	public Expression getExpressionFalse() {
+		return expressionFalse;
 	}
 
 	@Override

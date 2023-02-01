@@ -41,12 +41,32 @@ public final class Expression_IfObjCmp implements Expression {
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;
 
-	Expression_IfObjCmp(CompareOperation operation, Expression left, Expression right, Expression expressionTrue, Expression expressionFalse) {
+	public Expression_IfObjCmp(CompareOperation operation, Expression left, Expression right, Expression expressionTrue, Expression expressionFalse) {
 		this.left = left;
 		this.right = right;
 		this.operation = operation;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
+	}
+
+	public Expression getLeft() {
+		return left;
+	}
+
+	public Expression getRight() {
+		return right;
+	}
+
+	public CompareOperation getOperation() {
+		return operation;
+	}
+
+	public Expression getExpressionTrue() {
+		return expressionTrue;
+	}
+
+	public Expression getExpressionFalse() {
+		return expressionFalse;
 	}
 
 	@Override

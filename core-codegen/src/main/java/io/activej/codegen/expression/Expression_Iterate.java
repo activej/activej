@@ -33,10 +33,22 @@ public final class Expression_Iterate implements Expression {
 	private final Expression to;
 	private final UnaryOperator<Expression> forVar;
 
-	Expression_Iterate(Expression from, Expression to, UnaryOperator<Expression> forVar) {
+	public Expression_Iterate(Expression from, Expression to, UnaryOperator<Expression> forVar) {
 		this.from = from;
 		this.to = to;
 		this.forVar = forVar;
+	}
+
+	public Expression getFrom() {
+		return from;
+	}
+
+	public Expression getTo() {
+		return to;
+	}
+
+	public UnaryOperator<Expression> getForVar() {
+		return forVar;
 	}
 
 	@Override

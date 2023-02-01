@@ -21,8 +21,6 @@ import org.objectweb.asm.Type;
 
 import java.util.List;
 
-import static org.objectweb.asm.Type.getType;
-
 /**
  * Defines methods for using constructors from other classes
  */
@@ -30,13 +28,21 @@ public final class Expression_Constructor implements Expression {
 	private final Class<?> type;
 	private final List<Expression> fields;
 
-	Expression_Constructor(Class<?> type, List<Expression> fields) {
+	public Expression_Constructor(Class<?> type, List<Expression> fields) {
 		this.type = type;
 		this.fields = fields;
 	}
 
+	public Class<?> getType() {
+		return type;
+	}
+
+	public List<Expression> getFields() {
+		return fields;
+	}
+
 	@Override
 	public Type load(Context ctx) {
-		return ctx.invokeConstructor(getType(type), fields);
+		return ctx.invokeConstructor(Type.getType(type), fields);
 	}
 }

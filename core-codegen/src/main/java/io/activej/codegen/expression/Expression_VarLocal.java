@@ -26,12 +26,16 @@ import org.objectweb.asm.commons.GeneratorAdapter;
  */
 public final class Expression_VarLocal implements LocalVariable {
 	private static final int VOID = -1;
-	static final Expression_VarLocal VAR_LOCAL_VOID = new Expression_VarLocal(VOID);
+	public static final Expression_VarLocal VAR_LOCAL_VOID = new Expression_VarLocal(VOID);
 
 	private final int local;
 
-	Expression_VarLocal(int local) {
+	public Expression_VarLocal(int local) {
 		this.local = local;
+	}
+
+	public int getLocal() {
+		return local;
 	}
 
 	@Override

@@ -33,9 +33,17 @@ public final class Expression_StaticField implements Variable {
 	private final @Nullable Class<?> owner;
 	private final String name;
 
-	Expression_StaticField(@Nullable Class<?> owner, String name) {
+	public Expression_StaticField(@Nullable Class<?> owner, String name) {
 		this.owner = owner;
 		this.name = name;
+	}
+
+	public @Nullable Class<?> getOwner() {
+		return owner;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	@Override

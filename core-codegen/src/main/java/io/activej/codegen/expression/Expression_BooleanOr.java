@@ -33,8 +33,12 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 public final class Expression_BooleanOr implements Expression {
 	private final List<Expression> expressions;
 
-	Expression_BooleanOr(List<Expression> expressions) {
+	public Expression_BooleanOr(List<Expression> expressions) {
 		this.expressions = expressions;
+	}
+
+	public List<Expression> getExpressions() {
+		return expressions;
 	}
 
 	@Override

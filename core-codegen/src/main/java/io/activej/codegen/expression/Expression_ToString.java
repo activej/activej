@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import io.activej.codegen.expression.Expressions.ExpressionToStringBuilder;
 import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -41,73 +40,74 @@ import static org.objectweb.asm.commons.Method.getMethod;
  * Defines methods which allow to create a string
  */
 public final class Expression_ToString implements Expression {
-	private String begin = "{";
-	private String end = "}";
-	private @Nullable String nameSeparator = ": ";
-	private String valueSeparator = ", ";
-	private final Map<Object, Expression> arguments = new LinkedHashMap<>();
+	private String begin;
+	private String end;
+	private @Nullable String nameSeparator;
+	private String valueSeparator;
+	private final Map<Object, Expression> arguments;
 
-	private Expression_ToString() {
+	public Expression_ToString(String begin, String end, @Nullable String nameSeparator, String valueSeparator,
+			Map<Object, Expression> arguments) {
+		this.begin = begin;
+		this.end = end;
+		this.nameSeparator = nameSeparator;
+		this.valueSeparator = valueSeparator;
+		this.arguments = arguments;
 	}
 
-	static Builder builder() {
-		return new Expression_ToString().new Builder();
+	public static Expression_ToString create() {
+		return builder().build();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Expression>
-			implements ExpressionToStringBuilder {
+	public static Builder builder() {
+		return new Expression_ToString("{", "}", ": ", ", ", new LinkedHashMap<>()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Expression_ToString> {
 		private Builder() {}
 
-		@Override
 		public Builder withBeginTag(String begin) {
 			checkNotBuilt(this);
 			Expression_ToString.this.begin = begin;
 			return this;
 		}
 
-		@Override
 		public Builder withEndTag(String end) {
 			checkNotBuilt(this);
 			Expression_ToString.this.end = end;
 			return this;
 		}
 
-		@Override
-		public Builder withNameSeparator(String nameSeparator) {
+		public Builder withNameSeparator(@Nullable String nameSeparator) {
 			checkNotBuilt(this);
 			Expression_ToString.this.nameSeparator = nameSeparator;
 			return this;
 		}
 
-		@Override
 		public Builder withValueSeparator(String valueSeparator) {
 			checkNotBuilt(this);
 			Expression_ToString.this.valueSeparator = valueSeparator;
 			return this;
 		}
 
-		@Override
 		public Builder with(String label, Expression expression) {
 			checkNotBuilt(this);
 			Expression_ToString.this.arguments.put(label, expression);
 			return this;
 		}
 
-		@Override
 		public Builder with(Expression expression) {
 			checkNotBuilt(this);
 			Expression_ToString.this.arguments.put(arguments.size() + 1, expression);
 			return this;
 		}
 
-		@Override
 		public Builder withField(String field) {
 			checkNotBuilt(this);
 			Expression_ToString.this.arguments.put(field, property(self(), field));
 			return this;
 		}
 
-		@Override
 		public Builder withFields(List<String> fields) {
 			checkNotBuilt(this);
 			for (String field : fields) {
@@ -116,16 +116,35 @@ public final class Expression_ToString implements Expression {
 			return this;
 		}
 
-		@Override
 		public Builder withFields(String... fields) {
 			checkNotBuilt(this);
 			return withFields(List.of(fields));
 		}
 
 		@Override
-		protected Expression doBuild() {
+		protected Expression_ToString doBuild() {
 			return Expression_ToString.this;
 		}
+	}
+
+	public String getBegin() {
+		return begin;
+	}
+
+	public String getEnd() {
+		return end;
+	}
+
+	public @Nullable String getNameSeparator() {
+		return nameSeparator;
+	}
+
+	public String getValueSeparator() {
+		return valueSeparator;
+	}
+
+	public Map<Object, Expression> getArguments() {
+		return arguments;
 	}
 
 	@Override

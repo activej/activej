@@ -34,9 +34,17 @@ public final class Expression_Cast implements Expression {
 	private final Expression expression;
 	private final Type targetType;
 
-	Expression_Cast(Expression expression, Type type) {
+	public Expression_Cast(Expression expression, Type type) {
 		this.expression = expression;
 		this.targetType = type;
+	}
+
+	public Expression getExpression() {
+		return expression;
+	}
+
+	public Type getTargetType() {
+		return targetType;
 	}
 
 	@Override

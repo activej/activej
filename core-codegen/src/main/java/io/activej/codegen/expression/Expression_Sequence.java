@@ -30,10 +30,14 @@ import static org.objectweb.asm.Type.VOID_TYPE;
  * Defines methods which allow to use several methods one after the other
  */
 public final class Expression_Sequence implements Expression {
-	final List<Expression> expressions;
+	private final List<Expression> expressions;
 
-	Expression_Sequence(List<Expression> expressions) {
+	public Expression_Sequence(List<Expression> expressions) {
 		this.expressions = expressions;
+	}
+
+	public List<Expression> getExpressions() {
+		return expressions;
 	}
 
 	@Override

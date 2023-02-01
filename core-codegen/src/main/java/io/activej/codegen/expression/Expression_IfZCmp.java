@@ -32,11 +32,27 @@ public final class Expression_IfZCmp implements Expression {
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;
 
-	Expression_IfZCmp(Expression value, CompareOperation operation, Expression expressionTrue, Expression expressionFalse) {
+	public Expression_IfZCmp(Expression value, CompareOperation operation, Expression expressionTrue, Expression expressionFalse) {
 		this.value = value;
 		this.operation = operation;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
+	}
+
+	public Expression getValue() {
+		return value;
+	}
+
+	public CompareOperation getOperation() {
+		return operation;
+	}
+
+	public Expression getExpressionTrue() {
+		return expressionTrue;
+	}
+
+	public Expression getExpressionFalse() {
+		return expressionFalse;
 	}
 
 	@Override

@@ -32,10 +32,22 @@ public final class Expression_ArithmeticOp implements Expression {
 	private final Expression left;
 	private final Expression right;
 
-	Expression_ArithmeticOp(ArithmeticOperation op, Expression left, Expression right) {
+	public Expression_ArithmeticOp(ArithmeticOperation op, Expression left, Expression right) {
 		this.op = op;
 		this.left = left;
 		this.right = right;
+	}
+
+	public ArithmeticOperation getOp() {
+		return op;
+	}
+
+	public Expression getLeft() {
+		return left;
+	}
+
+	public Expression getRight() {
+		return right;
 	}
 
 	static Class<?> unifyArithmeticTypes(Class<?>... dataTypes) {

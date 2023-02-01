@@ -29,9 +29,17 @@ public final class Expression_Loop implements Expression {
 	private final Expression condition;
 	private final Expression body;
 
-	Expression_Loop(Expression condition, Expression body) {
+	public Expression_Loop(Expression condition, Expression body) {
 		this.condition = condition;
 		this.body = body;
+	}
+
+	public Expression getCondition() {
+		return condition;
+	}
+
+	public Expression getBody() {
+		return body;
 	}
 
 	@Override

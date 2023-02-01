@@ -24,10 +24,22 @@ public final class Expression_Call implements Expression {
 	private final String methodName;
 	private final Expression[] arguments;
 
-	Expression_Call(Expression owner, String methodName, Expression[] arguments) {
+	public Expression_Call(Expression owner, String methodName, Expression[] arguments) {
 		this.owner = owner;
 		this.methodName = methodName;
 		this.arguments = arguments;
+	}
+
+	public Expression getOwner() {
+		return owner;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public Expression[] getArguments() {
+		return arguments;
 	}
 
 	@Override

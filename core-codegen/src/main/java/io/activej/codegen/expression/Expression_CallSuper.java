@@ -23,9 +23,17 @@ public final class Expression_CallSuper implements Expression {
 	private final String methodName;
 	private final Expression[] arguments;
 
-	Expression_CallSuper(String methodName, Expression[] arguments) {
+	public Expression_CallSuper(String methodName, Expression[] arguments) {
 		this.methodName = methodName;
 		this.arguments = arguments;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public Expression[] getArguments() {
+		return arguments;
 	}
 
 	@Override

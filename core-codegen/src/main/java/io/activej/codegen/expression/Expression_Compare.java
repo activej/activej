@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import io.activej.codegen.expression.Expressions.ExpressionCompareBuilder;
 import io.activej.common.builder.AbstractBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -37,28 +36,26 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
  * Defines methods to compare some fields
  */
 public final class Expression_Compare implements Expression {
-	private final List<Pair> pairs = new ArrayList<>();
+	private final List<Pair> pairs;
 
 	public record Pair(Expression left, Expression right, boolean nullable) {}
 
-	private Expression_Compare() {
+	public Expression_Compare(List<Pair> pairs) {
+		this.pairs = pairs;
 	}
 
-	static Builder builder() {
-		return new Expression_Compare().new Builder();
+	public static Builder builder() {
+		return new Expression_Compare(new ArrayList<>()).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Expression>
-			implements ExpressionCompareBuilder {
+	public final class Builder extends AbstractBuilder<Builder, Expression_Compare> {
 		private Builder() {}
 
-		@Override
 		public Builder with(Expression left, Expression right) {
 			checkNotBuilt(this);
 			return with(left, right, false);
 		}
 
-		@Override
 		public Builder with(Expression left, Expression right, boolean nullable) {
 			checkNotBuilt(this);
 			Expression_Compare.this.pairs.add(new Expression_Compare.Pair(left, right, nullable));
@@ -66,9 +63,13 @@ public final class Expression_Compare implements Expression {
 		}
 
 		@Override
-		protected Expression doBuild() {
+		protected Expression_Compare doBuild() {
 			return Expression_Compare.this;
 		}
+	}
+
+	public List<Pair> getPairs() {
+		return pairs;
 	}
 
 	@Override

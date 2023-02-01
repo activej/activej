@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import io.activej.codegen.expression.Expressions.ExpressionHashCodeBuilder;
 import io.activej.common.builder.AbstractBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -39,33 +38,30 @@ import static org.objectweb.asm.commons.Method.getMethod;
  * Defines methods for hashing some fields
  */
 public final class Expression_HashCode implements Expression {
-	private final List<Expression> arguments = new ArrayList<>();
+	private final List<Expression> arguments;
 
-	private Expression_HashCode() {
+	public Expression_HashCode(List<Expression> arguments) {
+		this.arguments = arguments;
 	}
 
-	static Builder builder() {
-		return new Expression_HashCode().new Builder();
+	public static Builder builder() {
+		return new Expression_HashCode(new ArrayList<>()).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Expression>
-			implements ExpressionHashCodeBuilder {
+	public final class Builder extends AbstractBuilder<Builder, Expression_HashCode> {
 		private Builder() {}
 
-		@Override
 		public Builder with(Expression expression) {
 			checkNotBuilt(this);
 			Expression_HashCode.this.arguments.add(expression);
 			return this;
 		}
 
-		@Override
 		public Builder withField(String field) {
 			checkNotBuilt(this);
 			return with(Expressions.property(Expressions.self(), field));
 		}
 
-		@Override
 		public Builder withFields(List<String> fields) {
 			checkNotBuilt(this);
 			for (String field : fields) {
@@ -74,16 +70,19 @@ public final class Expression_HashCode implements Expression {
 			return this;
 		}
 
-		@Override
 		public Builder withFields(String... fields) {
 			checkNotBuilt(this);
 			return withFields(List.of(fields));
 		}
 
 		@Override
-		protected Expression doBuild() {
+		protected Expression_HashCode doBuild() {
 			return Expression_HashCode.this;
 		}
+	}
+
+	public List<Expression> getArguments() {
+		return arguments;
 	}
 
 	@Override

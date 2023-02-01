@@ -23,8 +23,12 @@ import org.objectweb.asm.Type;
 public final class Expression_Let implements Variable {
 	private final Expression value;
 
-	Expression_Let(Expression value) {
+	public Expression_Let(Expression value) {
 		this.value = value;
+	}
+
+	public Expression getValue() {
+		return value;
 	}
 
 	@Override

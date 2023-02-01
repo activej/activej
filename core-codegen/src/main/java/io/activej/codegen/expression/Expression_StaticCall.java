@@ -28,10 +28,22 @@ public final class Expression_StaticCall implements Expression {
 	private final String name;
 	private final List<Expression> arguments;
 
-	Expression_StaticCall(Class<?> owner, String name, List<Expression> arguments) {
+	public Expression_StaticCall(Class<?> owner, String name, List<Expression> arguments) {
 		this.owner = owner;
 		this.name = name;
 		this.arguments = arguments;
+	}
+
+	public Class<?> getOwner() {
+		return owner;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public List<Expression> getArguments() {
+		return arguments;
 	}
 
 	@Override

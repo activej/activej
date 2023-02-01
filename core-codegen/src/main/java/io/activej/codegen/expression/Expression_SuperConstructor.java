@@ -27,8 +27,12 @@ import java.util.List;
 public final class Expression_SuperConstructor implements Expression {
 	private final List<Expression> fields;
 
-	Expression_SuperConstructor(List<Expression> fields) {
+	public Expression_SuperConstructor(List<Expression> fields) {
 		this.fields = fields;
+	}
+
+	public List<Expression> getFields() {
+		return fields;
 	}
 
 	@Override

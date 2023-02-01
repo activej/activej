@@ -38,13 +38,13 @@ public final class Expression_Constant implements ConstantExpression {
 
 	private final int id = COUNTER.incrementAndGet();
 
-	Expression_Constant(Object value) {
+	public Expression_Constant(Object value) {
 		checkNotNull(value);
 		this.value = value;
 		this.cls = null;
 	}
 
-	Expression_Constant(Object value, Class<?> cls) {
+	public Expression_Constant(Object value, Class<?> cls) {
 		checkNotNull(value);
 		if (!cls.isInstance(value)) {
 			throw new IllegalArgumentException(value + " is not an instance of " + cls);
@@ -52,7 +52,10 @@ public final class Expression_Constant implements ConstantExpression {
 
 		this.value = value;
 		this.cls = cls;
+	}
 
+	public @Nullable Class<?> getCls() {
+		return cls;
 	}
 
 	@Override

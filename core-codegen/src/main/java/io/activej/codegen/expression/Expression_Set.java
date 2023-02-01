@@ -29,9 +29,17 @@ public final class Expression_Set implements Expression {
 	private final StoreDef to;
 	private final Expression from;
 
-	Expression_Set(StoreDef to, Expression from) {
+	public Expression_Set(StoreDef to, Expression from) {
 		this.to = to;
 		this.from = from;
+	}
+
+	public StoreDef getTo() {
+		return to;
+	}
+
+	public Expression getFrom() {
+		return from;
 	}
 
 	@Override

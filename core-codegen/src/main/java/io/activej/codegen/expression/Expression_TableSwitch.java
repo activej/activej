@@ -33,11 +33,27 @@ public final class Expression_TableSwitch implements Expression {
 	private final Expression[] matchExpressions;
 	private final Expression defaultExpression;
 
-	Expression_TableSwitch(Expression value, int[] keys, Expression[] matchExpressions, Expression defaultExpression) {
+	public Expression_TableSwitch(Expression value, int[] keys, Expression[] matchExpressions, Expression defaultExpression) {
 		this.value = value;
 		this.keys = keys;
 		this.matchExpressions = matchExpressions;
 		this.defaultExpression = defaultExpression;
+	}
+
+	public Expression getValue() {
+		return value;
+	}
+
+	public int[] getKeys() {
+		return keys;
+	}
+
+	public Expression[] getMatchExpressions() {
+		return matchExpressions;
+	}
+
+	public Expression getDefaultExpression() {
+		return defaultExpression;
 	}
 
 	@Override

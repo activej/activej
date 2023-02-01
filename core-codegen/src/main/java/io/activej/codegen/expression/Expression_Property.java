@@ -44,9 +44,17 @@ public final class Expression_Property implements Variable {
 	private final Expression owner;
 	private final String property;
 
-	Expression_Property(Expression owner, String property) {
+	public Expression_Property(Expression owner, String property) {
 		this.owner = owner;
 		this.property = property;
+	}
+
+	public Expression getOwner() {
+		return owner;
+	}
+
+	public String getProperty() {
+		return property;
 	}
 
 	@Override

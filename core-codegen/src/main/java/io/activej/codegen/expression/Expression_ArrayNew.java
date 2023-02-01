@@ -22,17 +22,24 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
-import static org.objectweb.asm.Type.getType;
 
 public final class Expression_ArrayNew implements Expression {
 	private final Class<?> type;
 	private final Expression length;
 
-	Expression_ArrayNew(Class<?> type, Expression length) {
+	public Expression_ArrayNew(Class<?> type, Expression length) {
 		if (!type.isArray())
 			throw new IllegalArgumentException();
 		this.type = type;
 		this.length = length;
+	}
+
+	public Class<?> getType() {
+		return type;
+	}
+
+	public Expression getLength() {
+		return length;
 	}
 
 	@Override
@@ -40,7 +47,7 @@ public final class Expression_ArrayNew implements Expression {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type lengthType = length.load(ctx);
 		checkType(lengthType, isWidenedToInt());
-		g.newArray(getType(getType(type).getDescriptor().substring(1)));
-		return getType(type);
+		g.newArray(Type.getType(Type.getType(type).getDescriptor().substring(1)));
+		return Type.getType(type);
 	}
 }

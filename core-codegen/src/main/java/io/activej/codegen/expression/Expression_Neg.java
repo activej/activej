@@ -29,8 +29,12 @@ import static org.objectweb.asm.Type.INT_TYPE;
 public final class Expression_Neg implements Expression {
 	private final Expression arg;
 
-	Expression_Neg(Expression arg) {
+	public Expression_Neg(Expression arg) {
 		this.arg = arg;
+	}
+
+	public Expression getArg() {
+		return arg;
 	}
 
 	@Override

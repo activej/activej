@@ -28,10 +28,22 @@ public final class Expression_ArraySet implements Expression {
 	private final Expression position;
 	private final Expression newElement;
 
-	Expression_ArraySet(Expression array, Expression position, Expression newElement) {
+	public Expression_ArraySet(Expression array, Expression position, Expression newElement) {
 		this.array = array;
 		this.position = position;
 		this.newElement = newElement;
+	}
+
+	public Expression getArray() {
+		return array;
+	}
+
+	public Expression getPosition() {
+		return position;
+	}
+
+	public Expression getNewElement() {
+		return newElement;
 	}
 
 	@Override

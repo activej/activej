@@ -30,6 +30,14 @@ public final class Expression_StaticCallSelf implements Expression {
 		this.arguments = expressions;
 	}
 
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public List<Expression> getArguments() {
+		return arguments;
+	}
+
 	@Override
 	public Type load(Context ctx) {
 		return ctx.invokeStatic(ctx.getSelfType(), methodName, arguments);

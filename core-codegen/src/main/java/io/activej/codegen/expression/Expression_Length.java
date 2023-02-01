@@ -25,8 +25,12 @@ import static io.activej.codegen.util.TypeChecks.*;
 public final class Expression_Length implements Expression {
 	private final Expression value;
 
-	Expression_Length(Expression value) {
+	public Expression_Length(Expression value) {
 		this.value = value;
+	}
+
+	public Expression getValue() {
+		return value;
 	}
 
 	@Override

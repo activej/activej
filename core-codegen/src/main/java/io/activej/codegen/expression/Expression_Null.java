@@ -20,17 +20,19 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static org.objectweb.asm.Type.getType;
-
 public final class Expression_Null implements Expression {
 	private final Type type;
 
-	Expression_Null(Class<?> type) {
-		this.type = getType(type);
+	public Expression_Null(Class<?> type) {
+		this.type = Type.getType(type);
 	}
 
-	Expression_Null(Type type) {
+	public Expression_Null(Type type) {
 		this.type = type;
+	}
+
+	public Type getType() {
+		return type;
 	}
 
 	@Override

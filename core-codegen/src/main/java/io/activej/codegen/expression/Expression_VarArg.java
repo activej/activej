@@ -26,8 +26,12 @@ import org.objectweb.asm.Type;
 public final class Expression_VarArg implements Variable {
 	private final int argument;
 
-	Expression_VarArg(int argument) {
+	public Expression_VarArg(int argument) {
 		this.argument = argument;
+	}
+
+	public int getArgument() {
+		return argument;
 	}
 
 	@Override
