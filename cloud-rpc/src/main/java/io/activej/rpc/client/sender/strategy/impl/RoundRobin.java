@@ -31,8 +31,8 @@ import java.util.Set;
 
 @ExposedInternals
 public final class RoundRobin implements RpcStrategy {
-	private final List<? extends RpcStrategy> list;
-	private int minActiveSubStrategies;
+	public final List<? extends RpcStrategy> list;
+	public int minActiveSubStrategies;
 
 	public RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.list = list;
@@ -68,14 +68,6 @@ public final class RoundRobin implements RpcStrategy {
 		protected RoundRobin doBuild() {
 			return RoundRobin.this;
 		}
-	}
-
-	public List<? extends RpcStrategy> getList() {
-		return list;
-	}
-
-	public int getMinActiveSubStrategies() {
-		return minActiveSubStrategies;
 	}
 
 	@Override

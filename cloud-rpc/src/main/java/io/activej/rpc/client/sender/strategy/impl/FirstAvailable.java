@@ -29,14 +29,10 @@ import java.util.Set;
 
 @ExposedInternals
 public final class FirstAvailable implements RpcStrategy {
-	private final List<? extends RpcStrategy> list;
+	public final List<? extends RpcStrategy> list;
 
 	public FirstAvailable(List<? extends RpcStrategy> list) {
 		this.list = list;
-	}
-
-	public List<? extends RpcStrategy> getList() {
-		return list;
 	}
 
 	@Override

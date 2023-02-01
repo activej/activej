@@ -35,28 +35,16 @@ import java.util.function.Predicate;
 public final class FirstValidResult implements RpcStrategy {
 	public static final Predicate<?> DEFAULT_RESULT_VALIDATOR = Objects::nonNull;
 
-	private final List<? extends RpcStrategy> list;
+	public final List<? extends RpcStrategy> list;
 
-	private Predicate<?> resultValidator;
-	private @Nullable Exception noValidResultException;
+	public Predicate<?> resultValidator;
+	public @Nullable Exception noValidResultException;
 
 	public FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
 			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
-	}
-
-	public List<? extends RpcStrategy> getList() {
-		return list;
-	}
-
-	public Predicate<?> getResultValidator() {
-		return resultValidator;
-	}
-
-	public @Nullable Exception getNoValidResultException() {
-		return noValidResultException;
 	}
 
 	public static FirstValidResult create(List<? extends RpcStrategy> list) {

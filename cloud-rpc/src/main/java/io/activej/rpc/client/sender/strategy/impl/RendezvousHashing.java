@@ -43,12 +43,12 @@ public final class RendezvousHashing implements RpcStrategy {
 	public static final int DEFAULT_MIN_ACTIVE_SHARDS = 1;
 	public static final int DEFAULT_MAX_RESHARDINGS = Integer.MAX_VALUE;
 
-	private final ToIntFunction<?> hashFn;
-	private final Map<Object, RpcStrategy> shards;
-	private ToLongBiFunction<Object, Integer> hashBucketFn;
-	private int buckets;
-	private int minActiveShards;
-	private int reshardings;
+	public final ToIntFunction<?> hashFn;
+	public final Map<Object, RpcStrategy> shards;
+	public ToLongBiFunction<Object, Integer> hashBucketFn;
+	public int buckets;
+	public int minActiveShards;
+	public int reshardings;
 
 	public RendezvousHashing(
 			ToIntFunction<?> hashFn,
@@ -122,30 +122,6 @@ public final class RendezvousHashing implements RpcStrategy {
 		protected RendezvousHashing doBuild() {
 			return RendezvousHashing.this;
 		}
-	}
-
-	public ToIntFunction<?> getHashFn() {
-		return hashFn;
-	}
-
-	public Map<Object, RpcStrategy> getShards() {
-		return shards;
-	}
-
-	public ToLongBiFunction<Object, Integer> getHashBucketFn() {
-		return hashBucketFn;
-	}
-
-	public int getBuckets() {
-		return buckets;
-	}
-
-	public int getMinActiveShards() {
-		return minActiveShards;
-	}
-
-	public int getReshardings() {
-		return reshardings;
 	}
 
 	@Override

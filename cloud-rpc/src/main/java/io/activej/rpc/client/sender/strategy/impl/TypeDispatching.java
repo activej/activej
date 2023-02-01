@@ -35,8 +35,8 @@ import static io.activej.common.Checks.checkState;
 
 @ExposedInternals
 public final class TypeDispatching implements RpcStrategy {
-	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy;
-	private @Nullable RpcStrategy defaultStrategy;
+	public final Map<Class<?>, RpcStrategy> dataTypeToStrategy;
+	public @Nullable RpcStrategy defaultStrategy;
 
 	public TypeDispatching(Map<Class<?>, RpcStrategy> dataTypeToStrategy, @Nullable RpcStrategy defaultStrategy) {
 		this.dataTypeToStrategy = dataTypeToStrategy;
@@ -69,14 +69,6 @@ public final class TypeDispatching implements RpcStrategy {
 		protected TypeDispatching doBuild() {
 			return TypeDispatching.this;
 		}
-	}
-
-	public Map<Class<?>, RpcStrategy> getDataTypeToStrategy() {
-		return dataTypeToStrategy;
-	}
-
-	public @Nullable RpcStrategy getDefaultStrategy() {
-		return defaultStrategy;
 	}
 
 	@Override

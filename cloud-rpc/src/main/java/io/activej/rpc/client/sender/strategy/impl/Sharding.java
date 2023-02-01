@@ -35,9 +35,9 @@ import static io.activej.rpc.client.sender.Utils.listOfNullableSenders;
 
 @ExposedInternals
 public final class Sharding implements RpcStrategy {
-	private final List<? extends RpcStrategy> list;
-	private final ToIntFunction<?> shardingFunction;
-	private int minActiveSubStrategies;
+	public final List<? extends RpcStrategy> list;
+	public final ToIntFunction<?> shardingFunction;
+	public int minActiveSubStrategies;
 
 	public Sharding(ToIntFunction<?> shardingFunction, List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
@@ -74,18 +74,6 @@ public final class Sharding implements RpcStrategy {
 		protected Sharding doBuild() {
 			return Sharding.this;
 		}
-	}
-
-	public List<? extends RpcStrategy> getList() {
-		return list;
-	}
-
-	public ToIntFunction<?> getShardingFunction() {
-		return shardingFunction;
-	}
-
-	public int getMinActiveSubStrategies() {
-		return minActiveSubStrategies;
 	}
 
 	@Override

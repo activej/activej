@@ -30,9 +30,9 @@ import static io.activej.common.Checks.checkArgument;
 
 @ExposedInternals
 public final class RandomSampling implements RpcStrategy {
-	private final Map<RpcStrategy, Double> strategyToWeight;
+	public final Map<RpcStrategy, Double> strategyToWeight;
 
-	private Random random;
+	public Random random;
 
 	public RandomSampling(Random random, Map<RpcStrategy, Double> strategyToWeight) {
 		this.random = random;
@@ -64,14 +64,6 @@ public final class RandomSampling implements RpcStrategy {
 		protected RandomSampling doBuild() {
 			return RandomSampling.this;
 		}
-	}
-
-	public Map<RpcStrategy, Double> getStrategyToWeight() {
-		return strategyToWeight;
-	}
-
-	public Random getRandom() {
-		return random;
 	}
 
 	@Override
