@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
@@ -26,8 +27,8 @@ import java.util.Set;
 import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class PredicateDef_AlwaysTrue implements PredicateDef {
-	public static final PredicateDef_AlwaysTrue INSTANCE = new PredicateDef_AlwaysTrue();
+public final class PredicateDef_AlwaysFalse implements PredicateDef {
+	public static final PredicateDef_AlwaysFalse INSTANCE = new PredicateDef_AlwaysFalse();
 
 	@Override
 	public PredicateDef simplify() {
@@ -47,11 +48,11 @@ public final class PredicateDef_AlwaysTrue implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		return value(true);
+		return value(false);
 	}
 
 	@Override
 	public String toString() {
-		return "TRUE";
+		return "FALSE";
 	}
 }

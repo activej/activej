@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
@@ -26,15 +27,17 @@ import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
+import static io.activej.aggregation.predicate.AggregationPredicates.isNull;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Gt implements PredicateDef {
+public final class PredicateDef_NotEq implements PredicateDef {
 	private final String key;
-	private final Comparable<Object> value;
+	private final Object value;
 
-	public PredicateDef_Gt(String key, Comparable<Object> value) {
+	public PredicateDef_NotEq(String key, Object value) {
 		this.key = key;
 		this.value = value;
 	}
@@ -43,7 +46,7 @@ public final class PredicateDef_Gt implements PredicateDef {
 		return key;
 	}
 
-	public Comparable<Object> getValue() {
+	public Object getValue() {
 		return value;
 	}
 
@@ -66,10 +69,14 @@ public final class PredicateDef_Gt implements PredicateDef {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
-		return and(
-				isNotNull(property, fields.get(key)),
-				isGt(property, value(toInternalValue(fields, key, value)))
-		);
+		Object internalValue = toInternalValue(fields, key, this.value);
+		FieldType fieldType = fields.get(key);
+		return internalValue == null ?
+				isNotNull(property, fieldType) :
+				or(
+						isNull(property, fieldType),
+						isNe(property, value(internalValue))
+				);
 	}
 
 	@Override
@@ -77,7 +84,7 @@ public final class PredicateDef_Gt implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Gt that = (PredicateDef_Gt) o;
+		PredicateDef_NotEq that = (PredicateDef_NotEq) o;
 
 		if (!key.equals(that.key)) return false;
 		return Objects.equals(value, that.value);
@@ -92,6 +99,6 @@ public final class PredicateDef_Gt implements PredicateDef {
 
 	@Override
 	public String toString() {
-		return key + ">" + value;
+		return key + "!=" + value;
 	}
 }

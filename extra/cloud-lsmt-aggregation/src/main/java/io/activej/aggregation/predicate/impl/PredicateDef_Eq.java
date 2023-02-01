@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
@@ -26,15 +27,18 @@ import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
+import static io.activej.aggregation.predicate.AggregationPredicates.isNull;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
+import static java.util.Collections.singletonMap;
 
 @ExposedInternals
-public final class PredicateDef_Le implements PredicateDef {
+public final class PredicateDef_Eq implements PredicateDef {
 	private final String key;
-	private final Comparable<Object> value;
+	private final Object value;
 
-	public PredicateDef_Le(String key, Comparable<Object> value) {
+	public PredicateDef_Eq(String key, Object value) {
 		this.key = key;
 		this.value = value;
 	}
@@ -43,7 +47,7 @@ public final class PredicateDef_Le implements PredicateDef {
 		return key;
 	}
 
-	public Comparable<Object> getValue() {
+	public Object getValue() {
 		return value;
 	}
 
@@ -59,17 +63,20 @@ public final class PredicateDef_Le implements PredicateDef {
 
 	@Override
 	public Map<String, Object> getFullySpecifiedDimensions() {
-		return Map.of();
+		return singletonMap(key, value);
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
-		return and(
-				isNotNull(property, fields.get(key)),
-				isLe(property, value(toInternalValue(fields, key, value)))
-		);
+		Object internalValue = toInternalValue(fields, key, this.value);
+		return internalValue == null ?
+				isNull(property, fields.get(key)) :
+				and(
+						isNotNull(property, fields.get(key)),
+						isEq(property, value(internalValue))
+				);
 	}
 
 	@Override
@@ -77,7 +84,7 @@ public final class PredicateDef_Le implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Le that = (PredicateDef_Le) o;
+		PredicateDef_Eq that = (PredicateDef_Eq) o;
 
 		if (!key.equals(that.key)) return false;
 		return Objects.equals(value, that.value);
@@ -92,6 +99,6 @@ public final class PredicateDef_Le implements PredicateDef {
 
 	@Override
 	public String toString() {
-		return key + "<=" + value;
+		return key + '=' + value;
 	}
 }

@@ -14,30 +14,38 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.codegen.expression.Expressions.property;
-import static io.activej.codegen.expression.Expressions.value;
+import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
+import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Has implements PredicateDef {
+public final class PredicateDef_Lt implements PredicateDef {
 	private final String key;
+	private final Comparable<Object> value;
 
-	public PredicateDef_Has(String key) {
+	public PredicateDef_Lt(String key, Comparable<Object> value) {
 		this.key = key;
+		this.value = value;
 	}
 
 	public String getKey() {
 		return key;
+	}
+
+	public Comparable<Object> getValue() {
+		return value;
 	}
 
 	@Override
@@ -58,10 +66,11 @@ public final class PredicateDef_Has implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		if (!fields.containsKey(key)) return value(false);
 		Variable property = property(record, key.replace('.', '$'));
-		FieldType fieldType = fields.get(key);
-		return isNotNull(property, fieldType);
+		return and(
+				isNotNull(property, fields.get(key)),
+				isLt(property, value(toInternalValue(fields, key, value)))
+		);
 	}
 
 	@Override
@@ -69,20 +78,21 @@ public final class PredicateDef_Has implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Has that = (PredicateDef_Has) o;
+		PredicateDef_Lt that = (PredicateDef_Lt) o;
 
-		return key.equals(that.key);
+		if (!key.equals(that.key)) return false;
+		return Objects.equals(value, that.value);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result;
+		result = 31 * result + (value != null ? value.hashCode() : 0);
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "HAS " + key;
+		return key + "<" + value;
 	}
 }

@@ -14,40 +14,42 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.isNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Collections.singletonMap;
 
 @ExposedInternals
-public final class PredicateDef_Eq implements PredicateDef {
+public final class PredicateDef_RegExp implements PredicateDef {
 	private final String key;
-	private final Object value;
+	private final Pattern regexp;
 
-	public PredicateDef_Eq(String key, Object value) {
+	public PredicateDef_RegExp(String key, Pattern regexp) {
 		this.key = key;
-		this.value = value;
+		this.regexp = regexp;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public Object getValue() {
-		return value;
+	public String getRegexp() {
+		return regexp.pattern();
+	}
+
+	public Pattern getRegexpPattern() {
+		return regexp;
 	}
 
 	@Override
@@ -62,20 +64,23 @@ public final class PredicateDef_Eq implements PredicateDef {
 
 	@Override
 	public Map<String, Object> getFullySpecifiedDimensions() {
-		return singletonMap(key, value);
+		return Map.of();
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
-		Object internalValue = toInternalValue(fields, key, this.value);
-		return internalValue == null ?
-				isNull(property, fields.get(key)) :
-				and(
-						isNotNull(property, fields.get(key)),
-						isEq(property, value(internalValue))
-				);
+		Variable value = property(record, key.replace('.', '$'));
+		return Expressions.and(
+				isNotNull(value, fields.get(key)),
+				isNe(
+						value(false),
+						call(call(value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
+		return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
 	}
 
 	@Override
@@ -83,21 +88,22 @@ public final class PredicateDef_Eq implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Eq that = (PredicateDef_Eq) o;
+		PredicateDef_RegExp that = (PredicateDef_RegExp) o;
 
 		if (!key.equals(that.key)) return false;
-		return Objects.equals(value, that.value);
+		return regexp.pattern().equals(that.regexp.pattern());
+
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + (value != null ? value.hashCode() : 0);
+		result = 31 * result + regexp.pattern().hashCode();
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return key + '=' + value;
+		return key + " " + regexp.pattern();
 	}
 }

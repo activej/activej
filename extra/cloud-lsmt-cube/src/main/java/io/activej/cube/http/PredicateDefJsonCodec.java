@@ -20,7 +20,8 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.predicate.*;
+import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.impl.*;
 import io.activej.aggregation.util.JsonCodec;
 
 import java.io.IOException;

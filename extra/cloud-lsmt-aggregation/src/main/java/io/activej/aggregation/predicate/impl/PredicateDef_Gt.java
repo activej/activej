@@ -14,48 +14,43 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.codegen.expression.Expressions.and;
+import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Between implements PredicateDef {
+public final class PredicateDef_Gt implements PredicateDef {
 	private final String key;
-	private final Comparable<Object> from;
-	private final Comparable<Object> to;
+	private final Comparable<Object> value;
 
-	public PredicateDef_Between(String key, Comparable<Object> from, Comparable<Object> to) {
+	public PredicateDef_Gt(String key, Comparable<Object> value) {
 		this.key = key;
-		this.from = from;
-		this.to = to;
+		this.value = value;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public Comparable<Object> getFrom() {
-		return from;
-	}
-
-	public Comparable<Object> getTo() {
-		return to;
+	public Comparable<Object> getValue() {
+		return value;
 	}
 
 	@Override
 	public PredicateDef simplify() {
-		return (from.compareTo(to) > 0) ? alwaysFalse() : (from.equals(to) ? eq(key, from) : this);
+		return this;
 	}
 
 	@Override
@@ -72,9 +67,10 @@ public final class PredicateDef_Between implements PredicateDef {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
-		return and(isNotNull(property, fields.get(key)),
-				isGe(property, value(toInternalValue(fields, key, from))),
-				isLe(property, value(toInternalValue(fields, key, to))));
+		return and(
+				isNotNull(property, fields.get(key)),
+				isGt(property, value(toInternalValue(fields, key, value)))
+		);
 	}
 
 	@Override
@@ -82,24 +78,21 @@ public final class PredicateDef_Between implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Between that = (PredicateDef_Between) o;
+		PredicateDef_Gt that = (PredicateDef_Gt) o;
 
 		if (!key.equals(that.key)) return false;
-		if (!from.equals(that.from)) return false;
-		return to.equals(that.to);
-
+		return Objects.equals(value, that.value);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + from.hashCode();
-		result = 31 * result + to.hashCode();
+		result = 31 * result + (value != null ? value.hashCode() : 0);
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "" + key + " BETWEEN " + from + " AND " + to;
+		return key + ">" + value;
 	}
 }

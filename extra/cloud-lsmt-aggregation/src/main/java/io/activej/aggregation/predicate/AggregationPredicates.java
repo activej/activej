@@ -18,6 +18,7 @@ package io.activej.aggregation.predicate;
 
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.impl.*;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.StaticFactories;
@@ -43,7 +44,7 @@ public class AggregationPredicates {
 		PredicateDef simplifyAnd(L left, R right);
 	}
 
-	static final Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
+	public static final Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
 
 	public static <L extends PredicateDef, R extends PredicateDef> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
 		PredicateSimplifierKey<L, R> keyLeftRight = new PredicateSimplifierKey<>(leftType, rightType);
@@ -558,16 +559,16 @@ public class AggregationPredicates {
 		}
 	}
 
-	static Expression isNotNull(Expression field, FieldType fieldType) {
+	public static Expression isNotNull(Expression field, FieldType fieldType) {
 		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? value(true) : Expressions.isNotNull(field);
 	}
 
-	static Expression isNull(Expression field, FieldType fieldType) {
+	public static Expression isNull(Expression field, FieldType fieldType) {
 		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? value(false) : Expressions.isNull(field);
 	}
 
 	@SuppressWarnings("unchecked")
-	static Object toInternalValue(Map<String, FieldType> fields, String key, Object value) {
+	public static Object toInternalValue(Map<String, FieldType> fields, String key, Object value) {
 		return fields.containsKey(key) ? fields.get(key).toInternalValue(value) : value;
 	}
 

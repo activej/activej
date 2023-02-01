@@ -14,37 +14,49 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
+import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_In implements PredicateDef {
+public final class PredicateDef_Between implements PredicateDef {
 	private final String key;
-	private final SortedSet<Object> values;
+	private final Comparable<Object> from;
+	private final Comparable<Object> to;
 
-	public PredicateDef_In(String key, SortedSet<Object> values) {
+	public PredicateDef_Between(String key, Comparable<Object> from, Comparable<Object> to) {
 		this.key = key;
-		this.values = values;
+		this.from = from;
+		this.to = to;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public SortedSet<Object> getValues() {
-		return values;
+	public Comparable<Object> getFrom() {
+		return from;
+	}
+
+	public Comparable<Object> getTo() {
+		return to;
 	}
 
 	@Override
 	public PredicateDef simplify() {
-		return (values.iterator().hasNext()) ? this : AggregationPredicates.alwaysFalse();
+		return (from.compareTo(to) > 0) ? alwaysFalse() : (from.equals(to) ? eq(key, from) : this);
 	}
 
 	@Override
@@ -60,10 +72,10 @@ public final class PredicateDef_In implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		return isNe(
-				value(false),
-				call(value(values), "contains",
-						cast(property(record, key.replace('.', '$')), Object.class)));
+		Variable property = property(record, key.replace('.', '$'));
+		return and(isNotNull(property, fields.get(key)),
+				isGe(property, value(toInternalValue(fields, key, from))),
+				isLe(property, value(toInternalValue(fields, key, to))));
 	}
 
 	@Override
@@ -71,23 +83,24 @@ public final class PredicateDef_In implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_In that = (PredicateDef_In) o;
+		PredicateDef_Between that = (PredicateDef_Between) o;
 
 		if (!key.equals(that.key)) return false;
-		return Objects.equals(values, that.values);
+		if (!from.equals(that.from)) return false;
+		return to.equals(that.to);
+
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + (values != null ? values.hashCode() : 0);
+		result = 31 * result + from.hashCode();
+		result = 31 * result + to.hashCode();
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		StringJoiner joiner = new StringJoiner(", ");
-		for (Object value : values) joiner.add(value != null ? value.toString() : null);
-		return "" + key + " IN " + joiner;
+		return "" + key + " BETWEEN " + from + " AND " + to;
 	}
 }

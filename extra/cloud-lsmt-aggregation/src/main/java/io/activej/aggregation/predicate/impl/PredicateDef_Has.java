@@ -14,20 +14,32 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.predicate;
+package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
 
+import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
+import static io.activej.codegen.expression.Expressions.property;
 import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class PredicateDef_AlwaysFalse implements PredicateDef {
-	public static final PredicateDef_AlwaysFalse INSTANCE = new PredicateDef_AlwaysFalse();
+public final class PredicateDef_Has implements PredicateDef {
+	private final String key;
+
+	public PredicateDef_Has(String key) {
+		this.key = key;
+	}
+
+	public String getKey() {
+		return key;
+	}
 
 	@Override
 	public PredicateDef simplify() {
@@ -36,7 +48,7 @@ public final class PredicateDef_AlwaysFalse implements PredicateDef {
 
 	@Override
 	public Set<String> getDimensions() {
-		return Set.of();
+		return Set.of(key);
 	}
 
 	@Override
@@ -47,11 +59,31 @@ public final class PredicateDef_AlwaysFalse implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		return value(false);
+		if (!fields.containsKey(key)) return value(false);
+		Variable property = property(record, key.replace('.', '$'));
+		FieldType fieldType = fields.get(key);
+		return isNotNull(property, fieldType);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		PredicateDef_Has that = (PredicateDef_Has) o;
+
+		return key.equals(that.key);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = key.hashCode();
+		result = 31 * result;
+		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "FALSE";
+		return "HAS " + key;
 	}
 }
