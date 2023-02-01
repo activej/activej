@@ -16,7 +16,7 @@
 
 package io.activej.aggregation.fieldtype;
 
-import io.activej.aggregation.measure.HyperLogLog;
+import io.activej.aggregation.util.HyperLogLog;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;

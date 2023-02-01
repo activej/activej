@@ -1,6 +1,6 @@
 package io.activej.aggregation.fieldtype;
 
-import io.activej.aggregation.measure.HyperLogLog;
+import io.activej.aggregation.util.HyperLogLog;
 import org.junit.Test;
 
 import static java.lang.Math.abs;

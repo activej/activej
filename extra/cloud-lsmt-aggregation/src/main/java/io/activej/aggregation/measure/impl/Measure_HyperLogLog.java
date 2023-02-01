@@ -17,8 +17,8 @@
 package io.activej.aggregation.measure.impl;
 
 import io.activej.aggregation.fieldtype.FieldTypes;
-import io.activej.aggregation.measure.HyperLogLog;
 import io.activej.aggregation.measure.Measure;
+import io.activej.aggregation.util.HyperLogLog;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;

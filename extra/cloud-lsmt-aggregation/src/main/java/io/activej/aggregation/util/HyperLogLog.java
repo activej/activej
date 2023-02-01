@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.measure;
+package io.activej.aggregation.util;
 
 import io.activej.common.Checks;
 import io.activej.common.HashUtils;
