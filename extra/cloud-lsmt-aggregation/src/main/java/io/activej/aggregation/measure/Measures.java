@@ -18,6 +18,7 @@ package io.activej.aggregation.measure;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.fieldtype.FieldTypes;
+import io.activej.aggregation.measure.impl.*;
 import io.activej.common.annotation.StaticFactories;
 
 @StaticFactories(Measure.class)

@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.measure;
+package io.activej.aggregation.measure.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
-import java.util.*;
-
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class Measure_Union extends Measure {
+public final class Measure_Count extends Measure {
 	@SuppressWarnings("rawtypes")
-	public Measure_Union(FieldType fieldType) {
+	public Measure_Count(FieldType fieldType) {
 		super(fieldType);
 	}
 
@@ -39,45 +38,29 @@ public final class Measure_Union extends Measure {
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return sequence(getInitializeExpression(accumulator));
+		return voidExp();
 	}
 
 	@Override
 	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
-		return sequence(
-				getInitializeExpression(accumulator),
-				call(accumulator, "addAll", cast(firstAccumulator, Collection.class)));
+		return set(accumulator, firstAccumulator);
 	}
 
 	@Override
 	public Expression reduce(Variable accumulator,
 			Variable nextAccumulator) {
-		return call(accumulator, "addAll", cast(nextAccumulator, Collection.class));
+		return set(accumulator, add(accumulator, nextAccumulator));
 	}
 
 	@Override
 	public Expression initAccumulatorWithValue(Variable accumulator,
 			Variable firstValue) {
-		List<Expression> expressions = new ArrayList<>();
-		expressions.add(getInitializeExpression(accumulator));
-		expressions.add(call(accumulator, "add", cast(firstValue, Object.class)));
-		return sequence(expressions);
+		return set(accumulator, value(1));
 	}
 
 	@Override
 	public Expression accumulate(Variable accumulator,
 			Variable nextValue) {
-		return call(accumulator, "add", cast(nextValue, Object.class));
-	}
-
-	private Expression getInitializeExpression(Variable accumulator) {
-		Class<?> accumulatorClass = fieldType.getInternalDataType();
-		if (accumulatorClass.isAssignableFrom(List.class))
-			return set(accumulator, constructor(ArrayList.class));
-
-		if (accumulatorClass.isAssignableFrom(Set.class))
-			return set(accumulator, constructor(LinkedHashSet.class));
-
-		throw new IllegalArgumentException("Unsupported type");
+		return set(accumulator, inc(accumulator));
 	}
 }

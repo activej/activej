@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.aggregation.measure;
+package io.activej.aggregation.measure.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
