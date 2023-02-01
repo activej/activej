@@ -21,6 +21,7 @@ import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
@@ -30,12 +31,17 @@ import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.isWrapperType;
 import static org.objectweb.asm.Type.*;
 
+@ExplicitlyExposed
 public final class Measure_HyperLogLog extends Measure {
 	private final int registers;
 
-	Measure_HyperLogLog(int registers) {
+	public Measure_HyperLogLog(int registers) {
 		super(FieldTypes.ofHyperLogLog());
 		this.registers = registers;
+	}
+
+	public int getRegisters() {
+		return registers;
 	}
 
 	@Override

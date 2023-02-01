@@ -19,12 +19,14 @@ package io.activej.aggregation.measure;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.annotation.ExplicitlyExposed;
 
 import static io.activej.codegen.expression.Expressions.*;
 
+@ExplicitlyExposed
 public final class Measure_Min extends Measure {
 	@SuppressWarnings("rawtypes")
-	Measure_Min(FieldType fieldType) {
+	public Measure_Min(FieldType fieldType) {
 		super(fieldType);
 	}
 

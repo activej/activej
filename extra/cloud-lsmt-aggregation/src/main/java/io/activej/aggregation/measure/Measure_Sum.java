@@ -19,12 +19,14 @@ package io.activej.aggregation.measure;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.annotation.ExplicitlyExposed;
 
 import static io.activej.codegen.expression.Expressions.*;
 
+@ExplicitlyExposed
 public final class Measure_Sum extends Measure {
 	@SuppressWarnings("rawtypes")
-	Measure_Sum(FieldType fieldType) {
+	public Measure_Sum(FieldType fieldType) {
 		super(fieldType);
 	}
 

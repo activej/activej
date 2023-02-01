@@ -19,12 +19,14 @@ package io.activej.aggregation.measure;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.annotation.ExplicitlyExposed;
 
 import static io.activej.codegen.expression.Expressions.*;
 
+@ExplicitlyExposed
 public final class Measure_Max extends Measure {
 	@SuppressWarnings("rawtypes")
-	Measure_Max(FieldType fieldType) {
+	public Measure_Max(FieldType fieldType) {
 		super(fieldType);
 	}
 
