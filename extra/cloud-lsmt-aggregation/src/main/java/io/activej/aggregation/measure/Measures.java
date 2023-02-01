@@ -24,26 +24,26 @@ import io.activej.common.annotation.StaticFactories;
 @StaticFactories(Measure.class)
 public class Measures {
 	public static Measure sum(FieldType<?> ofType) {
-		return new Measure_Sum(ofType);
+		return new Sum(ofType);
 	}
 
 	public static Measure min(FieldType<?> ofType) {
-		return new Measure_Min(ofType);
+		return new Min(ofType);
 	}
 
 	public static Measure max(FieldType<?> ofType) {
-		return new Measure_Max(ofType);
+		return new Max(ofType);
 	}
 
 	public static Measure count(FieldType<?> ofType) {
-		return new Measure_Count(ofType);
+		return new Count(ofType);
 	}
 
 	public static Measure hyperLogLog(int registers) {
-		return new Measure_HyperLogLog(registers);
+		return new HyperLogLog(registers);
 	}
 
 	public static Measure union(FieldType<?> fieldType) {
-		return new Measure_Union(FieldTypes.ofSet(fieldType));
+		return new Union(FieldTypes.ofSet(fieldType));
 	}
 }

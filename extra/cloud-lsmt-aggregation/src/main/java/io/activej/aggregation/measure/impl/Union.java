@@ -22,12 +22,14 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
+import java.util.*;
+
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class Measure_Max extends Measure {
+public final class Union extends Measure {
 	@SuppressWarnings("rawtypes")
-	public Measure_Max(FieldType fieldType) {
+	public Union(FieldType fieldType) {
 		super(fieldType);
 	}
 
@@ -38,29 +40,45 @@ public final class Measure_Max extends Measure {
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return voidExp();
+		return sequence(getInitializeExpression(accumulator));
 	}
 
 	@Override
 	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
-		return set(accumulator, firstAccumulator);
+		return sequence(
+				getInitializeExpression(accumulator),
+				call(accumulator, "addAll", cast(firstAccumulator, Collection.class)));
 	}
 
 	@Override
 	public Expression reduce(Variable accumulator,
 			Variable nextAccumulator) {
-		return set(accumulator, staticCall(Math.class, "max", accumulator, nextAccumulator));
+		return call(accumulator, "addAll", cast(nextAccumulator, Collection.class));
 	}
 
 	@Override
 	public Expression initAccumulatorWithValue(Variable accumulator,
 			Variable firstValue) {
-		return set(accumulator, firstValue);
+		List<Expression> expressions = new ArrayList<>();
+		expressions.add(getInitializeExpression(accumulator));
+		expressions.add(call(accumulator, "add", cast(firstValue, Object.class)));
+		return sequence(expressions);
 	}
 
 	@Override
 	public Expression accumulate(Variable accumulator,
 			Variable nextValue) {
-		return set(accumulator, staticCall(Math.class, "max", accumulator, nextValue));
+		return call(accumulator, "add", cast(nextValue, Object.class));
+	}
+
+	private Expression getInitializeExpression(Variable accumulator) {
+		Class<?> accumulatorClass = fieldType.getInternalDataType();
+		if (accumulatorClass.isAssignableFrom(List.class))
+			return set(accumulator, constructor(ArrayList.class));
+
+		if (accumulatorClass.isAssignableFrom(Set.class))
+			return set(accumulator, constructor(LinkedHashSet.class));
+
+		throw new IllegalArgumentException("Unsupported type");
 	}
 }

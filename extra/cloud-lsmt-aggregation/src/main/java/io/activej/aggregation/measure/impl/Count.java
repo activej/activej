@@ -25,9 +25,9 @@ import io.activej.common.annotation.ExposedInternals;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class Measure_Min extends Measure {
+public final class Count extends Measure {
 	@SuppressWarnings("rawtypes")
-	public Measure_Min(FieldType fieldType) {
+	public Count(FieldType fieldType) {
 		super(fieldType);
 	}
 
@@ -42,26 +42,25 @@ public final class Measure_Min extends Measure {
 	}
 
 	@Override
-	public Expression initAccumulatorWithAccumulator(Variable accumulator,
-			Expression firstAccumulator) {
+	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
 		return set(accumulator, firstAccumulator);
 	}
 
 	@Override
 	public Expression reduce(Variable accumulator,
 			Variable nextAccumulator) {
-		return set(accumulator, staticCall(Math.class, "min", accumulator, nextAccumulator));
+		return set(accumulator, add(accumulator, nextAccumulator));
 	}
 
 	@Override
 	public Expression initAccumulatorWithValue(Variable accumulator,
 			Variable firstValue) {
-		return set(accumulator, firstValue);
+		return set(accumulator, value(1));
 	}
 
 	@Override
 	public Expression accumulate(Variable accumulator,
 			Variable nextValue) {
-		return set(accumulator, staticCall(Math.class, "min", accumulator, nextValue));
+		return set(accumulator, inc(accumulator));
 	}
 }

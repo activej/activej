@@ -25,9 +25,9 @@ import io.activej.common.annotation.ExposedInternals;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class Measure_Count extends Measure {
+public final class Sum extends Measure {
 	@SuppressWarnings("rawtypes")
-	public Measure_Count(FieldType fieldType) {
+	public Sum(FieldType fieldType) {
 		super(fieldType);
 	}
 
@@ -55,12 +55,12 @@ public final class Measure_Count extends Measure {
 	@Override
 	public Expression initAccumulatorWithValue(Variable accumulator,
 			Variable firstValue) {
-		return set(accumulator, value(1));
+		return set(accumulator, firstValue);
 	}
 
 	@Override
 	public Expression accumulate(Variable accumulator,
 			Variable nextValue) {
-		return set(accumulator, inc(accumulator));
+		return set(accumulator, add(accumulator, nextValue));
 	}
 }
