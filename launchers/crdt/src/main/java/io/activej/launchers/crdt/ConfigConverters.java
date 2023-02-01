@@ -22,7 +22,7 @@ import io.activej.config.converter.SimpleConfigConverter;
 import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 

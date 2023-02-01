@@ -8,16 +8,16 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategies;
-import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.RpcStrategies;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 
 public class AdvancedRpcClientModule extends AbstractModule {
 	private AdvancedRpcClientModule() {

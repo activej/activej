@@ -5,7 +5,7 @@ import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 import static io.activej.common.Utils.difference;
 import static io.activej.common.Utils.union;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;

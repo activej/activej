@@ -10,7 +10,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategy_RoundRobin;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RoundRobin;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraph;
@@ -27,7 +27,7 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.rpc.client.sender.RpcStrategies.servers;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

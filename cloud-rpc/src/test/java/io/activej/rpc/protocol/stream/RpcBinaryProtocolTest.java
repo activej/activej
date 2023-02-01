@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;

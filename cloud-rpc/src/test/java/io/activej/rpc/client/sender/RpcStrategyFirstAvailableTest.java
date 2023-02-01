@@ -2,14 +2,15 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
-import static io.activej.rpc.client.sender.RpcStrategies.firstAvailable;
-import static io.activej.rpc.client.sender.RpcStrategies.servers;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.firstAvailable;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 

@@ -25,7 +25,7 @@ import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 
 import java.util.function.Function;
 

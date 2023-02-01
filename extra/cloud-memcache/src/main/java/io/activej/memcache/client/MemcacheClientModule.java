@@ -27,7 +27,7 @@ import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
 import io.activej.serializer.SerializerFactory;
 
 import java.time.Duration;

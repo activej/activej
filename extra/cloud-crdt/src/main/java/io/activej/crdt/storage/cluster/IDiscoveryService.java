@@ -21,7 +21,7 @@ import io.activej.common.annotation.ComponentInterface;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;

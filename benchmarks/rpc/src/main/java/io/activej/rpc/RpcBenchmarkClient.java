@@ -24,7 +24,7 @@ import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static java.lang.Math.min;
 
 @SuppressWarnings("WeakerAccess")

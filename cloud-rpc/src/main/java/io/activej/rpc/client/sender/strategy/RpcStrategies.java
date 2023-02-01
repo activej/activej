@@ -1,6 +1,7 @@
-package io.activej.rpc.client.sender;
+package io.activej.rpc.client.sender.strategy;
 
 import io.activej.common.annotation.StaticFactories;
+import io.activej.rpc.client.sender.strategy.impl.*;
 
 import java.net.InetSocketAddress;
 import java.util.List;

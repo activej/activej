@@ -17,6 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.RpcClientConnectionPool;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;

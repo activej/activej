@@ -7,7 +7,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.rpc.client.sender.RpcStrategies.*;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.*;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;

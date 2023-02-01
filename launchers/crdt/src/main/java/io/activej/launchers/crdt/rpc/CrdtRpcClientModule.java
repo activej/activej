@@ -23,7 +23,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -32,7 +32,7 @@ import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.launchers.crdt.rpc.CrdtRpcServerModule.DEFAULT_PORT;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 
 public class CrdtRpcClientModule extends AbstractModule {
 	public static final String PROPERTIES_FILE = "crdt-rpc-client.properties";

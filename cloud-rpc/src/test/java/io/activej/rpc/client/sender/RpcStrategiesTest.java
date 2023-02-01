@@ -2,6 +2,10 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import io.activej.rpc.client.sender.strategy.RpcStrategies;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_TypeDispatching;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -10,7 +14,7 @@ import java.util.List;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
 import static io.activej.rpc.client.sender.Callbacks.ignore;
-import static io.activej.rpc.client.sender.RpcStrategies.*;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.*;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 

@@ -26,7 +26,7 @@ import java.time.Duration;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;

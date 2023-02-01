@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package io.activej.rpc.client.sender;
+package io.activej.rpc.client.sender.strategy.impl;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.HashUtils;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
+import io.activej.rpc.client.sender.RpcSender;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +32,7 @@ import java.util.function.ToIntFunction;
 import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static java.lang.Math.min;
 
 @ExposedInternals

@@ -14,33 +14,17 @@
  * limitations under the License.
  */
 
-package io.activej.rpc.client.sender;
+package io.activej.rpc.client.sender.strategy;
 
-import io.activej.common.annotation.ExposedInternals;
 import io.activej.rpc.client.RpcClientConnectionPool;
+import io.activej.rpc.client.sender.RpcSender;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
 
-@ExposedInternals
-public final class RpcStrategy_SingleServer implements RpcStrategy {
-	private final InetSocketAddress address;
+public interface RpcStrategy {
+	Set<InetSocketAddress> getAddresses();
 
-	public RpcStrategy_SingleServer(InetSocketAddress address) {
-		this.address = address;
-	}
-
-	@Override
-	public Set<InetSocketAddress> getAddresses() {
-		return Set.of(address);
-	}
-
-	@Override
-	public RpcSender createSender(RpcClientConnectionPool pool) {
-		return pool.get(address);
-	}
-
-	public InetSocketAddress getAddress() {
-		return address;
-	}
+	@Nullable RpcSender createSender(RpcClientConnectionPool pool);
 }

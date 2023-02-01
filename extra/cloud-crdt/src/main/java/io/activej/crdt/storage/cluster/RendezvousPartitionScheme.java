@@ -3,9 +3,9 @@ package io.activej.crdt.storage.cluster;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
-import io.activej.rpc.client.sender.RpcStrategies;
-import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.RpcStrategies;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 

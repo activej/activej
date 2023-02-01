@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 
 // [START EXAMPLE]
 public class ClientModule extends AbstractModule {

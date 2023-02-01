@@ -5,7 +5,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 

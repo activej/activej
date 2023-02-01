@@ -4,6 +4,8 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.sender.strategy.RpcStrategies;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_Sharding;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.SerializeRecord;
@@ -16,7 +18,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 

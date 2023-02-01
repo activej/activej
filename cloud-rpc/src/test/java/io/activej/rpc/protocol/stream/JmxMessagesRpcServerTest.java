@@ -18,7 +18,7 @@ import java.net.InetSocketAddress;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.RpcClient.DEFAULT_PACKET_SIZE;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;

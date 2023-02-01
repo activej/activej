@@ -4,6 +4,8 @@ import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_FirstValidResult;
 import io.activej.test.ExpectedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,8 +18,8 @@ import java.util.function.Predicate;
 
 import static io.activej.rpc.client.sender.Callbacks.forFuture;
 import static io.activej.rpc.client.sender.Callbacks.ignore;
-import static io.activej.rpc.client.sender.RpcStrategies.firstValidResult;
-import static io.activej.rpc.client.sender.RpcStrategies.servers;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.firstValidResult;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 

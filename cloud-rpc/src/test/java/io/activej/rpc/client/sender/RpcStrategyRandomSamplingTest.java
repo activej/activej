@@ -2,6 +2,8 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
+import io.activej.rpc.client.sender.strategy.RpcStrategy;
+import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RandomSampling;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;

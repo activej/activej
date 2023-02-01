@@ -29,7 +29,7 @@ import static adder.AdderServerLauncher.MESSAGE_TYPES;
 import static adder.ClusterStorageModule.DEFAULT_PARTITIONS_FILE;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.config.converter.ConfigConverters.ofPath;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Inject
