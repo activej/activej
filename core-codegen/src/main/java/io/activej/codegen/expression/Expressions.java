@@ -16,6 +16,7 @@
 
 package io.activej.codegen.expression;
 
+import io.activej.codegen.expression.impl.*;
 import io.activej.codegen.operation.ArithmeticOperation;
 import io.activej.codegen.operation.CompareOperation;
 import io.activej.common.annotation.StaticFactories;
@@ -30,7 +31,7 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import static io.activej.codegen.expression.Expression_Cast.SELF_TYPE;
+import static io.activej.codegen.expression.impl.Expression_Cast.SELF_TYPE;
 import static io.activej.codegen.operation.CompareOperation.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;

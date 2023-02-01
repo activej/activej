@@ -1,7 +1,7 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.expression.Expression_HashCode;
-import io.activej.codegen.expression.Expression_ToString;
+import io.activej.codegen.expression.impl.Expression_HashCode;
+import io.activej.codegen.expression.impl.Expression_ToString;
 
 import static io.activej.codegen.expression.Expressions.*;
 
