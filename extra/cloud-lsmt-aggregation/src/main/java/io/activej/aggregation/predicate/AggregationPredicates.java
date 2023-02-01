@@ -20,6 +20,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
+import io.activej.common.annotation.StaticFactories;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
 import static io.activej.codegen.expression.Expressions.value;
 import static io.activej.common.Checks.checkState;
 
+@StaticFactories(PredicateDef.class)
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AggregationPredicates {
 

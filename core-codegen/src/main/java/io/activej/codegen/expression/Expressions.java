@@ -18,6 +18,7 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.operation.ArithmeticOperation;
 import io.activej.codegen.operation.CompareOperation;
+import io.activej.common.annotation.StaticFactories;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
@@ -36,8 +37,9 @@ import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Type.getType;
 
 /**
- * Defines list of possibilities for creating dynamic objects
+ * Defines list of possibilities for creating {@link Expression}s
  */
+@StaticFactories(Expression.class)
 public class Expressions {
 	/**
 	 * Returns a new constant for the value
@@ -240,6 +242,7 @@ public class Expressions {
 	public static LocalVariable local(int local) {
 		return new Expression_VarLocal(local);
 	}
+
 	/**
 	 * Creates a void local variable
 	 *

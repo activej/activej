@@ -1,11 +1,14 @@
 package io.activej.rpc.client.sender;
 
+import io.activej.common.annotation.StaticFactories;
+
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 
+@StaticFactories(RpcStrategy.class)
 public class RpcStrategies {
 	public static RpcStrategy server(InetSocketAddress address) {
 		return new RpcStrategy_SingleServer(address);

@@ -7,11 +7,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Annotates API types that are explicitly exposed for serialization,
- * introspection or other reasons
+ * Annotates classes that consist of static factories for some interface or class
  */
 @Target(TYPE)
 @Retention(SOURCE)
-public @interface ExplicitlyExposed {
-	String reason() default "";
+public @interface StaticFactories {
+	Class<?> value();
 }

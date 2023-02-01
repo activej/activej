@@ -18,7 +18,9 @@ package io.activej.aggregation.measure;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.fieldtype.FieldTypes;
+import io.activej.common.annotation.StaticFactories;
 
+@StaticFactories(Measures.class)
 public class Measures {
 	public static Measure sum(FieldType<?> ofType) {
 		return new Measure_Sum(ofType);
