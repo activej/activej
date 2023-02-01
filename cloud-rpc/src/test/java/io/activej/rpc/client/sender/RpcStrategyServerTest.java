@@ -14,7 +14,7 @@ import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
-public class RpcStrategySingleServerTest {
+public class RpcStrategyServerTest {
 
 	private static final String HOST = "localhost";
 

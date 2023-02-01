@@ -25,10 +25,10 @@ import java.net.InetSocketAddress;
 import java.util.Set;
 
 @ExposedInternals
-public final class SingleServer implements RpcStrategy {
+public final class Server implements RpcStrategy {
 	public final InetSocketAddress address;
 
-	public SingleServer(InetSocketAddress address) {
+	public Server(InetSocketAddress address) {
 		this.address = address;
 	}
 

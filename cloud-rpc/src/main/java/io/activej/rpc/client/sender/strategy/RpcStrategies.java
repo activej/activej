@@ -12,7 +12,7 @@ import static io.activej.common.Checks.checkArgument;
 @StaticFactories(RpcStrategy.class)
 public class RpcStrategies {
 	public static RpcStrategy server(InetSocketAddress address) {
-		return new SingleServer(address);
+		return new Server(address);
 	}
 
 	public static List<? extends RpcStrategy> servers(InetSocketAddress... addresses) {
@@ -22,7 +22,7 @@ public class RpcStrategies {
 	public static List<? extends RpcStrategy> servers(List<InetSocketAddress> addresses) {
 		checkArgument(!addresses.isEmpty(), "At least one address must be present");
 		return addresses.stream()
-				.map(SingleServer::new)
+				.map(Server::new)
 				.toList();
 	}
 
