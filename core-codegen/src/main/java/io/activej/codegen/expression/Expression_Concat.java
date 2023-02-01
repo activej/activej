@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -33,6 +34,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow to concat arguments into a string
  */
+@ExplicitlyExposed
 public final class Expression_Concat implements Expression {
 	private final List<Expression> arguments;
 

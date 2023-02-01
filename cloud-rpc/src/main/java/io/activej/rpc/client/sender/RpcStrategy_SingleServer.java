@@ -16,11 +16,13 @@
 
 package io.activej.rpc.client.sender;
 
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.rpc.client.RpcClientConnectionPool;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
 
+@ExplicitlyExposed
 public final class RpcStrategy_SingleServer implements RpcStrategy {
 	private final InetSocketAddress address;
 

@@ -17,12 +17,14 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
+@ExplicitlyExposed
 public final class Expression_ArrayNew implements Expression {
 	private final Class<?> type;
 	private final Expression length;

@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -25,6 +26,7 @@ import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.is;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
+@ExplicitlyExposed
 public final class Expression_Loop implements Expression {
 	private final Expression condition;
 	private final Expression body;

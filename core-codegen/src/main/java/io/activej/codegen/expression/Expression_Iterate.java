@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -28,6 +29,7 @@ import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
 
+@ExplicitlyExposed
 public final class Expression_Iterate implements Expression {
 	private final Expression from;
 	private final Expression to;

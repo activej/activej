@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -40,6 +41,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow taking property according to the name
  */
+@ExplicitlyExposed
 public final class Expression_Property implements Variable {
 	private final Expression owner;
 	private final String property;

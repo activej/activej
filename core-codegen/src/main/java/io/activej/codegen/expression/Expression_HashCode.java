@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.common.builder.AbstractBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -37,6 +38,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods for hashing some fields
  */
+@ExplicitlyExposed
 public final class Expression_HashCode implements Expression {
 	private final List<Expression> arguments;
 

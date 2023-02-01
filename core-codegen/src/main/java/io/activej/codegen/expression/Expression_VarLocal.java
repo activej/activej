@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -24,6 +25,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 /**
  * Defines methods which allow to create a local variable
  */
+@ExplicitlyExposed
 public final class Expression_VarLocal implements LocalVariable {
 	private static final int VOID = -1;
 	public static final Expression_VarLocal VAR_LOCAL_VOID = new Expression_VarLocal(VOID);

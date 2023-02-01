@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -39,6 +40,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods which allow to create a string
  */
+@ExplicitlyExposed
 public final class Expression_ToString implements Expression {
 	private String begin;
 	private String end;

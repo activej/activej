@@ -17,11 +17,13 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isObject;
 
+@ExplicitlyExposed
 public final class Expression_Throw implements Expression {
 	private final Expression exceptionExpression;
 

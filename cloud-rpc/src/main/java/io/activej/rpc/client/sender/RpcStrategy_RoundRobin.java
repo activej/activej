@@ -17,6 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Set;
 
+@ExplicitlyExposed
 public final class RpcStrategy_RoundRobin implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 	private int minActiveSubStrategies;

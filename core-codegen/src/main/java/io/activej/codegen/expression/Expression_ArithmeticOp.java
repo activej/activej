@@ -18,6 +18,7 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.operation.ArithmeticOperation;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
@@ -27,6 +28,7 @@ import static io.activej.codegen.util.Utils.isWrapperType;
 import static io.activej.codegen.util.Utils.unwrap;
 import static org.objectweb.asm.Type.getType;
 
+@ExplicitlyExposed
 public final class Expression_ArithmeticOp implements Expression {
 	private final ArithmeticOperation op;
 	private final Expression left;

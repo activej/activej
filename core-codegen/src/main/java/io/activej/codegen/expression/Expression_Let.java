@@ -17,9 +17,11 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
+@ExplicitlyExposed
 public final class Expression_Let implements Variable {
 	private final Expression value;
 

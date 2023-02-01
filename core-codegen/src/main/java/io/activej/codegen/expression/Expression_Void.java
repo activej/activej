@@ -17,10 +17,12 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
 import static org.objectweb.asm.Type.VOID_TYPE;
 
+@ExplicitlyExposed
 public final class Expression_Void implements Expression {
 	public static final Expression_Void INSTANCE = new Expression_Void();
 

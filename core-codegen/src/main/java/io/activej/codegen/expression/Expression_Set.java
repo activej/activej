@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
@@ -25,6 +26,7 @@ import static io.activej.codegen.util.TypeChecks.isAssignable;
 /**
  * Defines methods which allow setting fields
  */
+@ExplicitlyExposed
 public final class Expression_Set implements Expression {
 	private final StoreDef to;
 	private final Expression from;

@@ -19,6 +19,7 @@ package io.activej.aggregation.predicate;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.annotation.ExplicitlyExposed;
 
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +32,7 @@ import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Collections.singletonMap;
 
+@ExplicitlyExposed
 public final class PredicateDef_Eq implements PredicateDef {
 	private final String key;
 	private final Object value;

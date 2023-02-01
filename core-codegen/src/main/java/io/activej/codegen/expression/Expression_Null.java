@@ -17,9 +17,11 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+@ExplicitlyExposed
 public final class Expression_Null implements Expression {
 	private final Type type;
 

@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -30,6 +31,7 @@ import static org.objectweb.asm.Type.getType;
 /**
  * Defines methods to create a constant value
  */
+@ExplicitlyExposed
 public final class Expression_Constant implements ConstantExpression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 

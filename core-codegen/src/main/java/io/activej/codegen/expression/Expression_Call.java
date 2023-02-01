@@ -17,8 +17,10 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
+@ExplicitlyExposed
 public final class Expression_Call implements Expression {
 	private final Expression owner;
 	private final String methodName;

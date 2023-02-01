@@ -17,8 +17,10 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
+@ExplicitlyExposed
 public final class Expression_CallSuper implements Expression {
 	private final String methodName;
 	private final Expression[] arguments;

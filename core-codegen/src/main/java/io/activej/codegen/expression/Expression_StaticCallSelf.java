@@ -17,10 +17,12 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
 import java.util.List;
 
+@ExplicitlyExposed
 public final class Expression_StaticCallSelf implements Expression {
 	private final String methodName;
 	private final List<Expression> arguments;

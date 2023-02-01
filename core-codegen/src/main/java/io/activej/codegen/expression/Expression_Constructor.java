@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.List;
 /**
  * Defines methods for using constructors from other classes
  */
+@ExplicitlyExposed
 public final class Expression_Constructor implements Expression {
 	private final Class<?> type;
 	private final List<Expression> fields;

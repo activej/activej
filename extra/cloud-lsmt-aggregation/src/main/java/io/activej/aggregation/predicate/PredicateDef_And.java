@@ -20,6 +20,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.AggregationPredicates.PredicateSimplifierKey;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -28,6 +29,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.common.Utils.first;
 
+@ExplicitlyExposed
 public final class PredicateDef_And implements PredicateDef {
 	private final List<PredicateDef> predicates;
 

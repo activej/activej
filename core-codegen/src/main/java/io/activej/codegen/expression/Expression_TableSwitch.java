@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
+@ExplicitlyExposed
 public final class Expression_TableSwitch implements Expression {
 	private final Expression value;
 	private final int[] keys;

@@ -19,6 +19,7 @@ package io.activej.aggregation.predicate;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.annotation.ExplicitlyExposed;
 
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +31,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.codegen.expression.Expressions.*;
 
+@ExplicitlyExposed
 public final class PredicateDef_NotEq implements PredicateDef {
 	private final String key;
 	private final Object value;

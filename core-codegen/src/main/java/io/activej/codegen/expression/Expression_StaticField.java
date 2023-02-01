@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -29,6 +30,7 @@ import static io.activej.codegen.util.Utils.exceptionInGeneratedClass;
 import static java.lang.String.format;
 import static org.objectweb.asm.Type.getType;
 
+@ExplicitlyExposed
 public final class Expression_StaticField implements Variable {
 	private final @Nullable Class<?> owner;
 	private final String name;

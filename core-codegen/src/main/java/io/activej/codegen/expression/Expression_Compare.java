@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.common.builder.AbstractBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -35,6 +36,7 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 /**
  * Defines methods to compare some fields
  */
+@ExplicitlyExposed
 public final class Expression_Compare implements Expression {
 	private final List<Pair> pairs;
 

@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.common.annotation.ExplicitlyExposed;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -30,6 +31,7 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 /**
  * Defines methods for using logical 'and' for boolean type
  */
+@ExplicitlyExposed
 public final class Expression_BooleanAnd implements Expression {
 	private final List<Expression> expressions;
 
