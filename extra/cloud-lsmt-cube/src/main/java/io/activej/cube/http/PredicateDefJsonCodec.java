@@ -30,10 +30,9 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static com.dslplatform.json.JsonWriter.*;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("unchecked")
 public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
@@ -218,8 +217,9 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		}
 	}
 
-	private PredicateDef readObjectWithAlgebraOfSetsOperator(JsonReader reader) throws IOException {
-		if (reader.last() == OBJECT_END) return AggregationPredicates.and();
+	@SuppressWarnings("unchecked")
+	private PredicateDef readObjectWithAlgebraOfSetsOperator(JsonReader<?> reader) throws IOException {
+		if (reader.last() == OBJECT_END) return new PredicateDef_And(List.of());
 		List<PredicateDef> predicates = new ArrayList<>();
 
 		while (true) {
@@ -231,24 +231,24 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			Object value = codec.read(reader);
 			PredicateDef comparisonPredicate;
 			switch (operator) {
-				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = eq(field, value);
-				case NOT_EQ_SIGN -> comparisonPredicate = notEq(field, value);
-				case GE_SIGN -> comparisonPredicate = ge(field, (Comparable<?>) value);
-				case GT_SIGN -> comparisonPredicate = gt(field, (Comparable<?>) value);
-				case LE_SIGN -> comparisonPredicate = le(field, (Comparable<?>) value);
-				case LT_SIGN -> comparisonPredicate = lt(field, (Comparable<?>) value);
+				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new PredicateDef_Eq(field, value);
+				case NOT_EQ_SIGN -> comparisonPredicate = new PredicateDef_NotEq(field, value);
+				case GE_SIGN -> comparisonPredicate = new PredicateDef_Ge(field, (Comparable<Object>) value);
+				case GT_SIGN -> comparisonPredicate = new PredicateDef_Gt(field, (Comparable<Object>) value);
+				case LE_SIGN -> comparisonPredicate = new PredicateDef_Le(field, (Comparable<Object>) value);
+				case LT_SIGN -> comparisonPredicate = new PredicateDef_Lt(field, (Comparable<Object>) value);
 				case IN_SIGN -> {
 					if (value == null) {
 						throw ParsingException.create("Arguments of " + IN_SIGN + " cannot be null", true);
 					}
-					comparisonPredicate = in(field, (Set<?>) value);
+					comparisonPredicate = new PredicateDef_In(field, (SortedSet<Object>) value);
 				}
 				default -> throw ParsingException.create("Could not read predicate", true);
 			}
 			predicates.add(comparisonPredicate);
 			byte nextToken = reader.getNextToken();
 			if (nextToken == OBJECT_END) {
-				return predicates.size() == 1 ? predicates.get(0) : and(predicates);
+				return predicates.size() == 1 ? predicates.get(0) : new PredicateDef_And(predicates);
 			} else if (nextToken != COMMA) {
 				throw reader.newParseError("Unexpected symbol");
 			}
@@ -267,8 +267,8 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			byte next = reader.getNextToken();
 			if (next != COMMA) {
 				result = switch (type) {
-					case TRUE -> alwaysTrue();
-					case FALSE -> alwaysFalse();
+					case TRUE -> PredicateDef_AlwaysTrue.INSTANCE;
+					case FALSE -> PredicateDef_AlwaysFalse.INSTANCE;
 					default -> throw reader.newParseError("Unknown predicate type " + type);
 				};
 			} else {
@@ -304,60 +304,60 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return codec;
 	}
 
-	private PredicateDef readEq(JsonReader reader) throws IOException {
+	private PredicateDef readEq(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
 		Object value = readObject.read(reader);
 		reader.getNextToken();
-		return eq(attribute, value);
+		return new PredicateDef_Eq(attribute, value);
 	}
 
-	private PredicateDef readNotEq(JsonReader reader) throws IOException {
+	private PredicateDef readNotEq(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
 		Object value = readObject.read(reader);
 		reader.getNextToken();
-		return notEq(attribute, value);
+		return new PredicateDef_NotEq(attribute, value);
 	}
 
-	private PredicateDef readGe(JsonReader reader) throws IOException {
+	private PredicateDef readGe(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return ge(attributeAndValue.attribute, attributeAndValue.value);
+		return new PredicateDef_Ge(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private PredicateDef readGt(JsonReader reader) throws IOException {
+	private PredicateDef readGt(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return gt(attributeAndValue.attribute, attributeAndValue.value);
+		return new PredicateDef_Gt(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private PredicateDef readLe(JsonReader reader) throws IOException {
+	private PredicateDef readLe(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return le(attributeAndValue.attribute, attributeAndValue.value);
+		return new PredicateDef_Le(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private PredicateDef readLt(JsonReader reader) throws IOException {
+	private PredicateDef readLt(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return lt(attributeAndValue.attribute, attributeAndValue.value);
+		return new PredicateDef_Lt(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private AttributeAndValue readAttributeAndValue(JsonReader reader) throws IOException {
+	private AttributeAndValue readAttributeAndValue(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
-		Comparable<?> value = (Comparable<?>) readObject.read(reader);
+		Comparable<Object> value = (Comparable<Object>) readObject.read(reader);
 		reader.getNextToken();
 		return new AttributeAndValue(attribute, value);
 	}
 
-	private PredicateDef readIn(JsonReader reader) throws IOException {
+	private PredicateDef readIn(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
-		Set<Object> result = new LinkedHashSet<>();
+		SortedSet<Object> result = new TreeSet<>();
 		byte token;
 		while ((token = reader.getNextToken()) != ARRAY_END) {
 			if (token != COMMA) {
@@ -366,23 +366,23 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			reader.getNextToken();
 			result.add(readObject.read(reader));
 		}
-		return in(attribute, result);
+		return new PredicateDef_In(attribute, result);
 	}
 
-	private PredicateDef readBetween(JsonReader reader) throws IOException {
+	private PredicateDef readBetween(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
-		Comparable<?> from = (Comparable<?>) readObject.read(reader);
+		Comparable<Object> from = (Comparable<Object>) readObject.read(reader);
 		reader.comma();
 		reader.getNextToken();
-		Comparable<?> to = (Comparable<?>) readObject.read(reader);
+		Comparable<Object> to = (Comparable<Object>) readObject.read(reader);
 		reader.getNextToken();
-		return between(attribute, from, to);
+		return new PredicateDef_Between(attribute, from, to);
 	}
 
-	private PredicateDef readRegexp(JsonReader reader) throws IOException {
+	private PredicateDef readRegexp(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		reader.comma();
 		reader.getNextToken();
@@ -394,7 +394,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			throw ParsingException.create("Malformed regexp", e, true);
 		}
 		reader.getNextToken();
-		return regexp(attribute, pattern);
+		return new PredicateDef_RegExp(attribute, pattern);
 	}
 
 	private PredicateDef readAnd(JsonReader<?> reader) throws IOException {
@@ -404,31 +404,31 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			reader.getNextToken();
 			result.add(read(reader));
 		}
-		return and(result);
+		return new PredicateDef_And(result);
 	}
 
-	private PredicateDef readOr(JsonReader reader) throws IOException {
+	private PredicateDef readOr(JsonReader<?> reader) throws IOException {
 		List<PredicateDef> result = new ArrayList<>();
 		result.add(read(reader));
 		while (reader.getNextToken() == ',') {
 			reader.getNextToken();
 			result.add(read(reader));
 		}
-		return or(result);
+		return new PredicateDef_Or(result);
 	}
 
-	private PredicateDef readNot(JsonReader reader) throws IOException {
+	private PredicateDef readNot(JsonReader<?> reader) throws IOException {
 		PredicateDef predicate = read(reader);
 		reader.getNextToken();
-		return not(predicate);
+		return new PredicateDef_Not(predicate);
 	}
 
-	private PredicateDef readHas(JsonReader reader) throws IOException {
+	private PredicateDef readHas(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		reader.getNextToken();
-		return has(attribute);
+		return new PredicateDef_Has(attribute);
 	}
 
-	public record AttributeAndValue(String attribute, Comparable<?> value) {
+	public record AttributeAndValue(String attribute, Comparable<Object> value) {
 	}
 }

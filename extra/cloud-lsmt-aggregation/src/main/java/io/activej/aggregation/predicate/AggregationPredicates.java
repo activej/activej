@@ -44,11 +44,11 @@ public class AggregationPredicates {
 	static final Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
 
 	public static <L extends PredicateDef, R extends PredicateDef> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
-		PredicateSimplifierKey keyLeftRight = new PredicateSimplifierKey<>(leftType, rightType);
+		PredicateSimplifierKey<L, R> keyLeftRight = new PredicateSimplifierKey<>(leftType, rightType);
 		checkState(!simplifiers.containsKey(keyLeftRight), "Key '%s has already been registered", keyLeftRight);
 		simplifiers.put(keyLeftRight, operation);
 		if (!rightType.equals(leftType)) {
-			PredicateSimplifierKey keyRightLeft = new PredicateSimplifierKey<>(rightType, leftType);
+			PredicateSimplifierKey<R, L> keyRightLeft = new PredicateSimplifierKey<>(rightType, leftType);
 			checkState(!simplifiers.containsKey(keyRightLeft), "Key '%s has already been registered", keyRightLeft);
 			simplifiers.put(keyRightLeft, (PredicateSimplifier<R, L>) (right, left) -> operation.simplifyAnd(left, right));
 		}
@@ -434,11 +434,11 @@ public class AggregationPredicates {
 	}
 
 	public static PredicateDef alwaysTrue() {
-		return PredicateDef_AlwaysTrue.instance;
+		return PredicateDef_AlwaysTrue.INSTANCE;
 	}
 
 	public static PredicateDef alwaysFalse() {
-		return PredicateDef_AlwaysFalse.instance;
+		return PredicateDef_AlwaysFalse.INSTANCE;
 	}
 
 	public static PredicateDef not(PredicateDef predicate) {
@@ -507,7 +507,7 @@ public class AggregationPredicates {
 		return new PredicateDef_RegExp(key, pattern);
 	}
 
-	public static PredicateDef between(String key, Comparable from, Comparable to) {
+	public static <C extends Comparable<C>> PredicateDef between(String key, Comparable from, Comparable to) {
 		return new PredicateDef_Between(key, from, to);
 	}
 
