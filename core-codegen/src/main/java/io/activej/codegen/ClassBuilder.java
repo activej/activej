@@ -482,10 +482,10 @@ public final class ClassBuilder<T> {
 				String field = entry.getKey();
 				Constant expression = entry.getValue();
 
-				if (!isJvmPrimitive(expression.getValue())) {
-					STATIC_CONSTANTS.put(expression.getId(), expression.getValue());
+				if (!isJvmPrimitive(expression.value)) {
+					STATIC_CONSTANTS.put(expression.id, expression.value);
 					Expressions.set(staticField(field), cast(
-									staticCall(ClassBuilder.class, "getStaticConstant", value(expression.getId())),
+									staticCall(ClassBuilder.class, "getStaticConstant", value(expression.id)),
 									this.fields.get(field)))
 							.load(ctx);
 				} else {
@@ -500,9 +500,9 @@ public final class ClassBuilder<T> {
 				cw.visitField(ACC_PUBLIC + ACC_STATIC + ACC_FINAL,
 						field, getType(expression.getValueClass()).getDescriptor(), null, null);
 
-				checkState(!isJvmPrimitive(expression.getValue()));
-				STATIC_CONSTANTS.put(expression.getId(), expression.getValue());
-				Type typeFrom = staticCall(ClassBuilder.class, "getStaticConstant", value(expression.getId())).load(ctx);
+				checkState(!isJvmPrimitive(expression.value));
+				STATIC_CONSTANTS.put(expression.id, expression.value);
+				Type typeFrom = staticCall(ClassBuilder.class, "getStaticConstant", value(expression.id)).load(ctx);
 				g.checkCast(getType(expression.getValueClass()));
 				g.putStatic(ctx.getSelfType(), field, getType(expression.getValueClass()));
 			}
@@ -540,10 +540,10 @@ public final class ClassBuilder<T> {
 
 			private void cleanup() {
 				for (Map.Entry<String, Constant> entry : fieldConstants.entrySet()) {
-					STATIC_CONSTANTS.remove(entry.getValue().getId());
+					STATIC_CONSTANTS.remove(entry.getValue().id);
 				}
 				for (Constant expression : constantMap.values()) {
-					STATIC_CONSTANTS.remove(expression.getId());
+					STATIC_CONSTANTS.remove(expression.id);
 				}
 			}
 		};

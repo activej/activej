@@ -43,11 +43,11 @@ import static org.objectweb.asm.commons.Method.getMethod;
  */
 @ExposedInternals
 public final class ToString implements Expression {
-	private String begin;
-	private String end;
-	private @Nullable String nameSeparator;
-	private String valueSeparator;
-	private final Map<Object, Expression> arguments;
+	public String begin;
+	public String end;
+	public @Nullable String nameSeparator;
+	public String valueSeparator;
+	public final Map<Object, Expression> arguments;
 
 	public ToString(String begin, String end, @Nullable String nameSeparator, String valueSeparator,
 			Map<Object, Expression> arguments) {
@@ -128,26 +128,6 @@ public final class ToString implements Expression {
 		protected ToString doBuild() {
 			return ToString.this;
 		}
-	}
-
-	public String getBegin() {
-		return begin;
-	}
-
-	public String getEnd() {
-		return end;
-	}
-
-	public @Nullable String getNameSeparator() {
-		return nameSeparator;
-	}
-
-	public String getValueSeparator() {
-		return valueSeparator;
-	}
-
-	public Map<Object, Expression> getArguments() {
-		return arguments;
 	}
 
 	@Override

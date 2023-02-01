@@ -34,7 +34,7 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
  */
 @ExposedInternals
 public final class BooleanAnd implements Expression {
-	private final List<Expression> expressions;
+	public final List<Expression> expressions;
 
 	public BooleanAnd(List<Expression> expressions) {
 		this.expressions = expressions;

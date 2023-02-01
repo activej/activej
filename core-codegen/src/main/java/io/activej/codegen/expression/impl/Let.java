@@ -26,14 +26,10 @@ import org.objectweb.asm.Type;
 
 @ExposedInternals
 public final class Let implements Variable {
-	private final Expression value;
+	public final Expression value;
 
 	public Let(Expression value) {
 		this.value = value;
-	}
-
-	public Expression getValue() {
-		return value;
 	}
 
 	@Override

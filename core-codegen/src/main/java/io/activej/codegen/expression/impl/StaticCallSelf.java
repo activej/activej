@@ -25,20 +25,12 @@ import java.util.List;
 
 @ExposedInternals
 public final class StaticCallSelf implements Expression {
-	private final String methodName;
-	private final List<Expression> arguments;
+	public final String methodName;
+	public final List<Expression> arguments;
 
 	public StaticCallSelf(String methodName, List<Expression> expressions) {
 		this.methodName = methodName;
 		this.arguments = expressions;
-	}
-
-	public String getMethodName() {
-		return methodName;
-	}
-
-	public List<Expression> getArguments() {
-		return arguments;
 	}
 
 	@Override

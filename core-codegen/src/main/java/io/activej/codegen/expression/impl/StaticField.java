@@ -33,20 +33,12 @@ import static org.objectweb.asm.Type.getType;
 
 @ExposedInternals
 public final class StaticField implements Variable {
-	private final @Nullable Class<?> owner;
-	private final String name;
+	public final @Nullable Class<?> owner;
+	public final String name;
 
 	public StaticField(@Nullable Class<?> owner, String name) {
 		this.owner = owner;
 		this.name = name;
-	}
-
-	public @Nullable Class<?> getOwner() {
-		return owner;
-	}
-
-	public String getName() {
-		return name;
 	}
 
 	@Override

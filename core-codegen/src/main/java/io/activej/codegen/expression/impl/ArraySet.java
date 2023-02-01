@@ -27,26 +27,14 @@ import static org.objectweb.asm.Type.getType;
 
 @ExposedInternals
 public final class ArraySet implements Expression {
-	private final Expression array;
-	private final Expression position;
-	private final Expression newElement;
+	public final Expression array;
+	public final Expression position;
+	public final Expression newElement;
 
 	public ArraySet(Expression array, Expression position, Expression newElement) {
 		this.array = array;
 		this.position = position;
 		this.newElement = newElement;
-	}
-
-	public Expression getArray() {
-		return array;
-	}
-
-	public Expression getPosition() {
-		return position;
-	}
-
-	public Expression getNewElement() {
-		return newElement;
 	}
 
 	@Override

@@ -34,20 +34,12 @@ import static org.objectweb.asm.commons.InstructionAdapter.OBJECT_TYPE;
 public final class Cast implements Expression {
 	public static final Type SELF_TYPE = getType(Object.class);
 
-	private final Expression expression;
-	private final Type targetType;
+	public final Expression expression;
+	public final Type targetType;
 
 	public Cast(Expression expression, Type type) {
 		this.expression = expression;
 		this.targetType = type;
-	}
-
-	public Expression getExpression() {
-		return expression;
-	}
-
-	public Type getTargetType() {
-		return targetType;
 	}
 
 	@Override

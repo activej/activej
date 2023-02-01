@@ -30,20 +30,12 @@ import static io.activej.codegen.util.TypeChecks.isAssignable;
  */
 @ExposedInternals
 public final class Set implements Expression {
-	private final StoreDef to;
-	private final Expression from;
+	public final StoreDef to;
+	public final Expression from;
 
 	public Set(StoreDef to, Expression from) {
 		this.to = to;
 		this.from = from;
-	}
-
-	public StoreDef getTo() {
-		return to;
-	}
-
-	public Expression getFrom() {
-		return from;
 	}
 
 	@Override

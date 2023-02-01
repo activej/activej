@@ -27,14 +27,10 @@ import org.objectweb.asm.Type;
  */
 @ExposedInternals
 public final class VarArg implements Variable {
-	private final int argument;
+	public final int argument;
 
 	public VarArg(int argument) {
 		this.argument = argument;
-	}
-
-	public int getArgument() {
-		return argument;
 	}
 
 	@Override

@@ -29,26 +29,14 @@ import static io.activej.codegen.util.Utils.isPrimitiveType;
 
 @ExposedInternals
 public final class IfNonNull implements Expression {
-	private final Expression expression;
-	private final Expression expressionTrue;
-	private final Expression expressionFalse;
+	public final Expression expression;
+	public final Expression expressionTrue;
+	public final Expression expressionFalse;
 
 	public IfNonNull(Expression expression, Expression expressionTrue, Expression expressionFalse) {
 		this.expression = expression;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
-	}
-
-	public Expression getExpression() {
-		return expression;
-	}
-
-	public Expression getExpressionTrue() {
-		return expressionTrue;
-	}
-
-	public Expression getExpressionFalse() {
-		return expressionFalse;
 	}
 
 	@Override

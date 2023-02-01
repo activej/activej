@@ -27,22 +27,14 @@ import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
 @ExposedInternals
 public final class ArrayNew implements Expression {
-	private final Class<?> type;
-	private final Expression length;
+	public final Class<?> type;
+	public final Expression length;
 
 	public ArrayNew(Class<?> type, Expression length) {
 		if (!type.isArray())
 			throw new IllegalArgumentException();
 		this.type = type;
 		this.length = length;
-	}
-
-	public Class<?> getType() {
-		return type;
-	}
-
-	public Expression getLength() {
-		return length;
 	}
 
 	@Override

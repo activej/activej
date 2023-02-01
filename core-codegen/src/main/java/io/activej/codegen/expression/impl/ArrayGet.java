@@ -26,20 +26,12 @@ import static io.activej.codegen.util.TypeChecks.*;
 
 @ExposedInternals
 public final class ArrayGet implements Expression {
-	private final Expression array;
-	private final Expression index;
+	public final Expression array;
+	public final Expression index;
 
 	public ArrayGet(Expression array, Expression index) {
 		this.array = array;
 		this.index = index;
-	}
-
-	public Expression getArray() {
-		return array;
-	}
-
-	public Expression getIndex() {
-		return index;
 	}
 
 	@Override

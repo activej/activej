@@ -38,11 +38,11 @@ import static org.objectweb.asm.Type.INT_TYPE;
  */
 @ExposedInternals
 public final class IfObjCmp implements Expression {
-	private final Expression left;
-	private final Expression right;
-	private final CompareOperation operation;
-	private final Expression expressionTrue;
-	private final Expression expressionFalse;
+	public final Expression left;
+	public final Expression right;
+	public final CompareOperation operation;
+	public final Expression expressionTrue;
+	public final Expression expressionFalse;
 
 	public IfObjCmp(CompareOperation operation, Expression left, Expression right, Expression expressionTrue, Expression expressionFalse) {
 		this.left = left;
@@ -50,26 +50,6 @@ public final class IfObjCmp implements Expression {
 		this.operation = operation;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
-	}
-
-	public Expression getLeft() {
-		return left;
-	}
-
-	public Expression getRight() {
-		return right;
-	}
-
-	public CompareOperation getOperation() {
-		return operation;
-	}
-
-	public Expression getExpressionTrue() {
-		return expressionTrue;
-	}
-
-	public Expression getExpressionFalse() {
-		return expressionFalse;
 	}
 
 	@Override

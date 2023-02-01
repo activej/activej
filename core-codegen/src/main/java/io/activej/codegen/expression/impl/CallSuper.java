@@ -23,20 +23,12 @@ import org.objectweb.asm.Type;
 
 @ExposedInternals
 public final class CallSuper implements Expression {
-	private final String methodName;
-	private final Expression[] arguments;
+	public final String methodName;
+	public final Expression[] arguments;
 
 	public CallSuper(String methodName, Expression[] arguments) {
 		this.methodName = methodName;
 		this.arguments = arguments;
-	}
-
-	public String getMethodName() {
-		return methodName;
-	}
-
-	public Expression[] getArguments() {
-		return arguments;
 	}
 
 	@Override

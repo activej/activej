@@ -81,7 +81,7 @@ public class Expressions {
 		List<Expression> list = new ArrayList<>(parts.size());
 		for (Expression part : parts) {
 			if (part instanceof Sequence) {
-				list.addAll(((Sequence) part).getExpressions());
+				list.addAll(((Sequence) part).expressions);
 			} else {
 				list.add(part);
 			}

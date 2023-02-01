@@ -33,26 +33,14 @@ import static org.objectweb.asm.Type.VOID_TYPE;
 
 @ExposedInternals
 public final class Iterate implements Expression {
-	private final Expression from;
-	private final Expression to;
-	private final UnaryOperator<Expression> forVar;
+	public final Expression from;
+	public final Expression to;
+	public final UnaryOperator<Expression> forVar;
 
 	public Iterate(Expression from, Expression to, UnaryOperator<Expression> forVar) {
 		this.from = from;
 		this.to = to;
 		this.forVar = forVar;
-	}
-
-	public Expression getFrom() {
-		return from;
-	}
-
-	public Expression getTo() {
-		return to;
-	}
-
-	public UnaryOperator<Expression> getForVar() {
-		return forVar;
 	}
 
 	@Override

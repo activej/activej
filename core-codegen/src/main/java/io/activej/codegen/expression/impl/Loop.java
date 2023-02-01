@@ -29,20 +29,12 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
 @ExposedInternals
 public final class Loop implements Expression {
-	private final Expression condition;
-	private final Expression body;
+	public final Expression condition;
+	public final Expression body;
 
 	public Loop(Expression condition, Expression body) {
 		this.condition = condition;
 		this.body = body;
-	}
-
-	public Expression getCondition() {
-		return condition;
-	}
-
-	public Expression getBody() {
-		return body;
 	}
 
 	@Override

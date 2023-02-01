@@ -33,14 +33,10 @@ import static org.objectweb.asm.Type.VOID_TYPE;
  */
 @ExposedInternals
 public final class Sequence implements Expression {
-	private final List<Expression> expressions;
+	public final List<Expression> expressions;
 
 	public Sequence(List<Expression> expressions) {
 		this.expressions = expressions;
-	}
-
-	public List<Expression> getExpressions() {
-		return expressions;
 	}
 
 	@Override

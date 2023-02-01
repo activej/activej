@@ -31,26 +31,14 @@ import static org.objectweb.asm.Type.getType;
 
 @ExposedInternals
 public final class ArithmeticOp implements Expression {
-	private final ArithmeticOperation op;
-	private final Expression left;
-	private final Expression right;
+	public final ArithmeticOperation op;
+	public final Expression left;
+	public final Expression right;
 
 	public ArithmeticOp(ArithmeticOperation op, Expression left, Expression right) {
 		this.op = op;
 		this.left = left;
 		this.right = right;
-	}
-
-	public ArithmeticOperation getOp() {
-		return op;
-	}
-
-	public Expression getLeft() {
-		return left;
-	}
-
-	public Expression getRight() {
-		return right;
 	}
 
 	public static Class<?> unifyArithmeticTypes(Class<?>... dataTypes) {

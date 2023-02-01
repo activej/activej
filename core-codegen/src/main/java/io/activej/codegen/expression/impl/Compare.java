@@ -40,7 +40,7 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
  */
 @ExposedInternals
 public final class Compare implements Expression {
-	private final List<Pair> pairs;
+	public final List<Pair> pairs;
 
 	public record Pair(Expression left, Expression right, boolean nullable) {}
 
@@ -70,10 +70,6 @@ public final class Compare implements Expression {
 		protected Compare doBuild() {
 			return Compare.this;
 		}
-	}
-
-	public List<Pair> getPairs() {
-		return pairs;
 	}
 
 	@Override

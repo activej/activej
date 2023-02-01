@@ -26,14 +26,10 @@ import static io.activej.codegen.util.TypeChecks.*;
 
 @ExposedInternals
 public final class Length implements Expression {
-	private final Expression value;
+	public final Expression value;
 
 	public Length(Expression value) {
 		this.value = value;
-	}
-
-	public Expression getValue() {
-		return value;
 	}
 
 	@Override

@@ -28,14 +28,10 @@ import java.util.List;
  */
 @ExposedInternals
 public final class SuperConstructor implements Expression {
-	private final List<Expression> fields;
+	public final List<Expression> fields;
 
 	public SuperConstructor(List<Expression> fields) {
 		this.fields = fields;
-	}
-
-	public List<Expression> getFields() {
-		return fields;
 	}
 
 	@Override

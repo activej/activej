@@ -27,26 +27,14 @@ import static org.objectweb.asm.Type.getType;
 
 @ExposedInternals
 public final class StaticCall implements Expression {
-	private final Class<?> owner;
-	private final String name;
-	private final List<Expression> arguments;
+	public final Class<?> owner;
+	public final String name;
+	public final List<Expression> arguments;
 
 	public StaticCall(Class<?> owner, String name, List<Expression> arguments) {
 		this.owner = owner;
 		this.name = name;
 		this.arguments = arguments;
-	}
-
-	public Class<?> getOwner() {
-		return owner;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public List<Expression> getArguments() {
-		return arguments;
 	}
 
 	@Override

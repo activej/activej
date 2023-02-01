@@ -26,14 +26,10 @@ import static io.activej.codegen.util.TypeChecks.isObject;
 
 @ExposedInternals
 public final class Throw implements Expression {
-	private final Expression exceptionExpression;
+	public final Expression exceptionExpression;
 
 	public Throw(Expression exceptionExpression) {
 		this.exceptionExpression = exceptionExpression;
-	}
-
-	public Expression getExceptionExpression() {
-		return exceptionExpression;
 	}
 
 	@Override

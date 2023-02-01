@@ -34,12 +34,12 @@ import static org.objectweb.asm.Type.getType;
  */
 @ExposedInternals
 public final class Constant implements Expression {
-	private static final AtomicInteger COUNTER = new AtomicInteger();
+	public static final AtomicInteger COUNTER = new AtomicInteger();
 
-	private final Object value;
-	private final @Nullable Class<?> cls;
+	public final Object value;
+	public final @Nullable Class<?> cls;
 
-	private final int id = COUNTER.incrementAndGet();
+	public final int id = COUNTER.incrementAndGet();
 
 	public Constant(Object value) {
 		checkNotNull(value);
@@ -57,20 +57,8 @@ public final class Constant implements Expression {
 		this.cls = cls;
 	}
 
-	public @Nullable Class<?> getCls() {
-		return cls;
-	}
-
-	public Object getValue() {
-		return value;
-	}
-
 	public Class<?> getValueClass() {
 		return cls == null ? value.getClass() : cls;
-	}
-
-	public int getId() {
-		return id;
 	}
 
 	@Override
@@ -111,7 +99,7 @@ public final class Constant implements Expression {
 		} else if (value instanceof Enum) {
 			g.getStatic(type, ((Enum<?>) value).name(), type);
 		} else {
-			String field = "$STATIC_CONSTANT_" + getId();
+			String field = "$STATIC_CONSTANT_" + id;
 			ctx.setConstant(field, this);
 			g.getStatic(ctx.getSelfType(), field, getType(getValueClass()));
 		}

@@ -45,20 +45,12 @@ import static org.objectweb.asm.commons.Method.getMethod;
  */
 @ExposedInternals
 public final class Property implements Variable {
-	private final Expression owner;
-	private final String property;
+	public final Expression owner;
+	public final String property;
 
 	public Property(Expression owner, String property) {
 		this.owner = owner;
 		this.property = property;
-	}
-
-	public Expression getOwner() {
-		return owner;
-	}
-
-	public String getProperty() {
-		return property;
 	}
 
 	@Override

@@ -31,32 +31,16 @@ import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
 @ExposedInternals
 public final class TableSwitch implements Expression {
-	private final Expression value;
-	private final int[] keys;
-	private final Expression[] matchExpressions;
-	private final Expression defaultExpression;
+	public final Expression value;
+	public final int[] keys;
+	public final Expression[] matchExpressions;
+	public final Expression defaultExpression;
 
 	public TableSwitch(Expression value, int[] keys, Expression[] matchExpressions, Expression defaultExpression) {
 		this.value = value;
 		this.keys = keys;
 		this.matchExpressions = matchExpressions;
 		this.defaultExpression = defaultExpression;
-	}
-
-	public Expression getValue() {
-		return value;
-	}
-
-	public int[] getKeys() {
-		return keys;
-	}
-
-	public Expression[] getMatchExpressions() {
-		return matchExpressions;
-	}
-
-	public Expression getDefaultExpression() {
-		return defaultExpression;
 	}
 
 	@Override

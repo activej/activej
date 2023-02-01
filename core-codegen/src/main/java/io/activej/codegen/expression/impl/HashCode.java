@@ -42,7 +42,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
  */
 @ExposedInternals
 public final class HashCode implements Expression {
-	private final List<Expression> arguments;
+	public final List<Expression> arguments;
 
 	public HashCode(List<Expression> arguments) {
 		this.arguments = arguments;

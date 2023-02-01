@@ -24,7 +24,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 @ExposedInternals
 public final class Null implements Expression {
-	private final Type type;
+	public final Type type;
 
 	public Null(Class<?> type) {
 		this.type = Type.getType(type);
@@ -32,10 +32,6 @@ public final class Null implements Expression {
 
 	public Null(Type type) {
 		this.type = type;
-	}
-
-	public Type getType() {
-		return type;
 	}
 
 	@Override

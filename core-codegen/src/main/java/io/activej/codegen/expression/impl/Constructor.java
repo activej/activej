@@ -28,20 +28,12 @@ import java.util.List;
  */
 @ExposedInternals
 public final class Constructor implements Expression {
-	private final Class<?> type;
-	private final List<Expression> fields;
+	public final Class<?> type;
+	public final List<Expression> fields;
 
 	public Constructor(Class<?> type, List<Expression> fields) {
 		this.type = type;
 		this.fields = fields;
-	}
-
-	public Class<?> getType() {
-		return type;
-	}
-
-	public List<Expression> getFields() {
-		return fields;
 	}
 
 	@Override

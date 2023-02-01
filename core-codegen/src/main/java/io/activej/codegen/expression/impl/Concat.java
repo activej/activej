@@ -37,14 +37,10 @@ import static org.objectweb.asm.commons.Method.getMethod;
  */
 @ExposedInternals
 public final class Concat implements Expression {
-	private final List<Expression> arguments;
+	public final List<Expression> arguments;
 
 	public Concat(List<Expression> arguments) {
 		this.arguments = arguments;
-	}
-
-	public List<Expression> getArguments() {
-		return arguments;
 	}
 
 	@Override

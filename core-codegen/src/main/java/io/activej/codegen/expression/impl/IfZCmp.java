@@ -30,32 +30,16 @@ import static org.objectweb.asm.Type.INT;
 
 @ExposedInternals
 public final class IfZCmp implements Expression {
-	private final Expression value;
-	private final CompareOperation operation;
-	private final Expression expressionTrue;
-	private final Expression expressionFalse;
+	public final Expression value;
+	public final CompareOperation operation;
+	public final Expression expressionTrue;
+	public final Expression expressionFalse;
 
 	public IfZCmp(Expression value, CompareOperation operation, Expression expressionTrue, Expression expressionFalse) {
 		this.value = value;
 		this.operation = operation;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
-	}
-
-	public Expression getValue() {
-		return value;
-	}
-
-	public CompareOperation getOperation() {
-		return operation;
-	}
-
-	public Expression getExpressionTrue() {
-		return expressionTrue;
-	}
-
-	public Expression getExpressionFalse() {
-		return expressionFalse;
 	}
 
 	@Override

@@ -28,17 +28,13 @@ import org.objectweb.asm.commons.GeneratorAdapter;
  */
 @ExposedInternals
 public final class VarLocal implements LocalVariable {
-	private static final int VOID = -1;
+	public static final int VOID = -1;
 	public static final VarLocal VAR_LOCAL_VOID = new VarLocal(VOID);
 
-	private final int local;
+	public final int local;
 
 	public VarLocal(int local) {
 		this.local = local;
-	}
-
-	public int getLocal() {
-		return local;
 	}
 
 	@Override

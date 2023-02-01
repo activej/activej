@@ -34,7 +34,7 @@ import static org.objectweb.asm.Type.BOOLEAN_TYPE;
  */
 @ExposedInternals
 public final class BooleanOr implements Expression {
-	private final List<Expression> expressions;
+	public final List<Expression> expressions;
 
 	public BooleanOr(List<Expression> expressions) {
 		this.expressions = expressions;

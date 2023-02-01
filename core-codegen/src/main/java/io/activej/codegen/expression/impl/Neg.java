@@ -30,14 +30,10 @@ import static org.objectweb.asm.Type.INT_TYPE;
 
 @ExposedInternals
 public final class Neg implements Expression {
-	private final Expression arg;
+	public final Expression arg;
 
 	public Neg(Expression arg) {
 		this.arg = arg;
-	}
-
-	public Expression getArg() {
-		return arg;
 	}
 
 	@Override

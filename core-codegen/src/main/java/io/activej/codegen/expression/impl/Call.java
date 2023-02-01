@@ -23,26 +23,14 @@ import org.objectweb.asm.Type;
 
 @ExposedInternals
 public final class Call implements Expression {
-	private final Expression owner;
-	private final String methodName;
-	private final Expression[] arguments;
+	public final Expression owner;
+	public final String methodName;
+	public final Expression[] arguments;
 
 	public Call(Expression owner, String methodName, Expression[] arguments) {
 		this.owner = owner;
 		this.methodName = methodName;
 		this.arguments = arguments;
-	}
-
-	public Expression getOwner() {
-		return owner;
-	}
-
-	public String getMethodName() {
-		return methodName;
-	}
-
-	public Expression[] getArguments() {
-		return arguments;
 	}
 
 	@Override
