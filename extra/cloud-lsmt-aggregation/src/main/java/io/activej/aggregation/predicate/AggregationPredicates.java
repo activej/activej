@@ -31,8 +31,8 @@ import java.util.regex.Pattern;
 import static io.activej.codegen.expression.Expressions.value;
 import static io.activej.common.Checks.checkState;
 
-@StaticFactories(PredicateDef.class)
 @SuppressWarnings({"rawtypes", "unchecked"})
+@StaticFactories(PredicateDef.class)
 public class AggregationPredicates {
 
 	public record PredicateSimplifierKey<L extends PredicateDef, R extends PredicateDef>(
