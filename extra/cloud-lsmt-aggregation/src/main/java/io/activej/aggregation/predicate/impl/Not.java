@@ -17,8 +17,8 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
@@ -28,15 +28,15 @@ import java.util.Set;
 import static io.activej.codegen.expression.Expressions.not;
 
 @ExposedInternals
-public final class Not implements PredicateDef {
-	public final PredicateDef predicate;
+public final class Not implements AggregationPredicate {
+	public final AggregationPredicate predicate;
 
-	public Not(PredicateDef predicate) {
+	public Not(AggregationPredicate predicate) {
 		this.predicate = predicate;
 	}
 
 	@Override
-	public PredicateDef simplify() {
+	public AggregationPredicate simplify() {
 		if (predicate instanceof Not not)
 			return not.predicate.simplify();
 

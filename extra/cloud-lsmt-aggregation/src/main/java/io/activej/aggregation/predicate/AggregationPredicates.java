@@ -32,21 +32,21 @@ import static io.activej.codegen.expression.Expressions.value;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@StaticFactories(PredicateDef.class)
+@StaticFactories(AggregationPredicate.class)
 public class AggregationPredicates {
 
-	public record PredicateSimplifierKey<L extends PredicateDef, R extends PredicateDef>(
+	public record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
 			Class<L> leftType, Class<R> rightType) {
 	}
 
 	@FunctionalInterface
-	public interface PredicateSimplifier<L extends PredicateDef, R extends PredicateDef> {
-		PredicateDef simplifyAnd(L left, R right);
+	public interface PredicateSimplifier<L extends AggregationPredicate, R extends AggregationPredicate> {
+		AggregationPredicate simplifyAnd(L left, R right);
 	}
 
 	public static final Map<PredicateSimplifierKey<?, ?>, PredicateSimplifier<?, ?>> simplifiers = new HashMap<>();
 
-	public static <L extends PredicateDef, R extends PredicateDef> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
+	public static <L extends AggregationPredicate, R extends AggregationPredicate> void register(Class<L> leftType, Class<R> rightType, PredicateSimplifier<L, R> operation) {
 		PredicateSimplifierKey<L, R> keyLeftRight = new PredicateSimplifierKey<>(leftType, rightType);
 		checkState(!simplifiers.containsKey(keyLeftRight), "Key '%s has already been registered", keyLeftRight);
 		simplifiers.put(keyLeftRight, operation);
@@ -58,7 +58,7 @@ public class AggregationPredicates {
 	}
 
 	static {
-		PredicateSimplifier simplifierAlwaysFalse = (PredicateSimplifier<AlwaysFalse, PredicateDef>) (left, right) -> left;
+		PredicateSimplifier simplifierAlwaysFalse = (PredicateSimplifier<AlwaysFalse, AggregationPredicate>) (left, right) -> left;
 		register(AlwaysFalse.class, AlwaysFalse.class, simplifierAlwaysFalse);
 		register(AlwaysFalse.class, AlwaysTrue.class, simplifierAlwaysFalse);
 		register(AlwaysFalse.class, Not.class, simplifierAlwaysFalse);
@@ -75,7 +75,7 @@ public class AggregationPredicates {
 		register(AlwaysFalse.class, Or.class, simplifierAlwaysFalse);
 		register(AlwaysFalse.class, In.class, simplifierAlwaysFalse);
 
-		PredicateSimplifier simplifierAlwaysTrue = (PredicateSimplifier<AlwaysTrue, PredicateDef>) (left, right) -> right;
+		PredicateSimplifier simplifierAlwaysTrue = (PredicateSimplifier<AlwaysTrue, AggregationPredicate>) (left, right) -> right;
 		register(AlwaysTrue.class, AlwaysTrue.class, simplifierAlwaysTrue);
 		register(AlwaysTrue.class, Not.class, simplifierAlwaysTrue);
 		register(AlwaysTrue.class, Eq.class, simplifierAlwaysTrue);
@@ -91,7 +91,7 @@ public class AggregationPredicates {
 		register(AlwaysTrue.class, Or.class, simplifierAlwaysTrue);
 		register(AlwaysTrue.class, In.class, simplifierAlwaysTrue);
 
-		PredicateSimplifier simplifierNot = (PredicateSimplifier<Not, PredicateDef>) (left, right) -> {
+		PredicateSimplifier simplifierNot = (PredicateSimplifier<Not, AggregationPredicate>) (left, right) -> {
 			if (left.predicate.equals(right))
 				return alwaysFalse();
 			return null;
@@ -109,7 +109,7 @@ public class AggregationPredicates {
 		register(Not.class, In.class, simplifierNot);
 
 		register(Has.class, Has.class, (left, right) -> left.key.equals(right.key) ? left : null);
-		PredicateSimplifier simplifierHas = (PredicateSimplifier<Has, PredicateDef>) (left, right) -> right.getDimensions().contains(left.key) ? right : null;
+		PredicateSimplifier simplifierHas = (PredicateSimplifier<Has, AggregationPredicate>) (left, right) -> right.getDimensions().contains(left.key) ? right : null;
 		register(Has.class, Eq.class, simplifierHas);
 		register(Has.class, NotEq.class, simplifierHas);
 		register(Has.class, Le.class, simplifierHas);
@@ -434,81 +434,81 @@ public class AggregationPredicates {
 		});
 	}
 
-	public static PredicateDef alwaysTrue() {
+	public static AggregationPredicate alwaysTrue() {
 		return AlwaysTrue.INSTANCE;
 	}
 
-	public static PredicateDef alwaysFalse() {
+	public static AggregationPredicate alwaysFalse() {
 		return AlwaysFalse.INSTANCE;
 	}
 
-	public static PredicateDef not(PredicateDef predicate) {
+	public static AggregationPredicate not(AggregationPredicate predicate) {
 		return new Not(predicate);
 	}
 
-	public static PredicateDef and(List<PredicateDef> predicates) {
+	public static AggregationPredicate and(List<AggregationPredicate> predicates) {
 		return new And(predicates);
 	}
 
-	public static PredicateDef and(PredicateDef... predicates) {
+	public static AggregationPredicate and(AggregationPredicate... predicates) {
 		return and(List.of(predicates));
 	}
 
-	public static PredicateDef or(List<PredicateDef> predicates) {
+	public static AggregationPredicate or(List<AggregationPredicate> predicates) {
 		return new Or(predicates);
 	}
 
-	public static PredicateDef or(PredicateDef... predicates) {
+	public static AggregationPredicate or(AggregationPredicate... predicates) {
 		return or(List.of(predicates));
 	}
 
-	public static PredicateDef eq(String key, @Nullable Object value) {
+	public static AggregationPredicate eq(String key, @Nullable Object value) {
 		return new Eq(key, value);
 	}
 
-	public static PredicateDef notEq(String key, Object value) {
+	public static AggregationPredicate notEq(String key, Object value) {
 		return new NotEq(key, value);
 	}
 
-	public static PredicateDef ge(String key, Comparable value) {
+	public static AggregationPredicate ge(String key, Comparable value) {
 		return new Ge(key, value);
 	}
 
-	public static PredicateDef le(String key, Comparable value) {
+	public static AggregationPredicate le(String key, Comparable value) {
 		return new Le(key, value);
 	}
 
-	public static PredicateDef gt(String key, Comparable value) {
+	public static AggregationPredicate gt(String key, Comparable value) {
 		return new Gt(key, value);
 	}
 
-	public static PredicateDef lt(String key, Comparable value) {
+	public static AggregationPredicate lt(String key, Comparable value) {
 		return new Lt(key, value);
 	}
 
-	public static PredicateDef has(String key) {
+	public static AggregationPredicate has(String key) {
 		return new Has(key);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static PredicateDef in(String key, Collection values) {
+	public static AggregationPredicate in(String key, Collection values) {
 		return values.size() == 1 ? new Eq(key, values.toArray()[0]) : new In(key, new TreeSet(values));
 	}
 
 	@SuppressWarnings("unchecked")
-	public static PredicateDef in(String key, Comparable... values) {
+	public static AggregationPredicate in(String key, Comparable... values) {
 		return values.length == 1 ? new Eq(key, values[0]) : new In(key, new TreeSet(List.of(values)));
 	}
 
-	public static PredicateDef regexp(String key, @Language("RegExp") String pattern) {
+	public static AggregationPredicate regexp(String key, @Language("RegExp") String pattern) {
 		return new RegExp(key, Pattern.compile(pattern));
 	}
 
-	public static PredicateDef regexp(String key, Pattern pattern) {
+	public static AggregationPredicate regexp(String key, Pattern pattern) {
 		return new RegExp(key, pattern);
 	}
 
-	public static <C extends Comparable<C>> PredicateDef between(String key, Comparable from, Comparable to) {
+	public static <C extends Comparable<C>> AggregationPredicate between(String key, Comparable from, Comparable to) {
 		return new Between(key, from, to);
 	}
 
@@ -570,11 +570,11 @@ public class AggregationPredicates {
 		return fields.containsKey(key) ? fields.get(key).toInternalValue(value) : value;
 	}
 
-	public static RangeScan toRangeScan(PredicateDef predicate, List<String> primaryKey, Map<String, FieldType> fields) {
+	public static RangeScan toRangeScan(AggregationPredicate predicate, List<String> primaryKey, Map<String, FieldType> fields) {
 		predicate = predicate.simplify();
 		if (predicate == alwaysFalse())
 			return RangeScan.noScan();
-		List<PredicateDef> conjunctions = new ArrayList<>();
+		List<AggregationPredicate> conjunctions = new ArrayList<>();
 		if (predicate instanceof And and) {
 			conjunctions.addAll(and.predicates);
 		} else {
@@ -587,7 +587,7 @@ public class AggregationPredicates {
 		L:
 		for (String key : primaryKey) {
 			for (int j = 0; j < conjunctions.size(); j++) {
-				PredicateDef conjunction = conjunctions.get(j);
+				AggregationPredicate conjunction = conjunctions.get(j);
 				if (conjunction instanceof Eq eq && eq.key.equals(key)) {
 					conjunctions.remove(j);
 					from.add(toInternalValue(fields, eq.key, eq.value));

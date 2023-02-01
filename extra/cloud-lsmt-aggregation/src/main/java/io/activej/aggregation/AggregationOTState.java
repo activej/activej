@@ -19,8 +19,8 @@ package io.activej.aggregation;
 import io.activej.aggregation.RangeTree.Segment;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates.RangeScan;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.common.Utils;
 import io.activej.ot.OTState;
 import org.jetbrains.annotations.Nullable;
@@ -456,7 +456,7 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 		return true;
 	}
 
-	public List<AggregationChunk> findChunks(PredicateDef predicate, List<String> fields) {
+	public List<AggregationChunk> findChunks(AggregationPredicate predicate, List<String> fields) {
 		RangeScan rangeScan = toRangeScan(predicate, aggregation.getKeys(), aggregation.getKeyTypes());
 		if (rangeScan.isNoScan())
 			return List.of();

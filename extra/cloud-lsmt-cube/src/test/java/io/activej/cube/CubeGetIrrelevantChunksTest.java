@@ -2,8 +2,8 @@ package io.activej.cube;
 
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
@@ -44,9 +44,9 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	private static final LocalDate LOWER_DATE_BOUNDARY = LocalDate.of(2020, Month.JULY, 31);
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
-	private static final PredicateDef DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
+	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 	private static final int LOWER_NUMBER_BOUNDARY = 50;
-	private static final PredicateDef ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
+	private static final AggregationPredicate ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
 	private IAggregationChunkStorage<Long> chunkStorage;

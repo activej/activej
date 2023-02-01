@@ -17,7 +17,7 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
@@ -31,7 +31,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class RegExp implements PredicateDef {
+public final class RegExp implements AggregationPredicate {
 	public final String key;
 	public final Pattern regexp;
 
@@ -41,7 +41,7 @@ public final class RegExp implements PredicateDef {
 	}
 
 	@Override
-	public PredicateDef simplify() {
+	public AggregationPredicate simplify() {
 		return this;
 	}
 

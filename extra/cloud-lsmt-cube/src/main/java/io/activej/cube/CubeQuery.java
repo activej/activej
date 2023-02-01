@@ -16,8 +16,8 @@
 
 package io.activej.cube;
 
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.common.builder.AbstractBuilder;
 
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ import java.util.Set;
 public final class CubeQuery {
 	private Set<String> attributes = new LinkedHashSet<>();
 	private Set<String> measures = new LinkedHashSet<>();
-	private PredicateDef where = AggregationPredicates.alwaysTrue();
-	private PredicateDef having = AggregationPredicates.alwaysTrue();
+	private AggregationPredicate where = AggregationPredicates.alwaysTrue();
+	private AggregationPredicate having = AggregationPredicates.alwaysTrue();
 	private Integer limit = null;
 	private Integer offset = null;
 	private List<Ordering> orderings = new ArrayList<>();
@@ -67,13 +67,13 @@ public final class CubeQuery {
 			return withAttributes(List.of(attributes));
 		}
 
-		public Builder withWhere(PredicateDef where) {
+		public Builder withWhere(AggregationPredicate where) {
 			checkNotBuilt(this);
 			CubeQuery.this.where = where;
 			return this;
 		}
 
-		public Builder withHaving(PredicateDef having) {
+		public Builder withHaving(AggregationPredicate having) {
 			checkNotBuilt(this);
 			CubeQuery.this.having = having;
 			return this;
@@ -137,7 +137,7 @@ public final class CubeQuery {
 		return measures;
 	}
 
-	public PredicateDef getWhere() {
+	public AggregationPredicate getWhere() {
 		return where;
 	}
 
@@ -145,7 +145,7 @@ public final class CubeQuery {
 		return orderings;
 	}
 
-	public PredicateDef getHaving() {
+	public AggregationPredicate getHaving() {
 		return having;
 	}
 

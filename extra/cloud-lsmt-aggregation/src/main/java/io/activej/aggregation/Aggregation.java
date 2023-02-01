@@ -21,8 +21,8 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
@@ -424,7 +424,7 @@ public final class Aggregation extends AbstractReactive
 
 	private <R, S> StreamSupplier<R> consolidatedSupplier(List<String> queryKeys,
 			List<String> measures, Class<R> resultClass,
-			PredicateDef where,
+			AggregationPredicate where,
 			List<AggregationChunk> individualChunks,
 			DefiningClassLoader queryClassLoader) {
 		QueryPlan plan = createPlan(individualChunks, measures);
@@ -519,7 +519,7 @@ public final class Aggregation extends AbstractReactive
 				.transformWith((StreamStats<R>) stats.mergeReducerOutput);
 	}
 
-	private <T> StreamSupplier<T> sequenceStream(PredicateDef where,
+	private <T> StreamSupplier<T> sequenceStream(AggregationPredicate where,
 			List<AggregationChunk> individualChunks, Class<T> sequenceClass,
 			DefiningClassLoader queryClassLoader) {
 		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
@@ -537,7 +537,7 @@ public final class Aggregation extends AbstractReactive
 		});
 	}
 
-	private <T> StreamSupplier<T> chunkReaderWithFilter(PredicateDef where, AggregationChunk chunk,
+	private <T> StreamSupplier<T> chunkReaderWithFilter(AggregationPredicate where, AggregationChunk chunk,
 			Class<T> chunkRecordClass, DefiningClassLoader queryClassLoader) {
 		return StreamSupplier.ofPromise(
 						aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
@@ -548,7 +548,7 @@ public final class Aggregation extends AbstractReactive
 	}
 
 	private <T> Predicate<T> createPredicate(Class<T> chunkRecordClass,
-			PredicateDef where, DefiningClassLoader classLoader) {
+			AggregationPredicate where, DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, chunkRecordClass, where),
 				() -> ClassBuilder.builder(Predicate.class)

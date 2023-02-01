@@ -4,8 +4,8 @@ import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
@@ -353,9 +353,9 @@ public final class CubeTest {
 
 	@Test
 	public void testAggregationPredicate() {
-		PredicateDef predicate;
-		PredicateDef query;
-		PredicateDef intersection;
+		AggregationPredicate predicate;
+		AggregationPredicate query;
+		AggregationPredicate intersection;
 
 		predicate = AggregationPredicates.alwaysTrue();
 		query = AggregationPredicates.and(AggregationPredicates.eq("dimensionA", 1), AggregationPredicates.eq("dimensionB", 2)).simplify();

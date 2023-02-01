@@ -22,8 +22,8 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
@@ -152,9 +152,9 @@ public final class Cube extends AbstractReactive
 	public static final class AggregationContainer {
 		private final Aggregation aggregation;
 		private final List<String> measures;
-		private final PredicateDef predicate;
+		private final AggregationPredicate predicate;
 
-		private AggregationContainer(Aggregation aggregation, List<String> measures, PredicateDef predicate) {
+		private AggregationContainer(Aggregation aggregation, List<String> measures, AggregationPredicate predicate) {
 			this.aggregation = aggregation;
 			this.measures = measures;
 			this.predicate = predicate;
@@ -170,7 +170,7 @@ public final class Cube extends AbstractReactive
 		private final String id;
 		private final List<String> dimensions = new ArrayList<>();
 		private final List<String> measures = new ArrayList<>();
-		private PredicateDef predicate = AggregationPredicates.alwaysTrue();
+		private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
 		private final List<String> partitioningKey = new ArrayList<>();
 		private int chunkSize;
 		private int reducerBufferSize;
@@ -207,7 +207,7 @@ public final class Cube extends AbstractReactive
 			return withMeasures(List.of(measures));
 		}
 
-		public AggregationConfig withPredicate(PredicateDef predicate) {
+		public AggregationConfig withPredicate(AggregationPredicate predicate) {
 			this.predicate = predicate;
 			return this;
 		}
@@ -511,13 +511,13 @@ public final class Cube extends AbstractReactive
 		for (Entry<String, AggregationContainer> entry : aggregations.entrySet()) {
 			AggregationContainer container = entry.getValue();
 			Aggregation aggregation = container.aggregation;
-			PredicateDef containerPredicate = container.predicate;
+			AggregationPredicate containerPredicate = container.predicate;
 			AggregationStructure structure = aggregation.getStructure();
 			List<String> keys = aggregation.getKeys();
 			for (AggregationChunk chunk : aggregation.getState().getChunks().values()) {
 				PrimaryKey minPrimaryKey = chunk.getMinPrimaryKey();
 				PrimaryKey maxPrimaryKey = chunk.getMaxPrimaryKey();
-				PredicateDef chunkPredicate = AggregationPredicates.alwaysTrue();
+				AggregationPredicate chunkPredicate = AggregationPredicates.alwaysTrue();
 				for (int i = 0; i < keys.size(); i++) {
 					String key = keys.get(i);
 					FieldType keyType = structure.getKeyType(key);
@@ -530,7 +530,7 @@ public final class Cube extends AbstractReactive
 						break;
 					}
 				}
-				PredicateDef intersection = AggregationPredicates.and(chunkPredicate, containerPredicate).simplify();
+				AggregationPredicate intersection = AggregationPredicates.and(chunkPredicate, containerPredicate).simplify();
 				if (intersection == AggregationPredicates.alwaysFalse()) {
 					irrelevantChunks.computeIfAbsent(entry.getKey(), $ -> new HashSet<>()).add(chunk);
 				}
@@ -562,7 +562,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass,
-			PredicateDef predicate) {
+			AggregationPredicate predicate) {
 		return logStreamConsumer(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass), predicate);
 	}
 
@@ -571,7 +571,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
-			PredicateDef predicate) {
+			AggregationPredicate predicate) {
 		checkInReactorThread(this);
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
 				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
@@ -581,7 +581,7 @@ public final class Cube extends AbstractReactive
 		return consume(inputClass, AggregationPredicates.alwaysTrue());
 	}
 
-	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, PredicateDef predicate) {
+	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, AggregationPredicate predicate) {
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass), predicate);
 	}
 
@@ -594,7 +594,7 @@ public final class Cube extends AbstractReactive
 	 * @return consumer for streaming data to cube
 	 */
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
-			PredicateDef dataPredicate) {
+			AggregationPredicate dataPredicate) {
 		checkInReactorThread(this);
 		logger.info("Started consuming data. Dimensions: {}. Measures: {}", dimensionFields.keySet(), measureFields.keySet());
 
@@ -605,13 +605,13 @@ public final class Cube extends AbstractReactive
 		});
 
 		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
-		Map<String, PredicateDef> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
+		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.size() == 0) {
 			throw new IllegalArgumentException(format("No compatible aggregation for " +
 					"dimensions fields: %s, measureFields: %s", dimensionFields, measureFields));
 		}
 
-		for (Entry<String, PredicateDef> aggregationToDataInputFilterPredicate : compatibleAggregations.entrySet()) {
+		for (Entry<String, AggregationPredicate> aggregationToDataInputFilterPredicate : compatibleAggregations.entrySet()) {
 			String aggregationId = aggregationToDataInputFilterPredicate.getKey();
 			AggregationContainer aggregationContainer = aggregations.get(aggregationToDataInputFilterPredicate.getKey());
 			Aggregation aggregation = aggregationContainer.aggregation;
@@ -620,7 +620,7 @@ public final class Cube extends AbstractReactive
 			Map<String, String> aggregationKeyFields = entriesToMap(filterEntryKeys(dimensionFields.entrySet().stream(), keys::contains));
 			Map<String, String> aggregationMeasureFields = entriesToMap(filterEntryKeys(measureFields.entrySet().stream(), aggregationContainer.measures::contains));
 
-			PredicateDef dataInputFilterPredicate = aggregationToDataInputFilterPredicate.getValue();
+			AggregationPredicate dataInputFilterPredicate = aggregationToDataInputFilterPredicate.getValue();
 			StreamSupplier<T> output = streamSplitter.newOutput();
 			if (!dataInputFilterPredicate.equals(AggregationPredicates.alwaysTrue())) {
 				Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate, classLoader, fieldTypes);
@@ -633,11 +633,11 @@ public final class Cube extends AbstractReactive
 		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().promise().map(CubeDiff::of));
 	}
 
-	Map<String, PredicateDef> getCompatibleAggregationsForDataInput(Map<String, String> dimensionFields,
+	Map<String, AggregationPredicate> getCompatibleAggregationsForDataInput(Map<String, String> dimensionFields,
 			Map<String, String> measureFields,
-			PredicateDef predicate) {
-		PredicateDef dataPredicate = predicate.simplify();
-		Map<String, PredicateDef> aggregationToDataInputFilterPredicate = new HashMap<>();
+			AggregationPredicate predicate) {
+		AggregationPredicate dataPredicate = predicate.simplify();
+		Map<String, AggregationPredicate> aggregationToDataInputFilterPredicate = new HashMap<>();
 		for (Entry<String, AggregationContainer> aggregationContainer : aggregations.entrySet()) {
 			AggregationContainer container = aggregationContainer.getValue();
 			Aggregation aggregation = container.aggregation;
@@ -648,9 +648,9 @@ public final class Cube extends AbstractReactive
 			Map<String, String> aggregationMeasureFields = entriesToMap(filterEntryKeys(measureFields.entrySet().stream(), container.measures::contains));
 			if (aggregationMeasureFields.isEmpty()) continue;
 
-			PredicateDef containerPredicate = container.predicate.simplify();
+			AggregationPredicate containerPredicate = container.predicate.simplify();
 
-			PredicateDef intersection = AggregationPredicates.and(containerPredicate, dataPredicate).simplify();
+			AggregationPredicate intersection = AggregationPredicates.and(containerPredicate, dataPredicate).simplify();
 			if (AggregationPredicates.alwaysFalse().equals(intersection)) continue;
 
 			if (intersection.equals(dataPredicate)) {
@@ -664,7 +664,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	static Predicate createFilterPredicate(Class<?> inputClass,
-			PredicateDef predicate,
+			AggregationPredicate predicate,
 			DefiningClassLoader classLoader,
 			Map<String, FieldType> keyTypes) {
 		return classLoader.ensureClassAndCreateInstance(
@@ -683,12 +683,12 @@ public final class Cube extends AbstractReactive
 	 * @param resultClass class of output records
 	 * @return supplier that streams query results
 	 */
-	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, PredicateDef where,
+	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
 			Class<T> resultClass) {
 		return queryRawStream(dimensions, storedMeasures, where, resultClass, classLoader);
 	}
 
-	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, PredicateDef where,
+	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
 			Class<T> resultClass, DefiningClassLoader queryClassLoader) {
 
 		List<AggregationContainer> compatibleAggregations = getCompatibleAggregationsForQuery(dimensions, storedMeasures, where);
@@ -696,7 +696,7 @@ public final class Cube extends AbstractReactive
 		return queryRawStream(dimensions, storedMeasures, where, resultClass, queryClassLoader, compatibleAggregations);
 	}
 
-	private <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, PredicateDef where,
+	private <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
 			Class<T> resultClass, DefiningClassLoader queryClassLoader,
 			List<AggregationContainer> compatibleAggregations) {
 		checkInReactorThread(this);
@@ -771,7 +771,7 @@ public final class Cube extends AbstractReactive
 	@VisibleForTesting
 	List<AggregationContainer> getCompatibleAggregationsForQuery(Collection<String> dimensions,
 			Collection<String> storedMeasures,
-			PredicateDef where) {
+			AggregationPredicate where) {
 		where = where.simplify();
 		List<String> allDimensions = Stream.concat(dimensions.stream(), where.getDimensions().stream()).toList();
 
@@ -782,7 +782,7 @@ public final class Cube extends AbstractReactive
 
 			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).toList();
 			if (compatibleMeasures.isEmpty()) continue;
-			PredicateDef intersection = AggregationPredicates.and(where, aggregationContainer.predicate).simplify();
+			AggregationPredicate intersection = AggregationPredicates.and(where, aggregationContainer.predicate).simplify();
 
 			if (!intersection.equals(where)) continue;
 			compatibleAggregations.add(aggregationContainer);
@@ -911,8 +911,8 @@ public final class Cube extends AbstractReactive
 		DefiningClassLoader queryClassLoader;
 		CubeQuery query;
 
-		PredicateDef queryPredicate;
-		PredicateDef queryHaving;
+		AggregationPredicate queryPredicate;
+		AggregationPredicate queryHaving;
 
 		List<AggregationContainer> compatibleAggregations = new ArrayList<>();
 		Map<String, Object> fullySpecifiedDimensions;

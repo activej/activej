@@ -41,9 +41,9 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateEqSimplification() {
-		PredicateDef expected = eq("x", 10);
-		PredicateDef actual = and(notEq("x", 12), eq("x", 10));
-		PredicateDef actual2 = and(eq("x", 10), notEq("x", 12));
+		AggregationPredicate expected = eq("x", 10);
+		AggregationPredicate actual = and(notEq("x", 12), eq("x", 10));
+		AggregationPredicate actual2 = and(eq("x", 10), notEq("x", 12));
 		assertEquals(expected, actual.simplify());
 		// test symmetry
 		assertEquals(expected, actual2.simplify());
@@ -63,12 +63,12 @@ public class PredicatesTest {
 
 	@Test
 	public void testUnnecessaryPredicates_areRemoved_whenSimplified() {
-		PredicateDef predicate = and(
+		AggregationPredicate predicate = and(
 				not(eq("x", 1)),
 				notEq("x", 1),
 				not(not(not(eq("x", 1)))),
 				eq("x", 2));
-		PredicateDef expected = and(notEq("x", 1), eq("x", 2)).simplify();
+		AggregationPredicate expected = and(notEq("x", 1), eq("x", 2)).simplify();
 		assertEquals(expected, predicate.simplify());
 	}
 
@@ -76,7 +76,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testBetweenPredicateAndPredicateNotEq() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", 6), between("x", 5, 10));
 		assertEquals(predicate, predicate.simplify());
 
@@ -95,7 +95,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGtAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(ge("x", 10), gt("x", 10));
 		assertEquals(gt("x", 10), predicate.simplify());
 
@@ -114,7 +114,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGeAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(ge("x", 10), ge("x", 11));
 		assertEquals(ge("x", 11), predicate.simplify());
 
@@ -127,7 +127,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGtAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(gt("x", 10), gt("x", 11));
 		assertEquals(gt("x", 11), predicate.simplify());
 
@@ -140,7 +140,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLeAndPredicateLe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(le("x", 10), le("x", 11));
 		assertEquals(le("x", 10), predicate.simplify());
 
@@ -153,7 +153,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLeAndPredicateLt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(le("x", 11), lt("x", 11));
 		assertEquals(lt("x", 11), predicate.simplify());
 
@@ -166,7 +166,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGeAndPredicateLe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(ge("x", 11), le("x", 11));
 		assertEquals(eq("x", 11), predicate.simplify());
 
@@ -179,7 +179,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLtAndPredicateLt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(lt("x", 11), lt("x", 11));
 		assertEquals(lt("x", 11), predicate.simplify());
 
@@ -192,7 +192,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLtAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(lt("x", 11), ge("x", 11));
 		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
@@ -205,7 +205,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLeAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(le("x", 11), gt("x", 11));
 		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
@@ -218,7 +218,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLtAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(lt("x", 11), gt("x", 11));
 		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
@@ -231,7 +231,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateLe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), le("x", -6));
 		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
@@ -250,7 +250,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateLt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), lt("x", -6));
 		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
@@ -269,7 +269,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), ge("x", -6));
 		assertEquals(between("x", -5, 5), predicate.simplify());
 
@@ -288,7 +288,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), gt("x", -6));
 		assertEquals(between("x", -5, 5), predicate.simplify());
 
@@ -307,7 +307,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateBetween() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), between("x", 5, 10));
 		assertEquals(eq("x", 5), predicate.simplify());
 
@@ -323,7 +323,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateLe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), le("x", -4));
 		assertEquals(predicate, predicate.simplify());
 
@@ -336,7 +336,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateLt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), lt("x", -4));
 		assertEquals(predicate, predicate.simplify());
 
@@ -349,7 +349,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), ge("x", -4));
 		assertEquals(ge("x", -4), predicate.simplify());
 
@@ -362,7 +362,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), gt("x", -4));
 		assertEquals(gt("x", -4), predicate.simplify());
 
@@ -375,7 +375,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateLe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), le("x", -4));
 		assertEquals(eq("x", -5), predicate.simplify());
 
@@ -388,7 +388,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateLt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), lt("x", -4));
 		assertEquals(eq("x", -5), predicate.simplify());
 
@@ -401,7 +401,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), ge("x", -4));
 		assertEquals(alwaysFalse(), predicate.simplify());
 
@@ -414,7 +414,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), gt("x", -4));
 		assertEquals(alwaysFalse(), predicate.simplify());
 
@@ -427,7 +427,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateNotEq() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), notEq("x", -5));
 		assertEquals(notEq("x", -5), predicate.simplify());
 
@@ -437,7 +437,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateIn() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", 0), in("x"));
 		assertEquals(alwaysFalse(), predicate.simplify());
 
@@ -456,7 +456,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateInAndPredicateHas() {
-		PredicateDef predicate, predicateHas, predicateNotEq, predicateIn;
+		AggregationPredicate predicate, predicateHas, predicateNotEq, predicateIn;
 		predicateHas = has("x");
 		predicateNotEq = notEq("x", 0);
 
@@ -475,7 +475,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateEq() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), eq("x", 2));
 		assertEquals(eq("x", 2), predicate.simplify());
 
@@ -488,7 +488,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateIn() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), in("x", 2));
 		assertEquals(eq("x", 2), predicate.simplify());
 
@@ -510,7 +510,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateLe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), le("x", 2));
 		assertEquals(in("x", 1, 2), predicate.simplify());
 
@@ -529,7 +529,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateLt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), lt("x", 2));
 		assertEquals(in("x", 1), predicate.simplify());
 
@@ -548,7 +548,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateGe() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), ge("x", 2));
 		assertEquals(in("x", 2, 3, 5), predicate.simplify());
 
@@ -570,7 +570,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateGt() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), gt("x", 2));
 		assertEquals(in("x", 3, 5), predicate.simplify());
 
@@ -621,7 +621,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateRegexpAndPredicateEq() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(regexp("x", "tes."), eq("x", "test"));
 		assertEquals(eq("x", "test"), predicate.simplify());
 
@@ -637,7 +637,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateRegexpAndPredicateNotEq() {
-		PredicateDef predicate;
+		AggregationPredicate predicate;
 		predicate = and(regexp("x", "tes."), notEq("x", "test"));
 		assertEquals(predicate, predicate.simplify());
 
@@ -684,7 +684,7 @@ public class PredicatesTest {
 		assertTrue(matcher.match(has("other")));
 	}
 
-	private void testMatches(Matcher matcher, PredicateDef belongPredicate, PredicateDef belongOtherPredicate) {
+	private void testMatches(Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate) {
 
 		assertTrue(matcher.match(belongPredicate));
 		assertTrue(matcher.match(and(
@@ -720,7 +720,7 @@ public class PredicatesTest {
 
 	@SuppressWarnings("unchecked")
 	private boolean matches(Record record, String field, @Language("RegExp") String pattern) {
-		PredicateDef predicate = AggregationPredicates.regexp(field, pattern);
+		AggregationPredicate predicate = AggregationPredicates.regexp(field, pattern);
 		return ClassBuilder.builder(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
 						predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
@@ -757,14 +757,14 @@ public class PredicatesTest {
 	}
 
 	private static final class Matcher {
-		private final PredicateDef matchPredicate;
+		private final AggregationPredicate matchPredicate;
 
-		private Matcher(PredicateDef predicate) {
+		private Matcher(AggregationPredicate predicate) {
 			this.matchPredicate = predicate.simplify();
 		}
 
-		private boolean match(PredicateDef predicate) {
-			PredicateDef simplified = predicate.simplify();
+		private boolean match(AggregationPredicate predicate) {
+			AggregationPredicate simplified = predicate.simplify();
 			return simplified.equals(and(matchPredicate, simplified).simplify());
 		}
 	}

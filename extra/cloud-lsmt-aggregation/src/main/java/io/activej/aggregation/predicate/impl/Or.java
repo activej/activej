@@ -17,8 +17,8 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
@@ -28,18 +28,18 @@ import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.common.Utils.first;
 
 @ExposedInternals
-public final class Or implements PredicateDef {
-	public final List<PredicateDef> predicates;
+public final class Or implements AggregationPredicate {
+	public final List<AggregationPredicate> predicates;
 
-	public Or(List<PredicateDef> predicates) {
+	public Or(List<AggregationPredicate> predicates) {
 		this.predicates = predicates;
 	}
 
 	@Override
-	public PredicateDef simplify() {
-		Set<PredicateDef> simplifiedPredicates = new LinkedHashSet<>();
-		for (PredicateDef predicate : predicates) {
-			PredicateDef simplified = predicate.simplify();
+	public AggregationPredicate simplify() {
+		Set<AggregationPredicate> simplifiedPredicates = new LinkedHashSet<>();
+		for (AggregationPredicate predicate : predicates) {
+			AggregationPredicate simplified = predicate.simplify();
 			if (simplified instanceof Or or) {
 				simplifiedPredicates.addAll(or.predicates);
 			} else {
@@ -56,7 +56,7 @@ public final class Or implements PredicateDef {
 	@Override
 	public Set<String> getDimensions() {
 		Set<String> result = new HashSet<>();
-		for (PredicateDef predicate : predicates) {
+		for (AggregationPredicate predicate : predicates) {
 			result.addAll(predicate.getDimensions());
 		}
 		return result;
@@ -71,7 +71,7 @@ public final class Or implements PredicateDef {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		List<Expression> predicateDefs = new ArrayList<>();
-		for (PredicateDef predicate : predicates) {
+		for (AggregationPredicate predicate : predicates) {
 			predicateDefs.add(predicate.createPredicate(record, fields));
 		}
 		return or(predicateDefs);
@@ -96,7 +96,7 @@ public final class Or implements PredicateDef {
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(" OR ");
-		for (PredicateDef predicate : predicates)
+		for (AggregationPredicate predicate : predicates)
 			joiner.add(predicate != null ? predicate.toString() : null);
 		return "(" + joiner + ")";
 	}

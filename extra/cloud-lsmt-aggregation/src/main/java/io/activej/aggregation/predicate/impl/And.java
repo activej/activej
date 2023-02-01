@@ -17,9 +17,9 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.predicate.AggregationPredicates.PredicateSimplifierKey;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
@@ -32,18 +32,18 @@ import static io.activej.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.common.Utils.first;
 
 @ExposedInternals
-public final class And implements PredicateDef {
-	public final List<PredicateDef> predicates;
+public final class And implements AggregationPredicate {
+	public final List<AggregationPredicate> predicates;
 
-	public And(List<PredicateDef> predicates) {
+	public And(List<AggregationPredicate> predicates) {
 		this.predicates = predicates;
 	}
 
 	@Override
-	public PredicateDef simplify() {
-		Set<PredicateDef> simplifiedPredicates = new LinkedHashSet<>();
-		for (PredicateDef predicate : predicates) {
-			PredicateDef simplified = predicate.simplify();
+	public AggregationPredicate simplify() {
+		Set<AggregationPredicate> simplifiedPredicates = new LinkedHashSet<>();
+		for (AggregationPredicate predicate : predicates) {
+			AggregationPredicate simplified = predicate.simplify();
 			if (simplified instanceof And and) {
 				simplifiedPredicates.addAll(and.predicates);
 			} else {
@@ -53,11 +53,11 @@ public final class And implements PredicateDef {
 		boolean simplified;
 		do {
 			simplified = false;
-			Set<PredicateDef> newPredicates = new HashSet<>();
+			Set<AggregationPredicate> newPredicates = new HashSet<>();
 			L:
-			for (PredicateDef newPredicate : simplifiedPredicates) {
-				for (PredicateDef simplifiedPredicate : newPredicates) {
-					PredicateDef maybeSimplified = simplifyAnd(newPredicate, simplifiedPredicate);
+			for (AggregationPredicate newPredicate : simplifiedPredicates) {
+				for (AggregationPredicate simplifiedPredicate : newPredicates) {
+					AggregationPredicate maybeSimplified = simplifyAnd(newPredicate, simplifiedPredicate);
 					if (maybeSimplified != null) {
 						newPredicates.remove(simplifiedPredicate);
 						newPredicates.add(maybeSimplified);
@@ -78,11 +78,11 @@ public final class And implements PredicateDef {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static @Nullable PredicateDef simplifyAnd(PredicateDef left, PredicateDef right) {
+	private static @Nullable AggregationPredicate simplifyAnd(AggregationPredicate left, AggregationPredicate right) {
 		if (left.equals(right))
 			return left;
 		PredicateSimplifierKey<?, ?> key = new PredicateSimplifierKey<>(left.getClass(), right.getClass());
-		AggregationPredicates.PredicateSimplifier<PredicateDef, PredicateDef> simplifier = (AggregationPredicates.PredicateSimplifier<PredicateDef, PredicateDef>) AggregationPredicates.simplifiers.get(key);
+		AggregationPredicates.PredicateSimplifier<AggregationPredicate, AggregationPredicate> simplifier = (AggregationPredicates.PredicateSimplifier<AggregationPredicate, AggregationPredicate>) AggregationPredicates.simplifiers.get(key);
 		if (simplifier == null)
 			return null;
 		return simplifier.simplifyAnd(left, right);
@@ -91,7 +91,7 @@ public final class And implements PredicateDef {
 	@Override
 	public Set<String> getDimensions() {
 		Set<String> result = new HashSet<>();
-		for (PredicateDef predicate : predicates) {
+		for (AggregationPredicate predicate : predicates) {
 			result.addAll(predicate.getDimensions());
 		}
 		return result;
@@ -100,7 +100,7 @@ public final class And implements PredicateDef {
 	@Override
 	public Map<String, Object> getFullySpecifiedDimensions() {
 		Map<String, Object> result = new HashMap<>();
-		for (PredicateDef predicate : predicates) {
+		for (AggregationPredicate predicate : predicates) {
 			result.putAll(predicate.getFullySpecifiedDimensions());
 		}
 		return result;
@@ -110,7 +110,7 @@ public final class And implements PredicateDef {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		List<Expression> predicateDefs = new ArrayList<>();
-		for (PredicateDef predicate : predicates) {
+		for (AggregationPredicate predicate : predicates) {
 			predicateDefs.add(predicate.createPredicate(record, fields));
 		}
 		return Expressions.and(predicateDefs);
@@ -135,7 +135,7 @@ public final class And implements PredicateDef {
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(" AND ");
-		for (PredicateDef predicate : predicates)
+		for (AggregationPredicate predicate : predicates)
 			joiner.add(predicate != null ? predicate.toString() : null);
 
 		return "(" + joiner + ")";

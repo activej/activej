@@ -1,6 +1,6 @@
 package io.activej.cube.http;
 
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
 
-public class PredicateDefJsonCodecTest {
+public class AggregationPredicateJsonCodecTest {
 	private static final PredicateDefJsonCodec CODEC = PredicateDefJsonCodec.create(
 			Map.of(
 					"campaign", int.class,
@@ -110,9 +110,9 @@ public class PredicateDefJsonCodecTest {
 		doTest(has("campaign"));
 	}
 
-	private static void doTest(PredicateDef predicate) {
+	private static void doTest(AggregationPredicate predicate) {
 		String json = toJson(CODEC, predicate);
-		PredicateDef decoded;
+		AggregationPredicate decoded;
 		try {
 			decoded = fromJson(CODEC, json);
 		} catch (MalformedDataException e) {

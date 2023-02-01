@@ -17,7 +17,7 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
@@ -27,11 +27,11 @@ import java.util.Set;
 import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class AlwaysTrue implements PredicateDef {
+public final class AlwaysTrue implements AggregationPredicate {
 	public static final AlwaysTrue INSTANCE = new AlwaysTrue();
 
 	@Override
-	public PredicateDef simplify() {
+	public AggregationPredicate simplify() {
 		return this;
 	}
 

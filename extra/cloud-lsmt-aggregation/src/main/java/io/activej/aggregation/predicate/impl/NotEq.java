@@ -17,7 +17,7 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
@@ -33,7 +33,7 @@ import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class NotEq implements PredicateDef {
+public final class NotEq implements AggregationPredicate {
 	public final String key;
 	public final Object value;
 
@@ -43,7 +43,7 @@ public final class NotEq implements PredicateDef {
 	}
 
 	@Override
-	public PredicateDef simplify() {
+	public AggregationPredicate simplify() {
 		return this;
 	}
 

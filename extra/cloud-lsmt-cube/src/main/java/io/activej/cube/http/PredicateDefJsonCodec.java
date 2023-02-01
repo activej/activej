@@ -20,7 +20,7 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.impl.*;
 import io.activej.aggregation.util.JsonCodec;
 
@@ -34,7 +34,7 @@ import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("unchecked")
-public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
+public final class PredicateDefJsonCodec implements JsonCodec<AggregationPredicate> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
 	public static final String EQ = "eq";
@@ -136,9 +136,9 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		writer.writeString(predicate.regexp.pattern());
 	}
 
-	private void write(JsonWriter writer, List<PredicateDef> predicates) {
+	private void write(JsonWriter writer, List<AggregationPredicate> predicates) {
 		for (int i = 0; i < predicates.size(); i++) {
-			PredicateDef p = predicates.get(i);
+			AggregationPredicate p = predicates.get(i);
 			write(writer, p);
 			if (i != predicates.size() - 1) {
 				writer.writeByte(COMMA);
@@ -152,7 +152,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 
 	@SuppressWarnings("NullableProblems")
 	@Override
-	public void write(JsonWriter writer, PredicateDef predicate) {
+	public void write(JsonWriter writer, AggregationPredicate predicate) {
 		if (predicate instanceof Eq predicateEq) {
 			writer.writeByte(OBJECT_START);
 			writeEq(writer, predicateEq);
@@ -219,9 +219,9 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private PredicateDef readObjectWithAlgebraOfSetsOperator(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readObjectWithAlgebraOfSetsOperator(JsonReader<?> reader) throws IOException {
 		if (reader.last() == OBJECT_END) return new And(List.of());
-		List<PredicateDef> predicates = new ArrayList<>();
+		List<AggregationPredicate> predicates = new ArrayList<>();
 
 		while (true) {
 			String[] fieldWithOperator = reader.readKey().split(SPACES);
@@ -230,7 +230,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			JsonCodec<Object> codec = attributeFormats.get(field);
 			if (codec == null) throw ParsingException.create("Could not decode: " + field, true);
 			Object value = codec.read(reader);
-			PredicateDef comparisonPredicate;
+			AggregationPredicate comparisonPredicate;
 			switch (operator) {
 				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new Eq(field, value);
 				case NOT_EQ_SIGN -> comparisonPredicate = new NotEq(field, value);
@@ -257,14 +257,14 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 	}
 
 	@Override
-	public PredicateDef read(JsonReader reader) throws IOException {
+	public AggregationPredicate read(JsonReader reader) throws IOException {
 		if (reader.last() == OBJECT_START) {
 			reader.getNextToken();
 			return readObjectWithAlgebraOfSetsOperator(reader);
 		} else if (reader.last() == ARRAY_START) {
 			reader.getNextToken();
 			String type = reader.readString();
-			PredicateDef result;
+			AggregationPredicate result;
 			byte next = reader.getNextToken();
 			if (next != COMMA) {
 				result = switch (type) {
@@ -305,7 +305,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return codec;
 	}
 
-	private PredicateDef readEq(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readEq(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
@@ -315,7 +315,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new Eq(attribute, value);
 	}
 
-	private PredicateDef readNotEq(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readNotEq(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
@@ -325,22 +325,22 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new NotEq(attribute, value);
 	}
 
-	private PredicateDef readGe(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readGe(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return new Ge(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private PredicateDef readGt(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readGt(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return new Gt(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private PredicateDef readLe(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readLe(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return new Le(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private PredicateDef readLt(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readLt(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return new Lt(attributeAndValue.attribute, attributeAndValue.value);
 	}
@@ -355,7 +355,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new AttributeAndValue(attribute, value);
 	}
 
-	private PredicateDef readIn(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readIn(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		SortedSet<Object> result = new TreeSet<>();
@@ -370,7 +370,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new In(attribute, result);
 	}
 
-	private PredicateDef readBetween(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readBetween(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
@@ -383,7 +383,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new Between(attribute, from, to);
 	}
 
-	private PredicateDef readRegexp(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readRegexp(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		reader.comma();
 		reader.getNextToken();
@@ -398,8 +398,8 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new RegExp(attribute, pattern);
 	}
 
-	private PredicateDef readAnd(JsonReader<?> reader) throws IOException {
-		List<PredicateDef> result = new ArrayList<>();
+	private AggregationPredicate readAnd(JsonReader<?> reader) throws IOException {
+		List<AggregationPredicate> result = new ArrayList<>();
 		result.add(read(reader));
 		while (reader.getNextToken() == ',') {
 			reader.getNextToken();
@@ -408,8 +408,8 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new And(result);
 	}
 
-	private PredicateDef readOr(JsonReader<?> reader) throws IOException {
-		List<PredicateDef> result = new ArrayList<>();
+	private AggregationPredicate readOr(JsonReader<?> reader) throws IOException {
+		List<AggregationPredicate> result = new ArrayList<>();
 		result.add(read(reader));
 		while (reader.getNextToken() == ',') {
 			reader.getNextToken();
@@ -418,13 +418,13 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new Or(result);
 	}
 
-	private PredicateDef readNot(JsonReader<?> reader) throws IOException {
-		PredicateDef predicate = read(reader);
+	private AggregationPredicate readNot(JsonReader<?> reader) throws IOException {
+		AggregationPredicate predicate = read(reader);
 		reader.getNextToken();
 		return new Not(predicate);
 	}
 
-	private PredicateDef readHas(JsonReader<?> reader) throws IOException {
+	private AggregationPredicate readHas(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		reader.getNextToken();
 		return new Has(attribute);

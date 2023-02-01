@@ -16,8 +16,8 @@
 
 package io.activej.aggregation;
 
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.common.builder.AbstractBuilder;
 
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import static java.util.Collections.unmodifiableList;
 public final class AggregationQuery {
 	private final List<String> keys = new ArrayList<>();
 	private final List<String> measures = new ArrayList<>();
-	private PredicateDef predicate = AggregationPredicates.alwaysTrue();
+	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
 
 	private AggregationQuery() {
 	}
@@ -43,7 +43,7 @@ public final class AggregationQuery {
 		this.measures.addAll(measures);
 	}
 
-	private AggregationQuery(List<String> keys, List<String> measures, PredicateDef predicate) {
+	private AggregationQuery(List<String> keys, List<String> measures, AggregationPredicate predicate) {
 		this.keys.addAll(keys);
 		this.measures.addAll(measures);
 		this.predicate = predicate;
@@ -92,13 +92,13 @@ public final class AggregationQuery {
 			return this;
 		}
 
-		public Builder withPredicate(PredicateDef predicate) {
+		public Builder withPredicate(AggregationPredicate predicate) {
 			checkNotBuilt(this);
 			AggregationQuery.this.predicate = predicate;
 			return this;
 		}
 
-		public Builder withPredicates(List<PredicateDef> predicates) {
+		public Builder withPredicates(List<AggregationPredicate> predicates) {
 			checkNotBuilt(this);
 			AggregationQuery.this.predicate = AggregationPredicates.and(predicates);
 			return this;
@@ -125,7 +125,7 @@ public final class AggregationQuery {
 		return result;
 	}
 
-	public PredicateDef getPredicate() {
+	public AggregationPredicate getPredicate() {
 		return predicate;
 	}
 

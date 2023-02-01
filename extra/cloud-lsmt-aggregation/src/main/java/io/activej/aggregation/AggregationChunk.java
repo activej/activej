@@ -16,7 +16,7 @@
 
 package io.activej.aggregation;
 
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,8 +83,8 @@ public class AggregationChunk {
 		return Objects.hash(chunkId, measures, minPrimaryKey, maxPrimaryKey, count);
 	}
 
-	public PredicateDef toPredicate(List<String> primaryKey) {
-		List<PredicateDef> predicates = new ArrayList<>();
+	public AggregationPredicate toPredicate(List<String> primaryKey) {
+		List<AggregationPredicate> predicates = new ArrayList<>();
 		for (int i = 0; i < primaryKey.size(); i++) {
 			String key = primaryKey.get(i);
 			Object from = minPrimaryKey.get(i);

@@ -17,7 +17,7 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.predicate.PredicateDef;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
@@ -31,7 +31,7 @@ import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class Between implements PredicateDef {
+public final class Between implements AggregationPredicate {
 	public final String key;
 	public final Comparable<Object> from;
 	public final Comparable<Object> to;
@@ -43,7 +43,7 @@ public final class Between implements PredicateDef {
 	}
 
 	@Override
-	public PredicateDef simplify() {
+	public AggregationPredicate simplify() {
 		return (from.compareTo(to) > 0) ? alwaysFalse() : (from.equals(to) ? eq(key, from) : this);
 	}
 

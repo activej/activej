@@ -17,8 +17,8 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
-import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
@@ -27,7 +27,7 @@ import java.util.*;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class In implements PredicateDef {
+public final class In implements AggregationPredicate {
 	public final String key;
 	public final SortedSet<Object> values;
 
@@ -37,7 +37,7 @@ public final class In implements PredicateDef {
 	}
 
 	@Override
-	public PredicateDef simplify() {
+	public AggregationPredicate simplify() {
 		return (values.iterator().hasNext()) ? this : AggregationPredicates.alwaysFalse();
 	}
 
