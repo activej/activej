@@ -1,7 +1,7 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.expression.impl.Expression_HashCode;
-import io.activej.codegen.expression.impl.Expression_ToString;
+import io.activej.codegen.expression.impl.HashCodeExpression;
+import io.activej.codegen.expression.impl.ToStringExpression;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -33,11 +33,11 @@ public class DynamicClassCreationExample {
 				.withMethod("int compareTo(Person)", comparableImpl("id", "name"))
 				.withMethod("equals", equalsImpl("id", "name"))
 				.withMethod("hash", hashCodeImpl("id", "name"))
-				.withMethod("hashOfPojo", Expression_HashCode.builder()
+				.withMethod("hashOfPojo", HashCodeExpression.builder()
 						.with(property(arg(0), "id"))
 						.with(property(arg(0), "name"))
 						.build())
-				.withMethod("toString", Expression_ToString.builder()
+				.withMethod("toString", ToStringExpression.builder()
 						.withField("id")
 						.with("name", property(self(), "name"))
 						.build())

@@ -32,7 +32,7 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.codegen.expression.impl.Expression_Compare;
+import io.activej.codegen.expression.impl.CompareExpression;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
@@ -1117,7 +1117,7 @@ public final class Cube extends AbstractReactive
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
 					() -> ClassBuilder.builder(Comparator.class)
 							.withMethod("compare", get(() -> {
-								Expression_Compare.Builder compareBuilder = Expression_Compare.builder();
+								CompareExpression.Builder compareBuilder = CompareExpression.builder();
 								for (Ordering ordering : query.getOrderings()) {
 									String field = ordering.getField();
 									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
