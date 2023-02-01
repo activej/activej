@@ -18,20 +18,24 @@ package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.AggregationPredicates.PredicateSimplifierKey;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static io.activej.codegen.expression.Expressions.or;
+import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.common.Utils.first;
 
 @ExposedInternals
-public final class PredicateDef_Or implements PredicateDef {
+public final class And implements PredicateDef {
 	private final List<PredicateDef> predicates;
 
-	public PredicateDef_Or(List<PredicateDef> predicates) {
+	public And(List<PredicateDef> predicates) {
 		this.predicates = predicates;
 	}
 
@@ -44,17 +48,48 @@ public final class PredicateDef_Or implements PredicateDef {
 		Set<PredicateDef> simplifiedPredicates = new LinkedHashSet<>();
 		for (PredicateDef predicate : predicates) {
 			PredicateDef simplified = predicate.simplify();
-			if (simplified instanceof PredicateDef_Or or) {
-				simplifiedPredicates.addAll(or.predicates);
+			if (simplified instanceof And and) {
+				simplifiedPredicates.addAll(and.predicates);
 			} else {
 				simplifiedPredicates.add(simplified);
 			}
 		}
+		boolean simplified;
+		do {
+			simplified = false;
+			Set<PredicateDef> newPredicates = new HashSet<>();
+			L:
+			for (PredicateDef newPredicate : simplifiedPredicates) {
+				for (PredicateDef simplifiedPredicate : newPredicates) {
+					PredicateDef maybeSimplified = simplifyAnd(newPredicate, simplifiedPredicate);
+					if (maybeSimplified != null) {
+						newPredicates.remove(simplifiedPredicate);
+						newPredicates.add(maybeSimplified);
+						simplified = true;
+						continue L;
+					}
+				}
+				newPredicates.add(newPredicate);
+			}
+			simplifiedPredicates = newPredicates;
+		} while (simplified);
+
 		return simplifiedPredicates.isEmpty() ?
-				AggregationPredicates.alwaysTrue() :
+				alwaysTrue() :
 				simplifiedPredicates.size() == 1 ?
 						first(simplifiedPredicates) :
-						AggregationPredicates.or(new ArrayList<>(simplifiedPredicates));
+						and(new ArrayList<>(simplifiedPredicates));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static @Nullable PredicateDef simplifyAnd(PredicateDef left, PredicateDef right) {
+		if (left.equals(right))
+			return left;
+		PredicateSimplifierKey<?, ?> key = new PredicateSimplifierKey<>(left.getClass(), right.getClass());
+		AggregationPredicates.PredicateSimplifier<PredicateDef, PredicateDef> simplifier = (AggregationPredicates.PredicateSimplifier<PredicateDef, PredicateDef>) AggregationPredicates.simplifiers.get(key);
+		if (simplifier == null)
+			return null;
+		return simplifier.simplifyAnd(left, right);
 	}
 
 	@Override
@@ -68,7 +103,11 @@ public final class PredicateDef_Or implements PredicateDef {
 
 	@Override
 	public Map<String, Object> getFullySpecifiedDimensions() {
-		return Map.of();
+		Map<String, Object> result = new HashMap<>();
+		for (PredicateDef predicate : predicates) {
+			result.putAll(predicate.getFullySpecifiedDimensions());
+		}
+		return result;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -78,7 +117,7 @@ public final class PredicateDef_Or implements PredicateDef {
 		for (PredicateDef predicate : predicates) {
 			predicateDefs.add(predicate.createPredicate(record, fields));
 		}
-		return or(predicateDefs);
+		return Expressions.and(predicateDefs);
 	}
 
 	@Override
@@ -86,7 +125,7 @@ public final class PredicateDef_Or implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Or that = (PredicateDef_Or) o;
+		And that = (And) o;
 
 		return new HashSet<>(predicates).equals(new HashSet<>(that.predicates));
 
@@ -99,9 +138,10 @@ public final class PredicateDef_Or implements PredicateDef {
 
 	@Override
 	public String toString() {
-		StringJoiner joiner = new StringJoiner(" OR ");
+		StringJoiner joiner = new StringJoiner(" AND ");
 		for (PredicateDef predicate : predicates)
 			joiner.add(predicate != null ? predicate.toString() : null);
+
 		return "(" + joiner + ")";
 	}
 }

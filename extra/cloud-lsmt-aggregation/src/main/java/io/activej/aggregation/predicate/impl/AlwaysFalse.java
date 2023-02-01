@@ -19,27 +19,16 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.codegen.expression.Expressions.property;
 import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class PredicateDef_Has implements PredicateDef {
-	private final String key;
-
-	public PredicateDef_Has(String key) {
-		this.key = key;
-	}
-
-	public String getKey() {
-		return key;
-	}
+public final class AlwaysFalse implements PredicateDef {
+	public static final AlwaysFalse INSTANCE = new AlwaysFalse();
 
 	@Override
 	public PredicateDef simplify() {
@@ -48,7 +37,7 @@ public final class PredicateDef_Has implements PredicateDef {
 
 	@Override
 	public Set<String> getDimensions() {
-		return Set.of(key);
+		return Set.of();
 	}
 
 	@Override
@@ -59,31 +48,11 @@ public final class PredicateDef_Has implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		if (!fields.containsKey(key)) return value(false);
-		Variable property = property(record, key.replace('.', '$'));
-		FieldType fieldType = fields.get(key);
-		return isNotNull(property, fieldType);
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		PredicateDef_Has that = (PredicateDef_Has) o;
-
-		return key.equals(that.key);
-	}
-
-	@Override
-	public int hashCode() {
-		int result = key.hashCode();
-		result = 31 * result;
-		return result;
+		return value(false);
 	}
 
 	@Override
 	public String toString() {
-		return "HAS " + key;
+		return "FALSE";
 	}
 }

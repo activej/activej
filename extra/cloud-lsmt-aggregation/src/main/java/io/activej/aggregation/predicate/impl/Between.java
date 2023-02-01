@@ -23,36 +23,40 @@ import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.isNull;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.codegen.expression.Expressions.or;
+import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_NotEq implements PredicateDef {
+public final class Between implements PredicateDef {
 	private final String key;
-	private final Object value;
+	private final Comparable<Object> from;
+	private final Comparable<Object> to;
 
-	public PredicateDef_NotEq(String key, Object value) {
+	public Between(String key, Comparable<Object> from, Comparable<Object> to) {
 		this.key = key;
-		this.value = value;
+		this.from = from;
+		this.to = to;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public Object getValue() {
-		return value;
+	public Comparable<Object> getFrom() {
+		return from;
+	}
+
+	public Comparable<Object> getTo() {
+		return to;
 	}
 
 	@Override
 	public PredicateDef simplify() {
-		return this;
+		return (from.compareTo(to) > 0) ? alwaysFalse() : (from.equals(to) ? eq(key, from) : this);
 	}
 
 	@Override
@@ -69,14 +73,9 @@ public final class PredicateDef_NotEq implements PredicateDef {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
-		Object internalValue = toInternalValue(fields, key, this.value);
-		FieldType fieldType = fields.get(key);
-		return internalValue == null ?
-				isNotNull(property, fieldType) :
-				or(
-						isNull(property, fieldType),
-						isNe(property, value(internalValue))
-				);
+		return and(isNotNull(property, fields.get(key)),
+				isGe(property, value(toInternalValue(fields, key, from))),
+				isLe(property, value(toInternalValue(fields, key, to))));
 	}
 
 	@Override
@@ -84,21 +83,24 @@ public final class PredicateDef_NotEq implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_NotEq that = (PredicateDef_NotEq) o;
+		Between that = (Between) o;
 
 		if (!key.equals(that.key)) return false;
-		return Objects.equals(value, that.value);
+		if (!from.equals(that.from)) return false;
+		return to.equals(that.to);
+
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + (value != null ? value.hashCode() : 0);
+		result = 31 * result + from.hashCode();
+		result = 31 * result + to.hashCode();
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return key + "!=" + value;
+		return "" + key + " BETWEEN " + from + " AND " + to;
 	}
 }

@@ -58,117 +58,117 @@ public class AggregationPredicates {
 	}
 
 	static {
-		PredicateSimplifier simplifierAlwaysFalse = (PredicateSimplifier<PredicateDef_AlwaysFalse, PredicateDef>) (left, right) -> left;
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_AlwaysFalse.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_AlwaysTrue.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Not.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Eq.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_NotEq.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Le.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Ge.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Lt.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Gt.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Has.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Between.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_RegExp.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_And.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_Or.class, simplifierAlwaysFalse);
-		register(PredicateDef_AlwaysFalse.class, PredicateDef_In.class, simplifierAlwaysFalse);
+		PredicateSimplifier simplifierAlwaysFalse = (PredicateSimplifier<AlwaysFalse, PredicateDef>) (left, right) -> left;
+		register(AlwaysFalse.class, AlwaysFalse.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, AlwaysTrue.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Not.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Eq.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, NotEq.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Le.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Ge.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Lt.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Gt.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Has.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Between.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, RegExp.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, And.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, Or.class, simplifierAlwaysFalse);
+		register(AlwaysFalse.class, In.class, simplifierAlwaysFalse);
 
-		PredicateSimplifier simplifierAlwaysTrue = (PredicateSimplifier<PredicateDef_AlwaysTrue, PredicateDef>) (left, right) -> right;
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_AlwaysTrue.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Not.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Eq.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_NotEq.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Le.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Ge.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Lt.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Gt.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Has.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Between.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_RegExp.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_And.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_Or.class, simplifierAlwaysTrue);
-		register(PredicateDef_AlwaysTrue.class, PredicateDef_In.class, simplifierAlwaysTrue);
+		PredicateSimplifier simplifierAlwaysTrue = (PredicateSimplifier<AlwaysTrue, PredicateDef>) (left, right) -> right;
+		register(AlwaysTrue.class, AlwaysTrue.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Not.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Eq.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, NotEq.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Le.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Ge.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Lt.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Gt.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Has.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Between.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, RegExp.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, And.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, Or.class, simplifierAlwaysTrue);
+		register(AlwaysTrue.class, In.class, simplifierAlwaysTrue);
 
-		PredicateSimplifier simplifierNot = (PredicateSimplifier<PredicateDef_Not, PredicateDef>) (left, right) -> {
+		PredicateSimplifier simplifierNot = (PredicateSimplifier<Not, PredicateDef>) (left, right) -> {
 			if (left.getPredicate().equals(right))
 				return alwaysFalse();
 			return null;
 		};
-		register(PredicateDef_Not.class, PredicateDef_Not.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Has.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Between.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_RegExp.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_And.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Or.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Ge.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Le.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Gt.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_Lt.class, simplifierNot);
-		register(PredicateDef_Not.class, PredicateDef_In.class, simplifierNot);
+		register(Not.class, Not.class, simplifierNot);
+		register(Not.class, Has.class, simplifierNot);
+		register(Not.class, Between.class, simplifierNot);
+		register(Not.class, RegExp.class, simplifierNot);
+		register(Not.class, And.class, simplifierNot);
+		register(Not.class, Or.class, simplifierNot);
+		register(Not.class, Ge.class, simplifierNot);
+		register(Not.class, Le.class, simplifierNot);
+		register(Not.class, Gt.class, simplifierNot);
+		register(Not.class, Lt.class, simplifierNot);
+		register(Not.class, In.class, simplifierNot);
 
-		register(PredicateDef_Has.class, PredicateDef_Has.class, (left, right) -> left.getKey().equals(right.getKey()) ? left : null);
-		PredicateSimplifier simplifierHas = (PredicateSimplifier<PredicateDef_Has, PredicateDef>) (left, right) -> right.getDimensions().contains(left.getKey()) ? right : null;
-		register(PredicateDef_Has.class, PredicateDef_Eq.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_NotEq.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_Le.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_Ge.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_Lt.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_Gt.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_Between.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_And.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_Or.class, simplifierHas);
-		register(PredicateDef_Has.class, PredicateDef_In.class, simplifierHas);
+		register(Has.class, Has.class, (left, right) -> left.getKey().equals(right.getKey()) ? left : null);
+		PredicateSimplifier simplifierHas = (PredicateSimplifier<Has, PredicateDef>) (left, right) -> right.getDimensions().contains(left.getKey()) ? right : null;
+		register(Has.class, Eq.class, simplifierHas);
+		register(Has.class, NotEq.class, simplifierHas);
+		register(Has.class, Le.class, simplifierHas);
+		register(Has.class, Ge.class, simplifierHas);
+		register(Has.class, Lt.class, simplifierHas);
+		register(Has.class, Gt.class, simplifierHas);
+		register(Has.class, Between.class, simplifierHas);
+		register(Has.class, And.class, simplifierHas);
+		register(Has.class, Or.class, simplifierHas);
+		register(Has.class, In.class, simplifierHas);
 
-		register(PredicateDef_Eq.class, PredicateDef_Eq.class, (left, right) -> {
+		register(Eq.class, Eq.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_NotEq.class, (left, right) -> {
+		register(Eq.class, NotEq.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (!left.getValue().equals(right.getValue()))
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_Le.class, (left, right) -> {
+		register(Eq.class, Le.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) >= 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_Ge.class, (left, right) -> {
+		register(Eq.class, Ge.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) <= 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_Lt.class, (left, right) -> {
+		register(Eq.class, Lt.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) > 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_Gt.class, (left, right) -> {
+		register(Eq.class, Gt.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) < 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_Between.class, (left, right) -> {
+		register(Eq.class, Between.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getFrom().compareTo(left.getValue()) <= 0 && right.getTo().compareTo(left.getValue()) >= 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_RegExp.class, (left, right) -> {
+		register(Eq.class, RegExp.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue() instanceof CharSequence sequence &&
@@ -176,7 +176,7 @@ public class AggregationPredicates {
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateDef_Eq.class, PredicateDef_In.class, (left, right) -> {
+		register(Eq.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValues().contains(left.getValue()))
@@ -184,14 +184,14 @@ public class AggregationPredicates {
 			return alwaysFalse();
 		});
 
-		register(PredicateDef_NotEq.class, PredicateDef_NotEq.class, (left, right) -> {
+		register(NotEq.class, NotEq.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().equals(right.getValue()))
 				return left;
 			return null;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_Le.class, (left, right) -> {
+		register(NotEq.class, Le.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) < 0)
@@ -200,7 +200,7 @@ public class AggregationPredicates {
 				return lt(left.getKey(), right.getValue());
 			return null;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_Ge.class, (left, right) -> {
+		register(NotEq.class, Ge.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) > 0)
@@ -209,21 +209,21 @@ public class AggregationPredicates {
 				return gt(left.getKey(), right.getValue());
 			return null;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_Lt.class, (left, right) -> {
+		register(NotEq.class, Lt.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) <= 0)
 				return right;
 			return null;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_Gt.class, (left, right) -> {
+		register(NotEq.class, Gt.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) >= 0)
 				return right;
 			return null;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_Between.class, (left, right) -> {
+		register(NotEq.class, Between.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getFrom().compareTo(left.getValue()) > 0 && right.getTo().compareTo(left.getValue()) > 0)
@@ -232,7 +232,7 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_RegExp.class, (left, right) -> {
+		register(NotEq.class, RegExp.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue() instanceof CharSequence sequence &&
@@ -240,7 +240,7 @@ public class AggregationPredicates {
 				return null;
 			return right;
 		});
-		register(PredicateDef_NotEq.class, PredicateDef_In.class, (left, right) -> {
+		register(NotEq.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (right.getValues().contains(left.getValue()))
@@ -248,14 +248,14 @@ public class AggregationPredicates {
 			return right;
 		});
 
-		register(PredicateDef_Le.class, PredicateDef_Le.class, (left, right) -> {
+		register(Le.class, Le.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) <= 0)
 				return right;
 			return left;
 		});
-		register(PredicateDef_Le.class, PredicateDef_Ge.class, (left, right) -> {
+		register(Le.class, Ge.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValue()) < 0)
@@ -266,21 +266,21 @@ public class AggregationPredicates {
 				return eq(left.getKey(), left.getValue());
 			return null;
 		});
-		register(PredicateDef_Le.class, PredicateDef_Lt.class, (left, right) -> {
+		register(Le.class, Lt.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) <= 0)
 				return right;
 			return left;
 		});
-		register(PredicateDef_Le.class, PredicateDef_Gt.class, (left, right) -> {
+		register(Le.class, Gt.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValue()) <= 0)
 				return alwaysFalse();
 			return null;
 		});
-		register(PredicateDef_Le.class, PredicateDef_Between.class, (left, right) -> {
+		register(Le.class, Between.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getFrom().compareTo(left.getValue()) > 0)
@@ -291,7 +291,7 @@ public class AggregationPredicates {
 				return right;
 			return between(right.getKey(), right.getFrom(), left.getValue()).simplify();
 		});
-		register(PredicateDef_Le.class, PredicateDef_In.class, (left, right) -> {
+		register(Le.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValues().last()) >= 0)
@@ -303,28 +303,28 @@ public class AggregationPredicates {
 			return in(left.getKey(), subset);
 		});
 
-		register(PredicateDef_Ge.class, PredicateDef_Ge.class, (left, right) -> {
+		register(Ge.class, Ge.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) >= 0)
 				return right;
 			return left;
 		});
-		register(PredicateDef_Ge.class, PredicateDef_Lt.class, (left, right) -> {
+		register(Ge.class, Lt.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) <= 0)
 				return alwaysFalse();
 			return null;
 		});
-		register(PredicateDef_Ge.class, PredicateDef_Gt.class, (left, right) -> {
+		register(Ge.class, Gt.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) >= 0)
 				return gt(right.getKey(), right.getValue());
 			return left;
 		});
-		register(PredicateDef_Ge.class, PredicateDef_Between.class, (left, right) -> {
+		register(Ge.class, Between.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getTo().compareTo(left.getValue()) < 0)
@@ -335,7 +335,7 @@ public class AggregationPredicates {
 				return right;
 			return between(right.getKey(), left.getValue(), right.getTo()).simplify();
 		});
-		register(PredicateDef_Ge.class, PredicateDef_In.class, (left, right) -> {
+		register(Ge.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValues().first()) <= 0)
@@ -345,21 +345,21 @@ public class AggregationPredicates {
 			return in(left.getKey(), new TreeSet(right.getValues().tailSet(left.getValue())));
 		});
 
-		register(PredicateDef_Lt.class, PredicateDef_Lt.class, (left, right) -> {
+		register(Lt.class, Lt.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) >= 0)
 				return left;
 			return right;
 		});
-		register(PredicateDef_Lt.class, PredicateDef_Gt.class, (left, right) -> {
+		register(Lt.class, Gt.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValue()) <= 0)
 				return alwaysFalse();
 			return null;
 		});
-		register(PredicateDef_Lt.class, PredicateDef_Between.class, (left, right) -> {
+		register(Lt.class, Between.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getFrom().compareTo(left.getValue()) >= 0)
@@ -368,7 +368,7 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
-		register(PredicateDef_Lt.class, PredicateDef_In.class, (left, right) -> {
+		register(Lt.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValues().last()) > 0)
@@ -378,14 +378,14 @@ public class AggregationPredicates {
 			return in(left.getKey(), new TreeSet(right.getValues().subSet(right.getValues().first(), left.getValue())));
 		});
 
-		register(PredicateDef_Gt.class, PredicateDef_Gt.class, (left, right) -> {
+		register(Gt.class, Gt.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getValue().compareTo(left.getValue()) >= 0)
 				return right;
 			return left;
 		});
-		register(PredicateDef_Gt.class, PredicateDef_Between.class, (left, right) -> {
+		register(Gt.class, Between.class, (left, right) -> {
 			if (!right.getKey().equals(left.getKey()))
 				return null;
 			if (right.getTo().compareTo(left.getValue()) <= 0)
@@ -394,7 +394,7 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
-		register(PredicateDef_Gt.class, PredicateDef_In.class, (left, right) -> {
+		register(Gt.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValue().compareTo(right.getValues().first()) < 0)
@@ -406,14 +406,14 @@ public class AggregationPredicates {
 			return in(right.getKey(), subset);
 		});
 
-		register(PredicateDef_Between.class, PredicateDef_Between.class, (left, right) -> {
+		register(Between.class, Between.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			Comparable from = left.getFrom().compareTo(right.getFrom()) >= 0 ? left.getFrom() : right.getFrom();
 			Comparable to = left.getTo().compareTo(right.getTo()) <= 0 ? left.getTo() : right.getTo();
 			return between(left.getKey(), from, to).simplify();
 		});
-		register(PredicateDef_Between.class, PredicateDef_In.class, (left, right) -> {
+		register(Between.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getFrom().compareTo(right.getValues().first()) > 0 && left.getTo().compareTo(right.getValues().last()) > 0)
@@ -421,7 +421,7 @@ public class AggregationPredicates {
 			return null;
 		});
 
-		register(PredicateDef_In.class, PredicateDef_In.class, (left, right) -> {
+		register(In.class, In.class, (left, right) -> {
 			if (!left.getKey().equals(right.getKey()))
 				return null;
 			if (left.getValues().equals(right.getValues()))
@@ -437,19 +437,19 @@ public class AggregationPredicates {
 	}
 
 	public static PredicateDef alwaysTrue() {
-		return PredicateDef_AlwaysTrue.INSTANCE;
+		return AlwaysTrue.INSTANCE;
 	}
 
 	public static PredicateDef alwaysFalse() {
-		return PredicateDef_AlwaysFalse.INSTANCE;
+		return AlwaysFalse.INSTANCE;
 	}
 
 	public static PredicateDef not(PredicateDef predicate) {
-		return new PredicateDef_Not(predicate);
+		return new Not(predicate);
 	}
 
 	public static PredicateDef and(List<PredicateDef> predicates) {
-		return new PredicateDef_And(predicates);
+		return new And(predicates);
 	}
 
 	public static PredicateDef and(PredicateDef... predicates) {
@@ -457,7 +457,7 @@ public class AggregationPredicates {
 	}
 
 	public static PredicateDef or(List<PredicateDef> predicates) {
-		return new PredicateDef_Or(predicates);
+		return new Or(predicates);
 	}
 
 	public static PredicateDef or(PredicateDef... predicates) {
@@ -465,53 +465,53 @@ public class AggregationPredicates {
 	}
 
 	public static PredicateDef eq(String key, @Nullable Object value) {
-		return new PredicateDef_Eq(key, value);
+		return new Eq(key, value);
 	}
 
 	public static PredicateDef notEq(String key, Object value) {
-		return new PredicateDef_NotEq(key, value);
+		return new NotEq(key, value);
 	}
 
 	public static PredicateDef ge(String key, Comparable value) {
-		return new PredicateDef_Ge(key, value);
+		return new Ge(key, value);
 	}
 
 	public static PredicateDef le(String key, Comparable value) {
-		return new PredicateDef_Le(key, value);
+		return new Le(key, value);
 	}
 
 	public static PredicateDef gt(String key, Comparable value) {
-		return new PredicateDef_Gt(key, value);
+		return new Gt(key, value);
 	}
 
 	public static PredicateDef lt(String key, Comparable value) {
-		return new PredicateDef_Lt(key, value);
+		return new Lt(key, value);
 	}
 
 	public static PredicateDef has(String key) {
-		return new PredicateDef_Has(key);
+		return new Has(key);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static PredicateDef in(String key, Collection values) {
-		return values.size() == 1 ? new PredicateDef_Eq(key, values.toArray()[0]) : new PredicateDef_In(key, new TreeSet(values));
+		return values.size() == 1 ? new Eq(key, values.toArray()[0]) : new In(key, new TreeSet(values));
 	}
 
 	@SuppressWarnings("unchecked")
 	public static PredicateDef in(String key, Comparable... values) {
-		return values.length == 1 ? new PredicateDef_Eq(key, values[0]) : new PredicateDef_In(key, new TreeSet(List.of(values)));
+		return values.length == 1 ? new Eq(key, values[0]) : new In(key, new TreeSet(List.of(values)));
 	}
 
 	public static PredicateDef regexp(String key, @Language("RegExp") String pattern) {
-		return new PredicateDef_RegExp(key, Pattern.compile(pattern));
+		return new RegExp(key, Pattern.compile(pattern));
 	}
 
 	public static PredicateDef regexp(String key, Pattern pattern) {
-		return new PredicateDef_RegExp(key, pattern);
+		return new RegExp(key, pattern);
 	}
 
 	public static <C extends Comparable<C>> PredicateDef between(String key, Comparable from, Comparable to) {
-		return new PredicateDef_Between(key, from, to);
+		return new Between(key, from, to);
 	}
 
 	public static final class RangeScan {
@@ -577,7 +577,7 @@ public class AggregationPredicates {
 		if (predicate == alwaysFalse())
 			return RangeScan.noScan();
 		List<PredicateDef> conjunctions = new ArrayList<>();
-		if (predicate instanceof PredicateDef_And and) {
+		if (predicate instanceof And and) {
 			conjunctions.addAll(and.getPredicates());
 		} else {
 			conjunctions.add(predicate);
@@ -590,13 +590,13 @@ public class AggregationPredicates {
 		for (String key : primaryKey) {
 			for (int j = 0; j < conjunctions.size(); j++) {
 				PredicateDef conjunction = conjunctions.get(j);
-				if (conjunction instanceof PredicateDef_Eq eq && eq.getKey().equals(key)) {
+				if (conjunction instanceof Eq eq && eq.getKey().equals(key)) {
 					conjunctions.remove(j);
 					from.add(toInternalValue(fields, eq.getKey(), eq.getValue()));
 					to.add(toInternalValue(fields, eq.getKey(), eq.getValue()));
 					continue L;
 				}
-				if (conjunction instanceof PredicateDef_Between between && between.getKey().equals(key)) {
+				if (conjunction instanceof Between between && between.getKey().equals(key)) {
 					conjunctions.remove(j);
 					from.add(toInternalValue(fields, between.getKey(), between.getFrom()));
 					to.add(toInternalValue(fields, between.getKey(), between.getTo()));

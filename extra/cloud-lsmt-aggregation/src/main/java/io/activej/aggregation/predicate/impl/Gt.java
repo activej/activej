@@ -17,57 +17,45 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import static io.activej.codegen.expression.Expressions.not;
+import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
+import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
+import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Not implements PredicateDef {
-	private final PredicateDef predicate;
+public final class Gt implements PredicateDef {
+	private final String key;
+	private final Comparable<Object> value;
 
-	public PredicateDef_Not(PredicateDef predicate) {
-		this.predicate = predicate;
+	public Gt(String key, Comparable<Object> value) {
+		this.key = key;
+		this.value = value;
 	}
 
-	public PredicateDef getPredicate() {
-		return predicate;
+	public String getKey() {
+		return key;
+	}
+
+	public Comparable<Object> getValue() {
+		return value;
 	}
 
 	@Override
 	public PredicateDef simplify() {
-		if (predicate instanceof PredicateDef_Not not)
-			return not.predicate.simplify();
-
-		if (predicate instanceof PredicateDef_Eq eq)
-			return new PredicateDef_NotEq(eq.getKey(), eq.getValue());
-
-		if (predicate instanceof PredicateDef_NotEq notEq)
-			return new PredicateDef_Eq(notEq.getKey(), notEq.getValue());
-
-		if (predicate instanceof PredicateDef_Gt gt)
-			return new PredicateDef_Le(gt.getKey(), gt.getValue());
-
-		if (predicate instanceof PredicateDef_Lt lt)
-			return new PredicateDef_Ge(lt.getKey(), lt.getValue());
-
-		if (predicate instanceof PredicateDef_Ge ge)
-			return new PredicateDef_Lt(ge.getKey(), ge.getValue());
-
-		if (predicate instanceof PredicateDef_Le le)
-			return new PredicateDef_Gt(le.getKey(), le.getValue());
-
-		return AggregationPredicates.not(predicate.simplify());
+		return this;
 	}
 
 	@Override
 	public Set<String> getDimensions() {
-		return predicate.getDimensions();
+		return Set.of(key);
 	}
 
 	@Override
@@ -78,7 +66,11 @@ public final class PredicateDef_Not implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		return not(predicate.createPredicate(record, fields));
+		Variable property = property(record, key.replace('.', '$'));
+		return and(
+				isNotNull(property, fields.get(key)),
+				isGt(property, value(toInternalValue(fields, key, value)))
+		);
 	}
 
 	@Override
@@ -86,19 +78,21 @@ public final class PredicateDef_Not implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Not that = (PredicateDef_Not) o;
+		Gt that = (Gt) o;
 
-		return predicate.equals(that.predicate);
-
+		if (!key.equals(that.key)) return false;
+		return Objects.equals(value, that.value);
 	}
 
 	@Override
 	public int hashCode() {
-		return predicate.hashCode();
+		int result = key.hashCode();
+		result = 31 * result + (value != null ? value.hashCode() : 0);
+		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "NOT " + predicate;
+		return key + ">" + value;
 	}
 }

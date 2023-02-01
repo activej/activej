@@ -76,43 +76,43 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		return new PredicateDefJsonCodec(attributeCodecs);
 	}
 
-	private void writeEq(JsonWriter writer, PredicateDef_Eq predicate) {
+	private void writeEq(JsonWriter writer, Eq predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(SEMI);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeNotEq(JsonWriter writer, PredicateDef_NotEq predicate) {
+	private void writeNotEq(JsonWriter writer, NotEq predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeGe(JsonWriter writer, PredicateDef_Ge predicate) {
+	private void writeGe(JsonWriter writer, Ge predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeGt(JsonWriter writer, PredicateDef_Gt predicate) {
+	private void writeGt(JsonWriter writer, Gt predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeLe(JsonWriter writer, PredicateDef_Le predicate) {
+	private void writeLe(JsonWriter writer, Le predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeLt(JsonWriter writer, PredicateDef_Lt predicate) {
+	private void writeLt(JsonWriter writer, Lt predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeIn(JsonWriter writer, PredicateDef_In predicate) {
+	private void writeIn(JsonWriter writer, In predicate) {
 		writer.writeString(predicate.getKey());
 		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
 		for (Object o : predicate.getValues()) {
@@ -121,7 +121,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		}
 	}
 
-	private void writeBetween(JsonWriter writer, PredicateDef_Between predicate) {
+	private void writeBetween(JsonWriter writer, Between predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
@@ -130,7 +130,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		codec.write(writer, predicate.getTo());
 	}
 
-	private void writeRegexp(JsonWriter writer, PredicateDef_RegExp predicate) {
+	private void writeRegexp(JsonWriter writer, RegExp predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		writer.writeString(predicate.getRegexp());
@@ -146,70 +146,70 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		}
 	}
 
-	private void writeNot(JsonWriter writer, PredicateDef_Not predicate) {
+	private void writeNot(JsonWriter writer, Not predicate) {
 		write(writer, predicate.getPredicate());
 	}
 
 	@SuppressWarnings("NullableProblems")
 	@Override
 	public void write(JsonWriter writer, PredicateDef predicate) {
-		if (predicate instanceof PredicateDef_Eq predicateEq) {
+		if (predicate instanceof Eq predicateEq) {
 			writer.writeByte(OBJECT_START);
 			writeEq(writer, predicateEq);
 			writer.writeByte(OBJECT_END);
 		} else {
 			writer.writeByte(ARRAY_START);
-			if (predicate instanceof PredicateDef_NotEq predicateNotEq) {
+			if (predicate instanceof NotEq predicateNotEq) {
 				writer.writeString(NOT_EQ);
 				writer.writeByte(COMMA);
 				writeNotEq(writer, predicateNotEq);
-			} else if (predicate instanceof PredicateDef_Ge predicateGe) {
+			} else if (predicate instanceof Ge predicateGe) {
 				writer.writeString(GE);
 				writer.writeByte(COMMA);
 				writeGe(writer, predicateGe);
-			} else if (predicate instanceof PredicateDef_Has predicateHas) {
+			} else if (predicate instanceof Has predicateHas) {
 				writer.writeString(HAS);
 				writer.writeByte(COMMA);
 				writer.writeString(predicateHas.getKey());
-			} else if (predicate instanceof PredicateDef_Gt predicateGt) {
+			} else if (predicate instanceof Gt predicateGt) {
 				writer.writeString(GT);
 				writer.writeByte(COMMA);
 				writeGt(writer, predicateGt);
-			} else if (predicate instanceof PredicateDef_Le predicateLe) {
+			} else if (predicate instanceof Le predicateLe) {
 				writer.writeString(LE);
 				writer.writeByte(COMMA);
 				writeLe(writer, predicateLe);
-			} else if (predicate instanceof PredicateDef_Lt predicateLt) {
+			} else if (predicate instanceof Lt predicateLt) {
 				writer.writeString(LT);
 				writer.writeByte(COMMA);
 				writeLt(writer, predicateLt);
-			} else if (predicate instanceof PredicateDef_In predicateIn) {
+			} else if (predicate instanceof In predicateIn) {
 				writer.writeString(IN);
 				writer.writeByte(COMMA);
 				writeIn(writer, predicateIn);
-			} else if (predicate instanceof PredicateDef_Between predicateBetween) {
+			} else if (predicate instanceof Between predicateBetween) {
 				writer.writeString(BETWEEN);
 				writer.writeByte(COMMA);
 				writeBetween(writer, predicateBetween);
-			} else if (predicate instanceof PredicateDef_RegExp predicateRegexp) {
+			} else if (predicate instanceof RegExp predicateRegexp) {
 				writer.writeString(REGEXP);
 				writer.writeByte(COMMA);
 				writeRegexp(writer, predicateRegexp);
-			} else if (predicate instanceof PredicateDef_And predicateAnd) {
+			} else if (predicate instanceof And predicateAnd) {
 				writer.writeString(AND);
 				writer.writeByte(COMMA);
 				write(writer, predicateAnd.getPredicates());
-			} else if (predicate instanceof PredicateDef_Or predicateOr) {
+			} else if (predicate instanceof Or predicateOr) {
 				writer.writeString(OR);
 				writer.writeByte(COMMA);
 				write(writer, predicateOr.getPredicates());
-			} else if (predicate instanceof PredicateDef_Not predicateNot) {
+			} else if (predicate instanceof Not predicateNot) {
 				writer.writeString(NOT);
 				writer.writeByte(COMMA);
 				writeNot(writer, predicateNot);
-			} else if (predicate instanceof PredicateDef_AlwaysTrue) {
+			} else if (predicate instanceof AlwaysTrue) {
 				writer.writeString(TRUE);
-			} else if (predicate instanceof PredicateDef_AlwaysFalse) {
+			} else if (predicate instanceof AlwaysFalse) {
 				writer.writeString(FALSE);
 			} else {
 				throw new IllegalArgumentException("Unknown predicate type");
@@ -220,7 +220,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 
 	@SuppressWarnings("unchecked")
 	private PredicateDef readObjectWithAlgebraOfSetsOperator(JsonReader<?> reader) throws IOException {
-		if (reader.last() == OBJECT_END) return new PredicateDef_And(List.of());
+		if (reader.last() == OBJECT_END) return new And(List.of());
 		List<PredicateDef> predicates = new ArrayList<>();
 
 		while (true) {
@@ -232,24 +232,24 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			Object value = codec.read(reader);
 			PredicateDef comparisonPredicate;
 			switch (operator) {
-				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new PredicateDef_Eq(field, value);
-				case NOT_EQ_SIGN -> comparisonPredicate = new PredicateDef_NotEq(field, value);
-				case GE_SIGN -> comparisonPredicate = new PredicateDef_Ge(field, (Comparable<Object>) value);
-				case GT_SIGN -> comparisonPredicate = new PredicateDef_Gt(field, (Comparable<Object>) value);
-				case LE_SIGN -> comparisonPredicate = new PredicateDef_Le(field, (Comparable<Object>) value);
-				case LT_SIGN -> comparisonPredicate = new PredicateDef_Lt(field, (Comparable<Object>) value);
+				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new Eq(field, value);
+				case NOT_EQ_SIGN -> comparisonPredicate = new NotEq(field, value);
+				case GE_SIGN -> comparisonPredicate = new Ge(field, (Comparable<Object>) value);
+				case GT_SIGN -> comparisonPredicate = new Gt(field, (Comparable<Object>) value);
+				case LE_SIGN -> comparisonPredicate = new Le(field, (Comparable<Object>) value);
+				case LT_SIGN -> comparisonPredicate = new Lt(field, (Comparable<Object>) value);
 				case IN_SIGN -> {
 					if (value == null) {
 						throw ParsingException.create("Arguments of " + IN_SIGN + " cannot be null", true);
 					}
-					comparisonPredicate = new PredicateDef_In(field, (SortedSet<Object>) value);
+					comparisonPredicate = new In(field, (SortedSet<Object>) value);
 				}
 				default -> throw ParsingException.create("Could not read predicate", true);
 			}
 			predicates.add(comparisonPredicate);
 			byte nextToken = reader.getNextToken();
 			if (nextToken == OBJECT_END) {
-				return predicates.size() == 1 ? predicates.get(0) : new PredicateDef_And(predicates);
+				return predicates.size() == 1 ? predicates.get(0) : new And(predicates);
 			} else if (nextToken != COMMA) {
 				throw reader.newParseError("Unexpected symbol");
 			}
@@ -268,8 +268,8 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			byte next = reader.getNextToken();
 			if (next != COMMA) {
 				result = switch (type) {
-					case TRUE -> PredicateDef_AlwaysTrue.INSTANCE;
-					case FALSE -> PredicateDef_AlwaysFalse.INSTANCE;
+					case TRUE -> AlwaysTrue.INSTANCE;
+					case FALSE -> AlwaysFalse.INSTANCE;
 					default -> throw reader.newParseError("Unknown predicate type " + type);
 				};
 			} else {
@@ -312,7 +312,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		reader.getNextToken();
 		Object value = readObject.read(reader);
 		reader.getNextToken();
-		return new PredicateDef_Eq(attribute, value);
+		return new Eq(attribute, value);
 	}
 
 	private PredicateDef readNotEq(JsonReader<?> reader) throws IOException {
@@ -322,27 +322,27 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		reader.getNextToken();
 		Object value = readObject.read(reader);
 		reader.getNextToken();
-		return new PredicateDef_NotEq(attribute, value);
+		return new NotEq(attribute, value);
 	}
 
 	private PredicateDef readGe(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return new PredicateDef_Ge(attributeAndValue.attribute, attributeAndValue.value);
+		return new Ge(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
 	private PredicateDef readGt(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return new PredicateDef_Gt(attributeAndValue.attribute, attributeAndValue.value);
+		return new Gt(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
 	private PredicateDef readLe(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return new PredicateDef_Le(attributeAndValue.attribute, attributeAndValue.value);
+		return new Le(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
 	private PredicateDef readLt(JsonReader<?> reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
-		return new PredicateDef_Lt(attributeAndValue.attribute, attributeAndValue.value);
+		return new Lt(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
 	private AttributeAndValue readAttributeAndValue(JsonReader<?> reader) throws IOException {
@@ -367,7 +367,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			reader.getNextToken();
 			result.add(readObject.read(reader));
 		}
-		return new PredicateDef_In(attribute, result);
+		return new In(attribute, result);
 	}
 
 	private PredicateDef readBetween(JsonReader<?> reader) throws IOException {
@@ -380,7 +380,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 		reader.getNextToken();
 		Comparable<Object> to = (Comparable<Object>) readObject.read(reader);
 		reader.getNextToken();
-		return new PredicateDef_Between(attribute, from, to);
+		return new Between(attribute, from, to);
 	}
 
 	private PredicateDef readRegexp(JsonReader<?> reader) throws IOException {
@@ -395,7 +395,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			throw ParsingException.create("Malformed regexp", e, true);
 		}
 		reader.getNextToken();
-		return new PredicateDef_RegExp(attribute, pattern);
+		return new RegExp(attribute, pattern);
 	}
 
 	private PredicateDef readAnd(JsonReader<?> reader) throws IOException {
@@ -405,7 +405,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			reader.getNextToken();
 			result.add(read(reader));
 		}
-		return new PredicateDef_And(result);
+		return new And(result);
 	}
 
 	private PredicateDef readOr(JsonReader<?> reader) throws IOException {
@@ -415,19 +415,19 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			reader.getNextToken();
 			result.add(read(reader));
 		}
-		return new PredicateDef_Or(result);
+		return new Or(result);
 	}
 
 	private PredicateDef readNot(JsonReader<?> reader) throws IOException {
 		PredicateDef predicate = read(reader);
 		reader.getNextToken();
-		return new PredicateDef_Not(predicate);
+		return new Not(predicate);
 	}
 
 	private PredicateDef readHas(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
 		reader.getNextToken();
-		return new PredicateDef_Has(attribute);
+		return new Has(attribute);
 	}
 
 	public record AttributeAndValue(String attribute, Comparable<Object> value) {

@@ -17,40 +17,36 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
+import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Lt implements PredicateDef {
+public final class In implements PredicateDef {
 	private final String key;
-	private final Comparable<Object> value;
+	private final SortedSet<Object> values;
 
-	public PredicateDef_Lt(String key, Comparable<Object> value) {
+	public In(String key, SortedSet<Object> values) {
 		this.key = key;
-		this.value = value;
+		this.values = values;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public Comparable<Object> getValue() {
-		return value;
+	public SortedSet<Object> getValues() {
+		return values;
 	}
 
 	@Override
 	public PredicateDef simplify() {
-		return this;
+		return (values.iterator().hasNext()) ? this : AggregationPredicates.alwaysFalse();
 	}
 
 	@Override
@@ -66,11 +62,10 @@ public final class PredicateDef_Lt implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
-		return and(
-				isNotNull(property, fields.get(key)),
-				isLt(property, value(toInternalValue(fields, key, value)))
-		);
+		return isNe(
+				value(false),
+				call(value(values), "contains",
+						cast(property(record, key.replace('.', '$')), Object.class)));
 	}
 
 	@Override
@@ -78,21 +73,23 @@ public final class PredicateDef_Lt implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Lt that = (PredicateDef_Lt) o;
+		In that = (In) o;
 
 		if (!key.equals(that.key)) return false;
-		return Objects.equals(value, that.value);
+		return Objects.equals(values, that.values);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + (value != null ? value.hashCode() : 0);
+		result = 31 * result + (values != null ? values.hashCode() : 0);
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return key + "<" + value;
+		StringJoiner joiner = new StringJoiner(", ");
+		for (Object value : values) joiner.add(value != null ? value.toString() : null);
+		return "" + key + " IN " + joiner;
 	}
 }

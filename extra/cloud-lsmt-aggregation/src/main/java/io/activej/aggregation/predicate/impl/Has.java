@@ -17,36 +17,33 @@
 package io.activej.aggregation.predicate.impl;
 
 import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
+import static io.activej.codegen.expression.Expressions.property;
+import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class PredicateDef_In implements PredicateDef {
+public final class Has implements PredicateDef {
 	private final String key;
-	private final SortedSet<Object> values;
 
-	public PredicateDef_In(String key, SortedSet<Object> values) {
+	public Has(String key) {
 		this.key = key;
-		this.values = values;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public SortedSet<Object> getValues() {
-		return values;
-	}
-
 	@Override
 	public PredicateDef simplify() {
-		return (values.iterator().hasNext()) ? this : AggregationPredicates.alwaysFalse();
+		return this;
 	}
 
 	@Override
@@ -62,10 +59,10 @@ public final class PredicateDef_In implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		return isNe(
-				value(false),
-				call(value(values), "contains",
-						cast(property(record, key.replace('.', '$')), Object.class)));
+		if (!fields.containsKey(key)) return value(false);
+		Variable property = property(record, key.replace('.', '$'));
+		FieldType fieldType = fields.get(key);
+		return isNotNull(property, fieldType);
 	}
 
 	@Override
@@ -73,23 +70,20 @@ public final class PredicateDef_In implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_In that = (PredicateDef_In) o;
+		Has that = (Has) o;
 
-		if (!key.equals(that.key)) return false;
-		return Objects.equals(values, that.values);
+		return key.equals(that.key);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + (values != null ? values.hashCode() : 0);
+		result = 31 * result;
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		StringJoiner joiner = new StringJoiner(", ");
-		for (Object value : values) joiner.add(value != null ? value.toString() : null);
-		return "" + key + " IN " + joiner;
+		return "HAS " + key;
 	}
 }

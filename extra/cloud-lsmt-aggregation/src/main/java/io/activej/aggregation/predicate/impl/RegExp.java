@@ -19,44 +19,42 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Between implements PredicateDef {
+public final class RegExp implements PredicateDef {
 	private final String key;
-	private final Comparable<Object> from;
-	private final Comparable<Object> to;
+	private final Pattern regexp;
 
-	public PredicateDef_Between(String key, Comparable<Object> from, Comparable<Object> to) {
+	public RegExp(String key, Pattern regexp) {
 		this.key = key;
-		this.from = from;
-		this.to = to;
+		this.regexp = regexp;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public Comparable<Object> getFrom() {
-		return from;
+	public String getRegexp() {
+		return regexp.pattern();
 	}
 
-	public Comparable<Object> getTo() {
-		return to;
+	public Pattern getRegexpPattern() {
+		return regexp;
 	}
 
 	@Override
 	public PredicateDef simplify() {
-		return (from.compareTo(to) > 0) ? alwaysFalse() : (from.equals(to) ? eq(key, from) : this);
+		return this;
 	}
 
 	@Override
@@ -72,10 +70,17 @@ public final class PredicateDef_Between implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
-		return and(isNotNull(property, fields.get(key)),
-				isGe(property, value(toInternalValue(fields, key, from))),
-				isLe(property, value(toInternalValue(fields, key, to))));
+		Variable value = property(record, key.replace('.', '$'));
+		return Expressions.and(
+				isNotNull(value, fields.get(key)),
+				isNe(
+						value(false),
+						call(call(value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
+		return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
 	}
 
 	@Override
@@ -83,24 +88,22 @@ public final class PredicateDef_Between implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Between that = (PredicateDef_Between) o;
+		RegExp that = (RegExp) o;
 
 		if (!key.equals(that.key)) return false;
-		if (!from.equals(that.from)) return false;
-		return to.equals(that.to);
+		return regexp.pattern().equals(that.regexp.pattern());
 
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + from.hashCode();
-		result = 31 * result + to.hashCode();
+		result = 31 * result + regexp.pattern().hashCode();
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "" + key + " BETWEEN " + from + " AND " + to;
+		return key + " " + regexp.pattern();
 	}
 }

@@ -19,37 +19,33 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
+import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_RegExp implements PredicateDef {
+public final class Ge implements PredicateDef {
 	private final String key;
-	private final Pattern regexp;
+	private final Comparable<Object> value;
 
-	public PredicateDef_RegExp(String key, Pattern regexp) {
+	public Ge(String key, Comparable<Object> value) {
 		this.key = key;
-		this.regexp = regexp;
+		this.value = value;
 	}
 
 	public String getKey() {
 		return key;
 	}
 
-	public String getRegexp() {
-		return regexp.pattern();
-	}
-
-	public Pattern getRegexpPattern() {
-		return regexp;
+	public Comparable<Object> getValue() {
+		return value;
 	}
 
 	@Override
@@ -70,17 +66,11 @@ public final class PredicateDef_RegExp implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable value = property(record, key.replace('.', '$'));
-		return Expressions.and(
-				isNotNull(value, fields.get(key)),
-				isNe(
-						value(false),
-						call(call(value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
-	}
-
-	@SuppressWarnings("rawtypes")
-	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
-		return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
+		Variable property = property(record, key.replace('.', '$'));
+		return and(
+				isNotNull(property, fields.get(key)),
+				isGe(property, value(toInternalValue(fields, key, value)))
+		);
 	}
 
 	@Override
@@ -88,22 +78,21 @@ public final class PredicateDef_RegExp implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_RegExp that = (PredicateDef_RegExp) o;
+		Ge that = (Ge) o;
 
 		if (!key.equals(that.key)) return false;
-		return regexp.pattern().equals(that.regexp.pattern());
-
+		return Objects.equals(value, that.value);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key.hashCode();
-		result = 31 * result + regexp.pattern().hashCode();
+		result = 31 * result + (value != null ? value.hashCode() : 0);
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return key + " " + regexp.pattern();
+		return key + ">=" + value;
 	}
 }

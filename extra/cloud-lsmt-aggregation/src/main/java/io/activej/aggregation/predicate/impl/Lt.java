@@ -31,11 +31,11 @@ import static io.activej.aggregation.predicate.AggregationPredicates.toInternalV
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class PredicateDef_Gt implements PredicateDef {
+public final class Lt implements PredicateDef {
 	private final String key;
 	private final Comparable<Object> value;
 
-	public PredicateDef_Gt(String key, Comparable<Object> value) {
+	public Lt(String key, Comparable<Object> value) {
 		this.key = key;
 		this.value = value;
 	}
@@ -69,7 +69,7 @@ public final class PredicateDef_Gt implements PredicateDef {
 		Variable property = property(record, key.replace('.', '$'));
 		return and(
 				isNotNull(property, fields.get(key)),
-				isGt(property, value(toInternalValue(fields, key, value)))
+				isLt(property, value(toInternalValue(fields, key, value)))
 		);
 	}
 
@@ -78,7 +78,7 @@ public final class PredicateDef_Gt implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Gt that = (PredicateDef_Gt) o;
+		Lt that = (Lt) o;
 
 		if (!key.equals(that.key)) return false;
 		return Objects.equals(value, that.value);
@@ -93,6 +93,6 @@ public final class PredicateDef_Gt implements PredicateDef {
 
 	@Override
 	public String toString() {
-		return key + ">" + value;
+		return key + "<" + value;
 	}
 }

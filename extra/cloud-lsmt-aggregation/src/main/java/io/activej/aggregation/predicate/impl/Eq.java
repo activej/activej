@@ -34,11 +34,11 @@ import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Collections.singletonMap;
 
 @ExposedInternals
-public final class PredicateDef_Eq implements PredicateDef {
+public final class Eq implements PredicateDef {
 	private final String key;
 	private final Object value;
 
-	public PredicateDef_Eq(String key, Object value) {
+	public Eq(String key, Object value) {
 		this.key = key;
 		this.value = value;
 	}
@@ -84,7 +84,7 @@ public final class PredicateDef_Eq implements PredicateDef {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PredicateDef_Eq that = (PredicateDef_Eq) o;
+		Eq that = (Eq) o;
 
 		if (!key.equals(that.key)) return false;
 		return Objects.equals(value, that.value);

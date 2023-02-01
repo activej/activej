@@ -19,34 +19,16 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.PredicateDef;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class PredicateDef_Le implements PredicateDef {
-	private final String key;
-	private final Comparable<Object> value;
-
-	public PredicateDef_Le(String key, Comparable<Object> value) {
-		this.key = key;
-		this.value = value;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public Comparable<Object> getValue() {
-		return value;
-	}
+public final class AlwaysTrue implements PredicateDef {
+	public static final AlwaysTrue INSTANCE = new AlwaysTrue();
 
 	@Override
 	public PredicateDef simplify() {
@@ -55,7 +37,7 @@ public final class PredicateDef_Le implements PredicateDef {
 
 	@Override
 	public Set<String> getDimensions() {
-		return Set.of(key);
+		return Set.of();
 	}
 
 	@Override
@@ -66,33 +48,11 @@ public final class PredicateDef_Le implements PredicateDef {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
-		return and(
-				isNotNull(property, fields.get(key)),
-				isLe(property, value(toInternalValue(fields, key, value)))
-		);
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		PredicateDef_Le that = (PredicateDef_Le) o;
-
-		if (!key.equals(that.key)) return false;
-		return Objects.equals(value, that.value);
-	}
-
-	@Override
-	public int hashCode() {
-		int result = key.hashCode();
-		result = 31 * result + (value != null ? value.hashCode() : 0);
-		return result;
+		return value(true);
 	}
 
 	@Override
 	public String toString() {
-		return key + "<=" + value;
+		return "TRUE";
 	}
 }
