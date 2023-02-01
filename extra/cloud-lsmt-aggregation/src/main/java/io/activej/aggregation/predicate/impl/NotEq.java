@@ -34,20 +34,12 @@ import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
 public final class NotEq implements PredicateDef {
-	private final String key;
-	private final Object value;
+	public final String key;
+	public final Object value;
 
 	public NotEq(String key, Object value) {
 		this.key = key;
 		this.value = value;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public Object getValue() {
-		return value;
 	}
 
 	@Override

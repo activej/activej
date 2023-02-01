@@ -29,14 +29,10 @@ import static io.activej.common.Utils.first;
 
 @ExposedInternals
 public final class Or implements PredicateDef {
-	private final List<PredicateDef> predicates;
+	public final List<PredicateDef> predicates;
 
 	public Or(List<PredicateDef> predicates) {
 		this.predicates = predicates;
-	}
-
-	public List<PredicateDef> getPredicates() {
-		return predicates;
 	}
 
 	@Override

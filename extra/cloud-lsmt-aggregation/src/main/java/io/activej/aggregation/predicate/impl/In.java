@@ -28,20 +28,12 @@ import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
 public final class In implements PredicateDef {
-	private final String key;
-	private final SortedSet<Object> values;
+	public final String key;
+	public final SortedSet<Object> values;
 
 	public In(String key, SortedSet<Object> values) {
 		this.key = key;
 		this.values = values;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public SortedSet<Object> getValues() {
-		return values;
 	}
 
 	@Override

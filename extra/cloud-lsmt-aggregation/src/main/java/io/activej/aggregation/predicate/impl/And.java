@@ -33,14 +33,10 @@ import static io.activej.common.Utils.first;
 
 @ExposedInternals
 public final class And implements PredicateDef {
-	private final List<PredicateDef> predicates;
+	public final List<PredicateDef> predicates;
 
 	public And(List<PredicateDef> predicates) {
 		this.predicates = predicates;
-	}
-
-	public List<PredicateDef> getPredicates() {
-		return predicates;
 	}
 
 	@Override

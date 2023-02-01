@@ -92,7 +92,7 @@ public class AggregationPredicates {
 		register(AlwaysTrue.class, In.class, simplifierAlwaysTrue);
 
 		PredicateSimplifier simplifierNot = (PredicateSimplifier<Not, PredicateDef>) (left, right) -> {
-			if (left.getPredicate().equals(right))
+			if (left.predicate.equals(right))
 				return alwaysFalse();
 			return null;
 		};
@@ -108,8 +108,8 @@ public class AggregationPredicates {
 		register(Not.class, Lt.class, simplifierNot);
 		register(Not.class, In.class, simplifierNot);
 
-		register(Has.class, Has.class, (left, right) -> left.getKey().equals(right.getKey()) ? left : null);
-		PredicateSimplifier simplifierHas = (PredicateSimplifier<Has, PredicateDef>) (left, right) -> right.getDimensions().contains(left.getKey()) ? right : null;
+		register(Has.class, Has.class, (left, right) -> left.key.equals(right.key) ? left : null);
+		PredicateSimplifier simplifierHas = (PredicateSimplifier<Has, PredicateDef>) (left, right) -> right.getDimensions().contains(left.key) ? right : null;
 		register(Has.class, Eq.class, simplifierHas);
 		register(Has.class, NotEq.class, simplifierHas);
 		register(Has.class, Le.class, simplifierHas);
@@ -122,316 +122,314 @@ public class AggregationPredicates {
 		register(Has.class, In.class, simplifierHas);
 
 		register(Eq.class, Eq.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
 			return alwaysFalse();
 		});
 		register(Eq.class, NotEq.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (!left.getValue().equals(right.getValue()))
+			if (!left.value.equals(right.value))
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, Le.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) >= 0)
+			if (right.value.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, Ge.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) <= 0)
+			if (right.value.compareTo(left.value) <= 0)
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, Lt.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) > 0)
+			if (right.value.compareTo(left.value) > 0)
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, Gt.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) < 0)
+			if (right.value.compareTo(left.value) < 0)
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, Between.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getFrom().compareTo(left.getValue()) <= 0 && right.getTo().compareTo(left.getValue()) >= 0)
+			if (right.from.compareTo(left.value) <= 0 && right.to.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, RegExp.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue() instanceof CharSequence sequence &&
-					right.getRegexpPattern().matcher(sequence).matches())
+			if (left.value instanceof CharSequence sequence && right.regexp.matcher(sequence).matches())
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValues().contains(left.getValue()))
+			if (right.values.contains(left.value))
 				return left;
 			return alwaysFalse();
 		});
 
 		register(NotEq.class, NotEq.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().equals(right.getValue()))
+			if (left.value.equals(right.value))
 				return left;
 			return null;
 		});
 		register(NotEq.class, Le.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) < 0)
+			if (right.value.compareTo(left.value) < 0)
 				return right;
-			if (right.getValue().compareTo(left.getValue()) == 0)
-				return lt(left.getKey(), right.getValue());
+			if (right.value.compareTo(left.value) == 0)
+				return lt(left.key, right.value);
 			return null;
 		});
 		register(NotEq.class, Ge.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) > 0)
+			if (right.value.compareTo(left.value) > 0)
 				return right;
-			if (right.getValue().compareTo(left.getValue()) == 0)
-				return gt(left.getKey(), right.getValue());
+			if (right.value.compareTo(left.value) == 0)
+				return gt(left.key, right.value);
 			return null;
 		});
 		register(NotEq.class, Lt.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) <= 0)
+			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return null;
 		});
 		register(NotEq.class, Gt.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) >= 0)
+			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return null;
 		});
 		register(NotEq.class, Between.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getFrom().compareTo(left.getValue()) > 0 && right.getTo().compareTo(left.getValue()) > 0)
+			if (right.from.compareTo(left.value) > 0 && right.to.compareTo(left.value) > 0)
 				return right;
-			if (right.getFrom().compareTo(left.getValue()) < 0 && right.getTo().compareTo(left.getValue()) < 0)
+			if (right.from.compareTo(left.value) < 0 && right.to.compareTo(left.value) < 0)
 				return right;
 			return null;
 		});
 		register(NotEq.class, RegExp.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue() instanceof CharSequence sequence &&
-					right.getRegexpPattern().matcher(sequence).matches())
+			if (left.value instanceof CharSequence sequence && right.regexp.matcher(sequence).matches())
 				return null;
 			return right;
 		});
 		register(NotEq.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (right.getValues().contains(left.getValue()))
+			if (right.values.contains(left.value))
 				return alwaysFalse();
 			return right;
 		});
 
 		register(Le.class, Le.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) <= 0)
+			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return left;
 		});
 		register(Le.class, Ge.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValue()) < 0)
+			if (left.value.compareTo(right.value) < 0)
 				return alwaysFalse();
-			if (left.getValue().compareTo(right.getValue()) > 0)
-				return between(right.getKey(), right.getValue(), left.getValue());
-			if (left.getValue().compareTo(right.getValue()) == 0)
-				return eq(left.getKey(), left.getValue());
+			if (left.value.compareTo(right.value) > 0)
+				return between(right.key, right.value, left.value);
+			if (left.value.compareTo(right.value) == 0)
+				return eq(left.key, left.value);
 			return null;
 		});
 		register(Le.class, Lt.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) <= 0)
+			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return left;
 		});
 		register(Le.class, Gt.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValue()) <= 0)
+			if (left.value.compareTo(right.value) <= 0)
 				return alwaysFalse();
 			return null;
 		});
 		register(Le.class, Between.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getFrom().compareTo(left.getValue()) > 0)
+			if (right.from.compareTo(left.value) > 0)
 				return alwaysFalse();
-			if (right.getFrom().compareTo(left.getValue()) == 0)
-				return eq(left.getKey(), right.getFrom());
-			if (right.getTo().compareTo(left.getValue()) <= 0)
+			if (right.from.compareTo(left.value) == 0)
+				return eq(left.key, right.from);
+			if (right.to.compareTo(left.value) <= 0)
 				return right;
-			return between(right.getKey(), right.getFrom(), left.getValue()).simplify();
+			return between(right.key, right.from, left.value).simplify();
 		});
 		register(Le.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValues().last()) >= 0)
+			if (left.value.compareTo(right.values.last()) >= 0)
 				return right;
-			if (left.getValue().compareTo(right.getValues().first()) < 0)
+			if (left.value.compareTo(right.values.first()) < 0)
 				return alwaysFalse();
-			SortedSet subset = new TreeSet(right.getValues().headSet(left.getValue()));
-			if (right.getValues().contains(left.getValue())) subset.add(left.getValue());
-			return in(left.getKey(), subset);
+			SortedSet subset = new TreeSet(right.values.headSet(left.value));
+			if (right.values.contains(left.value)) subset.add(left.value);
+			return in(left.key, subset);
 		});
 
 		register(Ge.class, Ge.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) >= 0)
+			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return left;
 		});
 		register(Ge.class, Lt.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) <= 0)
+			if (right.value.compareTo(left.value) <= 0)
 				return alwaysFalse();
 			return null;
 		});
 		register(Ge.class, Gt.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) >= 0)
-				return gt(right.getKey(), right.getValue());
+			if (right.value.compareTo(left.value) >= 0)
+				return gt(right.key, right.value);
 			return left;
 		});
 		register(Ge.class, Between.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getTo().compareTo(left.getValue()) < 0)
+			if (right.to.compareTo(left.value) < 0)
 				return alwaysFalse();
-			if (right.getTo().compareTo(left.getValue()) == 0)
-				return eq(right.getKey(), right.getTo());
-			if (right.getFrom().compareTo(left.getValue()) >= 0)
+			if (right.to.compareTo(left.value) == 0)
+				return eq(right.key, right.to);
+			if (right.from.compareTo(left.value) >= 0)
 				return right;
-			return between(right.getKey(), left.getValue(), right.getTo()).simplify();
+			return between(right.key, left.value, right.to).simplify();
 		});
 		register(Ge.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValues().first()) <= 0)
+			if (left.value.compareTo(right.values.first()) <= 0)
 				return right;
-			if (left.getValue().compareTo(right.getValues().last()) > 0)
+			if (left.value.compareTo(right.values.last()) > 0)
 				return alwaysFalse();
-			return in(left.getKey(), new TreeSet(right.getValues().tailSet(left.getValue())));
+			return in(left.key, new TreeSet(right.values.tailSet(left.value)));
 		});
 
 		register(Lt.class, Lt.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) >= 0)
+			if (right.value.compareTo(left.value) >= 0)
 				return left;
 			return right;
 		});
 		register(Lt.class, Gt.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValue()) <= 0)
+			if (left.value.compareTo(right.value) <= 0)
 				return alwaysFalse();
 			return null;
 		});
 		register(Lt.class, Between.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getFrom().compareTo(left.getValue()) >= 0)
+			if (right.from.compareTo(left.value) >= 0)
 				return alwaysFalse();
-			if (right.getTo().compareTo(left.getValue()) < 0)
+			if (right.to.compareTo(left.value) < 0)
 				return right;
 			return null;
 		});
 		register(Lt.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValues().last()) > 0)
+			if (left.value.compareTo(right.values.last()) > 0)
 				return right;
-			if (left.getValue().compareTo(right.getValues().first()) < 0)
+			if (left.value.compareTo(right.values.first()) < 0)
 				return alwaysFalse();
-			return in(left.getKey(), new TreeSet(right.getValues().subSet(right.getValues().first(), left.getValue())));
+			return in(left.key, new TreeSet(right.values.subSet(right.values.first(), left.value)));
 		});
 
 		register(Gt.class, Gt.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getValue().compareTo(left.getValue()) >= 0)
+			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return left;
 		});
 		register(Gt.class, Between.class, (left, right) -> {
-			if (!right.getKey().equals(left.getKey()))
+			if (!right.key.equals(left.key))
 				return null;
-			if (right.getTo().compareTo(left.getValue()) <= 0)
+			if (right.to.compareTo(left.value) <= 0)
 				return alwaysFalse();
-			if (right.getFrom().compareTo(left.getValue()) > 0)
+			if (right.from.compareTo(left.value) > 0)
 				return right;
 			return null;
 		});
 		register(Gt.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValue().compareTo(right.getValues().first()) < 0)
+			if (left.value.compareTo(right.values.first()) < 0)
 				return right;
-			if (left.getValue().compareTo(right.getValues().last()) >= 0)
+			if (left.value.compareTo(right.values.last()) >= 0)
 				return alwaysFalse();
-			SortedSet subset = right.getValues().tailSet(left.getValue());
-			subset.remove(left.getValue());
-			return in(right.getKey(), subset);
+			SortedSet subset = right.values.tailSet(left.value);
+			subset.remove(left.value);
+			return in(right.key, subset);
 		});
 
 		register(Between.class, Between.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			Comparable from = left.getFrom().compareTo(right.getFrom()) >= 0 ? left.getFrom() : right.getFrom();
-			Comparable to = left.getTo().compareTo(right.getTo()) <= 0 ? left.getTo() : right.getTo();
-			return between(left.getKey(), from, to).simplify();
+			Comparable from = left.from.compareTo(right.from) >= 0 ? left.from : right.from;
+			Comparable to = left.to.compareTo(right.to) <= 0 ? left.to : right.to;
+			return between(left.key, from, to).simplify();
 		});
 		register(Between.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getFrom().compareTo(right.getValues().first()) > 0 && left.getTo().compareTo(right.getValues().last()) > 0)
+			if (left.from.compareTo(right.values.first()) > 0 && left.to.compareTo(right.values.last()) > 0)
 				return left;
 			return null;
 		});
 
 		register(In.class, In.class, (left, right) -> {
-			if (!left.getKey().equals(right.getKey()))
+			if (!left.key.equals(right.key))
 				return null;
-			if (left.getValues().equals(right.getValues()))
-				return left.getValues().size() == 1 ? eq(left.getKey(), left.getValues().first()) : left;
-			SortedSet values = left.getValues();
-			values.retainAll(right.getValues());
+			if (left.values.equals(right.values))
+				return left.values.size() == 1 ? eq(left.key, left.values.first()) : left;
+			SortedSet values = left.values;
+			values.retainAll(right.values);
 			if (values.size() == 1)
-				return eq(left.getKey(), left.getValues().first());
-			if (!left.getValues().isEmpty())
-				return in(left.getKey(), left.getValues());
+				return eq(left.key, left.values.first());
+			if (!left.values.isEmpty())
+				return in(left.key, left.values);
 			return alwaysFalse();
 		});
 	}
@@ -578,7 +576,7 @@ public class AggregationPredicates {
 			return RangeScan.noScan();
 		List<PredicateDef> conjunctions = new ArrayList<>();
 		if (predicate instanceof And and) {
-			conjunctions.addAll(and.getPredicates());
+			conjunctions.addAll(and.predicates);
 		} else {
 			conjunctions.add(predicate);
 		}
@@ -590,16 +588,16 @@ public class AggregationPredicates {
 		for (String key : primaryKey) {
 			for (int j = 0; j < conjunctions.size(); j++) {
 				PredicateDef conjunction = conjunctions.get(j);
-				if (conjunction instanceof Eq eq && eq.getKey().equals(key)) {
+				if (conjunction instanceof Eq eq && eq.key.equals(key)) {
 					conjunctions.remove(j);
-					from.add(toInternalValue(fields, eq.getKey(), eq.getValue()));
-					to.add(toInternalValue(fields, eq.getKey(), eq.getValue()));
+					from.add(toInternalValue(fields, eq.key, eq.value));
+					to.add(toInternalValue(fields, eq.key, eq.value));
 					continue L;
 				}
-				if (conjunction instanceof Between between && between.getKey().equals(key)) {
+				if (conjunction instanceof Between between && between.key.equals(key)) {
 					conjunctions.remove(j);
-					from.add(toInternalValue(fields, between.getKey(), between.getFrom()));
-					to.add(toInternalValue(fields, between.getKey(), between.getTo()));
+					from.add(toInternalValue(fields, between.key, between.from));
+					to.add(toInternalValue(fields, between.key, between.to));
 					break L;
 				}
 			}

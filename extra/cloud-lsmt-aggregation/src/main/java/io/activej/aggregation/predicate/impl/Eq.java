@@ -35,20 +35,12 @@ import static java.util.Collections.singletonMap;
 
 @ExposedInternals
 public final class Eq implements PredicateDef {
-	private final String key;
-	private final Object value;
+	public final String key;
+	public final Object value;
 
 	public Eq(String key, Object value) {
 		this.key = key;
 		this.value = value;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public Object getValue() {
-		return value;
 	}
 
 	@Override

@@ -29,14 +29,10 @@ import static io.activej.codegen.expression.Expressions.not;
 
 @ExposedInternals
 public final class Not implements PredicateDef {
-	private final PredicateDef predicate;
+	public final PredicateDef predicate;
 
 	public Not(PredicateDef predicate) {
 		this.predicate = predicate;
-	}
-
-	public PredicateDef getPredicate() {
-		return predicate;
 	}
 
 	@Override
@@ -44,23 +40,23 @@ public final class Not implements PredicateDef {
 		if (predicate instanceof Not not)
 			return not.predicate.simplify();
 
-		if (predicate instanceof Eq eq)
-			return new NotEq(eq.getKey(), eq.getValue());
+		if (predicate instanceof Eq eq) {
+			return new NotEq(eq.key, eq.value);}
 
-		if (predicate instanceof NotEq notEq)
-			return new Eq(notEq.getKey(), notEq.getValue());
+		if (predicate instanceof NotEq notEq) {
+			return new Eq(notEq.key, notEq.value);}
 
 		if (predicate instanceof Gt gt)
-			return new Le(gt.getKey(), gt.getValue());
+			return new Le(gt.key, gt.value);
 
 		if (predicate instanceof Lt lt)
-			return new Ge(lt.getKey(), lt.getValue());
+			return new Ge(lt.key, lt.value);
 
 		if (predicate instanceof Ge ge)
-			return new Lt(ge.getKey(), ge.getValue());
+			return new Lt(ge.key, ge.value);
 
 		if (predicate instanceof Le le)
-			return new Gt(le.getKey(), le.getValue());
+			return new Gt(le.key, le.value);
 
 		return AggregationPredicates.not(predicate.simplify());
 	}

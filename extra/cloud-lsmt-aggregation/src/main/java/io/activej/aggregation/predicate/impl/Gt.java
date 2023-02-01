@@ -32,20 +32,12 @@ import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
 public final class Gt implements PredicateDef {
-	private final String key;
-	private final Comparable<Object> value;
+	public final String key;
+	public final Comparable<Object> value;
 
 	public Gt(String key, Comparable<Object> value) {
 		this.key = key;
 		this.value = value;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public Comparable<Object> getValue() {
-		return value;
 	}
 
 	@Override

@@ -77,63 +77,63 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 	}
 
 	private void writeEq(JsonWriter writer, Eq predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(SEMI);
-		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
+		attributeFormats.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeNotEq(JsonWriter writer, NotEq predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
+		attributeFormats.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeGe(JsonWriter writer, Ge predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
+		attributeFormats.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeGt(JsonWriter writer, Gt predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
+		attributeFormats.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeLe(JsonWriter writer, Le predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
+		attributeFormats.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeLt(JsonWriter writer, Lt predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
+		attributeFormats.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeIn(JsonWriter writer, In predicate) {
-		writer.writeString(predicate.getKey());
-		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
-		for (Object o : predicate.getValues()) {
+		writer.writeString(predicate.key);
+		JsonCodec<Object> codec = attributeFormats.get(predicate.key);
+		for (Object o : predicate.values) {
 			writer.writeByte(COMMA);
 			codec.write(writer, o);
 		}
 	}
 
 	private void writeBetween(JsonWriter writer, Between predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
-		codec.write(writer, predicate.getFrom());
+		JsonCodec<Object> codec = attributeFormats.get(predicate.key);
+		codec.write(writer, predicate.from);
 		writer.writeByte(COMMA);
-		codec.write(writer, predicate.getTo());
+		codec.write(writer, predicate.to);
 	}
 
 	private void writeRegexp(JsonWriter writer, RegExp predicate) {
-		writer.writeString(predicate.getKey());
+		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		writer.writeString(predicate.getRegexp());
+		writer.writeString(predicate.regexp.pattern());
 	}
 
 	private void write(JsonWriter writer, List<PredicateDef> predicates) {
@@ -147,7 +147,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 	}
 
 	private void writeNot(JsonWriter writer, Not predicate) {
-		write(writer, predicate.getPredicate());
+		write(writer, predicate.predicate);
 	}
 
 	@SuppressWarnings("NullableProblems")
@@ -170,7 +170,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			} else if (predicate instanceof Has predicateHas) {
 				writer.writeString(HAS);
 				writer.writeByte(COMMA);
-				writer.writeString(predicateHas.getKey());
+				writer.writeString(predicateHas.key);
 			} else if (predicate instanceof Gt predicateGt) {
 				writer.writeString(GT);
 				writer.writeByte(COMMA);
@@ -198,11 +198,11 @@ public final class PredicateDefJsonCodec implements JsonCodec<PredicateDef> {
 			} else if (predicate instanceof And predicateAnd) {
 				writer.writeString(AND);
 				writer.writeByte(COMMA);
-				write(writer, predicateAnd.getPredicates());
+				write(writer, predicateAnd.predicates);
 			} else if (predicate instanceof Or predicateOr) {
 				writer.writeString(OR);
 				writer.writeByte(COMMA);
-				write(writer, predicateOr.getPredicates());
+				write(writer, predicateOr.predicates);
 			} else if (predicate instanceof Not predicateNot) {
 				writer.writeString(NOT);
 				writer.writeByte(COMMA);

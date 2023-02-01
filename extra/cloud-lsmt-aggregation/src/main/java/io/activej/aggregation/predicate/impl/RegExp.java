@@ -32,24 +32,12 @@ import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
 public final class RegExp implements PredicateDef {
-	private final String key;
-	private final Pattern regexp;
+	public final String key;
+	public final Pattern regexp;
 
 	public RegExp(String key, Pattern regexp) {
 		this.key = key;
 		this.regexp = regexp;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public String getRegexp() {
-		return regexp.pattern();
-	}
-
-	public Pattern getRegexpPattern() {
-		return regexp;
 	}
 
 	@Override

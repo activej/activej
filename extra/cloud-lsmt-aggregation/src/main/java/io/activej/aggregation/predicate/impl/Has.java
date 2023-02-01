@@ -31,14 +31,10 @@ import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
 public final class Has implements PredicateDef {
-	private final String key;
+	public final String key;
 
 	public Has(String key) {
 		this.key = key;
-	}
-
-	public String getKey() {
-		return key;
 	}
 
 	@Override

@@ -32,26 +32,14 @@ import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
 public final class Between implements PredicateDef {
-	private final String key;
-	private final Comparable<Object> from;
-	private final Comparable<Object> to;
+	public final String key;
+	public final Comparable<Object> from;
+	public final Comparable<Object> to;
 
 	public Between(String key, Comparable<Object> from, Comparable<Object> to) {
 		this.key = key;
 		this.from = from;
 		this.to = to;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public Comparable<Object> getFrom() {
-		return from;
-	}
-
-	public Comparable<Object> getTo() {
-		return to;
 	}
 
 	@Override
