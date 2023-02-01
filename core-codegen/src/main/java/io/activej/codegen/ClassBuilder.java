@@ -18,7 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
-import io.activej.codegen.expression.impl.ConstantExpression;
+import io.activej.codegen.expression.impl.Constant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -70,7 +70,7 @@ public final class ClassBuilder<T> {
 	final Set<String> fieldsFinal = new HashSet<>();
 	final Set<String> fieldsStatic = new HashSet<>();
 	final Map<String, Expression> fieldExpressions = new HashMap<>();
-	final Map<String, ConstantExpression> fieldConstants = new HashMap<>();
+	final Map<String, Constant> fieldConstants = new HashMap<>();
 
 	final Map<Method, Expression> methods = new LinkedHashMap<>();
 	final Map<Method, Expression> staticMethods = new LinkedHashMap<>();
@@ -318,8 +318,8 @@ public final class ClassBuilder<T> {
 			fieldsStatic.add(field);
 			fieldsFinal.add(field);
 			fieldExpressions.put(field, value);
-			if (value instanceof ConstantExpression constantExpression) {
-				fieldConstants.put(field, constantExpression);
+			if (value instanceof Constant constant) {
+				fieldConstants.put(field, constant);
 			} else {
 				fieldExpressions.put(field, value);
 			}
@@ -416,7 +416,7 @@ public final class ClassBuilder<T> {
 				getInternalName(superclass),
 				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
 
-		Map<String, ConstantExpression> constantMap = new LinkedHashMap<>();
+		Map<String, Constant> constantMap = new LinkedHashMap<>();
 
 		Map<Method, Expression> constructors = new LinkedHashMap<>(this.constructors);
 		if (constructors.isEmpty()) {
@@ -478,9 +478,9 @@ public final class ClassBuilder<T> {
 
 			Context ctx = new Context(classLoader, this, g, classType, m, constantMap);
 
-			for (Map.Entry<String, ConstantExpression> entry : this.fieldConstants.entrySet()) {
+			for (Map.Entry<String, Constant> entry : this.fieldConstants.entrySet()) {
 				String field = entry.getKey();
-				ConstantExpression expression = entry.getValue();
+				Constant expression = entry.getValue();
 
 				if (!isJvmPrimitive(expression.getValue())) {
 					STATIC_CONSTANTS.put(expression.getId(), expression.getValue());
@@ -493,9 +493,9 @@ public final class ClassBuilder<T> {
 				}
 			}
 
-			for (Map.Entry<String, ConstantExpression> entry : constantMap.entrySet()) {
+			for (Map.Entry<String, Constant> entry : constantMap.entrySet()) {
 				String field = entry.getKey();
-				ConstantExpression expression = entry.getValue();
+				Constant expression = entry.getValue();
 
 				cw.visitField(ACC_PUBLIC + ACC_STATIC + ACC_FINAL,
 						field, getType(expression.getValueClass()).getDescriptor(), null, null);
@@ -539,10 +539,10 @@ public final class ClassBuilder<T> {
 			}
 
 			private void cleanup() {
-				for (Map.Entry<String, ConstantExpression> entry : fieldConstants.entrySet()) {
+				for (Map.Entry<String, Constant> entry : fieldConstants.entrySet()) {
 					STATIC_CONSTANTS.remove(entry.getValue().getId());
 				}
-				for (ConstantExpression expression : constantMap.values()) {
+				for (Constant expression : constantMap.values()) {
 					STATIC_CONSTANTS.remove(expression.getId());
 				}
 			}
