@@ -5,7 +5,7 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_Sharding;
+import io.activej.rpc.client.sender.strategy.impl.Sharding;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.SerializeRecord;
@@ -96,7 +96,7 @@ public final class RpcBlockingTest {
 				.withStrategy(
 						RpcStrategies.roundRobin(
 								server(address1),
-								RpcStrategy_Sharding.builder(
+								Sharding.builder(
 												(HelloRequest item) -> {
 													int shard = 0;
 													if (item.name.startsWith("S")) {

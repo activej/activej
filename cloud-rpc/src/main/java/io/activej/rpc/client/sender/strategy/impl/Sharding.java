@@ -34,22 +34,22 @@ import java.util.function.ToIntFunction;
 import static io.activej.rpc.client.sender.Utils.listOfNullableSenders;
 
 @ExposedInternals
-public final class RpcStrategy_Sharding implements RpcStrategy {
+public final class Sharding implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 	private final ToIntFunction<?> shardingFunction;
 	private int minActiveSubStrategies;
 
-	public RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<? extends RpcStrategy> list, int minActiveSubStrategies) {
+	public Sharding(ToIntFunction<?> shardingFunction, List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
+	public static <T> Sharding create(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
 		return builder(shardingFunction, strategies).build();
 	}
 
-	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
+	public static <T> Sharding create(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
 		return builder(shardingFunction, strategies).build();
 	}
 
@@ -58,21 +58,21 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 	}
 
 	public static <T> Builder builder(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
-		return new RpcStrategy_Sharding(shardingFunction, strategies, 0).new Builder();
+		return new Sharding(shardingFunction, strategies, 0).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_Sharding> {
+	public final class Builder extends AbstractBuilder<Builder, Sharding> {
 		private Builder() {}
 
 		public Builder withMinActiveSubStrategies(int minActiveSubStrategies) {
 			checkNotBuilt(this);
-			RpcStrategy_Sharding.this.minActiveSubStrategies = minActiveSubStrategies;
+			Sharding.this.minActiveSubStrategies = minActiveSubStrategies;
 			return this;
 		}
 
 		@Override
-		protected RpcStrategy_Sharding doBuild() {
-			return RpcStrategy_Sharding.this;
+		protected Sharding doBuild() {
+			return Sharding.this;
 		}
 	}
 

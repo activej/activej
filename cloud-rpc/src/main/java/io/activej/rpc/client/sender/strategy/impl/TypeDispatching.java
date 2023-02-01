@@ -34,20 +34,20 @@ import java.util.Set;
 import static io.activej.common.Checks.checkState;
 
 @ExposedInternals
-public final class RpcStrategy_TypeDispatching implements RpcStrategy {
+public final class TypeDispatching implements RpcStrategy {
 	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy;
 	private @Nullable RpcStrategy defaultStrategy;
 
-	public RpcStrategy_TypeDispatching(Map<Class<?>, RpcStrategy> dataTypeToStrategy, @Nullable RpcStrategy defaultStrategy) {
+	public TypeDispatching(Map<Class<?>, RpcStrategy> dataTypeToStrategy, @Nullable RpcStrategy defaultStrategy) {
 		this.dataTypeToStrategy = dataTypeToStrategy;
 		this.defaultStrategy = defaultStrategy;
 	}
 
 	public static Builder builder() {
-		return new RpcStrategy_TypeDispatching(new HashMap<>(), null).new Builder();
+		return new TypeDispatching(new HashMap<>(), null).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_TypeDispatching> {
+	public final class Builder extends AbstractBuilder<Builder, TypeDispatching> {
 		private Builder() {}
 
 		public Builder with(Class<?> dataType, RpcStrategy strategy) {
@@ -66,8 +66,8 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 		}
 
 		@Override
-		protected RpcStrategy_TypeDispatching doBuild() {
-			return RpcStrategy_TypeDispatching.this;
+		protected TypeDispatching doBuild() {
+			return TypeDispatching.this;
 		}
 	}
 

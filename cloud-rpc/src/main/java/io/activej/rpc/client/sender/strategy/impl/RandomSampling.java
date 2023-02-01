@@ -29,21 +29,21 @@ import java.util.*;
 import static io.activej.common.Checks.checkArgument;
 
 @ExposedInternals
-public final class RpcStrategy_RandomSampling implements RpcStrategy {
+public final class RandomSampling implements RpcStrategy {
 	private final Map<RpcStrategy, Double> strategyToWeight;
 
 	private Random random;
 
-	public RpcStrategy_RandomSampling(Random random, Map<RpcStrategy, Double> strategyToWeight) {
+	public RandomSampling(Random random, Map<RpcStrategy, Double> strategyToWeight) {
 		this.random = random;
 		this.strategyToWeight = strategyToWeight;
 	}
 
 	public static Builder builder() {
-		return new RpcStrategy_RandomSampling(new Random(), new HashMap<>()).new Builder();
+		return new RandomSampling(new Random(), new HashMap<>()).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RandomSampling> {
+	public final class Builder extends AbstractBuilder<Builder, RandomSampling> {
 		private Builder() {}
 
 		public Builder with(double weight, RpcStrategy strategy) {
@@ -56,13 +56,13 @@ public final class RpcStrategy_RandomSampling implements RpcStrategy {
 
 		public Builder withRandom(Random random) {
 			checkNotBuilt(this);
-			RpcStrategy_RandomSampling.this.random = random;
+			RandomSampling.this.random = random;
 			return this;
 		}
 
 		@Override
-		protected RpcStrategy_RandomSampling doBuild() {
-			return RpcStrategy_RandomSampling.this;
+		protected RandomSampling doBuild() {
+			return RandomSampling.this;
 		}
 	}
 

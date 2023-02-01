@@ -36,7 +36,7 @@ import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static java.lang.Math.min;
 
 @ExposedInternals
-public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
+public final class RendezvousHashing implements RpcStrategy {
 	public static final int DEFAULT_BUCKET_CAPACITY = 2048;
 	public static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->
 			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
@@ -50,7 +50,7 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 	private int minActiveShards;
 	private int reshardings;
 
-	public RpcStrategy_RendezvousHashing(
+	public RendezvousHashing(
 			ToIntFunction<?> hashFn,
 			Map<Object, RpcStrategy> shards,
 			ToLongBiFunction<Object, Integer> hashBucketFn,
@@ -67,36 +67,36 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 	}
 
 	public static <T> Builder builder(ToIntFunction<T> hashFn) {
-		return new RpcStrategy_RendezvousHashing(
+		return new RendezvousHashing(
 				hashFn, new HashMap<>(), DEFAULT_HASH_BUCKET_FN,
 				DEFAULT_BUCKET_CAPACITY, DEFAULT_MIN_ACTIVE_SHARDS, DEFAULT_MAX_RESHARDINGS).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RendezvousHashing> {
+	public final class Builder extends AbstractBuilder<Builder, RendezvousHashing> {
 		private Builder() {}
 
 		public Builder withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
 			checkNotBuilt(this);
-			RpcStrategy_RendezvousHashing.this.hashBucketFn = hashBucketFn;
+			RendezvousHashing.this.hashBucketFn = hashBucketFn;
 			return this;
 		}
 
 		public Builder withBuckets(int buckets) {
 			checkNotBuilt(this);
 			checkArgument((buckets & (buckets - 1)) == 0);
-			RpcStrategy_RendezvousHashing.this.buckets = buckets;
+			RendezvousHashing.this.buckets = buckets;
 			return this;
 		}
 
 		public Builder withMinActiveShards(int minActiveShards) {
 			checkNotBuilt(this);
-			RpcStrategy_RendezvousHashing.this.minActiveShards = minActiveShards;
+			RendezvousHashing.this.minActiveShards = minActiveShards;
 			return this;
 		}
 
 		public Builder withReshardings(int reshardings) {
 			checkNotBuilt(this);
-			RpcStrategy_RendezvousHashing.this.reshardings = reshardings;
+			RendezvousHashing.this.reshardings = reshardings;
 			return this;
 		}
 
@@ -119,8 +119,8 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 		}
 
 		@Override
-		protected RpcStrategy_RendezvousHashing doBuild() {
-			return RpcStrategy_RendezvousHashing.this;
+		protected RendezvousHashing doBuild() {
+			return RendezvousHashing.this;
 		}
 	}
 

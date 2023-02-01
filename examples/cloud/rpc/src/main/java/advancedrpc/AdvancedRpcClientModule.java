@@ -10,7 +10,7 @@ import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.impl.RendezvousHashing;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -43,11 +43,11 @@ public class AdvancedRpcClientModule extends AbstractModule {
 		checkState(inetAddresses.size() == 4);
 
 		return RpcStrategies.firstAvailable(
-				RpcStrategy_RendezvousHashing.builder(Object::hashCode)
+				RendezvousHashing.builder(Object::hashCode)
 						.withShard(1, server(inetAddresses.get(0)))
 						.withShard(2, server(inetAddresses.get(1)))
 						.build(),
-				RpcStrategy_RendezvousHashing.builder(Object::hashCode)
+				RendezvousHashing.builder(Object::hashCode)
 						.withShard(1, server(inetAddresses.get(2)))
 						.withShard(2, server(inetAddresses.get(3)))
 						.build());

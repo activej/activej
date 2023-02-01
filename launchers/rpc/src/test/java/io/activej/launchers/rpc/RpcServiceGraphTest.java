@@ -10,7 +10,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RoundRobin;
+import io.activej.rpc.client.sender.strategy.impl.RoundRobin;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraph;
@@ -76,7 +76,7 @@ public class RpcServiceGraphTest {
 					IRpcClient client(NioReactor reactor) {
 						return RpcClient.builder(reactor)
 								.withMessageTypes(String.class)
-								.withStrategy(RpcStrategy_RoundRobin.builder(
+								.withStrategy(RoundRobin.builder(
 												servers(
 														new InetSocketAddress(port),
 														new InetSocketAddress(getFreePort())

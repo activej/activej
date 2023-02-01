@@ -3,7 +3,7 @@ package io.activej.rpc.client.sender;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RandomSampling;
+import io.activej.rpc.client.sender.strategy.impl.RandomSampling;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -33,7 +33,7 @@ public class RpcStrategyRandomSamplingTest {
 		int strategy_3_weight = 7;
 
 		// init RandomSamplingStrategy
-		RpcStrategy randomSamplingStrategy = RpcStrategy_RandomSampling.builder()
+		RpcStrategy randomSamplingStrategy = RandomSampling.builder()
 				.with(strategy_1_weight, strategy_1)
 				.with(strategy_2_weight, strategy_2)
 				.with(strategy_3_weight, strategy_3)
@@ -79,7 +79,7 @@ public class RpcStrategyRandomSamplingTest {
 		int strategy_3_weight = 8;
 
 		// init RandomSamplingStrategy
-		RpcStrategy randomSamplingStrategy = RpcStrategy_RandomSampling.builder()
+		RpcStrategy randomSamplingStrategy = RandomSampling.builder()
 				.with(strategy_1_weight, strategy_1)
 				.with(zero_weight, strategy_2)
 				.with(strategy_3_weight, strategy_3)

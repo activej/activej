@@ -4,8 +4,8 @@ import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_TypeDispatching;
+import io.activej.rpc.client.sender.strategy.impl.RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.impl.TypeDispatching;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -143,7 +143,7 @@ public class RpcStrategiesTest {
 		RpcSenderStub connection3 = new RpcSenderStub();
 		RpcSenderStub connection4 = new RpcSenderStub();
 		RpcSenderStub connection5 = new RpcSenderStub();
-		RpcStrategy strategy = RpcStrategy_RendezvousHashing.builder((Integer item) -> item)
+		RpcStrategy strategy = RendezvousHashing.builder((Integer item) -> item)
 				.withShard(1, firstAvailable(servers(address1, address2)))
 				.withShard(2, firstAvailable(servers(address3, address4)))
 				.withShard(3, server(address5))
@@ -196,7 +196,7 @@ public class RpcStrategiesTest {
 		int iterationsPerDataStub = 25;
 		int iterationsPerDataStubWithKey = 35;
 		RpcSender sender;
-		RpcStrategy strategy = RpcStrategy_TypeDispatching.builder()
+		RpcStrategy strategy = TypeDispatching.builder()
 				.with(String.class,
 						firstValidResult(servers(address1, address2)))
 				.withDefault(

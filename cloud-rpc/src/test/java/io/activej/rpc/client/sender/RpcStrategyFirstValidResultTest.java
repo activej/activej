@@ -5,7 +5,7 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_FirstValidResult;
+import io.activej.rpc.client.sender.strategy.impl.FirstValidResult;
 import io.activej.test.ExpectedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +92,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy strategy2 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy strategy3 = new RequestSenderOnResultWithNullRpcStrategy();
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.builder(strategy1, strategy2, strategy3)
+		RpcStrategy firstValidResult = FirstValidResult.builder(strategy1, strategy2, strategy3)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
 				.build();
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
@@ -114,7 +114,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy strategy2 = new RequestSenderOnResultWithValueRpcStrategy(validKey);
 		RpcStrategy strategy3 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.builder(strategy1, strategy2, strategy3)
+		RpcStrategy firstValidResult = FirstValidResult.builder(strategy1, strategy2, strategy3)
 				.withResultValidator((Predicate<Integer>) input -> input == validKey)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
 				.build();
@@ -133,7 +133,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy strategy2 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy strategy3 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.builder(strategy1, strategy2, strategy3)
+		RpcStrategy firstValidResult = FirstValidResult.builder(strategy1, strategy2, strategy3)
 				.withResultValidator((Predicate<Integer>) input -> input == validKey)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
 				.build();

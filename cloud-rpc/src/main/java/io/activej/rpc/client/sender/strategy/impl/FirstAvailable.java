@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Set;
 
 @ExposedInternals
-public final class RpcStrategy_FirstAvailable implements RpcStrategy {
+public final class FirstAvailable implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 
-	public RpcStrategy_FirstAvailable(List<? extends RpcStrategy> list) {
+	public FirstAvailable(List<? extends RpcStrategy> list) {
 		this.list = list;
 	}
 

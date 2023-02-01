@@ -4,7 +4,7 @@ import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcMessageDataStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_TypeDispatching;
+import io.activej.rpc.client.sender.strategy.impl.TypeDispatching;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,7 +48,7 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
+		RpcStrategy typeDispatchingStrategy = TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)
@@ -88,7 +88,7 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy defaultServer = server(address4);
-		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
+		RpcStrategy typeDispatchingStrategy = TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)
@@ -117,7 +117,7 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
+		RpcStrategy typeDispatchingStrategy = TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)
@@ -139,7 +139,7 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
+		RpcStrategy typeDispatchingStrategy = TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)
@@ -162,7 +162,7 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy defaultServer = server(address4);
-		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
+		RpcStrategy typeDispatchingStrategy = TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)

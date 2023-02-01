@@ -12,7 +12,7 @@ import static io.activej.common.Checks.checkArgument;
 @StaticFactories(RpcStrategy.class)
 public class RpcStrategies {
 	public static RpcStrategy server(InetSocketAddress address) {
-		return new RpcStrategy_SingleServer(address);
+		return new SingleServer(address);
 	}
 
 	public static List<? extends RpcStrategy> servers(InetSocketAddress... addresses) {
@@ -22,7 +22,7 @@ public class RpcStrategies {
 	public static List<? extends RpcStrategy> servers(List<InetSocketAddress> addresses) {
 		checkArgument(!addresses.isEmpty(), "At least one address must be present");
 		return addresses.stream()
-				.map(RpcStrategy_SingleServer::new)
+				.map(SingleServer::new)
 				.toList();
 	}
 
@@ -31,7 +31,7 @@ public class RpcStrategies {
 	}
 
 	public static RpcStrategy firstAvailable(List<? extends RpcStrategy> strategies) {
-		return new RpcStrategy_FirstAvailable(strategies);
+		return new FirstAvailable(strategies);
 	}
 
 	public static RpcStrategy firstValidResult(RpcStrategy... strategies) {
@@ -39,7 +39,7 @@ public class RpcStrategies {
 	}
 
 	public static RpcStrategy firstValidResult(List<? extends RpcStrategy> strategies) {
-		return RpcStrategy_FirstValidResult.create(strategies);
+		return FirstValidResult.create(strategies);
 	}
 
 	public static RpcStrategy roundRobin(RpcStrategy... strategies) {
@@ -47,7 +47,7 @@ public class RpcStrategies {
 	}
 
 	public static RpcStrategy roundRobin(List<? extends RpcStrategy> strategies) {
-		return RpcStrategy_RoundRobin.create(strategies);
+		return RoundRobin.create(strategies);
 	}
 
 	public static <T> RpcStrategy sharding(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
@@ -55,6 +55,6 @@ public class RpcStrategies {
 	}
 
 	public static <T> RpcStrategy sharding(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
-		return RpcStrategy_Sharding.create(shardingFunction, strategies);
+		return Sharding.create(shardingFunction, strategies);
 	}
 }

@@ -30,20 +30,20 @@ import java.util.List;
 import java.util.Set;
 
 @ExposedInternals
-public final class RpcStrategy_RoundRobin implements RpcStrategy {
+public final class RoundRobin implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 	private int minActiveSubStrategies;
 
-	public RpcStrategy_RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
+	public RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public static RpcStrategy_RoundRobin create(RpcStrategy... strategies) {
+	public static RoundRobin create(RpcStrategy... strategies) {
 		return builder(strategies).build();
 	}
 
-	public static RpcStrategy_RoundRobin create(List<? extends RpcStrategy> strategies) {
+	public static RoundRobin create(List<? extends RpcStrategy> strategies) {
 		return builder(strategies).build();
 	}
 
@@ -52,21 +52,21 @@ public final class RpcStrategy_RoundRobin implements RpcStrategy {
 	}
 
 	public static Builder builder(List<? extends RpcStrategy> strategies) {
-		return new RpcStrategy_RoundRobin(strategies, 0).new Builder();
+		return new RoundRobin(strategies, 0).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_RoundRobin> {
+	public final class Builder extends AbstractBuilder<Builder, RoundRobin> {
 		private Builder() {}
 
 		public Builder withMinActiveSubStrategies(int minActiveSubStrategies) {
 			checkNotBuilt(this);
-			RpcStrategy_RoundRobin.this.minActiveSubStrategies = minActiveSubStrategies;
+			RoundRobin.this.minActiveSubStrategies = minActiveSubStrategies;
 			return this;
 		}
 
 		@Override
-		protected RpcStrategy_RoundRobin doBuild() {
-			return RpcStrategy_RoundRobin.this;
+		protected RoundRobin doBuild() {
+			return RoundRobin.this;
 		}
 	}
 

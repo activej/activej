@@ -4,7 +4,7 @@ import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcMessageDataStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RoundRobin;
+import io.activej.rpc.client.sender.strategy.impl.RoundRobin;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -115,7 +115,7 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy roundRobin = RpcStrategy_RoundRobin.builder(servers(address1, address2, address3))
+		RpcStrategy roundRobin = RoundRobin.builder(servers(address1, address2, address3))
 				.withMinActiveSubStrategies(4)
 				.build();
 
@@ -131,7 +131,7 @@ public class RpcStrategyRoundRobinTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
-		RpcStrategy roundRobin = RpcStrategy_RoundRobin.builder(servers(address1, address2, address3))
+		RpcStrategy roundRobin = RoundRobin.builder(servers(address1, address2, address3))
 				.withMinActiveSubStrategies(3)
 				.build();
 

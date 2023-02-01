@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 @ExposedInternals
-public final class RpcStrategy_FirstValidResult implements RpcStrategy {
+public final class FirstValidResult implements RpcStrategy {
 	public static final Predicate<?> DEFAULT_RESULT_VALIDATOR = Objects::nonNull;
 
 	private final List<? extends RpcStrategy> list;
@@ -40,7 +40,7 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 	private Predicate<?> resultValidator;
 	private @Nullable Exception noValidResultException;
 
-	public RpcStrategy_FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
+	public FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
 			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
@@ -59,7 +59,7 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		return noValidResultException;
 	}
 
-	public static RpcStrategy_FirstValidResult create(List<? extends RpcStrategy> list) {
+	public static FirstValidResult create(List<? extends RpcStrategy> list) {
 		return builder(list).build();
 	}
 
@@ -68,27 +68,27 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 	}
 
 	public static Builder builder(List<? extends RpcStrategy> list) {
-		return new RpcStrategy_FirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null).new Builder();
+		return new FirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, RpcStrategy_FirstValidResult> {
+	public final class Builder extends AbstractBuilder<Builder, FirstValidResult> {
 		private Builder() {}
 
 		public Builder withResultValidator(Predicate<?> resultValidator) {
 			checkNotBuilt(this);
-			RpcStrategy_FirstValidResult.this.resultValidator = resultValidator;
+			FirstValidResult.this.resultValidator = resultValidator;
 			return this;
 		}
 
 		public Builder withNoValidResultException(Exception e) {
 			checkNotBuilt(this);
-			RpcStrategy_FirstValidResult.this.noValidResultException = e;
+			FirstValidResult.this.noValidResultException = e;
 			return this;
 		}
 
 		@Override
-		protected RpcStrategy_FirstValidResult doBuild() {
-			return RpcStrategy_FirstValidResult.this;
+		protected FirstValidResult doBuild() {
+			return FirstValidResult.this;
 		}
 	}
 

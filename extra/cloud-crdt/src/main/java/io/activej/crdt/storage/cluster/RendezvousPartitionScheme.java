@@ -5,7 +5,7 @@ import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.impl.RendezvousHashing;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -130,7 +130,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P> {
 			if (!partitionGroup.isActive()) continue;
 			//noinspection unchecked
 			rendezvousHashings.add(
-					RpcStrategy_RendezvousHashing.builder(req ->
+					RendezvousHashing.builder(req ->
 									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 							.withBuckets(NUMBER_OF_BUCKETS)
 							.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))

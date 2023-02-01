@@ -27,7 +27,7 @@ import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.strategy.impl.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.strategy.impl.RendezvousHashing;
 import io.activej.serializer.SerializerFactory;
 
 import java.time.Duration;
@@ -53,7 +53,7 @@ public class MemcacheClientModule extends AbstractModule {
 	IRpcClient rpcClient(NioReactor reactor, Config config, DefiningClassLoader classLoader) {
 		return RpcClient.builder(reactor)
 				.withStrategy(
-						RpcStrategy_RendezvousHashing.builder(HASH_FUNCTION)
+						RendezvousHashing.builder(HASH_FUNCTION)
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
 								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
 								.build())
