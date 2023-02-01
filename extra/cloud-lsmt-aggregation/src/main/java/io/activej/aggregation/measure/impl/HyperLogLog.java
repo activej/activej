@@ -34,15 +34,11 @@ import static org.objectweb.asm.Type.*;
 
 @ExposedInternals
 public final class HyperLogLog extends Measure {
-	private final int registers;
+	public final int registers;
 
 	public HyperLogLog(int registers) {
 		super(FieldTypes.ofHyperLogLog());
 		this.registers = registers;
-	}
-
-	public int getRegisters() {
-		return registers;
 	}
 
 	@Override
