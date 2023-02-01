@@ -17,7 +17,7 @@
 package io.activej.codegen.expression.impl;
 
 import io.activej.codegen.Context;
-import io.activej.codegen.expression.ConstantExpression;
+import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExplicitlyExposed;
 import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +33,7 @@ import static org.objectweb.asm.Type.getType;
  * Defines methods to create a constant value
  */
 @ExplicitlyExposed
-public final class Expression_Constant implements ConstantExpression {
+public final class Expression_Constant implements Expression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
 	private final Object value;
@@ -61,17 +61,14 @@ public final class Expression_Constant implements ConstantExpression {
 		return cls;
 	}
 
-	@Override
 	public Object getValue() {
 		return value;
 	}
 
-	@Override
 	public Class<?> getValueClass() {
 		return cls == null ? value.getClass() : cls;
 	}
 
-	@Override
 	public int getId() {
 		return id;
 	}

@@ -48,7 +48,7 @@ public class Expressions {
 	 * @param value value which will be created as constant
 	 * @return new instance of the ExpressionConstant
 	 */
-	public static ConstantExpression value(Object value) {
+	public static Expression_Constant value(Object value) {
 		return new Expression_Constant(value);
 	}
 
@@ -59,7 +59,7 @@ public class Expressions {
 	 * @param type  actual type of value
 	 * @return new instance of the ExpressionConstant
 	 */
-	public static ConstantExpression value(Object value, Class<?> type) {
+	public static Expression_Constant value(Object value, Class<?> type) {
 		return new Expression_Constant(value, type);
 	}
 
