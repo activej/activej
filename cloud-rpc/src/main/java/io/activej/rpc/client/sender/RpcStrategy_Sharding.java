@@ -17,7 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
@@ -30,7 +30,7 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.rpc.client.sender.Utils.listOfNullableSenders;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class RpcStrategy_Sharding implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 	private final ToIntFunction<?> shardingFunction;

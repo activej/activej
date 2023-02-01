@@ -19,7 +19,7 @@ package io.activej.codegen.expression.impl;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -40,7 +40,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods for hashing some fields
  */
-@ExplicitlyExposed
+@ExposedInternals
 public final class HashCode implements Expression {
 	private final List<Expression> arguments;
 

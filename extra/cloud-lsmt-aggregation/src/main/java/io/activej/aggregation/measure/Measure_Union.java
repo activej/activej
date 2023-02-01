@@ -19,13 +19,13 @@ package io.activej.aggregation.measure;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class Measure_Union extends Measure {
 	@SuppressWarnings("rawtypes")
 	public Measure_Union(FieldType fieldType) {

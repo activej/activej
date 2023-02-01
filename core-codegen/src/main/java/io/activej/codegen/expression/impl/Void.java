@@ -18,12 +18,12 @@ package io.activej.codegen.expression.impl;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Type;
 
 import static org.objectweb.asm.Type.VOID_TYPE;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class Void implements Expression {
 	public static final Void INSTANCE = new Void();
 

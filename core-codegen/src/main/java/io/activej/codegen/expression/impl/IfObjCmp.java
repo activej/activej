@@ -19,7 +19,7 @@ package io.activej.codegen.expression.impl;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.operation.CompareOperation;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -36,7 +36,7 @@ import static org.objectweb.asm.Type.INT_TYPE;
 /**
  * Defines methods for comparing functions
  */
-@ExplicitlyExposed
+@ExposedInternals
 public final class IfObjCmp implements Expression {
 	private final Expression left;
 	private final Expression right;

@@ -17,7 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 	public static final Predicate<?> DEFAULT_RESULT_VALIDATOR = Objects::nonNull;
 

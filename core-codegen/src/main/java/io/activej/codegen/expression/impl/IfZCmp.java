@@ -19,7 +19,7 @@ package io.activej.codegen.expression.impl;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.operation.CompareOperation;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -28,7 +28,7 @@ import static io.activej.codegen.util.TypeChecks.checkType;
 import static org.objectweb.asm.Type.BOOLEAN;
 import static org.objectweb.asm.Type.INT;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class IfZCmp implements Expression {
 	private final Expression value;
 	private final CompareOperation operation;

@@ -19,7 +19,7 @@ package io.activej.codegen.expression.impl;
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.StoreDef;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Type;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
@@ -28,7 +28,7 @@ import static io.activej.codegen.util.TypeChecks.isAssignable;
 /**
  * Defines methods which allow setting fields
  */
-@ExplicitlyExposed
+@ExposedInternals
 public final class Set implements Expression {
 	private final StoreDef to;
 	private final Expression from;

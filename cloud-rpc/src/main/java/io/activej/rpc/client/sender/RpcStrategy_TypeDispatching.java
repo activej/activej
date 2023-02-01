@@ -17,7 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
@@ -31,7 +31,7 @@ import java.util.Set;
 
 import static io.activej.common.Checks.checkState;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy;
 	private @Nullable RpcStrategy defaultStrategy;

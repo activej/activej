@@ -17,7 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 
@@ -26,7 +26,7 @@ import java.util.*;
 
 import static io.activej.common.Checks.checkArgument;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class RpcStrategy_RandomSampling implements RpcStrategy {
 	private final Map<RpcStrategy, Double> strategyToWeight;
 

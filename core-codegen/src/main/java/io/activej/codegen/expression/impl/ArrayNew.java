@@ -18,14 +18,14 @@ package io.activej.codegen.expression.impl;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class ArrayNew implements Expression {
 	private final Class<?> type;
 	private final Expression length;

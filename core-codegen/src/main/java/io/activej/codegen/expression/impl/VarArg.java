@@ -18,14 +18,14 @@ package io.activej.codegen.expression.impl;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 /**
  * Defines method which allow taking argument according to their ordinal number
  */
-@ExplicitlyExposed
+@ExposedInternals
 public final class VarArg implements Variable {
 	private final int argument;
 

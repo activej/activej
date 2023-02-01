@@ -18,13 +18,13 @@ package io.activej.codegen.expression.impl;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Type;
 
 /**
  * Defines method which allow taking current instance
  */
-@ExplicitlyExposed
+@ExposedInternals
 public final class VarThis implements Expression {
 	@Override
 	public Type load(Context ctx) {

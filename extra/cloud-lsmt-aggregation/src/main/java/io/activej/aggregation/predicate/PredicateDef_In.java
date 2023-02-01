@@ -18,13 +18,13 @@ package io.activej.aggregation.predicate;
 
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class PredicateDef_In implements PredicateDef {
 	private final String key;
 	private final SortedSet<Object> values;

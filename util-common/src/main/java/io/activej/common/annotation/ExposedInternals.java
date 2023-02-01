@@ -12,6 +12,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  */
 @Target(TYPE)
 @Retention(SOURCE)
-public @interface ExplicitlyExposed {
+public @interface ExposedInternals {
 	String reason() default "";
 }

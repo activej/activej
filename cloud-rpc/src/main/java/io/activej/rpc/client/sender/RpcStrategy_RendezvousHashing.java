@@ -18,7 +18,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.HashUtils;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
@@ -33,7 +33,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 	public static final int DEFAULT_BUCKET_CAPACITY = 2048;
 	public static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->

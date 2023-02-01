@@ -18,7 +18,7 @@ package io.activej.codegen.expression.impl;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.expression.Expression;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import org.objectweb.asm.Type;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
@@ -30,7 +30,7 @@ import static org.objectweb.asm.commons.InstructionAdapter.OBJECT_TYPE;
 /**
  * Defines method in order to cast a function to a type
  */
-@ExplicitlyExposed
+@ExposedInternals
 public final class Cast implements Expression {
 	public static final Type SELF_TYPE = getType(Object.class);
 

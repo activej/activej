@@ -19,7 +19,7 @@ package io.activej.aggregation.predicate;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +28,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.property;
 import static io.activej.codegen.expression.Expressions.value;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class PredicateDef_Has implements PredicateDef {
 	private final String key;
 

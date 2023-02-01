@@ -20,7 +20,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.*;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class PredicateDef_RegExp implements PredicateDef {
 	private final String key;
 	private final Pattern regexp;

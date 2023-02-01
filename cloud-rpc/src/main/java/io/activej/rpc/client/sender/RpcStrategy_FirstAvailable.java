@@ -16,7 +16,7 @@
 
 package io.activej.rpc.client.sender;
 
-import io.activej.common.annotation.ExplicitlyExposed;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Set;
 
-@ExplicitlyExposed
+@ExposedInternals
 public final class RpcStrategy_FirstAvailable implements RpcStrategy {
 	private final List<? extends RpcStrategy> list;
 
