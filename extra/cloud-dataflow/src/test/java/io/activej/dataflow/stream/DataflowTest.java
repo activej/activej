@@ -9,7 +9,7 @@ import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
-import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
+import io.activej.dataflow.dataset.impl.ConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -140,7 +140,7 @@ public final class DataflowTest {
 		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> items = datasetOfId("items", simple(TestItem.class));
-		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
+		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
@@ -202,7 +202,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
-		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
+		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
@@ -384,7 +384,7 @@ public final class DataflowTest {
 
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
-		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(sortedDataset, "result");
+		Dataset<TestItem> consumerNode = consumerOfId(sortedDataset, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
@@ -570,7 +570,7 @@ public final class DataflowTest {
 		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> emptyDataset = empty(simple(TestItem.class));
-		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(emptyDataset, "result");
+		Dataset<TestItem> consumerNode = consumerOfId(emptyDataset, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()

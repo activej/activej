@@ -16,37 +16,46 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.*;
+import io.activej.dataflow.graph.DataflowContext;
+import io.activej.dataflow.graph.DataflowGraph;
+import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
-public final class DatasetSupplierOfId<T> extends Dataset<T> {
-	private final String id;
-	private final @Nullable List<Partition> partitions;
+@ExposedInternals
+public final class Filter<T> extends Dataset<T> {
+	public final Dataset<T> input;
+	public final Predicate<T> predicate;
 
-	public DatasetSupplierOfId(String id, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
-		super(resultStreamSchema);
-		this.id = id;
-		this.partitions = partitions;
+	public Filter(Dataset<T> input, Predicate<T> predicate) {
+		super(input.streamSchema());
+		this.input = input;
+		this.predicate = predicate;
 	}
 
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
-		List<Partition> partitions = this.partitions == null ? graph.getAvailablePartitions() : this.partitions;
+		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
-		for (int i = 0, size = partitions.size(); i < size; i++) {
-			Partition partition = partitions.get(i);
-			Node node = Nodes.supplierOfId(index, id, i, size);
-			graph.addNode(partition, node);
+		for (StreamId streamId : streamIds) {
+			Node node = Nodes.filter(index, predicate, streamId);
+			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.addAll(node.getOutputs());
 		}
 		return outputStreamIds;
+	}
+
+	@Override
+	public Collection<Dataset<?>> getBases() {
+		return List.of(input);
 	}
 }

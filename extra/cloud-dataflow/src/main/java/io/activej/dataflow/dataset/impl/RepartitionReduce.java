@@ -16,45 +16,40 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
+import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.datastream.processor.StreamLimiter;
+import io.activej.dataflow.graph.StreamSchema;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static io.activej.dataflow.dataset.DatasetUtils.limitStream;
+import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndReduce;
 
-public final class DatasetLocalLimit<T> extends Dataset<T> {
-	private final Dataset<T> input;
+@ExposedInternals
+public final class RepartitionReduce<K, I, O> extends Dataset<O> {
+	public final LocallySortedDataset<K, I> input;
+	public final Reducer<K, I, O, ?> reducer;
+	public final List<Partition> partitions;
 
-	private final long limit;
-
-	public DatasetLocalLimit(Dataset<T> input, long limit) {
-		super(input.streamSchema());
+	public RepartitionReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
+			StreamSchema<O> resultStreamSchema, List<Partition> partitions) {
+		super(resultStreamSchema);
 		this.input = input;
-		this.limit = limit;
+		this.reducer = reducer;
+		this.partitions = partitions;
 	}
 
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
-		List<StreamId> streamIds = input.channels(context);
-
-		if (limit == StreamLimiter.NO_LIMIT) return streamIds;
-
-		DataflowGraph graph = context.getGraph();
-
-		if (streamIds.isEmpty()) return streamIds;
-
-		List<StreamId> newStreamIds = new ArrayList<>(streamIds.size());
-		for (StreamId streamId : streamIds) {
-			newStreamIds.addAll(limitStream(graph, context.generateNodeIndex(), limit, streamId));
-		}
-
-		return newStreamIds;
+		List<Partition> ps = partitions != null && !partitions.isEmpty() ?
+				partitions :
+				context.getGraph().getAvailablePartitions();
+		return repartitionAndReduce(context, input, reducer, ps);
 	}
 
 	@Override

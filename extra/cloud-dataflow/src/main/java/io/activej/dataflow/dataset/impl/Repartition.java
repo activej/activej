@@ -1,5 +1,6 @@
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.graph.DataflowContext;
@@ -11,12 +12,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Function;
 
-public final class DatasetRepartition<T, K> extends Dataset<T> {
-	private final Dataset<T> input;
-	private final Function<T, K> keyFunction;
-	private final @Nullable List<Partition> partitions;
+@ExposedInternals
+public final class Repartition<T, K> extends Dataset<T> {
+	public final Dataset<T> input;
+	public final Function<T, K> keyFunction;
+	public final @Nullable List<Partition> partitions;
 
-	public DatasetRepartition(Dataset<T> input, Function<T, K> keyFunction, @Nullable List<Partition> partitions) {
+	public Repartition(Dataset<T> input, Function<T, K> keyFunction, @Nullable List<Partition> partitions) {
 		super(input.streamSchema());
 		this.input = input;
 		this.keyFunction = keyFunction;

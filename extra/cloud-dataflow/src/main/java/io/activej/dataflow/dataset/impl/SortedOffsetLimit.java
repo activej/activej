@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.dataset.LocallySortedDataset;
@@ -25,23 +26,24 @@ import io.activej.dataflow.graph.StreamId;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
-public final class SortedDatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
-	private final LocallySortedDataset<K, T> input;
+@ExposedInternals
+public final class SortedOffsetLimit<K, T> extends SortedDataset<K, T> {
+	public final LocallySortedDataset<K, T> input;
 
-	private final long offset;
-	private final long limit;
+	public final long offset;
+	public final long limit;
 
-	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
+	public final int sharderNonce;
 
-	public SortedDatasetOffsetLimit(LocallySortedDataset<K, T> input, long offset, long limit) {
+	public SortedOffsetLimit(LocallySortedDataset<K, T> input, long offset, long limit, int nonce) {
 		super(input.streamSchema(), input.keyComparator(), input.keyType(), input.keyFunction());
 		this.input = input;
 		this.offset = offset;
 		this.limit = limit;
+		this.sharderNonce = nonce;
 	}
 
 	@Override

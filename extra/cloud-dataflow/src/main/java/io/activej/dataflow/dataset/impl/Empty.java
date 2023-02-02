@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.Node;
@@ -25,10 +26,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class DatasetEmpty<T> extends Dataset<T> {
-	private final @Nullable List<Partition> partitions;
+@ExposedInternals
+public final class Empty<T> extends Dataset<T> {
+	public final @Nullable List<Partition> partitions;
 
-	public DatasetEmpty(StreamSchema<T> streamSchema, @Nullable List<Partition> partitions) {
+	public Empty(StreamSchema<T> streamSchema, @Nullable List<Partition> partitions) {
 		super(streamSchema);
 		this.partitions = partitions;
 	}

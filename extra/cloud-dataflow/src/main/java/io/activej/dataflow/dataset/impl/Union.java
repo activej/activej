@@ -16,13 +16,14 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.Node;
-import io.activej.dataflow.node.Nodes;
+import io.activej.dataflow.node.impl.Merge;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,14 +32,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class DatasetUnionAll<T> extends Dataset<T> {
-	private final Dataset<T> left;
-	private final Dataset<T> right;
+import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
 
-	public DatasetUnionAll(Dataset<T> left, Dataset<T> right) {
-		super(left.streamSchema());
+@ExposedInternals
+public final class Union<K, T> extends SortedDataset<K, T> {
+	public final SortedDataset<K, T> left;
+	public final SortedDataset<K, T> right;
+
+	public final int sharderNonce;
+
+	public Union(SortedDataset<K, T> left, SortedDataset<K, T> right, int nonce) {
+		super(left.streamSchema(), left.keyComparator(), left.keyType(), left.keyFunction());
 		this.left = left;
 		this.right = right;
+		this.sharderNonce = nonce;
 	}
 
 	@Override
@@ -46,8 +53,10 @@ public final class DatasetUnionAll<T> extends Dataset<T> {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 
-		List<StreamId> leftStreamIds = left.channels(context);
-		List<StreamId> rightStreamIds = right.channels(context);
+		DataflowContext next = context.withFixedNonce(sharderNonce);
+
+		List<StreamId> leftStreamIds = left.channels(next);
+		List<StreamId> rightStreamIds = repartitionAndSort(next, right, graph.getPartitions(leftStreamIds));
 
 		Map<Partition, List<StreamId>> partitioned = Stream.concat(leftStreamIds.stream(), rightStreamIds.stream())
 				.collect(Collectors.groupingBy(graph::getPartition));
@@ -56,17 +65,15 @@ public final class DatasetUnionAll<T> extends Dataset<T> {
 
 		for (Map.Entry<Partition, List<StreamId>> entry : partitioned.entrySet()) {
 			List<StreamId> streamIds = entry.getValue();
-			assert !streamIds.isEmpty();
 
-			if (streamIds.size() == 1) {
-				outputStreamIds.add(streamIds.get(0));
-				continue;
+			Merge<K, T>.Builder nodeMergeBuilder = Merge.builder(index, keyFunction(), keyComparator(), true);
+			for (StreamId streamId : streamIds) {
+				nodeMergeBuilder.withInput(streamId);
 			}
+			Merge<K, T> nodeMerge = nodeMergeBuilder.build();
+			graph.addNode(entry.getKey(), nodeMerge);
 
-			Node nodeUnion = Nodes.union(index, streamIds);
-			graph.addNode(entry.getKey(), nodeUnion);
-
-			outputStreamIds.addAll(nodeUnion.getOutputs());
+			outputStreamIds.add(nodeMerge.output);
 		}
 
 		return outputStreamIds;

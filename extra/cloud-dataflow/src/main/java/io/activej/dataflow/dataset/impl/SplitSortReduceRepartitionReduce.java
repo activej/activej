@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.graph.*;
@@ -34,16 +35,17 @@ import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.DatasetUtils.generateIndexes;
 
-public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends Dataset<O> {
-	private final Dataset<I> input;
-	private final Function<I, K> inputKeyFunction;
-	private final Function<A, K> accumulatorKeyFunction;
-	private final Comparator<K> keyComparator;
-	private final ReducerToResult<K, I, O, A> reducer;
-	private final StreamSchema<A> accumulatorStreamSchema;
-	private final int sortBufferSize;
+@ExposedInternals
+public final class SplitSortReduceRepartitionReduce<K, I, O, A> extends Dataset<O> {
+	public final Dataset<I> input;
+	public final Function<I, K> inputKeyFunction;
+	public final Function<A, K> accumulatorKeyFunction;
+	public final Comparator<K> keyComparator;
+	public final ReducerToResult<K, I, O, A> reducer;
+	public final StreamSchema<A> accumulatorStreamSchema;
+	public final int sortBufferSize;
 
-	public DatasetSplitSortReduceRepartitionReduce(Dataset<I> input,
+	public SplitSortReduceRepartitionReduce(Dataset<I> input,
 			Function<I, K> inputKeyFunction,
 			Function<A, K> accumulatorKeyFunction,
 			Comparator<K> keyComparator,

@@ -16,40 +16,46 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.Node;
-import io.activej.dataflow.node.Nodes;
+import io.activej.dataflow.graph.StreamSchema;
+import io.activej.dataflow.node.impl.ReduceSimple;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
-	private final Dataset<T> input;
-	private final int sortBufferSize;
+@ExposedInternals
+public final class LocalSortReduce<K, I, O> extends LocallySortedDataset<K, O> {
+	public final LocallySortedDataset<K, I> input;
+	public final Reducer<K, I, O, ?> reducer;
 
-	public DatasetLocalSort(Dataset<T> input, Class<K> keyType, Function<T, K> keyFunction, Comparator<K> keyComparator, int sortBufferSize) {
-		super(input.streamSchema(), keyComparator, keyType, keyFunction);
-		this.sortBufferSize = sortBufferSize;
+	public LocalSortReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
+			StreamSchema<O> resultStreamSchema, Function<O, K> resultKeyFunction) {
+		super(resultStreamSchema, input.keyComparator(), input.keyType(), resultKeyFunction);
 		this.input = input;
+		this.reducer = reducer;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
-		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
-		for (StreamId streamId : streamIds) {
-			Node node = Nodes.sort(index, input.streamSchema(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
+		for (StreamId streamId : input.channels(context)) {
+			ReduceSimple<K, I, O, Object>.Builder nodeBuilder = ReduceSimple.builder(index, input.keyFunction(),
+					input.keyComparator(), (Reducer<K, I, O, Object>) reducer);
+			nodeBuilder.withInput(streamId);
+			ReduceSimple<K, I, O, Object> node = nodeBuilder.build();
 			graph.addNode(graph.getPartition(streamId), node);
-			outputStreamIds.addAll(node.getOutputs());
+			outputStreamIds.add(node.output);
 		}
 		return outputStreamIds;
 	}

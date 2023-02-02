@@ -16,27 +16,29 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import io.activej.dataflow.node.impl.Filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
-public final class DatasetFilter<T> extends Dataset<T> {
-	private final Dataset<T> input;
-	private final Predicate<T> predicate;
+@ExposedInternals
+public final class Map<I, O> extends Dataset<O> {
+	public final Dataset<I> input;
+	public final Function<I, O> mapper;
 
-	public DatasetFilter(Dataset<T> input, Predicate<T> predicate) {
-		super(input.streamSchema());
+	public Map(Dataset<I> input, Function<I, O> mapper, StreamSchema<O> resultStreamSchema) {
+		super(resultStreamSchema);
 		this.input = input;
-		this.predicate = predicate;
+		this.mapper = mapper;
 	}
 
 	@Override
@@ -46,7 +48,7 @@ public final class DatasetFilter<T> extends Dataset<T> {
 		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			Node node = Nodes.filter(index, predicate, streamId);
+			Node node = Nodes.map(index, mapper, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.addAll(node.getOutputs());
 		}

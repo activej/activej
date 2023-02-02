@@ -1,8 +1,9 @@
 package io.activej.dataflow.stream;
 
 import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
-import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
+import io.activej.dataflow.dataset.impl.ConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -119,7 +120,7 @@ public class ReducerDeadlockTest {
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
 
-		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
+		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 
 		consumerNode.channels(DataflowContext.of(graph));
 

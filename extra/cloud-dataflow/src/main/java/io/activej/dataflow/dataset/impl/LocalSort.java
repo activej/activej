@@ -16,27 +16,30 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-public final class DatasetMap<I, O> extends Dataset<O> {
-	private final Dataset<I> input;
-	private final Function<I, O> mapper;
+@ExposedInternals
+public final class LocalSort<K, T> extends LocallySortedDataset<K, T> {
+	public final Dataset<T> input;
+	public final int sortBufferSize;
 
-	public DatasetMap(Dataset<I> input, Function<I, O> mapper, StreamSchema<O> resultStreamSchema) {
-		super(resultStreamSchema);
+	public LocalSort(Dataset<T> input, Class<K> keyType, Function<T, K> keyFunction, Comparator<K> keyComparator, int sortBufferSize) {
+		super(input.streamSchema(), keyComparator, keyType, keyFunction);
+		this.sortBufferSize = sortBufferSize;
 		this.input = input;
-		this.mapper = mapper;
 	}
 
 	@Override
@@ -46,7 +49,7 @@ public final class DatasetMap<I, O> extends Dataset<O> {
 		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			Node node = Nodes.map(index, mapper, streamId);
+			Node node = Nodes.sort(index, input.streamSchema(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.addAll(node.getOutputs());
 		}

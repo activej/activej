@@ -3,7 +3,7 @@ package io.activej.dataflow.stream;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
-import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
+import io.activej.dataflow.dataset.impl.ConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -310,7 +310,7 @@ public class PageRankTest {
 
 		SortedDataset<Long, Rank> pageRanks = pageRank(pages);
 
-		DatasetConsumerOfId<Rank> consumerNode = consumerOfId(pageRanks, "result");
+		Dataset<Rank> consumerNode = consumerOfId(pageRanks, "result");
 
 		consumerNode.channels(DataflowContext.of(graph));
 

@@ -16,38 +16,39 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public final class DatasetConsumerOfId<T> extends Dataset<T> {
-	private final String id;
+@ExposedInternals
+public final class SupplierOfId<T> extends Dataset<T> {
+	public final String id;
+	public final @Nullable List<Partition> partitions;
 
-	private final Dataset<T> input;
-
-	public DatasetConsumerOfId(Dataset<T> input, String id) {
-		super(input.streamSchema());
+	public SupplierOfId(String id, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
+		super(resultStreamSchema);
 		this.id = id;
-		this.input = input;
+		this.partitions = partitions;
 	}
 
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
-		List<StreamId> streamIds = input.channels(context);
+		List<StreamId> outputStreamIds = new ArrayList<>();
+		List<Partition> partitions = this.partitions == null ? graph.getAvailablePartitions() : this.partitions;
 		int index = context.generateNodeIndex();
-		for (int i = 0, streamIdsSize = streamIds.size(); i < streamIdsSize; i++) {
-			StreamId streamId = streamIds.get(i);
-			Partition partition = graph.getPartition(streamId);
-			Node node = Nodes.consumerOfId(index, id, i, streamIdsSize, streamId);
+		for (int i = 0, size = partitions.size(); i < size; i++) {
+			Partition partition = partitions.get(i);
+			Node node = Nodes.supplierOfId(index, id, i, size);
 			graph.addNode(partition, node);
+			outputStreamIds.addAll(node.getOutputs());
 		}
-		return List.of();
+		return outputStreamIds;
 	}
 }

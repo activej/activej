@@ -16,45 +16,46 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.graph.DataflowContext;
+import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.datastream.processor.StreamLimiter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 
-public final class DatasetOffsetLimit<T, K> extends Dataset<T> {
-	private final Dataset<T> input;
-	private final Function<T, K> keyFunction;
+import static io.activej.dataflow.dataset.DatasetUtils.limitStream;
 
-	private final long offset;
-	private final long limit;
+@ExposedInternals
+public final class LocalLimit<T> extends Dataset<T> {
+	public final Dataset<T> input;
+	public final long limit;
 
-	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
-
-	public DatasetOffsetLimit(Dataset<T> input, Function<T, K> keyFunction, long offset, long limit) {
+	public LocalLimit(Dataset<T> input, long limit) {
 		super(input.streamSchema());
 		this.input = input;
-		this.keyFunction = keyFunction;
-		this.offset = offset;
 		this.limit = limit;
 	}
 
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
-		DataflowContext next = context.withFixedNonce(sharderNonce);
+		List<StreamId> streamIds = input.channels(context);
 
-		List<StreamId> streamIds = input.channels(next);
+		if (limit == StreamLimiter.NO_LIMIT) return streamIds;
 
-		return DatasetUtils.offsetLimit(next, streamIds, offset, limit,
-				(inputs, partition) -> {
-					List<StreamId> repartitioned = DatasetUtils.repartition(next, inputs, input.streamSchema(), keyFunction, List.of(partition));
-					assert repartitioned.size() == 1;
-					return repartitioned.get(0);
-				});
+		DataflowGraph graph = context.getGraph();
+
+		if (streamIds.isEmpty()) return streamIds;
+
+		List<StreamId> newStreamIds = new ArrayList<>(streamIds.size());
+		for (StreamId streamId : streamIds) {
+			newStreamIds.addAll(limitStream(graph, context.generateNodeIndex(), limit, streamId));
+		}
+
+		return newStreamIds;
 	}
 
 	@Override

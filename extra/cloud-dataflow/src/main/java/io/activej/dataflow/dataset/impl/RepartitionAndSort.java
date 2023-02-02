@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -29,15 +30,12 @@ import java.util.List;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
 
-public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
-	private final LocallySortedDataset<K, T> input;
-	private final @Nullable List<Partition> partitions;
+@ExposedInternals
+public final class RepartitionAndSort<K, T> extends SortedDataset<K, T> {
+	public final LocallySortedDataset<K, T> input;
+	public final @Nullable List<Partition> partitions;
 
-	public DatasetRepartitionAndSort(LocallySortedDataset<K, T> input) {
-		this(input, null);
-	}
-
-	public DatasetRepartitionAndSort(LocallySortedDataset<K, T> input, @Nullable List<Partition> partitions) {
+	public RepartitionAndSort(LocallySortedDataset<K, T> input, @Nullable List<Partition> partitions) {
 		super(input.streamSchema(), input.keyComparator(), input.keyType(), input.keyFunction());
 		this.input = input;
 		this.partitions = partitions;

@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
@@ -34,14 +35,15 @@ import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
 
-public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
-	private final SortedDataset<K, L> left;
-	private final SortedDataset<K, R> right;
-	private final LeftJoiner<K, L, R, V> leftJoiner;
+@ExposedInternals
+public final class Join<K, L, R, V> extends SortedDataset<K, V> {
+	public final SortedDataset<K, L> left;
+	public final SortedDataset<K, R> right;
+	public final LeftJoiner<K, L, R, V> leftJoiner;
 
-	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
+	public final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
-	public DatasetJoin(SortedDataset<K, L> left, SortedDataset<K, R> right, LeftJoiner<K, L, R, V> leftJoiner,
+	public Join(SortedDataset<K, L> left, SortedDataset<K, R> right, LeftJoiner<K, L, R, V> leftJoiner,
 			StreamSchema<V> resultStreamSchema, Function<V, K> keyFunction) {
 		super(resultStreamSchema, left.keyComparator(), left.keyType(), keyFunction);
 		this.left = left;

@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
@@ -26,10 +27,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-public final class DatasetAlreadySorted<K, T> extends SortedDataset<K, T> {
-	private final Dataset<T> dataset;
+@ExposedInternals
+public final class AlreadySorted<K, T> extends SortedDataset<K, T> {
+	public final Dataset<T> dataset;
 
-	public DatasetAlreadySorted(Dataset<T> dataset, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
+	public AlreadySorted(Dataset<T> dataset, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
 		super(dataset.streamSchema(), keyComparator, keyType, keyFunction);
 		this.dataset = dataset;
 	}

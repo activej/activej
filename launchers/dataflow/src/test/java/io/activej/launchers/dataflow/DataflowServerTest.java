@@ -6,7 +6,7 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.collector.ConcatCollector;
 import io.activej.dataflow.collector.ICollector;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
+import io.activej.dataflow.dataset.impl.ConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -214,7 +214,7 @@ public class DataflowServerTest {
 
 		Dataset<String> items = datasetOfId("items", simple(String.class));
 		Dataset<String> sorted = repartitionSort(localSort(items, String.class, new StringFunction(), new TestComparator()));
-		DatasetConsumerOfId<String> consumerNode = consumerOfId(sorted, "result");
+		Dataset<String> consumerNode = consumerOfId(sorted, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		System.out.println(graph);
