@@ -46,6 +46,7 @@ import java.util.stream.IntStream;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.last;
 import static io.activej.dataflow.calcite.operand.Operands.recordField;
+import static io.activej.dataflow.calcite.where.WherePredicates.and;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static java.util.Collections.emptyList;
 
@@ -169,7 +170,7 @@ public class RelToDatasetConverter {
 		if (needsFiltering) {
 			wherePredicate = paramsCollector.toWherePredicate((RexCall) predicate);
 		} else {
-			wherePredicate = new WherePredicate_And(emptyList());
+			wherePredicate = and(emptyList());
 		}
 
 		RexNode offsetNode = scan.getOffset();
@@ -666,30 +667,30 @@ public class RelToDatasetConverter {
 		private WherePredicate toWherePredicate(RexCall conditionNode) {
 			List<RexNode> operands = conditionNode.getOperands();
 			return switch (conditionNode.getKind()) {
-				case OR -> new WherePredicate_Or(operands.stream()
+				case OR -> WherePredicates.or(operands.stream()
 						.map(rexNode -> toWherePredicate((RexCall) rexNode))
 						.collect(Collectors.toList()));
-				case AND -> new WherePredicate_And(operands.stream()
+				case AND -> WherePredicates.and(operands.stream()
 						.map(rexNode -> toWherePredicate((RexCall) rexNode))
 						.collect(Collectors.toList()));
-				case EQUALS -> new WherePredicate_Eq(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case NOT_EQUALS -> new WherePredicate_NotEq(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN -> new WherePredicate_Gt(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN_OR_EQUAL -> new WherePredicate_Ge(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN -> new WherePredicate_Lt(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN_OR_EQUAL -> new WherePredicate_Le(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case EQUALS -> WherePredicates.eq(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case NOT_EQUALS -> WherePredicates.notEq(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case GREATER_THAN -> WherePredicates.gt(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case GREATER_THAN_OR_EQUAL -> WherePredicates.ge(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LESS_THAN -> WherePredicates.lt(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LESS_THAN_OR_EQUAL -> WherePredicates.le(toOperand(operands.get(0)), toOperand(operands.get(1)));
 				case BETWEEN ->
-						new WherePredicate_Between(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
+						WherePredicates.between(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
 				case IN -> {
 					List<Operand<?>> options = operands.subList(1, operands.size())
 							.stream()
 							.map(this::toOperand)
 							.collect(Collectors.toList());
-					yield new WherePredicate_In(toOperand(operands.get(0)), options);
+					yield WherePredicates.in(toOperand(operands.get(0)), options);
 				}
-				case LIKE -> new WherePredicate_Like(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case IS_NULL -> new WherePredicate_IsNull(toOperand(operands.get(0)));
-				case IS_NOT_NULL -> new WherePredicate_IsNotNull(toOperand(operands.get(0)));
+				case LIKE -> WherePredicates.like(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case IS_NULL -> WherePredicates.isNull(toOperand(operands.get(0)));
+				case IS_NOT_NULL -> WherePredicates.isNotNull(toOperand(operands.get(0)));
 
 				default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 			};

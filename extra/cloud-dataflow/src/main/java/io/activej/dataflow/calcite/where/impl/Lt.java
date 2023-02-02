@@ -1,17 +1,20 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.where.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.record.Record;
 
 import java.util.List;
 
 import static io.activej.dataflow.calcite.utils.Utils.compareToUnknown;
 
-public final class WherePredicate_Gt implements WherePredicate {
-	private final Operand<?> left;
-	private final Operand<?> right;
+@ExposedInternals
+public final class Lt implements WherePredicate {
+	public final Operand<?> left;
+	public final Operand<?> right;
 
-	public WherePredicate_Gt(Operand<?> left, Operand<?> right) {
+	public Lt(Operand<?> left, Operand<?> right) {
 		this.left = left;
 		this.right = right;
 	}
@@ -24,28 +27,20 @@ public final class WherePredicate_Gt implements WherePredicate {
 		Comparable<Object> rightValue = right.getValue(record);
 		if (rightValue == null) return false;
 
-		return compareToUnknown(leftValue, rightValue) > 0;
+		return compareToUnknown(leftValue, rightValue) < 0;
 	}
 
 	@Override
 	public WherePredicate materialize(List<Object> params) {
-		return new WherePredicate_Gt(
+		return new Lt(
 				left.materialize(params),
 				right.materialize(params)
 		);
 	}
 
-	public Operand<?> getLeft() {
-		return left;
-	}
-
-	public Operand<?> getRight() {
-		return right;
-	}
-
 	@Override
 	public String toString() {
-		return "GtPredicate[" +
+		return "Lt[" +
 				"left=" + left + ", " +
 				"right=" + right + ']';
 	}

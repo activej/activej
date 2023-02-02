@@ -1,18 +1,22 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.where.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.record.Record;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.activej.dataflow.calcite.utils.Utils.equalsUnknown;
 
-public final class WherePredicate_In implements WherePredicate {
-	private final Operand<?> value;
-	private final List<Operand<?>> options;
+@ExposedInternals
+public final class In implements WherePredicate {
+	public final Operand<?> value;
+	public final Collection<Operand<?>> options;
 
-	public WherePredicate_In(Operand<?> value, List<Operand<?>> options) {
+	public In(Operand<?> value, Collection<Operand<?>> options) {
 		this.value = value;
 		this.options = options;
 	}
@@ -32,7 +36,7 @@ public final class WherePredicate_In implements WherePredicate {
 
 	@Override
 	public WherePredicate materialize(List<Object> params) {
-		return new WherePredicate_In(
+		return new In(
 				value.materialize(params),
 				options.stream()
 						.map(option -> option.materialize(params))
@@ -40,17 +44,9 @@ public final class WherePredicate_In implements WherePredicate {
 		);
 	}
 
-	public Operand<?> getValue() {
-		return value;
-	}
-
-	public List<Operand<?>> getOptions() {
-		return options;
-	}
-
 	@Override
 	public String toString() {
-		return "InPredicate[" +
+		return "In[" +
 				"value=" + value + ", " +
 				"options=" + options + ']';
 	}

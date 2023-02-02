@@ -1,18 +1,21 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.where.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.record.Record;
 
 import java.util.List;
 
 import static io.activej.dataflow.calcite.utils.Utils.compareToUnknown;
 
-public final class WherePredicate_Between implements WherePredicate {
-	private final Operand<?> value;
-	private final Operand<?> from;
-	private final Operand<?> to;
+@ExposedInternals
+public final class Between implements WherePredicate {
+	public final Operand<?> value;
+	public final Operand<?> from;
+	public final Operand<?> to;
 
-	public WherePredicate_Between(Operand<?> value, Operand<?> from, Operand<?> to) {
+	public Between(Operand<?> value, Operand<?> from, Operand<?> to) {
 		this.value = value;
 		this.from = from;
 		this.to = to;
@@ -34,28 +37,16 @@ public final class WherePredicate_Between implements WherePredicate {
 
 	@Override
 	public WherePredicate materialize(List<Object> params) {
-		return new WherePredicate_Between(
+		return new Between(
 				value.materialize(params),
 				from.materialize(params),
 				to.materialize(params)
 		);
 	}
 
-	public Operand<?> getValue() {
-		return value;
-	}
-
-	public Operand<?> getFrom() {
-		return from;
-	}
-
-	public Operand<?> getTo() {
-		return to;
-	}
-
 	@Override
 	public String toString() {
-		return "BetweenPredicate[" +
+		return "Between[" +
 				"value=" + value + ", " +
 				"from=" + from + ", " +
 				"to=" + to + ']';

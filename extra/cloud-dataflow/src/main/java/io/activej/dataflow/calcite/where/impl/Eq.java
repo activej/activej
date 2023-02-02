@@ -1,17 +1,20 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.where.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.record.Record;
 
 import java.util.List;
 
 import static io.activej.dataflow.calcite.utils.Utils.equalsUnknown;
 
-public final class WherePredicate_Eq implements WherePredicate {
-	private final Operand<?> left;
-	private final Operand<?> right;
+@ExposedInternals
+public final class Eq implements WherePredicate {
+	public final Operand<?> left;
+	public final Operand<?> right;
 
-	public WherePredicate_Eq(Operand<?> left, Operand<?> right) {
+	public Eq(Operand<?> left, Operand<?> right) {
 		this.left = left;
 		this.right = right;
 	}
@@ -29,23 +32,15 @@ public final class WherePredicate_Eq implements WherePredicate {
 
 	@Override
 	public WherePredicate materialize(List<Object> params) {
-		return new WherePredicate_Eq(
+		return new Eq(
 				left.materialize(params),
 				right.materialize(params)
 		);
 	}
 
-	public Operand<?> getLeft() {
-		return left;
-	}
-
-	public Operand<?> getRight() {
-		return right;
-	}
-
 	@Override
 	public String toString() {
-		return "EqPredicate[" +
+		return "Eq[" +
 				"left=" + left + ", " +
 				"right=" + right + ']';
 	}

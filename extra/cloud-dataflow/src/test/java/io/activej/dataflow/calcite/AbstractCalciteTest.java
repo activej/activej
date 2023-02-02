@@ -12,6 +12,7 @@ import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.table.DataflowTable;
 import io.activej.dataflow.calcite.where.*;
+import io.activej.dataflow.calcite.where.impl.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
@@ -2982,8 +2983,8 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static @Nullable DateRange predicateToDateRange(WherePredicate predicate) {
-		if (predicate instanceof WherePredicate_Or orPredicate) {
-			List<WherePredicate> predicates = orPredicate.getPredicates();
+		if (predicate instanceof Or orPredicate) {
+			List<WherePredicate> predicates = orPredicate.predicates;
 			List<DateRange> ranges = new ArrayList<>(predicates.size());
 			for (WherePredicate wherePredicate : predicates) {
 				DateRange dateRange = predicateToDateRange(wherePredicate);
@@ -2992,8 +2993,8 @@ public abstract class AbstractCalciteTest {
 			}
 			return orRanges(ranges);
 		}
-		if (predicate instanceof WherePredicate_And andPredicate) {
-			List<WherePredicate> predicates = andPredicate.getPredicates();
+		if (predicate instanceof And andPredicate) {
+			List<WherePredicate> predicates = andPredicate.predicates;
 			List<DateRange> ranges = new ArrayList<>(predicates.size());
 			for (WherePredicate wherePredicate : predicates) {
 				DateRange dateRange = predicateToDateRange(wherePredicate);
@@ -3002,88 +3003,88 @@ public abstract class AbstractCalciteTest {
 			}
 			return andRanges(ranges);
 		}
-		if (predicate instanceof WherePredicate_Eq eqPredicate) {
-			if (isDate(eqPredicate.getLeft())) {
-				Long date = extractDate(eqPredicate.getRight());
+		if (predicate instanceof Eq eqPredicate) {
+			if (isDate(eqPredicate.left)) {
+				Long date = extractDate(eqPredicate.right);
 				if (date != null) {
 					return new DateRange(date, true, date, true);
 				}
-			} else if (isDate(eqPredicate.getRight())) {
-				Long date = extractDate(eqPredicate.getLeft());
+			} else if (isDate(eqPredicate.right)) {
+				Long date = extractDate(eqPredicate.left);
 				if (date != null) {
 					return new DateRange(date, true, date, true);
 				}
 			}
 		}
-		if (predicate instanceof WherePredicate_NotEq notEqPredicate) {
-			if (isDate(notEqPredicate.getLeft()) || isDate(notEqPredicate.getRight())) {
+		if (predicate instanceof NotEq notEqPredicate) {
+			if (isDate(notEqPredicate.left) || isDate(notEqPredicate.right)) {
 				return new DateRange(Long.MIN_VALUE, true, Long.MAX_VALUE, true);
 			}
 		}
-		if (predicate instanceof WherePredicate_Gt gtPredicate) {
-			if (isDate(gtPredicate.getLeft())) {
-				Long date = extractDate(gtPredicate.getRight());
+		if (predicate instanceof Gt gtPredicate) {
+			if (isDate(gtPredicate.left)) {
+				Long date = extractDate(gtPredicate.right);
 				if (date != null) {
 					return new DateRange(date, false, Long.MAX_VALUE, true);
 				}
-			} else if (isDate(gtPredicate.getRight())) {
-				Long date = extractDate(gtPredicate.getLeft());
+			} else if (isDate(gtPredicate.right)) {
+				Long date = extractDate(gtPredicate.left);
 				if (date != null) {
 					return new DateRange(Long.MIN_VALUE, true, date, false);
 				}
 			}
 		}
-		if (predicate instanceof WherePredicate_Ge gePredicate) {
-			if (isDate(gePredicate.getLeft())) {
-				Long date = extractDate(gePredicate.getRight());
+		if (predicate instanceof Ge gePredicate) {
+			if (isDate(gePredicate.left)) {
+				Long date = extractDate(gePredicate.right);
 				if (date != null) {
 					return new DateRange(date, true, Long.MAX_VALUE, true);
 				}
-			} else if (isDate(gePredicate.getRight())) {
-				Long date = extractDate(gePredicate.getLeft());
+			} else if (isDate(gePredicate.right)) {
+				Long date = extractDate(gePredicate.left);
 				if (date != null) {
 					return new DateRange(Long.MIN_VALUE, true, date, true);
 				}
 			}
 		}
-		if (predicate instanceof WherePredicate_Lt ltPredicate) {
-			if (isDate(ltPredicate.getLeft())) {
-				Long date = extractDate(ltPredicate.getRight());
+		if (predicate instanceof Lt ltPredicate) {
+			if (isDate(ltPredicate.left)) {
+				Long date = extractDate(ltPredicate.right);
 				if (date != null) {
 					return new DateRange(Long.MIN_VALUE, true, date, false);
 				}
-			} else if (isDate(ltPredicate.getRight())) {
-				Long date = extractDate(ltPredicate.getLeft());
+			} else if (isDate(ltPredicate.right)) {
+				Long date = extractDate(ltPredicate.left);
 				if (date != null) {
 					return new DateRange(date, false, Long.MAX_VALUE, true);
 				}
 			}
 		}
-		if (predicate instanceof WherePredicate_Le lePredicate) {
-			if (isDate(lePredicate.getLeft())) {
-				Long date = extractDate(lePredicate.getRight());
+		if (predicate instanceof Le lePredicate) {
+			if (isDate(lePredicate.left)) {
+				Long date = extractDate(lePredicate.right);
 				if (date != null) {
 					return new DateRange(Long.MIN_VALUE, true, date, true);
 				}
-			} else if (isDate(lePredicate.getRight())) {
-				Long date = extractDate(lePredicate.getLeft());
+			} else if (isDate(lePredicate.right)) {
+				Long date = extractDate(lePredicate.left);
 				if (date != null) {
 					return new DateRange(date, true, Long.MAX_VALUE, true);
 				}
 			}
 		}
-		if (predicate instanceof WherePredicate_Between betweenPredicate) {
-			if (isDate(betweenPredicate.getValue())) {
-				Long from = extractDate(betweenPredicate.getFrom());
+		if (predicate instanceof Between betweenPredicate) {
+			if (isDate(betweenPredicate.value)) {
+				Long from = extractDate(betweenPredicate.from);
 				from = from == null ? Long.MIN_VALUE : from;
-				Long to = extractDate(betweenPredicate.getTo());
+				Long to = extractDate(betweenPredicate.to);
 				to = to == null ? Long.MAX_VALUE : to;
 				return new DateRange(from, true, to, true);
 			}
 		}
-		if (predicate instanceof WherePredicate_In inPredicate) {
-			if (isDate(inPredicate.getValue())) {
-				List<Operand<?>> options = inPredicate.getOptions();
+		if (predicate instanceof In inPredicate) {
+			if (isDate(inPredicate.value)) {
+				Collection<Operand<?>> options = inPredicate.options;
 				List<Long> dates = new ArrayList<>(options.size());
 				for (Operand<?> option : options) {
 					Long date = extractDate(option);
@@ -3095,13 +3096,13 @@ public abstract class AbstractCalciteTest {
 				return new DateRange(Collections.min(dates), true, Collections.max(dates), true);
 			}
 		}
-		if (predicate instanceof WherePredicate_IsNull isNotNullPredicate) {
-			if (isDate(isNotNullPredicate.getValue())) {
+		if (predicate instanceof IsNull isNotNullPredicate) {
+			if (isDate(isNotNullPredicate.value)) {
 				return new DateRange(0, false, 0, false);
 			}
 		}
-		if (predicate instanceof WherePredicate_IsNotNull isNotNullPredicate) {
-			if (isDate(isNotNullPredicate.getValue())) {
+		if (predicate instanceof IsNotNull isNotNullPredicate) {
+			if (isDate(isNotNullPredicate.value)) {
 				return new DateRange(Long.MIN_VALUE, true, Long.MAX_VALUE, true);
 			}
 		}

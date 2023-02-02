@@ -1,19 +1,22 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.where.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.record.Record;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.regex.Pattern;
 
-public final class WherePredicate_Like implements WherePredicate {
-	private final Operand<?> value;
-	private final Operand<?> pattern;
+@ExposedInternals
+public final class Like implements WherePredicate {
+	public final Operand<?> value;
+	public final Operand<?> pattern;
 
 	private @Nullable CompiledPattern compiledPattern;
 
-	public WherePredicate_Like(Operand<?> value, Operand<?> pattern) {
+	public Like(Operand<?> value, Operand<?> pattern) {
 		this.value = value;
 		this.pattern = pattern;
 	}
@@ -36,18 +39,10 @@ public final class WherePredicate_Like implements WherePredicate {
 
 	@Override
 	public WherePredicate materialize(List<Object> params) {
-		return new WherePredicate_Like(
+		return new Like(
 				value.materialize(params),
 				pattern.materialize(params)
 		);
-	}
-
-	public Operand<?> getValue() {
-		return value;
-	}
-
-	public Operand<?> getPattern() {
-		return pattern;
 	}
 
 	public record CompiledPattern(Pattern pattern, String original) {
@@ -55,7 +50,7 @@ public final class WherePredicate_Like implements WherePredicate {
 
 	@Override
 	public String toString() {
-		return "LikePredicate[" +
+		return "Like[" +
 				"value=" + value +
 				", pattern=" + pattern +
 				']';

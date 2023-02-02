@@ -1,13 +1,16 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.where.impl;
 
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.record.Record;
 
 import java.util.List;
 
-public final class WherePredicate_Or implements WherePredicate {
-	private final List<WherePredicate> predicates;
+@ExposedInternals
+public final class Or implements WherePredicate {
+	public final List<WherePredicate> predicates;
 
-	public WherePredicate_Or(List<WherePredicate> predicates) {
+	public Or(List<WherePredicate> predicates) {
 		this.predicates = predicates;
 	}
 
@@ -21,20 +24,16 @@ public final class WherePredicate_Or implements WherePredicate {
 
 	@Override
 	public WherePredicate materialize(List<Object> params) {
-		return new WherePredicate_Or(
+		return new Or(
 				predicates.stream()
 						.map(wherePredicate -> wherePredicate.materialize(params))
 						.toList()
 		);
 	}
 
-	public List<WherePredicate> getPredicates() {
-		return predicates;
-	}
-
 	@Override
 	public String toString() {
-		return "OrPredicate[" +
+		return "Or[" +
 				"predicates=" + predicates + ']';
 	}
 }
