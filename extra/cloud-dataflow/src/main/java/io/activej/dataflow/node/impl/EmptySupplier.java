@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.StreamSupplier;
 
 import java.util.Collection;
@@ -25,17 +27,12 @@ import java.util.List;
 
 /**
  * Represents a node, which produces no items.
- *
- * @param <T> data items type
  */
-public final class Node_SupplierEmpty<T> extends AbstractNode {
-	private final StreamId output;
+@ExposedInternals
+public final class EmptySupplier extends AbstractNode {
+	public final StreamId output;
 
-	public Node_SupplierEmpty(int index) {
-		this(index, new StreamId());
-	}
-
-	public Node_SupplierEmpty(int index, StreamId output) {
+	public EmptySupplier(int index, StreamId output) {
 		super(index);
 		this.output = output;
 	}
@@ -50,12 +47,8 @@ public final class Node_SupplierEmpty<T> extends AbstractNode {
 		task.export(output, StreamSupplier.of());
 	}
 
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeSupplierEmpty{output=" + output + '}';
+		return "SupplierEmpty{output=" + output + '}';
 	}
 }

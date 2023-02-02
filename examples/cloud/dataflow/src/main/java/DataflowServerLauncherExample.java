@@ -1,6 +1,6 @@
 import io.activej.config.Config;
 import io.activej.dataflow.inject.DatasetId;
-import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;

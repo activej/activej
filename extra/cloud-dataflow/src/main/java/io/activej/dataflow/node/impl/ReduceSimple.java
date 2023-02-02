@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
@@ -35,18 +38,15 @@ import java.util.function.Function;
  * @param <O> output data type
  * @param <A> accumulator type
  */
-public final class Node_ReduceSimple<K, I, O, A> extends AbstractNode {
-	private final Function<I, K> keyFunction;
-	private final Comparator<K> keyComparator;
-	private final Reducer<K, I, O, A> reducer;
-	private final List<StreamId> inputs;
-	private final StreamId output;
+@ExposedInternals
+public final class ReduceSimple<K, I, O, A> extends AbstractNode {
+	public final Function<I, K> keyFunction;
+	public final Comparator<K> keyComparator;
+	public final Reducer<K, I, O, A> reducer;
+	public final List<StreamId> inputs;
+	public final StreamId output;
 
-	public Node_ReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer) {
-		this(index, keyFunction, keyComparator, reducer, new ArrayList<>(), new StreamId());
-	}
-
-	public Node_ReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
+	public ReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
 			List<StreamId> inputs, StreamId output) {
 		super(index);
 		this.keyFunction = keyFunction;
@@ -56,8 +56,24 @@ public final class Node_ReduceSimple<K, I, O, A> extends AbstractNode {
 		this.output = output;
 	}
 
-	public void addInput(StreamId input) {
-		inputs.add(input);
+	public static <K, I, O, A> ReduceSimple<K, I, O, A>.Builder builder(int index, Function<I, K> keyFunction,
+			Comparator<K> keyComparator, Reducer<K, I, O, A> reducer) {
+		return new ReduceSimple<>(index, keyFunction, keyComparator, reducer, new ArrayList<>(), new StreamId()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, ReduceSimple<K, I, O, A>> {
+		private Builder() {}
+
+		public Builder withInput(StreamId input) {
+			checkNotBuilt(this);
+			inputs.add(input);
+			return this;
+		}
+
+		@Override
+		protected ReduceSimple<K, I, O, A> doBuild() {
+			return ReduceSimple.this;
+		}
 	}
 
 	@Override
@@ -79,25 +95,9 @@ public final class Node_ReduceSimple<K, I, O, A> extends AbstractNode {
 		task.export(output, streamReducerSimple.getOutput());
 	}
 
-	public Function<I, K> getKeyFunction() {
-		return keyFunction;
-	}
-
-	public Comparator<K> getKeyComparator() {
-		return keyComparator;
-	}
-
-	public Reducer<K, I, O, A> getReducer() {
-		return reducer;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeReduceSimple{keyFunction=" + keyFunction.getClass().getSimpleName() +
+		return "ReduceSimple{keyFunction=" + keyFunction.getClass().getSimpleName() +
 				", keyComparator=" + keyComparator.getClass().getSimpleName() +
 				", reducer=" + reducer.getClass().getSimpleName() +
 				", inputs=" + inputs +

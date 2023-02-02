@@ -22,7 +22,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
-import io.activej.dataflow.node.Node_ReduceSimple;
+import io.activej.dataflow.node.impl.ReduceSimple;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
@@ -48,11 +48,12 @@ public final class DatasetLocalSortReduce<K, I, O> extends LocallySortedDataset<
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : input.channels(context)) {
-			Node_ReduceSimple<K, I, O, Object> node = new Node_ReduceSimple<>(index, input.keyFunction(),
+			ReduceSimple<K, I, O, Object>.Builder nodeBuilder = ReduceSimple.builder(index, input.keyFunction(),
 					input.keyComparator(), (Reducer<K, I, O, Object>) reducer);
-			node.addInput(streamId);
+			nodeBuilder.withInput(streamId);
+			ReduceSimple<K, I, O, Object> node = nodeBuilder.build();
 			graph.addNode(graph.getPartition(streamId), node);
-			outputStreamIds.add(node.getOutput());
+			outputStreamIds.add(node.output);
 		}
 		return outputStreamIds;
 	}

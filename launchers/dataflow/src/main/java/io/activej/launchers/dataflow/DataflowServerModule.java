@@ -13,7 +13,7 @@ import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
-import io.activej.dataflow.node.Node_Sort;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.processor.IStreamSorterStorage;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.inject.Injector;
@@ -80,10 +80,10 @@ public final class DataflowServerModule extends AbstractModule {
 
 	@Provides
 	@Eager
-	Node_Sort.StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
+	StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
 		Path providedSortDir = config.get(ofPath(), "dataflow.sortDir", null);
 		Path sortDir = providedSortDir == null ? Files.createTempDirectory("dataflow-sort-dir") : providedSortDir;
-		return new Node_Sort.StreamSorterStorageFactory() {
+		return new StreamSorterStorageFactory() {
 			int index;
 
 			@Override

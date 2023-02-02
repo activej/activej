@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.processor.StreamUnion;
 
 import java.util.Collection;
 import java.util.List;
 
-public final class Node_Union<T> extends AbstractNode {
-	private final List<StreamId> inputs;
-	private final StreamId output;
+@ExposedInternals
+public final class Union extends AbstractNode {
+	public final List<StreamId> inputs;
+	public final StreamId output;
 
-	public Node_Union(int index, List<StreamId> inputs) {
-		this(index, inputs, new StreamId());
-	}
-
-	public Node_Union(int index, List<StreamId> inputs, StreamId output) {
+	public Union(int index, List<StreamId> inputs, StreamId output) {
 		super(index);
 		this.inputs = inputs;
 		this.output = output;
@@ -44,7 +43,7 @@ public final class Node_Union<T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamUnion<T> streamUnion = StreamUnion.create();
+		StreamUnion<?> streamUnion = StreamUnion.create();
 		for (StreamId input : inputs) {
 			task.bindChannel(input, streamUnion.newInput());
 		}
@@ -56,12 +55,8 @@ public final class Node_Union<T> extends AbstractNode {
 		return inputs;
 	}
 
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeUnion{inputs=" + inputs + ", output=" + output + '}';
+		return "Union{inputs=" + inputs + ", output=" + output + '}';
 	}
 }

@@ -18,7 +18,8 @@ package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
-import io.activej.dataflow.node.Node_SupplierEmpty;
+import io.activej.dataflow.node.Node;
+import io.activej.dataflow.node.Nodes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -39,9 +40,9 @@ public final class DatasetEmpty<T> extends Dataset<T> {
 		List<Partition> partitions = this.partitions == null ? graph.getAvailablePartitions() : this.partitions;
 		int index = context.generateNodeIndex();
 		for (Partition partition : partitions) {
-			Node_SupplierEmpty<T> node = new Node_SupplierEmpty<>(index);
+			Node node = Nodes.emptySupplier(index);
 			graph.addNode(partition, node);
-			outputStreamIds.add(node.getOutput());
+			outputStreamIds.addAll(node.getOutputs());
 		}
 		return outputStreamIds;
 	}

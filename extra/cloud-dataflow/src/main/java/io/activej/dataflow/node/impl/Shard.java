@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamSplitter;
@@ -37,23 +39,24 @@ import static io.activej.common.HashUtils.murmur3hash;
  * @param <K> keys type
  * @param <T> data items type
  */
-public final class Node_Shard<K, T> extends AbstractNode {
-	private final Function<T, K> keyFunction;
+@ExposedInternals
+public final class Shard<K, T> extends AbstractNode {
+	public final Function<T, K> keyFunction;
 
-	private final int nonce;
-	private final StreamId input;
-	private final List<StreamId> outputs;
+	public final int nonce;
+	public final StreamId input;
+	public final List<StreamId> outputs;
 
-	public Node_Shard(int index, Function<T, K> keyFunction, StreamId input, int nonce) {
-		this(index, keyFunction, input, new ArrayList<>(), nonce);
-	}
-
-	public Node_Shard(int index, Function<T, K> keyFunction, StreamId input, List<StreamId> outputs, int nonce) {
+	public Shard(int index, Function<T, K> keyFunction, StreamId input, List<StreamId> outputs, int nonce) {
 		super(index);
 		this.keyFunction = keyFunction;
 		this.input = input;
 		this.outputs = outputs;
 		this.nonce = nonce;
+	}
+
+	public static <K, T> Shard<K, T> create(int index, Function<T, K> keyFunction, StreamId input, int nonce) {
+		return new Shard<>(index, keyFunction, input, new ArrayList<>(), nonce);
 	}
 
 	public StreamId newPartition() {
@@ -66,14 +69,6 @@ public final class Node_Shard<K, T> extends AbstractNode {
 		return outputs.get(partition);
 	}
 
-	public Function<T, K> getKeyFunction() {
-		return keyFunction;
-	}
-
-	public StreamId getInput() {
-		return input;
-	}
-
 	@Override
 	public Collection<StreamId> getInputs() {
 		return List.of(input);
@@ -84,18 +79,12 @@ public final class Node_Shard<K, T> extends AbstractNode {
 		return outputs;
 	}
 
-	public int getNonce() {
-		return nonce;
-	}
-
 	@Override
 	public void createAndBind(Task task) {
 		int partitions = outputs.size();
 		int bits = partitions - 1;
 		BiConsumer<T, StreamDataAcceptor<T>[]> splitter = (partitions & bits) == 0 ?
-				(item, acceptors) -> {
-					acceptors[murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce) & bits].accept(item);
-				} :
+				(item, acceptors) -> acceptors[murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce) & bits].accept(item) :
 				(item, acceptors) -> {
 					int hash = murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce);
 					int hashAbs = hash < 0 ? hash == Integer.MIN_VALUE ? Integer.MAX_VALUE : -hash : hash;
@@ -113,7 +102,7 @@ public final class Node_Shard<K, T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeShard{keyFunction=" + keyFunction.getClass().getSimpleName() +
+		return "Shard{keyFunction=" + keyFunction.getClass().getSimpleName() +
 				", input=" + input +
 				", outputs=" + outputs +
 				'}';

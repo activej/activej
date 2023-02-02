@@ -22,7 +22,8 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
-import io.activej.dataflow.node.Node_Join;
+import io.activej.dataflow.node.Node;
+import io.activej.dataflow.node.Nodes;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 
 import java.util.ArrayList;
@@ -63,10 +64,10 @@ public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
 		for (int i = 0; i < leftStreamIds.size(); i++) {
 			StreamId leftStreamId = leftStreamIds.get(i);
 			StreamId rightStreamId = rightStreamIds.get(i);
-			Node_Join<K, L, R, V> node = new Node_Join<>(index, leftStreamId, rightStreamId, left.keyComparator(),
+			Node node = Nodes.join(index, leftStreamId, rightStreamId, left.keyComparator(),
 					left.keyFunction(), right.keyFunction(), leftJoiner);
 			graph.addNode(graph.getPartition(leftStreamId), node);
-			outputStreamIds.add(node.getOutput());
+			outputStreamIds.addAll(node.getOutputs());
 		}
 		return outputStreamIds;
 	}

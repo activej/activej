@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.processor.StreamReducer;
 
 import java.util.ArrayList;
@@ -35,18 +38,15 @@ import static io.activej.datastream.processor.StreamReducers.mergeReducer;
  * @param <K> keys data type
  * @param <T> data items type
  */
-public final class Node_Merge<K, T> extends AbstractNode {
-	private final Function<T, K> keyFunction;
-	private final Comparator<K> keyComparator;
-	private final boolean deduplicate;
-	private final List<StreamId> inputs;
-	private final StreamId output;
+@ExposedInternals
+public final class Merge<K, T> extends AbstractNode {
+	public final Function<T, K> keyFunction;
+	public final Comparator<K> keyComparator;
+	public final boolean deduplicate;
+	public final List<StreamId> inputs;
+	public final StreamId output;
 
-	public Node_Merge(int index, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
-		this(index, keyFunction, keyComparator, deduplicate, new ArrayList<>(), new StreamId());
-	}
-
-	public Node_Merge(int index, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate, List<StreamId> inputs, StreamId output) {
+	public Merge(int index, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate, List<StreamId> inputs, StreamId output) {
 		super(index);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
@@ -55,8 +55,23 @@ public final class Node_Merge<K, T> extends AbstractNode {
 		this.output = output;
 	}
 
-	public void addInput(StreamId input) {
-		inputs.add(input);
+	public static <K, T> Merge<K, T>.Builder builder(int index, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
+		return new Merge<>(index, keyFunction, keyComparator, deduplicate, new ArrayList<>(), new StreamId()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Merge<K, T>> {
+		private Builder() {}
+
+		public Builder withInput(StreamId input) {
+			checkNotBuilt(this);
+			inputs.add(input);
+			return this;
+		}
+
+		@Override
+		protected Merge<K, T> doBuild() {
+			return Merge.this;
+		}
 	}
 
 	@Override
@@ -78,25 +93,9 @@ public final class Node_Merge<K, T> extends AbstractNode {
 		task.export(output, streamMerger.getOutput());
 	}
 
-	public Function<T, K> getKeyFunction() {
-		return keyFunction;
-	}
-
-	public Comparator<K> getKeyComparator() {
-		return keyComparator;
-	}
-
-	public boolean isDeduplicate() {
-		return deduplicate;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeMerge{keyFunction=" + keyFunction.getClass().getSimpleName() +
+		return "Merge{keyFunction=" + keyFunction.getClass().getSimpleName() +
 				", keyComparator=" + keyComparator.getClass().getSimpleName() +
 				", deduplicate=" + deduplicate +
 				", inputs=" + inputs +

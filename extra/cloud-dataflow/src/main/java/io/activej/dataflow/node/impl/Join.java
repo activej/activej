@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.processor.StreamLeftJoin;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 
@@ -34,22 +36,17 @@ import java.util.function.Function;
  * @param <R> right stream data type
  * @param <V> output stream data type
  */
-public final class Node_Join<K, L, R, V> extends AbstractNode {
-	private final StreamId left;
-	private final StreamId right;
-	private final StreamId output;
-	private final Comparator<K> keyComparator;
-	private final Function<L, K> leftKeyFunction;
-	private final Function<R, K> rightKeyFunction;
-	private final LeftJoiner<K, L, R, V> leftJoiner;
+@ExposedInternals
+public final class Join<K, L, R, V> extends AbstractNode {
+	public final StreamId left;
+	public final StreamId right;
+	public final StreamId output;
+	public final Comparator<K> keyComparator;
+	public final Function<L, K> leftKeyFunction;
+	public final Function<R, K> rightKeyFunction;
+	public final LeftJoiner<K, L, R, V> leftJoiner;
 
-	public Node_Join(int index, StreamId left, StreamId right,
-			Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
-			LeftJoiner<K, L, R, V> leftJoiner) {
-		this(index, left, right, new StreamId(), keyComparator, leftKeyFunction, rightKeyFunction, leftJoiner);
-	}
-
-	public Node_Join(int index, StreamId left, StreamId right, StreamId output,
+	public Join(int index, StreamId left, StreamId right, StreamId output,
 			Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
 			LeftJoiner<K, L, R, V> leftJoiner) {
 		super(index);
@@ -80,37 +77,9 @@ public final class Node_Join<K, L, R, V> extends AbstractNode {
 		task.export(output, join.getOutput());
 	}
 
-	public StreamId getLeft() {
-		return left;
-	}
-
-	public StreamId getRight() {
-		return right;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
-	public Comparator<K> getKeyComparator() {
-		return keyComparator;
-	}
-
-	public Function<L, K> getLeftKeyFunction() {
-		return leftKeyFunction;
-	}
-
-	public Function<R, K> getRightKeyFunction() {
-		return rightKeyFunction;
-	}
-
-	public LeftJoiner<K, L, R, V> getJoiner() {
-		return leftJoiner;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeJoin{left=" + left +
+		return "Join{left=" + left +
 				", right=" + right +
 				", output=" + output +
 				", keyComparator=" + keyComparator.getClass().getSimpleName() +

@@ -21,7 +21,8 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.Node_ConsumerOfId;
+import io.activej.dataflow.node.Node;
+import io.activej.dataflow.node.Nodes;
 
 import java.util.List;
 
@@ -44,7 +45,7 @@ public final class DatasetConsumerOfId<T> extends Dataset<T> {
 		for (int i = 0, streamIdsSize = streamIds.size(); i < streamIdsSize; i++) {
 			StreamId streamId = streamIds.get(i);
 			Partition partition = graph.getPartition(streamId);
-			Node_ConsumerOfId<T> node = new Node_ConsumerOfId<>(index, id, i, streamIdsSize, streamId);
+			Node node = Nodes.consumerOfId(index, id, i, streamIdsSize, streamId);
 			graph.addNode(partition, node);
 		}
 		return List.of();

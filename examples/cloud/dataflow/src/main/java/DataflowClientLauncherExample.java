@@ -8,7 +8,7 @@ import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;
 import io.activej.inject.annotation.Inject;

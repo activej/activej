@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
@@ -33,19 +35,16 @@ import java.util.List;
  *
  * @param <T> data items type
  */
-public final class Node_Download<T> extends AbstractNode {
-	private final StreamSchema<T> streamSchema;
-	private final InetSocketAddress address;
-	private final StreamId streamId;
-	private final StreamId output;
+@ExposedInternals
+public final class Download<T> extends AbstractNode {
+	public final StreamSchema<T> streamSchema;
+	public final InetSocketAddress address;
+	public final StreamId streamId;
+	public final StreamId output;
 
 	private BinaryNodeStat stats;
 
-	public Node_Download(int index, StreamSchema<T> streamSchema, InetSocketAddress address, StreamId streamId) {
-		this(index, streamSchema, address, streamId, new StreamId());
-	}
-
-	public Node_Download(int index, StreamSchema<T> streamSchema, InetSocketAddress address, StreamId streamId, StreamId output) {
+	public Download(int index, StreamSchema<T> streamSchema, InetSocketAddress address, StreamId streamId, StreamId output) {
 		super(index);
 		this.streamSchema = streamSchema;
 		this.address = address;
@@ -55,28 +54,12 @@ public final class Node_Download<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return List.of(streamId);
+		return List.of(output);
 	}
 
 	@Override
 	public void createAndBind(Task task) {
 		task.export(output, task.get(DataflowClient.class).download(address, streamId, streamSchema, stats = new BinaryNodeStat()));
-	}
-
-	public StreamSchema<T> getStreamSchema() {
-		return streamSchema;
-	}
-
-	public InetSocketAddress getAddress() {
-		return address;
-	}
-
-	public StreamId getStreamId() {
-		return streamId;
-	}
-
-	public StreamId getOutput() {
-		return output;
 	}
 
 	@Override
@@ -86,6 +69,6 @@ public final class Node_Download<T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeDownload{type=" + streamSchema + ", address=" + address + ", streamId=" + streamId + ", output=" + output + '}';
+		return "Download{type=" + streamSchema + ", address=" + address + ", streamId=" + streamId + ", output=" + output + '}';
 	}
 }

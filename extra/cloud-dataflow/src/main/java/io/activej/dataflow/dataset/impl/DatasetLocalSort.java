@@ -21,7 +21,8 @@ import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.Node_Sort;
+import io.activej.dataflow.node.Node;
+import io.activej.dataflow.node.Nodes;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,9 +47,9 @@ public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			Node_Sort<K, T> node = new Node_Sort<>(index, input.streamSchema(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
+			Node node = Nodes.sort(index, input.streamSchema(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
-			outputStreamIds.add(node.getOutput());
+			outputStreamIds.addAll(node.getOutputs());
 		}
 		return outputStreamIds;
 	}

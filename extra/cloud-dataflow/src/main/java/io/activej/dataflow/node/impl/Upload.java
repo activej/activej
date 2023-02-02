@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
@@ -32,13 +34,14 @@ import java.util.List;
  *
  * @param <T> data items type
  */
-public final class Node_Upload<T> extends AbstractNode {
-	private final StreamSchema<T> streamSchema;
-	private final StreamId streamId;
+@ExposedInternals
+public final class Upload<T> extends AbstractNode {
+	public final StreamSchema<T> streamSchema;
+	public final StreamId streamId;
 
-	private BinaryNodeStat stats;
+	public BinaryNodeStat stats;
 
-	public Node_Upload(int index, StreamSchema<T> streamSchema, StreamId streamId) {
+	public Upload(int index, StreamSchema<T> streamSchema, StreamId streamId) {
 		super(index);
 		this.streamSchema = streamSchema;
 		this.streamId = streamId;
@@ -54,14 +57,6 @@ public final class Node_Upload<T> extends AbstractNode {
 		task.bindChannel(streamId, task.get(DataflowServer.class).upload(streamId, streamSchema, stats = new BinaryNodeStat()));
 	}
 
-	public StreamSchema<T> getStreamSchema() {
-		return streamSchema;
-	}
-
-	public StreamId getStreamId() {
-		return streamId;
-	}
-
 	@Override
 	public @Nullable NodeStat getStats() {
 		return stats;
@@ -69,6 +64,6 @@ public final class Node_Upload<T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeUpload{type=" + streamSchema + ", streamId=" + streamId + '}';
+		return "Upload{type=" + streamSchema + ", streamId=" + streamId + '}';
 	}
 }

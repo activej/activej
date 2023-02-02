@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.SortingExecutor;
+import io.activej.dataflow.node.AbstractNode;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.processor.IStreamSorterStorage;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.inject.Key;
-import io.activej.promise.Promise;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -37,31 +39,18 @@ import java.util.function.Function;
  * @param <K> keys type
  * @param <T> data items type
  */
-public final class Node_Sort<K, T> extends AbstractNode {
+@ExposedInternals
+public final class Sort<K, T> extends AbstractNode {
+	public final StreamSchema<T> streamSchema;
+	public final Function<T, K> keyFunction;
+	public final Comparator<K> keyComparator;
+	public final boolean deduplicate;
+	public final int itemsInMemorySize;
 
-	public interface StreamSorterStorageFactory {
-		<T> IStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted);
+	public final StreamId input;
+	public final StreamId output;
 
-		default <T> Promise<Void> cleanup(IStreamSorterStorage<T> storage) {
-			return Promise.complete();
-		}
-	}
-
-	private final StreamSchema<T> streamSchema;
-	private final Function<T, K> keyFunction;
-	private final Comparator<K> keyComparator;
-	private final boolean deduplicate;
-	private final int itemsInMemorySize;
-
-	private final StreamId input;
-	private final StreamId output;
-
-	public Node_Sort(int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
-			boolean deduplicate, int itemsInMemorySize, StreamId input) {
-		this(index, streamSchema, keyFunction, keyComparator, deduplicate, itemsInMemorySize, input, new StreamId());
-	}
-
-	public Node_Sort(int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
+	public Sort(int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
 			boolean deduplicate, int itemsInMemorySize, StreamId input, StreamId output) {
 		super(index);
 		this.streamSchema = streamSchema;
@@ -97,37 +86,9 @@ public final class Node_Sort<K, T> extends AbstractNode {
 				.whenComplete(() -> storageFactory.cleanup(storage));
 	}
 
-	public StreamSchema<T> getStreamSchema() {
-		return streamSchema;
-	}
-
-	public Function<T, K> getKeyFunction() {
-		return keyFunction;
-	}
-
-	public Comparator<K> getKeyComparator() {
-		return keyComparator;
-	}
-
-	public boolean isDeduplicate() {
-		return deduplicate;
-	}
-
-	public int getItemsInMemorySize() {
-		return itemsInMemorySize;
-	}
-
-	public StreamId getInput() {
-		return input;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeSort{type=" + streamSchema +
+		return "Sort{type=" + streamSchema +
 				", keyFunction=" + keyFunction.getClass().getSimpleName() +
 				", keyComparator=" + keyComparator.getClass().getSimpleName() +
 				", deduplicate=" + deduplicate +

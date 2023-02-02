@@ -22,7 +22,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.Node_Merge;
+import io.activej.dataflow.node.impl.Merge;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,13 +64,14 @@ public final class DatasetUnion<K, T> extends SortedDataset<K, T> {
 		for (Map.Entry<Partition, List<StreamId>> entry : partitioned.entrySet()) {
 			List<StreamId> streamIds = entry.getValue();
 
-			Node_Merge<K, T> nodeMerge = new Node_Merge<>(index, keyFunction(), keyComparator(), true);
+			Merge<K, T>.Builder nodeMergeBuilder = Merge.builder(index, keyFunction(), keyComparator(), true);
 			for (StreamId streamId : streamIds) {
-				nodeMerge.addInput(streamId);
+				nodeMergeBuilder.withInput(streamId);
 			}
+			Merge<K, T> nodeMerge = nodeMergeBuilder.build();
 			graph.addNode(entry.getKey(), nodeMerge);
 
-			outputStreamIds.add(nodeMerge.getOutput());
+			outputStreamIds.add(nodeMerge.output);
 		}
 
 		return outputStreamIds;

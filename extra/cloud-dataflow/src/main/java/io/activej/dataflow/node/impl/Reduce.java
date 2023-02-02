@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
 import io.activej.datastream.StreamConsumer;
+
+import java.util.Map;
+
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
@@ -34,7 +40,8 @@ import java.util.function.Function;
  * @param <O> output data type
  * @param <A> accumulator type
  */
-public final class Node_Reduce<K, O, A> extends AbstractNode {
+@ExposedInternals
+public final class Reduce<K, O, A> extends AbstractNode {
 	public static class Input<K, O, A> {
 		private final Reducer<K, ?, O, A> reducer;
 		private final Function<?, K> keyFunction;
@@ -59,15 +66,11 @@ public final class Node_Reduce<K, O, A> extends AbstractNode {
 		}
 	}
 
-	private final Comparator<K> keyComparator;
-	private final Map<StreamId, Input<K, O, A>> inputs;
-	private final StreamId output;
+	public final Comparator<K> keyComparator;
+	public final Map<StreamId, Input<K, O, A>> inputs;
+	public final StreamId output;
 
-	public Node_Reduce(int index, Comparator<K> keyComparator) {
-		this(index, keyComparator, new LinkedHashMap<>(), new StreamId());
-	}
-
-	public Node_Reduce(int index, Comparator<K> keyComparator,
+	public Reduce(int index, Comparator<K> keyComparator,
 			Map<StreamId, Input<K, O, A>> inputs,
 			StreamId output) {
 		super(index);
@@ -76,8 +79,23 @@ public final class Node_Reduce<K, O, A> extends AbstractNode {
 		this.output = output;
 	}
 
-	public <I> void addInput(StreamId streamId, Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
-		inputs.put(streamId, new Input<>(reducer, keyFunction));
+	public static <K, O, A> Reduce<K, O, A>.Builder builder(int index, Comparator<K> keyComparator) {
+		return new Reduce<K, O, A>(index, keyComparator, new LinkedHashMap<>(), new StreamId()).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Reduce<K, O, A>> {
+		private Builder() {}
+
+		public <I> Builder withInput(StreamId streamId, Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
+			checkNotBuilt(this);
+			inputs.put(streamId, new Input<>(reducer, keyFunction));
+			return this;
+		}
+
+		@Override
+		protected Reduce<K, O, A> doBuild() {
+			return Reduce.this;
+		}
 	}
 
 	@Override
@@ -104,18 +122,6 @@ public final class Node_Reduce<K, O, A> extends AbstractNode {
 		task.export(output, streamReducer.getOutput());
 	}
 
-	public Comparator<K> getKeyComparator() {
-		return keyComparator;
-	}
-
-	public Map<StreamId, Input<K, O, A>> getInputMap() {
-		return inputs;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public NodeStat getStats() {
 		return new TestNodeStat(getIndex());
@@ -123,7 +129,7 @@ public final class Node_Reduce<K, O, A> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeReduce{keyComparator=" + keyComparator.getClass().getSimpleName() +
+		return "Reduce{keyComparator=" + keyComparator.getClass().getSimpleName() +
 				", inputs=" + inputs +
 				", output=" + output + '}';
 	}

@@ -15,7 +15,7 @@ import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.calcite.where.impl.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
-import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Injector;

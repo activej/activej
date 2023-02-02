@@ -459,9 +459,9 @@ public final class PartitionedStreamTest {
 
 		PartitionedCollector<String> collector = new PartitionedCollector<>(compoundDataset, client);
 
-		Promise<Map<Partition, List<String>>> resultPromise = collector.compile(graph);
+		collector.compile(graph);
 		await(graph.execute());
-		return await(resultPromise);
+		return collector.getResult();
 	}
 
 	private void filterOddAndPropagateToTarget() {

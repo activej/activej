@@ -24,7 +24,9 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.Node_Upload;
+import io.activej.dataflow.node.Node;
+import io.activej.dataflow.node.Nodes;
+import io.activej.dataflow.node.impl.Upload;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.reactor.AbstractReactive;
@@ -80,7 +82,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 			int index = context.generateNodeIndex();
 			List<StreamId> newStreamIds = new ArrayList<>(inputStreamIds.size());
 			for (StreamId inputStreamId : inputStreamIds) {
-				newStreamIds.add(DatasetUtils.limitStream(graph, index, limit, inputStreamId));
+				newStreamIds.addAll(DatasetUtils.limitStream(graph, index, limit, inputStreamId));
 			}
 			inputStreamIds = newStreamIds;
 		}
@@ -89,7 +91,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : inputStreamIds) {
-			Node_Upload<T> nodeUpload = new Node_Upload<>(index, input.streamSchema(), streamId);
+			Node nodeUpload = Nodes.upload(index, input.streamSchema(), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
 			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());

@@ -2,7 +2,7 @@ package io.activej.dataflow.helper;
 
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
-import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;

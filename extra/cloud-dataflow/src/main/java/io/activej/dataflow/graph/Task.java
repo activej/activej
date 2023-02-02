@@ -20,8 +20,8 @@ import io.activej.async.exception.AsyncCloseException;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
-import io.activej.dataflow.node.Node_Download;
-import io.activej.dataflow.node.Node_Upload;
+import io.activej.dataflow.node.impl.Download;
+import io.activej.dataflow.node.impl.Upload;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.inject.Key;
@@ -192,10 +192,10 @@ public final class Task {
 		Map<Node, String> ids = new LinkedHashMap<>();
 
 		for (Node node : nodes) {
-			if (node instanceof Node_Download<?> download) {
-				network.put(download.getStreamId(), download.getOutput());
-			} else if (node instanceof Node_Upload) {
-				uploads.put(((Node_Upload<?>) node).getStreamId(), node);
+			if (node instanceof Download<?> download) {
+				network.put(download.streamId, download.output);
+			} else if (node instanceof Upload) {
+				uploads.put(((Upload<?>) node).streamId, node);
 			} else {
 				node.getInputs().forEach(input -> nodesByInput.put(input, node));
 				node.getOutputs().forEach(input -> nodesByOutput.put(input, node));
@@ -203,12 +203,12 @@ public final class Task {
 		}
 		StringBuilder sb = new StringBuilder("digraph {\n");
 		for (Node node : nodes) {
-			if (node instanceof Node_Download) {
-				StreamId input = ((Node_Download<?>) node).getStreamId();
+			if (node instanceof Download) {
+				StreamId input = ((Download<?>) node).streamId;
 				if (nodesByOutput.containsKey(input)) {
 					continue;
 				}
-				Node target = nodesByInput.get(((Node_Download<?>) node).getOutput());
+				Node target = nodesByInput.get(((Download<?>) node).output);
 				if (target != null) {
 					// DOWNLOAD POINT HERE
 					String nodeId = "n" + node.getIndex();
@@ -216,7 +216,7 @@ public final class Task {
 					sb.append("  " + nodeId + " -> " + ids.computeIfAbsent(target, NODE_ID_FUNCTION) + " [style=dashed]\n");
 				}
 				continue;
-			} else if (node instanceof Node_Upload) {
+			} else if (node instanceof Upload) {
 				continue;
 			}
 			String nodeId = ids.computeIfAbsent(node, NODE_ID_FUNCTION);

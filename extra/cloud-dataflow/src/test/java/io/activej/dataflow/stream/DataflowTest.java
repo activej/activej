@@ -20,7 +20,7 @@ import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
-import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;

@@ -51,8 +51,7 @@ public final class DatasetLocalLimit<T> extends Dataset<T> {
 
 		List<StreamId> newStreamIds = new ArrayList<>(streamIds.size());
 		for (StreamId streamId : streamIds) {
-			StreamId limitedStream = limitStream(graph, context.generateNodeIndex(), limit, streamId);
-			newStreamIds.add(limitedStream);
+			newStreamIds.addAll(limitStream(graph, context.generateNodeIndex(), limit, streamId));
 		}
 
 		return newStreamIds;

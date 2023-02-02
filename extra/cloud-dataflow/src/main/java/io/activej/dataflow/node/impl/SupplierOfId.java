@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
+import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 
@@ -31,20 +34,15 @@ import java.util.stream.Stream;
 
 /**
  * Represents a node, which produces items as an iterable stream.
- *
- * @param <T> data items type
  */
-public final class Node_SupplierOfId<T> extends AbstractNode {
-	private final String id;
-	private final int partitionIndex;
-	private final int maxPartitions;
-	private final StreamId output;
+@ExposedInternals
+public final class SupplierOfId extends AbstractNode {
+	public final String id;
+	public final int partitionIndex;
+	public final int maxPartitions;
+	public final StreamId output;
 
-	public Node_SupplierOfId(int index, String id, int partitionIndex, int maxPartitions) {
-		this(index, id, partitionIndex, maxPartitions, new StreamId());
-	}
-
-	public Node_SupplierOfId(int index, String id, int partitionIndex, int maxPartitions, StreamId output) {
+	public SupplierOfId(int index, String id, int partitionIndex, int maxPartitions, StreamId output) {
 		super(index);
 		this.id = id;
 		this.partitionIndex = partitionIndex;
@@ -60,51 +58,35 @@ public final class Node_SupplierOfId<T> extends AbstractNode {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void createAndBind(Task task) {
-		StreamSupplier<T> supplier;
+		StreamSupplier<?> supplier;
 		Object object = task.get(id);
 		if (object instanceof Iterator) {
-			supplier = StreamSupplier.ofIterator((Iterator<T>) object);
+			supplier = StreamSupplier.ofIterator((Iterator<?>) object);
 		} else if (object instanceof Iterable) {
-			supplier = StreamSupplier.ofIterable((Iterable<T>) object);
+			supplier = StreamSupplier.ofIterable((Iterable<?>) object);
 		} else if (object instanceof Supplier) {
-			supplier = StreamSupplier.ofSupplier(((Supplier<T>) object)::get);
+			supplier = StreamSupplier.ofSupplier(((Supplier<?>) object)::get);
 		} else if (object instanceof SupplierEx) {
-			supplier = StreamSupplier.ofSupplier((SupplierEx<T>) object);
+			supplier = StreamSupplier.ofSupplier((SupplierEx<?>) object);
 		} else if (object instanceof Stream) {
-			supplier = StreamSupplier.ofStream((Stream<T>) object);
+			supplier = StreamSupplier.ofStream((Stream<?>) object);
 		} else if (object instanceof StreamSupplier) {
-			supplier = (StreamSupplier<T>) object;
+			supplier = (StreamSupplier<?>) object;
 		} else if (object instanceof ChannelSupplier) {
-			supplier = StreamSupplier.ofChannelSupplier((ChannelSupplier<T>) object);
+			supplier = StreamSupplier.ofChannelSupplier((ChannelSupplier<?>) object);
 		} else if (object instanceof PartitionedStreamSupplierFactory) {
-			supplier = ((PartitionedStreamSupplierFactory<T>) object).get(partitionIndex, maxPartitions);
+			supplier = ((PartitionedStreamSupplierFactory<?>) object).get(partitionIndex, maxPartitions);
 		} else if (object instanceof Promise) {
-			supplier = StreamSupplier.ofPromise(((Promise<StreamSupplier<T>>) object));
+			supplier = StreamSupplier.ofPromise(((Promise<StreamSupplier<Object>>) object));
 		} else {
 			throw new IllegalArgumentException("Object with id '" + id + "' is not a valid supplier of data: " + object);
 		}
 		task.export(output, supplier);
 	}
 
-	public String getId() {
-		return id;
-	}
-
-	public int getPartitionIndex() {
-		return partitionIndex;
-	}
-
-	public int getMaxPartitions() {
-		return maxPartitions;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeSupplierOfId{id='" + id +
+		return "SupplierOfId{id='" + id +
 				"', partitionIndex=" + partitionIndex +
 				", maxPartitions=" + maxPartitions +
 				", output=" + output +

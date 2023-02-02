@@ -19,10 +19,11 @@ package io.activej.dataflow.dataset.impl;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.graph.*;
-import io.activej.dataflow.node.Node_Reduce;
-import io.activej.dataflow.node.Node_ReduceSimple;
-import io.activej.dataflow.node.Node_Shard;
-import io.activej.dataflow.node.Node_Sort;
+import io.activej.dataflow.node.Node;
+import io.activej.dataflow.node.Nodes;
+import io.activej.dataflow.node.impl.Reduce;
+import io.activej.dataflow.node.impl.ReduceSimple;
+import io.activej.dataflow.node.impl.Shard;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 
 import java.util.ArrayList;
@@ -65,11 +66,11 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 		DataflowGraph graph = context.getGraph();
 		int nonce = context.getNonce();
 		List<StreamId> outputStreamIds = new ArrayList<>();
-		List<Node_Shard<K, I>> sharders = new ArrayList<>();
+		List<Shard<K, I>> sharders = new ArrayList<>();
 		int shardIndex = context.generateNodeIndex();
 		for (StreamId inputStreamId : input.channels(context.withoutFixedNonce())) {
 			Partition partition = graph.getPartition(inputStreamId);
-			Node_Shard<K, I> sharder = new Node_Shard<>(shardIndex, inputKeyFunction, inputStreamId, nonce);
+			Shard<K, I> sharder = Shard.create(shardIndex, inputKeyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
 			sharders.add(sharder);
 		}
@@ -80,20 +81,21 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 		int[] downloadIndexes = generateIndexes(context, partitions.size());
 		for (int i = 0; i < partitions.size(); i++) {
 			Partition partition = partitions.get(i);
-			Node_Reduce<K, O, A> nodeReduce = new Node_Reduce<>(reduceIndex, keyComparator);
-			graph.addNode(partition, nodeReduce);
+			Reduce<K, O, A>.Builder nodeReduceBuilder = Reduce.builder(reduceIndex, keyComparator);
 
 			int sortIndex = context.generateNodeIndex();
 			int simpleReduceIndex = context.generateNodeIndex();
 			for (int j = 0; j < sharders.size(); j++) {
-				Node_Shard<K, I> sharder = sharders.get(j);
+				Shard<K, I> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
 				StreamId reducerInput = sortReduceForward(context, sharderOutput, partition, sortIndex, simpleReduceIndex, uploadIndexes[i], downloadIndexes[j]);
-				nodeReduce.addInput(reducerInput, accumulatorKeyFunction, reducer.accumulatorToOutput());
+				nodeReduceBuilder.withInput(reducerInput, accumulatorKeyFunction, reducer.accumulatorToOutput());
 			}
+			Reduce<K, O, A> nodeReduce = nodeReduceBuilder.build();
+			graph.addNode(partition, nodeReduce);
 
-			outputStreamIds.add(nodeReduce.getOutput());
+			outputStreamIds.add(nodeReduce.output);
 		}
 
 		return outputStreamIds;
@@ -103,14 +105,17 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 		DataflowGraph graph = context.getGraph();
 		Partition sourcePartition = graph.getPartition(sourceStreamId);
 
-		Node_Sort<K, I> nodeSort = new Node_Sort<>(sortIndex, input.streamSchema(), inputKeyFunction, keyComparator, false, sortBufferSize, sourceStreamId);
+		Node nodeSort = Nodes.sort(sortIndex, input.streamSchema(), inputKeyFunction, keyComparator, false, sortBufferSize, sourceStreamId);
 		graph.addNode(sourcePartition, nodeSort);
 
-		Node_ReduceSimple<K, I, A, A> nodeReduce = new Node_ReduceSimple<>(simpleReduceIndex, inputKeyFunction, keyComparator, reducer.inputToAccumulator());
-		nodeReduce.addInput(nodeSort.getOutput());
+		ReduceSimple<K, I, A, A>.Builder nodeReduceBuilder = ReduceSimple.builder(simpleReduceIndex, inputKeyFunction, keyComparator, reducer.inputToAccumulator());
+		for (StreamId output : nodeSort.getOutputs()) {
+			nodeReduceBuilder.withInput(output);
+		}
+		ReduceSimple<K, I, A, A> nodeReduce = nodeReduceBuilder.build();
 		graph.addNode(sourcePartition, nodeReduce);
 
-		return DatasetUtils.forwardChannel(context, accumulatorStreamSchema, nodeReduce.getOutput(), targetPartition, uploadIndex, downloadIndex);
+		return DatasetUtils.forwardChannel(context, accumulatorStreamSchema, nodeReduce.output, targetPartition, uploadIndex, downloadIndex);
 	}
 
 	@Override

@@ -8,7 +8,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
-import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamLeftJoin.LeftInnerLeftJoiner;

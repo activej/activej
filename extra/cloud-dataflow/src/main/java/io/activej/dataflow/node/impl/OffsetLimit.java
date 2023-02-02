@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamSkip;
@@ -25,18 +27,15 @@ import io.activej.datastream.processor.StreamSkip;
 import java.util.Collection;
 import java.util.List;
 
-public final class Node_OffsetLimit<T> extends AbstractNode {
-	private final StreamId input;
-	private final StreamId output;
+@ExposedInternals
+public final class OffsetLimit extends AbstractNode {
+	public final StreamId input;
+	public final StreamId output;
 
-	private final long offset;
-	private final long limit;
+	public final long offset;
+	public final long limit;
 
-	public Node_OffsetLimit(int index, long offset, long limit, StreamId input) {
-		this(index, offset, limit, input, new StreamId());
-	}
-
-	public Node_OffsetLimit(int index, long offset, long limit, StreamId input, StreamId output) {
+	public OffsetLimit(int index, long offset, long limit, StreamId input, StreamId output) {
 		super(index);
 		this.input = input;
 		this.output = output;
@@ -51,10 +50,10 @@ public final class Node_OffsetLimit<T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamSkip<T> skip = StreamSkip.create(offset);
+		StreamSkip<?> skip = StreamSkip.create(offset);
 		task.bindChannel(input, skip.getInput());
 
-		StreamSupplier<T> supplier = skip.getOutput()
+		StreamSupplier<?> supplier = skip.getOutput()
 				.transformWith(StreamLimiter.create(limit));
 		task.export(output, supplier);
 	}
@@ -64,25 +63,9 @@ public final class Node_OffsetLimit<T> extends AbstractNode {
 		return List.of(input);
 	}
 
-	public StreamId getInput() {
-		return input;
-	}
-
-	public StreamId getOutput() {
-		return output;
-	}
-
-	public long getOffset() {
-		return offset;
-	}
-
-	public long getLimit() {
-		return limit;
-	}
-
 	@Override
 	public String toString() {
-		return "NodeOffsetLimit{" +
+		return "OffsetLimit{" +
 				"input=" + input +
 				", output=" + output +
 				", offset=" + (offset == StreamSkip.NO_SKIP ? "NONE" : offset) +

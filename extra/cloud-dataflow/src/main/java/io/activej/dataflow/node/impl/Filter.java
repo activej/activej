@@ -14,34 +14,32 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.node;
+package io.activej.dataflow.node.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.node.AbstractNode;
 import io.activej.datastream.processor.StreamFilter;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
- * Represents a node, which maps input values to output values based on a logic, defined by mapper.
+ * Represents a node, which filters a data stream and passes to output data items which satisfy a predicate.
  *
- * @param <I> input items data type
- * @param <O> output items data type
+ * @param <T> data items type
  */
-public final class Node_Map<I, O> extends AbstractNode {
-	private final Function<I, O> function;
-	private final StreamId input;
-	private final StreamId output;
+@ExposedInternals
+public final class Filter<T> extends AbstractNode {
+	public final Predicate<T> predicate;
+	public final StreamId input;
+	public final StreamId output;
 
-	public Node_Map(int index, Function<I, O> function, StreamId input) {
-		this(index, function, input, new StreamId());
-	}
-
-	public Node_Map(int index, Function<I, O> function, StreamId input, StreamId output) {
+	public Filter(int index, Predicate<T> predicate, StreamId input, StreamId output) {
 		super(index);
-		this.function = function;
+		this.predicate = predicate;
 		this.input = input;
 		this.output = output;
 	}
@@ -58,25 +56,13 @@ public final class Node_Map<I, O> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamFilter<I, O> streamMap = StreamFilter.mapper(function);
-		task.bindChannel(input, streamMap.getInput());
-		task.export(output, streamMap.getOutput());
-	}
-
-	public Function<I, O> getFunction() {
-		return function;
-	}
-
-	public StreamId getInput() {
-		return input;
-	}
-
-	public StreamId getOutput() {
-		return output;
+		StreamFilter<T, T> streamFilter = StreamFilter.create(predicate);
+		task.bindChannel(input, streamFilter.getInput());
+		task.export(output, streamFilter.getOutput());
 	}
 
 	@Override
 	public String toString() {
-		return "NodeMap{mapper=" + function.getClass().getSimpleName() + ", input=" + input + ", output=" + output + '}';
+		return "Filter{predicate=" + predicate.getClass().getSimpleName() + ", input=" + input + ", output=" + output + '}';
 	}
 }
