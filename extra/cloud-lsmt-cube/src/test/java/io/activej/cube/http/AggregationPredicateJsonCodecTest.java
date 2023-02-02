@@ -12,7 +12,7 @@ import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
 
 public class AggregationPredicateJsonCodecTest {
-	private static final PredicateDefJsonCodec CODEC = PredicateDefJsonCodec.create(
+	private static final AggregationPredicateJsonCodec CODEC = AggregationPredicateJsonCodec.create(
 			Map.of(
 					"campaign", int.class,
 					"site", String.class,

@@ -85,10 +85,6 @@ public final class HashCode implements Expression {
 		}
 	}
 
-	public List<Expression> getArguments() {
-		return arguments;
-	}
-
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();

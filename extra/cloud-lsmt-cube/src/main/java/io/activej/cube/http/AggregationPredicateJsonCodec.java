@@ -34,7 +34,7 @@ import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("unchecked")
-public final class PredicateDefJsonCodec implements JsonCodec<AggregationPredicate> {
+public final class AggregationPredicateJsonCodec implements JsonCodec<AggregationPredicate> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
 	public static final String EQ = "eq";
@@ -61,11 +61,11 @@ public final class PredicateDefJsonCodec implements JsonCodec<AggregationPredica
 	public static final String IN_SIGN = "IN";
 	private final Map<String, JsonCodec<Object>> attributeFormats;
 
-	private PredicateDefJsonCodec(Map<String, JsonCodec<Object>> attributeFormats) {
+	private AggregationPredicateJsonCodec(Map<String, JsonCodec<Object>> attributeFormats) {
 		this.attributeFormats = attributeFormats;
 	}
 
-	public static PredicateDefJsonCodec create(Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
+	public static AggregationPredicateJsonCodec create(Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
 			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()).nullable());
@@ -73,7 +73,7 @@ public final class PredicateDefJsonCodec implements JsonCodec<AggregationPredica
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
 			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
 		}
-		return new PredicateDefJsonCodec(attributeCodecs);
+		return new AggregationPredicateJsonCodec(attributeCodecs);
 	}
 
 	private void writeEq(JsonWriter writer, Eq predicate) {

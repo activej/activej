@@ -50,7 +50,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private final ICube cube;
 	private QueryResultJsonCodec queryResultCodec;
-	private PredicateDefJsonCodec aggregationPredicateCodec;
+	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
@@ -92,9 +92,9 @@ public final class ReportingServiceServlet extends ServletWithStats {
 		}
 	}
 
-	private PredicateDefJsonCodec getAggregationPredicateCodec() {
+	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = PredicateDefJsonCodec.create(cube.getAttributeTypes(), cube.getMeasureTypes());
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}

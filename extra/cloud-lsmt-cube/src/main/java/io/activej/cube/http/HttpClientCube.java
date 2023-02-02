@@ -47,7 +47,7 @@ public final class HttpClientCube implements ICube {
 	private final String url;
 	private final IHttpClient httpClient;
 	private QueryResultJsonCodec queryResultCodec;
-	private PredicateDefJsonCodec aggregationPredicateCodec;
+	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
 
@@ -93,9 +93,9 @@ public final class HttpClientCube implements ICube {
 		}
 	}
 
-	private PredicateDefJsonCodec getAggregationPredicateCodec() {
+	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = PredicateDefJsonCodec.create(attributeTypes, measureTypes);
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(attributeTypes, measureTypes);
 		}
 		return aggregationPredicateCodec;
 	}

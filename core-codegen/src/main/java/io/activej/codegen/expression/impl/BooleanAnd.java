@@ -40,10 +40,6 @@ public final class BooleanAnd implements Expression {
 		this.expressions = expressions;
 	}
 
-	public List<Expression> getExpressions() {
-		return expressions;
-	}
-
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
