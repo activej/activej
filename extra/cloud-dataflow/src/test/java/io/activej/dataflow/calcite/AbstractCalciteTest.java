@@ -6,8 +6,8 @@ import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.Operand_RecordField;
-import io.activej.dataflow.calcite.operand.Operand_Scalar;
+import io.activej.dataflow.calcite.operand.impl.RecordField;
+import io.activej.dataflow.calcite.operand.impl.Scalar;
 import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.table.DataflowTable;
@@ -3109,15 +3109,15 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static boolean isDate(Operand<?> operand) {
-		if (!(operand instanceof Operand_RecordField recordField)) return false;
+		if (!(operand instanceof RecordField recordField)) return false;
 
-		return recordField.getIndex() == 1;
+		return recordField.index == 1;
 	}
 
 	private static @Nullable Long extractDate(Operand<?> operand) {
-		if (!(operand instanceof Operand_Scalar scalar)) return null;
+		if (!(operand instanceof Scalar scalar)) return null;
 
-		BigDecimal value = (BigDecimal) scalar.getValue().getValue();
+		BigDecimal value = (BigDecimal) scalar.value.getValue();
 		return value == null ? null : value.longValue();
 	}
 

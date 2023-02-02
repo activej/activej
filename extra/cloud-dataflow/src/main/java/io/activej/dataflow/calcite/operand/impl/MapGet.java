@@ -1,6 +1,9 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.Utils;
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.operand.FunctionOperand;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -11,11 +14,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-public final class Operand_MapGet extends FunctionOperand<Operand_MapGet> {
-	private final Operand<?> mapOperand;
-	private final Operand<?> keyOperand;
+@ExposedInternals
+public final class MapGet extends FunctionOperand<MapGet> {
+	public final Operand<?> mapOperand;
+	public final Operand<?> keyOperand;
 
-	public Operand_MapGet(Operand<?> mapOperand, Operand<?> keyOperand) {
+	public MapGet(Operand<?> mapOperand, Operand<?> keyOperand) {
 		this.mapOperand = mapOperand;
 		this.keyOperand = keyOperand;
 	}
@@ -44,8 +48,8 @@ public final class Operand_MapGet extends FunctionOperand<Operand_MapGet> {
 	}
 
 	@Override
-	public Operand_MapGet materialize(List<Object> params) {
-		return new Operand_MapGet(
+	public MapGet materialize(List<Object> params) {
+		return new MapGet(
 				mapOperand.materialize(params),
 				keyOperand.materialize(params)
 		);
@@ -54,14 +58,6 @@ public final class Operand_MapGet extends FunctionOperand<Operand_MapGet> {
 	@Override
 	public List<RexDynamicParam> getParams() {
 		return Utils.concat(mapOperand.getParams(), keyOperand.getParams());
-	}
-
-	public Operand<?> getMapOperand() {
-		return mapOperand;
-	}
-
-	public Operand<?> getKeyOperand() {
-		return keyOperand;
 	}
 
 	@Override
@@ -90,7 +86,7 @@ public final class Operand_MapGet extends FunctionOperand<Operand_MapGet> {
 
 	@Override
 	public String toString() {
-		return "OperandMapGet[" +
+		return "MapGet[" +
 				"mapOperand=" + mapOperand + ", " +
 				"keyOperand=" + keyOperand + ']';
 	}

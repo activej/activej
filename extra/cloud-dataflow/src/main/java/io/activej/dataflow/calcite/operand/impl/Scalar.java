@@ -1,6 +1,8 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.Value;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -10,11 +12,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public final class Operand_Scalar implements Operand<Operand_Scalar> {
+@ExposedInternals
+public final class Scalar implements Operand<Scalar> {
+	public final Value value;
 
-	private final Value value;
-
-	public Operand_Scalar(Value value) {
+	public Scalar(Value value) {
 		this.value = value;
 	}
 
@@ -42,8 +44,8 @@ public final class Operand_Scalar implements Operand<Operand_Scalar> {
 	}
 
 	@Override
-	public Operand_Scalar materialize(List<Object> params) {
-		return new Operand_Scalar(value.materialize(params));
+	public Scalar materialize(List<Object> params) {
+		return new Scalar(value.materialize(params));
 	}
 
 	@Override
@@ -53,13 +55,9 @@ public final class Operand_Scalar implements Operand<Operand_Scalar> {
 				Collections.singletonList(value.getDynamicParam());
 	}
 
-	public Value getValue() {
-		return value;
-	}
-
 	@Override
 	public String toString() {
-		return "OperandScalar[" +
+		return "Scalar[" +
 				"value=" + value + ']';
 	}
 

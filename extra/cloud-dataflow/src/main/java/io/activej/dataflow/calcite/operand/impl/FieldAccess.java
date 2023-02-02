@@ -1,8 +1,10 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -16,19 +18,16 @@ import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-public final class Operand_FieldAccess implements Operand<Operand_FieldAccess> {
-	private final Operand<?> objectOperand;
-	private final String fieldName;
-	private final DefiningClassLoader classLoader;
+@ExposedInternals
+public final class FieldAccess implements Operand<FieldAccess> {
+	public final Operand<?> objectOperand;
+	public final String fieldName;
+	public final DefiningClassLoader classLoader;
 
-	public Operand_FieldAccess(Operand<?> objectOperand, String fieldName, DefiningClassLoader classLoader) {
+	public FieldAccess(Operand<?> objectOperand, String fieldName, DefiningClassLoader classLoader) {
 		this.objectOperand = objectOperand;
 		this.fieldName = fieldName;
 		this.classLoader = classLoader;
-	}
-
-	public Operand_FieldAccess(Operand<?> objectOperand, String fieldName) {
-		this(objectOperand, fieldName, DefiningClassLoader.create());
 	}
 
 	@Override
@@ -82,8 +81,8 @@ public final class Operand_FieldAccess implements Operand<Operand_FieldAccess> {
 	}
 
 	@Override
-	public Operand_FieldAccess materialize(List<Object> params) {
-		return new Operand_FieldAccess(
+	public FieldAccess materialize(List<Object> params) {
+		return new FieldAccess(
 				objectOperand.materialize(params),
 				fieldName,
 				classLoader
@@ -95,21 +94,13 @@ public final class Operand_FieldAccess implements Operand<Operand_FieldAccess> {
 		return objectOperand.getParams();
 	}
 
-	public Operand<?> getObjectOperand() {
-		return objectOperand;
-	}
-
-	public String getFieldName() {
-		return fieldName;
-	}
-
 	public interface FieldGetter {
 		@Nullable <T> T getField(Object object, String fieldName);
 	}
 
 	@Override
 	public String toString() {
-		return "OperandFieldAcces[" +
+		return "FieldAccess[" +
 				"objectOperand=" + objectOperand + ", " +
 				"fieldName=" + fieldName + ']';
 	}

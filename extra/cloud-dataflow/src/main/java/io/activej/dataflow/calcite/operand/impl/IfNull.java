@@ -1,6 +1,9 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.Utils;
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.operand.FunctionOperand;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -8,11 +11,12 @@ import org.apache.calcite.rex.RexDynamicParam;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class Operand_IfNull extends FunctionOperand<Operand_IfNull> {
-	private final Operand<?> checkedOperand;
-	private final Operand<?> defaultValueOperand;
+@ExposedInternals
+public final class IfNull extends FunctionOperand<IfNull> {
+	public final Operand<?> checkedOperand;
+	public final Operand<?> defaultValueOperand;
 
-	public Operand_IfNull(Operand<?> checkedOperand, Operand<?> defaultValueOperand) {
+	public IfNull(Operand<?> checkedOperand, Operand<?> defaultValueOperand) {
 		this.checkedOperand = checkedOperand;
 		this.defaultValueOperand = defaultValueOperand;
 	}
@@ -39,8 +43,8 @@ public final class Operand_IfNull extends FunctionOperand<Operand_IfNull> {
 	}
 
 	@Override
-	public Operand_IfNull materialize(List<Object> params) {
-		return new Operand_IfNull(
+	public IfNull materialize(List<Object> params) {
+		return new IfNull(
 				checkedOperand.materialize(params),
 				defaultValueOperand.materialize(params)
 		);
@@ -51,14 +55,6 @@ public final class Operand_IfNull extends FunctionOperand<Operand_IfNull> {
 		return Utils.concat(checkedOperand.getParams(), defaultValueOperand.getParams());
 	}
 
-	public Operand<?> getCheckedOperand() {
-		return checkedOperand;
-	}
-
-	public Operand<?> getDefaultValueOperand() {
-		return defaultValueOperand;
-	}
-
 	@Override
 	public List<Operand<?>> getOperands() {
 		return List.of(checkedOperand, defaultValueOperand);
@@ -66,7 +62,7 @@ public final class Operand_IfNull extends FunctionOperand<Operand_IfNull> {
 
 	@Override
 	public String toString() {
-		return "OperandIfNull[" +
+		return "IfNull[" +
 				"checkedOperand=" + checkedOperand + ", " +
 				"defaultValueOperand=" + defaultValueOperand + ']';
 	}

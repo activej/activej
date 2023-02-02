@@ -1,6 +1,9 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.Utils;
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.operand.FunctionOperand;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -9,11 +12,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class Operand_ListGet extends FunctionOperand<Operand_ListGet> {
-	private final Operand<?> listOperand;
-	private final Operand<?> indexOperand;
+@ExposedInternals
+public final class ListGet extends FunctionOperand<ListGet> {
+	public final Operand<?> listOperand;
+	public final Operand<?> indexOperand;
 
-	public Operand_ListGet(Operand<?> listOperand, Operand<?> indexOperand) {
+	public ListGet(Operand<?> listOperand, Operand<?> indexOperand) {
 		this.listOperand = listOperand;
 		this.indexOperand = indexOperand;
 	}
@@ -42,8 +46,8 @@ public final class Operand_ListGet extends FunctionOperand<Operand_ListGet> {
 	}
 
 	@Override
-	public Operand_ListGet materialize(List<Object> params) {
-		return new Operand_ListGet(
+	public ListGet materialize(List<Object> params) {
+		return new ListGet(
 				listOperand.materialize(params),
 				indexOperand.materialize(params)
 		);
@@ -54,14 +58,6 @@ public final class Operand_ListGet extends FunctionOperand<Operand_ListGet> {
 		return Utils.concat(listOperand.getParams(), indexOperand.getParams());
 	}
 
-	public Operand<?> getListOperand() {
-		return listOperand;
-	}
-
-	public Operand<?> getIndexOperand() {
-		return indexOperand;
-	}
-
 	@Override
 	public List<Operand<?>> getOperands() {
 		return List.of(listOperand, indexOperand);
@@ -69,7 +65,7 @@ public final class Operand_ListGet extends FunctionOperand<Operand_ListGet> {
 
 	@Override
 	public String toString() {
-		return "OperandListGet[" +
+		return "ListGet[" +
 				"listOperand=" + listOperand + ", " +
 				"indexOperand=" + indexOperand + ']';
 	}

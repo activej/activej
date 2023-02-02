@@ -7,8 +7,8 @@ import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
 import io.activej.dataflow.calcite.join.RecordLeftJoiner;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.Operand_RecordField;
-import io.activej.dataflow.calcite.operand.Operand_Scalar;
+import io.activej.dataflow.calcite.operand.impl.RecordField;
+import io.activej.dataflow.calcite.operand.impl.Scalar;
 import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
@@ -45,6 +45,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.last;
+import static io.activej.dataflow.calcite.operand.Operands.recordField;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static java.util.Collections.emptyList;
 
@@ -117,8 +118,8 @@ public class RelToDatasetConverter {
 
 			projections.add(fieldProjection);
 
-			if (!(projectOperand instanceof Operand_RecordField operandRecordField) ||
-					operandRecordField.getIndex() != i ||
+			if (!(projectOperand instanceof RecordField operandRecordField) ||
+					operandRecordField.index != i ||
 					!scheme.getField(i).equals(fieldName)) {
 				redundantProjection = false;
 			}
@@ -173,12 +174,12 @@ public class RelToDatasetConverter {
 
 		RexNode offsetNode = scan.getOffset();
 		RexNode limitNode = scan.getLimit();
-		Operand_Scalar offsetOperand = offsetNode == null ?
-				new Operand_Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+		Scalar offsetOperand = offsetNode == null ?
+				new Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
 				paramsCollector.toScalarOperand(offsetNode);
 
-		Operand_Scalar limitOperand = limitNode == null ?
-				new Operand_Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+		Scalar limitOperand = limitNode == null ?
+				new Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
 				paramsCollector.toScalarOperand(limitNode);
 
 		RecordScheme scheme = mapper.getScheme();
@@ -194,8 +195,8 @@ public class RelToDatasetConverter {
 
 			if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) return filtered;
 
-			long offset = ((Number) offsetOperand.materialize(params).getValue().getValue()).longValue();
-			long limit = ((Number) limitOperand.materialize(params).getValue().getValue()).longValue();
+			long offset = ((Number) offsetOperand.materialize(params).value.getValue()).longValue();
+			long limit = ((Number) limitOperand.materialize(params).value.getValue()).longValue();
 
 			if (limit != StreamLimiter.NO_LIMIT) {
 				filtered = Datasets.localLimit(filtered, offset + limit);
@@ -318,7 +319,7 @@ public class RelToDatasetConverter {
 	private static Function<Record, Record> getKeyFunction(List<Integer> indices) {
 		List<FieldProjection> projections = new ArrayList<>(indices.size());
 		for (Integer index : indices) {
-			projections.add(new FieldProjection(new Operand_RecordField(index), String.valueOf(index)));
+			projections.add(new FieldProjection(recordField(index), String.valueOf(index)));
 		}
 		return RecordProjectionFn.create(projections);
 	}
@@ -405,12 +406,12 @@ public class RelToDatasetConverter {
 			sorts.add(new FieldSort(fieldIndex, asc, fieldCollation.nullDirection));
 		}
 
-		Operand_Scalar offset = sort.offset == null ?
-				new Operand_Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+		Scalar offset = sort.offset == null ?
+				new Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
 				paramsCollector.toScalarOperand(sort.offset);
 
-		Operand_Scalar limit = sort.fetch == null ?
-				new Operand_Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+		Scalar limit = sort.fetch == null ?
+				new Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
 				paramsCollector.toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
@@ -418,8 +419,8 @@ public class RelToDatasetConverter {
 				params -> {
 					Dataset<Record> materializedDataset = current.materialize(params);
 
-					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
-					long limitValue = ((Number) limit.materialize(params).getValue().getValue()).longValue();
+					long offsetValue = ((Number) offset.materialize(params).value.getValue()).longValue();
+					long limitValue = ((Number) limit.materialize(params).value.getValue()).longValue();
 
 
 					if (sorts.isEmpty()) {
@@ -476,8 +477,8 @@ public class RelToDatasetConverter {
 			checkArgument(leftClass == rightClass);
 			checkArgument(Utils.isSortable(leftClass), "Column not sortable");
 
-			leftProjections.add(new FieldProjection(new Operand_RecordField(leftIndex), "join_" + leftProjections.size()));
-			rightProjections.add(new FieldProjection(new Operand_RecordField(rightIndex), "join_" + rightProjections.size()));
+			leftProjections.add(new FieldProjection(recordField(leftIndex), "join_" + leftProjections.size()));
+			rightProjections.add(new FieldProjection(recordField(rightIndex), "join_" + rightProjections.size()));
 		}
 
 		return new JoinKeyProjections(
@@ -576,7 +577,7 @@ public class RelToDatasetConverter {
 			if (index >= size) return true;
 
 			FieldProjection projection = projections.get(index);
-			if (!(projection.operand() instanceof Operand_RecordField operandField) || operandField.getIndex() != index) {
+			if (!(projection.operand() instanceof RecordField operandField) || operandField.index != index) {
 				return true;
 			}
 		}
@@ -700,10 +701,10 @@ public class RelToDatasetConverter {
 			return operand;
 		}
 
-		private Operand_Scalar toScalarOperand(RexNode node) {
+		private Scalar toScalarOperand(RexNode node) {
 			Operand<?> operand = toOperand(node);
-			checkArgument(operand instanceof Operand_Scalar, "Not scalar operand");
-			return (Operand_Scalar) operand;
+			checkArgument(operand instanceof Scalar, "Not scalar operand");
+			return (Scalar) operand;
 		}
 	}
 }

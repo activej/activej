@@ -1,5 +1,7 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -12,11 +14,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-public final class Operand_Cast implements Operand<Operand_Cast> {
-	private final Operand<?> valueOperand;
-	private final int type;
+@ExposedInternals
+public final class Cast implements Operand<Cast> {
+	public final Operand<?> valueOperand;
+	public final int type;
 
-	public Operand_Cast(Operand<?> valueOperand, int type) {
+	public Cast(Operand<?> valueOperand, int type) {
 		this.valueOperand = valueOperand;
 		this.type = type;
 	}
@@ -59,8 +62,8 @@ public final class Operand_Cast implements Operand<Operand_Cast> {
 	}
 
 	@Override
-	public Operand_Cast materialize(List<Object> params) {
-		return new Operand_Cast(valueOperand.materialize(params), type);
+	public Cast materialize(List<Object> params) {
+		return new Cast(valueOperand.materialize(params), type);
 	}
 
 	@Override
@@ -68,17 +71,9 @@ public final class Operand_Cast implements Operand<Operand_Cast> {
 		return valueOperand.getParams();
 	}
 
-	public Operand<?> getValueOperand() {
-		return valueOperand;
-	}
-
-	public int getType() {
-		return type;
-	}
-
 	@Override
 	public String toString() {
-		return "OperandCast[" +
+		return "Cast[" +
 				"valueOperand=" + valueOperand +
 				", type='" + type + '\'' +
 				']';

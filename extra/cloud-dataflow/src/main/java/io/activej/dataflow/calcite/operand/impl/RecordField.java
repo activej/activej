@@ -1,5 +1,7 @@
-package io.activej.dataflow.calcite.operand;
+package io.activej.dataflow.calcite.operand.impl;
 
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -8,10 +10,11 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
-public final class Operand_RecordField implements Operand<Operand_RecordField> {
-	private final int index;
+@ExposedInternals
+public final class RecordField implements Operand<RecordField> {
+	public final int index;
 
-	public Operand_RecordField(int index) {
+	public RecordField(int index) {
 		this.index = index;
 	}
 
@@ -31,7 +34,7 @@ public final class Operand_RecordField implements Operand<Operand_RecordField> {
 	}
 
 	@Override
-	public Operand_RecordField materialize(List<Object> params) {
+	public RecordField materialize(List<Object> params) {
 		return this;
 	}
 
@@ -40,14 +43,9 @@ public final class Operand_RecordField implements Operand<Operand_RecordField> {
 		return Collections.emptyList();
 	}
 
-	public int getIndex() {
-		return index;
-	}
-
 	@Override
 	public String toString() {
-		return "OperandRecordField[" +
+		return "RecordField[" +
 				"index=" + index + ']';
 	}
-
 }

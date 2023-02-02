@@ -2,7 +2,8 @@ package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.operand.FunctionOperand;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.Operand_ListGet;
+import io.activej.dataflow.calcite.operand.Operands;
+import io.activej.dataflow.calcite.operand.impl.ListGet;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.*;
@@ -29,6 +30,6 @@ public final class ListGetFunction extends ProjectionFunction {
 
 		Operand<?> listOperand = operands.get(0);
 		Operand<?> indexOperand = operands.get(1);
-		return new Operand_ListGet(listOperand, indexOperand);
+		return Operands.listGet(listOperand, indexOperand);
 	}
 }

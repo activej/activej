@@ -3,7 +3,8 @@ package io.activej.dataflow.calcite;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.Checks;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.Operand_RecordField;
+import io.activej.dataflow.calcite.operand.Operands;
+import io.activej.dataflow.calcite.operand.impl.RecordField;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
 import io.activej.record.RecordScheme;
@@ -39,7 +40,7 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 		List<FieldProjection> projections = new ArrayList<>(names.size());
 		for (int i = 0; i < names.size(); i++) {
 			String name = names.get(i);
-			projections.add(new FieldProjection(new Operand_RecordField(i), name));
+			projections.add(new FieldProjection(Operands.recordField(i), name));
 		}
 		return new RecordProjectionFn(projections);
 	}

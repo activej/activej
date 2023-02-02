@@ -2,6 +2,7 @@ package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.operand.*;
+import io.activej.dataflow.calcite.operand.impl.*;
 import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
@@ -12,73 +13,73 @@ import io.activej.serializer.stream.StreamCodecs;
 public final class OperandCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
-	StreamCodec<Operand_Scalar> operandScalar() {
-		return StreamCodec.create(Operand_Scalar::new,
-				Operand_Scalar::getValue, StreamCodecs.ofNullable(Utils.VALUE_STREAM_CODEC)
+	StreamCodec<Scalar> operandScalar() {
+		return StreamCodec.create(Scalar::new,
+				scalar -> scalar.value, StreamCodecs.ofNullable(Utils.VALUE_STREAM_CODEC)
 		);
 	}
 
 	@Provides
 	@Subtype(1)
-	StreamCodec<Operand_FieldAccess> fieldAccess(
+	StreamCodec<FieldAccess> fieldAccess(
 			StreamCodec<Operand<?>> operandStreamCodec,
 			DefiningClassLoader classLoader
 	) {
-		return StreamCodec.create((a, b) -> new Operand_FieldAccess(a, b, classLoader),
-				Operand_FieldAccess::getObjectOperand, operandStreamCodec,
-				Operand_FieldAccess::getFieldName, StreamCodecs.ofString()
+		return StreamCodec.create((a, b) -> new FieldAccess(a, b, classLoader),
+				fieldAccess -> fieldAccess.objectOperand, operandStreamCodec,
+				fieldAccess -> fieldAccess.fieldName, StreamCodecs.ofString()
 		);
 	}
 
 	@Provides
 	@Subtype(2)
-	StreamCodec<Operand_RecordField> operandRecordField() {
-		return StreamCodec.create(Operand_RecordField::new,
-				Operand_RecordField::getIndex, StreamCodecs.ofVarInt()
+	StreamCodec<RecordField> operandRecordField() {
+		return StreamCodec.create(RecordField::new,
+				recordField -> recordField.index, StreamCodecs.ofVarInt()
 		);
 	}
 
 	@Provides
 	@Subtype(3)
-	StreamCodec<Operand_Cast> operandCast(
+	StreamCodec<Cast> operandCast(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(Operand_Cast::new,
-				Operand_Cast::getValueOperand, operandStreamCodec,
-				Operand_Cast::getType, StreamCodecs.ofVarInt()
+		return StreamCodec.create(Cast::new,
+				cast -> cast.valueOperand, operandStreamCodec,
+				cast -> cast.type, StreamCodecs.ofVarInt()
 		);
 	}
 
 	@Provides
 	@Subtype(4)
-	StreamCodec<Operand_IfNull> operandIfNull(
+	StreamCodec<IfNull> operandIfNull(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(Operand_IfNull::new,
-				Operand_IfNull::getCheckedOperand, operandStreamCodec,
-				Operand_IfNull::getDefaultValueOperand, operandStreamCodec
+		return StreamCodec.create(IfNull::new,
+				ifNull -> ifNull.checkedOperand, operandStreamCodec,
+				ifNull -> ifNull.defaultValueOperand, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(5)
-	StreamCodec<Operand_ListGet> operandListGet(
+	StreamCodec<ListGet> operandListGet(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(Operand_ListGet::new,
-				Operand_ListGet::getListOperand, operandStreamCodec,
-				Operand_ListGet::getIndexOperand, operandStreamCodec
+		return StreamCodec.create(ListGet::new,
+				listGet -> listGet.listOperand, operandStreamCodec,
+				listGet -> listGet.indexOperand, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(6)
-	StreamCodec<Operand_MapGet> operandMapGet(
+	StreamCodec<MapGet> operandMapGet(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(Operand_MapGet::new,
-				Operand_MapGet::getMapOperand, operandStreamCodec,
-				Operand_MapGet::getKeyOperand, operandStreamCodec
+		return StreamCodec.create(MapGet::new,
+				mapGet -> mapGet.mapOperand, operandStreamCodec,
+				mapGet -> mapGet.keyOperand, operandStreamCodec
 		);
 	}
 }

@@ -2,7 +2,8 @@ package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.operand.FunctionOperand;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.Operand_MapGet;
+import io.activej.dataflow.calcite.operand.Operands;
+import io.activej.dataflow.calcite.operand.impl.MapGet;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.InferTypes;
@@ -28,6 +29,6 @@ public final class MapGetFunction extends ProjectionFunction {
 
 		Operand<?> mapOperand = operands.get(0);
 		Operand<?> keyOperand = operands.get(1);
-		return new Operand_MapGet(mapOperand, keyOperand);
+		return Operands.mapGet(mapOperand, keyOperand);
 	}
 }
