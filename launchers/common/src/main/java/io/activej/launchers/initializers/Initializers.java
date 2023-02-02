@@ -18,6 +18,7 @@ package io.activej.launchers.initializers;
 
 import io.activej.async.service.TaskScheduler;
 import io.activej.common.MemSize;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
@@ -39,6 +40,7 @@ import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStatsLastSuccess;
 import static io.activej.trigger.Severity.*;
 
+@StaticFactories(Initializer.class)
 public class Initializers {
 	public static final String GLOBAL_EVENTLOOP_NAME = "GlobalEventloopStats";
 	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.of(Eventloop.class, GLOBAL_EVENTLOOP_NAME);

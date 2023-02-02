@@ -16,6 +16,7 @@
 
 package io.activej.launchers.crdt;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.SimpleConfigConverter;
@@ -34,6 +35,7 @@ import java.util.Set;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.converter.ConfigConverters.*;
 
+@StaticFactories(ConfigConverter.class)
 public final class ConfigConverters {
 
 	/**

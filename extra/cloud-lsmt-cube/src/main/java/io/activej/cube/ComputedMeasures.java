@@ -19,11 +19,13 @@ package io.activej.cube;
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+@StaticFactories(ComputedMeasure.class)
 public class ComputedMeasures {
 	public static final class E extends Expressions {}
 

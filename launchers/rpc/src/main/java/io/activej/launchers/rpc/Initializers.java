@@ -16,6 +16,7 @@
 
 package io.activej.launchers.rpc;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.rpc.client.RpcClient;
@@ -33,6 +34,7 @@ import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.trigger.Severity.HIGH;
 
+@StaticFactories(Initializer.class)
 public final class Initializers {
 
 	public static Initializer<RpcServer.Builder> ofRpcServer(Config config) {

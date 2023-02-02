@@ -20,6 +20,7 @@ import io.activej.aggregation.util.HyperLogLog;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;
@@ -31,15 +32,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-import static io.activej.aggregation.fieldtype.JsonCodecs.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
 
+@StaticFactories(FieldType.class)
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
-		return new FieldType<>(byte.class, new SerializerDef_Byte(false), BYTE_CODEC) {
+		return new FieldType<>(byte.class, new SerializerDef_Byte(false), JsonCodecs.ofByte()) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Byte.class, "toString", value);
@@ -48,7 +49,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Short> ofShort() {
-		return new FieldType<>(short.class, new SerializerDef_Short(false), SHORT_CODEC) {
+		return new FieldType<>(short.class, new SerializerDef_Short(false), JsonCodecs.ofShort()) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Short.class, "toString", value);
@@ -57,31 +58,31 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Integer> ofInt() {
-		return new FieldType<>(int.class, new SerializerDef_Int(false, true), INTEGER_CODEC);
+		return new FieldType<>(int.class, new SerializerDef_Int(false, true), JsonCodecs.ofInteger());
 	}
 
 	public static FieldType<Long> ofLong() {
-		return new FieldType<>(long.class, new SerializerDef_Long(false, true), LONG_CODEC);
+		return new FieldType<>(long.class, new SerializerDef_Long(false, true), JsonCodecs.ofLong());
 	}
 
 	public static FieldType<Float> ofFloat() {
-		return new FieldType<>(float.class, new SerializerDef_Float(false), FLOAT_CODEC);
+		return new FieldType<>(float.class, new SerializerDef_Float(false), JsonCodecs.ofFloat());
 	}
 
 	public static FieldType<Double> ofDouble() {
-		return new FieldType<>(double.class, new SerializerDef_Double(false), DOUBLE_CODEC);
+		return new FieldType<>(double.class, new SerializerDef_Double(false), JsonCodecs.ofDouble());
 	}
 
 	public static FieldType<Character> ofChar() {
-		return new FieldType<>(char.class, new SerializerDef_Char(false), CHARACTER_CODEC);
+		return new FieldType<>(char.class, new SerializerDef_Char(false), JsonCodecs.ofCharacter());
 	}
 
 	public static FieldType<Boolean> ofBoolean() {
-		return new FieldType<>(boolean.class, new SerializerDef_Boolean(false), BOOLEAN_CODEC);
+		return new FieldType<>(boolean.class, new SerializerDef_Boolean(false), JsonCodecs.ofBoolean());
 	}
 
 	public static FieldType<Integer> ofHyperLogLog() {
-		return new FieldType<>(HyperLogLog.class, int.class, serializerDefHyperLogLog(), INTEGER_CODEC, null);
+		return new FieldType<>(HyperLogLog.class, int.class, serializerDefHyperLogLog(), JsonCodecs.ofInteger(), null);
 	}
 
 	private static SerializerDef serializerDefHyperLogLog() {
@@ -120,7 +121,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<String> ofString(StringFormat format) {
-		return new FieldType<>(String.class, new SerializerDef_String(format), STRING_CODEC) {
+		return new FieldType<>(String.class, new SerializerDef_String(format), JsonCodecs.ofString()) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return value;
@@ -144,7 +145,7 @@ public final class FieldTypes {
 		}
 
 		FieldTypeDate(LocalDate startDate) {
-			super(int.class, LocalDate.class, new SerializerDef_Int(false, true), LOCAL_DATE_CODEC, INTEGER_CODEC);
+			super(int.class, LocalDate.class, new SerializerDef_Int(false, true), JsonCodecs.ofLocalDate(), JsonCodecs.ofInteger());
 			this.startDate = startDate;
 		}
 

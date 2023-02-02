@@ -16,12 +16,14 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.datastream.StreamDataAcceptor;
 
 /**
  * Static utility methods pertaining to {@link Reducer}.
  * Contains primary ready for use reducers.
  */
+@StaticFactories(StreamReducers.Reducer.class)
 public final class StreamReducers {
 
 	/**

@@ -17,6 +17,7 @@
 package io.activej.service.adapter;
 
 import io.activej.async.service.ReactiveService;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.binding.OptionalDependency;
@@ -36,6 +37,7 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("WeakerAccess")
+@StaticFactories(ServiceAdapter.class)
 public final class ServiceAdapters {
 	private static final Logger logger = getLogger(ServiceAdapters.class);
 

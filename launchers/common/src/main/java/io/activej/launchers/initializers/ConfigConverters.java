@@ -16,6 +16,7 @@
 
 package io.activej.launchers.initializers;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.csp.process.frames.FrameFormat;
@@ -34,6 +35,7 @@ import java.util.List;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.dns.DnsCache.*;
 
+@StaticFactories(ConfigConverter.class)
 public final class ConfigConverters {
 
 	public static ConfigConverter<DnsCache> ofDnsCache(Reactor reactor) {

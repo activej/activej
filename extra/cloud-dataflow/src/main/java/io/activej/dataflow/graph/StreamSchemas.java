@@ -1,17 +1,19 @@
 package io.activej.dataflow.graph;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.serializer.BinarySerializer;
 
+@StaticFactories(StreamSchema.class)
 public final class StreamSchemas {
-	public static <T> SimpleStreamSchema<T> simple(Class<T> cls) {
+	public static <T> StreamSchema<T> simple(Class<T> cls) {
 		return new SimpleStreamSchema<>(cls);
 	}
 
 	public static class SimpleStreamSchema<T> implements StreamSchema<T> {
 		private final Class<T> cls;
 
-		private SimpleStreamSchema(Class<T> cls) {
+		public SimpleStreamSchema(Class<T> cls) {
 			this.cls = cls;
 		}
 

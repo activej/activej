@@ -17,6 +17,7 @@
 package io.activej.async.process;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.RetryPolicy;
@@ -30,7 +31,8 @@ import java.util.concurrent.RejectedExecutionException;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
-public class AsyncExecutors {
+@StaticFactories(AsyncExecutor.class)
+public final class AsyncExecutors {
 
 	public static AsyncExecutor direct() {
 		return new AsyncExecutor() {

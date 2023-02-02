@@ -1,5 +1,6 @@
 package io.activej.serializer.stream;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -13,6 +14,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
+@StaticFactories(StreamCodec.class)
 public final class StreamCodecs {
 	public static StreamCodec<Void> ofVoid() {
 		return new StreamCodec<>() {

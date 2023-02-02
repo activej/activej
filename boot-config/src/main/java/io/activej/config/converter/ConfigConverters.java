@@ -19,6 +19,7 @@ package io.activej.config.converter;
 import io.activej.async.service.TaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.config.Config;
 import io.activej.eventloop.inspector.ThrottlingController;
@@ -48,6 +49,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
+@StaticFactories(ConfigConverter.class)
 public final class ConfigConverters {
 
 	public static ConfigConverter<LocalDate> ofLocalDate() {

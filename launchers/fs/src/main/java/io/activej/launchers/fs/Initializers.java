@@ -16,6 +16,7 @@
 
 package io.activej.launchers.fs;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
@@ -44,6 +45,7 @@ import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStats;
 import static io.activej.trigger.Severity.HIGH;
 import static io.activej.trigger.Severity.WARNING;
 
+@StaticFactories(Initializer.class)
 public final class Initializers {
 
 	public static Initializer<FileSystemServer.Builder> ofFileSystemServer(Config config) {

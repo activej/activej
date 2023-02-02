@@ -22,6 +22,7 @@ import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
@@ -53,6 +54,7 @@ import static java.util.Arrays.asList;
  * Allows managing multiple {@link Promise}s.
  */
 @SuppressWarnings({"WeakerAccess", "unchecked"})
+@StaticFactories(Promise.class)
 public final class Promises {
 	/**
 	 * @see #timeout(long, Promise)

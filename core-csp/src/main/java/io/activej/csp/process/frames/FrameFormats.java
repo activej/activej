@@ -19,6 +19,7 @@ package io.activej.csp.process.frames;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -31,7 +32,8 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkArgument;
 
-public class FrameFormats {
+@StaticFactories(FrameFormat.class)
+public final class FrameFormats {
 
 	/**
 	 * A combination of different frame formats.

@@ -16,6 +16,7 @@
 
 package io.activej.http.decoder;
 
+import io.activej.common.annotation.StaticFactories;
 import io.activej.common.collection.Either;
 import io.activej.http.HttpRequest;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,7 @@ import java.util.function.BiFunction;
  * can be combined to form complex ones.
  */
 @SuppressWarnings("RedundantCast")
+@StaticFactories(Decoder.class)
 public final class Decoders {
 	public static final String REQUIRED_GET_PARAM = "Required GET param: %s";
 	public static final String REQUIRED_POST_PARAM = "Required POST param: %s";
