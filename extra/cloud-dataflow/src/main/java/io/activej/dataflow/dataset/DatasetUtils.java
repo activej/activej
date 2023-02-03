@@ -22,7 +22,7 @@ import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
 import io.activej.dataflow.node.impl.*;
 import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSkip;
 
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 
 public class DatasetUtils {
 

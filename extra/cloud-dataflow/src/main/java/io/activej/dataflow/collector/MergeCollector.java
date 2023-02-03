@@ -26,8 +26,8 @@ import io.activej.reactor.Reactor;
 import java.util.Comparator;
 import java.util.function.Function;
 
-import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.deduplicateReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 
 public final class MergeCollector<K, T> extends AbstractCollector<T, StreamReducer<K, T, Void>> {
 	private final Function<T, K> keyFunction;

@@ -20,7 +20,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 

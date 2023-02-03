@@ -29,8 +29,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.deduplicateReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 
 /**
  * Represents a node, which merges many data streams into one, based on a logic, defined by key function and key comparator.

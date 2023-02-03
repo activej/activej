@@ -26,7 +26,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.impl.SerializerDef_Class;

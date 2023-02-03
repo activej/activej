@@ -53,7 +53,7 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.fs.exception.FileNotFoundException;

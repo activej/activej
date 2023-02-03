@@ -9,7 +9,6 @@ import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
-import io.activej.dataflow.dataset.impl.ConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -23,8 +22,8 @@ import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;
-import io.activej.datastream.processor.StreamReducers.MergeReducer;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.impl.Merge;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -160,7 +159,7 @@ public final class DataflowTest {
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
 				.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
@@ -472,7 +471,7 @@ public final class DataflowTest {
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -592,7 +591,7 @@ public final class DataflowTest {
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -676,7 +675,7 @@ public final class DataflowTest {
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 

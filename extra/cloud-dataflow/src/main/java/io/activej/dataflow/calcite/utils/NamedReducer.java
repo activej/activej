@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.utils;
 
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.record.Record;
 
 public final class NamedReducer implements Reducer<Record, Record, Record, Object> {

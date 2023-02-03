@@ -1,12 +1,9 @@
 package io.activej.dataflow.codec.module;
 
 import io.activej.dataflow.codec.Subtype;
-import io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
-import io.activej.datastream.processor.StreamReducers.MergeReducer;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToAccumulator;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
+import io.activej.datastream.processor.reducer.impl.*;
+import io.activej.datastream.processor.reducer.ReducerToResult;
+import io.activej.datastream.processor.reducer.impl.AccumulatorToAccumulator;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
@@ -20,14 +17,14 @@ import java.io.IOException;
 public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
-	StreamCodec<MergeReducer<?, ?>> mergeReducer() {
-		return StreamCodecs.singleton(new MergeReducer<>());
+	StreamCodec<Merge<?, ?>> mergeReducer() {
+		return StreamCodecs.singleton(new Merge<>());
 	}
 
 	@Provides
 	@Subtype(1)
-	StreamCodec<DeduplicateReducer<?, ?>> deduplicateReducer() {
-		return StreamCodecs.singleton(new DeduplicateReducer<>());
+	StreamCodec<Deduplicate<?, ?>> deduplicateReducer() {
+		return StreamCodecs.singleton(new Deduplicate<>());
 	}
 
 	@Provides
@@ -39,7 +36,7 @@ public final class ReducerCodecModule extends AbstractModule {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, InputToAccumulator<?, ?, ?, ?> item) throws IOException {
-				reducerToResultSerializer.encode(output, item.getReducerToResult());
+				reducerToResultSerializer.encode(output, item.reducerToResult);
 			}
 
 			@Override
@@ -58,7 +55,7 @@ public final class ReducerCodecModule extends AbstractModule {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput out, InputToOutput<?, ?, ?, ?> item) throws IOException {
-				reducerToResultSerializer.encode(out, item.getReducerToResult());
+				reducerToResultSerializer.encode(out, item.reducerToResult);
 			}
 
 			@Override
@@ -77,7 +74,7 @@ public final class ReducerCodecModule extends AbstractModule {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput out, AccumulatorToAccumulator<?, ?, ?, ?> item) throws IOException {
-				reducerToResultSerializer.encode(out, item.getReducerToResult());
+				reducerToResultSerializer.encode(out, item.reducerToResult);
 			}
 
 			@Override
@@ -89,19 +86,19 @@ public final class ReducerCodecModule extends AbstractModule {
 
 	@Provides
 	@Subtype(5)
-	StreamCodec<ReducerToResult.AccumulatorToOutput<?, ?, ?, ?>> accumulatorToOutput(
+	StreamCodec<AccumulatorToOutput<?, ?, ?, ?>> accumulatorToOutput(
 			OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
 	) {
 		StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new StreamCodec<>() {
 			@Override
-			public void encode(StreamOutput out, ReducerToResult.AccumulatorToOutput<?, ?, ?, ?> item) throws IOException {
-				reducerToResultSerializer.encode(out, item.getReducerToResult());
+			public void encode(StreamOutput out, AccumulatorToOutput<?, ?, ?, ?> item) throws IOException {
+				reducerToResultSerializer.encode(out, item.reducerToResult);
 			}
 
 			@Override
-			public ReducerToResult.AccumulatorToOutput<?, ?, ?, ?> decode(StreamInput in) throws IOException {
-				return new ReducerToResult.AccumulatorToOutput<>(reducerToResultSerializer.decode(in));
+			public AccumulatorToOutput<?, ?, ?, ?> decode(StreamInput in) throws IOException {
+				return new AccumulatorToOutput<>(reducerToResultSerializer.decode(in));
 			}
 		};
 	}

@@ -19,8 +19,8 @@ package io.activej.dataflow.calcite.table;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.RecordFunction;
 import io.activej.dataflow.calcite.utils.Utils;
-import io.activej.datastream.processor.StreamReducers;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducers;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.types.TypeT;
@@ -55,7 +55,7 @@ public final class DataflowPartitionedTable<T> extends AbstractDataflowTable<T> 
 
 	public static final class Builder<T> extends AbstractDataflowTable.Builder<Builder<T>, DataflowPartitionedTable<T>, T> {
 		private final List<Integer> primaryKeyIndexes = new ArrayList<>();
-		private Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory = $ -> StreamReducers.deduplicateReducer();
+		private Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory = $ -> Reducers.deduplicateReducer();
 
 		private Builder(DefiningClassLoader classLoader, String tableName, Class<T> type) {
 			super(classLoader, tableName, type);

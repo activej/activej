@@ -11,8 +11,8 @@ import java.util.List;
 
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.*;
-import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.deduplicateReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.function.Function.identity;

@@ -18,7 +18,7 @@ import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.dataset.*;
 import io.activej.dataflow.graph.*;
 import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -47,7 +47,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.last;
 import static io.activej.dataflow.calcite.operand.Operands.recordField;
 import static io.activej.dataflow.calcite.where.WherePredicates.and;
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 import static java.util.Collections.emptyList;
 
 public class RelToDatasetConverter {

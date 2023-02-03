@@ -28,7 +28,7 @@ import io.activej.datastream.StreamConsumer;
 import java.util.Map;
 
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 
 import java.util.*;
 import java.util.function.Function;

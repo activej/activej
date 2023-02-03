@@ -17,7 +17,7 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.BinaryAccumulatorReducer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -3147,7 +3147,7 @@ public abstract class AbstractCalciteTest {
 		void setValues(PreparedStatement stmt) throws SQLException;
 	}
 
-	public static final class StudentReducer extends StreamReducers.BinaryAccumulatorReducer<Record, Record> {
+	public static final class StudentReducer extends BinaryAccumulatorReducer<Record, Record> {
 		@Override
 		protected Record combine(Record key, Record nextValue, Record accumulator) {
 			return nextValue.getInt("dept") > accumulator.getInt("dept") ? nextValue : accumulator;

@@ -25,7 +25,7 @@ import io.activej.dataflow.node.Nodes;
 import io.activej.dataflow.node.impl.Reduce;
 import io.activej.dataflow.node.impl.ReduceSimple;
 import io.activej.dataflow.node.impl.Shard;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.datastream.processor.reducer.ReducerToResult;
 
 import java.util.ArrayList;
 import java.util.Collection;

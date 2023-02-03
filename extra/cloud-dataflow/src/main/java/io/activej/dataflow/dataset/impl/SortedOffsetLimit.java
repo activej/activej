@@ -27,7 +27,7 @@ import io.activej.dataflow.graph.StreamId;
 import java.util.Collection;
 import java.util.List;
 
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 
 @ExposedInternals
 public final class SortedOffsetLimit<K, T> extends SortedDataset<K, T> {

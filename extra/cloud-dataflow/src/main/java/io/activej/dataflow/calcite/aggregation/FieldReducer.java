@@ -1,10 +1,10 @@
 package io.activej.dataflow.calcite.aggregation;
 
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.ReducerToResult;
 import io.activej.record.Record;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResult<Record, Record, O, A> {
+public abstract class FieldReducer<I, O, A> extends ReducerToResult<Record, Record, O, A> {
 	private final int fieldIndex;
 	private final @Nullable String fieldAlias;
 

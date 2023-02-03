@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
-import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static io.activej.datastream.processor.reducer.Reducers.deduplicateReducer;
+import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**

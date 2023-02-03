@@ -6,7 +6,7 @@ import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.*;
 import io.activej.dataflow.node.impl.*;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;

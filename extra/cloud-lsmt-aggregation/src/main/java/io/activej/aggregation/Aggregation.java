@@ -34,7 +34,7 @@ import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.datastream.stats.StreamStats;

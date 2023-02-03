@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.dataflow.calcite.aggregation.FieldReducer;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.ReducerToResult;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
@@ -18,7 +18,7 @@ public final class RecordReducerCodecModule extends AbstractModule {
 	}
 
 	@Provides
-	StreamCodec<StreamReducers.ReducerToResult<?, ?, ?, ?>> reducerToResult(
+	StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResult(
 			StreamCodec<RecordScheme> recordSchemeStreamCodec,
 			StreamCodec<FieldReducer<Object, Object, Object>> fieldReducerStreamCodec
 	) {

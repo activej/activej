@@ -1,6 +1,6 @@
 package dto;
 
-import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
+import io.activej.datastream.processor.reducer.ReducerToAccumulator;
 
 public final class StringCountReducer extends ReducerToAccumulator<String, StringCount, StringCount> {
 	@Override

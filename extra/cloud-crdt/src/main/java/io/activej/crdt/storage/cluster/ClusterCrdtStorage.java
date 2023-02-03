@@ -33,7 +33,7 @@ import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers.BinaryAccumulatorReducer;
+import io.activej.datastream.processor.reducer.BinaryAccumulatorReducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;

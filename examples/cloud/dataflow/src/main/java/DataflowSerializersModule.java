@@ -2,7 +2,7 @@ import dto.CreateStringCountFunction;
 import dto.ExtractStringFunction;
 import dto.StringCountReducer;
 import io.activej.dataflow.codec.Subtype;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.datastream.processor.reducer.ReducerToResult;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;

@@ -22,8 +22,8 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.ReducerToResult;
 import io.activej.datastream.processor.StreamSkip;
 
 import java.util.Comparator;

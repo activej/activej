@@ -5,7 +5,7 @@ import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.utils.NamedReducer;
 import io.activej.dataflow.codec.Subtype;
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.Record;
@@ -26,7 +26,7 @@ public final class ReducerCodecModule extends AbstractModule {
 						throw new CorruptedDataException("Not a partitioned table: " + tableName);
 					}
 					//noinspection unchecked
-					return new NamedReducer(tableName, (StreamReducers.Reducer<Record, Record, Record, Object>) dataflowPartitionedTable.getReducer());
+					return new NamedReducer(tableName, (Reducer<Record, Record, Record, Object>) dataflowPartitionedTable.getReducer());
 				},
 				NamedReducer::getTableName, StreamCodecs.ofString());
 	}

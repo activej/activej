@@ -23,7 +23,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
-import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.reducer.Reducer;
 
 import java.util.Collection;
 import java.util.List;

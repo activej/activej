@@ -31,7 +31,7 @@ import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -260,7 +260,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 	// endregion
 
-	public final class WalReducer implements StreamReducers.Reducer<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> {
+	public final class WalReducer implements Reducer<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> {
 		@Override
 		public CrdtData<K, S> onFirstItem(StreamDataAcceptor<CrdtData<K, S>> stream, K key, CrdtData<K, S> firstValue) {
 			return firstValue;

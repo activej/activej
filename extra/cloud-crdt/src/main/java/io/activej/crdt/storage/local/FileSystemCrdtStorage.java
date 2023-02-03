@@ -39,7 +39,7 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
@@ -382,7 +382,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 
 	public record CrdtEntry<S>(S state, long timestamp) {}
 
-	public final class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
+	public final class CrdtReducer implements Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
 		final boolean includeTombstones;
 
 		CrdtReducer(boolean includeTombstones) {

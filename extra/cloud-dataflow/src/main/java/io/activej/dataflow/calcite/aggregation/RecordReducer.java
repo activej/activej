@@ -1,6 +1,8 @@
 package io.activej.dataflow.calcite.aggregation;
 
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.reducer.ReducerToResult;
+import io.activej.datastream.processor.reducer.impl.AccumulatorToOutput;
+import io.activej.datastream.processor.reducer.impl.InputToAccumulator;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.record.RecordScheme.Builder;
@@ -8,7 +10,7 @@ import io.activej.record.RecordScheme.Builder;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class RecordReducer extends StreamReducers.ReducerToResult<Record, Record, Record, Record> {
+public final class RecordReducer extends ReducerToResult<Record, Record, Record, Record> {
 	private final RecordScheme originalScheme;
 	private final List<FieldReducer<Object, Object, Object>> reducers;
 
