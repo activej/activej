@@ -10,7 +10,7 @@ import java.util.function.ToIntFunction;
 import static io.activej.common.Checks.checkArgument;
 
 @StaticFactories(RpcStrategy.class)
-public class RpcStrategies {
+public final class RpcStrategies {
 	public static RpcStrategy server(InetSocketAddress address) {
 		return new Server(address);
 	}

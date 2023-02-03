@@ -41,7 +41,7 @@ import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStatsLas
 import static io.activej.trigger.Severity.*;
 
 @StaticFactories(Initializer.class)
-public class Initializers {
+public final class Initializers {
 	public static final String GLOBAL_EVENTLOOP_NAME = "GlobalEventloopStats";
 	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.of(Eventloop.class, GLOBAL_EVENTLOOP_NAME);
 
