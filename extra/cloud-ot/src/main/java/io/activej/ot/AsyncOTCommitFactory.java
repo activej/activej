@@ -27,22 +27,7 @@ import java.util.function.ToLongFunction;
 import static io.activej.common.Utils.keysToMap;
 
 public interface AsyncOTCommitFactory<K, D> {
-	final class DiffsWithLevel<D> {
-		private final long level;
-		private final List<D> diffs;
-
-		public DiffsWithLevel(long level, List<D> diffs) {
-			this.level = level;
-			this.diffs = diffs;
-		}
-
-		public long getLevel() {
-			return level;
-		}
-
-		public List<D> getDiffs() {
-			return diffs;
-		}
+	record DiffsWithLevel<D>(long level, List<D> diffs) {
 	}
 
 	Promise<OTCommit<K, D>> createCommit(Map<K, DiffsWithLevel<D>> parentDiffs);

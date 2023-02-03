@@ -98,7 +98,7 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 	@Override
 	public @Nullable Long getLastDiffRevision(Long currentRevision) throws IOException {
 		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.diffGlob(currentRevision));
-		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(FileNamingScheme.Diff::getTo).max();
+		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(FileNamingScheme.Diff::to).max();
 		return max.isPresent() ? max.getAsLong() : null;
 	}
 

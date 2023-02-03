@@ -215,10 +215,10 @@ public class OTUplinkTest {
 */
 
 	private static void assertFetchData(Integer expectedId, long expectedLevel, Integer expectedState, FetchData<Integer, TestOp> fetchData) {
-		assertEquals(expectedId, fetchData.getCommitId());
-		assertEquals(expectedLevel, fetchData.getLevel());
+		assertEquals(expectedId, fetchData.commitId());
+		assertEquals(expectedLevel, fetchData.level());
 		state.init();
-		fetchData.getDiffs().forEach(state::apply);
+		fetchData.diffs().forEach(state::apply);
 		assertEquals(expectedState, (Integer) state.getValue());
 	}
 

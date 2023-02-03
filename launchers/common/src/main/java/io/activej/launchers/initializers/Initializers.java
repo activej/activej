@@ -201,10 +201,10 @@ public class Initializers {
 
 		return builder ->
 				builder.withObjectNameMapping(protoObjectName -> {
-					Map<String, String> packageMap = byPackageAndClassMap.get(protoObjectName.getPackageName());
+					Map<String, String> packageMap = byPackageAndClassMap.get(protoObjectName.packageName());
 					if (packageMap == null) return protoObjectName;
 
-					String oldClassName = packageMap.get(protoObjectName.getClassName());
+					String oldClassName = packageMap.get(protoObjectName.className());
 
 					if (oldClassName == null) return protoObjectName;
 

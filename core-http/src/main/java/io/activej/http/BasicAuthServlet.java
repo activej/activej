@@ -130,22 +130,7 @@ public final class BasicAuthServlet extends AbstractReactive
 				);
 	}
 
-	public static final class BasicAuthCredentials {
-		private final String username;
-		private final String password;
-
-		public BasicAuthCredentials(String username, String password) {
-			this.username = username;
-			this.password = password;
-		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getPassword() {
-			return password;
-		}
+	public record BasicAuthCredentials(String username, String password) {
 	}
 
 	public static BiPredicate<String, String> lookupFrom(Map<String, String> credentials) {

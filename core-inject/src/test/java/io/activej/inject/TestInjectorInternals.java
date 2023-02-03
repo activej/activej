@@ -18,16 +18,7 @@ public final class TestInjectorInternals {
 
 	static class SomeServiceImpl implements SomeService {}
 
-	static class Container {
-		private final SomeService service;
-
-		public Container(SomeService service) {
-			this.service = service;
-		}
-
-		public SomeService getService() {
-			return service;
-		}
+	record Container(SomeService service) {
 	}
 
 	@Test

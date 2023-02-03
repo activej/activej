@@ -79,10 +79,10 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 				.map("/api/*", RoutingServlet.create(reactor)
 						.map(GET, "/partitions", request -> ok200()
 								.withJson(objectMapper.writeValueAsString(partitions.stream()
-										.map(Partition::getAddress)
+										.map(Partition::address)
 										.collect(Collectors.toList()))))
 						.map(GET, "/tasks", request ->
-								Promises.toList(partitions.stream().map(p -> getPartitionData(p.getAddress())))
+								Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
 										.map(partitionStats -> {
 											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
 											for (int i = 0; i < partitionStats.size(); i++) {
@@ -97,7 +97,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 										}))
 						.map(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
-							return Promises.toList(partitions.stream().map(p -> getTask(p.getAddress(), id)).collect(toList()))
+							return Promises.toList(partitions.stream().map(p -> getTask(p.address(), id)).collect(toList()))
 									.map(localStats -> {
 										List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
 
@@ -138,7 +138,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 							} catch (NumberFormatException | IndexOutOfBoundsException e) {
 								throw HttpError.ofCode(400, "Bad index");
 							}
-							return getTask(partition.getAddress(), id)
+							return getTask(partition.address(), id)
 									.map(task -> ok200()
 											.withJson(objectMapper.writeValueAsString(new LocalTaskData(task.status(), task.graphViz(),
 													task.nodes().entrySet().stream()

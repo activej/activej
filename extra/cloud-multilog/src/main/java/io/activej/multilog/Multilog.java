@@ -171,8 +171,8 @@ public final class Multilog<T> extends AbstractReactive
 						files.keySet().stream()
 								.map(namingScheme::parse)
 								.filter(Objects::nonNull)
-								.filter(partitionAndFile -> partitionAndFile.getLogPartition().equals(logPartition))
-								.map(PartitionAndFile::getLogFile)
+								.filter(partitionAndFile -> partitionAndFile.logPartition().equals(logPartition))
+								.map(PartitionAndFile::logFile)
 								.collect(toList()))
 				.map(logFiles -> {
 					RefBoolean lastFileRef = new RefBoolean(true);

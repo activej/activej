@@ -440,13 +440,13 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	}
 
 	private ObjectName createObjectName(ProtoObjectName protoObjectName) throws MalformedObjectNameException, ReflectiveOperationException {
-		StringJoiner joiner = new StringJoiner(",", protoObjectName.getPackageName() + ":", "");
+		StringJoiner joiner = new StringJoiner(",", protoObjectName.packageName() + ":", "");
 
-		if (protoObjectName.getClassName() != null) {
-			joiner.add("type=" + protoObjectName.getClassName());
+		if (protoObjectName.className() != null) {
+			joiner.add("type=" + protoObjectName.className());
 		}
 
-		Object qualifier = protoObjectName.getQualifier();
+		Object qualifier = protoObjectName.qualifier();
 		if (qualifier != null) {
 			String qualifierString = null;
 			if (qualifier instanceof Class<?> qualifierClass) {
@@ -464,17 +464,17 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			joiner.add(qualifierString);
 		}
 
-		String scope = protoObjectName.getScope();
+		String scope = protoObjectName.scope();
 		if (scope != null) {
 			joiner.add("scope=" + scope);
 		}
 
-		String workerPoolQualifier = protoObjectName.getWorkerPoolQualifier();
+		String workerPoolQualifier = protoObjectName.workerPoolQualifier();
 		if (workerPoolQualifier != null) {
 			joiner.add("workerPool=" + workerPoolQualifier);
 		}
 
-		List<String> genericParameters = protoObjectName.getGenericParameters();
+		List<String> genericParameters = protoObjectName.genericParameters();
 		if (genericParameters != null) {
 			for (int i = 0; i < genericParameters.size(); i++) {
 				int argId = i + 1;
@@ -482,7 +482,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			}
 		}
 
-		String workerId = protoObjectName.getWorkerId();
+		String workerId = protoObjectName.workerId();
 		if (workerId != null) {
 			joiner.add("workerId=" + workerId);
 		}

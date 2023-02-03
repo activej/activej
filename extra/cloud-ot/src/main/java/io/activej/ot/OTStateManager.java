@@ -142,10 +142,10 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		return uplink.checkout()
 				.whenResult(checkoutData -> {
 					state.init();
-					apply(checkoutData.getDiffs());
+					apply(checkoutData.diffs());
 
-					commitId = originCommitId = checkoutData.getCommitId();
-					level = originLevel = checkoutData.getLevel();
+					commitId = originCommitId = checkoutData.commitId();
+					level = originLevel = checkoutData.level();
 				})
 				.toVoid()
 				.whenComplete(toLogger(logger, thisMethod(), this));
@@ -179,9 +179,9 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 	private void updateOrigin(AsyncOTUplink.FetchData<K, D> fetchData) {
 		assert pendingProtoCommit == null;
-		originCommitId = fetchData.getCommitId();
-		originLevel = fetchData.getLevel();
-		originDiffs = otSystem.squash(concat(originDiffs, fetchData.getDiffs()));
+		originCommitId = fetchData.commitId();
+		originLevel = fetchData.level();
+		originDiffs = otSystem.squash(concat(originDiffs, fetchData.diffs()));
 	}
 
 	private Promise<Void> doSync() {
@@ -240,7 +240,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		return uplink.fetch(fetchCommitId)
 				.map(fetchData -> {
 					if (fetchCommitId == this.originCommitId && pendingProtoCommit == null) {
-						if (fetchData.getCommitId() != fetchCommitId) {
+						if (fetchData.commitId() != fetchCommitId) {
 							updateOrigin(fetchData);
 							return true;
 						}

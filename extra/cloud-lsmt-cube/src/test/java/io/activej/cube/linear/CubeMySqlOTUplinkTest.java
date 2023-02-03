@@ -82,18 +82,18 @@ public class CubeMySqlOTUplinkTest {
 	public void checkoutEmpty() {
 		FetchData<Long, LogDiff<CubeDiff>> result = await(uplink.checkout());
 
-		assertEquals(0, result.getLevel());
-		assertEquals(0, (long) result.getCommitId());
-		assertTrue(result.getDiffs().isEmpty());
+		assertEquals(0, result.level());
+		assertEquals(0, (long) result.commitId());
+		assertTrue(result.diffs().isEmpty());
 	}
 
 	@Test
 	public void fetchEmpty() {
 		FetchData<Long, LogDiff<CubeDiff>> result = await(uplink.fetch(0L));
 
-		assertEquals(0, result.getLevel());
-		assertEquals(0, (long) result.getCommitId());
-		assertTrue(result.getDiffs().isEmpty());
+		assertEquals(0, result.level());
+		assertEquals(0, (long) result.commitId());
+		assertTrue(result.diffs().isEmpty());
 	}
 
 	@Test
@@ -101,8 +101,8 @@ public class CubeMySqlOTUplinkTest {
 		List<LogDiff<CubeDiff>> diffs = randomDiffs();
 		UplinkProtoCommit protoCommit = await(uplink.createProtoCommit(0L, diffs, 0));
 
-		assertEquals(0, protoCommit.getParentRevision());
-		assertEquals(diffs, protoCommit.getDiffs());
+		assertEquals(0, protoCommit.parentRevision());
+		assertEquals(diffs, protoCommit.diffs());
 	}
 
 	@Test
@@ -114,9 +114,9 @@ public class CubeMySqlOTUplinkTest {
 
 		FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.checkout());
 
-		assertEquals(1L, (long) fetchData.getCommitId());
-		assertEquals(1L, fetchData.getLevel());
-		assertDiffs(diffs, fetchData.getDiffs());
+		assertEquals(1L, (long) fetchData.commitId());
+		assertEquals(1L, fetchData.level());
+		assertDiffs(diffs, fetchData.diffs());
 	}
 
 	@Test
@@ -129,18 +129,18 @@ public class CubeMySqlOTUplinkTest {
 
 			FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.fetch((long) i));
 
-			assertEquals(i + 1, (long) fetchData.getCommitId());
-			assertEquals(i + 1, fetchData.getLevel());
-			assertDiffs(diffs, fetchData.getDiffs());
+			assertEquals(i + 1, (long) fetchData.commitId());
+			assertEquals(i + 1, fetchData.level());
+			assertDiffs(diffs, fetchData.diffs());
 
 			totalDiffs.addAll(diffs);
 		}
 
 		FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.fetch(0L));
 
-		assertEquals(3, (long) fetchData.getCommitId());
-		assertEquals(3, fetchData.getLevel());
-		assertDiffs(totalDiffs, fetchData.getDiffs());
+		assertEquals(3, (long) fetchData.commitId());
+		assertEquals(3, fetchData.level());
+		assertDiffs(totalDiffs, fetchData.diffs());
 	}
 
 	@Test
@@ -156,7 +156,7 @@ public class CubeMySqlOTUplinkTest {
 
 		FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.checkout());
 
-		assertTrue(fetchData.getDiffs().isEmpty());
+		assertTrue(fetchData.diffs().isEmpty());
 	}
 
 	@Test
@@ -170,7 +170,7 @@ public class CubeMySqlOTUplinkTest {
 		FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.checkout());
 
 		StubOTState state = new StubOTState();
-		fetchData.getDiffs().forEach(state::apply);
+		fetchData.diffs().forEach(state::apply);
 
 		assertTrue(state.positions.isEmpty());
 		assertEquals(Map.of(
@@ -183,16 +183,16 @@ public class CubeMySqlOTUplinkTest {
 		await(uplink.push(protoCommit));
 
 		fetchData = await(uplink.fetch(1L));
-		fetchData.getDiffs().forEach(state::apply);
+		fetchData.diffs().forEach(state::apply);
 
 		assertTrue(state.positions.isEmpty());
 		assertTrue(state.chunks.isEmpty());
 
 		FetchData<Long, LogDiff<CubeDiff>> checkoutData = await(uplink.checkout());
 
-		assertEquals(2, (long) checkoutData.getCommitId());
-		assertEquals(2, checkoutData.getLevel());
-		assertTrue(checkoutData.getDiffs().isEmpty());
+		assertEquals(2, (long) checkoutData.commitId());
+		assertEquals(2, checkoutData.level());
+		assertTrue(checkoutData.diffs().isEmpty());
 	}
 
 	@Test
@@ -216,17 +216,17 @@ public class CubeMySqlOTUplinkTest {
 		UplinkProtoCommit protoCommit2 = await(uplink.createProtoCommit(0L, diffs2, 0));
 
 		FetchData<Long, LogDiff<CubeDiff>> fetch1 = await(uplink.push(protoCommit1));
-		assertEquals(1, (long) fetch1.getCommitId());
-		assertTrue(fetch1.getDiffs().isEmpty());
+		assertEquals(1, (long) fetch1.commitId());
+		assertTrue(fetch1.diffs().isEmpty());
 
 		FetchData<Long, LogDiff<CubeDiff>> fetch2 = await(uplink.push(protoCommit2));
-		assertEquals(2, (long) fetch2.getCommitId());
-		assertEquals(diffs1, fetch2.getDiffs());
+		assertEquals(2, (long) fetch2.commitId());
+		assertEquals(diffs1, fetch2.diffs());
 
 		FetchData<Long, LogDiff<CubeDiff>> checkoutData = await(uplink.checkout());
-		assertEquals(2, (long) checkoutData.getCommitId());
+		assertEquals(2, (long) checkoutData.commitId());
 
-		assertEquals(OT_SYSTEM.squash(concat(diffs1, diffs2)), checkoutData.getDiffs());
+		assertEquals(OT_SYSTEM.squash(concat(diffs1, diffs2)), checkoutData.diffs());
 	}
 
 	@Test
@@ -259,8 +259,8 @@ public class CubeMySqlOTUplinkTest {
 		UplinkProtoCommit protoCommit2 = await(uplink.createProtoCommit(1L, diffs2, 1));
 
 		FetchData<Long, LogDiff<CubeDiff>> fetch1 = await(uplink.push(protoCommit1));
-		assertEquals(2, (long) fetch1.getCommitId());
-		assertTrue(fetch1.getDiffs().isEmpty());
+		assertEquals(2, (long) fetch1.commitId());
+		assertTrue(fetch1.diffs().isEmpty());
 
 		Exception exception = awaitException(uplink.push(protoCommit2));
 		assertThat(exception, instanceOf(SQLIntegrityConstraintViolationException.class));

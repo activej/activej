@@ -179,7 +179,7 @@ public class MultilogTest {
 				.then(map -> {
 					PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
 					assert partitionAndFile != null;
-					LogFile logFile = partitionAndFile.getLogFile();
+					LogFile logFile = partitionAndFile.logFile();
 					return StreamSupplierWithResult.ofPromise(
 									multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))
 							.getSupplier()

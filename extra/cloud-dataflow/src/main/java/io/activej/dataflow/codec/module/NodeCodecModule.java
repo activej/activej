@@ -37,8 +37,8 @@ public final class NodeCodecModule extends AbstractModule {
 			StreamCodec<Function> functionStreamCodec
 	) {
 		StreamCodec<Reduce.Input> inputCodec = StreamCodec.create(Reduce.Input::new,
-				Reduce.Input::getReducer, reducerStreamCodec,
-				Reduce.Input::getKeyFunction, functionStreamCodec
+				Reduce.Input::reducer, reducerStreamCodec,
+				Reduce.Input::keyFunction, functionStreamCodec
 		);
 		return StreamCodec.create((a, b, c, d) -> new Reduce(a, b, c, d),
 				Reduce::getIndex, StreamCodecs.ofVarInt(),

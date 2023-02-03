@@ -21,26 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ProtoObjectName {
-	private final @Nullable String className;
-	private final String packageName;
-	private final @Nullable Object qualifier;
-	private final @Nullable String scope;
-	private final @Nullable String workerPoolQualifier;
-	private final @Nullable String workerId;
-	private final @Nullable List<String> genericParameters;
-
-	public ProtoObjectName(@Nullable String className, String packageName, @Nullable Object qualifier,
-			@Nullable String scope, @Nullable String workerPoolQualifier, @Nullable String workerId,
-			@Nullable List<String> genericParameters) {
-		this.className = className;
-		this.packageName = packageName;
-		this.qualifier = qualifier;
-		this.scope = scope;
-		this.workerPoolQualifier = workerPoolQualifier;
-		this.workerId = workerId;
-		this.genericParameters = genericParameters;
-	}
+public record ProtoObjectName(@Nullable String className, String packageName, @Nullable Object qualifier, @Nullable String scope, @Nullable String workerPoolQualifier, @Nullable String workerId, @Nullable List<String> genericParameters) {
 
 	public static ProtoObjectName create(@Nullable String className, String packageName) {
 		return new ProtoObjectName(className, packageName, null, null, null, null, null);
@@ -74,36 +55,6 @@ public final class ProtoObjectName {
 		ArrayList<String> list = genericParameters == null ? null : new ArrayList<>(genericParameters);
 		return new ProtoObjectName(className, packageName, qualifier, scope, workerPoolQualifier, workerId, list);
 	}
-
-	// region getters
-	public @Nullable String getClassName() {
-		return className;
-	}
-
-	public String getPackageName() {
-		return packageName;
-	}
-
-	public @Nullable Object getQualifier() {
-		return qualifier;
-	}
-
-	public @Nullable String getScope() {
-		return scope;
-	}
-
-	public @Nullable String getWorkerPoolQualifier() {
-		return workerPoolQualifier;
-	}
-
-	public @Nullable List<String> getGenericParameters() {
-		return genericParameters;
-	}
-
-	public @Nullable String getWorkerId() {
-		return workerId;
-	}
-	// endregion
 
 	@Override
 	public String toString() {

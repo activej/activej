@@ -25,29 +25,7 @@ import java.util.List;
 public interface AsyncOTUplink<K, D, PC> {
 
 	@CompiledJson
-	final class FetchData<K, D> {
-		private final K commitId;
-		private final long level;
-		private final List<D> diffs;
-
-		public FetchData(K commitId, long level, List<D> diffs) {
-			this.commitId = commitId;
-			this.level = level;
-			this.diffs = diffs;
-		}
-
-		@JsonAttribute(name = "id")
-		public K getCommitId() {
-			return commitId;
-		}
-
-		public long getLevel() {
-			return level;
-		}
-
-		public List<D> getDiffs() {
-			return diffs;
-		}
+	record FetchData<K, D>(@JsonAttribute(name = "id") K commitId, long level, List<D> diffs) {
 	}
 
 	Promise<FetchData<K, D>> checkout();

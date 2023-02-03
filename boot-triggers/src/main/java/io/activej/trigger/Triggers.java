@@ -56,7 +56,7 @@ public final class Triggers implements ConcurrentJmxBean {
 		Trigger trigger = triggerWithResult.trigger;
 		if (suppressedResults.containsKey(trigger)) {
 			TriggerResult suppressedTriggerResult = suppressedResults.get(trigger);
-			TriggerResult triggerResult = triggerWithResult.getTriggerResult();
+			TriggerResult triggerResult = triggerWithResult.triggerResult();
 
 			return triggerResult.getCount() > suppressedTriggerResult.getCount() ||
 					triggerResult.getTimestamp() > suppressedTriggerResult.getTimestamp();
@@ -72,7 +72,7 @@ public final class Triggers implements ConcurrentJmxBean {
 		return new Triggers().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Triggers>{
+	public final class Builder extends AbstractBuilder<Builder, Triggers> {
 		private Builder() {}
 
 		public Builder withTrigger(Trigger trigger) {
@@ -144,13 +144,13 @@ public final class Triggers implements ConcurrentJmxBean {
 
 				TriggerWithResult oldTriggerWithResult = maxSeverityResults.get(trigger);
 				if (oldTriggerWithResult == null ||
-						oldTriggerWithResult.getTrigger().getSeverity().ordinal() < trigger.getSeverity().ordinal() ||
-						oldTriggerWithResult.getTrigger().getSeverity() == trigger.getSeverity() &&
-								oldTriggerWithResult.getTriggerResult().getTimestamp() > triggerResult.getTimestamp()) {
+						oldTriggerWithResult.trigger().getSeverity().ordinal() < trigger.getSeverity().ordinal() ||
+						oldTriggerWithResult.trigger().getSeverity() == trigger.getSeverity() &&
+								oldTriggerWithResult.triggerResult().getTimestamp() > triggerResult.getTimestamp()) {
 					maxSeverityResults.put(trigger, new TriggerWithResult(trigger, triggerResult
 							.withCount(triggerResult.getCount())));
 				} else {
-					maxSeverityResults.put(trigger, new TriggerWithResult(oldTriggerWithResult.getTrigger(), oldTriggerWithResult.getTriggerResult()
+					maxSeverityResults.put(trigger, new TriggerWithResult(oldTriggerWithResult.trigger(), oldTriggerWithResult.triggerResult()
 							.withCount(triggerResult.getCount())));
 				}
 			}
@@ -158,23 +158,7 @@ public final class Triggers implements ConcurrentJmxBean {
 		}
 	}
 
-	public static final class TriggerWithResult {
-		private final Trigger trigger;
-		private final TriggerResult triggerResult;
-
-		public TriggerWithResult(Trigger trigger, TriggerResult triggerResult) {
-			this.trigger = trigger;
-			this.triggerResult = triggerResult;
-		}
-
-		public Trigger getTrigger() {
-			return trigger;
-		}
-
-		public TriggerResult getTriggerResult() {
-			return triggerResult;
-		}
-
+	public record TriggerWithResult(Trigger trigger, TriggerResult triggerResult) {
 		@Override
 		public String toString() {
 			return trigger + " :: " + triggerResult;
@@ -215,13 +199,13 @@ public final class Triggers implements ConcurrentJmxBean {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)
-				.filter(entry -> entry.getTrigger().getSeverity() == severity)
-				.sorted(comparing(item -> item.getTriggerResult().getTimestamp()))
-				.collect(Collectors.groupingBy(o -> new TriggerKey(o.getTrigger().getComponent(), o.getTrigger().getName())))
+				.filter(entry -> entry.trigger().getSeverity() == severity)
+				.sorted(comparing(item -> item.triggerResult().getTimestamp()))
+				.collect(Collectors.groupingBy(o -> new TriggerKey(o.trigger().getComponent(), o.trigger().getName())))
 				.values()
 				.stream()
 				.flatMap(list -> list.stream()
-						.filter(trigger -> trigger.getTrigger().getSeverity() == last(list).getTrigger().getSeverity()))
+						.filter(trigger -> trigger.trigger().getSeverity() == last(list).trigger().getSeverity()))
 				.collect(Collectors.toList());
 	}
 
@@ -230,13 +214,13 @@ public final class Triggers implements ConcurrentJmxBean {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)
-				.sorted(Comparator.<TriggerWithResult, Severity>comparing(item -> item.getTrigger().getSeverity())
-						.thenComparing(item -> item.getTriggerResult().getTimestamp()))
-				.collect(Collectors.groupingBy(o -> new TriggerKey(o.getTrigger().getComponent(), o.getTrigger().getName())))
+				.sorted(Comparator.<TriggerWithResult, Severity>comparing(item -> item.trigger().getSeverity())
+						.thenComparing(item -> item.triggerResult().getTimestamp()))
+				.collect(Collectors.groupingBy(o -> new TriggerKey(o.trigger().getComponent(), o.trigger().getName())))
 				.values()
 				.stream()
 				.flatMap(list -> list.stream()
-						.filter(trigger -> trigger.getTrigger().getSeverity() == last(list).getTrigger().getSeverity()))
+						.filter(trigger -> trigger.trigger().getSeverity() == last(list).trigger().getSeverity()))
 				.collect(Collectors.toList());
 	}
 
@@ -285,8 +269,8 @@ public final class Triggers implements ConcurrentJmxBean {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)
-				.max(comparing(entry -> entry.getTrigger().getSeverity()))
-				.map(entry -> entry.getTrigger().getSeverity())
+				.max(comparing(entry -> entry.trigger().getSeverity()))
+				.map(entry -> entry.trigger().getSeverity())
 				.orElse(null);
 	}
 
@@ -295,7 +279,7 @@ public final class Triggers implements ConcurrentJmxBean {
 		refresh();
 		return maxSeverityResults.values().stream()
 				.filter(isNotSuppressed)
-				.max(comparing(entry -> entry.getTrigger().getSeverity()))
+				.max(comparing(entry -> entry.trigger().getSeverity()))
 				.map(Object::toString)
 				.orElse(null);
 	}

@@ -157,7 +157,7 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 		return startSync()
 				.then(syncData -> uplink.push(syncData.getProtoCommit())
 						.then(uplinkFetchedData -> Promise.ofCallback(cb ->
-								completeSync(syncData.getCommitId(), new ArrayList<>(), uplinkFetchedData.getCommitId(), uplinkFetchedData.getLevel(), uplinkFetchedData.getDiffs(), cb))));
+								completeSync(syncData.getCommitId(), new ArrayList<>(), uplinkFetchedData.commitId(), uplinkFetchedData.level(), uplinkFetchedData.diffs(), cb))));
 	}
 
 	Promise<SyncData<K, D>> startSync() {
@@ -165,8 +165,8 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 				.thenIf(syncData -> syncData.getProtoCommit() == null,
 						syncData -> storage.fetch(syncData.getCommitId())
 								.then(fetchedData -> {
-									long headCommitId = fetchedData.getCommitId();
-									List<D> diffs = fetchedData.getDiffs();
+									long headCommitId = fetchedData.commitId();
+									List<D> diffs = fetchedData.diffs();
 									return uplink.createProtoCommit(syncData.getUplinkCommitId(), concat(syncData.getUplinkDiffs(), diffs), 0)
 											.then(protoCommit ->
 													storage.startSync(headCommitId, syncData.getUplinkCommitId(), protoCommit)
@@ -177,10 +177,10 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettablePromise<Void> cb) {
 		storage.fetch(commitId)
 				.whenResult(fetchData -> {
-					TransformResult<D> transformResult = otSystem.transform(uplinkDiffs, fetchData.getDiffs());
+					TransformResult<D> transformResult = otSystem.transform(uplinkDiffs, fetchData.diffs());
 
 					accumulatedDiffs.addAll(transformResult.left);
-					storage.completeSync(fetchData.getCommitId(), accumulatedDiffs, uplinkCommitId, uplinkLevel, transformResult.right)
+					storage.completeSync(fetchData.commitId(), accumulatedDiffs, uplinkCommitId, uplinkLevel, transformResult.right)
 							.whenResult(ok -> {
 								if (ok) {
 									cb.set(null);
@@ -201,13 +201,13 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 				isResultOrException(Objects::nonNull),
 				() -> storage.getSnapshot()
 						.thenIfNull(() -> uplink.checkout()
-								.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.getDiffs(), uplinkSnapshotData.getCommitId(), uplinkSnapshotData.getLevel())
+								.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.diffs(), uplinkSnapshotData.commitId(), uplinkSnapshotData.level())
 										.mapIfElse(ok -> ok,
-												$ -> new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.getDiffs()),
+												$ -> new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.diffs()),
 												$ -> null))))
-				.then(snapshotData -> storage.fetch(snapshotData.getCommitId())
+				.then(snapshotData -> storage.fetch(snapshotData.commitId())
 						.map(fetchData ->
-								new FetchData<>(fetchData.getCommitId(), NO_LEVEL, concat(snapshotData.getDiffs(), fetchData.getDiffs()))));
+								new FetchData<>(fetchData.commitId(), NO_LEVEL, concat(snapshotData.diffs(), fetchData.diffs()))));
 	}
 
 	@Override
@@ -230,8 +230,8 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 					} else {
 						storage.fetch(commitId)
 								.whenResult(fetchData -> {
-									TransformResult<D> transformResult = otSystem.transform(fetchData.getDiffs(), diffs);
-									doPush(fetchData.getCommitId(), transformResult.left, concat(fetchedDiffs, transformResult.right), cb);
+									TransformResult<D> transformResult = otSystem.transform(fetchData.diffs(), diffs);
+									doPush(fetchData.commitId(), transformResult.left, concat(fetchedDiffs, transformResult.right), cb);
 								})
 								.whenException(cb::setException);
 					}

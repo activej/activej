@@ -38,7 +38,7 @@ public final class PartitionedCollector<T> implements ICollector<T> {
 			Node nodeUpload = Nodes.upload(0, StreamSchemas.simple(String.class), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
-			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());
+			StreamSupplier<T> supplier = client.download(partition.address(), streamId, input.streamSchema());
 			ArrayList<T> partitionItems = new ArrayList<>();
 			List<T> prev = result.put(partition, partitionItems);
 			checkState(prev == null, "Partition provides multiple channels");

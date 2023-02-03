@@ -26,7 +26,6 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import io.activej.dataflow.node.impl.Upload;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.reactor.AbstractReactive;
@@ -94,7 +93,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 			Node nodeUpload = Nodes.upload(index, input.streamSchema(), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
-			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());
+			StreamSupplier<T> supplier = client.download(partition.address(), streamId, input.streamSchema());
 			accumulate(accumulator, supplier);
 		}
 

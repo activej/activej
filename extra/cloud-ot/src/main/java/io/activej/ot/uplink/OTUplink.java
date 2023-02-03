@@ -122,11 +122,11 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 								findResult.getChild(),
 								findResult.getChildLevel(),
 								concat(cachedSnapshotRef.value, findResult.getAccumulatedDiffs()))))
-				.then(checkoutData -> fetch(checkoutData.getCommitId())
+				.then(checkoutData -> fetch(checkoutData.commitId())
 						.map(fetchData -> new FetchData<>(
-								fetchData.getCommitId(),
-								fetchData.getLevel(),
-								otSystem.squash(concat(checkoutData.getDiffs(), fetchData.getDiffs()))
+								fetchData.commitId(),
+								fetchData.level(),
+								otSystem.squash(concat(checkoutData.diffs(), fetchData.diffs()))
 						))
 				)
 				.whenComplete(toLogger(logger, thisMethod()));

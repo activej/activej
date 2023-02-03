@@ -582,26 +582,6 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	}
 	// endregion
 
-	public static final class UplinkProtoCommit {
-		private final long parentRevision;
-		private final List<LogDiff<CubeDiff>> diffs;
-
-		public UplinkProtoCommit(long parentRevision, List<LogDiff<CubeDiff>> diffs) {
-			this.parentRevision = parentRevision;
-			this.diffs = diffs;
-		}
-
-		public long getParentRevision() {
-			return parentRevision;
-		}
-
-		public List<LogDiff<CubeDiff>> getDiffs() {
-			return diffs;
-		}
-
-		@Override
-		public String toString() {
-			return "{parentRevision=" + parentRevision + ", diffs=" + diffs + '}';
-		}
+	public record UplinkProtoCommit(long parentRevision, List<LogDiff<CubeDiff>> diffs) {
 	}
 }

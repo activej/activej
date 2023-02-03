@@ -114,7 +114,7 @@ public final class FileSystemGuiServlet {
 	private static DirView filesToDirView(Map<String, FileMetadata> files, String currentDir) {
 		files.keySet().removeIf(s -> !s.startsWith(currentDir));
 
-		Set<Dir> dirs = new TreeSet<>(comparing(Dir::getShortName));
+		Set<Dir> dirs = new TreeSet<>(comparing(Dir::shortName));
 		Set<FileView> fileViews = new TreeSet<>(comparing(FileView::getName));
 		for (Map.Entry<String, FileMetadata> entry : files.entrySet()) {
 			String name = entry.getKey();

@@ -117,7 +117,7 @@ public final class DataflowGraph extends AbstractReactive {
 
 	private Promise<List<PartitionSession>> connect(Set<Partition> partitions) {
 		return Promises.toList(partitions.stream()
-						.map(partition -> client.connect(partition.getAddress()).map(session -> new PartitionSession(partition, session)).toTry()))
+						.map(partition -> client.connect(partition.address()).map(session -> new PartitionSession(partition, session)).toTry()))
 				.map(tries -> {
 					List<PartitionSession> sessions = tries.stream()
 							.filter(Try::isSuccess)
@@ -206,7 +206,7 @@ public final class DataflowGraph extends AbstractReactive {
 							.append(++clusterCounter.value)
 							.append(" {\n")
 							.append("    label=\"")
-							.append(e.getKey().getAddress())
+							.append(e.getKey().address())
 							.append("\";\n    style=rounded;\n\n");
 					for (Node node : e.getValue()) {
 						// upload and download nodeStats have no common connections

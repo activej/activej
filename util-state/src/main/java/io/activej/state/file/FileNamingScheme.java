@@ -17,22 +17,6 @@ public interface FileNamingScheme {
 
 	@Nullable Diff decodeDiff(String filename);
 
-	final class Diff {
-		private final long from;
-		private final long to;
-
-		public Diff(long from, long to) {
-			this.from = from;
-			this.to = to;
-		}
-
-		public long getFrom() {
-			return from;
-		}
-
-		public long getTo() {
-			return to;
-		}
+	record Diff(long from, long to) {
 	}
-
 }

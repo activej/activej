@@ -16,20 +16,5 @@
 
 package io.activej.launchers.fs.gui;
 
-public final class Dir {
-	private final String shortName;
-	private final String fullPath;
-
-	public Dir(String shortName, String fullPath) {
-		this.shortName = shortName;
-		this.fullPath = fullPath;
-	}
-
-	public String getShortName() {
-		return shortName;
-	}
-
-	public String getFullPath() {
-		return fullPath;
-	}
+public record Dir(String shortName, String fullPath) {
 }

@@ -18,29 +18,7 @@ package io.activej.launchers.fs.gui;
 
 import java.util.Set;
 
-public final class DirView {
-	private final String current;
-	private final Set<Dir> dirs;
-	private final Set<FileView> files;
-
-	public DirView(String current, Set<Dir> dirs, Set<FileView> files) {
-		this.current = current;
-		this.dirs = dirs;
-		this.files = files;
-	}
-
-	public String getCurrent() {
-		return current;
-	}
-
-	public Set<Dir> getDirs() {
-		return dirs;
-	}
-
-	public Set<FileView> getFiles() {
-		return files;
-	}
-
+public record DirView(String current, Set<Dir> dirs, Set<FileView> files) {
 	public boolean isEmpty() {
 		return true;
 	}

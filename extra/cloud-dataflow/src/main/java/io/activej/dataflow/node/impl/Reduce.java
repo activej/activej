@@ -42,22 +42,7 @@ import java.util.function.Function;
  */
 @ExposedInternals
 public final class Reduce<K, O, A> extends AbstractNode {
-	public static class Input<K, O, A> {
-		private final Reducer<K, ?, O, A> reducer;
-		private final Function<?, K> keyFunction;
-
-		public Input(Reducer<K, ?, O, A> reducer, Function<?, K> keyFunction) {
-			this.reducer = reducer;
-			this.keyFunction = keyFunction;
-		}
-
-		public Reducer<K, ?, O, A> getReducer() {
-			return reducer;
-		}
-
-		public Function<?, K> getKeyFunction() {
-			return keyFunction;
-		}
+	public record Input<K, O, A>(Reducer<K, ?, O, A> reducer, Function<?, K> keyFunction) {
 
 		@Override
 		public String toString() {

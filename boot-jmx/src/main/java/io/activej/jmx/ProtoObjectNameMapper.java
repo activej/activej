@@ -30,31 +30,31 @@ public interface ProtoObjectNameMapper {
 	}
 
 	static ProtoObjectNameMapper mapClassName(UnaryOperator<String> mapper) {
-		return doMap(ProtoObjectName::getClassName, mapper, ProtoObjectName::withClassName);
+		return doMap(ProtoObjectName::className, mapper, ProtoObjectName::withClassName);
 	}
 
 	static ProtoObjectNameMapper mapPackageName(UnaryOperator<String> mapper) {
-		return doMap(ProtoObjectName::getPackageName, mapper, ProtoObjectName::withPackageName);
+		return doMap(ProtoObjectName::packageName, mapper, ProtoObjectName::withPackageName);
 	}
 
 	static ProtoObjectNameMapper mapQualifier(UnaryOperator<Object> mapper) {
-		return doMap(ProtoObjectName::getQualifier, mapper, ProtoObjectName::withQualifier);
+		return doMap(ProtoObjectName::qualifier, mapper, ProtoObjectName::withQualifier);
 	}
 
 	static ProtoObjectNameMapper mapScope(UnaryOperator<String> mapper) {
-		return doMap(ProtoObjectName::getScope, mapper, ProtoObjectName::withScope);
+		return doMap(ProtoObjectName::scope, mapper, ProtoObjectName::withScope);
 	}
 
 	static ProtoObjectNameMapper mapWorkerPoolQualifier(UnaryOperator<String> mapper) {
-		return doMap(ProtoObjectName::getWorkerPoolQualifier, mapper, ProtoObjectName::withWorkerPoolQualifier);
+		return doMap(ProtoObjectName::workerPoolQualifier, mapper, ProtoObjectName::withWorkerPoolQualifier);
 	}
 
 	static ProtoObjectNameMapper mapWorkerId(UnaryOperator<String> mapper) {
-		return doMap(ProtoObjectName::getWorkerId, mapper, ProtoObjectName::withWorkerId);
+		return doMap(ProtoObjectName::workerId, mapper, ProtoObjectName::withWorkerId);
 	}
 
 	static ProtoObjectNameMapper mapGenericParameters(UnaryOperator<List<String>> mapper) {
-		return doMap(ProtoObjectName::getGenericParameters, mapper, ProtoObjectName::withGenericParameters);
+		return doMap(ProtoObjectName::genericParameters, mapper, ProtoObjectName::withGenericParameters);
 	}
 
 	default ProtoObjectNameMapper then(ProtoObjectNameMapper next) {

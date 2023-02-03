@@ -97,9 +97,9 @@ public final class CubeUplinkMigrationServiceTest {
 	@Test
 	public void migration() throws ExecutionException, InterruptedException {
 		FetchData<Long, LogDiff<CubeDiff>> checkoutData = await(uplink.checkout());
-		assertEquals(0, (long) checkoutData.getCommitId());
-		assertEquals(0, checkoutData.getLevel());
-		assertTrue(checkoutData.getDiffs().isEmpty());
+		assertEquals(0, (long) checkoutData.commitId());
+		assertEquals(0, checkoutData.level());
+		assertTrue(checkoutData.diffs().isEmpty());
 
 		CubeUplinkMigrationService service = new CubeUplinkMigrationService();
 		service.cube = cube;
@@ -138,12 +138,12 @@ public final class CubeUplinkMigrationServiceTest {
 		service.migrate(dataSource, dataSource);
 
 		checkoutData = await(uplink.checkout());
-		assertEquals(1, (long) checkoutData.getCommitId());
-		assertEquals(1, checkoutData.getLevel());
+		assertEquals(1, (long) checkoutData.commitId());
+		assertEquals(1, checkoutData.level());
 
 		List<LogDiff<CubeDiff>> expected = OT_SYSTEM.squash(concat(diffs1, diffs2));
 
-		assertEquals(expected, checkoutData.getDiffs());
+		assertEquals(expected, checkoutData.diffs());
 	}
 
 	private void push(List<LogDiff<CubeDiff>> diffs) {

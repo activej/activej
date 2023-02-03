@@ -59,7 +59,7 @@ public class TriggersTest {
 	public void testDuplicateTriggers() {
 		triggers.addTrigger(Severity.HIGH, "Component", "nameOne", TriggerResult::create);
 		triggers.suppressTriggerByName("nameOne");
-		triggers.getResults().forEach(result -> assertNotEquals("nameOne", result.getTrigger().getName()));
+		triggers.getResults().forEach(result -> assertNotEquals("nameOne", result.trigger().getName()));
 	}
 
 	@Test
@@ -116,21 +116,21 @@ public class TriggersTest {
 	public void testSuppressByName() {
 		assertEquals(11, triggers.getTriggers().size());
 		triggers.suppressTriggerByName("nameOne");
-		triggers.getResults().forEach(result -> assertNotEquals("nameOne", result.getTrigger().getName()));
+		triggers.getResults().forEach(result -> assertNotEquals("nameOne", result.trigger().getName()));
 	}
 
 	@Test
 	public void testSuppressByComponent() {
 		assertEquals(11, triggers.getTriggers().size());
 		triggers.suppressTriggerByComponent("Component");
-		triggers.getResults().forEach(result -> assertNotEquals("Component", result.getTrigger().getComponent()));
+		triggers.getResults().forEach(result -> assertNotEquals("Component", result.trigger().getComponent()));
 	}
 
 	@Test
 	public void testSuppressBySeverity() {
 		assertEquals(11, triggers.getTriggers().size());
 		triggers.suppressTriggerBySeverity("HIGH");
-		triggers.getResults().forEach(result -> assertNotEquals("nameOne", result.getTrigger().getSeverity().name()));
+		triggers.getResults().forEach(result -> assertNotEquals("nameOne", result.trigger().getSeverity().name()));
 	}
 
 	@Test
@@ -195,11 +195,11 @@ public class TriggersTest {
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp, results.get(0).getTriggerResult().getTimestamp());
+		assertEquals(currentTimestamp, results.get(0).triggerResult().getTimestamp());
 
 		results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp, results.get(0).getTriggerResult().getTimestamp());
+		assertEquals(currentTimestamp, results.get(0).triggerResult().getTimestamp());
 	}
 
 	@Test
@@ -212,11 +212,11 @@ public class TriggersTest {
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp + 10000, results.get(0).getTriggerResult().getTimestamp());
+		assertEquals(currentTimestamp + 10000, results.get(0).triggerResult().getTimestamp());
 
 		results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp + 20000, results.get(0).getTriggerResult().getTimestamp());
+		assertEquals(currentTimestamp + 20000, results.get(0).triggerResult().getTimestamp());
 	}
 
 	@Test
@@ -229,11 +229,11 @@ public class TriggersTest {
 		long currentTimestamp = timestamp;
 		List<TriggerWithResult> results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp + 10000, results.get(0).getTriggerResult().getTimestamp());
+		assertEquals(currentTimestamp + 10000, results.get(0).triggerResult().getTimestamp());
 
 		results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp + 20000, results.get(0).getTriggerResult().getTimestamp());
+		assertEquals(currentTimestamp + 20000, results.get(0).triggerResult().getTimestamp());
 	}
 
 	@Test
@@ -248,13 +248,13 @@ public class TriggersTest {
 		List<TriggerWithResult> results = triggers.getResults();
 
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp, results.get(0).getTriggerResult().getTimestamp());
-		assertEquals(currentTimestamp + 10000, results.get(0).getTriggerResult().getValue());
+		assertEquals(currentTimestamp, results.get(0).triggerResult().getTimestamp());
+		assertEquals(currentTimestamp + 10000, results.get(0).triggerResult().getValue());
 
 		results = triggers.getResults();
 		assertEquals(1, results.size());
-		assertEquals(currentTimestamp, results.get(0).getTriggerResult().getTimestamp());
-		assertEquals(currentTimestamp + 20000, results.get(0).getTriggerResult().getValue());
+		assertEquals(currentTimestamp, results.get(0).triggerResult().getTimestamp());
+		assertEquals(currentTimestamp + 20000, results.get(0).triggerResult().getValue());
 	}
 
 	@Test

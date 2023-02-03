@@ -46,8 +46,8 @@ public final class OTCommit<K, D> {
 		this.epoch = epoch;
 		this.id = id;
 		this.parentsWithLevels = parents;
-		this.parents = entriesToMap(parentsWithLevels.entrySet().stream(), DiffsWithLevel::getDiffs);
-		this.level = parents.values().stream().mapToLong(DiffsWithLevel::getLevel).max().orElse(0L) + 1L;
+		this.parents = entriesToMap(parentsWithLevels.entrySet().stream(), DiffsWithLevel::diffs);
+		this.level = parents.values().stream().mapToLong(DiffsWithLevel::level).max().orElse(0L) + 1L;
 	}
 
 	public static <K, D> OTCommit<K, D> ofRoot(K id) {

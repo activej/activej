@@ -21,24 +21,5 @@ import java.net.InetSocketAddress;
 /**
  * Defines a remote partition, which is represented by a server address.
  */
-public final class Partition {
-	private final InetSocketAddress address;
-
-	/**
-	 * Constructs a new remote partition with the given server address.
-	 *
-	 * @param address server address
-	 */
-	public Partition(InetSocketAddress address) {
-		this.address = address;
-	}
-
-	public InetSocketAddress getAddress() {
-		return address;
-	}
-
-	@Override
-	public String toString() {
-		return "RemotePartition{address=" + address + '}';
-	}
+public record Partition(InetSocketAddress address) {
 }

@@ -116,11 +116,11 @@ public class TriggersModuleTest {
 		assertEquals(1, results.size());
 		TriggerWithResult result = results.get(0);
 
-		Trigger trigger = result.getTrigger();
+		Trigger trigger = result.trigger();
 		assertEquals(TestClass.class.getSimpleName(), trigger.getComponent());
 		assertEquals("test", trigger.getName());
 		assertSame(Severity.HIGH, trigger.getSeverity());
-		assertTrue(result.getTriggerResult().isPresent());
+		assertTrue(result.triggerResult().isPresent());
 	}
 
 	@Test
@@ -152,11 +152,11 @@ public class TriggersModuleTest {
 		assertEquals(1, results.size());
 		TriggerWithResult result = results.get(0);
 
-		Trigger trigger = result.getTrigger();
+		Trigger trigger = result.trigger();
 		assertEquals(TestClass.class.getSimpleName(), trigger.getComponent());
 		assertEquals("test", trigger.getName());
 		assertSame(Severity.HIGH, trigger.getSeverity());
-		assertTrue(result.getTriggerResult().isPresent());
+		assertTrue(result.triggerResult().isPresent());
 	}
 
 	@Test
@@ -234,11 +234,11 @@ public class TriggersModuleTest {
 		List<TriggerWithResult> results = injector.getInstance(Triggers.class).getResults();
 		assertEquals(firstPoolSize + secondPoolSize, results.size());
 		results.forEach(result -> {
-			Trigger trigger = result.getTrigger();
+			Trigger trigger = result.trigger();
 			assertEquals(TestClass.class.getSimpleName(), trigger.getComponent());
 			assertEquals("test", trigger.getName());
 			assertSame(Severity.HIGH, trigger.getSeverity());
-			assertTrue(result.getTriggerResult().isPresent());
+			assertTrue(result.triggerResult().isPresent());
 		});
 	}
 
@@ -298,11 +298,11 @@ public class TriggersModuleTest {
 		List<TriggerWithResult> results = injector.getInstance(Triggers.class).getResults();
 		assertEquals(firstPoolSize + secondPoolSize, results.size());
 		results.forEach(result -> {
-			Trigger trigger = result.getTrigger();
+			Trigger trigger = result.trigger();
 			assertEquals(TestClass.class.getSimpleName(), trigger.getComponent());
 			assertEquals("test", trigger.getName());
 			assertSame(Severity.HIGH, trigger.getSeverity());
-			assertTrue(result.getTriggerResult().isPresent());
+			assertTrue(result.triggerResult().isPresent());
 		});
 	}
 

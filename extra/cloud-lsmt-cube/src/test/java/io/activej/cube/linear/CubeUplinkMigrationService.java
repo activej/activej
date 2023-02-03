@@ -71,9 +71,9 @@ public final class CubeUplinkMigrationService {
 		CompletableFuture<AsyncOTUplink.FetchData<Long, LogDiff<CubeDiff>>> future = eventloop.submit(() ->
 				uplink.checkout()
 						.then(checkoutData -> {
-							if (checkoutData.getLevel() != 0 ||
-									checkoutData.getCommitId() != 0 ||
-									!checkoutData.getDiffs().isEmpty()) {
+							if (checkoutData.level() != 0 ||
+									checkoutData.commitId() != 0 ||
+									!checkoutData.diffs().isEmpty()) {
 								throw new IllegalStateException("Uplink repository is not empty");
 							}
 							//noinspection Convert2MethodRef
@@ -88,7 +88,7 @@ public final class CubeUplinkMigrationService {
 						.whenResult(diffs -> logger.info("Found {} diffs to be migrated", diffs.size()))
 						.map(OT_SYSTEM::squash)
 						.then(diffs -> uplink.push(new UplinkProtoCommit(0, diffs)))
-						.whenResult(fetchData -> logger.info("Successfully migrated to uplink revision {}", fetchData.getCommitId()))
+						.whenResult(fetchData -> logger.info("Successfully migrated to uplink revision {}", fetchData.commitId()))
 		);
 
 		eventloop.run();

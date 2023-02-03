@@ -146,7 +146,7 @@ public class DatasetUtils {
 		}
 		DataflowGraph graph = context.getGraph();
 		Node nodeUpload = Nodes.upload(uploadIndex, streamSchema, sourceStreamId);
-		Node nodeDownload = Nodes.download(downloadIndex, streamSchema, sourcePartition.getAddress(), sourceStreamId);
+		Node nodeDownload = Nodes.download(downloadIndex, streamSchema, sourcePartition.address(), sourceStreamId);
 		graph.addNode(sourcePartition, nodeUpload);
 		graph.addNode(targetPartition, nodeDownload);
 		return Utils.first(nodeDownload.getOutputs());

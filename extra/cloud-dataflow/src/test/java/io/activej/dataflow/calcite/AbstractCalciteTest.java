@@ -392,28 +392,7 @@ public abstract class AbstractCalciteTest {
 	public record Filterable(int id, long created) {
 	}
 
-	public static final class Custom {
-		private final int id;
-		private final BigDecimal price;
-		private final String description;
-
-		public Custom(int id, BigDecimal price, String description) {
-			this.id = id;
-			this.price = price;
-			this.description = description;
-		}
-
-		public int getId() {
-			return id;
-		}
-
-		public BigDecimal getPrice() {
-			return price;
-		}
-
-		public String getDescription() {
-			return description;
-		}
+	public record Custom(int id, BigDecimal price, String description) {
 	}
 
 	public record TemporalValues(int userId, Instant registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
@@ -2856,16 +2835,16 @@ public abstract class AbstractCalciteTest {
 
 	private static DataflowTable<Custom> createCustomTable(DefiningClassLoader classLoader) {
 		return DataflowTable.builder(classLoader, CUSTOM_TABLE_NAME, Custom.class)
-				.withColumn("id", int.class, Custom::getId)
-				.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
-				.withColumn("description", String.class, Custom::getDescription)
+				.withColumn("id", int.class, Custom::id)
+				.withColumn("price", double.class, custom -> custom.price().doubleValue())
+				.withColumn("description", String.class, Custom::description)
 				.build();
 	}
 
 	private static DataflowPartitionedTable<Custom> createPartitionedCustomTable(DefiningClassLoader classLoader) {
 		return DataflowPartitionedTable.builder(classLoader, CUSTOM_PARTITIONED_TABLE_NAME, Custom.class)
-				.withKeyColumn("id", int.class, Custom::getId)
-				.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+				.withKeyColumn("id", int.class, Custom::id)
+				.withColumn("price", double.class, custom -> custom.price().doubleValue())
 				.build();
 	}
 

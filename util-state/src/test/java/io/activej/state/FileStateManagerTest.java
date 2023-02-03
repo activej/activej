@@ -46,8 +46,8 @@ public class FileStateManagerTest {
 		long revision = manager.save(100);
 		FileState<Integer> loaded = manager.load();
 
-		assertEquals(100, (int) loaded.getState());
-		assertEquals(revision, loaded.getRevision());
+		assertEquals(100, (int) loaded.state());
+		assertEquals(revision, loaded.revision());
 	}
 
 	@Test
@@ -71,8 +71,8 @@ public class FileStateManagerTest {
 
 		FileState<Integer> loaded = manager.load();
 
-		assertEquals(300, (int) loaded.getState());
-		assertEquals(lastRevision, loaded.getRevision());
+		assertEquals(300, (int) loaded.state());
+		assertEquals(lastRevision, loaded.revision());
 	}
 
 	@Test
@@ -200,8 +200,8 @@ public class FileStateManagerTest {
 		}
 
 		FileState<Integer> load1 = manager.load();
-		assertEquals(150, load1.getState().intValue());
-		assertEquals(30L, load1.getRevision());
+		assertEquals(150, load1.state().intValue());
+		assertEquals(30L, load1.revision());
 
 		assertEquals(100, manager.loadSnapshot(10L).intValue());
 	}
