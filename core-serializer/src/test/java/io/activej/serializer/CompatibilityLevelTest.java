@@ -4,7 +4,8 @@ import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeStringFormat;
-import io.activej.serializer.impl.SerializerDef_ByteBuffer;
+import io.activej.serializer.def.SerializerDefs;
+import io.activej.serializer.def.impl.ByteBufferDef;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,7 +101,7 @@ public class CompatibilityLevelTest {
 
 	private static <T> byte[] doTestPreload(Class<T> aClass, T item, CompatibilityLevel compatibilityLevel, String filePrefix) {
 		BinarySerializer<T> serializer = SerializerFactory.builder()
-				.with(ByteBuffer.class, $ -> new SerializerDef_ByteBuffer())
+				.with(ByteBuffer.class, $ -> SerializerDefs.ofByteBuffer())
 				.withCompatibilityLevel(compatibilityLevel)
 				.build()
 				.create(DEFINING_CLASS_LOADER, aClass);

@@ -2,6 +2,7 @@ package io.activej.serializer;
 
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.def.SimpleSerializerDef;
 import org.junit.Test;
 
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;

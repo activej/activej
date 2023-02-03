@@ -12,6 +12,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
 import java.util.concurrent.TimeUnit;
 
@@ -227,61 +228,61 @@ public class SpringDiBenchmark {
 	Kitchen kitchen() {return new Kitchen();}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Sugar sugar() {return new Sugar();}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Butter butter() {return new Butter();}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Flour flour() {return new Flour();}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Pastry pastry(Sugar sugar, Butter butter, Flour flour) {
 		return new Pastry(sugar, butter, flour);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Cookie1 cookie1(Pastry pastry) {
 		return new Cookie1(pastry);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Cookie2 cookie2(Pastry pastry) {
 		return new Cookie2(pastry);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Cookie3 cookie3(Pastry pastry) {
 		return new Cookie3(pastry);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Cookie4 cookie4(Pastry pastry) {
 		return new Cookie4(pastry);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Cookie5 cookie5(Pastry pastry) {
 		return new Cookie5(pastry);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	Cookie6 cookie6(Pastry pastry) {
 		return new Cookie6(pastry);
 	}
 
 	@Bean
-	@org.springframework.context.annotation.Scope("prototype")
+	@Scope("prototype")
 	CookieBucket tort(Cookie1 c1, Cookie2 c2, Cookie3 c3, Cookie4 c4, Cookie5 c5, Cookie6 c6) {
 		return new CookieBucket(c1, c2, c3, c4, c5, c6);
 	}

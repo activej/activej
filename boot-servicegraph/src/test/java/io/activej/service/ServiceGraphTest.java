@@ -10,6 +10,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
+import io.activej.test.ExpectedException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
@@ -71,7 +72,7 @@ public class ServiceGraphTest {
 	// region modules
 	public static class FailingModule extends AbstractModule {
 
-		private static final io.activej.test.ExpectedException INTERRUPTED = new io.activej.test.ExpectedException("interrupted");
+		private static final ExpectedException INTERRUPTED = new ExpectedException("interrupted");
 
 		@Override
 		protected void configure() {

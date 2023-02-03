@@ -266,7 +266,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		String value = "value";
 		String otherValue = "other value";
 
-		io.activej.redis.TestUtils.await(client, redis -> redis.cmd(RedisRequest.of("WATCH", key1, key2), OK)
+		TestUtils.await(client, redis -> redis.cmd(RedisRequest.of("WATCH", key1, key2), OK)
 				.then(redis::multi)
 				.then(() -> client.connect())
 				.then(otherConnection -> otherConnection.cmd(RedisRequest.of("SET", key2, otherValue), OK)
@@ -292,7 +292,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		String value = "value";
 		String otherValue = "other value";
 
-		Object[] execResult = io.activej.redis.TestUtils.await(client, redis -> redis.cmd(RedisRequest.of("WATCH", key1, key2), OK)
+		Object[] execResult = TestUtils.await(client, redis -> redis.cmd(RedisRequest.of("WATCH", key1, key2), OK)
 				.then(() -> redis.cmd(RedisRequest.of("UNWATCH"), OK))
 				.then(redis::multi)
 				.then(() -> client.connect())

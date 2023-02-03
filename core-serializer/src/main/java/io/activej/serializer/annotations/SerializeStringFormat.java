@@ -16,6 +16,8 @@
 
 package io.activej.serializer.annotations;
 
+import io.activej.serializer.StringFormat;
+
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -26,7 +28,7 @@ import java.lang.annotation.*;
 		ElementType.RECORD_COMPONENT})
 @Repeatable(SerializeStringFormats.class)
 public @interface SerializeStringFormat {
-	io.activej.serializer.StringFormat value();
+	StringFormat value();
 
 	int[] path() default {};
 }

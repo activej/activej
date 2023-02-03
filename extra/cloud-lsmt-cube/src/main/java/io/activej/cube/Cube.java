@@ -1169,7 +1169,7 @@ public final class Cube extends AbstractReactive
 				List<String> attributes = new ArrayList<>(resolverContainer.attributes);
 				attributes.retainAll(resultAttributes);
 				if (!attributes.isEmpty()) {
-					tasks.add(io.activej.cube.Utils.resolveAttributes(results, resolverContainer.resolver,
+					tasks.add(Utils.resolveAttributes(results, resolverContainer.resolver,
 							resolverContainer.dimensions, attributes,
 							fullySpecifiedDimensions, resultClass, queryClassLoader));
 				}

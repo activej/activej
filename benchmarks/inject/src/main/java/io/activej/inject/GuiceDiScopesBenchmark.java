@@ -3,6 +3,7 @@ package io.activej.inject;
 import com.google.inject.Injector;
 import com.google.inject.*;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @since 3.0.0
  */
-@State(org.openjdk.jmh.annotations.Scope.Benchmark)
+@State(Scope.Benchmark)
 @SuppressWarnings("FieldCanBeLocal")
 public class GuiceDiScopesBenchmark {
 

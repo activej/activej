@@ -16,7 +16,7 @@
 
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.SerializerDef;
+import io.activej.serializer.def.SerializerDef;
 
 import java.lang.annotation.*;
 

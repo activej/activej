@@ -106,7 +106,7 @@ public final class Specializer {
 
 		final List<Specialization> relatedSpecializations = new ArrayList<>(List.of(this));
 
-		final Map<java.lang.reflect.Field, String> specializedFields = new LinkedHashMap<>();
+		final Map<Field, String> specializedFields = new LinkedHashMap<>();
 		final Map<java.lang.reflect.Method, String> specializedMethods = new LinkedHashMap<>();
 
 		Specialization(Object instance) {
@@ -118,7 +118,7 @@ public final class Specializer {
 
 		void scanInstance() {
 			for (Class<?> clazz = instance.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
-				for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
+				for (Field field : clazz.getDeclaredFields()) {
 					specializedFields.put(field,
 							field.getDeclaringClass().getSimpleName() + "$" + field.getName());
 				}
@@ -193,8 +193,8 @@ public final class Specializer {
 			cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "$this",
 					Type.getType(instanceClass).getDescriptor(), null, null);
 
-			for (Map.Entry<java.lang.reflect.Field, String> entry : specializedFields.entrySet()) {
-				java.lang.reflect.Field javaField = entry.getKey();
+			for (Map.Entry<Field, String> entry : specializedFields.entrySet()) {
+				Field javaField = entry.getKey();
 				String name = entry.getValue();
 
 				cw.visitField(ACC_PUBLIC | ACC_STATIC | (javaField.getModifiers() & (ACC_FINAL | ACC_VOLATILE)), name,
@@ -211,8 +211,8 @@ public final class Specializer {
 				g.checkCast(getType(instanceClass));
 				g.putStatic(specializedType, THIS, getType(instanceClass));
 
-				for (Map.Entry<java.lang.reflect.Field, String> entry : specializedFields.entrySet()) {
-					java.lang.reflect.Field javaField = entry.getKey();
+				for (Map.Entry<Field, String> entry : specializedFields.entrySet()) {
+					Field javaField = entry.getKey();
 					String fieldName = entry.getValue();
 
 					javaField.setAccessible(true);
@@ -763,8 +763,8 @@ public final class Specializer {
 		}
 
 		@Nullable String lookupField(Class<?> owner, String field) {
-			java.lang.reflect.Field result = null;
-			for (java.lang.reflect.Field originalField : specializedFields.keySet()) {
+			Field result = null;
+			for (Field originalField : specializedFields.keySet()) {
 				if (true &&
 						Objects.equals(originalField.getName(), field) &&
 						originalField.getDeclaringClass().isAssignableFrom(owner) &&

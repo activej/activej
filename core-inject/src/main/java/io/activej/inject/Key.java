@@ -37,7 +37,7 @@ import static io.activej.inject.util.TypeUtils.simplifyType;
  * For example, to create a key of type Map&lt;String, List&lt;Integer&gt;&gt;, you can just use
  * this syntax: <code>new Key&lt;Map&lt;String, List&lt;Integer&gt;&gt;&gt;(){}</code>.
  * <p>
- * If your types are not known at compile time, you can use {@link io.activej.types.Types#parameterizedType} to make a
+ * If your types are not known at compile time, you can use {@link Types#parameterizedType} to make a
  * parameterized type and give it to a {@link #ofType Key.ofType} constructor.
  */
 public abstract class Key<T> {

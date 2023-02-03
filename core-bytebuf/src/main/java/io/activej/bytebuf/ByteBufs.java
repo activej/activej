@@ -182,7 +182,7 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	/**
-	 * Creates and returns a {@link io.activej.bytebuf.ByteBuf.ByteBufSlice}
+	 * Creates and returns a {@link ByteBuf.ByteBufSlice}
 	 * which contains {@code size} bytes from queue's first ByteBuf if the
 	 * latter contains too many bytes.
 	 * <p>

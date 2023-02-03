@@ -1,7 +1,7 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.serializer.SerializerDef;
+import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.SerializerFactory;
 import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 
@@ -124,7 +124,7 @@ public class SerializerFactoryUtils {
 				throw new NullPointerException();
 			if (keySerializer == null)
 				throw new NullPointerException();
-			return new SerializerDef_Hppc7HashMap(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
+			return new Hppc9HashMapSerializerDef(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
 		};
 	}
 
@@ -145,9 +145,9 @@ public class SerializerFactoryUtils {
 			if (valueSerializer == null)
 				throw new NullPointerException();
 			if (isHashSet) {
-				return new SerializerDef_Hppc7HashSet(valueSerializer, collectionType, collectionImplType, valueType);
+				return new Hppc9HashSetSerializerDef(valueSerializer, collectionType, collectionImplType, valueType);
 			}
-			return new SerializerDef_Hppc7RegularCollection(valueSerializer, collectionType, collectionImplType, valueType);
+			return new Hppc9RegularCollectionSerializerDef(valueSerializer, collectionType, collectionImplType, valueType);
 		};
 	}
 }

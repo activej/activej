@@ -114,7 +114,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Creates a consumer that streams the received items into a given {@link io.activej.csp.ChannelConsumer channel consumer}
+	 * Creates a consumer that streams the received items into a given {@link ChannelConsumer channel consumer}
 	 */
 	static <T> StreamConsumer<T> ofChannelConsumer(ChannelConsumer<T> consumer) {
 		return new OfChannelConsumer<>(consumer);

@@ -20,12 +20,13 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.serializer.AbstractSerializerDef;
+import io.activej.serializer.def.AbstractSerializerDef;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.SerializerDef;
-import io.activej.serializer.impl.SerializerDefWithNullable;
-import io.activej.serializer.impl.SerializerDef_Nullable;
+import io.activej.serializer.def.SerializerDef;
+import io.activej.serializer.def.SerializerDefWithNullable;
+import io.activej.serializer.def.SerializerDefs;
+import io.activej.serializer.def.impl.NullableDef;
 import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -50,7 +51,7 @@ public class ByteBufSerializerDef extends AbstractSerializerDef implements Seria
 	@Override
 	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDef_Nullable(this);
+			return SerializerDefs.ofNullable(this);
 		}
 		return new ByteBufSerializerDef(writeWithRecycle, wrap, true);
 	}

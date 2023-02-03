@@ -1,7 +1,15 @@
 package io.activej.serializer;
 
 import io.activej.serializer.annotations.*;
-import io.activej.serializer.impl.*;
+import io.activej.serializer.def.*;
+import io.activej.serializer.def.impl.*;
+import io.activej.serializer.def.impl.BooleanDef;
+import io.activej.serializer.def.impl.ByteDef;
+import io.activej.serializer.def.impl.DoubleDef;
+import io.activej.serializer.def.impl.FloatDef;
+import io.activej.serializer.def.impl.LongDef;
+import io.activej.serializer.def.impl.ShortDef;
+import io.activej.serializer.def.impl.StringDef;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1788,7 +1796,7 @@ public class BinarySerializerTest {
 		public Inet6Address inet6Address;
 
 		@Serialize
-		@SerializeClass(SerializerDef_Inet4Address.class)
+		@SerializeClass(Inet4AddressDef.class)
 		public InetAddress inetAddress2;
 	}
 
@@ -1826,32 +1834,32 @@ public class BinarySerializerTest {
 		}
 
 		@Serialize
-		@SerializeClass(SerializerDef_Boolean.class)
+		@SerializeClass(BooleanDef.class)
 		public Object zBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Char.class)
+		@SerializeClass(CharDef.class)
 		public Object cBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Byte.class)
+		@SerializeClass(ByteDef.class)
 		public Object bBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Short.class)
+		@SerializeClass(ShortDef.class)
 		public Object sBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Int.class)
+		@SerializeClass(IntDef.class)
 		public Object iBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Long.class)
+		@SerializeClass(LongDef.class)
 		public Object lBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Float.class)
+		@SerializeClass(FloatDef.class)
 		public Object fBoxed;
 		@Serialize
-		@SerializeClass(SerializerDef_Double.class)
+		@SerializeClass(DoubleDef.class)
 		public Object dBoxed;
 
 		@Serialize
-		@SerializeClass(SerializerDef_String.class)
+		@SerializeClass(StringDef.class)
 		public Object string;
 		@Serialize
 		@SerializeClass(subclasses = {Inet4Address.class, Inet6Address.class})
@@ -1862,7 +1870,7 @@ public class BinarySerializerTest {
 		public Object address2;
 
 		@Serialize
-		public List<@SerializeClass(SerializerDef_Int.class) Object> list;
+		public List<@SerializeClass(IntDef.class) Object> list;
 	}
 
 	@Test
@@ -2491,9 +2499,9 @@ public class BinarySerializerTest {
 		BinarySerializer<BooleanHolder> serializer = SerializerFactory.defaultInstance()
 				.create(DEFINING_CLASS_LOADER, BooleanHolder.class);
 
-		doTestNullableBoolean(serializer, new BooleanHolder(null), SerializerDef_Boolean.NULLABLE_NULL);
-		doTestNullableBoolean(serializer, new BooleanHolder(false), SerializerDef_Boolean.NULLABLE_FALSE);
-		doTestNullableBoolean(serializer, new BooleanHolder(true), SerializerDef_Boolean.NULLABLE_TRUE);
+		doTestNullableBoolean(serializer, new BooleanHolder(null), BooleanDef.NULLABLE_NULL);
+		doTestNullableBoolean(serializer, new BooleanHolder(false), BooleanDef.NULLABLE_FALSE);
+		doTestNullableBoolean(serializer, new BooleanHolder(true), BooleanDef.NULLABLE_TRUE);
 	}
 
 	private void doTestBoolean(BinarySerializer<Boolean> serializer, boolean value, byte expectedByte) {
@@ -2762,7 +2770,7 @@ public class BinarySerializerTest {
 			serializerFactory.create(Object.class);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("A subclass should not be an interface: " + Interface.class, e.getMessage());
+			assertEquals("Cannot serialize an interface", e.getMessage());
 		}
 	}
 
@@ -2776,7 +2784,7 @@ public class BinarySerializerTest {
 			serializerFactory.create(Object.class);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("A subclass should not be an interface: " + Annotation.class, e.getMessage());
+			assertEquals("Cannot serialize an interface", e.getMessage());
 		}
 	}
 

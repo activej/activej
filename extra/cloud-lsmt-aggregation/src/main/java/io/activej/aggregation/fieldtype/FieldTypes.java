@@ -21,9 +21,11 @@ import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.StaticFactories;
-import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
-import io.activej.serializer.impl.*;
+import io.activej.serializer.def.PrimitiveSerializerDef;
+import io.activej.serializer.def.SerializerDef;
+import io.activej.serializer.def.SerializerDefs;
+import io.activej.serializer.def.impl.*;
 import io.activej.types.Primitives;
 import io.activej.types.Types;
 
@@ -40,7 +42,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
-		return new FieldType<>(byte.class, new SerializerDef_Byte(false), JsonCodecs.ofByte()) {
+		return new FieldType<>(byte.class, SerializerDefs.ofByte(false), JsonCodecs.ofByte()) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Byte.class, "toString", value);
@@ -49,7 +51,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Short> ofShort() {
-		return new FieldType<>(short.class, new SerializerDef_Short(false), JsonCodecs.ofShort()) {
+		return new FieldType<>(short.class, SerializerDefs.ofShort(false), JsonCodecs.ofShort()) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Short.class, "toString", value);
@@ -58,27 +60,27 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Integer> ofInt() {
-		return new FieldType<>(int.class, new SerializerDef_Int(false, true), JsonCodecs.ofInteger());
+		return new FieldType<>(int.class, SerializerDefs.ofInt(false, true), JsonCodecs.ofInteger());
 	}
 
 	public static FieldType<Long> ofLong() {
-		return new FieldType<>(long.class, new SerializerDef_Long(false, true), JsonCodecs.ofLong());
+		return new FieldType<>(long.class, SerializerDefs.ofLong(false, true), JsonCodecs.ofLong());
 	}
 
 	public static FieldType<Float> ofFloat() {
-		return new FieldType<>(float.class, new SerializerDef_Float(false), JsonCodecs.ofFloat());
+		return new FieldType<>(float.class, SerializerDefs.ofFloat(false), JsonCodecs.ofFloat());
 	}
 
 	public static FieldType<Double> ofDouble() {
-		return new FieldType<>(double.class, new SerializerDef_Double(false), JsonCodecs.ofDouble());
+		return new FieldType<>(double.class, SerializerDefs.ofDouble(false), JsonCodecs.ofDouble());
 	}
 
 	public static FieldType<Character> ofChar() {
-		return new FieldType<>(char.class, new SerializerDef_Char(false), JsonCodecs.ofCharacter());
+		return new FieldType<>(char.class, SerializerDefs.ofChar(false), JsonCodecs.ofCharacter());
 	}
 
 	public static FieldType<Boolean> ofBoolean() {
-		return new FieldType<>(boolean.class, new SerializerDef_Boolean(false), JsonCodecs.ofBoolean());
+		return new FieldType<>(boolean.class, SerializerDefs.ofBoolean(false), JsonCodecs.ofBoolean());
 	}
 
 	public static FieldType<Integer> ofHyperLogLog() {
@@ -86,24 +88,24 @@ public final class FieldTypes {
 	}
 
 	private static SerializerDef serializerDefHyperLogLog() {
-		SerializerDef_Class serializer = SerializerDef_Class.create(HyperLogLog.class);
+		ClassDef.Builder classSerializerBuilder = ClassDef.builder(HyperLogLog.class);
 		try {
-			serializer.addGetter(HyperLogLog.class.getMethod("getRegisters"),
-					new SerializerDef_Array(new SerializerDef_Byte(false), byte[].class), -1, -1);
-			serializer.setConstructor(HyperLogLog.class.getConstructor(byte[].class),
+			classSerializerBuilder.withGetter(HyperLogLog.class.getMethod("getRegisters"),
+					SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1);
+			classSerializerBuilder.withConstructor(HyperLogLog.class.getConstructor(byte[].class),
 					List.of("registers"));
 		} catch (NoSuchMethodException ignored) {
 			throw new RuntimeException("Unable to construct SerializerDef for HyperLogLog");
 		}
-		return serializer;
+		return classSerializerBuilder.build();
 	}
 
 	public static <T> FieldType<Set<T>> ofSet(FieldType<T> fieldType) {
 		SerializerDef itemSerializer = fieldType.getSerializer();
-		if (itemSerializer instanceof SerializerDef_Primitive) {
-			itemSerializer = ((SerializerDef_Primitive) itemSerializer).ensureWrapped();
+		if (itemSerializer instanceof PrimitiveSerializerDef) {
+			itemSerializer = ((PrimitiveSerializerDef) itemSerializer).ensureWrapped();
 		}
-		SerializerDef_Set serializer = new SerializerDef_Set(itemSerializer);
+		SerializerDef serializer = SerializerDefs.ofSet(itemSerializer);
 		Type wrappedNestedType = fieldType.getDataType() instanceof Class ?
 				Primitives.wrap((Class<?>) fieldType.getDataType()) :
 				fieldType.getDataType();
@@ -113,7 +115,7 @@ public final class FieldTypes {
 	}
 
 	public static <E extends Enum<E>> FieldType<E> ofEnum(Class<E> enumClass) {
-		return new FieldType<>(enumClass, new SerializerDef_Enum(enumClass), JsonCodecs.ofEnum(enumClass));
+		return new FieldType<>(enumClass, SerializerDefs.ofEnum(enumClass), JsonCodecs.ofEnum(enumClass));
 	}
 
 	public static FieldType<String> ofString() {
@@ -121,7 +123,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<String> ofString(StringFormat format) {
-		return new FieldType<>(String.class, new SerializerDef_String(format), JsonCodecs.ofString()) {
+		return new FieldType<>(String.class, SerializerDefs.ofString(format), JsonCodecs.ofString()) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return value;
@@ -134,7 +136,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<LocalDate> ofLocalDate(LocalDate startDate) {
-		return new FieldType<>(int.class, LocalDate.class, new SerializerDef_Int(false, true), JsonCodecs.ofLocalDate(), JsonCodecs.ofInteger()) {
+		return new FieldType<>(int.class, LocalDate.class, SerializerDefs.ofInt(false, true), JsonCodecs.ofLocalDate(), JsonCodecs.ofInteger()) {
 
 			@Override
 			public Expression toValue(Expression internalValue) {

@@ -73,7 +73,7 @@ public class RedisConnectionTestWithStub {
 	}
 
 	protected <T> T await(AsyncFunction<RedisConnection, T> clientCommand) {
-		return io.activej.redis.TestUtils.await(client, clientCommand);
+		return TestUtils.await(client, clientCommand);
 	}
 
 	/*

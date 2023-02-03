@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 import static org.junit.Assert.assertEquals;
 
 /**
- * {@link TestRule} that fails if not all static constants from the {@link io.activej.codegen.ClassBuilder}'s STATIC_CONSTANTS map were removed properly.
+ * {@link TestRule} that fails if not all static constants from the {@link ClassBuilder}'s STATIC_CONSTANTS map were removed properly.
  * <p>
  * Annotation {@link IgnoreLeaks} can be put on a test that wants this rule disabled.
  */

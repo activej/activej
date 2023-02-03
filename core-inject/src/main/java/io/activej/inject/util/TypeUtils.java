@@ -26,7 +26,7 @@ import java.util.Objects;
 
 /**
  * This class contains reflection utilities to work with Java types.
- * Its main use is for method {@link io.activej.types.Types#parameterizedType Types.parameterized}.
+ * Its main use is for method {@link Types#parameterizedType Types.parameterized}.
  * However, just like with {@link ReflectionUtils}, other type utility
  * methods are pretty clean too, so they are left public.
  */

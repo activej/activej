@@ -29,7 +29,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
-import io.activej.serializer.impl.SerializerDef_Class;
+import io.activej.serializer.def.impl.ClassDef;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -153,20 +153,20 @@ public class Utils {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(BinarySerializer.class, recordClass, keysList, fieldsList),
 				() -> {
-					SerializerDef_Class serializer = SerializerDef_Class.create(recordClass);
-					addFields(serializer, recordClass, new ArrayList<>(keys.entrySet()));
-					addFields(serializer, recordClass, new ArrayList<>(fields.entrySet()));
+					ClassDef.Builder classSerializerBuilder = ClassDef.builder(recordClass);
+					addFields(classSerializerBuilder, recordClass, new ArrayList<>(keys.entrySet()));
+					addFields(classSerializerBuilder, recordClass, new ArrayList<>(fields.entrySet()));
 
 					return SerializerFactory.defaultInstance()
-							.toClassBuilder(serializer);
+							.toClassBuilder(classSerializerBuilder.build());
 				});
 	}
 
-	private static <T> void addFields(SerializerDef_Class serializer, Class<T> recordClass, List<Entry<String, FieldType>> fields) {
+	private static <T> void addFields(ClassDef.Builder classSerializerBuilder, Class<T> recordClass, List<Entry<String, FieldType>> fields) {
 		for (Entry<String, FieldType> entry : fields) {
 			try {
 				Field field = recordClass.getField(entry.getKey());
-				serializer.addField(field, entry.getValue().getSerializer(), -1, -1);
+				classSerializerBuilder.withField(field, entry.getValue().getSerializer(), -1, -1);
 			} catch (NoSuchFieldException e) {
 				throw new RuntimeException(e);
 			}

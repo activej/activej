@@ -143,7 +143,7 @@ public final class TestBlockingFileSystemInvariants {
 			try {
 				client.move("directory", "newDirectory");
 				fail();
-			} catch (java.io.FileNotFoundException ignored) {
+			} catch (FileNotFoundException ignored) {
 			}
 		});
 

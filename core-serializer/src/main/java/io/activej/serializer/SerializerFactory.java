@@ -23,7 +23,10 @@ import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.annotations.*;
-import io.activej.serializer.impl.*;
+import io.activej.serializer.def.*;
+import io.activej.serializer.def.impl.ClassDef;
+import io.activej.serializer.def.impl.NullableDef;
+import io.activej.serializer.def.impl.SubclassDef;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
 import io.activej.types.scanner.TypeScannerRegistry;
@@ -44,9 +47,9 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.SerializerDef.*;
-import static io.activej.serializer.impl.SerializerExpressions.readByte;
-import static io.activej.serializer.impl.SerializerExpressions.writeByte;
+import static io.activej.serializer.def.SerializerDef.*;
+import static io.activej.serializer.def.SerializerExpressions.readByte;
+import static io.activej.serializer.def.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.get;
 import static io.activej.types.AnnotatedTypes.*;
 import static io.activej.types.AnnotationUtils.getAnnotation;
@@ -99,39 +102,34 @@ public final class SerializerFactory {
 		SerializerFactory.Builder builder = new SerializerFactory().new Builder();
 
 		builder
-				.with(boolean.class, ctx -> new SerializerDef_Boolean(false))
-				.with(char.class, ctx -> new SerializerDef_Char(false))
-				.with(byte.class, ctx -> new SerializerDef_Byte(false))
-				.with(short.class, ctx -> new SerializerDef_Short(false))
-				.with(int.class, ctx -> new SerializerDef_Int(false))
-				.with(long.class, ctx -> new SerializerDef_Long(false))
-				.with(float.class, ctx -> new SerializerDef_Float(false))
-				.with(double.class, ctx -> new SerializerDef_Double(false))
+				.with(boolean.class, ctx -> SerializerDefs.ofBoolean(false))
+				.with(char.class, ctx -> SerializerDefs.ofChar(false))
+				.with(byte.class, ctx -> SerializerDefs.ofByte(false))
+				.with(short.class, ctx -> SerializerDefs.ofShort(false))
+				.with(int.class, ctx -> SerializerDefs.ofInt(false))
+				.with(long.class, ctx -> SerializerDefs.ofLong(false))
+				.with(float.class, ctx -> SerializerDefs.ofFloat(false))
+				.with(double.class, ctx -> SerializerDefs.ofDouble(false))
 
-				.with(Boolean.class, ctx -> new SerializerDef_Boolean(true))
-				.with(Character.class, ctx -> new SerializerDef_Char(true))
-				.with(Byte.class, ctx -> new SerializerDef_Byte(true))
-				.with(Short.class, ctx -> new SerializerDef_Short(true))
-				.with(Integer.class, ctx -> new SerializerDef_Int(true))
-				.with(Long.class, ctx -> new SerializerDef_Long(true))
-				.with(Float.class, ctx -> new SerializerDef_Float(true))
-				.with(Double.class, ctx -> new SerializerDef_Double(true));
+				.with(Boolean.class, ctx -> SerializerDefs.ofBoolean(true))
+				.with(Character.class, ctx -> SerializerDefs.ofChar(true))
+				.with(Byte.class, ctx -> SerializerDefs.ofByte(true))
+				.with(Short.class, ctx -> SerializerDefs.ofShort(true))
+				.with(Integer.class, ctx -> SerializerDefs.ofInt(true))
+				.with(Long.class, ctx -> SerializerDefs.ofLong(true))
+				.with(Float.class, ctx -> SerializerDefs.ofFloat(true))
+				.with(Double.class, ctx -> SerializerDefs.ofDouble(true));
 
 		for (Type type : new Type[]{
 				boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
 				Object[].class}) {
-			builder.with(type, ctx -> new SerializerDef_Array(ctx.scanTypeArgument(0), ctx.getRawType()));
+			builder.with(type, ctx -> SerializerDefs.ofArray(ctx.scanTypeArgument(0), ctx.getRawType()));
 		}
 
-		LinkedHashMap<Class<?>, SerializerDef> addressMap = new LinkedHashMap<>();
-		SerializerDef_Inet4Address serializerDefInet4Address = new SerializerDef_Inet4Address();
-		SerializerDef_Inet6Address serializerDefInet6Address = new SerializerDef_Inet6Address();
-		addressMap.put(Inet4Address.class, serializerDefInet4Address);
-		addressMap.put(Inet6Address.class, serializerDefInet6Address);
 		builder
-				.with(Inet4Address.class, ctx -> serializerDefInet4Address)
-				.with(Inet6Address.class, ctx -> serializerDefInet6Address)
-				.with(InetAddress.class, ctx -> new SerializerDef_Subclass(InetAddress.class, addressMap, 0));
+				.with(Inet4Address.class, ctx -> SerializerDefs.ofInet4Address())
+				.with(Inet6Address.class, ctx -> SerializerDefs.ofInet6Address())
+				.with(InetAddress.class, ctx -> SerializerDefs.ofInetAddress());
 
 		builder
 				.with(Enum.class, ctx -> {
@@ -145,31 +143,31 @@ public final class SerializerFactory {
 							return builder.scan(ctx);
 						}
 					}
-					//noinspection unchecked
-					return new SerializerDef_Enum((Class<? extends Enum<?>>) ctx.getRawType());
+					//noinspection unchecked,rawtypes
+					return SerializerDefs.ofEnum((Class<Enum>) ctx.getRawType());
 				})
 
 				.with(String.class, ctx -> {
 					SerializeStringFormat a = builder.getAnnotation(SerializeStringFormat.class, ctx.getAnnotations());
-					return new SerializerDef_String(a == null ? StringFormat.UTF8 : a.value());
+					return SerializerDefs.ofString(a == null ? StringFormat.UTF8 : a.value());
 				})
 
-				.with(Collection.class, ctx -> new SerializerDef_RegularCollection(ctx.scanTypeArgument(0), Collection.class, ArrayList.class))
-				.with(Queue.class, ctx -> new SerializerDef_RegularCollection(ctx.scanTypeArgument(0), Queue.class, ArrayDeque.class))
+				.with(Collection.class, ctx -> SerializerDefs.ofCollection(ctx.scanTypeArgument(0), Collection.class, ArrayList.class))
+				.with(Queue.class, ctx -> SerializerDefs.ofCollection(ctx.scanTypeArgument(0), Queue.class, ArrayDeque.class))
 
-				.with(List.class, ctx -> new SerializerDef_List(ctx.scanTypeArgument(0)))
-				.with(ArrayList.class, ctx -> new SerializerDef_RegularCollection(ctx.scanTypeArgument(0), ArrayList.class, ArrayList.class))
-				.with(LinkedList.class, ctx -> new SerializerDef_LinkedList(ctx.scanTypeArgument(0)))
+				.with(List.class, ctx -> SerializerDefs.ofList(ctx.scanTypeArgument(0)))
+				.with(ArrayList.class, ctx -> SerializerDefs.ofCollection(ctx.scanTypeArgument(0), ArrayList.class, ArrayList.class))
+				.with(LinkedList.class, ctx -> SerializerDefs.ofLinkedList(ctx.scanTypeArgument(0)))
 
-				.with(Map.class, ctx -> new SerializerDef_Map(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
-				.with(HashMap.class, ctx -> new SerializerDef_HashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), HashMap.class, HashMap.class))
-				.with(LinkedHashMap.class, ctx -> new SerializerDef_HashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), LinkedHashMap.class, LinkedHashMap.class))
-				.with(EnumMap.class, ctx -> new SerializerDef_EnumMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
+				.with(Map.class, ctx -> SerializerDefs.ofMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
+				.with(HashMap.class, ctx -> SerializerDefs.ofHashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), HashMap.class, HashMap.class))
+				.with(LinkedHashMap.class, ctx -> SerializerDefs.ofHashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), LinkedHashMap.class, LinkedHashMap.class))
+				.with(EnumMap.class, ctx -> SerializerDefs.ofEnumMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
 
-				.with(Set.class, ctx -> new SerializerDef_Set(ctx.scanTypeArgument(0)))
-				.with(HashSet.class, ctx -> new SerializerDef_HashSet(ctx.scanTypeArgument(0), HashSet.class, HashSet.class))
-				.with(LinkedHashSet.class, ctx -> new SerializerDef_HashSet(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
-				.with(EnumSet.class, ctx -> new SerializerDef_EnumSet(ctx.scanTypeArgument(0)))
+				.with(Set.class, ctx -> SerializerDefs.ofSet(ctx.scanTypeArgument(0)))
+				.with(HashSet.class, ctx -> SerializerDefs.ofHashSet(ctx.scanTypeArgument(0), HashSet.class, HashSet.class))
+				.with(LinkedHashSet.class, ctx -> SerializerDefs.ofHashSet(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
+				.with(EnumSet.class, ctx -> SerializerDefs.ofEnumSet(ctx.scanTypeArgument(0)))
 
 				.with(Object.class, builder::scan);
 
@@ -214,21 +212,21 @@ public final class SerializerFactory {
 							throw new RuntimeException(e);
 						}
 					} else {
-						LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
+						SubclassDef.Builder subclassBuilder = SubclassDef.builder(rawClass);
 						LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(List.of(annotationClass.subclasses()));
 						subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
 						subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
 						for (Class<?> subclass : subclassesSet) {
-							map.put(subclass, ctx.scan(subclass));
+							subclassBuilder.withSubclass(subclass, ctx.scan(subclass));
 						}
-						serializerDef = new SerializerDef_Subclass(rawClass, map, annotationClass.subclassesIdx());
+						serializerDef = subclassBuilder.build();
 					}
 				} else if (extraSubclassesMap.containsKey(rawClass)) {
-					LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
+					SubclassDef.Builder subclassBuilder = SubclassDef.builder(rawClass);
 					for (Class<?> subclass : extraSubclassesMap.get(rawClass)) {
-						map.put(subclass, ctx.scan(subclass));
+						subclassBuilder.withSubclass(subclass, ctx.scan(subclass));
 					}
-					serializerDef = new SerializerDef_Subclass(rawClass, map, 0);
+					serializerDef = subclassBuilder.build();
 				} else {
 					serializerDef = fn.apply(ctx);
 				}
@@ -244,7 +242,7 @@ public final class SerializerFactory {
 
 				if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
 					serializerDef = serializerDef instanceof SerializerDefWithNullable ?
-							((SerializerDefWithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDef_Nullable(serializerDef);
+							((SerializerDefWithNullable) serializerDef).ensureNullable(compatibilityLevel) : SerializerDefs.ofNullable(serializerDef);
 				}
 
 				return serializerDef;
@@ -775,56 +773,56 @@ public final class SerializerFactory {
 		if (rawClass.getEnclosingClass() != null && !Modifier.isStatic(rawClass.getModifiers()))
 			throw new IllegalArgumentException("Class should not be an inner class");
 
-		SerializerDef_Class serializer = SerializerDef_Class.create(rawClass);
+		ClassDef.Builder classSerializerBuilder = ClassDef.builder(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
 			if (!rawClass.isRecord()) {
 				throw new IllegalArgumentException("Non-record type '" + rawClass.getName() +
 						"' annotated with @SerializeRecord annotation");
 			}
-			scanRecord(ctx, serializer);
+			scanRecord(ctx, classSerializerBuilder);
 		} else if (!rawClass.isInterface()) {
-			scanClass(ctx, serializer);
+			scanClass(ctx, classSerializerBuilder);
 		} else {
-			scanInterface(ctx, serializer);
+			scanInterface(ctx, classSerializerBuilder);
 		}
-		return serializer;
+		return classSerializerBuilder.build();
 	}
 
-	private void scanClass(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
+	private void scanClass(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder) {
 		AnnotatedType annotatedClassType = ctx.getAnnotatedType();
 
 		Class<?> rawClassType = getRawType(annotatedClassType);
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(annotatedClassType)::get;
 
 		if (rawClassType.getSuperclass() != Object.class) {
-			scanClass(ctx.push(bind(rawClassType.getAnnotatedSuperclass(), bindings)), serializer);
+			scanClass(ctx.push(bind(rawClassType.getAnnotatedSuperclass(), bindings)), classSerializerBuilder);
 		}
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
-		scanConstructors(ctx, serializer);
-		scanStaticFactoryMethods(ctx, serializer);
-		scanSetters(ctx, serializer);
+		scanConstructors(ctx, classSerializerBuilder);
+		scanStaticFactoryMethods(ctx, classSerializerBuilder);
+		scanSetters(ctx, classSerializerBuilder);
 		scanFields(ctx, bindings, foundSerializers);
 		scanGetters(ctx, bindings, foundSerializers);
-		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
+		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
 		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
-			serializer.addMatchingSetters();
+			classSerializerBuilder.withMatchingSetters();
 		}
 	}
 
-	private void scanInterface(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
+	private void scanInterface(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 		scanGetters(ctx, bindings, foundSerializers);
-		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
+		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
 
 		for (AnnotatedType superInterface : ctx.getRawType().getAnnotatedInterfaces()) {
-			scanInterface(ctx.push(bind(superInterface, bindings)), serializer);
+			scanInterface(ctx.push(bind(superInterface, bindings)), classSerializerBuilder);
 		}
 	}
 
-	private void scanRecord(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
+	private void scanRecord(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 
@@ -847,11 +845,11 @@ public final class SerializerFactory {
 					bindings));
 			foundSerializers.add(foundSerializer);
 		}
-		serializer.setConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
-		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
+		classSerializerBuilder.withConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
+		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
 	}
 
-	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDef_Class serializer, List<FoundSerializer> foundSerializers) {
+	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder, List<FoundSerializer> foundSerializers) {
 		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
 			Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
 			String pathToClass = ctx.getRawType().getName().replace('.', '/') + ".class";
@@ -899,15 +897,15 @@ public final class SerializerFactory {
 		Set<Integer> orders = new HashSet<>();
 		for (FoundSerializer foundSerializer : foundSerializers) {
 			if (!orders.add(foundSerializer.order))
-				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, serializer));
+				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, classSerializerBuilder));
 		}
 
 		Collections.sort(foundSerializers);
 		for (FoundSerializer foundSerializer : foundSerializers) {
 			if (foundSerializer.methodOrField instanceof Method) {
-				serializer.addGetter((Method) foundSerializer.methodOrField, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
+				classSerializerBuilder.withGetter((Method) foundSerializer.methodOrField, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
 			} else if (foundSerializer.methodOrField instanceof Field) {
-				serializer.addField((Field) foundSerializer.methodOrField, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
+				classSerializerBuilder.withField((Field) foundSerializer.methodOrField, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
 			} else {
 				throw new AssertionError();
 			}
@@ -934,7 +932,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void scanSetters(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
+	private void scanSetters(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder) {
 		for (Method method : ctx.getRawType().getDeclaredMethods()) {
 			if (isStatic(method.getModifiers())) {
 				continue;
@@ -942,7 +940,7 @@ public final class SerializerFactory {
 			if (method.getParameterTypes().length != 0) {
 				List<String> fields = extractFields(method);
 				if (fields.size() == method.getParameterTypes().length) {
-					serializer.addSetter(method, fields);
+					classSerializerBuilder.withSetter(method, fields);
 				} else {
 					if (!fields.isEmpty())
 						throw new IllegalArgumentException("Fields should not be empty");
@@ -951,7 +949,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
+	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder) {
 		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
 			if (ctx.getRawType() != factory.getReturnType()) {
@@ -960,7 +958,7 @@ public final class SerializerFactory {
 			if (factory.getParameterTypes().length != 0) {
 				List<String> fields = extractFields(factory);
 				if (fields.size() == factory.getParameterTypes().length) {
-					serializer.setStaticFactoryMethod(factory, fields);
+					classSerializerBuilder.withStaticFactoryMethod(factory, fields);
 				} else {
 					if (!fields.isEmpty())
 						throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));
@@ -982,7 +980,7 @@ public final class SerializerFactory {
 		return fields;
 	}
 
-	private void scanConstructors(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
+	private void scanConstructors(Context<SerializerDef> ctx, ClassDef.Builder classSerializerBuilder) {
 		boolean found = false;
 		for (Constructor<?> constructor : ctx.getRawType().getDeclaredConstructors()) {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);
@@ -997,7 +995,7 @@ public final class SerializerFactory {
 				if (found)
 					throw new IllegalArgumentException(format("Duplicate @Deserialize constructor %s", constructor));
 				found = true;
-				serializer.setConstructor(constructor, fields);
+				classSerializerBuilder.withConstructor(constructor, fields);
 			} else {
 				if (!fields.isEmpty())
 					throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));

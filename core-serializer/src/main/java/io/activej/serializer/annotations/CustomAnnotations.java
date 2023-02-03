@@ -1,6 +1,6 @@
 package io.activej.serializer.annotations;
 
-import io.activej.serializer.SerializerDef;
+import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.StringFormat;
 
 import java.lang.annotation.Annotation;

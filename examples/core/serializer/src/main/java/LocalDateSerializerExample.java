@@ -2,6 +2,8 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.*;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.def.SerializerDef;
+import io.activej.serializer.def.SimpleSerializerDef;
 
 import java.time.LocalDate;
 import java.util.Arrays;
