@@ -4,7 +4,8 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
@@ -67,7 +68,7 @@ public class AggregationChunkStorageTest {
 				reactor,
 				ChunkIdJsonCodec.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc),
-				LZ4FrameFormat.create(),
+				FrameFormats.lz4(),
 				fs);
 
 		int nChunks = 100;

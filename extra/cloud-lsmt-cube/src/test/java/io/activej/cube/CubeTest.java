@@ -9,8 +9,9 @@ import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
@@ -67,7 +68,7 @@ public final class CubeTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+	private static final FrameFormat FRAME_FORMAT = FrameFormats.lz4();
 
 	private final DefiningClassLoader classLoader = create();
 	private final Executor executor = newSingleThreadExecutor();

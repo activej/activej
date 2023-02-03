@@ -1,4 +1,4 @@
-package io.activej.csp.process.frames;
+package io.activej.csp.process.frame;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
@@ -8,6 +8,8 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.process.frame.impl.LZ4;
+import io.activej.csp.process.frame.impl.LZ4Legacy;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -21,7 +23,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
-import static io.activej.csp.process.frames.FrameFormats.*;
+import static io.activej.csp.process.frame.FrameFormats.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -62,22 +64,22 @@ public class FrameFormatTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"LZ4 format", LZ4FrameFormat.create(), false, true},
-				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), false, true},
+				new Object[]{"LZ4 format", lz4(), false, true},
+				new Object[]{"Legacy LZ4 format", lz4Legacy(), false, true},
 
 				new Object[]{"Size prefixed", FrameFormats.sizePrefixed(), false, true},
 				new Object[]{"Identity", FrameFormats.identity(), true, true},
 
-				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(LZ4FrameFormat.create(), LZ4LegacyFrameFormat.create()), false, true},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(LZ4LegacyFrameFormat.create(), LZ4FrameFormat.create()), false, true},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(LZ4LegacyFrameFormat.create(), LZ4LegacyFrameFormat.create()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(LZ4FrameFormat.create(), LZ4FrameFormat.create()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(LZ4FrameFormat.create(), FrameFormats.identity()), true, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(lz4(), lz4Legacy()), false, true},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(lz4Legacy(), lz4()), false, true},
+				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(lz4Legacy(), lz4Legacy()), false, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(lz4(), lz4()), false, true},
+				new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(lz4(), FrameFormats.identity()), true, true},
 
 				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER), false, true},
 				new Object[]{"With random magic number: Identity", withMagicNumber(identity(), RANDOM_MAGIC_NUMBER), true, false},
-				new Object[]{"With random magic number: LZ4", withMagicNumber(LZ4FrameFormat.create(), RANDOM_MAGIC_NUMBER), false, true},
-				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(LZ4LegacyFrameFormat.create(), RANDOM_MAGIC_NUMBER), false, true}
+				new Object[]{"With random magic number: LZ4", withMagicNumber(lz4(), RANDOM_MAGIC_NUMBER), false, true},
+				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(lz4Legacy(), RANDOM_MAGIC_NUMBER), false, true}
 		);
 	}
 

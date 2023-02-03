@@ -19,10 +19,10 @@ package io.activej.launchers.initializers;
 import io.activej.common.annotation.StaticFactories;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormats;
-import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
+import io.activej.csp.process.frame.impl.LZ4Legacy;
 import io.activej.dns.DnsCache;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Contract;
@@ -78,14 +78,14 @@ public final class ConfigConverters {
 					case "identity" -> FrameFormats.identity();
 					case "size-prefixed" -> FrameFormats.sizePrefixed();
 					case "lz4" -> {
-						LZ4FrameFormat.Builder formatBuilder = LZ4FrameFormat.builder();
+						LZ4.Builder formatBuilder = LZ4.builder();
 						if (config.hasChild("compressionLevel")) {
 							formatBuilder.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
 						}
 						yield formatBuilder.build();
 					}
 					case "legacy-lz4" -> {
-						LZ4LegacyFrameFormat.Builder legacyFormatBuilder = LZ4LegacyFrameFormat.builder();
+						LZ4Legacy.Builder legacyFormatBuilder = LZ4Legacy.builder();
 						if (config.hasChild("compressionLevel")) {
 							legacyFormatBuilder.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
 						}

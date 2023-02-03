@@ -6,8 +6,9 @@ import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.ot.CubeDiff;
@@ -45,7 +46,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
+		FrameFormat frameFormat = FrameFormats.lz4();
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())

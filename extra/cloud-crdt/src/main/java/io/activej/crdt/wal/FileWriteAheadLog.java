@@ -27,9 +27,10 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.csp.process.frames.ChannelFrameEncoder;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.ChannelFrameEncoder;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -75,7 +76,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 	public static final String EXT_FINAL = ".wal";
 	public static final String EXT_CURRENT = ".current";
-	public static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+	public static final FrameFormat FRAME_FORMAT = FrameFormats.lz4();
 
 	private static final Duration SMOOTHING_WINDOW = ApplicationSettings.getDuration(FileWriteAheadLog.class, "smoothingWindow", Duration.ofMinutes(5));
 

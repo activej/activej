@@ -1,8 +1,8 @@
 package io.activej.datastream.processor;
 
 import io.activej.common.MemSize;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.FrameFormats;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;

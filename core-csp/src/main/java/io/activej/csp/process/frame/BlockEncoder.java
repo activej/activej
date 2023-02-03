@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.frames;
+package io.activej.csp.process.frame;
 
 import io.activej.bytebuf.ByteBuf;
 

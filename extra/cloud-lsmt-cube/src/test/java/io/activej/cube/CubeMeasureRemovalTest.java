@@ -6,8 +6,9 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -47,7 +48,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class CubeMeasureRemovalTest extends CubeTestBase {
-	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
+	private static final FrameFormat FRAME_FORMAT = FrameFormats.lz4();
 
 	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 	private IMultilog<LogItem> multilog;
@@ -67,7 +68,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		await(fileSystem.start());
 		multilog = Multilog.create(reactor,
 				fileSystem,
-				LZ4FrameFormat.create(),
+				FrameFormats.lz4(),
 				serializer,
 				NAME_PARTITION_REMAINDER_SEQ);
 	}
@@ -105,7 +106,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				fileSystem,
-				LZ4FrameFormat.create(),
+				FrameFormats.lz4(),
 				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 

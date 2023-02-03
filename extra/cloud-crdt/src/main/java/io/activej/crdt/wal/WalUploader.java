@@ -27,7 +27,7 @@ import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
-import io.activej.csp.process.frames.ChannelFrameDecoder;
+import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamReducer;

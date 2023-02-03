@@ -8,7 +8,7 @@ import io.activej.crdt.storage.local.FileSystemCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.csp.process.frames.ChannelFrameEncoder;
+import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.fs.FileSystem;

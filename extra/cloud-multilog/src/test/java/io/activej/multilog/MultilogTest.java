@@ -4,9 +4,10 @@ import io.activej.common.MemSize;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteRanger;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
+import io.activej.csp.process.frame.impl.LZ4Legacy;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -62,8 +63,8 @@ public class MultilogTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"LZ4 format", LZ4FrameFormat.create(), 8},
-				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), 21}
+				new Object[]{"LZ4 format", FrameFormats.lz4(), 8},
+				new Object[]{"Legacy LZ4 format", FrameFormats.lz4Legacy(), 21}
 		);
 	}
 

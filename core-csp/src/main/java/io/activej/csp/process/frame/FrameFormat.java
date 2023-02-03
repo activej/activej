@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.frames;
+package io.activej.csp.process.frame;
 
 /**
  * This interface specifies data encoding format which utilizes block structure.

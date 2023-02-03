@@ -9,8 +9,9 @@ import io.activej.aggregation.util.HyperLogLog;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
@@ -87,7 +88,7 @@ public class CustomFieldsTest {
 		Path path = temporaryFolder.newFolder().toPath();
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
+		FrameFormat frameFormat = FrameFormats.lz4();
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)

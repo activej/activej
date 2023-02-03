@@ -2,7 +2,8 @@ package io.activej.launchers.dataflow;
 
 import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamSchema;
@@ -89,7 +90,7 @@ public final class DataflowServerModule extends AbstractModule {
 			@Override
 			public <T> IStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted) {
 				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
-				return StreamSorterStorage.create(executor, streamSchema.createSerializer(serializerLocator), LZ4FrameFormat.create(), taskSortDir);
+				return StreamSorterStorage.create(executor, streamSchema.createSerializer(serializerLocator), FrameFormats.lz4(), taskSortDir);
 			}
 
 			@Override

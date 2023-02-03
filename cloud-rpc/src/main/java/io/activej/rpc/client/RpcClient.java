@@ -24,7 +24,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;

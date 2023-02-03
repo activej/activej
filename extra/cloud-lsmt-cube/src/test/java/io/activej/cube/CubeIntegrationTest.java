@@ -6,8 +6,9 @@ import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -54,7 +55,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""))
 				.build();
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
+		FrameFormat frameFormat = FrameFormats.lz4();
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())

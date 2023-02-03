@@ -9,9 +9,10 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelSupplier;
-import io.activej.csp.process.frames.ChannelFrameDecoder;
-import io.activej.csp.process.frames.ChannelFrameEncoder;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frame.ChannelFrameDecoder;
+import io.activej.csp.process.frame.ChannelFrameEncoder;
+import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.Cube;
 import io.activej.cube.CubeTestBase;
 import io.activej.cube.LogItem;
@@ -62,7 +63,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		FileSystem aggregationFS = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFS.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				LZ4FrameFormat.create(), aggregationFS);
+				FrameFormats.lz4(), aggregationFS);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
@@ -94,7 +95,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		await(logsFileSystem.start());
 		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance()
 				.create(CLASS_LOADER, LogItem.class);
-		multilog = Multilog.create(reactor, logsFileSystem, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = Multilog.create(reactor, logsFileSystem, FrameFormats.lz4(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
 				reactor,
@@ -124,7 +125,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		String logFile = first(files.keySet());
 		ByteBuf serializedData = await(logsFileSystem.download(logFile).then(supplier -> supplier
-				.transformWith(ChannelFrameDecoder.builder(LZ4FrameFormat.create())
+				.transformWith(ChannelFrameDecoder.builder(FrameFormats.lz4())
 						.withDecoderResets()
 						.build())
 				.toCollector(ByteBufs.collector())));
@@ -136,7 +137,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		byte[] malformed = new byte[bufSize - 49];
 		malformed[0] = 127; // exceeds message size
 		await(ChannelSupplier.of(serializedData, ByteBuf.wrapForReading(malformed))
-				.transformWith(ChannelFrameEncoder.builder(LZ4FrameFormat.create())
+				.transformWith(ChannelFrameEncoder.builder(FrameFormats.lz4())
 						.withEncoderResets()
 						.build())
 				.streamTo(logsFileSystem.upload(logFile)));

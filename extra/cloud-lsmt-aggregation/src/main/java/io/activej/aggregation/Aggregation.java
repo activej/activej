@@ -28,7 +28,7 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.csp.process.frames.FrameFormat;
+import io.activej.csp.process.frame.FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplier;

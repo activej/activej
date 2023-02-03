@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process.frames;
+package io.activej.csp.process.frame;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
@@ -30,7 +30,7 @@ import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
 
-import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
+import static io.activej.csp.process.frame.BlockDecoder.END_OF_STREAM;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
