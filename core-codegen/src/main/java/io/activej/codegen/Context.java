@@ -51,7 +51,7 @@ public final class Context {
 			.collect(toSet());
 
 	private final ClassLoader classLoader;
-	private final ClassBuilder<?> classBuilder;
+	private final ClassGenerator<?> classGenerator;
 	private final GeneratorAdapter g;
 	private final Type selfType;
 	private final Method method;
@@ -60,13 +60,13 @@ public final class Context {
 	private final Map<Object, LocalVariable> varLocals = new HashMap<>();
 	private final Map<String, Constant> constantMap;
 
-	public Context(ClassLoader classLoader, ClassBuilder<?> builder,
+	public Context(ClassLoader classLoader, ClassGenerator<?> classGenerator,
 			GeneratorAdapter g,
 			Type selfType,
 			Method method,
 			Map<String, Constant> constantMap) {
 		this.classLoader = classLoader;
-		this.classBuilder = builder;
+		this.classGenerator = classGenerator;
 		this.g = g;
 		this.selfType = selfType;
 		this.method = method;
@@ -90,27 +90,27 @@ public final class Context {
 	}
 
 	public Class<?> getSuperclass() {
-		return classBuilder.superclass;
+		return classGenerator.superclass;
 	}
 
 	public List<Class<?>> getInterfaces() {
-		return classBuilder.interfaces;
+		return classGenerator.interfaces;
 	}
 
 	public Map<String, Class<?>> getFields() {
-		return classBuilder.fields;
+		return classGenerator.fields;
 	}
 
 	public Map<Method, Expression> getMethods() {
-		return classBuilder.methods;
+		return classGenerator.methods;
 	}
 
 	public Set<Method> getAccessibleMethods() {
 		if (accessibleMethods != null) {
 			return accessibleMethods;
 		}
-		accessibleMethods = new HashSet<>(classBuilder.methods.keySet());
-		Class<?> superclass = classBuilder.superclass;
+		accessibleMethods = new HashSet<>(classGenerator.methods.keySet());
+		Class<?> superclass = classGenerator.superclass;
 		while (superclass != null) {
 			for (java.lang.reflect.Method method : superclass.getDeclaredMethods()) {
 				int modifiers = method.getModifiers();
@@ -124,7 +124,7 @@ public final class Context {
 	}
 
 	public Map<Method, Expression> getStaticMethods() {
-		return classBuilder.staticMethods;
+		return classGenerator.staticMethods;
 	}
 
 	public Method getMethod() {
@@ -184,7 +184,7 @@ public final class Context {
 
 	private SelfOrClass toSelfOrClass(Type type) {
 		return type.equals(getSelfType()) ?
-				new SelfOrClass(classBuilder.superclass, classBuilder.interfaces) :
+				new SelfOrClass(classGenerator.superclass, classGenerator.interfaces) :
 				new SelfOrClass(toJavaType(type), Collections.emptyList());
 	}
 
@@ -411,18 +411,18 @@ public final class Context {
 		Type[] argumentTypes = getArgumentTypes(arguments);
 		SelfOrClass[] argumentClasses = Stream.of(argumentTypes).map(this::toSelfOrClass).toArray(SelfOrClass[]::new);
 		Method foundMethod = findMethod(
-				Arrays.stream(classBuilder.superclass.getDeclaredConstructors()).map(Method::getMethod),
+				Arrays.stream(classGenerator.superclass.getDeclaredConstructors()).map(Method::getMethod),
 				"<init>",
 				argumentClasses);
 		if (foundMethod == null) {
-			throw new IllegalArgumentException("Parent constructor not found: " + classBuilder.superclass.getSimpleName() +
+			throw new IllegalArgumentException("Parent constructor not found: " + classGenerator.superclass.getSimpleName() +
 					" with arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
-		g.invokeConstructor(getType(classBuilder.superclass), foundMethod);
+		g.invokeConstructor(getType(classGenerator.superclass), foundMethod);
 
-		for (String field : classBuilder.fieldExpressions.keySet()) {
-			if (classBuilder.fieldsStatic.contains(field)) continue;
-			Expression expression = classBuilder.fieldExpressions.get(field);
+		for (String field : classGenerator.fieldExpressions.keySet()) {
+			if (classGenerator.fieldsStatic.contains(field)) continue;
+			Expression expression = classGenerator.fieldExpressions.get(field);
 			set(property(self(), field), expression).load(this);
 		}
 
@@ -442,12 +442,12 @@ public final class Context {
 				methodName,
 				argumentClasses);
 		if (foundMethod == null) {
-			throw new IllegalArgumentException("Parent method of " + classBuilder.superclass.getSimpleName() +
+			throw new IllegalArgumentException("Parent method of " + classGenerator.superclass.getSimpleName() +
 					" with name'" + methodName +
 					"' and arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")) +
 					" not found");
 		}
-		String typeName = getType(classBuilder.superclass).getInternalName();
+		String typeName = getType(classGenerator.superclass).getInternalName();
 		g.visitMethodInsn(Opcodes.INVOKESPECIAL, typeName, methodName, method.getDescriptor(), false);
 		return foundMethod.getReturnType();
 	}

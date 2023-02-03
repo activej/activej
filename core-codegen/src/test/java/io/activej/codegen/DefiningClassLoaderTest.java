@@ -58,8 +58,8 @@ public class DefiningClassLoaderTest {
 	public void ensureSameClassName() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 		String testString = "test string";
 		String className = "io.activej.codegen.TestSupplier";
-		Class<Supplier> supplier1Class = classLoader.ensureClass(className, () ->
-				ClassBuilder.builder(Supplier.class)
+		Class<Supplier> supplier1Class = classLoader.ensureClass(className,
+				() -> ClassGenerator.builder(Supplier.class)
 						.withMethod("get", value(testString))
 						.build());
 
@@ -77,7 +77,7 @@ public class DefiningClassLoaderTest {
 		String className1 = "io.activej.codegen.TestSupplier";
 		String className2 = "MySupplier";
 
-		Supplier<ClassBuilder<Supplier>> cbSupplier = () -> ClassBuilder.builder(Supplier.class)
+		Supplier<ClassGenerator<Supplier>> cbSupplier = () -> ClassGenerator.builder(Supplier.class)
 				.withMethod("get", value(testString))
 				.build();
 
@@ -98,9 +98,10 @@ public class DefiningClassLoaderTest {
 		String className = "";
 
 		try {
-			classLoader.ensureClass(className, () -> ClassBuilder.builder(Supplier.class)
-					.withMethod("get", value(testString))
-					.build());
+			classLoader.ensureClass(className,
+					() -> ClassGenerator.builder(Supplier.class)
+							.withMethod("get", value(testString))
+							.build());
 			fail();
 		} catch (ClassFormatError ignored) {
 		}
@@ -112,9 +113,10 @@ public class DefiningClassLoaderTest {
 		String className = "/";
 
 		try {
-			classLoader.ensureClass(className, () -> ClassBuilder.builder(Supplier.class)
-					.withMethod("get", value(testString))
-					.build());
+			classLoader.ensureClass(className,
+					() -> ClassGenerator.builder(Supplier.class)
+							.withMethod("get", value(testString))
+							.build());
 			fail();
 		} catch (NoClassDefFoundError e) {
 			assertTrue(e.getMessage().startsWith("IllegalName"));
@@ -134,7 +136,7 @@ public class DefiningClassLoaderTest {
 		assertEquals(MySupplier.class, cls);
 	}
 
-	private Supplier<ClassBuilder<Supplier>> failingSupplier() {
+	private Supplier<ClassGenerator<Supplier>> failingSupplier() {
 		return () -> {
 			throw new AssertionError();
 		};

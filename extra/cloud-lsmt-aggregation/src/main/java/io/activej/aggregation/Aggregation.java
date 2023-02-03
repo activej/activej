@@ -24,7 +24,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.util.Utils;
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
@@ -34,9 +34,9 @@ import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorage;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -551,7 +551,7 @@ public final class Aggregation extends AbstractReactive
 			AggregationPredicate where, DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, chunkRecordClass, where),
-				() -> ClassBuilder.builder(Predicate.class)
+				() -> ClassGenerator.builder(Predicate.class)
 						.withMethod("test", boolean.class, List.of(Object.class),
 								where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
 						.build()

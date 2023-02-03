@@ -2,7 +2,7 @@ package io.activej.cube.http;
 
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.measure.Measures;
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.measure.ComputedMeasure;
 import io.activej.cube.measure.ComputedMeasures;
@@ -48,7 +48,7 @@ public class ComputedMeasuresTest {
 				ComputedMeasures.measure("c")
 		);
 
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassGenerator.builder(TestQueryResultPlaceholder.class)
 				.withField("a", long.class)
 				.withField("b", long.class)
 				.withField("c", double.class)
@@ -60,7 +60,7 @@ public class ComputedMeasuresTest {
 						set(property(self(), "c"), value(5))))
 				.withMethod("getResult", property(self(), "d"))
 				.build()
-				.defineClassAndCreateInstance(CLASS_LOADER);
+				.generateClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
 
@@ -81,7 +81,7 @@ public class ComputedMeasuresTest {
 				ComputedMeasures.measure("c")
 		);
 
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassGenerator.builder(TestQueryResultPlaceholder.class)
 				.withField("a", long.class)
 				.withField("b", long.class)
 				.withField("c", double.class)
@@ -93,7 +93,7 @@ public class ComputedMeasuresTest {
 						set(property(self(), "c"), value(0))))
 				.withMethod("getResult", property(self(), "d"))
 				.build()
-				.defineClassAndCreateInstance(CLASS_LOADER);
+				.generateClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
 
@@ -109,7 +109,7 @@ public class ComputedMeasuresTest {
 				)
 		);
 
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassGenerator.builder(TestQueryResultPlaceholder.class)
 				.withField("a", double.class)
 				.withField("b", double.class)
 				.withField("c", double.class)
@@ -119,7 +119,7 @@ public class ComputedMeasuresTest {
 						set(property(self(), "b"), value(7.0))))
 				.withMethod("getResult", property(self(), "c"))
 				.build()
-				.defineClassAndCreateInstance(CLASS_LOADER);
+				.generateClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
 
@@ -135,7 +135,7 @@ public class ComputedMeasuresTest {
 				)
 		);
 
-		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
+		TestQueryResultPlaceholder resultPlaceholder = ClassGenerator.builder(TestQueryResultPlaceholder.class)
 				.withField("a", double.class)
 				.withField("b", double.class)
 				.withField("c", double.class)
@@ -145,7 +145,7 @@ public class ComputedMeasuresTest {
 						set(property(self(), "b"), value(1E-10))))
 				.withMethod("getResult", property(self(), "c"))
 				.build()
-				.defineClassAndCreateInstance(CLASS_LOADER);
+				.generateClassAndCreateInstance(CLASS_LOADER);
 		resultPlaceholder.init();
 		resultPlaceholder.computeMeasures();
 

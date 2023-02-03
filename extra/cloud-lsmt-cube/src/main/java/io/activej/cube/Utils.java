@@ -23,7 +23,7 @@ import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
@@ -51,14 +51,16 @@ public final class Utils {
 				ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
 				() -> {
 					//noinspection unchecked
-					ClassBuilder<R>.Builder builder = ClassBuilder.builder((Class<R>) Object.class);
-					for (String attribute : attributes) {
-						builder.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
-					}
-					for (String measure : measures) {
-						builder.withField(measure, cube.getMeasureInternalType(measure));
-					}
-					return builder.build();
+					return ClassGenerator.builder((Class<R>) Object.class)
+							.initialize(b -> {
+								for (String attribute : attributes) {
+									b.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
+								}
+								for (String measure : measures) {
+									b.withField(measure, cube.getMeasureInternalType(measure));
+								}
+							})
+							.build();
 				}
 		);
 	}
@@ -90,7 +92,7 @@ public final class Utils {
 
 		KeyFunction keyFunction = classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(KeyFunction.class, recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray)),
-				() -> ClassBuilder.builder(KeyFunction.class)
+				() -> ClassGenerator.builder(KeyFunction.class)
 						.withMethod("extractKey",
 								let(
 										arrayNew(Object[].class, value(recordDimensions.size())),
@@ -109,7 +111,7 @@ public final class Utils {
 
 		AttributesFunction attributesFunction = classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(AttributesFunction.class, recordClass, new HashSet<>(recordAttributes)),
-				() -> ClassBuilder.builder(AttributesFunction.class)
+				() -> ClassGenerator.builder(AttributesFunction.class)
 						.withMethod("applyAttributes",
 								sequence(seq -> {
 									List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());

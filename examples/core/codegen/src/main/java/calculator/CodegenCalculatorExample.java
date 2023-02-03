@@ -1,6 +1,6 @@
 package calculator;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
@@ -57,10 +57,10 @@ public final class CodegenCalculatorExample {
 
 	//[START REGION_2]
 	public static Class<DoubleUnaryOperator> compile(String expression) {
-		return ClassBuilder.builder(DoubleUnaryOperator.class)
+		return ClassGenerator.builder(DoubleUnaryOperator.class)
 				.withMethod("applyAsDouble", PARSER.parse(expression))
 				.build()
-				.defineClass(CLASS_LOADER);
+				.generateClass(CLASS_LOADER);
 	}
 	//[END REGION_2]
 

@@ -1,4 +1,4 @@
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -8,11 +8,11 @@ public final class CodegenExpressionsExample {
 
 	public static void main(String[] args) throws ReflectiveOperationException {
 		//[START REGION_1]
-		Class<Greeter> greeterClass = ClassBuilder.builder(Greeter.class)
+		Class<Greeter> greeterClass = ClassGenerator.builder(Greeter.class)
 				.withMethod("sayHello",
 						call(staticField(System.class, "out"), "println", value("Hello world")))
 				.build()
-				.defineClass(CLASS_LOADER);
+				.generateClass(CLASS_LOADER);
 		//[END REGION_1]
 
 		//[START REGION_2]

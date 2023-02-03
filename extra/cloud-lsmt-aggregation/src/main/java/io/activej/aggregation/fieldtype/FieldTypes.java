@@ -88,16 +88,16 @@ public final class FieldTypes {
 	}
 
 	private static SerializerDef serializerDefHyperLogLog() {
-		ClassDef.Builder classSerializerBuilder = ClassDef.builder(HyperLogLog.class);
 		try {
-			classSerializerBuilder.withGetter(HyperLogLog.class.getMethod("getRegisters"),
-					SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1);
-			classSerializerBuilder.withConstructor(HyperLogLog.class.getConstructor(byte[].class),
-					List.of("registers"));
-		} catch (NoSuchMethodException ignored) {
-			throw new RuntimeException("Unable to construct SerializerDef for HyperLogLog");
+			return ClassDef.builder(HyperLogLog.class)
+					.withGetter(HyperLogLog.class.getMethod("getRegisters"),
+							SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1)
+					.withConstructor(HyperLogLog.class.getConstructor(byte[].class),
+							List.of("registers"))
+					.build();
+		} catch (NoSuchMethodException e) {
+			throw new AssertionError(e);
 		}
-		return classSerializerBuilder.build();
 	}
 
 	public static <T> FieldType<Set<T>> ofSet(FieldType<T> fieldType) {

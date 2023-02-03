@@ -16,7 +16,7 @@
 
 package io.activej.test.rules;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 import static org.junit.Assert.assertEquals;
 
 /**
- * {@link TestRule} that fails if not all static constants from the {@link ClassBuilder}'s STATIC_CONSTANTS map were removed properly.
+ * {@link TestRule} that fails if not all static constants from the {@link ClassGenerator}'s STATIC_CONSTANTS map were removed properly.
  * <p>
  * Annotation {@link IgnoreLeaks} can be put on a test that wants this rule disabled.
  */
@@ -41,9 +41,9 @@ public final class ClassBuilderConstantsRule implements TestRule {
 			return base;
 		}
 		return new LambdaStatement(() -> {
-			ClassBuilder.clearStaticConstants();
+			ClassGenerator.clearStaticConstants();
 			base.evaluate();
-			assertEquals("Some static constants have not been cleaned up", 0, ClassBuilder.getStaticConstantsSize());
+			assertEquals("Some static constants have not been cleaned up", 0, ClassGenerator.getStaticConstantsSize());
 		});
 	}
 

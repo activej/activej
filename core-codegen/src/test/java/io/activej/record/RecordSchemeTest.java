@@ -1,6 +1,6 @@
 package io.activej.record;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.types.Types;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +15,7 @@ public class RecordSchemeTest {
 
 	@Before
 	public void setUp() {
-		ClassBuilder.clearStaticConstants();
+		ClassGenerator.clearStaticConstants();
 	}
 
 	@Test

@@ -1,6 +1,6 @@
 package io.activej.record;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
@@ -72,7 +72,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			Map<String, UnaryOperator<Expression>> mapping) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordProjection.class, classKey),
-				() -> ClassBuilder.builder(RecordProjection.class)
+				() -> ClassGenerator.builder(RecordProjection.class)
 						.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
 								superConstructor(arg(0), arg(1)))
 						.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {

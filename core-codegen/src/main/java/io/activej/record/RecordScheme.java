@@ -16,7 +16,7 @@
 
 package io.activej.record;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
@@ -77,7 +77,7 @@ public final class RecordScheme {
 				.collect(Collectors.toList());
 		this.recordClass = builder.classLoader.ensureClass(
 				ClassKey.of(Record.class, asList(builder.fields), asList(builder.types), hashCodeEqualsClassFields),
-				() -> ClassBuilder.builder(Record.class)
+				() -> ClassGenerator.builder(Record.class)
 						.withConstructor(List.of(RecordScheme.class),
 								superConstructor(arg(0)))
 						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
@@ -100,14 +100,14 @@ public final class RecordScheme {
 			Variable property = builder.property(cast(arg(0), recordClass), field);
 			RecordGetter<?> recordGetter = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordGetter.class, recordClass, field),
-					() -> ClassBuilder.builder(RecordGetter.class)
+					() -> ClassGenerator.builder(RecordGetter.class)
 							.withMethod("get", property)
-							.initialize(cb -> {
+							.initialize(b -> {
 								if (isImplicitType(fieldType)) {
-									cb.withMethod("getInt", property);
-									cb.withMethod("getLong", property);
-									cb.withMethod("getFloat", property);
-									cb.withMethod("getDouble", property);
+									b.withMethod("getInt", property);
+									b.withMethod("getLong", property);
+									b.withMethod("getFloat", property);
+									b.withMethod("getDouble", property);
 								}
 							})
 							.withMethod("getScheme", value(this))
@@ -120,14 +120,14 @@ public final class RecordScheme {
 			Expression set = Expressions.set(property, arg(1));
 			RecordSetter<?> recordSetter = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordSetter.class, recordClass, field),
-					() -> ClassBuilder.builder(RecordSetter.class)
+					() -> ClassGenerator.builder(RecordSetter.class)
 							.withMethod("set", set)
-							.initialize(cb -> {
+							.initialize(b -> {
 								if (isImplicitType(fieldType)) {
-									cb.withMethod("setInt", set);
-									cb.withMethod("setLong", set);
-									cb.withMethod("setFloat", set);
-									cb.withMethod("setDouble", set);
+									b.withMethod("setInt", set);
+									b.withMethod("setLong", set);
+									b.withMethod("setFloat", set);
+									b.withMethod("setDouble", set);
 								}
 							})
 							.withMethod("getScheme", value(this))
@@ -151,14 +151,14 @@ public final class RecordScheme {
 			//noinspection unchecked
 			comparator = builder.classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Comparator.class, recordClass, builder.comparatorFields),
-					() -> ClassBuilder.builder(Comparator.class)
+					() -> ClassGenerator.builder(Comparator.class)
 							.withMethod("compare", comparatorImpl(recordClass, comparatorClassFields))
 							.build());
 		}
 
 		this.factory = builder.classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordFactory.class, recordClass),
-				() -> ClassBuilder.builder(RecordFactory.class)
+				() -> ClassGenerator.builder(RecordFactory.class)
 						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
 						.withMethod("create", Record.class, List.of(),
 								constructor(recordClass, staticField("SCHEME")))

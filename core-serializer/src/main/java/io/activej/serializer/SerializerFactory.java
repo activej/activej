@@ -16,7 +16,7 @@
 
 package io.activej.serializer;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
@@ -25,7 +25,6 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.def.*;
 import io.activej.serializer.def.impl.ClassDef;
-import io.activej.serializer.def.impl.NullableDef;
 import io.activej.serializer.def.impl.SubclassDef;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
@@ -507,7 +506,7 @@ public final class SerializerFactory {
 	 *
 	 * @see #create(AnnotatedType)
 	 */
-	public <T> ClassBuilder<BinarySerializer<T>> create(Type type) {
+	public <T> ClassGenerator<BinarySerializer<T>> create(Type type) {
 		return create(annotatedTypeOf(type));
 	}
 
@@ -525,7 +524,7 @@ public final class SerializerFactory {
 	 *
 	 * @see #create(AnnotatedType)
 	 */
-	public <T> ClassBuilder<BinarySerializer<T>> create(Class<T> type) {
+	public <T> ClassGenerator<BinarySerializer<T>> create(Class<T> type) {
 		return create(annotatedTypeOf(type));
 	}
 
@@ -543,7 +542,7 @@ public final class SerializerFactory {
 	 *
 	 * @see #create(AnnotatedType)
 	 */
-	public <T> ClassBuilder<BinarySerializer<T>> create(TypeT<T> typeT) {
+	public <T> ClassGenerator<BinarySerializer<T>> create(TypeT<T> typeT) {
 		return create(typeT.getAnnotatedType());
 	}
 
@@ -556,8 +555,8 @@ public final class SerializerFactory {
 	 */
 	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, AnnotatedType type) {
 		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
-		ClassBuilder<BinarySerializer<T>> classBuilder = toClassBuilder(serializer);
-		return classBuilder.defineClassAndCreateInstance(classLoader);
+		ClassGenerator<BinarySerializer<T>> classGenerator = toClassGenerator(serializer);
+		return classGenerator.generateClassAndCreateInstance(classLoader);
 	}
 
 	/**
@@ -567,9 +566,9 @@ public final class SerializerFactory {
 	 * @param type a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> ClassBuilder<BinarySerializer<T>> create(AnnotatedType type) {
+	public <T> ClassGenerator<BinarySerializer<T>> create(AnnotatedType type) {
 		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
-		return toClassBuilder(serializer);
+		return toClassGenerator(serializer);
 	}
 
 	/**
@@ -580,20 +579,20 @@ public final class SerializerFactory {
 	 */
 	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, SerializerDef serializer) {
 		//noinspection unchecked
-		return (BinarySerializer<T>) toClassBuilder(serializer).defineClassAndCreateInstance(classLoader);
+		return (BinarySerializer<T>) toClassGenerator(serializer).generateClassAndCreateInstance(classLoader);
 	}
 
 	/**
-	 * Converts a {@link SerializerDef} into a {@link ClassBuilder} of {@link BinarySerializer}
+	 * Converts a {@link SerializerDef} into a {@link ClassGenerator} of {@link BinarySerializer}
 	 *
 	 * @param serializer a serializer definition
 	 * @param <T>        a type of data to be serialized by a {@link BinarySerializer}
-	 * @return a {@link ClassBuilder} of {@link BinarySerializer}
+	 * @return a {@link ClassGenerator} of {@link BinarySerializer}
 	 */
-	public <T> ClassBuilder<BinarySerializer<T>> toClassBuilder(SerializerDef serializer) {
+	public <T> ClassGenerator<BinarySerializer<T>> toClassGenerator(SerializerDef serializer) {
 		//noinspection unchecked
-		ClassBuilder<BinarySerializer<T>>.Builder classBuilder =
-				ClassBuilder.builder((Class<BinarySerializer<T>>) implementationClass, BinarySerializer.class);
+		ClassGenerator<BinarySerializer<T>>.Builder classGenerator =
+				ClassGenerator.builder((Class<BinarySerializer<T>>) implementationClass, BinarySerializer.class);
 
 		Set<Integer> collectedVersions = new HashSet<>();
 		Set<SerializerDef> visited = newSetFromMap(new IdentityHashMap<>());
@@ -617,21 +616,21 @@ public final class SerializerFactory {
 				.sorted()
 				.collect(toList());
 
-		defineEncoders(classBuilder, serializer, encodeVersion);
+		defineEncoders(classGenerator, serializer, encodeVersion);
 
-		defineDecoders(classBuilder, serializer, decodeVersions);
+		defineDecoders(classGenerator, serializer, decodeVersions);
 
-		return classBuilder.build();
+		return classGenerator.build();
 	}
 
-	private void defineEncoders(ClassBuilder<?>.Builder classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion) {
-		StaticEncoders staticEncoders = staticEncoders(classBuilder, encodeVersion != null ? encodeVersion : 0, compatibilityLevel);
+	private void defineEncoders(ClassGenerator<?>.Builder classGenerator, SerializerDef serializer, @Nullable Integer encodeVersion) {
+		StaticEncoders staticEncoders = staticEncoders(classGenerator, encodeVersion != null ? encodeVersion : 0, compatibilityLevel);
 
-		classBuilder.withMethod("encode", int.class, List.of(byte[].class, int.class, Object.class),
+		classGenerator.withMethod("encode", int.class, List.of(byte[].class, int.class, Object.class),
 				let(cast(arg(2), serializer.getEncodeType()), data ->
 						encoderImpl(serializer, encodeVersion, staticEncoders, arg(0), arg(1), data)));
 
-		classBuilder.withMethod("encode", void.class, List.of(BinaryOutput.class, Object.class),
+		classGenerator.withMethod("encode", void.class, List.of(BinaryOutput.class, Object.class),
 				let(call(arg(0), "array"), buf ->
 						let(call(arg(0), "pos"), pos ->
 								let(cast(arg(1), serializer.getEncodeType()), data ->
@@ -654,18 +653,18 @@ public final class SerializerFactory {
 				pos);
 	}
 
-	private void defineDecoders(ClassBuilder<?>.Builder classBuilder, SerializerDef serializer, List<Integer> decodeVersions) {
+	private void defineDecoders(ClassGenerator<?>.Builder classGenerator, SerializerDef serializer, List<Integer> decodeVersions) {
 
 		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
-		StaticDecoders latestStaticDecoders = staticDecoders(classBuilder, latestVersion == null ? 0 : latestVersion);
-		classBuilder.withMethod("decode", Object.class, List.of(BinaryInput.class),
+		StaticDecoders latestStaticDecoders = staticDecoders(classGenerator, latestVersion == null ? 0 : latestVersion);
+		classGenerator.withMethod("decode", Object.class, List.of(BinaryInput.class),
 				decodeImpl(serializer, latestVersion, latestStaticDecoders, arg(0)));
 
-		classBuilder.withMethod("decode", Object.class, List.of(byte[].class, int.class),
+		classGenerator.withMethod("decode", Object.class, List.of(byte[].class, int.class),
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
 						decodeImpl(serializer, latestVersion, latestStaticDecoders, in)));
 
-		classBuilder.withMethod("decodeEarlierVersions",
+		classGenerator.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
 				List.of(BinaryInput.class, byte.class),
 				get(() -> {
@@ -686,9 +685,9 @@ public final class SerializerFactory {
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
 			int version = decodeVersions.get(i);
-			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), List.of(BinaryInput.class),
+			classGenerator.withMethod("decodeVersion" + version, serializer.getDecodeType(), List.of(BinaryInput.class),
 					sequence(serializer
-							.defineDecoder(staticDecoders(classBuilder, version), version, compatibilityLevel)
+							.defineDecoder(staticDecoders(classGenerator, version), version, compatibilityLevel)
 							.decode(arg(0))));
 		}
 	}
@@ -712,7 +711,7 @@ public final class SerializerFactory {
 								call(self(), "decodeEarlierVersions", in, version)));
 	}
 
-	private static StaticEncoders staticEncoders(ClassBuilder<?>.Builder classBuilder, int version, CompatibilityLevel compatibilityLevel) {
+	private static StaticEncoders staticEncoders(ClassGenerator<?>.Builder classGenerator, int version, CompatibilityLevel compatibilityLevel) {
 		return new StaticEncoders() {
 			final Map<List<?>, String> defined = new HashMap<>();
 
@@ -728,7 +727,7 @@ public final class SerializerFactory {
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, int.class, List.of(byte[].class, int.class, serializerDef.getEncodeType()), sequence(
+					classGenerator.withStaticMethod(methodName, int.class, List.of(byte[].class, int.class, serializerDef.getEncodeType()), sequence(
 							serializerDef.encode(this, BUF, POS, VALUE, version, compatibilityLevel),
 							POS));
 				}
@@ -738,7 +737,7 @@ public final class SerializerFactory {
 		};
 	}
 
-	private StaticDecoders staticDecoders(ClassBuilder<?>.Builder classBuilder, int version) {
+	private StaticDecoders staticDecoders(ClassGenerator<?>.Builder classGenerator, int version) {
 		return new StaticDecoders() {
 			final Map<List<?>, String> defined = new HashMap<>();
 
@@ -755,7 +754,7 @@ public final class SerializerFactory {
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, serializerDef.getDecodeType(), List.of(BinaryInput.class),
+					classGenerator.withStaticMethod(methodName, serializerDef.getDecodeType(), List.of(BinaryInput.class),
 							serializerDef.decode(this, IN, version, compatibilityLevel));
 				}
 				String finalMethodName = methodName;

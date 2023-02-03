@@ -1,6 +1,6 @@
 package io.activej.serializer;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
@@ -40,7 +40,7 @@ public class TableSwitchBenchmark {
 		String test(Object k);
 	}
 
-	private static final Test test1 = ClassBuilder.builder(Test.class)
+	private static final Test test1 = ClassGenerator.builder(Test.class)
 			.withMethod("test",
 					get(() -> {
 						Expression result = value("---");
@@ -50,9 +50,9 @@ public class TableSwitchBenchmark {
 						return result;
 					}))
 			.build()
-			.defineClassAndCreateInstance(DefiningClassLoader.create());
+			.generateClassAndCreateInstance(DefiningClassLoader.create());
 
-	private static final Test test2 = ClassBuilder.builder(Test.class)
+	private static final Test test2 = ClassGenerator.builder(Test.class)
 			.withMethod("test", String.class, List.of(int.class),
 					get(() -> {
 						Map<Integer, Expression> cases = new HashMap<>();
@@ -63,9 +63,9 @@ public class TableSwitchBenchmark {
 						return Expressions.tableSwitch(arg(0), cases, value("---"));
 					}))
 			.build()
-			.defineClassAndCreateInstance(DefiningClassLoader.create());
+			.generateClassAndCreateInstance(DefiningClassLoader.create());
 
-	private static final TestS testS1 = ClassBuilder.builder(TestS.class)
+	private static final TestS testS1 = ClassGenerator.builder(TestS.class)
 			.withMethod("test",
 					let(arg(0), arg -> {
 						Expression result = value("---");
@@ -75,9 +75,9 @@ public class TableSwitchBenchmark {
 						return result;
 					}))
 			.build()
-			.defineClassAndCreateInstance(DefiningClassLoader.create());
+			.generateClassAndCreateInstance(DefiningClassLoader.create());
 
-	private static final TestS testS2 = ClassBuilder.builder(TestS.class)
+	private static final TestS testS2 = ClassGenerator.builder(TestS.class)
 			.withMethod("test",
 					let(staticCall(System.class, "identityHashCode", arg(0)), key -> {
 						Map<Integer, Expression> cases = new HashMap<>();
@@ -87,7 +87,7 @@ public class TableSwitchBenchmark {
 						return Expressions.tableSwitch(key, cases, value("---"));
 					}))
 			.build()
-			.defineClassAndCreateInstance(DefiningClassLoader.create());
+			.generateClassAndCreateInstance(DefiningClassLoader.create());
 
 	@Benchmark
 	public void measureTableSwitch1(Blackhole blackhole) {

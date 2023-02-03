@@ -51,11 +51,11 @@ import static org.objectweb.asm.commons.Method.getMethod;
  * @param <T> type of class to be generated
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public final class ClassBuilder<T> {
+public final class ClassGenerator<T> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public static final String CLASS_BUILDER_MARKER = "$GENERATED";
-	public static final String PACKAGE_PREFIX = getStringSetting(ClassBuilder.class, "packagePrefix", "io.activej.codegen.");
+	public static final String GENERATED_MARKER = "$GENERATED";
+	public static final String PACKAGE_PREFIX = getStringSetting(ClassGenerator.class, "packagePrefix", "io.activej.codegen.");
 
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 	private static final ConcurrentHashMap<Integer, Object> STATIC_CONSTANTS = new ConcurrentHashMap<>();
@@ -78,7 +78,7 @@ public final class ClassBuilder<T> {
 	private final Map<Method, Expression> constructors = new LinkedHashMap<>();
 	private final List<Expression> staticInitializers = new ArrayList<>();
 
-	private ClassBuilder(Class<?> superclass, List<Class<?>> interfaces, String className) {
+	private ClassGenerator(Class<?> superclass, List<Class<?>> interfaces, String className) {
 		this.superclass = superclass;
 		this.interfaces = interfaces;
 		this.autoClassName = PACKAGE_PREFIX + className;
@@ -90,16 +90,16 @@ public final class ClassBuilder<T> {
 	 * @param implementation type of dynamic class
 	 * @param interfaces     additional interfaces for the class to implement
 	 */
-	public static <T> ClassBuilder<T>.Builder builder(Class<?> implementation, List<Class<?>> interfaces) {
+	public static <T> ClassGenerator<T>.Builder builder(Class<?> implementation, List<Class<?>> interfaces) {
 		if (!interfaces.stream().allMatch(Class::isInterface))
 			throw new IllegalArgumentException();
 		if (implementation.isInterface()) {
-			return new ClassBuilder<T>(
+			return new ClassGenerator<T>(
 					Object.class,
 					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()),
 					implementation.getName()).new Builder();
 		} else {
-			return new ClassBuilder<T>(
+			return new ClassGenerator<T>(
 					implementation,
 					interfaces,
 					implementation.getName()).new Builder();
@@ -112,13 +112,13 @@ public final class ClassBuilder<T> {
 	 * @param implementation type of dynamic class
 	 * @param interfaces     additional interfaces for the class to implement
 	 */
-	public static <T> ClassBuilder<T>.Builder builder(Class<T> implementation, Class<?>... interfaces) {
+	public static <T> ClassGenerator<T>.Builder builder(Class<T> implementation, Class<?>... interfaces) {
 		return builder(implementation, List.of(interfaces));
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ClassBuilder<T>> {
+	public final class Builder extends AbstractBuilder<Builder, ClassGenerator<T>> {
 		private Builder() {
-			withStaticField(CLASS_BUILDER_MARKER, Void.class);
+			withStaticField(GENERATED_MARKER, Void.class);
 		}
 
 		/**
@@ -128,7 +128,7 @@ public final class ClassBuilder<T> {
 		 */
 		public Builder withClassName(String name) {
 			checkNotBuilt(this);
-			ClassBuilder.this.className = name;
+			ClassGenerator.this.className = name;
 			return this;
 		}
 
@@ -327,8 +327,8 @@ public final class ClassBuilder<T> {
 		}
 
 		@Override
-		protected ClassBuilder<T> doBuild() {
-			return ClassBuilder.this;
+		protected ClassGenerator<T> doBuild() {
+			return ClassGenerator.this;
 		}
 	}
 
@@ -362,28 +362,29 @@ public final class ClassBuilder<T> {
 	}
 
 	/**
-	 * Defines a class from {@code this} {@link ClassBuilder} using given {@link DefiningClassLoader}
+	 * Defines a class from {@code this} {@link ClassGenerator} using given {@link DefiningClassLoader}
 	 *
 	 * @param classLoader a class loader that would be used to define a class
 	 * @return a defined class
 	 */
-	public Class<T> defineClass(DefiningClassLoader classLoader) {
-		GeneratedBytecode generatedBytecode = toBytecode(classLoader);
-		//noinspection unchecked
-		return (Class<T>) generatedBytecode.defineClass(classLoader);
+	public Class<T> generateClass(DefiningClassLoader classLoader) {
+		try (GeneratedBytecode generatedBytecode = generateBytecode(classLoader)) {
+			//noinspection unchecked
+			return (Class<T>) generatedBytecode.generateClass(classLoader);
+		}
 	}
 
 	/**
-	 * Defines a class from {@code this} {@link ClassBuilder} using given {@link DefiningClassLoader}
+	 * Defines a class from {@code this} {@link ClassGenerator} using given {@link DefiningClassLoader}
 	 * and creates an instance of defined class.
 	 *
 	 * @param classLoader a class loader that would be used to define a class
 	 * @param arguments   an array of parameters that would be passed to the constructor of a defined class
 	 * @return an instance of a defined class
 	 */
-	public T defineClassAndCreateInstance(DefiningClassLoader classLoader, Object... arguments) {
-		Class<T> aClass = defineClass(classLoader);
-		return createInstance(aClass, arguments);
+	public T generateClassAndCreateInstance(DefiningClassLoader classLoader, Object... arguments) {
+		Class<T> generatedClass = generateClass(classLoader);
+		return createInstance(generatedClass, arguments);
 	}
 
 	/**
@@ -393,8 +394,8 @@ public final class ClassBuilder<T> {
 	 * @return a generated bytecode which consists of actual bytecode as well as a class name
 	 * @see GeneratedBytecode
 	 */
-	public GeneratedBytecode toBytecode(ClassLoader classLoader) {
-		return toBytecode(classLoader, className != null ? className : autoClassName + '_' + COUNTER.incrementAndGet());
+	public GeneratedBytecode generateBytecode(ClassLoader classLoader) {
+		return generateBytecode(classLoader, className != null ? className : autoClassName + '_' + COUNTER.incrementAndGet());
 	}
 
 	/**
@@ -405,7 +406,7 @@ public final class ClassBuilder<T> {
 	 * @return a generated bytecode which consists of actual bytecode as well as a class name
 	 * @see GeneratedBytecode
 	 */
-	public GeneratedBytecode toBytecode(ClassLoader classLoader, String className) {
+	public GeneratedBytecode generateBytecode(ClassLoader classLoader, String className) {
 		DefiningClassWriter cw = new DefiningClassWriter(classLoader);
 
 		Type classType = getType('L' + className.replace('.', '/') + ';');
@@ -485,7 +486,7 @@ public final class ClassBuilder<T> {
 				if (!isJvmPrimitive(expression.value)) {
 					STATIC_CONSTANTS.put(expression.id, expression.value);
 					Expressions.set(staticField(field), cast(
-									staticCall(ClassBuilder.class, "getStaticConstant", value(expression.id)),
+									staticCall(ClassGenerator.class, "getStaticConstant", value(expression.id)),
 									this.fields.get(field)))
 							.load(ctx);
 				} else {
@@ -502,7 +503,7 @@ public final class ClassBuilder<T> {
 
 				checkState(!isJvmPrimitive(expression.value));
 				STATIC_CONSTANTS.put(expression.id, expression.value);
-				Type typeFrom = staticCall(ClassBuilder.class, "getStaticConstant", value(expression.id)).load(ctx);
+				Type typeFrom = staticCall(ClassGenerator.class, "getStaticConstant", value(expression.id)).load(ctx);
 				g.checkCast(getType(expression.getValueClass()));
 				g.putStatic(ctx.getSelfType(), field, getType(expression.getValueClass()));
 			}
@@ -521,24 +522,17 @@ public final class ClassBuilder<T> {
 
 		return new GeneratedBytecode(className, bytecode) {
 			@Override
-			protected void onDefinedClass(Class<?> clazz) {
+			protected void touchGeneratedClass(Class<?> generatedClass) {
 				try {
-					Field field = clazz.getField(CLASS_BUILDER_MARKER);
+					Field field = generatedClass.getField(GENERATED_MARKER);
 					//noinspection ResultOfMethodCallIgnored
 					field.get(null);
 				} catch (IllegalAccessException | NoSuchFieldException e) {
 					throw new AssertionError(e);
-				} finally {
-					cleanup();
 				}
 			}
 
-			@Override
-			protected void onError(Exception e) {
-				cleanup();
-			}
-
-			private void cleanup() {
+			public void close() {
 				for (Map.Entry<String, Constant> entry : fieldConstants.entrySet()) {
 					STATIC_CONSTANTS.remove(entry.getValue().id);
 				}

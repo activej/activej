@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite.operand.impl;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.annotation.ExposedInternals;
@@ -39,7 +39,7 @@ public final class FieldAccess implements Operand<FieldAccess> {
 
 		FieldGetter fieldGetter = classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(FieldGetter.class, objectClass, fieldName),
-				() -> ClassBuilder.builder(FieldGetter.class)
+				() -> ClassGenerator.builder(FieldGetter.class)
 						.withMethod("getField", property(cast(arg(0), objectClass), fieldName))
 						.build()
 		);

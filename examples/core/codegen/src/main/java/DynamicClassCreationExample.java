@@ -1,4 +1,4 @@
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.impl.HashCode;
 import io.activej.codegen.expression.impl.ToString;
@@ -17,7 +17,7 @@ public class DynamicClassCreationExample {
 		// declare fields
 		// setter for both fields - a sequence of actions
 		// compareTo, equals, hashCode and toString methods implementations follow the standard convention
-		Class<Person> personClass = ClassBuilder.builder(Person.class)
+		Class<Person> personClass = ClassGenerator.builder(Person.class)
 				// declare fields
 				.withField("id", int.class)
 				.withField("name", String.class)
@@ -42,7 +42,7 @@ public class DynamicClassCreationExample {
 						.with("name", property(self(), "name"))
 						.build())
 				.build()
-				.defineClass(CLASS_LOADER);
+				.generateClass(CLASS_LOADER);
 		//[END REGION_2]
 
 		//[START REGION_3]

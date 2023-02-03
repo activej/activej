@@ -159,8 +159,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
-		return ensureClass(className, (cl, s) -> classBuilder.get().toBytecode(cl, s));
+	public <T> Class<T> ensureClass(String className, Supplier<ClassGenerator<T>> classGenerator) {
+		return ensureClass(className, (cl, s) -> classGenerator.get().generateBytecode(cl, s));
 	}
 
 	/**
@@ -168,8 +168,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
-		return ensureClass(key, classLoader -> classBuilder.get().toBytecode(classLoader));
+	public <T> Class<T> ensureClass(ClassKey<T> key, Supplier<ClassGenerator<T>> classGenerator) {
+		return ensureClass(key, classLoader -> classGenerator.get().generateBytecode(classLoader));
 	}
 
 	/**
@@ -177,9 +177,9 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
+	public <T> T ensureClassAndCreateInstance(String className, Supplier<ClassGenerator<T>> classGenerator,
 			Object... arguments) {
-		return createInstance(ensureClass(className, classBuilder), arguments);
+		return createInstance(ensureClass(className, classGenerator), arguments);
 	}
 
 	/**
@@ -187,9 +187,9 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
+	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassGenerator<T>> classGenerator,
 			Object... arguments) {
-		Class<T> aClass = ensureClass(key, classBuilder);
+		Class<T> aClass = ensureClass(key, classGenerator);
 		return createInstance(aClass, arguments);
 	}
 
@@ -224,14 +224,13 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 				}
 			}
 
-			GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this, className);
-			Class<?> aClass = generatedBytecode.defineClass(this);
-
-			if (bytecodeStorage != null) {
-				bytecodeStorage.saveBytecode(className, generatedBytecode.getBytecode());
+			try (GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this, className)) {
+				Class<T> generatedClass = (Class<T>) generatedBytecode.generateClass(this);
+				if (bytecodeStorage != null) {
+					bytecodeStorage.saveBytecode(className, generatedBytecode.getBytecode());
+				}
+				return generatedClass;
 			}
-
-			return (Class<T>) aClass;
 		}
 	}
 
@@ -252,20 +251,21 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 */
 	public <T> Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
 		AtomicReference<Class<?>> reference = cachedClasses.computeIfAbsent(key, k -> new AtomicReference<>());
-		Class<?> aClass = reference.get();
-		if (aClass == null) {
+		Class<?> generatedClass = reference.get();
+		if (generatedClass == null) {
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (reference) {
-				aClass = reference.get();
-				if (aClass == null) {
-					GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this);
-					aClass = generatedBytecode.defineClass(this);
-					reference.set(aClass);
+				generatedClass = reference.get();
+				if (generatedClass == null) {
+					try (GeneratedBytecode generatedBytecode = bytecodeBuilder.apply(this)) {
+						generatedClass = generatedBytecode.generateClass(this);
+					}
+					reference.set(generatedClass);
 				}
 			}
 		}
 		//noinspection unchecked
-		return (Class<T>) aClass;
+		return (Class<T>) generatedClass;
 	}
 
 	/**

@@ -27,7 +27,7 @@ import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
@@ -38,7 +38,6 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.exception.CubeException;
@@ -54,8 +53,8 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -671,7 +670,7 @@ public final class Cube extends AbstractReactive
 			Map<String, FieldType> keyTypes) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, inputClass, predicate),
-				() -> ClassBuilder.builder(Predicate.class)
+				() -> ClassGenerator.builder(Predicate.class)
 						.withMethod("test", boolean.class, List.of(Object.class),
 								predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
 						.build()
@@ -1039,7 +1038,7 @@ public final class Cube extends AbstractReactive
 		RecordFunction createRecordFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordFunction.class, resultClass, recordScheme.getFields()),
-					() -> ClassBuilder.builder(RecordFunction.class)
+					() -> ClassGenerator.builder(RecordFunction.class)
 							.withMethod("copyAttributes",
 									sequence(seq -> {
 										for (String field : recordScheme.getFields()) {
@@ -1075,10 +1074,10 @@ public final class Cube extends AbstractReactive
 		MeasuresFunction<R> createMeasuresFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(MeasuresFunction.class, resultClass, resultComputedMeasures),
-					() -> ClassBuilder.builder(MeasuresFunction.class)
-							.initialize(cb ->
+					() -> ClassGenerator.builder(MeasuresFunction.class)
+							.initialize(b ->
 									resultComputedMeasures.forEach(computedMeasure ->
-											cb.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
+											b.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
 							.withMethod("computeMeasures", sequence(seq -> {
 								for (String computedMeasure : resultComputedMeasures) {
 									Expression record = cast(arg(0), resultClass);
@@ -1096,7 +1095,7 @@ public final class Cube extends AbstractReactive
 
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Predicate.class, resultClass, queryHaving),
-					() -> ClassBuilder.builder(Predicate.class)
+					() -> ClassGenerator.builder(Predicate.class)
 							.withMethod("test",
 									queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
 							.build()
@@ -1117,7 +1116,7 @@ public final class Cube extends AbstractReactive
 
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
-					() -> ClassBuilder.builder(Comparator.class)
+					() -> ClassGenerator.builder(Comparator.class)
 							.withMethod("compare", get(() -> {
 								Compare.Builder compareBuilder = Compare.builder();
 								for (Ordering ordering : query.getOrderings()) {
@@ -1280,7 +1279,7 @@ public final class Cube extends AbstractReactive
 		TotalsFunction<R, R> createTotalsFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
 					ClassKey.of(TotalsFunction.class, resultClass, resultStoredMeasures, resultComputedMeasures),
-					() -> ClassBuilder.builder(TotalsFunction.class)
+					() -> ClassGenerator.builder(TotalsFunction.class)
 							.withMethod("zero",
 									sequence(seq -> {
 										for (String field : resultStoredMeasures) {

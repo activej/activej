@@ -1,6 +1,6 @@
 package io.activej.record;
 
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.expression.Expression;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertSame;
 public class RecordProjectionTest {
 	@Before
 	public void setUp() {
-		ClassBuilder.clearStaticConstants();
+		ClassGenerator.clearStaticConstants();
 	}
 
 	@Test

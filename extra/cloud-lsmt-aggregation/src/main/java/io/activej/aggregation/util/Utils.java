@@ -23,7 +23,7 @@ import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.codegen.ClassBuilder;
+import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.processor.reducer.Reducer;
@@ -51,10 +51,10 @@ public class Utils {
 		List<String> keyList = new ArrayList<>(keys.keySet());
 		return classLoader.ensureClass(
 				ClassKey.of(Object.class, keyList),
-				() -> ClassBuilder.builder((Class<K>) Comparable.class)
-						.initialize(cb ->
+				() -> ClassGenerator.builder((Class<K>) Comparable.class)
+						.initialize(b ->
 								keys.forEach((key, value) ->
-										cb.withField(key, value.getInternalDataType())))
+										b.withField(key, value.getInternalDataType())))
 						.withMethod("compareTo", comparableImpl(keyList))
 						.withMethod("equals", equalsImpl(keyList))
 						.withMethod("hashCode", hashCodeImpl(keyList))
@@ -66,7 +66,7 @@ public class Utils {
 			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Comparator.class, recordClass, keys),
-				() -> ClassBuilder.builder(Comparator.class)
+				() -> ClassGenerator.builder(Comparator.class)
 						.withMethod("compare", comparatorImpl(recordClass, keys))
 						.build());
 	}
@@ -76,7 +76,7 @@ public class Utils {
 			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Function.class, recordClass, resultClass, keys, fields),
-				() -> ClassBuilder.builder(Function.class)
+				() -> ClassGenerator.builder(Function.class)
 						.withMethod("apply",
 								let(constructor(resultClass), result ->
 										sequence(seq -> {
@@ -95,7 +95,7 @@ public class Utils {
 			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Function.class, recordClass, keyClass, keys),
-				() -> ClassBuilder.builder(Function.class)
+				() -> ClassGenerator.builder(Function.class)
 						.withMethod("apply",
 								let(constructor(keyClass), key ->
 										sequence(seq -> {
@@ -125,13 +125,13 @@ public class Utils {
 		List<String> fieldsList = new ArrayList<>(fields.keySet());
 		return (Class<T>) classLoader.ensureClass(
 				ClassKey.of(Object.class, keysList, fieldsList),
-				() -> ClassBuilder.builder(Object.class)
-						.initialize(cb ->
+				() -> ClassGenerator.builder(Object.class)
+						.initialize(b ->
 								keys.forEach((key, value) ->
-										cb.withField(key, value.getInternalDataType())))
-						.initialize(cb ->
+										b.withField(key, value.getInternalDataType())))
+						.initialize(b ->
 								fields.forEach((key, value) ->
-										cb.withField(key, value.getInternalDataType())))
+										b.withField(key, value.getInternalDataType())))
 						.withMethod("toString", toStringImpl(concat(keysList, fieldsList)))
 						.build());
 	}
@@ -148,27 +148,22 @@ public class Utils {
 	private static <T> BinarySerializer<T> createBinarySerializer(Class<T> recordClass,
 			Map<String, FieldType> keys, Map<String, FieldType> fields,
 			DefiningClassLoader classLoader) {
-		ArrayList<String> keysList = new ArrayList<>(keys.keySet());
-		ArrayList<String> fieldsList = new ArrayList<>(fields.keySet());
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(BinarySerializer.class, recordClass, keysList, fieldsList),
-				() -> {
-					ClassDef.Builder classSerializerBuilder = ClassDef.builder(recordClass);
-					addFields(classSerializerBuilder, recordClass, new ArrayList<>(keys.entrySet()));
-					addFields(classSerializerBuilder, recordClass, new ArrayList<>(fields.entrySet()));
-
-					return SerializerFactory.defaultInstance()
-							.toClassBuilder(classSerializerBuilder.build());
-				});
+				ClassKey.of(BinarySerializer.class, recordClass, new ArrayList<>(keys.keySet()), new ArrayList<>(fields.keySet())),
+				() -> SerializerFactory.defaultInstance()
+						.toClassGenerator(
+								ClassDef.builder(recordClass)
+										.initialize(b -> addFields(b, recordClass, new ArrayList<>(keys.entrySet())))
+										.initialize(b -> addFields(b, recordClass, new ArrayList<>(fields.entrySet())))
+										.build()));
 	}
 
 	private static <T> void addFields(ClassDef.Builder classSerializerBuilder, Class<T> recordClass, List<Entry<String, FieldType>> fields) {
 		for (Entry<String, FieldType> entry : fields) {
 			try {
-				Field field = recordClass.getField(entry.getKey());
-				classSerializerBuilder.withField(field, entry.getValue().getSerializer(), -1, -1);
+				classSerializerBuilder.withField(recordClass.getField(entry.getKey()), entry.getValue().getSerializer(), -1, -1);
 			} catch (NoSuchFieldException e) {
-				throw new RuntimeException(e);
+				throw new AssertionError(e);
 			}
 		}
 	}
@@ -179,7 +174,7 @@ public class Utils {
 
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Reducer.class, inputClass, outputClass, keys, fields, extraFields.keySet()),
-				() -> ClassBuilder.builder(Reducer.class)
+				() -> ClassGenerator.builder(Reducer.class)
 						.withMethod("onFirstItem",
 								let(constructor(outputClass), accumulator ->
 										sequence(seq -> {
@@ -228,7 +223,7 @@ public class Utils {
 		ArrayList<String> measuresList = new ArrayList<>(measureFields.keySet());
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Aggregate.class, inputClass, outputClass, keysList, measuresList),
-				() -> ClassBuilder.builder(Aggregate.class)
+				() -> ClassGenerator.builder(Aggregate.class)
 						.withMethod("createAccumulator",
 								let(constructor(outputClass), accumulator ->
 										sequence(seq -> {
@@ -276,7 +271,7 @@ public class Utils {
 
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(PartitionPredicate.class, recordClass, partitioningKey),
-				() -> ClassBuilder.builder(PartitionPredicate.class)
+				() -> ClassGenerator.builder(PartitionPredicate.class)
 						.withMethod("isSamePartition", and(
 								partitioningKey.stream()
 										.map(keyComponent -> isEq(
