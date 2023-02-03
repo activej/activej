@@ -55,7 +55,7 @@ public final class NodeDownload<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(streamId);
+		return singletonList(output);
 	}
 
 	@Override
