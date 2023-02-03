@@ -130,40 +130,26 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<LocalDate> ofLocalDate() {
-		return new FieldTypeDate();
+		return ofLocalDate(LocalDate.parse("1970-01-01"));
 	}
 
 	public static FieldType<LocalDate> ofLocalDate(LocalDate startDate) {
-		return new FieldTypeDate(startDate);
+		return new FieldType<>(int.class, LocalDate.class, new SerializerDef_Int(false, true), JsonCodecs.ofLocalDate(), JsonCodecs.ofInteger()) {
+
+			@Override
+			public Expression toValue(Expression internalValue) {
+				return call(value(startDate), "plusDays", cast(internalValue, long.class));
+			}
+
+			@Override
+			public LocalDate toInitialValue(Object internalValue) {
+				return startDate.plusDays((int) internalValue);
+			}
+
+			@Override
+			public Object toInternalValue(LocalDate value) {
+				return (int) DAYS.between(startDate, value);
+			}
+		};
 	}
-
-	public static final class FieldTypeDate extends FieldType<LocalDate> {
-		private final LocalDate startDate;
-
-		FieldTypeDate() {
-			this(LocalDate.parse("1970-01-01"));
-		}
-
-		FieldTypeDate(LocalDate startDate) {
-			super(int.class, LocalDate.class, new SerializerDef_Int(false, true), JsonCodecs.ofLocalDate(), JsonCodecs.ofInteger());
-			this.startDate = startDate;
-		}
-
-		@Override
-		public Expression toValue(Expression internalValue) {
-			return call(value(startDate), "plusDays", cast(internalValue, long.class));
-		}
-
-		@Override
-		public LocalDate toInitialValue(Object internalValue) {
-			return startDate.plusDays((int) internalValue);
-		}
-
-		@Override
-		public Object toInternalValue(LocalDate value) {
-			return (int) DAYS.between(startDate, value);
-		}
-
-	}
-
 }
