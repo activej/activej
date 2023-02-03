@@ -33,7 +33,7 @@ import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @StaticFactories(AggregationPredicate.class)
-public class AggregationPredicates {
+public final class AggregationPredicates {
 
 	public record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
 			Class<L> leftType, Class<R> rightType) {

@@ -42,7 +42,7 @@ import static org.objectweb.asm.Type.getType;
  * Defines list of possibilities for creating {@link Expression}s
  */
 @StaticFactories(Expression.class)
-public class Expressions {
+public final class Expressions {
 	/**
 	 * Returns a new constant for the value
 	 *

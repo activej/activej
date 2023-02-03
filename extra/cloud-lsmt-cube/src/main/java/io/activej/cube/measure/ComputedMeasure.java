@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.cube;
+package io.activej.cube.measure;
 
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;

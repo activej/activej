@@ -45,6 +45,7 @@ import io.activej.cube.exception.QueryException;
 import io.activej.cube.function.MeasuresFunction;
 import io.activej.cube.function.RecordFunction;
 import io.activej.cube.function.TotalsFunction;
+import io.activej.cube.measure.ComputedMeasure;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;

@@ -4,8 +4,8 @@ import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.measure.Measures;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.cube.ComputedMeasure;
-import io.activej.cube.ComputedMeasures;
+import io.activej.cube.measure.ComputedMeasure;
+import io.activej.cube.measure.ComputedMeasures;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,10 +24,6 @@ public class ComputedMeasuresTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private static final class M extends Measures {}
-
-	private static final class CM extends ComputedMeasures {}
-
 	public interface TestQueryResultPlaceholder {
 		void computeMeasures();
 
@@ -37,11 +33,21 @@ public class ComputedMeasuresTest {
 	}
 
 	private static final Map<String, Measure> MEASURES =
-			keysToMap(Stream.of("a", "b", "c", "d"), k -> M.sum(ofDouble()));
+			keysToMap(Stream.of("a", "b", "c", "d"), k -> Measures.sum(ofDouble()));
 
 	@Test
 	public void test() {
-		ComputedMeasure d = CM.div(CM.mul(CM.div(CM.measure("a"), CM.measure("b")), CM.value(100)), CM.measure("c"));
+		ComputedMeasure d = ComputedMeasures.div(
+				ComputedMeasures.mul(
+						ComputedMeasures.div(
+								ComputedMeasures.measure("a"),
+								ComputedMeasures.measure("b")
+						),
+						ComputedMeasures.value(100)
+				),
+				ComputedMeasures.measure("c")
+		);
+
 		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
 				.withField("a", long.class)
 				.withField("b", long.class)
@@ -64,7 +70,17 @@ public class ComputedMeasuresTest {
 
 	@Test
 	public void testNullDivision() {
-		ComputedMeasure d = CM.div(CM.mul(CM.div(CM.measure("a"), CM.measure("b")), CM.value(100)), CM.measure("c"));
+		ComputedMeasure d = ComputedMeasures.div(
+				ComputedMeasures.mul(
+						ComputedMeasures.div(
+								ComputedMeasures.measure("a"),
+								ComputedMeasures.measure("b")
+						),
+						ComputedMeasures.value(100)
+				),
+				ComputedMeasures.measure("c")
+		);
+
 		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
 				.withField("a", long.class)
 				.withField("b", long.class)
@@ -86,7 +102,13 @@ public class ComputedMeasuresTest {
 
 	@Test
 	public void testSqrt() {
-		ComputedMeasure c = CM.sqrt(CM.add(CM.measure("a"), CM.measure("b")));
+		ComputedMeasure c = ComputedMeasures.sqrt(
+				ComputedMeasures.add(
+						ComputedMeasures.measure("a"),
+						ComputedMeasures.measure("b")
+				)
+		);
+
 		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
 				.withField("a", double.class)
 				.withField("b", double.class)
@@ -106,7 +128,13 @@ public class ComputedMeasuresTest {
 
 	@Test
 	public void testSqrtOfNegativeArgument() {
-		ComputedMeasure c = CM.sqrt(CM.sub(CM.measure("a"), CM.measure("b")));
+		ComputedMeasure c = ComputedMeasures.sqrt(
+				ComputedMeasures.sub(
+						ComputedMeasures.measure("a"),
+						ComputedMeasures.measure("b")
+				)
+		);
+
 		TestQueryResultPlaceholder resultPlaceholder = ClassBuilder.builder(TestQueryResultPlaceholder.class)
 				.withField("a", double.class)
 				.withField("b", double.class)

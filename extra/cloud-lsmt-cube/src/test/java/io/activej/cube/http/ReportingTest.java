@@ -46,7 +46,7 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToMap;
-import static io.activej.cube.ComputedMeasures.*;
+import static io.activej.cube.measure.ComputedMeasures.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.ReportType.DATA;
