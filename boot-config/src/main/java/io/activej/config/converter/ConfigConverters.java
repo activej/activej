@@ -303,7 +303,11 @@ public final class ConfigConverters {
 		};
 	}
 
-	public static final ConfigConverter<List<Class<?>>> OF_CLASSES = ofList(ofClass());
+	private static final ConfigConverter<List<Class<?>>> OF_CLASSES = ofList(ofClass());
+
+	public static ConfigConverter<List<Class<?>>> ofClasses() {
+		return OF_CLASSES;
+	}
 
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
 		return new ConfigConverter<>() {
