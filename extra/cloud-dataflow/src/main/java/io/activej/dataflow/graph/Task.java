@@ -243,7 +243,7 @@ public final class Task {
 		ids.forEach((node, id) -> {
 			String name = node.getClass().getSimpleName();
 			sb.append("  " + id)
-					.append(" [label=\"" + (name.startsWith("Node") ? name.substring(4) : name))
+					.append(" [label=\"" + name)
 					.append("\" id=" + id);
 			Exception error = node.getError();
 			if (error != null) {

@@ -116,7 +116,7 @@ public final class FilterableSupplierNode<T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeSupplierOfWherePredicate{id='" + id +
+		return "FilterableSupplierNode{id='" + id +
 				"', predicate=" + predicate +
 				", partitionIndex=" + partitionIndex +
 				", maxPartitions=" + maxPartitions +

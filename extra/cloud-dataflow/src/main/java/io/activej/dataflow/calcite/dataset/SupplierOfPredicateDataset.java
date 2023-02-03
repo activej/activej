@@ -25,24 +25,24 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class DatasetSupplierOfPredicate<T> extends Dataset<T> {
+public final class SupplierOfPredicateDataset<T> extends Dataset<T> {
 	private final String id;
 	private final WherePredicate predicate;
 	private final @Nullable List<Partition> partitions;
 
-	private DatasetSupplierOfPredicate(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
+	private SupplierOfPredicateDataset(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
 		super(resultStreamSchema);
 		this.id = id;
 		this.predicate = predicate;
 		this.partitions = partitions;
 	}
 
-	public static <T> DatasetSupplierOfPredicate<T> create(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
-		return new DatasetSupplierOfPredicate<>(id, predicate, resultStreamSchema, partitions);
+	public static <T> SupplierOfPredicateDataset<T> create(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
+		return new SupplierOfPredicateDataset<>(id, predicate, resultStreamSchema, partitions);
 	}
 
-	public static <T> DatasetSupplierOfPredicate<T> create(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema) {
-		return new DatasetSupplierOfPredicate<>(id, predicate, resultStreamSchema, null);
+	public static <T> SupplierOfPredicateDataset<T> create(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema) {
+		return new SupplierOfPredicateDataset<>(id, predicate, resultStreamSchema, null);
 	}
 
 	@Override

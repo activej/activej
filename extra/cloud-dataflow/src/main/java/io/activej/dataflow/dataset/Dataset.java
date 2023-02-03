@@ -60,7 +60,7 @@ public abstract class Dataset<T> {
 	@Override
 	public String toString() {
 		String name = getClass().getSimpleName();
-		return (name.startsWith("Dataset") ? name.substring(7) : name) + "<" + streamSchema.createClass().getSimpleName() + ">";
+		return name + "<" + streamSchema.createClass().getSimpleName() + ">";
 	}
 
 	private static void writeDatasets(StringBuilder sb, Map<Dataset<?>, String> ids, Set<Tuple2<Dataset<?>, Dataset<?>>> visited, RefInt lastId, Dataset<?> dataset) {

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
-import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
+import io.activej.dataflow.calcite.dataset.SupplierOfPredicateDataset;
 import io.activej.dataflow.calcite.join.RecordLeftJoiner;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.impl.RecordField;
@@ -187,7 +187,7 @@ public class RelToDatasetConverter {
 		return UnmaterializedDataset.of(scheme, params -> {
 			WherePredicate materializedPredicate = wherePredicate.materialize(params);
 			Class<Object> type = (Class<Object>) dataflowTable.getType();
-			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, StreamSchemas.simple(type));
+			Dataset<Object> dataset = SupplierOfPredicateDataset.create(id, materializedPredicate, StreamSchemas.simple(type));
 
 			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), RecordStreamSchema.create(scheme));
 			Dataset<Record> filtered = needsFiltering ?

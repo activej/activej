@@ -219,7 +219,7 @@ public final class DataflowGraph extends AbstractReactive {
 						sb.append("    ")
 								.append(nodeId)
 								.append(" [label=\"")
-								.append(name.startsWith("Node") ? name.substring(4) : name)
+								.append(name)
 								.append("\"];\n");
 						nodeIds.put(node, nodeId);
 					}
