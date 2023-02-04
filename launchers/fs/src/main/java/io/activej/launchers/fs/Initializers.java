@@ -46,7 +46,7 @@ import static io.activej.trigger.Severity.HIGH;
 import static io.activej.trigger.Severity.WARNING;
 
 @StaticFactories(Initializer.class)
-public final class Initializers {
+public class Initializers {
 
 	public static Initializer<FileSystemServer.Builder> ofFileSystemServer(Config config) {
 		return builder -> builder

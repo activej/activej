@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 @StaticFactories(Node.class)
-public final class Nodes {
+public class Nodes {
 	public static Node consumerOfId(int index, String id, int partitionIndex, int maxPartitions, StreamId input) {
 		return new ConsumerOfId(index, id, partitionIndex, maxPartitions, input);
 	}

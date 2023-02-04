@@ -15,7 +15,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 @StaticFactories(StreamCodec.class)
-public final class StreamCodecs {
+public class StreamCodecs {
 	public static StreamCodec<Void> ofVoid() {
 		return new StreamCodec<>() {
 			@Override

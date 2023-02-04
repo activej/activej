@@ -29,7 +29,7 @@ import java.util.function.BiFunction;
  */
 @SuppressWarnings("RedundantCast")
 @StaticFactories(Decoder.class)
-public final class Decoders {
+public class Decoders {
 	public static final String REQUIRED_GET_PARAM = "Required GET param: %s";
 	public static final String REQUIRED_POST_PARAM = "Required POST param: %s";
 	public static final String REQUIRED_PATH_PARAM = "Required path param: %s";

@@ -25,7 +25,7 @@ import java.util.List;
 import static io.activej.common.Checks.checkArgument;
 
 @StaticFactories(FrameFormat.class)
-public final class FrameFormats {
+public class FrameFormats {
 
 	/**
 	 * Creates a default LZ4 frame format

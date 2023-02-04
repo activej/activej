@@ -35,7 +35,7 @@ import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.trigger.Severity.HIGH;
 
 @StaticFactories(Initializer.class)
-public final class Initializers {
+public class Initializers {
 
 	public static Initializer<RpcServer.Builder> ofRpcServer(Config config) {
 		return builder -> builder

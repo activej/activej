@@ -46,7 +46,7 @@ import static java.util.stream.Collectors.toCollection;
  * This class contains a set of utilities for working with {@link Module modules}.
  */
 @StaticFactories(Module.class)
-public final class Modules {
+public class Modules {
 	static final Module EMPTY = new SimpleModule(Trie.leaf(Map.of()), Map.of(), Map.of(), Map.of());
 
 	/**

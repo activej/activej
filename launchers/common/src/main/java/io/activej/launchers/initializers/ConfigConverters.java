@@ -36,7 +36,7 @@ import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.dns.DnsCache.*;
 
 @StaticFactories(ConfigConverter.class)
-public final class ConfigConverters {
+public class ConfigConverters {
 
 	public static ConfigConverter<DnsCache> ofDnsCache(Reactor reactor) {
 		return new ConfigConverter<>() {

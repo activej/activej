@@ -36,7 +36,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.converter.ConfigConverters.*;
 
 @StaticFactories(ConfigConverter.class)
-public final class ConfigConverters {
+public class ConfigConverters {
 
 	/**
 	 * Config converter to create a {@link RendezvousPartitionScheme.Builder} out of a {@link Config}

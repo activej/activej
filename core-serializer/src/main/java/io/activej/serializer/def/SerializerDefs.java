@@ -10,12 +10,11 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 
 import static io.activej.common.Checks.checkArgument;
 
 @StaticFactories(SerializerDef.class)
-public final class SerializerDefs {
+public class SerializerDefs {
 
 	public static SerializerDef ofArray(SerializerDef elementSerializer) {
 		checkArgument(elementSerializer.getEncodeType() == elementSerializer.getDecodeType(),

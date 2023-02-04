@@ -50,7 +50,7 @@ import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @StaticFactories(ConfigConverter.class)
-public final class ConfigConverters {
+public class ConfigConverters {
 
 	public static ConfigConverter<LocalDate> ofLocalDate() {
 		return SimpleConfigConverter.of(LocalDate::parse, LocalDate::toString);

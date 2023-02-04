@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 @StaticFactories(WherePredicate.class)
-public final class WherePredicates {
+public class WherePredicates {
 	public static WherePredicate and(WherePredicate... predicates) {
 		return and(List.of(predicates));
 	}

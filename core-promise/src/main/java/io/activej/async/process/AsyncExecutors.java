@@ -32,7 +32,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 @StaticFactories(AsyncExecutor.class)
-public final class AsyncExecutors {
+public class AsyncExecutors {
 
 	public static AsyncExecutor direct() {
 		return new AsyncExecutor() {

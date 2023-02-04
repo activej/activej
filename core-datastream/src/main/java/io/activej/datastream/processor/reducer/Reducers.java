@@ -24,7 +24,7 @@ import io.activej.datastream.processor.reducer.impl.*;
  * Contains primary ready for use reducers.
  */
 @StaticFactories(Reducer.class)
-public final class Reducers {
+public class Reducers {
 
 	/**
 	 * Returns reducer which streams only one element from group of same keys.

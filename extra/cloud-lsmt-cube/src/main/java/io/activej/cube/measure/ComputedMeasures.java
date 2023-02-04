@@ -22,10 +22,10 @@ import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.StaticFactories;
 import io.activej.cube.measure.impl.Value;
 
-import java.util.*;
+import java.util.Map;
 
 @StaticFactories(ComputedMeasure.class)
-public final class ComputedMeasures {
+public class ComputedMeasures {
 	public static ComputedMeasure value(Object value) {
 		return new Value(value);
 	}

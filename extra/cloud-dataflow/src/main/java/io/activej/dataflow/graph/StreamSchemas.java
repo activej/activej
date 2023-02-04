@@ -5,7 +5,7 @@ import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.serializer.BinarySerializer;
 
 @StaticFactories(StreamSchema.class)
-public final class StreamSchemas {
+public class StreamSchemas {
 	public static <T> StreamSchema<T> simple(Class<T> cls) {
 		return new SimpleStreamSchema<>(cls);
 	}

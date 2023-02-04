@@ -55,7 +55,7 @@ import static java.util.Arrays.asList;
  */
 @SuppressWarnings({"WeakerAccess", "unchecked"})
 @StaticFactories(Promise.class)
-public final class Promises {
+public class Promises {
 	/**
 	 * @see #timeout(long, Promise)
 	 */

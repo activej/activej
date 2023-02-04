@@ -30,7 +30,7 @@ import java.util.Set;
 
 @SuppressWarnings("ConstantConditions")
 @StaticFactories(JsonCodec.class)
-public final class JsonCodecs {
+public class JsonCodecs {
 	private static final JsonCodec<String> STRING_CODEC = JsonCodec.of(JsonReader::readString, JsonWriter::writeString);
 	private static final JsonCodec<Short> SHORT_CODEC = JsonCodec.of(NumberConverter::deserializeShort, (writer, value) -> NumberConverter.serialize(value, writer));
 	private static final JsonCodec<Integer> INTEGER_CODEC = JsonCodec.of(NumberConverter::deserializeInt, (writer, value) -> NumberConverter.serialize(value, writer));

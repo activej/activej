@@ -22,7 +22,7 @@ import io.activej.aggregation.measure.impl.*;
 import io.activej.common.annotation.StaticFactories;
 
 @StaticFactories(Measure.class)
-public final class Measures {
+public class Measures {
 	public static Measure sum(FieldType<?> ofType) {
 		return new Sum(ofType);
 	}

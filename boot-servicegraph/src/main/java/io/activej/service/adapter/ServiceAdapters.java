@@ -38,7 +38,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("WeakerAccess")
 @StaticFactories(ServiceAdapter.class)
-public final class ServiceAdapters {
+public class ServiceAdapters {
 	private static final Logger logger = getLogger(ServiceAdapters.class);
 
 	public abstract static class SimpleServiceAdapter<S> implements ServiceAdapter<S> {

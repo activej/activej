@@ -6,7 +6,7 @@ import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.operand.impl.*;
 
 @StaticFactories(Operand.class)
-public final class Operands {
+public class Operands {
 	public static Operand<?> cast(Operand<?> operand, int type) {
 		return new Cast(operand, type);
 	}

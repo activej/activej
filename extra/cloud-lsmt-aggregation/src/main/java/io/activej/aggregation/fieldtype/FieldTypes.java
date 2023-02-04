@@ -25,7 +25,7 @@ import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.def.SerializerDefs;
-import io.activej.serializer.def.impl.*;
+import io.activej.serializer.def.impl.ClassDef;
 import io.activej.types.Primitives;
 import io.activej.types.Types;
 
@@ -39,7 +39,7 @@ import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @StaticFactories(FieldType.class)
-public final class FieldTypes {
+public class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
 		return new FieldType<>(byte.class, SerializerDefs.ofByte(false), JsonCodecs.ofByte()) {

@@ -22,9 +22,9 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamLimiter;
+import io.activej.datastream.processor.StreamSkip;
 import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.reducer.ReducerToResult;
-import io.activej.datastream.processor.StreamSkip;
 
 import java.util.Comparator;
 import java.util.List;
@@ -36,7 +36,7 @@ import java.util.function.UnaryOperator;
 import static io.activej.common.Checks.checkArgument;
 
 @StaticFactories(Dataset.class)
-public final class Datasets {
+public class Datasets {
 
 	public static <K, T> SortedDataset<K, T> castToSorted(Dataset<T> dataset, Class<K> keyType,
 			Function<T, K> keyFunction, Comparator<K> keyComparator) {
