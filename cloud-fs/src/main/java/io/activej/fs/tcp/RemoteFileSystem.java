@@ -82,7 +82,7 @@ public final class RemoteFileSystem extends AbstractNioReactive
 
 	private final InetSocketAddress address;
 
-	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettings = SocketSettings.defaultInstance();
 	private SocketSettings socketSettingsStreaming = createSocketSettingsForStreaming(socketSettings);
 	private int connectionTimeout = (int) DEFAULT_CONNECTION_TIMEOUT.toMillis();
 
@@ -426,19 +426,17 @@ public final class RemoteFileSystem extends AbstractNioReactive
 	}
 
 	private static SocketSettings createSocketSettingsForStreaming(SocketSettings socketSettings) {
-		SocketSettings.Builder builder = SocketSettings.builder()
-				.withLingerTimeout(Duration.ZERO);
-
-		if (socketSettings.hasKeepAlive()) builder.withKeepAlive(socketSettings.getKeepAlive());
-		if (socketSettings.hasReuseAddress()) builder.withReuseAddress(socketSettings.getReuseAddress());
-		if (socketSettings.hasTcpNoDelay()) builder.withTcpNoDelay(socketSettings.getTcpNoDelay());
-		if (socketSettings.hasSendBufferSize()) builder.withSendBufferSize(socketSettings.getSendBufferSize());
-		if (socketSettings.hasReceiveBufferSize()) builder.withReceiveBufferSize(socketSettings.getReceiveBufferSize());
-		if (socketSettings.hasImplReadTimeout()) builder.withImplReadTimeout(socketSettings.getImplReadTimeout());
-		if (socketSettings.hasImplWriteTimeout()) builder.withImplWriteTimeout(socketSettings.getImplWriteTimeout());
-		if (socketSettings.hasReadBufferSize()) builder.withImplReadBufferSize(socketSettings.getImplReadBufferSize());
-
-		return builder.build();
+		return SocketSettings.builder()
+				.withLingerTimeout(Duration.ZERO)
+				.withKeepAlive(socketSettings.getKeepAlive())
+				.withReuseAddress(socketSettings.getReuseAddress())
+				.withTcpNoDelay(socketSettings.getTcpNoDelay())
+				.withSendBufferSize(socketSettings.getSendBufferSize())
+				.withReceiveBufferSize(socketSettings.getReceiveBufferSize())
+				.withImplReadTimeout(socketSettings.getImplReadTimeout())
+				.withImplWriteTimeout(socketSettings.getImplWriteTimeout())
+				.withImplReadBufferSize(socketSettings.getImplReadBufferSize())
+				.build();
 	}
 
 	@Override

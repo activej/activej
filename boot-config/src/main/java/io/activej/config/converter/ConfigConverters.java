@@ -212,7 +212,7 @@ public class ConfigConverters {
 
 	// compound
 	public static ConfigConverter<ServerSocketSettings> ofServerSocketSettings() {
-		return new ComplexConfigConverter<>(ServerSocketSettings.createDefault()) {
+		return new ComplexConfigConverter<>(ServerSocketSettings.defaultInstance()) {
 			@Override
 			protected ServerSocketSettings provide(Config config, ServerSocketSettings defaultValue) {
 				return ServerSocketSettings.builder()
@@ -221,58 +221,47 @@ public class ConfigConverters {
 								config.get(ofInteger(), "backlog", defaultValue.getBacklog()))
 						.setIfNotNull(
 								ServerSocketSettings.Builder::withReceiveBufferSize,
-								config.get(ofMemSize(), "receiveBufferSize",
-										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null))
+								config.get(ofMemSize(), "receiveBufferSize", defaultValue.getReceiveBufferSize()))
 						.setIfNotNull(
 								ServerSocketSettings.Builder::withReuseAddress,
-								config.get(ofBoolean(), "reuseAddress",
-										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null))
+								config.get(ofBoolean(), "reuseAddress", defaultValue.getReuseAddress()))
 						.build();
 			}
 		};
 	}
 
 	public static ConfigConverter<SocketSettings> ofSocketSettings() {
-		return new ComplexConfigConverter<>(SocketSettings.createDefault()) {
+		return new ComplexConfigConverter<>(SocketSettings.defaultInstance()) {
 			@Override
 			protected SocketSettings provide(Config config, SocketSettings defaultValue) {
 				return SocketSettings.builder()
 						.setIfNotNull(
 								SocketSettings.Builder::withReceiveBufferSize,
-								config.get(ofMemSize(), "receiveBufferSize",
-										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null))
+								config.get(ofMemSize(), "receiveBufferSize", defaultValue.getReceiveBufferSize()))
 						.setIfNotNull(
 								SocketSettings.Builder::withSendBufferSize,
-								config.get(ofMemSize(), "sendBufferSize",
-										defaultValue.hasSendBufferSize() ? defaultValue.getSendBufferSize() : null))
+								config.get(ofMemSize(), "sendBufferSize", defaultValue.getSendBufferSize()))
 						.setIfNotNull(
 								SocketSettings.Builder::withReuseAddress,
-								config.get(ofBoolean(), "reuseAddress",
-										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null))
+								config.get(ofBoolean(), "reuseAddress", defaultValue.getReuseAddress()))
 						.setIfNotNull(
 								SocketSettings.Builder::withKeepAlive,
-								config.get(ofBoolean(), "keepAlive",
-										defaultValue.hasKeepAlive() ? defaultValue.getKeepAlive() : null))
+								config.get(ofBoolean(), "keepAlive", defaultValue.getKeepAlive()))
 						.setIfNotNull(
 								SocketSettings.Builder::withTcpNoDelay,
-								config.get(ofBoolean(), "tcpNoDelay",
-										defaultValue.hasTcpNoDelay() ? defaultValue.getTcpNoDelay() : null))
+								config.get(ofBoolean(), "tcpNoDelay", defaultValue.getTcpNoDelay()))
 						.setIfNotNull(
 								SocketSettings.Builder::withLingerTimeout,
-								config.get(ofDuration(), "lingerTimeout",
-										defaultValue.hasLingerTimeout() ? defaultValue.getLingerTimeout() : null))
+								config.get(ofDuration(), "lingerTimeout", defaultValue.getLingerTimeout()))
 						.setIfNotNull(
 								SocketSettings.Builder::withImplReadTimeout,
-								config.get(ofDuration(), "implReadTimeout",
-										defaultValue.hasImplReadTimeout() ? defaultValue.getImplReadTimeout() : null))
+								config.get(ofDuration(), "implReadTimeout", defaultValue.getImplReadTimeout()))
 						.setIfNotNull(
 								SocketSettings.Builder::withImplWriteTimeout,
-								config.get(ofDuration(), "implWriteTimeout",
-										defaultValue.hasImplWriteTimeout() ? defaultValue.getImplWriteTimeout() : null))
+								config.get(ofDuration(), "implWriteTimeout", defaultValue.getImplWriteTimeout()))
 						.setIfNotNull(
 								SocketSettings.Builder::withImplReadBufferSize,
-								config.get(ofMemSize(), "implReadBufferSize",
-										defaultValue.hasReadBufferSize() ? defaultValue.getImplReadBufferSize() : null)).build();
+								config.get(ofMemSize(), "implReadBufferSize", defaultValue.getImplReadBufferSize())).build();
 			}
 		};
 	}
@@ -284,20 +273,16 @@ public class ConfigConverters {
 				return DatagramSocketSettings.builder()
 						.setIfNotNull(
 								DatagramSocketSettings.Builder::withReceiveBufferSize,
-								config.get(ofMemSize(), "receiveBufferSize",
-										defaultValue.hasReceiveBufferSize() ? defaultValue.getReceiveBufferSize() : null))
+								config.get(ofMemSize(), "receiveBufferSize", defaultValue.getReceiveBufferSize()))
 						.setIfNotNull(
 								DatagramSocketSettings.Builder::withSendBufferSize,
-								config.get(ofMemSize(), "sendBufferSize",
-										defaultValue.hasSendBufferSize() ? defaultValue.getSendBufferSize() : null))
+								config.get(ofMemSize(), "sendBufferSize", defaultValue.getSendBufferSize()))
 						.setIfNotNull(
 								DatagramSocketSettings.Builder::withReuseAddress,
-								config.get(ofBoolean(), "reuseAddress",
-										defaultValue.hasReuseAddress() ? defaultValue.getReuseAddress() : null))
+								config.get(ofBoolean(), "reuseAddress", defaultValue.getReuseAddress()))
 						.setIfNotNull(
 								DatagramSocketSettings.Builder::withBroadcast,
-								config.get(ofBoolean(), "broadcast",
-										defaultValue.hasBroadcast() ? defaultValue.getBroadcast() : null))
+								config.get(ofBoolean(), "broadcast", defaultValue.getBroadcast()))
 						.build();
 			}
 		};

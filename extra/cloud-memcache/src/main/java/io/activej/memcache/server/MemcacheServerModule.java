@@ -78,8 +78,8 @@ public class MemcacheServerModule extends AbstractModule {
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))
-				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", ServerSocketSettings.createDefault()))
-				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", SocketSettings.createDefault()))
+				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", ServerSocketSettings.defaultInstance()))
+				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", SocketSettings.defaultInstance()))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"))
 				.build();
 	}

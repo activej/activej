@@ -19,11 +19,11 @@ package io.activej.reactor.net;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 
-import static io.activej.common.Checks.checkState;
 import static java.net.StandardSocketOptions.SO_RCVBUF;
 import static java.net.StandardSocketOptions.SO_REUSEADDR;
 
@@ -31,15 +31,15 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
  * This class used to change settings for server socket. It will be applying with creating new server socket
  */
 public final class ServerSocketSettings {
-	public static final int DEFAULT_BACKLOG = ApplicationSettings.getInt(ServerSocketSettings.class, "backlog", 16384);
+	private static final ServerSocketSettings DEFAULT_INSTANCE = builder().build();
 
-	private static final byte DEF_BOOL = -1;
-	private static final byte TRUE = 1;
-	private static final byte FALSE = 0;
+	public static final int DEFAULT_BACKLOG = ApplicationSettings.getInt(ServerSocketSettings.class, "backlog", 16384);
+	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(ServerSocketSettings.class, "receiveBufferSize", null);
+	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(ServerSocketSettings.class, "reuseAddress", null);
 
 	private int backlog = DEFAULT_BACKLOG;
-	private int receiveBufferSize = 0;
-	private byte reuseAddress = DEF_BOOL;
+	private @Nullable MemSize receiveBufferSize = DEFAULT_RECEIVE_BUFFER_SIZE;
+	private @Nullable Boolean reuseAddress = DEFAULT_REUSE_ADDRESS;
 
 	private ServerSocketSettings() {
 	}
@@ -48,8 +48,8 @@ public final class ServerSocketSettings {
 		return builder().withBacklog(backlog).build();
 	}
 
-	public static ServerSocketSettings createDefault() {
-		return builder().build();
+	public static ServerSocketSettings defaultInstance() {
+		return DEFAULT_INSTANCE;
 	}
 
 	public static Builder builder() {
@@ -67,13 +67,13 @@ public final class ServerSocketSettings {
 
 		public Builder withReceiveBufferSize(MemSize receiveBufferSize) {
 			checkNotBuilt(this);
-			ServerSocketSettings.this.receiveBufferSize = receiveBufferSize.toInt();
+			ServerSocketSettings.this.receiveBufferSize = receiveBufferSize;
 			return this;
 		}
 
 		public Builder withReuseAddress(boolean reuseAddress) {
 			checkNotBuilt(this);
-			ServerSocketSettings.this.reuseAddress = reuseAddress ? TRUE : FALSE;
+			ServerSocketSettings.this.reuseAddress = reuseAddress;
 			return this;
 		}
 
@@ -84,11 +84,11 @@ public final class ServerSocketSettings {
 	}
 
 	public void applySettings(ServerSocketChannel channel) throws IOException {
-		if (receiveBufferSize != 0) {
-			channel.setOption(SO_RCVBUF, receiveBufferSize);
+		if (receiveBufferSize != null) {
+			channel.setOption(SO_RCVBUF, receiveBufferSize.toInt());
 		}
-		if (reuseAddress != DEF_BOOL) {
-			channel.setOption(SO_REUSEADDR, reuseAddress != FALSE);
+		if (reuseAddress != null) {
+			channel.setOption(SO_REUSEADDR, reuseAddress);
 		}
 	}
 
@@ -96,26 +96,12 @@ public final class ServerSocketSettings {
 		return backlog;
 	}
 
-	public boolean hasReceiveBufferSize() {
-		return receiveBufferSize != 0;
-	}
-
-	public MemSize getReceiveBufferSize() {
-		return MemSize.of(getReceiveBufferSizeBytes());
-	}
-
-	public int getReceiveBufferSizeBytes() {
-		checkState(hasReceiveBufferSize(), "No 'receive buffer size' setting is present");
+	public @Nullable MemSize getReceiveBufferSize() {
 		return receiveBufferSize;
 	}
 
-	public boolean hasReuseAddress() {
-		return reuseAddress != DEF_BOOL;
-	}
-
-	public boolean getReuseAddress() {
-		checkState(hasReuseAddress(), "No 'reuse address' setting is present");
-		return reuseAddress != FALSE;
+	public @Nullable Boolean getReuseAddress() {
+		return reuseAddress;
 	}
 
 }

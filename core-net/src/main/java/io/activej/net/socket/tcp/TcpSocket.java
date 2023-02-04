@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
+import io.activej.common.MemSize;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -240,14 +241,17 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 		TcpSocket tcpSocket = new TcpSocket(reactor, socketChannel, remoteAddress);
 		if (socketSettings == null) return tcpSocket;
 		socketSettings.applySettings(socketChannel);
-		if (socketSettings.hasImplReadTimeout()) {
-			tcpSocket.readTimeout = (int) socketSettings.getImplReadTimeoutMillis();
+		Duration implReadTimeout = socketSettings.getImplReadTimeout();
+		if (implReadTimeout != null) {
+			tcpSocket.readTimeout = (int) implReadTimeout.toMillis();
 		}
-		if (socketSettings.hasImplWriteTimeout()) {
-			tcpSocket.writeTimeout = (int) socketSettings.getImplWriteTimeoutMillis();
+		Duration implWriteTimeout = socketSettings.getImplWriteTimeout();
+		if (implWriteTimeout != null) {
+			tcpSocket.writeTimeout = (int) implWriteTimeout.toMillis();
 		}
-		if (socketSettings.hasReadBufferSize()) {
-			tcpSocket.readBufferSize = socketSettings.getImplReadBufferSizeBytes();
+		MemSize implReadBufferSize = socketSettings.getImplReadBufferSize();
+		if (implReadBufferSize != null) {
+			tcpSocket.readBufferSize = implReadBufferSize.toInt();
 		}
 		return tcpSocket;
 	}

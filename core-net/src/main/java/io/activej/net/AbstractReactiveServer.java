@@ -65,8 +65,8 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		implements ReactiveServer, WorkerServer, ReactiveJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
 
-	protected ServerSocketSettings serverSocketSettings = ServerSocketSettings.createDefault();
-	protected SocketSettings socketSettings = SocketSettings.createDefault();
+	protected ServerSocketSettings serverSocketSettings = ServerSocketSettings.defaultInstance();
+	protected SocketSettings socketSettings = SocketSettings.defaultInstance();
 
 	protected boolean acceptOnce;
 

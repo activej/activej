@@ -70,7 +70,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
-	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettings = SocketSettings.defaultInstance();
 
 	// region JMX
 	private boolean detailedStats;

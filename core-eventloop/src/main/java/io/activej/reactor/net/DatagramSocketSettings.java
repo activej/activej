@@ -16,27 +16,29 @@
 
 package io.activej.reactor.net;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.channels.DatagramChannel;
 
-import static io.activej.common.Checks.checkState;
 import static java.net.StandardSocketOptions.*;
 
 /**
  * This class is used to change settings for datagram socket. It will be applied when creating a new socket
  */
 public final class DatagramSocketSettings {
-	private static final byte DEF_BOOL = -1;
-	private static final byte TRUE = 1;
-	private static final byte FALSE = 0;
+	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(DatagramSocketSettings.class, "receiveBufferSize", null);
+	public static final @Nullable MemSize DEFAULT_SEND_BUFFER_SIZE = ApplicationSettings.getMemSize(DatagramSocketSettings.class, "sendBufferSize", null);
+	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(DatagramSocketSettings.class, "reuseAddress", null);
+	public static final @Nullable Boolean DEFAULT_BROADCAST = ApplicationSettings.getBoolean(DatagramSocketSettings.class, "broadcast", null);
 
-	private int receiveBufferSize = 0;
-	private byte reuseAddress = DEF_BOOL;
-	private int sendBufferSize = 0;
-	private byte broadcast = DEF_BOOL;
+	private @Nullable MemSize receiveBufferSize = DEFAULT_RECEIVE_BUFFER_SIZE;
+	private @Nullable MemSize sendBufferSize = DEFAULT_SEND_BUFFER_SIZE;
+	private @Nullable Boolean reuseAddress = DEFAULT_REUSE_ADDRESS;
+	private @Nullable Boolean broadcast = DEFAULT_BROADCAST;
 
 	private DatagramSocketSettings() {
 	}
@@ -52,27 +54,27 @@ public final class DatagramSocketSettings {
 	public final class Builder extends AbstractBuilder<Builder, DatagramSocketSettings> {
 		private Builder() {}
 
-		public Builder withReceiveBufferSize(MemSize receiveBufferSize) {
+		public Builder withReceiveBufferSize(@Nullable MemSize receiveBufferSize) {
 			checkNotBuilt(this);
-			DatagramSocketSettings.this.receiveBufferSize = receiveBufferSize.toInt();
+			DatagramSocketSettings.this.receiveBufferSize = receiveBufferSize;
 			return this;
 		}
 
-		public Builder withSendBufferSize(MemSize sendBufferSize) {
+		public Builder withSendBufferSize(@Nullable MemSize sendBufferSize) {
 			checkNotBuilt(this);
-			DatagramSocketSettings.this.sendBufferSize = sendBufferSize.toInt();
+			DatagramSocketSettings.this.sendBufferSize = sendBufferSize;
 			return this;
 		}
 
-		public Builder withReuseAddress(boolean reuseAddress) {
+		public Builder withReuseAddress(@Nullable Boolean reuseAddress) {
 			checkNotBuilt(this);
-			DatagramSocketSettings.this.reuseAddress = reuseAddress ? TRUE : FALSE;
+			DatagramSocketSettings.this.reuseAddress = reuseAddress;
 			return this;
 		}
 
-		public Builder withBroadcast(boolean broadcast) {
+		public Builder withBroadcast(@Nullable Boolean broadcast) {
 			checkNotBuilt(this);
-			DatagramSocketSettings.this.broadcast = broadcast ? TRUE : FALSE;
+			DatagramSocketSettings.this.broadcast = broadcast;
 			return this;
 		}
 
@@ -83,61 +85,33 @@ public final class DatagramSocketSettings {
 	}
 
 	public void applySettings(DatagramChannel channel) throws IOException {
-		if (receiveBufferSize != 0) {
-			channel.setOption(SO_RCVBUF, receiveBufferSize);
+		if (receiveBufferSize != null) {
+			channel.setOption(SO_RCVBUF, receiveBufferSize.toInt());
 		}
-		if (sendBufferSize != 0) {
-			channel.setOption(SO_SNDBUF, sendBufferSize);
+		if (sendBufferSize != null) {
+			channel.setOption(SO_SNDBUF, sendBufferSize.toInt());
 		}
-		if (reuseAddress != DEF_BOOL) {
-			channel.setOption(SO_REUSEADDR, reuseAddress != FALSE);
+		if (reuseAddress != null) {
+			channel.setOption(SO_REUSEADDR, reuseAddress);
 		}
-		if (broadcast != DEF_BOOL) {
-			channel.setOption(SO_BROADCAST, broadcast != FALSE);
+		if (broadcast != null) {
+			channel.setOption(SO_BROADCAST, broadcast);
 		}
 	}
 
-	public boolean hasReceiveBufferSize() {
-		return receiveBufferSize != 0;
-	}
-
-	public MemSize getReceiveBufferSize() {
-		return MemSize.of(getReceiveBufferSizeBytes());
-	}
-
-	public int getReceiveBufferSizeBytes() {
-		checkState(hasReceiveBufferSize(), "No 'receive buffer size' setting is present");
+	public @Nullable MemSize getReceiveBufferSize() {
 		return receiveBufferSize;
 	}
 
-	public boolean hasReuseAddress() {
-		return reuseAddress != DEF_BOOL;
+	public @Nullable Boolean getReuseAddress() {
+		return reuseAddress;
 	}
 
-	public boolean getReuseAddress() {
-		checkState(hasReuseAddress(), "No 'reuse address' setting is present");
-		return reuseAddress != FALSE;
-	}
-
-	public boolean hasSendBufferSize() {
-		return sendBufferSize != 0;
-	}
-
-	public MemSize getSendBufferSize() {
-		return MemSize.of(getSendBufferSizeBytes());
-	}
-
-	public int getSendBufferSizeBytes() {
-		checkState(hasSendBufferSize(), "No 'send buffer size' setting is present");
+	public @Nullable MemSize getSendBufferSize() {
 		return sendBufferSize;
 	}
 
-	public boolean hasBroadcast() {
-		return broadcast != DEF_BOOL;
-	}
-
-	public boolean getBroadcast() {
-		checkState(hasBroadcast(), "No 'broadcast' setting is present");
-		return broadcast != FALSE;
+	public @Nullable Boolean getBroadcast() {
+		return broadcast;
 	}
 }

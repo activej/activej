@@ -16,6 +16,7 @@
 
 package io.activej.reactor.net;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 import org.jetbrains.annotations.Nullable;
@@ -24,27 +25,33 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
 
-import static io.activej.common.Checks.checkState;
 import static java.net.StandardSocketOptions.*;
 
 /**
  * This class is used to hold settings for a socket. Settings  will be applied when creating new socket
  */
 public final class SocketSettings {
-	private static final byte DEF_BOOL = -1;
-	private static final byte TRUE = 1;
-	private static final byte FALSE = 0;
+	private static final SocketSettings DEFAULT_INSTANCE = builder().withTcpNoDelay(true).build();
 
-	private byte keepAlive = DEF_BOOL;
-	private byte reuseAddress = DEF_BOOL;
-	private byte tcpNoDelay = DEF_BOOL;
+	public static final @Nullable Boolean DEFAULT_KEEP_ALIVE = ApplicationSettings.getBoolean(SocketSettings.class, "keepAlive", null);
+	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(SocketSettings.class, "reuseAddress", null);
+	public static final @Nullable Boolean DEFAULT_TCP_NO_DELAY = ApplicationSettings.getBoolean(SocketSettings.class, "tcpNoDelay", null);
+	public static final @Nullable MemSize DEFAULT_SEND_BUFFER_SIZE = ApplicationSettings.getMemSize(SocketSettings.class, "sendBufferSize", null);
+	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(SocketSettings.class, "receiveBufferSize", null);
+	public static final @Nullable Duration DEFAULT_IMPL_READ_TIMEOUT = ApplicationSettings.getDuration(SocketSettings.class, "implReadTimeout", null);
+	public static final @Nullable Duration DEFAULT_IMPL_WRITE_TIMEOUT = ApplicationSettings.getDuration(SocketSettings.class, "implWriteTimeout", null);
+	public static final @Nullable MemSize DEFAULT_IMPL_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(SocketSettings.class, "implReadBufferSize", null);
+	public static final @Nullable Duration DEFAULT_LINGER_TIMEOUT = ApplicationSettings.getDuration(SocketSettings.class, "lingerTimeout", null);
 
-	private int sendBufferSize = 0;
-	private int receiveBufferSize = 0;
-	private int implReadTimeout = 0;
-	private int implWriteTimeout = 0;
-	private int implReadBufferSize = 0;
-	private int lingerTimeout = -1;
+	private @Nullable Boolean keepAlive = DEFAULT_KEEP_ALIVE;
+	private @Nullable Boolean reuseAddress = DEFAULT_REUSE_ADDRESS;
+	private @Nullable Boolean tcpNoDelay = DEFAULT_TCP_NO_DELAY;
+	private @Nullable MemSize sendBufferSize = DEFAULT_SEND_BUFFER_SIZE;
+	private @Nullable MemSize receiveBufferSize = DEFAULT_RECEIVE_BUFFER_SIZE;
+	private @Nullable Duration implReadTimeout = DEFAULT_IMPL_READ_TIMEOUT;
+	private @Nullable Duration implWriteTimeout = DEFAULT_IMPL_WRITE_TIMEOUT;
+	private @Nullable MemSize implReadBufferSize = DEFAULT_IMPL_READ_BUFFER_SIZE;
+	private @Nullable Duration lingerTimeout = DEFAULT_LINGER_TIMEOUT;
 
 	private SocketSettings() {
 	}
@@ -60,8 +67,8 @@ public final class SocketSettings {
 		return builder().build();
 	}
 
-	public static SocketSettings createDefault() {
-		return builder().withTcpNoDelay(true).build();
+	public static SocketSettings defaultInstance() {
+		return DEFAULT_INSTANCE;
 	}
 
 	/**
@@ -78,57 +85,57 @@ public final class SocketSettings {
 	public final class Builder extends AbstractBuilder<Builder, SocketSettings> {
 		private Builder() {}
 
-		public Builder withSendBufferSize(MemSize sendBufferSize) {
+		public Builder withSendBufferSize(@Nullable MemSize sendBufferSize) {
 			checkNotBuilt(this);
-			SocketSettings.this.sendBufferSize = sendBufferSize.toInt();
+			SocketSettings.this.sendBufferSize = sendBufferSize;
 			return this;
 		}
 
-		public Builder withReceiveBufferSize(MemSize receiveBufferSize) {
+		public Builder withReceiveBufferSize(@Nullable MemSize receiveBufferSize) {
 			checkNotBuilt(this);
-			SocketSettings.this.receiveBufferSize = receiveBufferSize.toInt();
+			SocketSettings.this.receiveBufferSize = receiveBufferSize;
 			return this;
 		}
 
-		public Builder withKeepAlive(boolean keepAlive) {
+		public Builder withKeepAlive(@Nullable Boolean keepAlive) {
 			checkNotBuilt(this);
-			SocketSettings.this.keepAlive = keepAlive ? TRUE : FALSE;
+			SocketSettings.this.keepAlive = keepAlive;
 			return this;
 		}
 
-		public Builder withReuseAddress(boolean reuseAddress) {
+		public Builder withReuseAddress(@Nullable Boolean reuseAddress) {
 			checkNotBuilt(this);
-			SocketSettings.this.reuseAddress = reuseAddress ? TRUE : FALSE;
+			SocketSettings.this.reuseAddress = reuseAddress;
 			return this;
 		}
 
-		public Builder withTcpNoDelay(boolean tcpNoDelay) {
+		public Builder withTcpNoDelay(@Nullable Boolean tcpNoDelay) {
 			checkNotBuilt(this);
-			SocketSettings.this.tcpNoDelay = tcpNoDelay ? TRUE : FALSE;
+			SocketSettings.this.tcpNoDelay = tcpNoDelay;
 			return this;
 		}
 
-		public Builder withImplReadTimeout(Duration implReadTimeout) {
+		public Builder withImplReadTimeout(@Nullable Duration implReadTimeout) {
 			checkNotBuilt(this);
-			SocketSettings.this.implReadTimeout = (int) implReadTimeout.toMillis();
+			SocketSettings.this.implReadTimeout = implReadTimeout;
 			return this;
 		}
 
-		public Builder withImplWriteTimeout(Duration implWriteTimeout) {
+		public Builder withImplWriteTimeout(@Nullable Duration implWriteTimeout) {
 			checkNotBuilt(this);
-			SocketSettings.this.implWriteTimeout = (int) implWriteTimeout.toMillis();
+			SocketSettings.this.implWriteTimeout = implWriteTimeout;
 			return this;
 		}
 
-		public Builder withImplReadBufferSize(MemSize implReadBufferSize) {
+		public Builder withImplReadBufferSize(@Nullable MemSize implReadBufferSize) {
 			checkNotBuilt(this);
-			SocketSettings.this.implReadBufferSize = implReadBufferSize.toInt();
+			SocketSettings.this.implReadBufferSize = implReadBufferSize;
 			return this;
 		}
 
-		public Builder withLingerTimeout(Duration lingerTimeout) {
+		public Builder withLingerTimeout(@Nullable Duration lingerTimeout) {
 			checkNotBuilt(this);
-			SocketSettings.this.lingerTimeout = (int) (lingerTimeout.toMillis() / 1000);
+			SocketSettings.this.lingerTimeout = lingerTimeout;
 			return this;
 		}
 
@@ -139,128 +146,59 @@ public final class SocketSettings {
 	}
 
 	public void applySettings(SocketChannel channel) throws IOException {
-		if (sendBufferSize != 0) {
-			channel.setOption(SO_SNDBUF, sendBufferSize);
+		if (sendBufferSize != null) {
+			channel.setOption(SO_SNDBUF, sendBufferSize.toInt());
 		}
-		if (receiveBufferSize != 0) {
-			channel.setOption(SO_RCVBUF, receiveBufferSize);
+		if (receiveBufferSize != null) {
+			channel.setOption(SO_RCVBUF, receiveBufferSize.toInt());
 		}
-		if (keepAlive != DEF_BOOL) {
-			channel.setOption(SO_KEEPALIVE, keepAlive != FALSE);
+		if (keepAlive != null) {
+			channel.setOption(SO_KEEPALIVE, keepAlive);
 		}
-		if (reuseAddress != DEF_BOOL) {
-			channel.setOption(SO_REUSEADDR, reuseAddress != FALSE);
+		if (reuseAddress != null) {
+			channel.setOption(SO_REUSEADDR, reuseAddress);
 		}
-		if (tcpNoDelay != DEF_BOOL) {
-			channel.setOption(TCP_NODELAY, tcpNoDelay != FALSE);
+		if (tcpNoDelay != null) {
+			channel.setOption(TCP_NODELAY, tcpNoDelay);
 		}
-		if (lingerTimeout != -1) {
-			channel.setOption(SO_LINGER, lingerTimeout);
+		if (lingerTimeout != null) {
+			channel.setOption(SO_LINGER, (int) lingerTimeout.getSeconds());
 		}
 	}
 
-	public boolean hasSendBufferSize() {
-		return sendBufferSize != 0;
-	}
-
-	public MemSize getSendBufferSize() {
-		return MemSize.of(getSendBufferSizeBytes());
-	}
-
-	public int getSendBufferSizeBytes() {
-		checkState(hasSendBufferSize(), "No 'send buffer size' setting is present");
+	public @Nullable MemSize getSendBufferSize() {
 		return sendBufferSize;
 	}
 
-	public boolean hasReceiveBufferSize() {
-		return receiveBufferSize != 0;
-	}
-
-	public MemSize getReceiveBufferSize() {
-		return MemSize.of(getReceiveBufferSizeBytes());
-	}
-
-	public int getReceiveBufferSizeBytes() {
-		checkState(hasReceiveBufferSize(), "No 'receive buffer size' setting is present");
+	public @Nullable MemSize getReceiveBufferSize() {
 		return receiveBufferSize;
 	}
 
-	public boolean hasKeepAlive() {
-		return keepAlive != DEF_BOOL;
+	public @Nullable Boolean getKeepAlive() {
+		return keepAlive;
 	}
 
-	public boolean getKeepAlive() {
-		checkState(hasKeepAlive(), "No 'keep alive' setting is present");
-		return keepAlive != FALSE;
+	public @Nullable Boolean getReuseAddress() {
+		return reuseAddress;
 	}
 
-	public boolean hasReuseAddress() {
-		return reuseAddress != DEF_BOOL;
+	public @Nullable Boolean getTcpNoDelay() {
+		return tcpNoDelay;
 	}
 
-	public boolean getReuseAddress() {
-		checkState(hasReuseAddress(), "No 'reuse address' setting is present");
-		return reuseAddress != FALSE;
-	}
-
-	public boolean hasTcpNoDelay() {
-		return tcpNoDelay != DEF_BOOL;
-	}
-
-	public boolean getTcpNoDelay() {
-		checkState(hasTcpNoDelay(), "No 'TCP no delay' setting is present");
-		return tcpNoDelay != FALSE;
-	}
-
-	public boolean hasImplReadTimeout() {
-		return implReadTimeout != 0;
-	}
-
-	public Duration getImplReadTimeout() {
-		return Duration.ofMillis(getImplReadTimeoutMillis());
-	}
-
-	public long getImplReadTimeoutMillis() {
-		checkState(hasImplReadTimeout(), "No 'implicit read timeout' setting is present");
+	public @Nullable Duration getImplReadTimeout() {
 		return implReadTimeout;
 	}
 
-	public boolean hasImplWriteTimeout() {
-		return implWriteTimeout != 0;
-	}
-
-	public Duration getImplWriteTimeout() {
-		return Duration.ofMillis(getImplWriteTimeoutMillis());
-	}
-
-	public long getImplWriteTimeoutMillis() {
-		checkState(hasImplWriteTimeout(), "No 'implicit write timeout' setting is present");
+	public @Nullable Duration getImplWriteTimeout() {
 		return implWriteTimeout;
 	}
 
-	public boolean hasReadBufferSize() {
-		return implReadBufferSize != 0;
-	}
-
-	public MemSize getImplReadBufferSize() {
-		return MemSize.of(getImplReadBufferSizeBytes());
-	}
-
-	public int getImplReadBufferSizeBytes() {
-		checkState(hasReadBufferSize(), "No 'read buffer size' setting is present");
+	public @Nullable MemSize getImplReadBufferSize() {
 		return implReadBufferSize;
-	}
-
-	public boolean hasLingerTimeout() {
-		return lingerTimeout != -1;
 	}
 
 	public @Nullable Duration getLingerTimeout() {
-		return lingerTimeout == -1 ? null : Duration.ofSeconds(lingerTimeout);
-	}
-
-	public int getLingerTimeoutSeconds() {
-		checkState(hasLingerTimeout(), "No 'linger timeout' setting is present");
-		return implReadBufferSize;
+		return lingerTimeout;
 	}
 }

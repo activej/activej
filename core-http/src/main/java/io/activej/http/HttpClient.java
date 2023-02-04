@@ -88,7 +88,7 @@ public final class HttpClient extends AbstractNioReactive
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient.class, "maxKeepAliveRequests", 0);
 
 	private IDnsClient dnsClient;
-	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettings = SocketSettings.defaultInstance();
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
 	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList();

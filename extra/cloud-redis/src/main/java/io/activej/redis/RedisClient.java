@@ -51,7 +51,7 @@ public final class RedisClient extends AbstractNioReactive {
 
 	private final InetSocketAddress address;
 
-	private SocketSettings socketSettings = SocketSettings.createDefault();
+	private SocketSettings socketSettings = SocketSettings.defaultInstance();
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private Duration autoFlushInterval = Duration.ZERO;
 

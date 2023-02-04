@@ -66,7 +66,7 @@ public class MemcacheClientModule extends AbstractModule {
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))
-				.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", SocketSettings.createDefault()))
+				.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", SocketSettings.defaultInstance()))
 				.withConnectTimeout(config.get(ofDuration(), "client.connectSettings.connectTimeout", Duration.ofSeconds(10)))
 				.withReconnectInterval(config.get(ofDuration(), "client.connectSettings.reconnectInterval", Duration.ofSeconds(1)))
 				.withLogger(getLogger(IMemcacheClient.class))

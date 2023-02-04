@@ -122,7 +122,7 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static int getInt(Class<?> type, String name, int defValue) {
+	public static Integer getInt(Class<?> type, String name, Integer defValue) {
 		return get(Integer::parseInt, type, name, defValue);
 	}
 
@@ -131,7 +131,7 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static long getLong(Class<?> type, String name, long defValue) {
+	public static Long getLong(Class<?> type, String name, Long defValue) {
 		return get(Long::parseLong, type, name, defValue);
 	}
 
@@ -140,8 +140,12 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static boolean getBoolean(Class<?> type, String name, boolean defValue) {
-		return get(s -> s.trim().isEmpty() || Boolean.parseBoolean(s), type, name, defValue);
+	public static Boolean getBoolean(Class<?> type, String name, Boolean defValue) {
+		return get(ApplicationSettings::parseBoolean, type, name, defValue);
+	}
+
+	public static boolean parseBoolean(String s) {
+		return s.trim().isEmpty() || Boolean.parseBoolean(s);
 	}
 
 	/**
@@ -149,7 +153,7 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static double getDouble(Class<?> type, String name, double defValue) {
+	public static Double getDouble(Class<?> type, String name, Double defValue) {
 		return get(Double::parseDouble, type, name, defValue);
 	}
 
