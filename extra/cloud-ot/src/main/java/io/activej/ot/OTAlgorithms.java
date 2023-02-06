@@ -213,7 +213,7 @@ public final class OTAlgorithms {
 		checkArgument(heads.size() >= 2, "Cannot merge less than 2 heads");
 		return repository.getLevels(heads)
 				.then(levels ->
-						reduce(repository, system, heads, new GraphReducer_Load<>(system))
+						reduce(repository, system, heads, new LoadGraphReducer<>(system))
 								.map(graph -> {
 									try {
 										Map<K, List<D>> mergeResult = graph.merge(graph.excludeParents(heads));
@@ -254,13 +254,13 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D> Promise<K> findAnyCommonParent(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startCut) {
-		return reduce(repository, system, startCut, new GraphReducer_FindAnyCommonParent<>(DiffsReducer.toVoid()))
+		return reduce(repository, system, startCut, new FindAnyCommonParentGraphReducer<>(DiffsReducer.toVoid()))
 				.map(Map.Entry::getKey)
 				.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
 	public static <K, D> Promise<Set<K>> findAllCommonParents(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startCut) {
-		return reduce(repository, system, startCut, new GraphReducer_FindAllCommonParents<>(DiffsReducer.toVoid()))
+		return reduce(repository, system, startCut, new FindAllCommonParentsGraphReducer<>(DiffsReducer.toVoid()))
 				.map(Map::keySet)
 				.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
@@ -269,7 +269,7 @@ public final class OTAlgorithms {
 		if (node1.equals(node2)) return Promise.of(List.of());
 
 		Set<K> startCut = Set.of(node1, node2);
-		return reduce(repository, system, startCut, new GraphReducer_FindAnyCommonParent<>(DiffsReducer.toList()))
+		return reduce(repository, system, startCut, new FindAnyCommonParentGraphReducer<>(DiffsReducer.toList()))
 				.map(entry -> {
 					List<D> diffs1 = entry.getValue().get(node1);
 					List<D> diffs2 = entry.getValue().get(node2);
@@ -304,8 +304,8 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod(), startNodes));
 	}
 
-	public static final class GraphReducer_FindAnyCommonParent<K, D, A> extends AbstractGraphReducer<K, D, A, Map.Entry<K, Map<K, A>>> {
-		private GraphReducer_FindAnyCommonParent(DiffsReducer<A, D> diffsReducer) {
+	public static final class FindAnyCommonParentGraphReducer<K, D, A> extends AbstractGraphReducer<K, D, A, Map.Entry<K, Map<K, A>>> {
+		private FindAnyCommonParentGraphReducer(DiffsReducer<A, D> diffsReducer) {
 			super(diffsReducer);
 		}
 
@@ -320,8 +320,8 @@ public final class OTAlgorithms {
 		}
 	}
 
-	public static final class GraphReducer_FindAllCommonParents<K, D, A> extends AbstractGraphReducer<K, D, A, Map<K, Map<K, A>>> {
-		private GraphReducer_FindAllCommonParents(DiffsReducer<A, D> diffsReducer) {
+	public static final class FindAllCommonParentsGraphReducer<K, D, A> extends AbstractGraphReducer<K, D, A, Map<K, Map<K, A>>> {
+		private FindAllCommonParentsGraphReducer(DiffsReducer<A, D> diffsReducer) {
 			super(diffsReducer);
 		}
 
@@ -381,13 +381,13 @@ public final class OTAlgorithms {
 				.then(diffs -> repository.saveSnapshot(revisionId, diffs));
 	}
 
-	public static class GraphReducer_Load<K, D> implements GraphReducer<K, D, OTLoadedGraph<K, D>> {
+	public static class LoadGraphReducer<K, D> implements GraphReducer<K, D, OTLoadedGraph<K, D>> {
 		private final OTSystem<D> system;
 		private final OTLoadedGraph<K, D> graph;
 		private final Map<K, Set<K>> head2roots = new HashMap<>();
 		private final Map<K, Set<K>> root2heads = new HashMap<>();
 
-		private GraphReducer_Load(OTSystem<D> system) {
+		private LoadGraphReducer(OTSystem<D> system) {
 			this.system = system;
 			this.graph = new OTLoadedGraph<>(system);
 		}
@@ -443,7 +443,7 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D> Promise<OTLoadedGraph<K, D>> loadForMerge(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
-		return reduce(repository, system, heads, new GraphReducer_Load<>(system))
+		return reduce(repository, system, heads, new LoadGraphReducer<>(system))
 				.whenComplete(toLogger(logger, thisMethod(), heads));
 	}
 
