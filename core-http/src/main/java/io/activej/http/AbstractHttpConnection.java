@@ -25,8 +25,12 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.recycle.Recyclable;
-import io.activej.csp.*;
+import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.AbstractChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.stream.*;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
@@ -534,7 +538,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize());
 		httpMessage.writeTo(buf);
 
-		writeStream(ChannelSuppliers.concat(writeBuf != null ? ChannelSupplier.of(writeBuf, buf) : ChannelSupplier.of(buf), bodyStream));
+		writeStream(ChannelSuppliers.concat(writeBuf != null ? ChannelSuppliers.ofValues(writeBuf, buf) : ChannelSuppliers.ofValue(buf), bodyStream));
 	}
 
 	protected void writeBuf(ByteBuf buf) {
@@ -550,7 +554,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	}
 
 	private void writeStream(ChannelSupplier<ByteBuf> supplier) {
-		supplier.streamTo(ChannelConsumer.of(
+		supplier.streamTo(ChannelConsumers.ofAsyncConsumer(
 						buf -> socket.write(buf)
 								.whenException(e -> closeEx(translateToHttpException(e))),
 						AsyncCloseable.of(e -> closeEx(translateToHttpException(e)))))

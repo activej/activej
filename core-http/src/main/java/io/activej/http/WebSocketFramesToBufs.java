@@ -21,12 +21,13 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.Checks;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.http.IWebSocket.Frame;
 import io.activej.http.IWebSocket.Frame.FrameType;
 import io.activej.promise.Promise;
@@ -98,7 +99,7 @@ public final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 
 	@Override
 	protected void doProcess() {
-		input.streamTo(ChannelConsumer.of(
+		input.streamTo(ChannelConsumers.ofAsyncConsumer(
 						frame -> {
 							if (CHECKS) checkFrameOrder(frame);
 

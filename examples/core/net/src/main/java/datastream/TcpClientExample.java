@@ -1,7 +1,7 @@
 package datastream;
 
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -42,11 +42,11 @@ public final class TcpClientExample {
 
 				StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 						.transformWith(ChannelSerializer.create(INT_SERIALIZER))
-						.streamTo(ChannelConsumer.ofSocket(socket));
+						.streamTo(ChannelConsumers.ofSocket(socket));
 
 				ToListStreamConsumer<String> consumer = ToListStreamConsumer.create();
 
-				ChannelSupplier.ofSocket(socket)
+				ChannelSuppliers.ofSocket(socket)
 						.transformWith(ChannelDeserializer.create(UTF8_SERIALIZER))
 						.streamTo(consumer);
 

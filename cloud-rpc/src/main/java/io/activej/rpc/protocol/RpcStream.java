@@ -18,11 +18,11 @@ package io.activej.rpc.protocol;
 
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.MemSize;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamDataAcceptor;
@@ -94,14 +94,14 @@ public final class RpcStream {
 			ChannelFrameDecoder decompressor = ChannelFrameDecoder.create(frameFormat);
 			ChannelFrameEncoder compressor = ChannelFrameEncoder.create(frameFormat);
 
-			ChannelSupplier.ofSocket(socket).bindTo(decompressor.getInput());
+			ChannelSuppliers.ofSocket(socket).bindTo(decompressor.getInput());
 			decompressor.getOutput().bindTo(deserializer.getInput());
 
 			serializer.getOutput().bindTo(compressor.getInput());
-			compressor.getOutput().set(ChannelConsumer.ofSocket(socket));
+			compressor.getOutput().set(ChannelConsumers.ofSocket(socket));
 		} else {
-			ChannelSupplier.ofSocket(socket).bindTo(deserializer.getInput());
-			serializer.getOutput().set(ChannelConsumer.ofSocket(socket));
+			ChannelSuppliers.ofSocket(socket).bindTo(deserializer.getInput());
+			serializer.getOutput().set(ChannelConsumers.ofSocket(socket));
 		}
 
 		deserializer.streamTo(internalConsumer);

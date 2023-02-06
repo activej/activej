@@ -2,6 +2,10 @@ package io.activej.csp;
 
 import io.activej.common.function.FunctionEx;
 import io.activej.config.Config;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.AbstractChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.InstanceProvider;
 import io.activej.inject.annotation.Inject;
@@ -68,7 +72,7 @@ public class CspBenchmark extends Launcher {
 	@Provides
 	@Transient
 	ChannelConsumer<Integer> channelConsumer() {
-		return ChannelConsumer.ofConsumer(x -> {});
+		return ChannelConsumers.ofConsumer(x -> {});
 	}
 
 	@Override

@@ -17,10 +17,10 @@
 package io.activej.datastream.stats;
 
 import io.activej.common.Utils;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamConsumerTransformer;

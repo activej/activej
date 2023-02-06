@@ -1,6 +1,7 @@
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.SimpleServer;
 import io.activej.net.socket.tcp.TcpSocket;
@@ -19,7 +20,7 @@ public final class PingPongSocketConnection {
 	private static final String REQUEST_MSG = "PING";
 	private static final String RESPONSE_MSG = "PONG";
 
-	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoder.ofFixedSize(4)
+	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoders.ofFixedSize(4)
 			.andThen(buf -> buf.asString(UTF_8));
 
 	//[START REGION_1]
@@ -31,7 +32,7 @@ public final class PingPongSocketConnection {
 		SimpleServer server = SimpleServer.builder(
 						eventloop,
 						socket -> {
-							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
+							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
 							repeat(() ->
 									bufsSupplier.decode(DECODER)
 											.whenResult(x -> System.out.println(x))
@@ -47,7 +48,7 @@ public final class PingPongSocketConnection {
 
 		TcpSocket.connect(eventloop, ADDRESS)
 				.whenResult(socket -> {
-					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
+					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
 					loop(0,
 							i -> i < ITERATIONS,
 							i -> socket.write(wrapAscii(REQUEST_MSG))

@@ -25,11 +25,12 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodecs;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
@@ -75,7 +76,7 @@ public final class RemoteFileSystem extends AbstractNioReactive
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteFileSystem.class, "connectTimeout", Duration.ZERO);
 
-	private static final ByteBufsCodec<FileSystemResponse, FileSystemRequest> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
+	private static final ByteBufsCodec<FileSystemResponse, FileSystemRequest> SERIALIZER = ByteBufsCodecs.ofStreamCodecs(
 			RemoteFileSystemUtils.FS_RESPONSE_CODEC,
 			RemoteFileSystemUtils.FS_REQUEST_CODEC
 	);

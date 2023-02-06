@@ -1,6 +1,6 @@
 package io.activej.csp.queue;
 
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class ChannelBufferTest {
 	@Test
 	public void testBufferStreaming() {
 		ChannelBuffer<Integer> buffer = new ChannelBuffer<>(3);
-		ChannelSupplier.of(1, 2, 3, 4, 5).streamTo(buffer.getConsumer());
+		ChannelSuppliers.ofValues(1, 2, 3, 4, 5).streamTo(buffer.getConsumer());
 		List<Integer> list = await(buffer.getSupplier().toList());
 
 		assertEquals(List.of(1, 2, 3, 4, 5), list);

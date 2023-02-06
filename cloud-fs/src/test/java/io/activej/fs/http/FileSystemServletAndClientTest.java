@@ -4,9 +4,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
@@ -81,7 +81,8 @@ public final class FileSystemServletAndClientTest {
 	public void upload() throws IOException {
 		String content = "Test data";
 		String fileName = "newDir/newFile";
-		await(ChannelSupplier.of(wrapUtf8(content)).streamTo(fileSystem.upload(fileName)));
+		ByteBuf value = wrapUtf8(content);
+		await(ChannelSuppliers.ofValue(value).streamTo(fileSystem.upload(fileName)));
 		List<String> strings = Files.readAllLines(storage.resolve(fileName));
 
 		assertEquals(1, strings.size());
@@ -98,8 +99,8 @@ public final class FileSystemServletAndClientTest {
 		ChannelConsumer<ByteBuf> consumer = await(fileSystem.upload(filename));
 
 		Exception exception = awaitException(ChannelSuppliers.concat(
-						ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
-						ChannelSupplier.ofException(expectedException))
+						ChannelSuppliers.ofValues(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+						ChannelSuppliers.ofException(expectedException))
 				.streamTo(consumer));
 
 		assertSame(expectedException, exception);
@@ -115,7 +116,8 @@ public final class FileSystemServletAndClientTest {
 
 		ChannelConsumer<ByteBuf> consumer = await(fileSystem.upload(filename, 10));
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
+		ByteBuf value = wrapUtf8("data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(consumer));
 
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 
@@ -130,7 +132,8 @@ public final class FileSystemServletAndClientTest {
 
 		ChannelConsumer<ByteBuf> consumer = await(fileSystem.upload(filename, 10));
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
+		ByteBuf value = wrapUtf8("data data data data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(consumer));
 
 		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
@@ -139,7 +142,8 @@ public final class FileSystemServletAndClientTest {
 
 	@Test
 	public void uploadIllegalPath() {
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("test")).streamTo(fileSystem.upload("../outside")));
+		ByteBuf value = wrapUtf8("test");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(fileSystem.upload("../outside")));
 		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
 

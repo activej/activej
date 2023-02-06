@@ -2,8 +2,8 @@ package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.ConsumerEx;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.IsADirectoryException;

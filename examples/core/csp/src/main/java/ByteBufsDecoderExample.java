@@ -1,7 +1,7 @@
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public final class ByteBufsDecoderExample {
 			return bufs.takeExactSize(5).asString(UTF_8);
 		};
 
-		BinaryChannelSupplier.of(ChannelSupplier.ofList(letters)).decode(decoder)
+		BinaryChannelSupplier.of(ChannelSuppliers.ofList(letters)).decode(decoder)
 				.whenResult(x -> System.out.println(x));
 
 		eventloop.run();

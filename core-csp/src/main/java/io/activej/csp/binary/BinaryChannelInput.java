@@ -18,7 +18,7 @@ package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelInput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 
 @FunctionalInterface

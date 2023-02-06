@@ -2,8 +2,8 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -36,11 +36,11 @@ public final class ChannelByteCombinerTest {
 
 	@Test
 	public void exceptionOnStart() {
-		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3")).async());
+		combiner.addInput().set(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3")).async());
 		combiner.addInput().set(failing().async());
-		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5"),
+		combiner.addInput().set(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5"),
 				wrapUtf8("6"), wrapUtf8("7"), wrapUtf8("8")).async());
-		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")).async());
+		combiner.addInput().set(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")).async());
 
 		String result = await(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector())).asString(UTF_8);
 
@@ -49,11 +49,11 @@ public final class ChannelByteCombinerTest {
 
 	@Test
 	public void exceptionInProcess() {
-		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3")).async());
-		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2")), failing()).async());
-		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5"),
+		combiner.addInput().set(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3")).async());
+		combiner.addInput().set(ChannelSuppliers.concat(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2")), failing()).async());
+		combiner.addInput().set(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5"),
 				wrapUtf8("6"), wrapUtf8("7"), wrapUtf8("8")).async());
-		combiner.addInput().set(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")).async());
+		combiner.addInput().set(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")).async());
 
 		String result = await(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector())).asString(UTF_8);
 
@@ -74,11 +74,11 @@ public final class ChannelByteCombinerTest {
 
 	@Test
 	public void allExceptionsOnInProcess() {
-		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3")), failing()).async());
-		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2")), failing()).async());
-		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5"),
+		combiner.addInput().set(ChannelSuppliers.concat(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3")), failing()).async());
+		combiner.addInput().set(ChannelSuppliers.concat(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2")), failing()).async());
+		combiner.addInput().set(ChannelSuppliers.concat(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5"),
 				wrapUtf8("6"), wrapUtf8("7"), wrapUtf8("8")), failing()).async());
-		combiner.addInput().set(ChannelSuppliers.concat(ChannelSupplier.of(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")),
+		combiner.addInput().set(ChannelSuppliers.concat(ChannelSuppliers.ofValues(wrapUtf8("1"), wrapUtf8("2"), wrapUtf8("3"), wrapUtf8("4"), wrapUtf8("5")),
 				failing()).async());
 
 		Exception exception = awaitException(combiner.getOutput().getSupplier().toCollector(ByteBufs.collector()));
@@ -87,7 +87,7 @@ public final class ChannelByteCombinerTest {
 	}
 
 	private static ChannelSupplier<ByteBuf> failing() {
-		return ChannelSupplier.ofException(EXPECTED_EXCEPTION);
+		return ChannelSuppliers.ofException(EXPECTED_EXCEPTION);
 	}
 
 }

@@ -1,13 +1,11 @@
 package io.activej.multilog;
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.process.ChannelByteRanger;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
-import io.activej.csp.process.frame.impl.LZ4Legacy;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -141,7 +139,8 @@ public class MultilogTest {
 		await(fs.list("*" + partition1 + "*")
 				.then(map -> {
 					String filename = first(map.keySet());
-					return ChannelSupplier.of(wrapUtf8("MALFORMED")).streamTo(fs.upload(filename));
+					ByteBuf value = wrapUtf8("MALFORMED");
+					return ChannelSuppliers.ofValue(value).streamTo(fs.upload(filename));
 				}));
 
 		// Unexpected data
@@ -149,8 +148,11 @@ public class MultilogTest {
 				.then(map -> {
 					String filename = first(map.keySet());
 					return fs.download(filename)
-							.then(supplier -> ChannelSuppliers.concat(supplier, ChannelSupplier.of(wrapUtf8("UNEXPECTED DATA")))
-									.streamTo(fs.upload(filename)));
+							.then(supplier -> {
+								ByteBuf value = wrapUtf8("UNEXPECTED DATA");
+								return ChannelSuppliers.concat(supplier, ChannelSuppliers.ofValue(value))
+										.streamTo(fs.upload(filename));
+							});
 				}));
 
 		assertTrue(readLog(multilog, partition1).isEmpty());

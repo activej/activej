@@ -21,10 +21,10 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.bytebuf.ByteBufs.ByteScanner;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
 import io.activej.csp.binary.BinaryChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
@@ -33,8 +33,8 @@ import io.activej.promise.Promise;
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
 import static io.activej.common.Checks.checkState;
-import static io.activej.csp.binary.ByteBufsDecoder.assertBytes;
-import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
+import static io.activej.csp.binary.decoder.ByteBufsDecoders.assertBytes;
+import static io.activej.csp.binary.decoder.ByteBufsDecoders.ofCrlfTerminatedBytes;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**

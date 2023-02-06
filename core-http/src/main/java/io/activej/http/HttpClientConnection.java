@@ -20,9 +20,9 @@ import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.recycle.Recyclable;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.HttpClient.Inspector;
 import io.activej.http.stream.BufsConsumerGzipInflater;
 import io.activej.net.socket.tcp.ITcpSocket;
@@ -36,7 +36,7 @@ import java.net.InetSocketAddress;
 import static io.activej.bytebuf.ByteBufStrings.SP;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Utils.nullify;
-import static io.activej.csp.ChannelSuppliers.concat;
+import static io.activej.csp.supplier.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_KEY;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
@@ -217,7 +217,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private boolean processWebSocketResponse(@Nullable ByteBuf body) {
 		if (response.getCode() == 101) {
 			assert body != null && body.readRemaining() == 0;
-			response.bodyStream = sanitize(concat(ChannelSupplier.of(detachReadBuf()), ChannelSupplier.ofSocket(socket)));
+			response.bodyStream = sanitize(concat(ChannelSuppliers.ofValue(detachReadBuf()), ChannelSuppliers.ofSocket(socket)));
 			return true;
 		} else {
 			closeEx(HANDSHAKE_FAILED);
@@ -246,7 +246,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onNoContentLength() {
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ChannelSupplier.of(detachReadBuf()), buffer.getSupplier());
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(ChannelSuppliers.ofValue(detachReadBuf()), buffer.getSupplier());
 		Promise<Void> inflaterFinished = Promise.complete();
 		if ((flags & GZIPPED) != 0) {
 			BufsConsumerGzipInflater gzipInflater = BufsConsumerGzipInflater.create();
@@ -254,7 +254,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			inflaterFinished = gzipInflater.getProcessCompletion();
 		}
 		onHeadersReceived(null, supplier);
-		ChannelSupplier.of(socket::read, socket)
+		ChannelSuppliers.ofAsyncSupplier(socket::read, socket)
 				.streamTo(buffer.getConsumer())
 				.both(inflaterFinished)
 				.run(($, e) -> {

@@ -32,6 +32,10 @@ public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implemen
 		return exception;
 	}
 
+	public @Nullable AsyncCloseable getCloseable() {
+		return closeable;
+	}
+
 	public final void setCloseable(@Nullable AsyncCloseable closeable) {
 		this.closeable = closeable;
 	}

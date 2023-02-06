@@ -26,11 +26,11 @@ import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -158,7 +158,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, AggregationChunkStorage<C>>{
+	public final class Builder extends AbstractBuilder<Builder, AggregationChunkStorage<C>> {
 		private Builder() {}
 
 		public Builder withBufferSize(MemSize bufferSize) {
@@ -190,7 +190,6 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			return AggregationChunkStorage.this;
 		}
 	}
-
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -259,7 +258,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
 		checkInReactorThread(this);
 		return fileSystem.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
-				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
+				.then(() -> ChannelSuppliers.<ByteBuf>empty().streamTo(
 						fileSystem.upload(toBackupPath(backupId, null), 0)))
 				.mapException(e -> new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e))
 				.whenComplete(promiseBackup.recordStats())

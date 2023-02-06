@@ -1,9 +1,8 @@
 package io.activej.csp.process;
 
 import io.activej.async.function.AsyncConsumer;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -35,11 +34,11 @@ public class ChannelSplitterTest {
 		List<String> theList = new ArrayList<>();
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSupplier.ofList(expected));
+				.withInput(ChannelSuppliers.ofList(expected));
 
 		for (int i = 0; i < n; i++) {
 			splitter.addOutput()
-					.set(ChannelConsumer.of(AsyncConsumer.<String>of(theList::add)).async());
+					.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.<String>of(theList::add)).async());
 		}
 
 		await(splitter.startProcess());
@@ -58,11 +57,11 @@ public class ChannelSplitterTest {
 
 		Exception exception = new Exception("test exception");
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSuppliers.concat(ChannelSupplier.ofList(expected), ChannelSupplier.ofException(exception)));
+				.withInput(ChannelSuppliers.concat(ChannelSuppliers.ofList(expected), ChannelSuppliers.ofException(exception)));
 
 		for (int i = 0; i < n; i++) {
 			splitter.addOutput()
-					.set(ChannelConsumer.of(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
+					.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
 		}
 
 		assertSame(exception, awaitException(splitter.startProcess()));
@@ -78,16 +77,16 @@ public class ChannelSplitterTest {
 		expected.add("third");
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSupplier.ofList(expected));
+				.withInput(ChannelSuppliers.ofList(expected));
 		Exception exception = new Exception("test exception");
 
 		for (int i = 0; i < n; i++) {
 			if (i == n / 2) {
 				splitter.addOutput()
-						.set(ChannelConsumer.ofException(exception));
+						.set(ChannelConsumers.ofException(exception));
 			} else {
 				splitter.addOutput()
-						.set(ChannelConsumer.of(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
+						.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
 			}
 		}
 

@@ -1,8 +1,10 @@
 package io.activej.http;
 
+import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.IWebSocket.Frame;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -30,7 +32,8 @@ public final class WebSocketBufsToFramesTest {
 		// Unmasked "Hello" message, RFC 6455 - 5.7
 		byte[] frame = new byte[]{(byte) 0x81, (byte) 0x05, (byte) 0x48, (byte) 0x65, (byte) 0x6c, (byte) 0x6c, (byte) 0x6f};
 
-		Frame result = await(ChannelSupplier.of(wrapForReading(frame))
+		ByteBuf value = wrapForReading(frame);
+		Frame result = await(ChannelSuppliers.ofValue(value)
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
 				.get());
@@ -46,7 +49,8 @@ public final class WebSocketBufsToFramesTest {
 		byte[] frame = new byte[]{(byte) 0x81, (byte) 0x85, (byte) 0x37, (byte) 0xfa, (byte) 0x21,
 				(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
 
-		Frame result = await(ChannelSupplier.of(wrapForReading(frame))
+		ByteBuf value = wrapForReading(frame);
+		Frame result = await(ChannelSuppliers.ofValue(value)
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), true))
 				.get());
@@ -63,7 +67,7 @@ public final class WebSocketBufsToFramesTest {
 		// Contains "lo" message, RFC 6455 - 5.7
 		byte[] frame2 = new byte[]{(byte) 0x80, (byte) 0x02, (byte) 0x6c, (byte) 0x6f};
 
-		ChannelSupplier<Frame> supplier = ChannelSupplier.of(wrapForReading(frame1), wrapForReading(frame2))
+		ChannelSupplier<Frame> supplier = ChannelSuppliers.ofValues(wrapForReading(frame1), wrapForReading(frame2))
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false));
 
@@ -84,7 +88,7 @@ public final class WebSocketBufsToFramesTest {
 		byte[] header = new byte[]{(byte) 0x82, (byte) 0x7E, (byte) 0x01, (byte) 0x00};
 		byte[] payload = randomBytes(256);
 
-		Frame result = await(ChannelSupplier.of(wrapForReading(header), wrapForReading(payload))
+		Frame result = await(ChannelSuppliers.ofValues(wrapForReading(header), wrapForReading(payload))
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
 				.get());
@@ -101,7 +105,7 @@ public final class WebSocketBufsToFramesTest {
 				(byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00};
 		byte[] payload = randomBytes(65536);
 
-		Frame result = await(ChannelSupplier.of(wrapForReading(header), wrapForReading(payload))
+		Frame result = await(ChannelSuppliers.ofValues(wrapForReading(header), wrapForReading(payload))
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
 				.get());
@@ -117,10 +121,10 @@ public final class WebSocketBufsToFramesTest {
 		byte[] pingFrame = new byte[]{(byte) 0x89, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f};
 
 		ByteBufs pingMessage = new ByteBufs();
-		await(ChannelSupplier.of(wrapForReading(pingFrame), closeUnmasked())
+		await(ChannelSuppliers.ofValues(wrapForReading(pingFrame), closeUnmasked())
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, pingMessage::add, failOnItem(), false))
-				.streamTo(ChannelConsumer.ofConsumer($ -> fail())));
+				.streamTo(ChannelConsumers.ofConsumer($ -> fail())));
 
 		assertEquals("Hello", pingMessage.takeRemaining().asString(UTF_8));
 	}
@@ -132,10 +136,10 @@ public final class WebSocketBufsToFramesTest {
 				(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
 
 		ByteBufs pongMessage = new ByteBufs();
-		await(ChannelSupplier.of(wrapForReading(pingFrame), closeMasked())
+		await(ChannelSuppliers.ofValues(wrapForReading(pingFrame), closeMasked())
 				.transformWith(chunker())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), pongMessage::add, true))
-				.streamTo(ChannelConsumer.ofConsumer($ -> fail())));
+				.streamTo(ChannelConsumers.ofConsumer($ -> fail())));
 
 		assertEquals("Hello", pongMessage.takeRemaining().asString(UTF_8));
 	}

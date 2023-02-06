@@ -1,5 +1,5 @@
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.tcp.RemoteFileSystem;
 import io.activej.inject.Injector;
@@ -61,7 +61,7 @@ public final class FileDownloadExample extends Launcher {
 	protected void run() throws Exception {
 		ExecutorService executor = newSingleThreadExecutor();
 		CompletableFuture<Void> future = reactor.submit(() ->
-				ChannelSupplier.ofPromise(client.download(REQUIRED_FILE))
+				ChannelSuppliers.ofPromise(client.download(REQUIRED_FILE))
 						.streamTo(ChannelFileWriter.open(executor, clientStorage.resolve(DOWNLOADED_FILE)))
 						.whenResult(() -> System.out.printf("%nFile '%s' successfully downloaded to '%s'%n%n",
 								REQUIRED_FILE, clientStorage))

@@ -22,7 +22,8 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.HttpServer.Inspector;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.SslTcpSocket;
@@ -35,7 +36,7 @@ import java.net.InetAddress;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Utils.nullify;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.csp.ChannelSuppliers.concat;
+import static io.activej.csp.supplier.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
@@ -408,8 +409,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@SuppressWarnings("ConstantConditions")
 	private boolean processWebSocketRequest(@Nullable ByteBuf body) {
 		if (body != null && body.readRemaining() == 0) {
-			ChannelSupplier<ByteBuf> ofReadBufSupplier = ChannelSupplier.of(detachReadBuf());
-			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
+			ChannelSupplier<ByteBuf> ofReadBufSupplier = ChannelSuppliers.ofValue(detachReadBuf());
+			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSuppliers.ofSocket(socket);
 			request.bodyStream = sanitize(concat(ofReadBufSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
 			request.setProtocol(socket instanceof SslTcpSocket ? WSS : WS);

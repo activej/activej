@@ -21,12 +21,13 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.csp.supplier.ChannelSupplier;
 
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
@@ -128,7 +129,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	}
 
 	private void writeBody() {
-		input.streamTo(ChannelConsumer.of(buf -> {
+		input.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> {
 					crc32.update(buf.array(), buf.head(), buf.readRemaining());
 					deflater.setInput(buf.array(), buf.head(), buf.readRemaining());
 					ByteBufs bufs = deflate();

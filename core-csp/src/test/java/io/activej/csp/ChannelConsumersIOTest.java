@@ -2,6 +2,9 @@ package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
@@ -20,8 +23,8 @@ import java.util.concurrent.Executors;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
-import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
+import static io.activej.csp.binary.Utils.channelConsumerAsOutputStream;
+import static io.activej.csp.consumer.ChannelConsumers.ofOutputStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.executeWithReactor;
@@ -63,9 +66,10 @@ public class ChannelConsumersIOTest {
 				.build();
 		ChannelConsumer<ByteBuf> consumer;
 		try (OutputStream os = outputStream()) {
-			consumer = outputStreamAsChannelConsumer(executor, os);
+			consumer = ofOutputStream(executor, os);
 
-			await(ChannelSupplier.of(ByteBuf.wrapForReading(DATA)).streamTo(consumer));
+			ByteBuf value = ByteBuf.wrapForReading(DATA);
+			await(ChannelSuppliers.ofValue(value).streamTo(consumer));
 		}
 		assertArrayEquals(DATA, Files.readAllBytes(file));
 
@@ -82,7 +86,7 @@ public class ChannelConsumersIOTest {
 				.build();
 		try (OutputStream os = outputStream()) {
 			os.close();
-			ChannelConsumer<ByteBuf> consumer = outputStreamAsChannelConsumer(executor, os);
+			ChannelConsumer<ByteBuf> consumer = ofOutputStream(executor, os);
 
 			IOException exception = awaitException(consumer.accept(ByteBuf.wrapForReading(new byte[]{1})));
 			try {
@@ -106,7 +110,7 @@ public class ChannelConsumersIOTest {
 		List<ByteBuf> expected = List.of(wrapUtf8("Hello"), wrapUtf8("World"));
 		List<ByteBuf> bufs = new ArrayList<>();
 
-		ChannelConsumer<ByteBuf> consumer = executeWithReactor(eventloop, () -> ChannelConsumer.ofConsumer(bufs::add));
+		ChannelConsumer<ByteBuf> consumer = executeWithReactor(eventloop, () -> ChannelConsumers.ofConsumer(bufs::add));
 
 		try (OutputStream outputStream = outputStream();
 			 OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {
@@ -132,7 +136,7 @@ public class ChannelConsumersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		ChannelConsumer<ByteBuf> consumer = executeWithReactor(eventloop, () -> ChannelConsumer.ofConsumer($ -> fail()));
+		ChannelConsumer<ByteBuf> consumer = executeWithReactor(eventloop, () -> ChannelConsumers.ofConsumer($ -> fail()));
 
 		try (OutputStream outputStream = outputStream();
 			 OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {

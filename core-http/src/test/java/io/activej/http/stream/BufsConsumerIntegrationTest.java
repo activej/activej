@@ -14,7 +14,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.csp.ChannelSupplier.ofList;
+import static io.activej.csp.supplier.ChannelSuppliers.ofList;
 import static io.activej.http.TestUtils.chunkedByByte;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertTrue;

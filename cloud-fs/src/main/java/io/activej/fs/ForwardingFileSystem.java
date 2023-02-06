@@ -17,8 +17,8 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 

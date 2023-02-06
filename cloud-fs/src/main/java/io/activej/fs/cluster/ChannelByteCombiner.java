@@ -18,13 +18,13 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.WithChannelInputs;
 import io.activej.csp.dsl.WithChannelOutput;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 

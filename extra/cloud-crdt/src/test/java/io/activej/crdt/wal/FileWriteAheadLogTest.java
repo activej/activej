@@ -6,9 +6,9 @@ import io.activej.crdt.primitives.GSet;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.FileSystemCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.fs.FileSystem;
@@ -300,7 +300,7 @@ public class FileWriteAheadLogTest {
 	@SafeVarargs
 	private Path craftWALFile(CrdtData<Long, GSet<Integer>>... mockData) {
 		Path file = path.resolve(UUID.randomUUID() + EXT_FINAL);
-		await(StreamSupplier.ofChannelSupplier(ChannelSupplier.of(mockData)
+		await(StreamSupplier.ofChannelSupplier(ChannelSuppliers.ofValues(mockData)
 						.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))
 				.transformWith(ChannelSerializer.builder(serializer)
 						.withAutoFlushInterval(Duration.ZERO)

@@ -18,10 +18,11 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
@@ -283,7 +284,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
 		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
 		client.request(request
-						.withBodyStream(ChannelSupplier.ofPromise(responsePromise
+						.withBodyStream(ChannelSuppliers.ofPromise(responsePromise
 								.map(response -> {
 									ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 									ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();

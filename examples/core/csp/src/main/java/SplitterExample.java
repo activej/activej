@@ -1,7 +1,7 @@
 import io.activej.async.function.AsyncConsumer;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.ChannelSplitter;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 
 import java.util.ArrayList;
@@ -19,15 +19,15 @@ public class SplitterExample {
 				.limit(5)
 				.collect(Collectors.toList());
 
-		ChannelSplitter<Integer> splitter = ChannelSplitter.create(ChannelSupplier.ofList(integers));
+		ChannelSplitter<Integer> splitter = ChannelSplitter.create(ChannelSuppliers.ofList(integers));
 
 		List<Integer> list1 = new ArrayList<>();
 		List<Integer> list2 = new ArrayList<>();
 		List<Integer> list3 = new ArrayList<>();
 
-		splitter.addOutput().set(ChannelConsumer.of(AsyncConsumer.of(list1::add)));
-		splitter.addOutput().set(ChannelConsumer.of(AsyncConsumer.of(list2::add)));
-		splitter.addOutput().set(ChannelConsumer.of(AsyncConsumer.of(list3::add)));
+		splitter.addOutput().set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of(list1::add)));
+		splitter.addOutput().set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of(list2::add)));
+		splitter.addOutput().set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of(list3::add)));
 
 		eventloop.run();
 

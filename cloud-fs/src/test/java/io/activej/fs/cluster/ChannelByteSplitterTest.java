@@ -3,11 +3,12 @@ package io.activej.fs.cluster;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.csp.AbstractChannelConsumer;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.consumer.AbstractChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -44,11 +45,12 @@ public final class ChannelByteSplitterTest {
 		String source = IntStream.range(0, 1000).mapToObj(String::valueOf).collect(joining());
 		int nOutputs = 10;
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(nOutputs);
-		splitter.withInput(ChannelSupplier.of(wrapUtf8(source))
+		ByteBuf value = wrapUtf8(source);
+		splitter.withInput(ChannelSuppliers.ofValue(value)
 				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
 		List<String> results = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
-			splitter.addOutput().set(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
+			splitter.addOutput().set(ChannelConsumers.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
 					.then(buf -> {
 						results.add(buf.asString(UTF_8));
 						return Promise.complete();
@@ -67,13 +69,14 @@ public final class ChannelByteSplitterTest {
 		String source = IntStream.range(0, 1000).mapToObj(String::valueOf).collect(joining());
 		int nOutputs = 10;
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(nOutputs);
+		ByteBuf value = wrapUtf8(source);
 		splitter.withInput(ChannelSuppliers.concat(
-				ChannelSupplier.of(wrapUtf8(source))
+				ChannelSuppliers.ofValue(value)
 						.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))),
 				failingSupplier()));
 		List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
-			ChannelConsumer<ByteBuf> output = ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
+			ChannelConsumer<ByteBuf> output = ChannelConsumers.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
 					.then(buf -> {
 						buf.recycle();
 						return Promise.complete();
@@ -94,13 +97,14 @@ public final class ChannelByteSplitterTest {
 		String source = IntStream.range(0, 1000).mapToObj(String::valueOf).collect(joining());
 		int nOutputs = 10;
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(3);
-		splitter.withInput(ChannelSupplier.of(wrapUtf8(source))
+		ByteBuf value = wrapUtf8(source);
+		splitter.withInput(ChannelSuppliers.ofValue(value)
 				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
 		List<String> results = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
 			ChannelConsumer<ByteBuf> consumer = i % 3 == 0 ?
 					failingConsumer() :
-					ChannelConsumer.ofSupplier(supplier -> supplier
+					ChannelConsumers.ofSupplier(supplier -> supplier
 							.toCollector(ByteBufs.collector())
 							.then(buf -> {
 								results.add(buf.asString(UTF_8));
@@ -122,14 +126,15 @@ public final class ChannelByteSplitterTest {
 		String source = IntStream.range(0, 1000).mapToObj(String::valueOf).collect(joining());
 		int nOutputs = 10;
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(8);
-		splitter.withInput(ChannelSupplier.of(wrapUtf8(source))
+		ByteBuf value = wrapUtf8(source);
+		splitter.withInput(ChannelSuppliers.ofValue(value)
 				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
 		List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
 			if (i % 3 == 0) {
 				splitter.addOutput().set(failingConsumer());
 			} else {
-				ChannelConsumer<ByteBuf> consumer = ChannelConsumer.ofSupplier(supplier -> supplier
+				ChannelConsumer<ByteBuf> consumer = ChannelConsumers.ofSupplier(supplier -> supplier
 						.toCollector(ByteBufs.collector())
 						.then(buf -> {
 							buf.recycle();
@@ -150,11 +155,11 @@ public final class ChannelByteSplitterTest {
 	}
 
 	private static ChannelSupplier<ByteBuf> failingSupplier() {
-		return ChannelSupplier.ofException(EXPECTED_EXCEPTION);
+		return ChannelSuppliers.ofException(EXPECTED_EXCEPTION);
 	}
 
 	private static ChannelConsumer<ByteBuf> failingConsumer() {
-		return ChannelConsumer.ofException(EXPECTED_EXCEPTION);
+		return ChannelConsumers.ofException(EXPECTED_EXCEPTION);
 	}
 
 }

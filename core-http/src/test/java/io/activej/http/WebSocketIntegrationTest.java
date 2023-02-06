@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.IWebSocket.Frame;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -62,7 +62,7 @@ public final class WebSocketIntegrationTest {
 	private void doTest(byte[] bytes, boolean mask, boolean chunked) {
 		byte[] bytesCopy = Arrays.copyOf(bytes, bytes.length);
 		ByteBuf buf = wrapForReading(bytesCopy);
-		List<Frame> result = await(ChannelSupplier.of(Frame.binary(buf))
+		List<Frame> result = await(ChannelSuppliers.ofValue(Frame.binary(buf))
 				.transformWith(WebSocketFramesToBufs.create(mask))
 				.transformWith(chunked ? chunker() : identity())
 				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), mask))

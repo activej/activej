@@ -6,9 +6,9 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpClient.JmxInspector;
 import io.activej.jmx.stats.EventStats;
@@ -218,7 +218,7 @@ public final class AbstractHttpConnectionTest {
 
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
 				.withHeader(CONTENT_LENGTH, String.valueOf(size))
-				.withBodyStream(ChannelSupplier.ofStream(Stream.generate(() -> {
+				.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
 					int length = 1_000_000;
 					byte[] temp = new byte[length];
 					RANDOM.nextBytes(temp);
@@ -228,7 +228,7 @@ public final class AbstractHttpConnectionTest {
 
 		await(client.request(request)
 				.then(response -> response.takeBodyStream()
-						.streamTo(ChannelConsumer.ofConsumer(buf -> {
+						.streamTo(ChannelConsumers.ofConsumer(buf -> {
 							byte[] bytes = buf.asArray();
 							inChecksum.update(bytes, 0, bytes.length);
 						})))
@@ -246,9 +246,10 @@ public final class AbstractHttpConnectionTest {
 							byte[] bytes = new byte[size];
 							RANDOM.nextBytes(bytes);
 							expected.put(bytes);
+							ByteBuf value = expected.slice();
 							return HttpResponse.ok200()
 									.withBodyGzipCompression()
-									.withBodyStream(ChannelSupplier.of(expected.slice()));
+									.withBodyStream(ChannelSuppliers.ofValue(value));
 						})
 				.withAcceptOnce()
 				.withListenPort(port)
@@ -284,17 +285,17 @@ public final class AbstractHttpConnectionTest {
 					message.setBodyGzipCompression();
 					message.addHeader(CONTENT_LENGTH, "0");
 				},
-				message -> message.setBodyStream(ChannelSupplier.of()),
+				message -> message.setBodyStream(ChannelSuppliers.empty()),
 				message -> {
-					message.setBodyStream(ChannelSupplier.of());
+					message.setBodyStream(ChannelSuppliers.empty());
 					message.setBodyGzipCompression();
 				},
 				message -> {
-					message.setBodyStream(ChannelSupplier.of());
+					message.setBodyStream(ChannelSuppliers.empty());
 					message.addHeader(CONTENT_LENGTH, "0");
 				},
 				message -> {
-					message.setBodyStream(ChannelSupplier.of());
+					message.setBodyStream(ChannelSuppliers.empty());
 					message.setBodyGzipCompression();
 					message.addHeader(CONTENT_LENGTH, "0");
 				}
@@ -338,8 +339,11 @@ public final class AbstractHttpConnectionTest {
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
-								.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
+						request -> {
+							ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
+							return HttpResponse.ok200()
+									.withBodyStream(ChannelSuppliers.ofValue(value));
+						})
 				.withInspector(serverInspector)
 				.withListenPort(port)
 				.build();
@@ -407,8 +411,9 @@ public final class AbstractHttpConnectionTest {
 		assertEquals(0, serverInspector.getTotalConnections().getTotalCount());
 
 		String url = "http://127.0.0.1:" + port;
+		ByteBuf value1 = ByteBuf.wrapForReading(HELLO_WORLD);
 		await(client.request(HttpRequest.get(url)
-						.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
+						.withBodyStream(ChannelSuppliers.ofValue(value1)))
 				.then(ensureHelloWorldAsyncFn())
 				.whenResult(() -> {
 					assertEquals(1, client.getConnectionsKeepAliveCount());
@@ -417,8 +422,11 @@ public final class AbstractHttpConnectionTest {
 					assertEquals(1, server.getConnectionsKeepAliveCount());
 					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
 				})
-				.then(() -> client.request(HttpRequest.get(url)
-						.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD)))))
+				.then(() -> {
+					ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
+					return client.request(HttpRequest.get(url)
+							.withBodyStream(ChannelSuppliers.ofValue(value)));
+				})
 				.then(ensureHelloWorldAsyncFn())
 				.whenResult(() -> {
 					assertEquals(1, client.getConnectionsKeepAliveCount());
@@ -526,7 +534,7 @@ public final class AbstractHttpConnectionTest {
 		server.listen();
 
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
-				.withBodyStream(ChannelSupplier.ofStream(Stream.generate(() -> {
+				.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
 					byte[] temp = new byte[1];
 					RANDOM.nextBytes(temp);
 					ByteBuf buf = ByteBuf.wrapForReading(temp);

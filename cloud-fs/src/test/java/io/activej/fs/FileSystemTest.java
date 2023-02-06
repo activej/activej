@@ -5,11 +5,11 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.exception.*;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -124,13 +124,15 @@ public final class FileSystemTest {
 
 	@Test
 	public void testUploadToDirectory() {
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload("1")));
+		ByteBuf value = wrapUtf8("data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(client.upload("1")));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 
 	@Test
 	public void testAppendToDirectory() {
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append("1", 0)));
+		ByteBuf value = wrapUtf8("data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(client.append("1", 0)));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 
@@ -142,7 +144,8 @@ public final class FileSystemTest {
 			assertEquals(0, list.count());
 		}
 
-		await(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.append(storagePath.relativize(empty).toString(), 0)));
+		ByteBuf value = wrapUtf8("data");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.append(storagePath.relativize(empty).toString(), 0)));
 
 		assertTrue(Files.isRegularFile(empty));
 		assertArrayEquals("data".getBytes(), Files.readAllBytes(empty));
@@ -154,7 +157,8 @@ public final class FileSystemTest {
 		long size = Files.size(storagePath.resolve(path));
 		assertTrue(size > 0);
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("appended"))
+		ByteBuf value = wrapUtf8("appended");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value)
 				.streamTo(client.append(path, size * 2)));
 
 		assertThat(exception, instanceOf(IllegalOffsetException.class));
@@ -170,8 +174,8 @@ public final class FileSystemTest {
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename));
 
 		Exception exception = awaitException(ChannelSuppliers.concat(
-						ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
-						ChannelSupplier.ofException(expectedException))
+						ChannelSuppliers.ofValues(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+						ChannelSuppliers.ofException(expectedException))
 				.streamTo(consumer));
 
 		assertSame(expectedException, exception);
@@ -187,7 +191,8 @@ public final class FileSystemTest {
 
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
+		ByteBuf value = wrapUtf8("data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(consumer));
 
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 
@@ -202,7 +207,8 @@ public final class FileSystemTest {
 
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
+		ByteBuf value = wrapUtf8("data data data data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(consumer));
 
 		assertThat(exception, instanceOf(UnexpectedDataException.class));
 
@@ -222,7 +228,8 @@ public final class FileSystemTest {
 	@Test
 	public void testDownloadWithOffset() {
 		String filename = "filename";
-		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
+		ByteBuf value = wrapUtf8("abcdefgh");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload(filename)));
 
 		String result = await(await(client.download(filename, 3, Long.MAX_VALUE))
 				.toCollector(ByteBufs.collector())).asString(UTF_8);
@@ -232,7 +239,8 @@ public final class FileSystemTest {
 	@Test
 	public void testDownloadWithOffsetExceedingFileSize() {
 		String filename = "filename";
-		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
+		ByteBuf value = wrapUtf8("abcdefgh");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload(filename)));
 
 		Exception exception = awaitException(client.download(filename, 100, Long.MAX_VALUE));
 		assertThat(exception, instanceOf(IllegalOffsetException.class));
@@ -241,7 +249,8 @@ public final class FileSystemTest {
 	@Test
 	public void testDownloadWithLimit() {
 		String filename = "filename";
-		await(ChannelSupplier.of(wrapUtf8("abcdefgh")).streamTo(client.upload(filename)));
+		ByteBuf value = wrapUtf8("abcdefgh");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload(filename)));
 
 		String result = await(await(client.download(filename, 3, 2))
 				.toCollector(ByteBufs.collector())).asString(UTF_8);
@@ -314,11 +323,13 @@ public final class FileSystemTest {
 
 	@Test
 	public void testOverwritingDirAsFile() {
-		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("newdir/a.txt")));
+		ByteBuf value1 = wrapUtf8("test");
+		await(ChannelSuppliers.ofValue(value1).streamTo(client.upload("newdir/a.txt")));
 		await(client.delete("newdir/a.txt"));
 
 		assertTrue(await(client.list("**")).keySet().stream().noneMatch(name -> name.contains("newdir")));
-		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("newdir")));
+		ByteBuf value = wrapUtf8("test");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload("newdir")));
 		assertNotNull(await(client.info("newdir")));
 	}
 
@@ -350,15 +361,18 @@ public final class FileSystemTest {
 
 	@Test
 	public void copyCreatesNewFile() {
-		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("first")));
+		ByteBuf value2 = wrapUtf8("test");
+		await(ChannelSuppliers.ofValue(value2).streamTo(client.upload("first")));
 		await(client.copy("first", "second"));
 
-		await(ChannelSupplier.of(wrapUtf8("first")).streamTo(client.append("first", 4)));
+		ByteBuf value1 = wrapUtf8("first");
+		await(ChannelSuppliers.ofValue(value1).streamTo(client.append("first", 4)));
 
 		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
 		assertEquals("test", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
 
-		await(ChannelSupplier.of(wrapUtf8("second")).streamTo(client.append("second", 4)));
+		ByteBuf value = wrapUtf8("second");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.append("second", 4)));
 
 		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
 		assertEquals("testsecond", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
@@ -371,15 +385,18 @@ public final class FileSystemTest {
 				.build();
 		await(client.start());
 
-		await(ChannelSupplier.of(wrapUtf8("test")).streamTo(client.upload("first")));
+		ByteBuf value2 = wrapUtf8("test");
+		await(ChannelSuppliers.ofValue(value2).streamTo(client.upload("first")));
 		await(client.copy("first", "second"));
 
-		await(ChannelSupplier.of(wrapUtf8("first")).streamTo(client.append("first", 4)));
+		ByteBuf value1 = wrapUtf8("first");
+		await(ChannelSuppliers.ofValue(value1).streamTo(client.append("first", 4)));
 
 		assertEquals("testfirst", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
 		assertEquals("testfirst", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
 
-		await(ChannelSupplier.of(wrapUtf8("second")).streamTo(client.append("second", 9)));
+		ByteBuf value = wrapUtf8("second");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.append("second", 9)));
 
 		assertEquals("testfirstsecond", await(await(client.download("first")).toCollector(ByteBufs.collector())).asString(UTF_8));
 		assertEquals("testfirstsecond", await(await(client.download("second")).toCollector(ByteBufs.collector())).asString(UTF_8));
@@ -390,8 +407,10 @@ public final class FileSystemTest {
 		String filename = "test";
 
 		// Creating file
-		await(ChannelSupplier.of(wrapUtf8("data")).streamTo(client.upload(filename)));
-		await(ChannelSupplier.of(wrapUtf8("d")).streamTo(client.append(filename, 2)));
+		ByteBuf value1 = wrapUtf8("data");
+		await(ChannelSuppliers.ofValue(value1).streamTo(client.upload(filename)));
+		ByteBuf value = wrapUtf8("d");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.append(filename, 2)));
 
 		String result = await(await(client.download(filename)).toCollector(ByteBufs.collector())).asString(UTF_8);
 		assertEquals("dada", result);
@@ -423,7 +442,8 @@ public final class FileSystemTest {
 	public void testEmptyDirectoryCleanupOnUpload() {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
-		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
+		ByteBuf value = wrapUtf8(data);
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload("empty")));
 
 		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 		assertEquals(data, result);
@@ -436,7 +456,8 @@ public final class FileSystemTest {
 	public void testEmptyDirectoryCleanupOnAppend() {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
-		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.append("empty", 0)));
+		ByteBuf value = wrapUtf8(data);
+		await(ChannelSuppliers.ofValue(value).streamTo(client.append("empty", 0)));
 
 		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 		assertEquals(data, result);
@@ -449,7 +470,8 @@ public final class FileSystemTest {
 	public void testEmptyDirectoryCleanupOnMove() {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
-		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
+		ByteBuf value = wrapUtf8(data);
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload("source")));
 		await(client.move("source", "empty"));
 
 		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
@@ -463,7 +485,8 @@ public final class FileSystemTest {
 	public void testEmptyDirectoryCleanupOnCopy() {
 		List<Path> emptyDirs = createEmptyDirectories(storagePath);
 		String data = "test";
-		await(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("source")));
+		ByteBuf value = wrapUtf8(data);
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload("source")));
 		await(client.copy("source", "empty"));
 
 		String result = await(client.download("empty").then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
@@ -479,7 +502,8 @@ public final class FileSystemTest {
 		Path randomPath = emptyDirs.get(ThreadLocalRandom.current().nextInt(emptyDirs.size()));
 		Files.createFile(randomPath.resolve("file"));
 		String data = "test";
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8(data)).streamTo(client.upload("empty")));
+		ByteBuf value = wrapUtf8(data);
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value).streamTo(client.upload("empty")));
 		assertThat(exception, instanceOf(IsADirectoryException.class));
 	}
 
@@ -503,7 +527,8 @@ public final class FileSystemTest {
 
 	@Test
 	public void testCopyWithDeletedTempDir() throws IOException {
-		await(ChannelSupplier.of(wrapUtf8("Test content")).streamTo(client.upload("test.txt")));
+		ByteBuf value = wrapUtf8("Test content");
+		await(ChannelSuppliers.ofValue(value).streamTo(client.upload("test.txt")));
 
 		Path tempDir = storagePath.resolve(DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
@@ -519,7 +544,8 @@ public final class FileSystemTest {
 		Path tempDir = storagePath.resolve(DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
-		Exception e = awaitException(ChannelSupplier.of(wrapUtf8("Test content"))
+		ByteBuf value = wrapUtf8("Test content");
+		Exception e = awaitException(ChannelSuppliers.ofValue(value)
 				.streamTo(client.upload("test.txt")));
 
 		assertThat(e, instanceOf(FileSystemIOException.class));

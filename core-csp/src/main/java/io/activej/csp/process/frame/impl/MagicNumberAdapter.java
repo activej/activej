@@ -5,7 +5,8 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
 import io.activej.csp.process.frame.BlockDecoder;
 import io.activej.csp.process.frame.BlockEncoder;
 import io.activej.csp.process.frame.FrameFormat;
@@ -20,7 +21,7 @@ public final class MagicNumberAdapter implements FrameFormat {
 	public MagicNumberAdapter(FrameFormat peerFormat, byte[] magicNumber) {
 		this.peerFormat = peerFormat;
 		this.magicNumber = magicNumber;
-		this.magicNumberValidator = ByteBufsDecoder.assertBytes(magicNumber);
+		this.magicNumberValidator = ByteBufsDecoders.assertBytes(magicNumber);
 	}
 
 	@Override

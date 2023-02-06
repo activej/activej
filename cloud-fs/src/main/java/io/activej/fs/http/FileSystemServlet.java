@@ -18,8 +18,8 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.FunctionEx;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FileSystemException;
@@ -207,10 +207,10 @@ public final class FileSystemServlet {
 	private static FunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
 		return consumer -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBodyStream(ChannelSupplier.ofPromise(request.takeBodyStream()
+				.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
 						.streamTo(consumer)
 						.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
-						.map(ack -> ChannelSupplier.of(toJson(ack)))));
+						.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))));
 	}
 
 }

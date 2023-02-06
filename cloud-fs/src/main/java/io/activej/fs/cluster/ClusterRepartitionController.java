@@ -21,9 +21,9 @@ import io.activej.async.service.ReactiveService;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.ChannelByteRanger;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemIOException;
@@ -307,7 +307,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 									.getAsLong();
 
 							ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
-									.withInput(ChannelSupplier.ofPromise(fileSystem.download(name, offset, meta.getSize())));
+									.withInput(ChannelSuppliers.ofPromise(fileSystem.download(name, offset, meta.getSize())));
 
 							RefInt idx = new RefInt(0);
 							return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
@@ -323,7 +323,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 												}
 												return Promise.<Void>ofCallback(cb ->
 														splitter.addOutput()
-																.set(ChannelConsumer.ofPromise(Promise.complete()
+																.set(ChannelConsumers.ofPromise(Promise.complete()
 																				.then(() -> remoteMeta == null ?
 																						fs.upload(name, meta.getSize()) :
 																						fs.append(name, remoteMeta.getSize())

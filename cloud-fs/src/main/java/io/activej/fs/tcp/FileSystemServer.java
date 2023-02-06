@@ -17,7 +17,8 @@
 package io.activej.fs.tcp;
 
 import io.activej.common.function.SupplierEx;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.fs.IFileSystem;
@@ -54,7 +55,7 @@ import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 public final class FileSystemServer extends AbstractReactiveServer {
 	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<FileSystemRequest, FileSystemResponse> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
+	private static final ByteBufsCodec<FileSystemRequest, FileSystemResponse> SERIALIZER = ByteBufsCodecs.ofStreamCodecs(
 			RemoteFileSystemUtils.FS_REQUEST_CODEC,
 			RemoteFileSystemUtils.FS_RESPONSE_CODEC
 	);

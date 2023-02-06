@@ -17,7 +17,7 @@
 package io.activej.dataflow.calcite.node;
 
 import io.activej.common.function.SupplierEx;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.dataflow.calcite.FilteredDataflowSupplier;
 import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.dataflow.graph.StreamId;

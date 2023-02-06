@@ -1,7 +1,7 @@
 import io.activej.bytebuf.ByteBuf;
 import io.activej.config.Config;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.tcp.FileSystemServer;

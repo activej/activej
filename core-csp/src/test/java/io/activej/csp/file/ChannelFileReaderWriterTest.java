@@ -3,8 +3,8 @@ package io.activej.csp.file;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
@@ -62,7 +62,7 @@ public final class ChannelFileReaderWriterTest {
 		Path tempPath = temporaryFolder.getRoot().toPath().resolve("out.dat");
 		byte[] bytes = {'T', 'e', 's', 't', '1', ' ', 'T', 'e', 's', 't', '2', ' ', 'T', 'e', 's', 't', '3', '\n', 'T', 'e', 's', 't', '\n'};
 
-		await(ChannelSupplier.of(ByteBuf.wrapForReading(bytes))
+		await(ChannelSuppliers.ofValue(ByteBuf.wrapForReading(bytes))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), tempPath)));
 
 		assertArrayEquals(bytes, Files.readAllBytes(tempPath));
@@ -78,7 +78,7 @@ public final class ChannelFileReaderWriterTest {
 		Exception exception = new Exception("Test Exception");
 
 		writer.closeEx(exception);
-		Exception e = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading(bytes))
+		Exception e = awaitException(ChannelSuppliers.ofValue(ByteBuf.wrapForReading(bytes))
 				.streamTo(writer)
 				.then(() -> writer.accept(ByteBuf.wrapForReading("abc".getBytes()))));
 		assertSame(exception, e);
@@ -95,7 +95,7 @@ public final class ChannelFileReaderWriterTest {
 		Files.write(file, data);
 
 		await(ChannelFileReader.open(newCachedThreadPool(), file)
-				.then(cfr -> cfr.streamTo(ChannelConsumer.of(buf -> {
+				.then(cfr -> cfr.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> {
 					assertTrue("Received byte buffer is empty", buf.canRead());
 					buf.recycle();
 					return Promise.complete();

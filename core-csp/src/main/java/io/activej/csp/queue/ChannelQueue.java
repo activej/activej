@@ -17,11 +17,11 @@
 package io.activej.csp.queue;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.csp.AbstractChannelConsumer;
-import io.activej.csp.AbstractChannelSupplier;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.AbstractChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.ChannelTransformer;
+import io.activej.csp.supplier.AbstractChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 

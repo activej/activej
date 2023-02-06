@@ -3,10 +3,10 @@ package csp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.SimpleServer;
 
@@ -29,15 +29,15 @@ public final class TcpServerExample {
 				.build();
 
 		SimpleServer server = SimpleServer.builder(eventloop, socket ->
-						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
-								.decodeStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
+						BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
+								.decodeStream(ByteBufsDecoders.ofCrlfTerminatedBytes())
 								.peek(buf -> System.out.println("client:" + buf.getString(UTF_8)))
 								.map(buf -> {
 									ByteBuf serverBuf = ByteBufStrings.wrapUtf8("Server> ");
 									return ByteBufPool.append(serverBuf, buf);
 								})
 								.map(buf -> ByteBufPool.append(buf, CRLF))
-								.streamTo(ChannelConsumer.ofSocket(socket)))
+								.streamTo(ChannelConsumers.ofSocket(socket)))
 				.withListenPort(PORT)
 				.build();
 

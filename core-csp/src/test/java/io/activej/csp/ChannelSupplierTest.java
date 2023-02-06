@@ -3,6 +3,8 @@ package io.activej.csp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -16,8 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static io.activej.common.MemSize.kilobytes;
-import static io.activej.csp.ChannelSuppliers.channelSupplierAsInputStream;
-import static io.activej.csp.ChannelSuppliers.inputStreamAsChannelSupplier;
+import static io.activej.csp.binary.Utils.channelSupplierAsInputStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -36,7 +37,7 @@ public class ChannelSupplierTest {
 
 	@Test
 	public void testToCollector() {
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(List.of(
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(List.of(
 				ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
 				ByteBuf.wrapForReading("Test2".getBytes(UTF_8)),
 				ByteBuf.wrapForReading("Test3".getBytes(UTF_8)),
@@ -55,8 +56,8 @@ public class ChannelSupplierTest {
 		value.put("Test".getBytes(UTF_8));
 		Exception exception = new Exception("Test Exception");
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
-				ChannelSupplier.of(value),
-				ChannelSupplier.ofException(exception)
+				ChannelSuppliers.ofValue(value),
+				ChannelSuppliers.ofException(exception)
 		);
 
 		Exception e = awaitException(supplier.toCollector(ByteBufs.collector()));
@@ -70,11 +71,11 @@ public class ChannelSupplierTest {
 		ByteBuf byteBuf3 = ByteBuf.wrapForReading("Tes".getBytes(UTF_8));
 		ByteBuf byteBuf4 = ByteBuf.wrapForReading("Test".getBytes(UTF_8));
 
-		await(ChannelSupplier.of(byteBuf1).toCollector(ByteBufs.collector(2)));
-		await(ChannelSupplier.of(byteBuf2).toCollector(ByteBufs.collector(2)));
-		Exception e1 = awaitException(ChannelSupplier.of(byteBuf3).toCollector(ByteBufs.collector(2)));
+		await(ChannelSuppliers.ofValue(byteBuf1).toCollector(ByteBufs.collector(2)));
+		await(ChannelSuppliers.ofValue(byteBuf2).toCollector(ByteBufs.collector(2)));
+		Exception e1 = awaitException(ChannelSuppliers.ofValue(byteBuf3).toCollector(ByteBufs.collector(2)));
 		assertThat(e1.getMessage(), containsString("Size of ByteBufs exceeds maximum size of 2 bytes"));
-		Exception e2 = awaitException(ChannelSupplier.of(byteBuf4).toCollector(ByteBufs.collector(2)));
+		Exception e2 = awaitException(ChannelSuppliers.ofValue(byteBuf4).toCollector(ByteBufs.collector(2)));
 		assertThat(e2.getMessage(), containsString("Size of ByteBufs exceeds maximum size of 2 bytes"));
 	}
 
@@ -91,7 +92,7 @@ public class ChannelSupplierTest {
 			}
 		};
 
-		ChannelSupplier<ByteBuf> channel = inputStreamAsChannelSupplier(newSingleThreadExecutor(), kilobytes(16), inputStream);
+		ChannelSupplier<ByteBuf> channel = ChannelSuppliers.ofInputStream(newSingleThreadExecutor(), kilobytes(16), inputStream);
 		List<ByteBuf> byteBufList = await(channel.toCollector(Collectors.toList()));
 		int readSize = 0;
 		for (ByteBuf buf : byteBufList) {
@@ -110,7 +111,7 @@ public class ChannelSupplierTest {
 			}
 		};
 
-		ChannelSupplier<ByteBuf> channel = inputStreamAsChannelSupplier(newSingleThreadExecutor(), kilobytes(16), inputStream);
+		ChannelSupplier<ByteBuf> channel = ChannelSuppliers.ofInputStream(newSingleThreadExecutor(), kilobytes(16), inputStream);
 		List<ByteBuf> byteBufList = await(channel.toCollector(Collectors.toList()));
 		int readSize = 0;
 		for (ByteBuf buf : byteBufList) {
@@ -122,7 +123,7 @@ public class ChannelSupplierTest {
 
 	@Test
 	public void testAsInputStream() {
-		ChannelSupplier<ByteBuf> channelSupplier = ChannelSupplier.of(
+		ChannelSupplier<ByteBuf> channelSupplier = ChannelSuppliers.ofValues(
 				ByteBuf.wrapForReading("Hello".getBytes()),
 				ByteBuf.wrapForReading("World".getBytes()));
 
@@ -142,7 +143,7 @@ public class ChannelSupplierTest {
 
 	@Test
 	public void testEmptyInputStream() {
-		ChannelSupplier<ByteBuf> channelSupplier = ChannelSupplier.of(ByteBuf.empty(), ByteBuf.empty());
+		ChannelSupplier<ByteBuf> channelSupplier = ChannelSuppliers.ofValues(ByteBuf.empty(), ByteBuf.empty());
 
 		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),

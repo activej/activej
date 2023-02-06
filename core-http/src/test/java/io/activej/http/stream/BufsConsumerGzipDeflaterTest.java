@@ -2,7 +2,7 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.TestUtils.AssertingConsumer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -126,7 +126,7 @@ public final class BufsConsumerGzipDeflaterTest {
 	}
 
 	private void doTest() {
-		gzip.getInput().set(ChannelSupplier.ofList(list));
+		gzip.getInput().set(ChannelSuppliers.ofList(list));
 		await(gzip.getProcessCompletion());
 	}
 

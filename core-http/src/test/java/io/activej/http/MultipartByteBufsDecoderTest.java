@@ -2,9 +2,9 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -65,7 +65,7 @@ public final class MultipartByteBufsDecoderTest {
 
 		List<Map<String, String>> headers = new ArrayList<>();
 
-		String res = await(BinaryChannelSupplier.of(ChannelSupplier.ofList(split))
+		String res = await(BinaryChannelSupplier.of(ChannelSuppliers.ofList(split))
 				.decodeStream(MultipartByteBufsDecoder.create(BOUNDARY.substring(2)))
 				.toCollector(mapping(frame -> {
 					if (frame.isData()) {
@@ -99,7 +99,7 @@ public final class MultipartByteBufsDecoderTest {
 		ByteBuf buf = ByteBufStrings.wrapUtf8(BOUNDARY + "--" + CRLF);
 		MultipartByteBufsDecoder decoder = MultipartByteBufsDecoder.create(BOUNDARY.substring(2));
 
-		await(decoder.split(ChannelSupplier.of(buf), new MultipartByteBufsDecoder.AsyncMultipartDataHandler() {
+		await(decoder.split(ChannelSuppliers.ofValue(buf), new MultipartByteBufsDecoder.AsyncMultipartDataHandler() {
 			@Override
 			public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 				return Promise.ofException(new ExpectedException());

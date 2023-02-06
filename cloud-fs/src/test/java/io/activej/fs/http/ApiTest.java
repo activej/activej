@@ -2,8 +2,10 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.http.RoutingServlet;
@@ -116,7 +118,7 @@ public final class ApiTest {
 
 	@Test
 	public void upload() {
-		Promise<Void> uploadPromise = ChannelSupplier.ofList(data)
+		Promise<Void> uploadPromise = ChannelSuppliers.ofList(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.upload("test"));
 		doTest(uploadPromise, "test", data);
@@ -124,7 +126,7 @@ public final class ApiTest {
 
 	@Test
 	public void uploadWithSize() {
-		Promise<Void> uploadPromise = ChannelSupplier.ofList(data)
+		Promise<Void> uploadPromise = ChannelSuppliers.ofList(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.upload("test", dataSize));
 		doTest(uploadPromise, "test", dataSize, data);
@@ -132,7 +134,7 @@ public final class ApiTest {
 
 	@Test
 	public void append() {
-		Promise<Void> appendPromise = ChannelSupplier.ofList(data)
+		Promise<Void> appendPromise = ChannelSuppliers.ofList(data)
 				.map(ByteBufStrings::wrapUtf8)
 				.streamTo(client.append("test", dataSize / 2));
 		doTest(appendPromise, "test", dataSize / 2, data);
@@ -141,36 +143,36 @@ public final class ApiTest {
 	@Test
 	public void download() {
 		List<String> chunks = new ArrayList<>();
-		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10, 20))
+		Promise<Void> uploadPromise = ChannelSuppliers.ofPromise(client.download("test", 10, 20))
 				.map(buf -> buf.asString(UTF_8))
-				.streamTo(ChannelConsumer.ofConsumer(chunks::add));
+				.streamTo(ChannelConsumers.ofConsumer(chunks::add));
 		doTest(uploadPromise, "test", 10L, 20L, chunks);
 	}
 
 	@Test
 	public void downloadHugeLimit() {
 		List<String> chunks = new ArrayList<>();
-		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 0, Integer.MAX_VALUE))
+		Promise<Void> uploadPromise = ChannelSuppliers.ofPromise(client.download("test", 0, Integer.MAX_VALUE))
 				.map(buf -> buf.asString(UTF_8))
-				.streamTo(ChannelConsumer.ofConsumer(chunks::add));
+				.streamTo(ChannelConsumers.ofConsumer(chunks::add));
 		doTest(uploadPromise, "test", 0L, (long) Integer.MAX_VALUE, chunks);
 	}
 
 	@Test
 	public void downloadToTheEnd() {
 		List<String> chunks = new ArrayList<>();
-		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 0, Long.MAX_VALUE))
+		Promise<Void> uploadPromise = ChannelSuppliers.ofPromise(client.download("test", 0, Long.MAX_VALUE))
 				.map(buf -> buf.asString(UTF_8))
-				.streamTo(ChannelConsumer.ofConsumer(chunks::add));
+				.streamTo(ChannelConsumers.ofConsumer(chunks::add));
 		doTest(uploadPromise, "test", 0L, Long.MAX_VALUE, chunks);
 	}
 
 	@Test
 	public void downloadToTheEndWithOffset() {
 		List<String> chunks = new ArrayList<>();
-		Promise<Void> uploadPromise = ChannelSupplier.ofPromise(client.download("test", 10, Long.MAX_VALUE))
+		Promise<Void> uploadPromise = ChannelSuppliers.ofPromise(client.download("test", 10, Long.MAX_VALUE))
 				.map(buf -> buf.asString(UTF_8))
-				.streamTo(ChannelConsumer.ofConsumer(chunks::add));
+				.streamTo(ChannelConsumers.ofConsumer(chunks::add));
 		doTest(uploadPromise, "test", 10L, Long.MAX_VALUE, chunks);
 	}
 
@@ -195,7 +197,7 @@ public final class ApiTest {
 			@Override
 			public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 				List<String> received = new ArrayList<>();
-				return Promise.of(ChannelConsumer.<String>ofConsumer(received::add)
+				return Promise.of(ChannelConsumers.<String>ofConsumer(received::add)
 						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
 						.withAcknowledgement(ack -> ack
 								.then(result -> resultOf(result, name, received))));
@@ -204,7 +206,7 @@ public final class ApiTest {
 			@Override
 			public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 				List<String> received = new ArrayList<>();
-				return Promise.of(ChannelConsumer.<String>ofConsumer(received::add)
+				return Promise.of(ChannelConsumers.<String>ofConsumer(received::add)
 						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
 						.withAcknowledgement(ack -> ack
 								.then(result -> resultOf(result, name, size, received))));
@@ -213,7 +215,7 @@ public final class ApiTest {
 			@Override
 			public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 				List<String> received = new ArrayList<>();
-				return Promise.of(ChannelConsumer.<String>ofConsumer(received::add)
+				return Promise.of(ChannelConsumers.<String>ofConsumer(received::add)
 						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
 						.withAcknowledgement(ack -> ack
 								.then(result -> resultOf(result, name, offset, received))));
@@ -221,7 +223,7 @@ public final class ApiTest {
 
 			@Override
 			public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
-				return Promise.of(ChannelSupplier.ofList(data)
+				return Promise.of(ChannelSuppliers.ofList(data)
 						.map(ByteBufStrings::wrapUtf8)
 						.withEndOfStream(eos -> eos
 								.then(result -> resultOf(result, name, offset, limit, data))));

@@ -3,7 +3,7 @@ package io.activej.http.stream;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.UnexpectedDataException;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.TestUtils.AssertingConsumer;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
@@ -210,7 +210,7 @@ public final class BufsConsumerGzipInflaterTest {
 	}
 
 	private void doTest(@Nullable Class<? extends Exception> expectedExceptionType) {
-		gunzip.getInput().set(ChannelSupplier.ofList(list));
+		gunzip.getInput().set(ChannelSuppliers.ofList(list));
 		Promise<Void> processResult = gunzip.getProcessCompletion();
 		if (expectedExceptionType == null) {
 			await(processResult);

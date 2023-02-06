@@ -27,8 +27,9 @@ import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.crdt.util.Utils;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodecs;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -60,7 +61,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
+	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = ByteBufsCodecs.ofStreamCodecs(
 			Utils.CRDT_RESPONSE_CODEC,
 			Utils.CRDT_REQUEST_CODEC
 	);

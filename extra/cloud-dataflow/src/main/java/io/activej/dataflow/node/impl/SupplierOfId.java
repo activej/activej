@@ -18,7 +18,7 @@ package io.activej.dataflow.node.impl;
 
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.function.SupplierEx;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;

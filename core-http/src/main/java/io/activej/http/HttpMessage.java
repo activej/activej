@@ -20,8 +20,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.session.SessionServlet;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
@@ -34,7 +34,7 @@ import java.util.*;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
-import static io.activej.csp.ChannelConsumers.recycling;
+import static io.activej.csp.consumer.ChannelConsumers.recycling;
 
 /**
  * Represents any HTTP message. Its internal byte buffers will be automatically recycled in HTTP client or HTTP server.
@@ -192,7 +192,7 @@ public abstract class HttpMessage {
 		if (body != null) {
 			ByteBuf body = this.body;
 			this.body = null;
-			return ChannelSupplier.of(body);
+			return ChannelSuppliers.ofValue(body);
 		}
 		throw new IllegalStateException("Body stream is missing or already consumed");
 	}
@@ -277,7 +277,7 @@ public abstract class HttpMessage {
 		ChannelSupplier<ByteBuf> bodyStream = this.bodyStream;
 		if (bodyStream == null) throw new IllegalStateException("Body stream is missing or already consumed");
 		this.bodyStream = null;
-		return ChannelSuppliers.collect(bodyStream,
+		return ChannelSupplier.collect(bodyStream,
 						new ByteBufs(),
 						(bufs, buf) -> {
 							if (maxBodySize != 0 && bufs.hasRemainingBytes(maxBodySize)) {

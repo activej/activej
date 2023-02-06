@@ -18,12 +18,12 @@ package io.activej.csp.process;
 
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.recycle.Recyclers;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.WithChannelInput;
 import io.activej.csp.dsl.WithChannelOutputs;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promises;
 
 import java.util.ArrayList;

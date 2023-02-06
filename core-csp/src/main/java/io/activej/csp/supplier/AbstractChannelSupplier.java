@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp;
+package io.activej.csp.supplier;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;

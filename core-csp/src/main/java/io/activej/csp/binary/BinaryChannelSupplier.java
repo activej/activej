@@ -25,7 +25,9 @@ import io.activej.common.Checks;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 
 import java.util.Iterator;
@@ -57,11 +59,11 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	public abstract Promise<Void> endOfStream();
 
 	public static BinaryChannelSupplier ofList(List<ByteBuf> iterable) {
-		return of(ChannelSupplier.ofList(iterable));
+		return of(ChannelSuppliers.ofList(iterable));
 	}
 
 	public static BinaryChannelSupplier ofIterator(Iterator<ByteBuf> iterator) {
-		return of(ChannelSupplier.ofIterator(iterator));
+		return of(ChannelSuppliers.ofIterator(iterator));
 	}
 
 	public static BinaryChannelSupplier of(ChannelSupplier<ByteBuf> input) {
@@ -167,7 +169,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
 		checkInReactorThread(this);
-		return ChannelSupplier.of(
+		return ChannelSuppliers.ofAsyncSupplier(
 				() -> doDecode(decoder,
 						AsyncCloseable.of(e -> {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;

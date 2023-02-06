@@ -1,8 +1,8 @@
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
 
@@ -22,7 +22,7 @@ public final class ChannelBufferExample {
 						System.out.println("Granny gives apple   #" + apple);
 						return apple + 1;
 					}));
-			granny.streamTo(ChannelConsumer.ofConsumer(apple -> System.out.println("Grandson takes apple #" + apple)));
+			granny.streamTo(ChannelConsumers.ofConsumer(apple -> System.out.println("Grandson takes apple #" + apple)));
 			eventloop.run();
 		}
 	}
@@ -45,7 +45,7 @@ public final class ChannelBufferExample {
 						return apple + 1;
 					}));
 
-			granny.streamTo(ChannelConsumer.<Integer>ofConsumer(apple ->
+			granny.streamTo(ChannelConsumers.<Integer>ofConsumer(apple ->
 					System.out.println("Grandson takes apple #" + apple)).async());
 
 			eventloop.run();

@@ -1,7 +1,7 @@
 package io.activej.net;
 
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
@@ -27,11 +27,11 @@ public class TcpDataBenchmarkServer extends Launcher {
 	@Eager
 	SimpleServer server(NioReactor reactor) {
 		return SimpleServer.builder(reactor,
-						socket -> ChannelSupplier.ofSocket(socket)
+						socket -> ChannelSuppliers.ofSocket(socket)
 								.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
 								.transformWith(StreamFilter.mapper(Function.identity()))
 								.transformWith(ChannelSerializer.create(INT_SERIALIZER))
-								.streamTo(ChannelConsumer.ofSocket(socket)))
+								.streamTo(ChannelConsumers.ofSocket(socket)))
 				.withListenPort(9001)
 				.build();
 	}

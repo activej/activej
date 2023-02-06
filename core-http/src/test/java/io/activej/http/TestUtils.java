@@ -3,9 +3,9 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.csp.AbstractChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.AbstractChannelConsumer;
 import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 

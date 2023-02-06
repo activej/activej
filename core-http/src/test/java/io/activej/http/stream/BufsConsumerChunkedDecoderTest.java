@@ -4,8 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -190,7 +190,7 @@ public final class BufsConsumerChunkedDecoderTest {
 	}
 
 	private void doTest(@Nullable Class<? extends Exception> expectedExceptionType) {
-		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(chunkedByByte(ChannelSupplier.ofList(list))));
+		chunkedDecoder.getInput().set(BinaryChannelSupplier.of(chunkedByByte(ChannelSuppliers.ofList(list))));
 		Promise<?> processResult = chunkedDecoder.getProcessCompletion();
 		if (expectedExceptionType == null) {
 			await(processResult);

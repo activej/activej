@@ -6,8 +6,8 @@ import io.activej.common.function.RunnableEx;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.IWebSocket.Message;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
@@ -66,7 +66,7 @@ public final class WebSocketClientServerTest {
 		String result = await(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(ws -> {
-					ChannelSupplier.ofStream(inputStream)
+					ChannelSuppliers.ofStream(inputStream)
 							.mapAsync(item -> Promises.delay(1L, Message.text(item)))
 							.streamTo(ws.messageWriteChannel());
 					return ws.messageReadChannel()
@@ -85,7 +85,7 @@ public final class WebSocketClientServerTest {
 		String reason = "Some error";
 		WebSocketException exception = new WebSocketException(4321, reason);
 
-		startTestServer(webSocket -> ChannelSupplier.of(() -> Promise.of("hello"))
+		startTestServer(webSocket -> ChannelSuppliers.ofAsyncSupplier(() -> Promise.of("hello"))
 				.mapAsync(
 						buf -> {
 							if (counter.dec() < 0) {
@@ -98,7 +98,7 @@ public final class WebSocketClientServerTest {
 
 		Exception receivedEx = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
-				.then(webSocket -> webSocket.messageReadChannel().streamTo(ChannelConsumer.ofConsumer(messages::add))));
+				.then(webSocket -> webSocket.messageReadChannel().streamTo(ChannelConsumers.ofConsumer(messages::add))));
 
 		assertThat(receivedEx, instanceOf(WebSocketException.class));
 		assertEquals(Integer.valueOf(4321), ((WebSocketException) receivedEx).getCode());
@@ -144,7 +144,7 @@ public final class WebSocketClientServerTest {
 				.build()
 				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.messageReadChannel()
-						.streamTo(ChannelConsumer.ofConsumer($ -> fail()))));
+						.streamTo(ChannelConsumers.ofConsumer($ -> fail()))));
 
 		assertEquals(testError.getCode(), exception.getCode());
 		assertEquals(testError.getMessage(), exception.getMessage());

@@ -19,8 +19,8 @@ package io.activej.csp.net;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 
 @ComponentInterface

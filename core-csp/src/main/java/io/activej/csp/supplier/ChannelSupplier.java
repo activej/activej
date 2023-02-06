@@ -14,33 +14,29 @@
  * limitations under the License.
  */
 
-package io.activej.csp;
+package io.activej.csp.supplier;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
-import io.activej.bytebuf.ByteBuf;
+import io.activej.common.collection.Try;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
+import io.activej.csp.ChannelInput;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
-import io.activej.csp.queue.ChannelQueue;
-import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * This interface represents supplier of {@link Promise} of data that should be used serially
@@ -59,208 +55,6 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  */
 public interface ChannelSupplier<T> extends AsyncCloseable {
 	Promise<T> get();
-
-	/**
-	 * @see #of(AsyncSupplier, AsyncCloseable)
-	 */
-	static <T> ChannelSupplier<T> of(AsyncSupplier<T> supplier) {
-		return of(supplier, null);
-	}
-
-	/**
-	 * Wraps {@link AsyncSupplier} in ChannelSupplier, when {@code get()}
-	 * is called, {@code AsyncSupplier}'s {@code get()} will be executed.
-	 *
-	 * @param supplier  an {@code AsyncSupplier} to be wrapped in ChannelSupplier
-	 * @param closeable a {@code Cancellable} which will be set
-	 *                  for the ChannelSupplier wrapper
-	 * @param <T>       data type wrapped in {@code AsyncSupplier} and ChannelSupplier
-	 * @return ChannelSupplier which wraps {@code AsyncSupplier}
-	 */
-	static <T> ChannelSupplier<T> of(AsyncSupplier<T> supplier, @Nullable AsyncCloseable closeable) {
-		return new AbstractChannelSupplier<>(closeable) {
-			@Override
-			protected Promise<T> doGet() {
-				return supplier.get();
-			}
-		};
-	}
-
-	/**
-	 * Returns a ChannelSupplier received from {@link ChannelQueue}.
-	 */
-	static <T> ChannelSupplier<T> ofConsumer(Consumer<ChannelConsumer<T>> consumer, ChannelQueue<T> queue) {
-		consumer.accept(queue.getConsumer());
-		return queue.getSupplier();
-	}
-
-	/**
-	 * Wraps provided default {@link Supplier} to ChannelSupplier.
-	 */
-	static <T> ChannelSupplier<T> ofSupplier(Supplier<Promise<T>> supplier) {
-		return of(supplier::get);
-	}
-
-	/**
-	 * Returns a {@link ChannelSuppliers.ChannelSupplier_Empty}.
-	 */
-	static <T> ChannelSupplier<T> of() {
-		return new ChannelSuppliers.ChannelSupplier_Empty<>();
-	}
-
-	/**
-	 * Wraps provided {@code value} to a {@link ChannelSuppliers.ChannelSupplier_OfValue}.
-	 *
-	 * @param value a value to be wrapped in ChannelSupplier
-	 * @return a {@code ChannelSupplierOfValue} which wraps the {@code value}
-	 */
-	static <T> ChannelSupplier<T> of(T value) {
-		return new ChannelSuppliers.ChannelSupplier_OfValue<>(value);
-	}
-
-	/**
-	 * @see #ofIterator(Iterator)
-	 */
-	@SafeVarargs
-	static <T> ChannelSupplier<T> of(T... values) {
-		return ofList(List.of(values));
-	}
-
-	/**
-	 * Returns a {@link ChannelSuppliers.ChannelSupplier_OfException}
-	 * of provided exception.
-	 *
-	 * @param e a {@link Exception} to be wrapped in ChannelSupplier
-	 */
-	static <T> ChannelSupplier<T> ofException(Exception e) {
-		return new ChannelSuppliers.ChannelSupplier_OfException<>(e);
-	}
-
-	/**
-	 * @see #ofIterator(Iterator)
-	 */
-	static <T> ChannelSupplier<T> ofList(List<? extends T> list) {
-		return new ChannelSuppliers.ChannelSupplier_OfIterator<>(list.iterator(), true);
-	}
-
-	/**
-	 * @see #ofIterator(Iterator)
-	 */
-	static <T> ChannelSupplier<T> ofStream(Stream<? extends T> stream) {
-		return ofIterator(stream.iterator());
-	}
-
-	/**
-	 * Wraps provided {@code Iterator} into
-	 * {@link ChannelSuppliers.ChannelSupplier_OfIterator}.
-	 *
-	 * @param iterator an iterator to be wrapped in ChannelSupplier
-	 * @return a ChannelSupplier which wraps elements of <T> type
-	 */
-	static <T> ChannelSupplier<T> ofIterator(Iterator<? extends T> iterator) {
-		return new ChannelSuppliers.ChannelSupplier_OfIterator<>(iterator, false);
-	}
-
-	/**
-	 * Wraps {@link ITcpSocket#read()} operation into {@link ChannelSupplier}
-	 *
-	 * @return {@link ChannelSupplier} of ByteBufs that are read from network
-	 */
-	static ChannelSupplier<ByteBuf> ofSocket(ITcpSocket socket) {
-		return ChannelSuppliers.prefetch(ChannelSupplier.of(socket::read, socket));
-	}
-
-	/**
-	 * Wraps {@code promise} of ChannelSupplier in ChannelSupplier or
-	 * returns the ChannelSupplier from {@code promise} itself.
-	 * <p>
-	 * If {@code promise} is completed, it will be materialized and its result
-	 * (a ChannelSupplier) will be returned.
-	 * <p>
-	 * Otherwise, when {@code get()} is called, it will wait until {@code promise}
-	 * completes and {@code promise} result's (a ChannelSupplier) {@code get()}
-	 * operation will be executed. If the {@code promise} completes exceptionally,
-	 * a {@code promise} of exception will be returned.
-	 *
-	 * @param promise wraps a {@code ChannelSupplier}
-	 * @return a ChannelSupplier of {@code promise} or a wrapper ChannelSupplier
-	 */
-	static <T> ChannelSupplier<T> ofPromise(Promise<? extends ChannelSupplier<T>> promise) {
-		if (promise.isResult()) return promise.getResult();
-		return new AbstractChannelSupplier<>() {
-			ChannelSupplier<T> supplier;
-
-			@Override
-			protected Promise<T> doGet() {
-				if (supplier != null) return supplier.get();
-				return promise.then(supplier -> {
-					this.supplier = supplier;
-					return supplier.get();
-				});
-			}
-
-			@Override
-			protected void onClosed(Exception e) {
-				promise.whenResult(supplier -> supplier.closeEx(e));
-			}
-		};
-	}
-
-	static <T> ChannelSupplier<T> ofAnotherReactor(Reactor anotherReactor, ChannelSupplier<T> anotherReactorSupplier) {
-		if (getCurrentReactor() == anotherReactor) {
-			return anotherReactorSupplier;
-		}
-		return new AbstractChannelSupplier<>() {
-			@Override
-			protected Promise<T> doGet() {
-				SettablePromise<T> promise = new SettablePromise<>();
-				reactor.startExternalTask();
-				anotherReactor.execute(() ->
-						anotherReactorSupplier.get()
-								.run((item, e) -> {
-									reactor.execute(() -> promise.accept(item, e));
-									reactor.completeExternalTask();
-								}));
-				return promise;
-			}
-
-			@Override
-			protected void onClosed(Exception e) {
-				reactor.startExternalTask();
-				anotherReactor.execute(() -> {
-					anotherReactorSupplier.closeEx(e);
-					reactor.completeExternalTask();
-				});
-			}
-		};
-	}
-
-	/**
-	 * Returns a {@code ChannelSupplier} wrapped in {@link Supplier}
-	 * and calls its {@code get()} when {@code get()} method is called.
-	 *
-	 * @param provider a provider of {@code ChannelSupplier}
-	 * @return a {@code ChannelSupplier} that was wrapped in
-	 * the {@code provider}
-	 */
-	static <T> ChannelSupplier<T> ofLazyProvider(Supplier<? extends ChannelSupplier<T>> provider) {
-		return new AbstractChannelSupplier<>() {
-			private ChannelSupplier<T> supplier;
-
-			@Override
-			protected Promise<T> doGet() {
-				if (supplier == null) supplier = provider.get();
-				return supplier.get();
-			}
-
-			@Override
-			protected void onClosed(Exception e) {
-				if (supplier != null) {
-					supplier.closeEx(e);
-				}
-			}
-		};
-	}
 
 	/**
 	 * Transforms this ChannelSupplier with the provided {@code fn}.
@@ -424,14 +218,23 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * @see ChannelSuppliers#streamTo(ChannelSupplier, ChannelConsumer)
+	 * Streams data from this {@link ChannelSupplier} to the {@link ChannelConsumer} until {@link #get()}
+	 * returns a promise of {@code null}.
+	 * <p>
+	 * If {@link #get()} returns a promise of exception or there was an exception while
+	 * {@link  ChannelConsumer} accepted values, a promise of {@code exception} will be
+	 * returned and the process will stop.
+	 *
+	 * @param consumer a consumer which accepts the provided by supplier data
+	 * @return a promise of {@code null} as a marker of completion of stream,
+	 * or promise of exception, if there was an exception while streaming
 	 */
 	default Promise<Void> streamTo(ChannelConsumer<T> consumer) {
-		return ChannelSuppliers.streamTo(this, consumer);
+		return Promise.ofCallback(cb -> streamToImpl(this, consumer, cb));
 	}
 
 	default Promise<Void> streamTo(Promise<? extends ChannelConsumer<T>> consumer) {
-		return ChannelSuppliers.streamTo(this, ChannelConsumer.ofPromise(consumer));
+		return streamTo(ChannelConsumers.ofPromise(consumer));
 	}
 
 	/**
@@ -442,10 +245,10 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * @see ChannelSuppliers#collect
+	 * @see ChannelSupplier#collect
 	 */
 	default <A, R> Promise<R> toCollector(Collector<T, A, R> collector) {
-		return ChannelSuppliers.collect(this,
+		return collect(this,
 				collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()));
 	}
 
@@ -482,4 +285,138 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		};
 	}
 
+	/**
+	 * Collects data provided by the {@code supplier} asynchronously and returns a
+	 * promise of accumulated result. This process will be getting values from the
+	 * {@code supplier}, until a promise of {@code null} is returned, which represents
+	 * end of stream.
+	 * <p>
+	 * If {@code get} returns a promise of exception or there was an exception while
+	 * {@code accumulator} accepted values, a promise of {@code exception} will be
+	 * returned and the process will stop.
+	 *
+	 * @param supplier     a {@code ChannelSupplier} which provides data to be collected
+	 * @param initialValue a value which will accumulate the results of accumulator
+	 * @param accumulator  a {@link BiConsumer} which may perform some operations over provided
+	 *                     by supplier data and accumulates the result to the initialValue
+	 * @param finisher     a {@link Function} which performs the final transformation of the
+	 *                     accumulated value
+	 * @param <T>          a data type provided by the {@code supplier}
+	 * @param <A>          an intermediate accumulation data type
+	 * @param <R>          a data type of final result of {@code finisher}
+	 * @return a promise of accumulated result, transformed by the {@code finisher}
+	 */
+	static <T, A, R> Promise<R> collect(ChannelSupplier<T> supplier,
+			A initialValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher) {
+		return Promise.ofCallback(cb ->
+				toCollectorImpl(supplier, initialValue, accumulator, finisher, cb));
+	}
+
+	static <T> Promise<Void> streamTo(Promise<ChannelSupplier<T>> supplier, Promise<ChannelConsumer<T>> consumer) {
+		return Promises.toTuple(supplier.toTry(), consumer.toTry())
+				.then(t -> streamTo(t.value1(), t.value2()));
+	}
+
+	static <T> Promise<Void> streamTo(Try<ChannelSupplier<T>> supplier, Try<ChannelConsumer<T>> consumer) {
+		if (supplier.isSuccess() && consumer.isSuccess()) {
+			return supplier.get().streamTo(consumer.get());
+		}
+		Exception exception = new Exception("Channel stream failed");
+		supplier.consume(AsyncCloseable::close, exception::addSuppressed);
+		consumer.consume(AsyncCloseable::close, exception::addSuppressed);
+		return Promise.ofException(exception);
+	}
+
+	private static <T> void streamToImpl(ChannelSupplier<T> supplier, ChannelConsumer<T> consumer, SettablePromise<Void> cb) {
+		Promise<T> supplierPromise;
+		while (true) {
+			supplierPromise = supplier.get();
+			if (!supplierPromise.isResult()) break;
+			T item = supplierPromise.getResult();
+			if (item == null) break;
+			Promise<Void> consumerPromise = consumer.accept(item);
+			if (consumerPromise.isResult()) continue;
+			consumerPromise.run(($, e) -> {
+				if (e == null) {
+					streamToImpl(supplier, consumer, cb);
+				} else {
+					supplier.closeEx(e);
+					cb.trySetException(e);
+				}
+			});
+			return;
+		}
+		supplierPromise
+				.run((item, e1) -> {
+					if (e1 == null) {
+						consumer.accept(item)
+								.run(($, e2) -> {
+									if (e2 == null) {
+										if (item != null) {
+											streamToImpl(supplier, consumer, cb);
+										} else {
+											cb.trySet(null);
+										}
+									} else {
+										supplier.closeEx(e2);
+										cb.trySetException(e2);
+									}
+								});
+					} else {
+						consumer.closeEx(e1);
+						cb.trySetException(e1);
+					}
+				});
+	}
+
+	private static <T, A, R> void toCollectorImpl(ChannelSupplier<T> supplier,
+			A accumulatedValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher,
+			SettablePromise<R> cb) {
+		Promise<T> promise;
+		while (true) {
+			promise = supplier.get();
+			if (!promise.isResult()) break;
+			T item = promise.getResult();
+			if (item != null) {
+				try {
+					accumulator.accept(accumulatedValue, item);
+				} catch (Exception ex) {
+					handleError(ex, cb);
+					supplier.closeEx(ex);
+					cb.setException(ex);
+					return;
+				}
+				continue;
+			}
+			break;
+		}
+		promise.run((value, e) -> {
+			if (e == null) {
+				if (value != null) {
+					try {
+						accumulator.accept(accumulatedValue, value);
+					} catch (Exception ex) {
+						handleError(ex, cb);
+						supplier.closeEx(ex);
+						cb.setException(ex);
+						return;
+					}
+					toCollectorImpl(supplier, accumulatedValue, accumulator, finisher, cb);
+				} else {
+					R result;
+					try {
+						result = finisher.apply(accumulatedValue);
+					} catch (Exception ex) {
+						handleError(ex, cb);
+						cb.setException(ex);
+						return;
+					}
+					cb.set(result);
+				}
+			} else {
+				Recyclers.recycle(accumulatedValue);
+				cb.setException(e);
+			}
+		});
+	}
 }

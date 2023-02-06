@@ -4,11 +4,13 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.recycle.Recyclers;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.WithChannelTransformer;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -61,14 +63,14 @@ public final class AbstractCommunicatingProcessTest {
 			processes[i].getOutput().bindTo(processes[i + 1].getInput());
 		}
 
-		acknowledgement = ChannelSupplier.ofList(expectedData)
+		acknowledgement = ChannelSuppliers.ofList(expectedData)
 				.bindTo(processes[0].getInput());
 	}
 
 	@Test
 	public void testAckPropagation() {
 		processes[size - 1].getOutput()
-				.set(ChannelConsumer.of(value -> {
+				.set(ChannelConsumers.ofAsyncConsumer(value -> {
 					actualData.add(value);
 					if (expectedData.size() == actualData.size()) {
 						Recyclers.recycle(actualData);
@@ -84,7 +86,7 @@ public final class AbstractCommunicatingProcessTest {
 	@Test
 	public void testAckPropagationWithFailure() {
 		processes[size - 1].getOutput()
-				.set(ChannelConsumer.of(value -> {
+				.set(ChannelConsumers.ofAsyncConsumer(value -> {
 					Recyclers.recycle(value);
 					return Promise.ofException(ERROR);
 				}));

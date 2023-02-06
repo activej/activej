@@ -16,8 +16,10 @@
 
 package io.activej.csp;
 
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 
 @FunctionalInterface

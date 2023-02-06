@@ -23,11 +23,11 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UnknownFormatException;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
@@ -39,7 +39,7 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.csp.binary.ByteBufsDecoder.ofFixedSize;
+import static io.activej.csp.binary.decoder.ByteBufsDecoders.ofFixedSize;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Integer.reverseBytes;
 import static java.lang.Math.max;
@@ -244,7 +244,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void skipTerminatorByte(int flag, int part) {
-		input.decode(ByteBufsDecoder.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
+		input.decode(ByteBufsDecoders.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
 				.whenException(e -> closeEx(new InvalidSizeException("FNAME or FEXTRA header is larger than maximum allowed length")))
 				.whenResult(ByteBuf::recycle)
 				.whenResult(() -> runNext(flag - part));

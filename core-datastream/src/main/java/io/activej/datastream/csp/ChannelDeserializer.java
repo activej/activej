@@ -24,7 +24,7 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelInput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamSupplier;
 import io.activej.serializer.BinarySerializer;

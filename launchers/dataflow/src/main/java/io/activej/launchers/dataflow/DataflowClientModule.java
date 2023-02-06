@@ -17,7 +17,7 @@
 package io.activej.launchers.dataflow;
 
 import io.activej.config.Config;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;

@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.Reactor;

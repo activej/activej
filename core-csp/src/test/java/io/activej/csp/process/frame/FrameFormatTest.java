@@ -5,11 +5,10 @@ import io.activej.bytebuf.ByteBufStrings;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UnexpectedDataException;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.ChannelByteChunker;
-import io.activej.csp.process.frame.impl.LZ4;
-import io.activej.csp.process.frame.impl.LZ4Legacy;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -91,7 +90,7 @@ public class FrameFormatTest {
 		List<ByteBuf> buffers = IntStream.range(0, buffersCount).mapToObj($ -> createRandomByteBuf()).collect(toList());
 		byte[] expected = buffers.stream().map(ByteBuf::slice).collect(ByteBufs.collector()).asArray();
 
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(buffers)
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(buffers)
 				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
 				.transformWith(ChannelFrameEncoder.create(frameFormat))
 				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
@@ -152,15 +151,15 @@ public class FrameFormatTest {
 		ChannelFrameDecoder decompressor = ChannelFrameDecoder.create(frameFormat);
 		ByteBufs bufs = new ByteBufs();
 
-		await(ChannelSupplier.of(ByteBufStrings.wrapAscii("TestData")).transformWith(compressor)
-				.streamTo(ChannelConsumer.ofConsumer(bufs::add)));
+		await(ChannelSuppliers.ofValue(ByteBufStrings.wrapAscii("TestData")).transformWith(compressor)
+				.streamTo(ChannelConsumers.ofConsumer(bufs::add)));
 
 		// add trailing 0 - bytes
 		bufs.add(ByteBuf.wrapForReading(new byte[10]));
 
-		Exception e = awaitException(ChannelSupplier.of(bufs.takeRemaining())
+		Exception e = awaitException(ChannelSuppliers.ofValue(bufs.takeRemaining())
 				.transformWith(decompressor)
-				.streamTo(ChannelConsumer.ofConsumer(ByteBuf::recycle)));
+				.streamTo(ChannelConsumers.ofConsumer(ByteBuf::recycle)));
 
 		assertThat(e, instanceOf(UnexpectedDataException.class));
 	}
@@ -198,7 +197,7 @@ public class FrameFormatTest {
 			if (!resetsAllowed) return;
 			encoderBuilder = encoderBuilder.withEncoderResets();
 		}
-		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data1), ByteBuf.wrapForReading(data2))
+		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSuppliers.ofValues(ByteBuf.wrapForReading(data1), ByteBuf.wrapForReading(data2))
 				.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
@@ -211,7 +210,7 @@ public class FrameFormatTest {
 
 			ByteBufs bufs = new ByteBufs();
 			bufs.add(compressed.slice());
-			ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(bufs.takeExactSize(i), bufs.takeRemaining())
+			ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofValues(bufs.takeExactSize(i), bufs.takeRemaining())
 					.transformWith(decoderBuilder.build());
 
 			ByteBuf resultBuf = await(supplier.toCollector(ByteBufs.collector()));
@@ -232,13 +231,14 @@ public class FrameFormatTest {
 			encoderBuilder.withEncoderResets();
 			decoderBuilder.withDecoderResets();
 		}
-		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSupplier.of(ByteBuf.wrapForReading(data))
+		ByteBuf value = ByteBuf.wrapForReading(data);
+		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSuppliers.ofValue(value)
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
 				.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(compressed)
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofValue(compressed)
 				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
 				.transformWith(decoderBuilder.build());
 

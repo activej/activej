@@ -23,10 +23,10 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.common.time.Stopwatch;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -239,7 +239,7 @@ public final class Multilog<T> extends AbstractReactive
 															position, fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
 															sw, countingFormat.getCount(), e);
 												}
-												return Promise.of(ChannelSupplier.<ByteBuf>of());
+												return Promise.of(ChannelSuppliers.<ByteBuf>empty());
 											}
 											return Promise.ofException(e);
 										})

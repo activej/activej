@@ -2,6 +2,8 @@ package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
@@ -18,8 +20,8 @@ import java.util.concurrent.Executors;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.csp.ChannelSuppliers.channelSupplierAsInputStream;
-import static io.activej.csp.ChannelSuppliers.inputStreamAsChannelSupplier;
+import static io.activej.csp.binary.Utils.channelSupplierAsInputStream;
+import static io.activej.csp.supplier.ChannelSuppliers.ofInputStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.executeWithReactor;
@@ -61,7 +63,7 @@ public class ChannelSuppliersIOTest {
 				.build();
 		ChannelSupplier<ByteBuf> supplier;
 		try (InputStream is = inputStream()) {
-			supplier = inputStreamAsChannelSupplier(executor, is);
+			supplier = ofInputStream(executor, is);
 
 			ByteBuf buf = await(supplier.toCollector(ByteBufs.collector()));
 			assertArrayEquals(DATA, buf.asArray());
@@ -80,7 +82,7 @@ public class ChannelSuppliersIOTest {
 				.build();
 		try (InputStream is = inputStream()) {
 			is.close();
-			ChannelSupplier<ByteBuf> supplier = inputStreamAsChannelSupplier(executor, is);
+			ChannelSupplier<ByteBuf> supplier = ofInputStream(executor, is);
 
 			IOException exception = awaitException(supplier.get());
 			try {
@@ -104,7 +106,7 @@ public class ChannelSuppliersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		ChannelSupplier<ByteBuf> supplier = executeWithReactor(eventloop, () -> ChannelSupplier.of(byteBuf));
+		ChannelSupplier<ByteBuf> supplier = executeWithReactor(eventloop, () -> ChannelSuppliers.ofValue(byteBuf));
 
 		try (InputStream inputStream = inputStream();
 			 InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {
@@ -142,7 +144,7 @@ public class ChannelSuppliersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		ChannelSupplier<ByteBuf> supplier = executeWithReactor(eventloop, () -> ChannelSupplier.of(byteBuf));
+		ChannelSupplier<ByteBuf> supplier = executeWithReactor(eventloop, () -> ChannelSuppliers.ofValue(byteBuf));
 
 		try (InputStream inputStream = inputStream();
 			 InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {

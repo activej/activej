@@ -2,7 +2,7 @@ package io.activej.fs.cluster;
 
 import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
@@ -224,7 +224,7 @@ public final class TestClusterDeadPartitionCheck {
 				.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
 				.then(consumer -> {
 					RefInt dataBeforeShutdown = new RefInt(100);
-					return ChannelSupplier.of(() -> Promise.of(wrapUtf8("data")))
+					return ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapUtf8("data")))
 							.peek($ -> {
 								if (dataBeforeShutdown.dec() == 0) {
 									List<Path> allFiles = Arrays.stream(serverStorages)

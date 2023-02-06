@@ -3,9 +3,9 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
@@ -138,8 +138,9 @@ public final class ClusterFileSystemTest {
 		String content = "test content of the file";
 		String resultFile = "file.txt";
 
+		ByteBuf value = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 		await(client.upload(resultFile)
-				.then(ChannelSupplier.of(ByteBuf.wrapForReading(content.getBytes(UTF_8)))::streamTo));
+				.then(ChannelSuppliers.ofValue(value)::streamTo));
 
 		int uploaded = 0;
 		for (Path path : serverStorages) {
@@ -161,7 +162,7 @@ public final class ClusterFileSystemTest {
 
 		Files.writeString(serverStorages.get(numOfServer).resolve(file), content);
 
-		await(ChannelSupplier.ofPromise(client.download(file))
+		await(ChannelSuppliers.ofPromise(client.download(file))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file))));
 
 		assertEquals(Files.readString(clientStorage.resolve(file)), content);
@@ -199,8 +200,11 @@ public final class ClusterFileSystemTest {
 		String[] files = {"file_1.txt", "file_2.txt", "file_3.txt", "other.txt"};
 
 		await(Promises.all(Arrays.stream(files).map(f ->
-				ChannelSupplier.of(data.slice())
-						.streamTo(ChannelConsumer.ofPromise(client.upload(f))))));
+		{
+			ByteBuf value = data.slice();
+			return ChannelSuppliers.ofValue(value)
+					.streamTo(ChannelConsumers.ofPromise(client.upload(f)));
+		})));
 
 		assertEquals(Files.readString(serverStorages.get(1).resolve("file_1.txt")), content);
 		assertEquals(Files.readString(serverStorages.get(2).resolve("file_2.txt")), content);
@@ -216,8 +220,11 @@ public final class ClusterFileSystemTest {
 
 		await(Promises.sequence(IntStream.range(0, 1_000)
 				.mapToObj(i ->
-						() -> ChannelSupplier.of(data.slice())
-								.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded_" + i + ".txt"))))));
+						() -> {
+							ByteBuf value = data.slice();
+							return ChannelSuppliers.ofValue(value)
+									.streamTo(ChannelConsumers.ofPromise(client.upload("file_uploaded_" + i + ".txt")));
+						})));
 
 		for (int i = 0; i < 1000; i++) {
 			int replicasCount = 0;
@@ -236,8 +243,9 @@ public final class ClusterFileSystemTest {
 		int allClientsSize = partitions.getPartitions().size();
 		client.setReplicationCount(allClientsSize);
 
-		Exception exception = awaitException(ChannelSupplier.of(ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8)))
-				.streamTo(ChannelConsumer.ofPromise(client.upload("file_uploaded.txt"))));
+		ByteBuf value = ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8));
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value)
+				.streamTo(ChannelConsumers.ofPromise(client.upload("file_uploaded.txt"))));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
 		assertThat(exception.getMessage(), containsString("Didn't connect to enough partitions"));
@@ -247,8 +255,8 @@ public final class ClusterFileSystemTest {
 	public void downloadNonExisting() {
 		String fileName = "i_dont_exist.txt";
 
-		Exception exception = awaitException(ChannelSupplier.ofPromise(client.download(fileName))
-				.streamTo(ChannelConsumer.of(AsyncConsumer.of(ByteBuf::recycle))));
+		Exception exception = awaitException(ChannelSuppliers.ofPromise(client.download(fileName))
+				.streamTo(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of(ByteBuf::recycle))));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
 		assertThat(exception.getMessage(), containsString(fileName));

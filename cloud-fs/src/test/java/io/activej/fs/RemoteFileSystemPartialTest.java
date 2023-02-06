@@ -2,9 +2,11 @@ package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.fs.exception.MalformedGlobException;
 import io.activej.fs.tcp.FileSystemServer;
@@ -36,7 +38,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public final class RemoteFileSystemTestPartial {
+public final class RemoteFileSystemPartialTest {
 	private static final String FILE = "file.txt";
 	private static final byte[] CONTENT = "test content of the file".getBytes(UTF_8);
 
@@ -75,7 +77,7 @@ public final class RemoteFileSystemTestPartial {
 
 	@Test
 	public void justDownload() throws IOException {
-		await(ChannelSupplier.ofPromise(client.download(FILE))
+		await(ChannelSuppliers.ofPromise(client.download(FILE))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
 				.whenComplete(server::close));
 
@@ -87,8 +89,9 @@ public final class RemoteFileSystemTestPartial {
 		byte[] data = new byte[10 * (1 << 20)]; // 10 mb
 		ThreadLocalRandom.current().nextBytes(data);
 
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(ByteBuf.wrapForReading(data));
-		ChannelConsumer<ByteBuf> consumer = ChannelConsumer.ofPromise(client.upload("test_big_file.bin", data.length));
+		ByteBuf value = ByteBuf.wrapForReading(data);
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofValue(value);
+		ChannelConsumer<ByteBuf> consumer = ChannelConsumers.ofPromise(client.upload("test_big_file.bin", data.length));
 
 		await(supplier.streamTo(consumer)
 				.whenComplete(server::close));
@@ -98,7 +101,7 @@ public final class RemoteFileSystemTestPartial {
 
 	@Test
 	public void downloadPrefix() throws IOException {
-		await(ChannelSupplier.ofPromise(client.download(FILE, 0, 12))
+		await(ChannelSuppliers.ofPromise(client.download(FILE, 0, 12))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
 				.whenComplete(server::close));
 
@@ -107,7 +110,7 @@ public final class RemoteFileSystemTestPartial {
 
 	@Test
 	public void downloadSuffix() throws IOException {
-		await(ChannelSupplier.ofPromise(client.download(FILE, 13, Long.MAX_VALUE))
+		await(ChannelSuppliers.ofPromise(client.download(FILE, 13, Long.MAX_VALUE))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
 				.whenComplete(server::close));
 
@@ -116,7 +119,7 @@ public final class RemoteFileSystemTestPartial {
 
 	@Test
 	public void downloadPart() throws IOException {
-		await(ChannelSupplier.ofPromise(client.download(FILE, 5, 10))
+		await(ChannelSuppliers.ofPromise(client.download(FILE, 5, 10))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
 				.whenComplete(server::close));
 
@@ -126,7 +129,7 @@ public final class RemoteFileSystemTestPartial {
 	@Test
 	public void downloadOverSuffix() {
 		int offset = 13;
-		ByteBuf result = await(ChannelSupplier.ofPromise(client.download(FILE, offset, 123))
+		ByteBuf result = await(ChannelSuppliers.ofPromise(client.download(FILE, offset, 123))
 				.toCollector(ByteBufs.collector())
 				.whenComplete(server::close));
 
@@ -135,7 +138,7 @@ public final class RemoteFileSystemTestPartial {
 
 	@Test
 	public void downloadOver() {
-		Exception exception = awaitException(ChannelSupplier.ofPromise(client.download(FILE, 123, 123))
+		Exception exception = awaitException(ChannelSuppliers.ofPromise(client.download(FILE, 123, 123))
 				.toCollector(ByteBufs.collector())
 				.whenComplete(server::close));
 

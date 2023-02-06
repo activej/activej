@@ -1,8 +1,9 @@
 package io.activej.csp.net;
 
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.net.SimpleServer;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.test.rules.ActivePromisesRule;
@@ -31,7 +32,7 @@ public final class PingPongSocketConnectionTest {
 	private static final String REQUEST_MSG = "PING";
 	private static final String RESPONSE_MSG = "PONG";
 
-	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoder.ofFixedSize(4)
+	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoders.ofFixedSize(4)
 			.andThen(buf -> buf.asString(UTF_8));
 
 	@ClassRule
@@ -55,7 +56,7 @@ public final class PingPongSocketConnectionTest {
 		SimpleServer.builder(
 						getCurrentReactor(),
 						socket -> {
-							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
+							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
 							loop(ITERATIONS,
 									i -> i != 0,
 									i -> bufsSupplier.decode(DECODER)
@@ -72,7 +73,7 @@ public final class PingPongSocketConnectionTest {
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
+					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
 					return loop(ITERATIONS,
 							i -> i != 0,
 							i -> socket.write(wrapAscii(REQUEST_MSG))

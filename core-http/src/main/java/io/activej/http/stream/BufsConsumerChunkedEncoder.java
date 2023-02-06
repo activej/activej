@@ -18,12 +18,13 @@ package io.activej.http.stream;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.csp.supplier.ChannelSupplier;
 
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
@@ -79,7 +80,7 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	@Override
 	protected void doProcess() {
 		input.filter(ByteBuf::canRead)
-				.streamTo(ChannelConsumer.of(buf -> output.accept(encodeBuf(buf))))
+				.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> output.accept(encodeBuf(buf))))
 				.then(() -> output.accept(ByteBuf.wrapForReading(LAST_CHUNK_BYTES)))
 				.then(() -> output.acceptEndOfStream())
 				.whenResult(this::completeProcess);

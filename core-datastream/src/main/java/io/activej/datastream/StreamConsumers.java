@@ -17,7 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.common.function.ConsumerEx;
-import io.activej.csp.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;

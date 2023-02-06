@@ -2,8 +2,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -27,7 +26,7 @@ public class AsyncServletTest {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE).map(body -> HttpResponse.ok200().withBody(body.slice()));
 
 		HttpRequest testRequest = HttpRequest.post("http://example.com")
-				.withBodyStream(ChannelSupplier.of(
+				.withBodyStream(ChannelSuppliers.ofValues(
 						ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
 						ByteBuf.wrapForReading("Test2".getBytes(UTF_8)))
 				);
@@ -50,8 +49,8 @@ public class AsyncServletTest {
 
 		HttpRequest testRequest = HttpRequest.post("http://example.com")
 				.withBodyStream(ChannelSuppliers.concat(
-						ChannelSupplier.of(byteBuf),
-						ChannelSupplier.ofException(exception)
+						ChannelSuppliers.ofValue(byteBuf),
+						ChannelSuppliers.ofException(exception)
 				));
 
 		Exception e = awaitException(servlet.serveAsync(testRequest));

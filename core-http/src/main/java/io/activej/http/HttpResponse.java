@@ -19,7 +19,8 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
@@ -238,7 +239,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 			offset = 0;
 		}
 		response.addHeader(CONTENT_LENGTH, Long.toString(contentLength));
-		response.setBodyStream(ChannelSupplier.ofPromise(downloader.getFileSlice(offset, contentLength)));
+		response.setBodyStream(ChannelSuppliers.ofPromise(downloader.getFileSlice(offset, contentLength)));
 		return Promise.of(response);
 	}
 

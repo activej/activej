@@ -16,7 +16,7 @@
 
 package io.activej.csp.dsl;
 
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 
 @FunctionalInterface
 public interface ChannelSupplierTransformer<T, R> {

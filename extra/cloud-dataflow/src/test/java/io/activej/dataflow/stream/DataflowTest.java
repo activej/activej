@@ -1,6 +1,6 @@
 package io.activej.dataflow.stream;
 
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.ConcatCollector;
@@ -22,8 +22,8 @@ import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.ToListStreamConsumer;
-import io.activej.datastream.processor.reducer.impl.Merge;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.impl.Merge;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;

@@ -20,7 +20,7 @@ import io.activej.async.file.ExecutorFileService;
 import io.activej.async.file.IFileService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.csp.AbstractChannelConsumer;
+import io.activej.csp.consumer.AbstractChannelConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.slf4j.Logger;

@@ -25,15 +25,15 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorage;
+import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -210,7 +210,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 		StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> reducer = StreamReducer.create();
 
 		for (Path file : files) {
-			ChannelSupplier.ofPromise(ChannelFileReader.open(executor, file))
+			ChannelSuppliers.ofPromise(ChannelFileReader.open(executor, file))
 					.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
 					.withEndOfStream(eos -> eos
 							.map(identity(),

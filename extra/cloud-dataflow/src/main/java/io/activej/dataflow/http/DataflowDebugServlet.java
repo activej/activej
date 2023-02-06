@@ -19,7 +19,7 @@ package io.activej.dataflow.http;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.dataflow.DataflowClient;

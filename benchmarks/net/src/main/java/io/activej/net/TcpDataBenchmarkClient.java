@@ -1,8 +1,8 @@
 package io.activej.net;
 
 import io.activej.config.Config;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
@@ -122,9 +122,9 @@ public class TcpDataBenchmarkClient extends Launcher {
 				.then(socket -> {
 					StreamSupplierOfSequence.create(limit)
 							.transformWith(ChannelSerializer.create(INT_SERIALIZER))
-							.streamTo(ChannelConsumer.ofSocket(socket));
+							.streamTo(ChannelConsumers.ofSocket(socket));
 
-					return ChannelSupplier.ofSocket(socket)
+					return ChannelSuppliers.ofSocket(socket)
 							.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
 							.streamTo(StreamConsumer.skip())
 							.whenComplete(socket::close)

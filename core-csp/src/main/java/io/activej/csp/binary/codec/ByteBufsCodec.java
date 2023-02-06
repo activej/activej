@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package io.activej.csp.binary;
+package io.activej.csp.binary.codec;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamDecoder;
-import io.activej.serializer.stream.StreamEncoder;
+import io.activej.csp.binary.DecoderFunction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 public interface ByteBufsCodec<I, O> {
 	ByteBuf encode(O item);
@@ -47,27 +44,4 @@ public interface ByteBufsCodec<I, O> {
 			}
 		};
 	}
-
-	static ByteBufsCodec<ByteBuf, ByteBuf> ofDelimiter(ByteBufsDecoder<ByteBuf> delimiterIn, UnaryOperator<ByteBuf> delimiterOut) {
-		return new ByteBufsCodec<>() {
-			@Override
-			public ByteBuf encode(ByteBuf buf) {
-				return delimiterOut.apply(buf);
-			}
-
-			@Override
-			public @Nullable ByteBuf tryDecode(ByteBufs bufs) throws MalformedDataException {
-				return delimiterIn.tryDecode(bufs);
-			}
-		};
-	}
-
-	static <I, O> ByteBufsCodec<I, O> ofStreamCodecs(StreamDecoder<I> decoder, StreamEncoder<O> encoder) {
-		return new StreamByteBufsCodec<>(decoder, encoder);
-	}
-
-	static <T> ByteBufsCodec<T, T> ofStreamCodecs(StreamCodec<T> codec) {
-		return ofStreamCodecs(codec, codec);
-	}
-
 }

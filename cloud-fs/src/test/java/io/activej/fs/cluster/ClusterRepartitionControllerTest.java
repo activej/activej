@@ -1,7 +1,7 @@
 package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.fs.FileSystem;
 import io.activej.fs.ForwardingFileSystem;
 import io.activej.fs.IFileSystem;

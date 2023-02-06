@@ -21,7 +21,7 @@ import com.github.mustachejava.Mustache;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.common.ref.Ref;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemException;
@@ -71,7 +71,7 @@ public final class FileSystemGuiServlet {
 							String dir = request.getPostParameter("dir");
 							if (dir == null || dir.isEmpty())
 								return Promise.of(HttpResponse.ofCode(400).withPlainText("Dir should not be empty"));
-							return ChannelSupplier.<ByteBuf>of().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
+							return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
 									.map($ -> HttpResponse.ok200());
 						}))
 				.map("/", request -> {

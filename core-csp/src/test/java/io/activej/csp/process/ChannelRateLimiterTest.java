@@ -1,8 +1,8 @@
 package io.activej.csp.process;
 
 import io.activej.common.exception.FatalErrorHandler;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.EventloopRule;
 import io.activej.test.time.TestCurrentTimeProvider;
@@ -40,9 +40,9 @@ public class ChannelRateLimiterTest {
 				.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
-		await(ChannelSupplier.ofList(expected)
+		await(ChannelSuppliers.ofList(expected)
 				.transformWith(limiter)
-				.streamTo(ChannelConsumer.ofConsumer(actual::add)));
+				.streamTo(ChannelConsumers.ofConsumer(actual::add)));
 
 		assertEquals(expected, actual);
 		assertTrue(timeSequence.getTime() > 2_000);
@@ -65,9 +65,9 @@ public class ChannelRateLimiterTest {
 				.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
-		await(ChannelSupplier.ofList(expected)
+		await(ChannelSuppliers.ofList(expected)
 				.transformWith(limiter)
-				.streamTo(ChannelConsumer.ofConsumer(actual::add)));
+				.streamTo(ChannelConsumers.ofConsumer(actual::add)));
 
 		assertEquals(expected, actual);
 		assertTrue(timeSequence.getTime() > 1_000 && timeSequence.getTime() < 2_000);
@@ -90,9 +90,9 @@ public class ChannelRateLimiterTest {
 				.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
-		await(ChannelSupplier.ofList(expected)
+		await(ChannelSuppliers.ofList(expected)
 				.transformWith(limiter)
-				.streamTo(ChannelConsumer.ofConsumer(actual::add)));
+				.streamTo(ChannelConsumers.ofConsumer(actual::add)));
 
 		assertEquals(expected, actual);
 		assertTrue(timeSequence.getTime() < 1_000);

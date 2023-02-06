@@ -25,12 +25,12 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.csp.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -324,13 +324,13 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 		public WalConsumer(Path walFile) {
 			this.walFile = walFile;
-			ChannelConsumer<ByteBuf> writer = ChannelConsumer.ofPromise(ChannelFileWriter.open(executor, walFile));
+			ChannelConsumer<ByteBuf> writer = ChannelConsumers.ofPromise(ChannelFileWriter.open(executor, walFile));
 			internalSupplier.streamTo(StreamConsumer.ofSupplier(supplier -> supplier
 					.transformWith(ChannelSerializer.builder(serializer)
 							.withAutoFlushInterval(Duration.ZERO)
 							.build())
 					.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
-					.streamTo(ChannelConsumer.of(value -> {
+					.streamTo(ChannelConsumers.ofAsyncConsumer(value -> {
 						if (this.writeCallback == null) return writer.accept(value);
 
 						SettablePromise<Void> writeCallback = this.writeCallback;

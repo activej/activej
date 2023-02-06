@@ -5,12 +5,14 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.RefBoolean;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.dataset.Dataset;
@@ -328,7 +330,7 @@ public final class PartitionedStreamTest {
 						return (partitionIndex, maxPartitions) -> {
 							StreamUnion<String> union = StreamUnion.create();
 							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
-								ChannelSupplier.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
+								ChannelSuppliers.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
 										.streamTo(union.newInput());
 							}
@@ -343,7 +345,7 @@ public final class PartitionedStreamTest {
 							StreamReducer<Integer, String, Void> merger = StreamReducer.create();
 
 							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
-								ChannelSupplier.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
+								ChannelSuppliers.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
 										.transformWith(new CSVDecoder())
 										.streamTo(merger.newInput(KEY_FUNCTION, mergeReducer()));
 							}
@@ -361,7 +363,7 @@ public final class PartitionedStreamTest {
 							List<Promise<Void>> uploads = new ArrayList<>();
 							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
 								uploads.add(splitter.newOutput()
-										.streamTo(ChannelConsumer.ofPromise(fileSystems.get(i).upload(TARGET_FILENAME))
+										.streamTo(ChannelConsumers.ofPromise(fileSystems.get(i).upload(TARGET_FILENAME))
 												.transformWith(new CSVEncoder())));
 							}
 
@@ -587,7 +589,7 @@ public final class PartitionedStreamTest {
 		@Override
 		public StreamSupplier<String> transform(ChannelSupplier<ByteBuf> supplier) {
 			BinaryChannelSupplier binaryChannelSupplier = BinaryChannelSupplier.of(supplier);
-			return ofChannelSupplier(ChannelSupplier.of(
+			return ofChannelSupplier(ChannelSuppliers.ofAsyncSupplier(
 					() -> binaryChannelSupplier.decode(
 									bufs -> {
 										for (int i = 0; i < bufs.remainingBytes(); i++) {

@@ -8,11 +8,10 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.cube.Cube;
 import io.activej.cube.CubeTestBase;
 import io.activej.cube.LogItem;
@@ -136,7 +135,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		byte[] malformed = new byte[bufSize - 49];
 		malformed[0] = 127; // exceeds message size
-		await(ChannelSupplier.of(serializedData, ByteBuf.wrapForReading(malformed))
+		await(ChannelSuppliers.ofValues(serializedData, ByteBuf.wrapForReading(malformed))
 				.transformWith(ChannelFrameEncoder.builder(FrameFormats.lz4())
 						.withEncoderResets()
 						.build())

@@ -21,7 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.function.FunctionEx;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;

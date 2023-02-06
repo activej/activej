@@ -23,7 +23,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.csp.AbstractChannelSupplier;
+import io.activej.csp.supplier.AbstractChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.slf4j.Logger;

@@ -24,11 +24,12 @@ import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelConsumers;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.http.MultipartByteBufsDecoder.MultipartFrame;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +52,7 @@ import static java.util.stream.Collectors.toMap;
  */
 public final class MultipartByteBufsDecoder implements ByteBufsDecoder<MultipartFrame> {
 	private static final int MAX_META_SIZE = ApplicationSettings.getMemSize(MultipartByteBufsDecoder.class, "maxMetaBuffer", kilobytes(4)).toInt();
-	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoder.ofCrlfTerminatedBytes();
+	private static final ByteBufsDecoder<ByteBuf> OF_CRLF_DECODER = ByteBufsDecoders.ofCrlfTerminatedBytes();
 
 	private @Nullable List<String> readingHeaders = null;
 
@@ -118,7 +119,7 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 							})
 							.filter(MultipartFrame::isData)
 							.map(MultipartFrame::getData)
-							.streamTo(ChannelConsumer.ofPromise(fileName == null ?
+							.streamTo(ChannelConsumers.ofPromise(fileName == null ?
 									dataHandler.handleField(fieldName) :
 									dataHandler.handleFile(fieldName, fileName)
 							))
@@ -299,7 +300,7 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 			return new AsyncMultipartDataHandler() {
 				@Override
 				public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
-					return Promise.of(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
+					return Promise.of(ChannelConsumers.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
 							.map(value -> {
 								fields.put(fieldName, value.asString(UTF_8));
 								return null;

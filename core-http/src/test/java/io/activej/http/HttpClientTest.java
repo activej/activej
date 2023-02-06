@@ -4,9 +4,9 @@ import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ref.Ref;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.HttpClient.JmxInspector;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.SimpleServer;
@@ -58,7 +58,7 @@ public final class HttpClientTest {
 	public void startServer() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
-								.withBodyStream(ChannelSupplier.ofStream(
+								.withBodyStream(ChannelSuppliers.ofStream(
 										IntStream.range(0, HELLO_WORLD.length)
 												.mapToObj(idx -> {
 													ByteBuf buf = ByteBufPool.allocate(1);
@@ -356,7 +356,7 @@ public final class HttpClientTest {
 
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
 		SimpleServer.Builder builder = SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
-						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
+						BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
 								.decode(REQUEST_DECODER)
 								.whenResult(ByteBuf::recycle)
 								.then(() -> socket.write(rawResponse))

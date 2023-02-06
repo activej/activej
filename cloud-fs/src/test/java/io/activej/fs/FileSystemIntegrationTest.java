@@ -5,10 +5,10 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.tuple.Tuple2;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -95,8 +95,9 @@ public final class FileSystemIntegrationTest {
 	public void testUploadCompletesCorrectly() {
 		String resultFile = "file_uploaded.txt";
 
+		ByteBuf value = ByteBuf.wrapForReading(CONTENT);
 		byte[] bytes = await(fileSystem.upload(resultFile)
-				.then(ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))::streamTo)
+				.then(ChannelSuppliers.ofValue(value)::streamTo)
 				.map($ -> {
 					try {
 						return Files.readAllBytes(storage.resolve(resultFile));
@@ -115,7 +116,8 @@ public final class FileSystemIntegrationTest {
 		Path path = storage.resolve(filename);
 		assertFalse(Files.exists(path));
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data"))
+		ByteBuf value = wrapUtf8("data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value)
 				.streamTo(fileSystem.upload(filename, 10))
 				.whenComplete(server::close));
 
@@ -130,7 +132,8 @@ public final class FileSystemIntegrationTest {
 		Path path = storage.resolve(filename);
 		assertFalse(Files.exists(path));
 
-		Exception exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data"))
+		ByteBuf value = wrapUtf8("data data data data");
+		Exception exception = awaitException(ChannelSuppliers.ofValue(value)
 				.streamTo(fileSystem.upload(filename, 10))
 				.whenComplete(server::close));
 
@@ -144,8 +147,11 @@ public final class FileSystemIntegrationTest {
 		int files = 10;
 
 		await(Promises.all(IntStream.range(0, 10)
-						.mapToObj(i -> ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))
-								.streamTo(ChannelConsumer.ofPromise(fileSystem.upload("file" + i, CONTENT.length)))))
+						.mapToObj(i -> {
+							ByteBuf value = ByteBuf.wrapForReading(CONTENT);
+							return ChannelSuppliers.ofValue(value)
+									.streamTo(ChannelConsumers.ofPromise(fileSystem.upload("file" + i, CONTENT.length)));
+						}))
 				.whenComplete(server::close));
 
 		for (int i = 0; i < files; i++) {
@@ -185,13 +191,15 @@ public final class FileSystemIntegrationTest {
 	public void testOnClientExceptionWhileUploading() {
 		String resultFile = "upload_with_exceptions.txt";
 
+		ByteBuf value = wrapUtf8("Test4");
+		ByteBuf value1 = ByteBuf.wrapForReading(BIG_FILE);
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
-				ChannelSupplier.of(wrapUtf8("Test1"), wrapUtf8(" Test2"), wrapUtf8(" Test3")).async(),
-				ChannelSupplier.of(ByteBuf.wrapForReading(BIG_FILE)),
-				ChannelSupplier.ofException(new FileSystemIOException("Test exception")),
-				ChannelSupplier.of(wrapUtf8("Test4")));
+				ChannelSuppliers.ofValues(wrapUtf8("Test1"), wrapUtf8(" Test2"), wrapUtf8(" Test3")).async(),
+				ChannelSuppliers.ofValue(value1),
+				ChannelSuppliers.ofException(new FileSystemIOException("Test exception")),
+				ChannelSuppliers.ofValue(value));
 
-		Exception exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fileSystem.upload(resultFile, Long.MAX_VALUE)))
+		Exception exception = awaitException(supplier.streamTo(ChannelConsumers.ofPromise(fileSystem.upload(resultFile, Long.MAX_VALUE)))
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
@@ -230,8 +238,8 @@ public final class FileSystemIntegrationTest {
 	@Test
 	public void testDownloadNotExist() {
 		String file = "file_not_exist_downloaded.txt";
-		Exception exception = awaitException(ChannelSupplier.ofPromise(fileSystem.download(file))
-				.streamTo(ChannelConsumer.of($ -> Promise.complete()))
+		Exception exception = awaitException(ChannelSuppliers.ofPromise(fileSystem.download(file))
+				.streamTo(ChannelConsumers.ofAsyncConsumer($ -> Promise.complete()))
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
@@ -247,7 +255,7 @@ public final class FileSystemIntegrationTest {
 
 		Executor executor = newCachedThreadPool();
 		for (int i = 0; i < 10; i++) {
-			tasks.add(ChannelSupplier.ofPromise(fileSystem.download(file))
+			tasks.add(ChannelSuppliers.ofPromise(fileSystem.download(file))
 					.streamTo(ChannelFileWriter.open(executor, storage.resolve("file" + i))));
 		}
 
@@ -337,7 +345,8 @@ public final class FileSystemIntegrationTest {
 		String appended = contentString.substring(offset) + toAppend;
 		Files.write(storage.resolve(filename), CONTENT);
 
-		String result = await(ChannelSupplier.of(wrapUtf8(appended))
+		ByteBuf value = wrapUtf8(appended);
+		String result = await(ChannelSuppliers.ofValue(value)
 				.streamTo(fileSystem.append(filename, offset))
 				.then(() -> fileSystem.download(filename))
 				.then(supplier -> supplier.toCollector(ByteBufs.collector())
@@ -348,7 +357,8 @@ public final class FileSystemIntegrationTest {
 	}
 
 	private Promise<Void> upload(String resultFile, byte[] bytes) {
+		ByteBuf value = ByteBuf.wrapForReading(bytes);
 		return fileSystem.upload(resultFile, bytes.length)
-				.then(ChannelSupplier.of(ByteBuf.wrapForReading(bytes))::streamTo);
+				.then(ChannelSuppliers.ofValue(value)::streamTo);
 	}
 }

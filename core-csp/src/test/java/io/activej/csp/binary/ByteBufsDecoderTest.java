@@ -4,6 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.csp.binary.decoder.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -23,7 +25,7 @@ public final class ByteBufsDecoderTest {
 
 	@Test
 	public void testOfNullTerminatedBytes() throws MalformedDataException {
-		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofNullTerminatedBytes();
+		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoders.ofNullTerminatedBytes();
 		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, 0, 4, 5, 6}));
 		ByteBuf beforeNull = doDecode(decoder);
 		ByteBuf afterNull = bufs.takeRemaining();
@@ -41,7 +43,7 @@ public final class ByteBufsDecoderTest {
 
 	@Test
 	public void ofCrlfTerminatedBytes() throws MalformedDataException {
-		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes();
+		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoders.ofCrlfTerminatedBytes();
 		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, 3, CR, LF, 4, 5, 6}));
 		ByteBuf beforeCrlf = doDecode(decoder);
 		ByteBuf afterCrlf = bufs.takeRemaining();
@@ -59,7 +61,7 @@ public final class ByteBufsDecoderTest {
 
 	@Test
 	public void ofCrlfTerminatedBytesWithMaxSize() throws MalformedDataException {
-		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofCrlfTerminatedBytes(5);
+		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoders.ofCrlfTerminatedBytes(5);
 		bufs.add(ByteBuf.wrapForReading(new byte[]{1, 2, CR, LF, 3, 4}));
 		ByteBuf beforeCrlf = doDecode(decoder);
 		ByteBuf afterCrlf = bufs.takeRemaining();
@@ -85,7 +87,7 @@ public final class ByteBufsDecoderTest {
 
 	@Test
 	public void ofIntSizePrefixedBytes() throws MalformedDataException {
-		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofIntSizePrefixedBytes();
+		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoders.ofIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(4);
 		buf.writeInt(5);
 		bufs.add(buf);
@@ -99,7 +101,7 @@ public final class ByteBufsDecoderTest {
 
 	@Test
 	public void ofVarIntSizePrefixedBytes() throws MalformedDataException {
-		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoder.ofVarIntSizePrefixedBytes();
+		ByteBufsDecoder<ByteBuf> decoder = ByteBufsDecoders.ofVarIntSizePrefixedBytes();
 		ByteBuf buf = ByteBufPool.allocate(1005);
 		buf.writeVarInt(1000);
 		bufs.add(buf);
@@ -119,7 +121,7 @@ public final class ByteBufsDecoderTest {
 		bufs.add(ByteBuf.wrapForReading(bytes));
 		bufs.add(ByteBuf.wrapForReading(otherBytes));
 
-		ByteBufsDecoder<byte[]> decoder = ByteBufsDecoder.assertBytes(bytes);
+		ByteBufsDecoder<byte[]> decoder = ByteBufsDecoders.assertBytes(bytes);
 		byte[] decoded = doDecode(decoder);
 		assertArrayEquals(bytes, decoded);
 		assertArrayEquals(otherBytes, bufs.takeRemaining().asArray());

@@ -2,6 +2,8 @@ package io.activej.csp;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -18,8 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
-import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
+import static io.activej.csp.binary.Utils.channelConsumerAsOutputStream;
+import static io.activej.csp.consumer.ChannelConsumers.ofOutputStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.executeWithReactor;
@@ -47,7 +49,7 @@ public class ChannelConsumerTest {
 			}
 		};
 
-		ChannelConsumer<ByteBuf> channelConsumer = outputStreamAsChannelConsumer(newSingleThreadExecutor(), outputStream);
+		ChannelConsumer<ByteBuf> channelConsumer = ofOutputStream(newSingleThreadExecutor(), outputStream);
 		await(channelConsumer.acceptAll(
 				ByteBuf.wrapForReading("Hello".getBytes()),
 				ByteBuf.wrapForReading("World".getBytes())));
@@ -65,7 +67,7 @@ public class ChannelConsumerTest {
 			}
 		};
 
-		ChannelConsumer<ByteBuf> channelConsumer = outputStreamAsChannelConsumer(newSingleThreadExecutor(), outputStream);
+		ChannelConsumer<ByteBuf> channelConsumer = ofOutputStream(newSingleThreadExecutor(), outputStream);
 		await(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.empty()));
 
 		assertTrue(buf.asString(UTF_8).isEmpty());
@@ -81,7 +83,7 @@ public class ChannelConsumerTest {
 			}
 		};
 
-		ChannelConsumer<ByteBuf> channelConsumer = outputStreamAsChannelConsumer(newSingleThreadExecutor(), outputStream);
+		ChannelConsumer<ByteBuf> channelConsumer = ofOutputStream(newSingleThreadExecutor(), outputStream);
 		Exception exception2 = awaitException(channelConsumer.acceptAll(ByteBuf.empty(), ByteBuf.wrapForReading("Hello".getBytes())));
 		assertSame(exception, exception2);
 	}
@@ -92,7 +94,7 @@ public class ChannelConsumerTest {
 
 		ByteBuf result = ByteBuf.wrapForWriting(new byte[expectedSize]);
 
-		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumer.of(
+		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumers.ofAsyncConsumer(
 				buf -> {
 					result.put(buf);
 					buf.recycle();
@@ -118,7 +120,7 @@ public class ChannelConsumerTest {
 	public void testAsOutputStreamEmpty() {
 		int expectedSize = 0;
 
-		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumer.of(value -> {
+		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumers.ofAsyncConsumer(value -> {
 			assertEquals(expectedSize, value.readRemaining());
 			value.recycle();
 			return Promise.complete();
@@ -134,7 +136,7 @@ public class ChannelConsumerTest {
 
 	@Test
 	public void testAsOutputStreamException() {
-		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumer.of(value -> {
+		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumers.ofAsyncConsumer(value -> {
 			value.recycle();
 			return Promise.ofException(new RuntimeException());
 		});
@@ -160,8 +162,8 @@ public class ChannelConsumerTest {
 				.build();
 		List<Integer> expectedList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
-		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumer.ofConsumer(actualList::add));
-		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherReactor, anotherEventloopConsumer);
+		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumers.ofConsumer(actualList::add));
+		ChannelConsumer<Integer> consumer = ChannelConsumers.ofAnotherReactor(anotherReactor, anotherEventloopConsumer);
 
 		startAnotherEventloop(anotherReactor);
 		await(consumer.acceptAll(expectedList));
@@ -177,8 +179,8 @@ public class ChannelConsumerTest {
 				.build();
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
-		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumer.ofConsumer(list::add));
-		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherReactor, anotherEventloopConsumer);
+		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumers.ofConsumer(list::add));
+		ChannelConsumer<Integer> consumer = ChannelConsumers.ofAnotherReactor(anotherReactor, anotherEventloopConsumer);
 
 		startAnotherEventloop(anotherReactor);
 		Exception exception = awaitException(consumer.accept(1)

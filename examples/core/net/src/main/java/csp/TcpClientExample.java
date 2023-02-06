@@ -1,10 +1,10 @@
 package csp;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.csp.binary.decoder.ByteBufsDecoders;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
@@ -54,9 +54,9 @@ public final class TcpClientExample {
 					throw new RuntimeException(ioException);
 				}
 
-				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
-						.decodeStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
-						.streamTo(ChannelConsumer.ofConsumer(buf -> System.out.println(buf.asString(UTF_8))));
+				BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
+						.decodeStream(ByteBufsDecoders.ofCrlfTerminatedBytes())
+						.streamTo(ChannelConsumers.ofConsumer(buf -> System.out.println(buf.asString(UTF_8))));
 
 				startCommandLineInterface(socket);
 			} else {

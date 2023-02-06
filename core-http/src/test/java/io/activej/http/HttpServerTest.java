@@ -3,7 +3,8 @@ package io.activej.http;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpServer.JmxInspector;
 import io.activej.jmx.stats.ExceptionStats;
@@ -224,7 +225,7 @@ public final class HttpServerTest {
 	@Test
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
+		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
 		HttpServer.builder(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
 				.withListenPort(port)
 				.withAcceptOnce()

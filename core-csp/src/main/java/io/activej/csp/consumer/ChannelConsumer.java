@@ -14,31 +14,26 @@
  * limitations under the License.
  */
 
-package io.activej.csp;
+package io.activej.csp.consumer;
 
-import io.activej.async.function.AsyncConsumer;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
-import io.activej.bytebuf.ByteBuf;
-import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.csp.queue.ChannelQueue;
-import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * This interface represents consumer of data items that should be used serially
@@ -79,194 +74,26 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * @see ChannelConsumers#acceptAll(ChannelConsumer, Iterator)
+	 * Passes iterator's values to the {@code output} until it {@code hasNext()},
+	 * then returns a promise of {@code null} as a marker of completion.
+	 * <p>
+	 * If there was an exception while accepting iterator, a promise of
+	 * exception will be returned.
+	 *
+	 * @param it     an {@link Iterator} which provides some values
+	 * @return a promise of {@code null} as a marker of completion
 	 */
 	default Promise<Void> acceptAll(Iterator<? extends T> it) {
-		return ChannelConsumers.acceptAll(this, it);
+		if (!it.hasNext()) return Promise.complete();
+		return Promise.ofCallback(cb -> acceptAllImpl(this, it, false, cb));
 	}
 
 	/**
 	 * @see #acceptAll(Iterator)
 	 */
 	default Promise<Void> acceptAll(List<T> list) {
-		return ChannelConsumers.acceptAll(this, list);
-	}
-
-	/**
-	 * Wraps {@link AsyncConsumer} in {@code ChannelConsumer}.
-	 *
-	 * @see ChannelConsumer#of(AsyncConsumer, AsyncCloseable)
-	 */
-	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer) {
-		return of(consumer, AsyncCloseable.of(e -> {}));
-	}
-
-	/**
-	 * Wraps {@link AsyncConsumer} in {@code ChannelConsumer}.
-	 *
-	 * @param consumer  AsyncConsumer to be wrapped
-	 * @param closeable a Cancellable, which will be set to the returned ChannelConsumer
-	 * @param <T>       type of data to be consumed
-	 * @return AbstractChannelConsumer which wraps AsyncConsumer
-	 */
-	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer, @Nullable AsyncCloseable closeable) {
-		return new AbstractChannelConsumer<>(closeable) {
-			final AsyncConsumer<T> thisConsumer = consumer;
-
-			@Override
-			protected Promise<Void> doAccept(T value) {
-				if (value != null) {
-					return thisConsumer.accept(value);
-				}
-				return Promise.complete();
-			}
-		};
-	}
-
-	/**
-	 * Wraps a {@link ConsumerEx} in {@code ChannelConsumer}.
-	 */
-	static <T> ChannelConsumer<T> ofConsumer(ConsumerEx<T> consumer) {
-		return of(AsyncConsumer.of(consumer));
-	}
-
-	/**
-	 * Creates a consumer which always returns Promise
-	 * of exception when accepts values.
-	 *
-	 * @param e   an exception which is wrapped in returned
-	 *            Promise when {@code accept()} is called
-	 * @param <T> type of data to be consumed
-	 * @return an AbstractChannelConsumer which always
-	 * returns Promise of exception when accepts values
-	 */
-	static <T> ChannelConsumer<T> ofException(Exception e) {
-		return new AbstractChannelConsumer<>() {
-			@Override
-			protected Promise<Void> doAccept(T value) {
-				Recyclers.recycle(value);
-				return Promise.ofException(e);
-			}
-		};
-	}
-
-	/**
-	 * @see #ofSupplier(AsyncConsumer, ChannelQueue)
-	 */
-	static <T> ChannelConsumer<T> ofSupplier(AsyncConsumer<ChannelSupplier<T>> supplierConsumer) {
-		return ofSupplier(supplierConsumer, new ChannelZeroBuffer<>());
-	}
-
-	static <T> ChannelConsumer<T> ofSupplier(AsyncConsumer<ChannelSupplier<T>> supplierConsumer, ChannelQueue<T> queue) {
-		Promise<Void> extraAcknowledge = supplierConsumer.accept(queue.getSupplier());
-		ChannelConsumer<T> result = queue.getConsumer();
-		if (extraAcknowledge == Promise.complete()) return result;
-		return result
-				.withAcknowledgement(ack -> ack.both(extraAcknowledge));
-	}
-
-	/**
-	 * Unwraps {@code ChannelConsumer} of provided {@code Promise}.
-	 * If provided Promise is already successfully completed, its
-	 * result will be returned, otherwise an {@code AbstractChannelConsumer}
-	 * is created, which waits for the Promise to be completed before accepting
-	 * any value. A Promise of Exception will be returned if Promise was completed
-	 * with an exception.
-	 *
-	 * @param promise Promise of {@code ChannelConsumer}
-	 * @param <T>     type of data to be consumed
-	 * @return ChannelConsumer b
-	 */
-	static <T> ChannelConsumer<T> ofPromise(Promise<? extends ChannelConsumer<T>> promise) {
-		if (promise.isResult()) return promise.getResult();
-		return new AbstractChannelConsumer<>() {
-			ChannelConsumer<T> consumer;
-
-			@Override
-			protected Promise<Void> doAccept(T value) {
-				if (consumer != null) return consumer.accept(value);
-				return promise.then(
-						consumer -> {
-							this.consumer = consumer;
-							return consumer.accept(value);
-						},
-						e -> {
-							Recyclers.recycle(value);
-							return Promise.ofException(e);
-						});
-			}
-
-			@Override
-			protected void onClosed(Exception e) {
-				promise.whenResult(supplier -> supplier.closeEx(e));
-			}
-		};
-	}
-
-	static <T> ChannelConsumer<T> ofAnotherReactor(Reactor anotherReactor, ChannelConsumer<T> anotherReactorConsumer) {
-		if (getCurrentReactor() == anotherReactor) {
-			return anotherReactorConsumer;
-		}
-		return new AbstractChannelConsumer<>() {
-			@Override
-			protected Promise<Void> doAccept(@Nullable T value) {
-				SettablePromise<Void> promise = new SettablePromise<>();
-				reactor.startExternalTask();
-				anotherReactor.execute(() ->
-						anotherReactorConsumer.accept(value)
-								.run((v, e) -> {
-									reactor.execute(() -> promise.accept(v, e));
-									reactor.completeExternalTask();
-								}));
-				return promise;
-			}
-
-			@Override
-			protected void onClosed(Exception e) {
-				reactor.startExternalTask();
-				anotherReactor.execute(() -> {
-					anotherReactorConsumer.closeEx(e);
-					reactor.completeExternalTask();
-				});
-			}
-		};
-	}
-
-	/**
-	 * Returns a {@code ChannelConsumer} wrapped in {@link Supplier}
-	 * and calls its {@code accept()} when {@code accept()} method is called.
-	 *
-	 * @param provider provider of the {@code ChannelConsumer}
-	 * @return a {@code ChannelConsumer} which was wrapped in the {@code provider}
-	 */
-	static <T> ChannelConsumer<T> ofLazyProvider(Supplier<? extends ChannelConsumer<T>> provider) {
-		return new AbstractChannelConsumer<>() {
-			private ChannelConsumer<T> consumer;
-
-			@Override
-			protected Promise<Void> doAccept(@Nullable T value) {
-				if (consumer == null) consumer = provider.get();
-				return consumer.accept(value);
-			}
-
-			@Override
-			protected void onClosed(Exception e) {
-				if (consumer != null) {
-					consumer.closeEx(e);
-				}
-			}
-		};
-	}
-
-	/**
-	 * Wraps {@link ITcpSocket#write(ByteBuf)} operation into {@link ChannelConsumer}.
-	 *
-	 * @return {@link ChannelConsumer} of ByteBufs that will be sent to network
-	 */
-	static ChannelConsumer<ByteBuf> ofSocket(ITcpSocket socket) {
-		return ChannelConsumer.of(socket::write, socket)
-				.withAcknowledgement(ack -> ack
-						.then(() -> socket.write(null)));
+		if (list.isEmpty()) return Promise.complete();
+		return Promise.ofCallback(cb -> acceptAllImpl(this, ((List<? extends T>) list).iterator(), true, cb));
 	}
 
 	/**
@@ -438,4 +265,24 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		};
 	}
 
+	private static <T> void acceptAllImpl(ChannelConsumer<T> output, Iterator<? extends T> it, boolean ownership, SettablePromise<Void> cb) {
+		while (it.hasNext()) {
+			Promise<Void> accept = output.accept(it.next());
+			if (accept.isResult()) continue;
+			accept.run(($, e) -> {
+				if (e == null) {
+					acceptAllImpl(output, it, ownership, cb);
+				} else {
+					if (ownership) {
+						it.forEachRemaining(Recyclers::recycle);
+					} else {
+						Recyclers.recycle(it);
+					}
+					cb.setException(e);
+				}
+			});
+			return;
+		}
+		cb.set(null);
+	}
 }

@@ -1,9 +1,8 @@
 package io.activej.launchers.dataflow;
 
 import io.activej.config.Config;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamSchema;

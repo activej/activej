@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package io.activej.csp;
+package io.activej.csp.consumer.impl;
 
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.recycle.Recyclable;
+import io.activej.csp.consumer.AbstractChannelConsumer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
-public final class RecyclingChannelConsumer<T extends Recyclable> extends AbstractChannelConsumer<T> {
+@ExposedInternals
+public final class Recycling<T extends Recyclable> extends AbstractChannelConsumer<T> {
 
 	@Override
 	protected Promise<Void> doAccept(@Nullable T value) {

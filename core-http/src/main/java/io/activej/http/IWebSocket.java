@@ -21,8 +21,10 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.annotation.ComponentInterface;
 import io.activej.common.recycle.Recyclable;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -82,7 +84,7 @@ public interface IWebSocket extends AsyncCloseable {
 	 * @see Frame
 	 */
 	default ChannelSupplier<Frame> frameReadChannel() {
-		return ChannelSupplier.of(this::readFrame, this);
+		return ChannelSuppliers.ofAsyncSupplier(this::readFrame, this);
 	}
 
 	/**
@@ -93,7 +95,7 @@ public interface IWebSocket extends AsyncCloseable {
 	 * @see Message
 	 */
 	default ChannelSupplier<Message> messageReadChannel() {
-		return ChannelSupplier.of(this::readMessage, this);
+		return ChannelSuppliers.ofAsyncSupplier	(this::readMessage, this);
 	}
 
 	/**
@@ -132,7 +134,7 @@ public interface IWebSocket extends AsyncCloseable {
 	 * @see Frame
 	 */
 	default ChannelConsumer<Frame> frameWriteChannel() {
-		return ChannelConsumer.of(this::writeFrame, this)
+		return ChannelConsumers.ofAsyncConsumer(this::writeFrame, this)
 				.withAcknowledgement(ack -> ack.then(() -> writeFrame(null)));
 	}
 
@@ -144,7 +146,7 @@ public interface IWebSocket extends AsyncCloseable {
 	 * @see Message
 	 */
 	default ChannelConsumer<Message> messageWriteChannel() {
-		return ChannelConsumer.of(this::writeMessage, this)
+		return ChannelConsumers.ofAsyncConsumer(this::writeMessage, this)
 				.withAcknowledgement(ack -> ack
 						.then(() -> writeMessage(null)));
 	}

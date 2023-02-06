@@ -1,6 +1,6 @@
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.csp.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.http.*;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;

@@ -18,7 +18,8 @@ package io.activej.datastream;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.function.SupplierEx;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.StreamSuppliers.Closing;
 import io.activej.datastream.StreamSuppliers.ClosingWithError;
 import io.activej.datastream.StreamSuppliers.Idle;
@@ -214,7 +215,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 * Creates a supplier that supplies items from given suppliers consecutively and only then closes.
 	 */
 	static <T> StreamSupplier<T> concat(Iterator<StreamSupplier<T>> iterator) {
-		return new StreamSuppliers.Concat<>(ChannelSupplier.ofIterator(iterator));
+		return new StreamSuppliers.Concat<>(ChannelSuppliers.ofIterator(iterator));
 	}
 
 	/**
@@ -228,7 +229,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 * A shortcut for {@link #concat(Iterator)} that uses a list of suppliers
 	 */
 	static <T> StreamSupplier<T> concat(List<StreamSupplier<T>> suppliers) {
-		return new StreamSuppliers.Concat<>(ChannelSupplier.ofList(suppliers));
+		return new StreamSuppliers.Concat<>(ChannelSuppliers.ofList(suppliers));
 	}
 
 	/**

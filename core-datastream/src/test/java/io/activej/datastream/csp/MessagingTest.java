@@ -3,7 +3,8 @@ package io.activej.datastream.csp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamSupplier;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.LongStream;
 
-import static io.activej.csp.binary.ByteBufsDecoder.ofNullTerminatedBytes;
+import static io.activej.csp.binary.decoder.ByteBufsDecoders.ofNullTerminatedBytes;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
@@ -36,7 +37,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 
 public final class MessagingTest {
-	private static final ByteBufsCodec<String, String> STRING_SERIALIZER = ByteBufsCodec
+	private static final ByteBufsCodec<String, String> STRING_SERIALIZER = ByteBufsCodecs
 			.ofDelimiter(
 					ofNullTerminatedBytes(),
 					buf -> {

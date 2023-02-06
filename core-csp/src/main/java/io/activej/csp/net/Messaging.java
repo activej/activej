@@ -20,11 +20,12 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
-import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 
@@ -112,7 +113,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	@Override
 	public ChannelConsumer<ByteBuf> sendBinaryStream() {
 		checkInReactorThread(this);
-		return ChannelConsumer.ofSocket(socket)
+		return ChannelConsumers.ofSocket(socket)
 				.withAcknowledgement(ack -> ack
 						.whenResult(() -> {
 							writeDone = true;
@@ -123,7 +124,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	@Override
 	public ChannelSupplier<ByteBuf> receiveBinaryStream() {
 		checkInReactorThread(this);
-		return ChannelSuppliers.concat(ChannelSupplier.ofIterator(bufs.asIterator()), ChannelSupplier.ofSocket(socket))
+		return ChannelSuppliers.concat(ChannelSuppliers.ofIterator(bufs.asIterator()), ChannelSuppliers.ofSocket(socket))
 				.withEndOfStream(eos -> eos
 						.whenResult(() -> {
 							readDone = true;

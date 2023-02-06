@@ -1,9 +1,11 @@
-import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
+import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 
 /**
@@ -63,9 +65,9 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 				.build();
 
 		CspExample process = new CspExample();
-		ChannelSupplier.of("hello", "world", "nice", "to", "see", "you")
+		ChannelSuppliers.ofValues("hello", "world", "nice", "to", "see", "you")
 				.transformWith(process)
-				.streamTo(ChannelConsumer.ofConsumer(System.out::println));
+				.streamTo(ChannelConsumers.ofConsumer(System.out::println));
 
 		eventloop.run();
 	}

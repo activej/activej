@@ -3,6 +3,9 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodecs;
+import io.activej.csp.binary.codec.impl.OfStreamCodecs;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.test.rules.ByteBufRule;
@@ -14,14 +17,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
 
-public class StreamByteBufsCodecTest {
+public class OfStreamCodecsTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
 	public void testCodec() throws MalformedDataException {
-		ByteBufsCodec<String, String> codec = new StreamByteBufsCodec<>(
+		ByteBufsCodec<String, String> codec = new OfStreamCodecs<>(
 				StreamCodecs.ofString(),
 				StreamCodecs.ofString()
 		);
@@ -47,7 +50,7 @@ public class StreamByteBufsCodecTest {
 
 	@Test
 	public void testCodecLargeMessages() throws MalformedDataException {
-		ByteBufsCodec<byte[], byte[]> codec = ByteBufsCodec.ofStreamCodecs(
+		ByteBufsCodec<byte[], byte[]> codec = ByteBufsCodecs.ofStreamCodecs(
 				StreamCodecs.ofByteArray(),
 				StreamCodecs.ofByteArray()
 		);

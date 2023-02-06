@@ -3,14 +3,14 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.TruncatedDataException;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.csp.binary.ByteBufsDecoder.ofCrlfTerminatedBytes;
+import static io.activej.csp.binary.decoder.ByteBufsDecoders.ofCrlfTerminatedBytes;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -27,7 +27,7 @@ public final class BinaryChannelSupplierTest {
 
 	@Test
 	public void testDecodeStream() {
-		ByteBuf buf = await(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n World\r\n")))
+		ByteBuf buf = await(BinaryChannelSupplier.of(ChannelSuppliers.ofValue(wrapUtf8("Hello\r\n World\r\n")))
 				.decodeStream(ofCrlfTerminatedBytes())
 				.toCollector(ByteBufs.collector()));
 		assertEquals("Hello World", buf.asString(UTF_8));
@@ -35,7 +35,7 @@ public final class BinaryChannelSupplierTest {
 
 	@Test
 	public void testDecodeStreamLessData() {
-		Exception exception = awaitException(BinaryChannelSupplier.of(ChannelSupplier.of(wrapUtf8("Hello\r\n Wo")))
+		Exception exception = awaitException(BinaryChannelSupplier.of(ChannelSuppliers.ofValue(wrapUtf8("Hello\r\n Wo")))
 				.decodeStream(ofCrlfTerminatedBytes())
 				.toCollector(ByteBufs.collector()));
 		assertThat(exception, instanceOf(TruncatedDataException.class));

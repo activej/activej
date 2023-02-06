@@ -3,7 +3,8 @@ package io.activej.dataflow.node.impl;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.function.ConsumerEx;
-import io.activej.csp.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
@@ -56,7 +57,7 @@ public final class ConsumerOfId extends AbstractNode {
 		} else if (object instanceof ConsumerEx) {
 			streamConsumer = StreamConsumer.ofConsumer((ConsumerEx<?>) object);
 		} else if (object instanceof AsyncConsumer) {
-			streamConsumer = StreamConsumer.ofChannelConsumer(ChannelConsumer.of((AsyncConsumer<?>) object));
+			streamConsumer = StreamConsumer.ofChannelConsumer(ChannelConsumers.ofAsyncConsumer((AsyncConsumer<?>) object));
 		} else if (object instanceof ChannelConsumer) {
 			streamConsumer = StreamConsumer.ofChannelConsumer((ChannelConsumer<?>) object);
 		} else if (object instanceof StreamConsumer) {

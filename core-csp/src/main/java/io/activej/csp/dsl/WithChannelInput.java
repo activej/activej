@@ -16,7 +16,7 @@
 
 package io.activej.csp.dsl;
 
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.supplier.ChannelSupplier;
 
 public interface WithChannelInput<B, T> extends HasChannelInput<T> {
 	@SuppressWarnings("unchecked")

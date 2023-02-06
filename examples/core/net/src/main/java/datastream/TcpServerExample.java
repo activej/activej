@@ -1,7 +1,7 @@
 package datastream;
 
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
@@ -39,11 +39,11 @@ public final class TcpServerExample {
 						throw new RuntimeException(e);
 					}
 
-					ChannelSupplier.ofSocket(socket)
+					ChannelSuppliers.ofSocket(socket)
 							.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
 							.transformWith(StreamFilter.mapper(x -> x + " times 10 = " + x * 10))
 							.transformWith(ChannelSerializer.create(UTF8_SERIALIZER))
-							.streamTo(ChannelConsumer.ofSocket(socket));
+							.streamTo(ChannelConsumers.ofSocket(socket));
 				});
 
 		System.out.println("Connect to the server by running datastream.TcpClientExample");

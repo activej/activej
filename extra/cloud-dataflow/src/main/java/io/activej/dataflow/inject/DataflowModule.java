@@ -16,7 +16,8 @@
 
 package io.activej.dataflow.inject;
 
-import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodec;
+import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.dataflow.codec.module.DataflowStreamCodecsModule;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
@@ -48,7 +49,7 @@ public final class DataflowModule extends AbstractModule {
 			StreamCodec<DataflowRequest> requestStreamCodec,
 			StreamCodec<DataflowResponse> responseStreamCodec
 	) {
-		return ByteBufsCodec.ofStreamCodecs(responseStreamCodec, requestStreamCodec);
+		return ByteBufsCodecs.ofStreamCodecs(responseStreamCodec, requestStreamCodec);
 	}
 
 	@Provides
@@ -56,6 +57,6 @@ public final class DataflowModule extends AbstractModule {
 			StreamCodec<DataflowRequest> requestStreamCodec,
 			StreamCodec<DataflowResponse> responseStreamCodec
 	) {
-		return ByteBufsCodec.ofStreamCodecs(requestStreamCodec, responseStreamCodec);
+		return ByteBufsCodecs.ofStreamCodecs(requestStreamCodec, responseStreamCodec);
 	}
 }

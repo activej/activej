@@ -1,8 +1,8 @@
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
+import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
+import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -34,7 +34,7 @@ public final class ChannelFileExample {
 
 	//[START REGION_1]
 	private static Promise<Void> writeToFile() {
-		return ChannelSupplier.of(
+		return ChannelSuppliers.ofValues(
 						ByteBufStrings.wrapAscii("Hello, this is example file\n"),
 						ByteBufStrings.wrapAscii("This is the second line of file\n"))
 				.streamTo(ChannelFileWriter.open(executor, PATH, WRITE));
@@ -42,7 +42,7 @@ public final class ChannelFileExample {
 
 	private static Promise<Void> readFile() {
 		return ChannelFileReader.open(executor, PATH)
-				.then(cfr -> cfr.streamTo(ChannelConsumer.ofConsumer(buf -> System.out.print(buf.asString(UTF_8)))));
+				.then(cfr -> cfr.streamTo(ChannelConsumers.ofConsumer(buf -> System.out.print(buf.asString(UTF_8)))));
 
 	}
 	//[END REGION_1]
