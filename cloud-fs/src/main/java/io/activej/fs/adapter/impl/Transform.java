@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package io.activej.fs;
+package io.activej.fs.adapter.impl;
 
 import io.activej.async.function.AsyncBiConsumer;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemBatchException;
 import io.activej.fs.exception.FileSystemScalarException;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -38,18 +41,14 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
 import static java.util.stream.Collectors.toSet;
 
-/**
- * A file system that can be configured to transform paths and filename via mapping functions.
- * <p>
- * Inherits all the limitations of parent {@link IFileSystem}
- */
-public final class FileSystem_Transform implements IFileSystem {
-	private final IFileSystem parent;
-	private final Function<String, Optional<String>> into;
-	private final Function<String, Optional<String>> from;
-	private final Function<String, Optional<String>> globInto;
+@ExposedInternals
+public final class Transform implements IFileSystem {
+	public final IFileSystem parent;
+	public final Function<String, Optional<String>> into;
+	public final Function<String, Optional<String>> from;
+	public final Function<String, Optional<String>> globInto;
 
-	FileSystem_Transform(IFileSystem parent, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
+	public Transform(IFileSystem parent, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
 		this.parent = parent;
 		this.into = into;
 		this.from = from;

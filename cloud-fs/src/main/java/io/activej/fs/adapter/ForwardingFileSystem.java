@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.fs;
+package io.activej.fs.adapter;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 

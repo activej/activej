@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package io.activej.fs;
+package io.activej.fs.adapter.impl;
 
 import io.activej.async.function.AsyncBiConsumer;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.collection.Try;
 import io.activej.common.tuple.Tuple2;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemBatchException;
 import io.activej.fs.exception.FileSystemScalarException;
 import io.activej.promise.Promise;
@@ -39,16 +42,12 @@ import static io.activej.common.Utils.isBijection;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
-/**
- * A file system that allows to mount several {@link IFileSystem} implementations to correspond to different filenames.
- * <p>
- * Inherits the most strict limitations of all the mounted file systems implementations and root file system.
- */
-public final class FileSystem_Mounting implements IFileSystem {
-	private final IFileSystem root;
-	private final Map<String, IFileSystem> mounts;
+@ExposedInternals
+public final class Mounting implements IFileSystem {
+	public final IFileSystem root;
+	public final Map<String, IFileSystem> mounts;
 
-	FileSystem_Mounting(IFileSystem root, Map<String, IFileSystem> mounts) {
+	public Mounting(IFileSystem root, Map<String, IFileSystem> mounts) {
 		this.root = root;
 		this.mounts = mounts;
 	}

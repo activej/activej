@@ -9,6 +9,7 @@ import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.fs.adapter.FileSystemAdapters;
 import io.activej.fs.exception.FileSystemException;
 import io.activej.fs.exception.FileSystemIOException;
 import io.activej.fs.exception.ForbiddenPathException;

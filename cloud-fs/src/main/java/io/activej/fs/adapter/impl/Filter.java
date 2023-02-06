@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package io.activej.fs;
+package io.activej.fs.adapter.impl;
 
 import io.activej.async.function.AsyncBiConsumer;
 import io.activej.async.function.AsyncConsumer;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSupplier;
+import io.activej.fs.FileMetadata;
+import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileSystemBatchException;
 import io.activej.fs.exception.FileSystemScalarException;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -38,17 +41,13 @@ import static io.activej.common.Utils.isBijection;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.*;
 
-/**
- * A file system that can be configured to forbid certain paths and filenames.
- * <p>
- * Inherits all the limitations of parent {@link IFileSystem}
- */
-public final class FileSystem_Filter implements IFileSystem {
+@ExposedInternals
+public final class Filter implements IFileSystem {
 
-	private final IFileSystem parent;
-	private final Predicate<String> predicate;
+	public final IFileSystem parent;
+	public final Predicate<String> predicate;
 
-	FileSystem_Filter(IFileSystem parent, Predicate<String> predicate) {
+	public Filter(IFileSystem parent, Predicate<String> predicate) {
 		this.parent = parent;
 		this.predicate = predicate;
 	}
