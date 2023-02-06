@@ -22,34 +22,46 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
+import io.activej.serializer.def.SerializerDefWithVarLength;
 
-import static io.activej.serializer.def.SerializerExpressions.readChar;
-import static io.activej.serializer.def.SerializerExpressions.writeChar;
+import static io.activej.serializer.def.SerializerExpressions.*;
 
 @ExposedInternals
-public final class CharDef extends PrimitiveSerializerDef {
+public final class LongSerializer extends PrimitiveSerializerDef implements SerializerDefWithVarLength {
+	public final boolean varLength;
 
 	@SuppressWarnings("unused") // used via reflection
-	public CharDef() {
-		this(true);
+	public LongSerializer() {
+		this(true, false);
 	}
 
-	public CharDef(boolean wrapped) {
-		super(char.class, wrapped);
+	public LongSerializer(boolean wrapped, boolean varLength) {
+		super(long.class, wrapped);
+		this.varLength = varLength;
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new CharDef(true);
+		return new LongSerializer(true, varLength);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeChar(byteArray, off, value, !compatibilityLevel.isLittleEndian());
+		return varLength ?
+				writeVarLong(byteArray, off, value) :
+				writeLong(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readChar(in, !compatibilityLevel.isLittleEndian());
+		return varLength ?
+				readVarLong(in) :
+				readLong(in, !compatibilityLevel.isLittleEndian());
 	}
+
+	@Override
+	public SerializerDef ensureVarLength() {
+		return new LongSerializer(wrapped, true);
+	}
+
 }

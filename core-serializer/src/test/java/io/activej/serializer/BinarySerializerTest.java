@@ -3,13 +3,13 @@ package io.activej.serializer;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.def.*;
 import io.activej.serializer.def.impl.*;
-import io.activej.serializer.def.impl.BooleanDef;
-import io.activej.serializer.def.impl.ByteDef;
-import io.activej.serializer.def.impl.DoubleDef;
-import io.activej.serializer.def.impl.FloatDef;
-import io.activej.serializer.def.impl.LongDef;
-import io.activej.serializer.def.impl.ShortDef;
-import io.activej.serializer.def.impl.StringDef;
+import io.activej.serializer.def.impl.BooleanSerializer;
+import io.activej.serializer.def.impl.ByteSerializer;
+import io.activej.serializer.def.impl.DoubleSerializer;
+import io.activej.serializer.def.impl.FloatSerializer;
+import io.activej.serializer.def.impl.LongSerializer;
+import io.activej.serializer.def.impl.ShortSerializer;
+import io.activej.serializer.def.impl.StringSerializer;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1796,7 +1796,7 @@ public class BinarySerializerTest {
 		public Inet6Address inet6Address;
 
 		@Serialize
-		@SerializeClass(Inet4AddressDef.class)
+		@SerializeClass(Inet4AddressSerializer.class)
 		public InetAddress inetAddress2;
 	}
 
@@ -1834,32 +1834,32 @@ public class BinarySerializerTest {
 		}
 
 		@Serialize
-		@SerializeClass(BooleanDef.class)
+		@SerializeClass(BooleanSerializer.class)
 		public Object zBoxed;
 		@Serialize
-		@SerializeClass(CharDef.class)
+		@SerializeClass(CharSerializer.class)
 		public Object cBoxed;
 		@Serialize
-		@SerializeClass(ByteDef.class)
+		@SerializeClass(ByteSerializer.class)
 		public Object bBoxed;
 		@Serialize
-		@SerializeClass(ShortDef.class)
+		@SerializeClass(ShortSerializer.class)
 		public Object sBoxed;
 		@Serialize
-		@SerializeClass(IntDef.class)
+		@SerializeClass(IntSerializer.class)
 		public Object iBoxed;
 		@Serialize
-		@SerializeClass(LongDef.class)
+		@SerializeClass(LongSerializer.class)
 		public Object lBoxed;
 		@Serialize
-		@SerializeClass(FloatDef.class)
+		@SerializeClass(FloatSerializer.class)
 		public Object fBoxed;
 		@Serialize
-		@SerializeClass(DoubleDef.class)
+		@SerializeClass(DoubleSerializer.class)
 		public Object dBoxed;
 
 		@Serialize
-		@SerializeClass(StringDef.class)
+		@SerializeClass(StringSerializer.class)
 		public Object string;
 		@Serialize
 		@SerializeClass(subclasses = {Inet4Address.class, Inet6Address.class})
@@ -1870,7 +1870,7 @@ public class BinarySerializerTest {
 		public Object address2;
 
 		@Serialize
-		public List<@SerializeClass(IntDef.class) Object> list;
+		public List<@SerializeClass(IntSerializer.class) Object> list;
 	}
 
 	@Test
@@ -2499,9 +2499,9 @@ public class BinarySerializerTest {
 		BinarySerializer<BooleanHolder> serializer = SerializerFactory.defaultInstance()
 				.create(DEFINING_CLASS_LOADER, BooleanHolder.class);
 
-		doTestNullableBoolean(serializer, new BooleanHolder(null), BooleanDef.NULLABLE_NULL);
-		doTestNullableBoolean(serializer, new BooleanHolder(false), BooleanDef.NULLABLE_FALSE);
-		doTestNullableBoolean(serializer, new BooleanHolder(true), BooleanDef.NULLABLE_TRUE);
+		doTestNullableBoolean(serializer, new BooleanHolder(null), BooleanSerializer.NULLABLE_NULL);
+		doTestNullableBoolean(serializer, new BooleanHolder(false), BooleanSerializer.NULLABLE_FALSE);
+		doTestNullableBoolean(serializer, new BooleanHolder(true), BooleanSerializer.NULLABLE_TRUE);
 	}
 
 	private void doTestBoolean(BinarySerializer<Boolean> serializer, boolean value, byte expectedByte) {

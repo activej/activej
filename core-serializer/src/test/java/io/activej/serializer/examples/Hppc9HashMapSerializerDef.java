@@ -4,7 +4,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
-import io.activej.serializer.def.impl.RegularMapDef;
+import io.activej.serializer.def.impl.RegularMapSerializer;
 
 import java.util.function.BinaryOperator;
 
@@ -12,7 +12,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
-public final class Hppc9HashMapSerializerDef extends RegularMapDef {
+public final class Hppc9HashMapSerializerDef extends RegularMapSerializer {
 	public Hppc9HashMapSerializerDef(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
 		this(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType, false);
 	}

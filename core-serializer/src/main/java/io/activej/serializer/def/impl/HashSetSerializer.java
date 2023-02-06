@@ -17,29 +17,26 @@
 package io.activej.serializer.def.impl;
 
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
-import java.util.EnumMap;
-
-import static io.activej.codegen.expression.Expressions.constructor;
-import static io.activej.codegen.expression.Expressions.value;
+import static io.activej.serializer.util.Utils.hashInitialSize;
 
 @ExposedInternals
-public final class EnumMapDef extends RegularMapDef {
-	public EnumMapDef(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
-		super(keySerializer, valueSerializer, EnumMap.class, EnumMap.class, Enum.class, Object.class, nullable);
+public final class HashSetSerializer extends RegularCollectionSerializer {
+	public HashSetSerializer(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
+		super(valueSerializer, encodeType, decodeType, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new EnumMapDef(keySerializer, valueSerializer, true);
+		return new HashSetSerializer(valueSerializer, encodeType, decodeType, true);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
+		return Expressions.constructor(decodeType, hashInitialSize(length));
 	}
-
 }

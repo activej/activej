@@ -4,14 +4,14 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
-import io.activej.serializer.def.impl.RegularCollectionDef;
+import io.activej.serializer.def.impl.RegularCollectionSerializer;
 
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
 
-public class Hppc9RegularCollectionSerializerDef extends RegularCollectionDef {
+public class Hppc9RegularCollectionSerializerDef extends RegularCollectionSerializer {
 	public Hppc9RegularCollectionSerializerDef(SerializerDef valueSerializer, Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
 		this(valueSerializer, collectionType, collectionImplType, valueType, false);
 	}

@@ -22,43 +22,39 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
 import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
 @ExposedInternals
-public final class MapDef extends RegularMapDef {
-	public MapDef(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
-		super(keySerializer, valueSerializer, Map.class, Map.class, Object.class, Object.class, nullable);
+public final class SetSerializer extends RegularCollectionSerializer {
+	public SetSerializer(SerializerDef valueSerializer, boolean nullable) {
+		super(valueSerializer, Set.class, Set.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new MapDef(keySerializer, valueSerializer, true);
+		return new SetSerializer(valueSerializer, true);
 	}
 
 	@Override
-	protected Expression doDecode(SerializerDef.StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		SerializerDef.Decoder keyDecoder = keySerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
-		SerializerDef.Decoder valueDecoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
+	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return ifEq(length, value(0),
-				staticCall(Collections.class, "emptyMap"),
+				staticCall(Collections.class, "emptySet"),
 				ifEq(length, value(1),
-						staticCall(Collections.class, "singletonMap",
-								keyDecoder.decode(in),
-								valueDecoder.decode(in)),
+						staticCall(Collections.class, "singleton", decoder.decode(in)),
 						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		Class<?> rawType = keySerializer.getDecodeType();
-		if (rawType.isEnum()) {
-			return constructor(EnumMap.class, value(rawType));
+		if (valueSerializer.getDecodeType().isEnum()) {
+			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
 		}
-		return constructor(HashMap.class, hashInitialSize(length));
+		return constructor(HashSet.class, hashInitialSize(length));
 	}
 }

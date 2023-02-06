@@ -27,14 +27,14 @@ import java.util.function.BinaryOperator;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public class RegularMapDef extends AbstractSerializerDefMap {
-	public RegularMapDef(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
+public class RegularMapSerializer extends AbstractSerializerDefMap {
+	public RegularMapSerializer(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
 		super(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new RegularMapDef(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
+		return new RegularMapSerializer(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
 	}
 
 	@Override

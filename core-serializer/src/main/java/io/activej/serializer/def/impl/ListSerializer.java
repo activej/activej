@@ -29,14 +29,14 @@ import java.util.function.UnaryOperator;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public final class ListDef extends RegularCollectionDef {
-	public ListDef(SerializerDef valueSerializer, boolean nullable) {
+public final class ListSerializer extends RegularCollectionSerializer {
+	public ListSerializer(SerializerDef valueSerializer, boolean nullable) {
 		super(valueSerializer, List.class, List.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new ListDef(valueSerializer, true);
+		return new ListSerializer(valueSerializer, true);
 	}
 
 	@Override

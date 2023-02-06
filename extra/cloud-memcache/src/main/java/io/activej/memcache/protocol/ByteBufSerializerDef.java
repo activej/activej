@@ -26,7 +26,6 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.def.SerializerDefWithNullable;
 import io.activej.serializer.def.SerializerDefs;
-import io.activej.serializer.def.impl.NullableDef;
 import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;

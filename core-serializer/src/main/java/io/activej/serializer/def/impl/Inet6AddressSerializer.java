@@ -20,26 +20,26 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.*;
 import io.activej.serializer.def.SimpleSerializerDef;
 
-import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
 @ExposedInternals
-public final class Inet4AddressDef extends SimpleSerializerDef<Inet4Address> {
+public final class Inet6AddressSerializer extends SimpleSerializerDef<Inet6Address> {
 	@Override
-	protected BinarySerializer<Inet4Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
+	protected BinarySerializer<Inet6Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
 		return new BinarySerializer<>() {
 			@Override
-			public void encode(BinaryOutput out, Inet4Address address) {
+			public void encode(BinaryOutput out, Inet6Address address) {
 				out.write(address.getAddress());
 			}
 
 			@Override
-			public Inet4Address decode(BinaryInput in) throws CorruptedDataException {
-				byte[] addressBytes = new byte[4];
+			public Inet6Address decode(BinaryInput in) throws CorruptedDataException {
+				byte[] addressBytes = new byte[16];
 				in.read(addressBytes);
 
 				try {
-					return (Inet4Address) Inet4Address.getByAddress(addressBytes);
+					return Inet6Address.getByAddress(null, addressBytes, null);
 				} catch (UnknownHostException e) {
 					throw new CorruptedDataException(e.getMessage());
 				}

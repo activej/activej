@@ -23,33 +23,34 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 
-import static io.activej.serializer.def.SerializerExpressions.readByte;
-import static io.activej.serializer.def.SerializerExpressions.writeByte;
+import static io.activej.serializer.def.SerializerExpressions.readFloat;
+import static io.activej.serializer.def.SerializerExpressions.writeFloat;
 
 @ExposedInternals
-public final class ByteDef extends PrimitiveSerializerDef {
+public final class FloatSerializer extends PrimitiveSerializerDef {
 
 	@SuppressWarnings("unused") // used via reflection
-	public ByteDef() {
+	public FloatSerializer() {
 		this(true);
 	}
 
-	public ByteDef(boolean wrapped) {
-		super(byte.class, wrapped);
+	public FloatSerializer(boolean wrapped) {
+		super(float.class, wrapped);
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new ByteDef(true);
+		return new FloatSerializer(true);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeByte(byteArray, off, value);
+		return writeFloat(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readByte(in);
+		return readFloat(in, !compatibilityLevel.isLittleEndian());
 	}
 }
+

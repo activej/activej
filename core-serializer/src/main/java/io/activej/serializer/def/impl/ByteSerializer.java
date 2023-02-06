@@ -17,26 +17,39 @@
 package io.activej.serializer.def.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
+import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import static io.activej.serializer.def.SerializerExpressions.readByte;
+import static io.activej.serializer.def.SerializerExpressions.writeByte;
 
 @ExposedInternals
-public final class HashMapDef extends RegularMapDef {
-	public HashMapDef(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
+public final class ByteSerializer extends PrimitiveSerializerDef {
+
+	@SuppressWarnings("unused") // used via reflection
+	public ByteSerializer() {
+		this(true);
+	}
+
+	public ByteSerializer(boolean wrapped) {
+		super(byte.class, wrapped);
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new HashMapDef(keySerializer, valueSerializer, encodeType, decodeType, true);
+	public SerializerDef ensureWrapped() {
+		return new ByteSerializer(true);
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
-		return Expressions.constructor(decodeType, hashInitialSize(length));
+	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
+		return writeByte(byteArray, off, value);
+	}
+
+	@Override
+	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
+		return readByte(in);
 	}
 }

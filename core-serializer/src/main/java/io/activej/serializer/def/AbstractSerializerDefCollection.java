@@ -19,7 +19,6 @@ package io.activej.serializer.def;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.def.impl.NullableDef;
 
 import java.util.function.UnaryOperator;
 

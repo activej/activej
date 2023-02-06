@@ -22,46 +22,35 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
-import io.activej.serializer.def.SerializerDefWithVarLength;
 
-import static io.activej.codegen.expression.Expressions.cast;
-import static io.activej.serializer.def.SerializerExpressions.*;
+import static io.activej.serializer.def.SerializerExpressions.readDouble;
+import static io.activej.serializer.def.SerializerExpressions.writeDouble;
 
 @ExposedInternals
-public final class IntDef extends PrimitiveSerializerDef implements SerializerDefWithVarLength {
-	public final boolean varLength;
+public final class DoubleSerializer extends PrimitiveSerializerDef {
 
 	@SuppressWarnings("unused") // used via reflection
-	public IntDef() {
-		this(true, false);
+	public DoubleSerializer() {
+		this(true);
 	}
 
-	public IntDef(boolean wrapped, boolean varLength) {
-		super(int.class, wrapped);
-		this.varLength = varLength;
+	public DoubleSerializer(boolean wrapped) {
+		super(double.class, wrapped);
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new IntDef(true, varLength);
+		return new DoubleSerializer(true);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return varLength ?
-				writeVarInt(byteArray, off, cast(value, int.class)) :
-				writeInt(byteArray, off, cast(value, int.class), !compatibilityLevel.isLittleEndian());
+		return writeDouble(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return varLength ?
-				readVarInt(in) :
-				readInt(in, !compatibilityLevel.isLittleEndian());
-	}
-
-	@Override
-	public SerializerDef ensureVarLength() {
-		return new IntDef(wrapped, true);
+		return readDouble(in, !compatibilityLevel.isLittleEndian());
 	}
 }
+

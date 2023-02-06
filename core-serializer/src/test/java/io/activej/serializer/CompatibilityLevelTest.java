@@ -5,7 +5,6 @@ import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeStringFormat;
 import io.activej.serializer.def.SerializerDefs;
-import io.activej.serializer.def.impl.ByteBufferDef;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;

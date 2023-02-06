@@ -22,35 +22,46 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
+import io.activej.serializer.def.SerializerDefWithVarLength;
 
-import static io.activej.serializer.def.SerializerExpressions.readFloat;
-import static io.activej.serializer.def.SerializerExpressions.writeFloat;
+import static io.activej.codegen.expression.Expressions.cast;
+import static io.activej.serializer.def.SerializerExpressions.*;
 
 @ExposedInternals
-public final class FloatDef extends PrimitiveSerializerDef {
+public final class IntSerializer extends PrimitiveSerializerDef implements SerializerDefWithVarLength {
+	public final boolean varLength;
 
 	@SuppressWarnings("unused") // used via reflection
-	public FloatDef() {
-		this(true);
+	public IntSerializer() {
+		this(true, false);
 	}
 
-	public FloatDef(boolean wrapped) {
-		super(float.class, wrapped);
+	public IntSerializer(boolean wrapped, boolean varLength) {
+		super(int.class, wrapped);
+		this.varLength = varLength;
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new FloatDef(true);
+		return new IntSerializer(true, varLength);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeFloat(byteArray, off, value, !compatibilityLevel.isLittleEndian());
+		return varLength ?
+				writeVarInt(byteArray, off, cast(value, int.class)) :
+				writeInt(byteArray, off, cast(value, int.class), !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readFloat(in, !compatibilityLevel.isLittleEndian());
+		return varLength ?
+				readVarInt(in) :
+				readInt(in, !compatibilityLevel.isLittleEndian());
+	}
+
+	@Override
+	public SerializerDef ensureVarLength() {
+		return new IntSerializer(wrapped, true);
 	}
 }
-

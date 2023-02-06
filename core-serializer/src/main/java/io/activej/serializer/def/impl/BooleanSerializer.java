@@ -31,7 +31,7 @@ import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
 
 @ExposedInternals
-public final class BooleanDef extends PrimitiveSerializerDef implements SerializerDefWithNullable {
+public final class BooleanSerializer extends PrimitiveSerializerDef implements SerializerDefWithNullable {
 	public static final byte NULLABLE_NULL = 0b00;
 	public static final byte NULLABLE_FALSE = 0b10;
 	public static final byte NULLABLE_TRUE = 0b11;
@@ -39,11 +39,11 @@ public final class BooleanDef extends PrimitiveSerializerDef implements Serializ
 	public final boolean nullable;
 
 	@SuppressWarnings("unused") // used via reflection
-	public BooleanDef() {
+	public BooleanSerializer() {
 		this(true, false);
 	}
 
-	public BooleanDef(boolean wrapped, boolean nullable) {
+	public BooleanSerializer(boolean wrapped, boolean nullable) {
 		super(boolean.class, wrapped);
 		if (nullable && !wrapped) throw new IllegalArgumentException("Primitive cannot be nullable");
 		this.nullable = nullable;
@@ -51,7 +51,7 @@ public final class BooleanDef extends PrimitiveSerializerDef implements Serializ
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new BooleanDef(true, nullable);
+		return new BooleanSerializer(true, nullable);
 	}
 
 	@Override
@@ -84,6 +84,6 @@ public final class BooleanDef extends PrimitiveSerializerDef implements Serializ
 		if (compatibilityLevel.getLevel() < LEVEL_4.getLevel()) {
 			return SerializerDefs.ofNullable(this);
 		}
-		return new BooleanDef(wrapped, true);
+		return new BooleanSerializer(wrapped, true);
 	}
 }

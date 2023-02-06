@@ -26,14 +26,14 @@ import java.util.LinkedList;
 import static io.activej.codegen.expression.Expressions.constructor;
 
 @ExposedInternals
-public final class LinkedListDef extends RegularCollectionDef {
-	public LinkedListDef(SerializerDef valueSerializer, boolean nullable) {
+public final class LinkedListSerializer extends RegularCollectionSerializer {
+	public LinkedListSerializer(SerializerDef valueSerializer, boolean nullable) {
 		super(valueSerializer, LinkedList.class, LinkedList.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new LinkedListDef(valueSerializer, true);
+		return new LinkedListSerializer(valueSerializer, true);
 	}
 
 	@Override

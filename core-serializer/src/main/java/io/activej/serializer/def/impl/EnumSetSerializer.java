@@ -19,41 +19,26 @@ package io.activej.serializer.def.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.def.AbstractSerializerDefCollection;
 import io.activej.serializer.def.SerializerDef;
 
-import java.util.function.UnaryOperator;
+import java.util.EnumSet;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expressions.staticCall;
+import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public class RegularCollectionDef extends AbstractSerializerDefCollection {
-	public RegularCollectionDef(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> elementType, boolean nullable) {
-		super(valueSerializer, encodeType, decodeType, elementType, nullable);
+public final class EnumSetSerializer extends RegularCollectionSerializer {
+	public EnumSetSerializer(SerializerDef valueSerializer, boolean nullable) {
+		super(valueSerializer, EnumSet.class, EnumSet.class, Enum.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new RegularCollectionDef(valueSerializer, encodeType, decodeType, elementType, true);
-	}
-
-	@Override
-	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
-		return iterateIterable(collection, action);
+		return new EnumSetSerializer(valueSerializer, true);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, length);
-	}
-
-	@Override
-	protected Expression addToBuilder(Expression builder, Expression index, Expression element) {
-		return call(builder, "add", element);
-	}
-
-	@Override
-	protected Expression build(Expression builder) {
-		return builder;
+		return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getDecodeType()));
 	}
 }
