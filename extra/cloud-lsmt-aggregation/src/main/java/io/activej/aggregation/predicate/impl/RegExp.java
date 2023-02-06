@@ -19,7 +19,6 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
@@ -59,7 +58,7 @@ public final class RegExp implements AggregationPredicate {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable value = property(record, key.replace('.', '$'));
-		return Expressions.and(
+		return and(
 				isNotNull(value, fields.get(key)),
 				isNe(
 						value(false),

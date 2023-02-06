@@ -24,6 +24,10 @@ public class ComputedMeasuresTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
+	private static final class M extends Measures {}
+
+	private static final class CM extends ComputedMeasures {}
+
 	public interface TestQueryResultPlaceholder {
 		void computeMeasures();
 
@@ -33,19 +37,19 @@ public class ComputedMeasuresTest {
 	}
 
 	private static final Map<String, Measure> MEASURES =
-			keysToMap(Stream.of("a", "b", "c", "d"), k -> Measures.sum(ofDouble()));
+			keysToMap(Stream.of("a", "b", "c", "d"), k -> M.sum(ofDouble()));
 
 	@Test
 	public void test() {
-		ComputedMeasure d = ComputedMeasures.div(
-				ComputedMeasures.mul(
-						ComputedMeasures.div(
-								ComputedMeasures.measure("a"),
-								ComputedMeasures.measure("b")
+		ComputedMeasure d = CM.div(
+				CM.mul(
+						CM.div(
+								CM.measure("a"),
+								CM.measure("b")
 						),
-						ComputedMeasures.value(100)
+						CM.value(100)
 				),
-				ComputedMeasures.measure("c")
+				CM.measure("c")
 		);
 
 		TestQueryResultPlaceholder resultPlaceholder = ClassGenerator.builder(TestQueryResultPlaceholder.class)
@@ -70,15 +74,15 @@ public class ComputedMeasuresTest {
 
 	@Test
 	public void testNullDivision() {
-		ComputedMeasure d = ComputedMeasures.div(
-				ComputedMeasures.mul(
-						ComputedMeasures.div(
-								ComputedMeasures.measure("a"),
-								ComputedMeasures.measure("b")
+		ComputedMeasure d = CM.div(
+				CM.mul(
+						CM.div(
+								CM.measure("a"),
+								CM.measure("b")
 						),
-						ComputedMeasures.value(100)
+						CM.value(100)
 				),
-				ComputedMeasures.measure("c")
+				CM.measure("c")
 		);
 
 		TestQueryResultPlaceholder resultPlaceholder = ClassGenerator.builder(TestQueryResultPlaceholder.class)
@@ -102,10 +106,10 @@ public class ComputedMeasuresTest {
 
 	@Test
 	public void testSqrt() {
-		ComputedMeasure c = ComputedMeasures.sqrt(
-				ComputedMeasures.add(
-						ComputedMeasures.measure("a"),
-						ComputedMeasures.measure("b")
+		ComputedMeasure c = CM.sqrt(
+				CM.add(
+						CM.measure("a"),
+						CM.measure("b")
 				)
 		);
 
@@ -128,10 +132,10 @@ public class ComputedMeasuresTest {
 
 	@Test
 	public void testSqrtOfNegativeArgument() {
-		ComputedMeasure c = ComputedMeasures.sqrt(
-				ComputedMeasures.sub(
-						ComputedMeasures.measure("a"),
-						ComputedMeasures.measure("b")
+		ComputedMeasure c = CM.sqrt(
+				CM.sub(
+						CM.measure("a"),
+						CM.measure("b")
 				)
 		);
 

@@ -28,12 +28,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static io.activej.codegen.expression.Expressions.value;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @StaticFactories(AggregationPredicate.class)
 public class AggregationPredicates {
+	private static final class E extends Expressions {}
 
 	public record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
 			Class<L> leftType, Class<R> rightType) {
@@ -558,11 +558,11 @@ public class AggregationPredicates {
 	}
 
 	public static Expression isNotNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? value(true) : Expressions.isNotNull(field);
+		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(true) : E.isNotNull(field);
 	}
 
 	public static Expression isNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? value(false) : Expressions.isNull(field);
+		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(false) : E.isNull(field);
 	}
 
 	@SuppressWarnings("unchecked")

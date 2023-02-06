@@ -19,6 +19,7 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
+import io.activej.aggregation.predicate.AggregationPredicates.PredicateSimplifier;
 import io.activej.aggregation.predicate.AggregationPredicates.PredicateSimplifierKey;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
@@ -33,6 +34,8 @@ import static io.activej.common.Utils.first;
 
 @ExposedInternals
 public final class And implements AggregationPredicate {
+	private static final class E extends Expressions {}
+
 	public final List<AggregationPredicate> predicates;
 
 	public And(List<AggregationPredicate> predicates) {
@@ -82,7 +85,7 @@ public final class And implements AggregationPredicate {
 		if (left.equals(right))
 			return left;
 		PredicateSimplifierKey<?, ?> key = new PredicateSimplifierKey<>(left.getClass(), right.getClass());
-		AggregationPredicates.PredicateSimplifier<AggregationPredicate, AggregationPredicate> simplifier = (AggregationPredicates.PredicateSimplifier<AggregationPredicate, AggregationPredicate>) AggregationPredicates.simplifiers.get(key);
+		PredicateSimplifier<AggregationPredicate, AggregationPredicate> simplifier = (PredicateSimplifier<AggregationPredicate, AggregationPredicate>) AggregationPredicates.simplifiers.get(key);
 		if (simplifier == null)
 			return null;
 		return simplifier.simplifyAnd(left, right);
@@ -113,7 +116,7 @@ public final class And implements AggregationPredicate {
 		for (AggregationPredicate predicate : predicates) {
 			predicateDefs.add(predicate.createPredicate(record, fields));
 		}
-		return Expressions.and(predicateDefs);
+		return E.and(predicateDefs);
 	}
 
 	@Override
