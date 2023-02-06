@@ -9,7 +9,7 @@ import io.activej.reactor.nio.NioReactor;
 import java.util.Random;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.test.TestUtils.getFreePort;
 
 public class HttpThrottlingServer {

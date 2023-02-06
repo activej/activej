@@ -1,6 +1,5 @@
 package specializer;
 
-import io.activej.common.exception.FatalErrorHandler;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
@@ -12,6 +11,8 @@ import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+
 /**
  * Run {@link ScopedRpcBenchmarkClient} after launching this server
  */
@@ -22,7 +23,7 @@ public final class ScopedRpcServerExample extends Launcher {
 	@Provides
 	NioReactor reactor() {
 		return Eventloop.builder()
-				.withFatalErrorHandler(FatalErrorHandler.rethrow())
+				.withFatalErrorHandler(rethrow())
 				.build();
 	}
 

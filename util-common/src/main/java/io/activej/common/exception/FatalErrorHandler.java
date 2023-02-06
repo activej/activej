@@ -17,11 +17,9 @@
 package io.activej.common.exception;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.PrintStream;
-import java.util.function.Predicate;
+import static io.activej.common.exception.FatalErrorHandlers.CURRENT_HANDLER;
+import static io.activej.common.exception.FatalErrorHandlers.globalFatalErrorHandler;
 
 /**
  * A callback for any fatal (unchecked) exceptions
@@ -59,137 +57,94 @@ public interface FatalErrorHandler {
 	}
 
 	/**
-	 * A fatal error handler that simply ignores all received errors
-	 */
-	static FatalErrorHandler ignore() {
-		return (e, context) -> {};
-	}
-
-	/**
-	 * A fatal error handler that terminates JVM on any {@link Throwable}
-	 */
-	static FatalErrorHandler halt() {
-		return haltOn(t -> true);
-	}
-
-	/**
-	 * A fatal error handler that terminates JVM on any {@link Error}
-	 */
-	static FatalErrorHandler haltOnError() {
-		return haltOn(e -> e instanceof Error);
-	}
-
-	/**
-	 * A fatal error handler that terminates JVM on any {@link VirtualMachineError}
-	 */
-	static FatalErrorHandler haltOnVirtualMachineError() {
-		return haltOn(e -> e instanceof VirtualMachineError);
-	}
-
-	/**
-	 * A fatal error handler that terminates JVM on any {@link OutOfMemoryError}
-	 */
-	static FatalErrorHandler haltOnOutOfMemoryError() {
-		return haltOn(e -> e instanceof OutOfMemoryError);
-	}
-
-	/**
-	 * A fatal error handler that terminates JVM on any error that matches
-	 * a given predicate
+	 * Sets a fatal error handler for a current thread
 	 *
-	 * @param predicate a predicate that tests a received error
+	 * @param handler a global fatal error handler
 	 */
-	static FatalErrorHandler haltOn(Predicate<Throwable> predicate) {
-		return (e, context) -> {
-			if (predicate.test(e)) {
-				Runtime.getRuntime().halt(1);
-			}
-		};
+	static void setThreadFatalErrorHandler(@Nullable FatalErrorHandler handler) {
+		if (handler == null) {
+			CURRENT_HANDLER.remove();
+		} else {
+			CURRENT_HANDLER.set(handler);
+		}
 	}
 
 	/**
-	 * A fatal error handler that rethrows any error it receives
-	 */
-	static FatalErrorHandler rethrow() {
-		return rethrowOn(t -> true);
-	}
-
-	/**
-	 * A fatal error handler that rethrows any error that matches
-	 * a given predicate
+	 * Sets a global fatal error handler. This handler will be used if no other handler
+	 * was set for a handling thread using {@link #setThreadFatalErrorHandler(FatalErrorHandler)}
 	 *
-	 * @param predicate a predicate that tests a received error
+	 * @param handler a global fatal error handler
 	 */
-	static FatalErrorHandler rethrowOn(Predicate<Throwable> predicate) {
-		return (e, context) -> {
-			if (predicate.test(e)) {
-				if (e instanceof RuntimeException) {
-					throw (RuntimeException) e;
-				} else if (e instanceof Error) {
-					throw (Error) e;
-				} else {
-					throw new Error(e);
-				}
-			}
-		};
+	static void setGlobalFatalErrorHandler(FatalErrorHandler handler) {
+		globalFatalErrorHandler = handler;
 	}
 
 	/**
-	 * A fatal error handler that logs all errors to an internal {@link Logger}
-	 */
-	static FatalErrorHandler logging() {
-		return loggingTo(LoggerFactory.getLogger(FatalErrorHandler.class));
-	}
-
-	/**
-	 * A fatal error handler that logs all errors to a given {@link Logger}
+	 * Returns a thread fatal error handler. If no thread fatal error handler was set using
+	 * {@link #setThreadFatalErrorHandler(FatalErrorHandler)}, a global fatal error handler will
+	 * be returned
 	 *
-	 * @param logger a logger to log all the received errors
+	 * @return a thread fatal error handler or a global fatal error handler if thread's handler was not set
 	 */
-	static FatalErrorHandler loggingTo(Logger logger) {
-		return (e, context) -> {
-			if (!logger.isErrorEnabled()) return;
-
-			if (context == null) {
-				logger.error("Fatal error", e);
-			} else {
-				logger.error("Fatal error in {}", context, e);
-			}
-		};
+	static FatalErrorHandler getCurrent() {
+		FatalErrorHandler handler = CURRENT_HANDLER.get();
+		return handler != null ? handler : globalFatalErrorHandler;
 	}
 
 	/**
-	 * A fatal error handler that logs all errors to a standard output stream
+	 * Uses a given fatal error handler to handle a received {@link Throwable}
+	 * <p>
+	 * If an error is a checked exception, no handling will be performed
+	 * <p>
+	 * An optional context may be passed for debug purposes
 	 *
-	 * @see System#out
+	 * @param fatalErrorHandler a fatal error handler
+	 * @param e                 an error to be handled
+	 * @param context           an optional context that provides additional debug information
+	 * @see #getCurrent()
 	 */
-	static FatalErrorHandler loggingToSystemOut() {
-		return loggingTo(System.out);
+	static void handleError(FatalErrorHandler fatalErrorHandler, Throwable e, @Nullable Object context) {
+		if (e instanceof RuntimeException || !(e instanceof Exception)) {
+			fatalErrorHandler.handle(e, context);
+		}
 	}
 
 	/**
-	 * A fatal error handler that logs all errors to a standard error output stream
+	 * Uses current thread's fatal error handler to handle a received {@link Throwable}
+	 * <p>
+	 * If no error handler is set for the current thread, uses a global fatal error handler
+	 * <p>
+	 * If an error is a checked exception, no handling will be performed
+	 * <p>
+	 * An optional context may be passed for debug purposes
 	 *
-	 * @see System#err
+	 * @param e       an error to be handled
+	 * @param context an optional context that provides additional debug information
+	 * @see #getCurrent()
 	 */
-	static FatalErrorHandler loggingToSystemErr() {
-		return loggingTo(System.err);
+	static void handleError(Throwable e, @Nullable Object context) {
+		if (e instanceof RuntimeException || !(e instanceof Exception)) {
+			getCurrent().handle(e, context);
+		}
 	}
 
 	/**
-	 * A fatal error handler that logs all errors to a given {@link PrintStream}
+	 * Uses current thread's fatal error handler to handle a received {@link Throwable}
 	 *
-	 * @param stream a print stream to log all the received errors
+	 * @see #handleError(Throwable, Object)
 	 */
-	static FatalErrorHandler loggingTo(PrintStream stream) {
-		return (e, context) -> {
-			if (context == null) {
-				stream.println("Fatal error");
-			} else {
-				stream.println("Fatal error in " + context);
-			}
-			e.printStackTrace(stream);
-		};
+	static void handleError(Throwable e) {
+		handleError(e, null);
 	}
 
+	static Exception getExceptionOrThrowError(Throwable t) {
+		if (t instanceof Exception) {
+			return (Exception) t;
+		}
+		if (t instanceof Error) {
+			throw (Error) t;
+		} else {
+			throw new Error(t);
+		}
+	}
 }

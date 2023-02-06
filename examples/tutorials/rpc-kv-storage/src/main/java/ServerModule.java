@@ -5,7 +5,7 @@ import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 
 // [START EXAMPLE]
 public class ServerModule extends AbstractModule {

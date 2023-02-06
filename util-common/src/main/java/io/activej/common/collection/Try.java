@@ -29,7 +29,7 @@ import java.util.function.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * A compound type that represents either a result or an exception

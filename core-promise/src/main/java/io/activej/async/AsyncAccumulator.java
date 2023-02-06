@@ -26,7 +26,7 @@ import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")

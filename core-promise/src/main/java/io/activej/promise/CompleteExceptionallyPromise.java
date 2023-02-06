@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 

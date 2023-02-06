@@ -58,8 +58,8 @@ import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nonNullElseGet;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.common.exception.FatalErrorHandlers.setThreadFatalErrorHandler;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
+import static io.activej.common.exception.FatalErrorHandler.setThreadFatalErrorHandler;
 import static java.util.Collections.emptyIterator;
 
 /**

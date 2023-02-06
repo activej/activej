@@ -4,7 +4,7 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 
 /**
  * Example of creating custom StreamConsumer. This implementation outputs received data to the console.

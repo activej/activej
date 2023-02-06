@@ -8,7 +8,7 @@ import io.activej.rpc.client.RpcClient;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 
 // [START EXAMPLE]

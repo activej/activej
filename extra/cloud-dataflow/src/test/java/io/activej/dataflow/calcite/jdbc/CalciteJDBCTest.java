@@ -1,6 +1,5 @@
 package io.activej.dataflow.calcite.jdbc;
 
-import io.activej.common.exception.FatalErrorHandler;
 import io.activej.dataflow.calcite.AbstractCalciteTest;
 import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
@@ -23,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static org.junit.Assert.assertTrue;
 
 public class CalciteJDBCTest extends AbstractCalciteTest {
@@ -43,7 +43,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 								.build(),
 						NioReactor.class, int.class, SqlDataflow.class)
 				.bind(Eventloop.class).to(() -> Eventloop.builder()
-						.withFatalErrorHandler(FatalErrorHandler.rethrow())
+						.withFatalErrorHandler(rethrow())
 						.build())
 				.bind(NioReactor.class).to(Eventloop.class)
 				.build();

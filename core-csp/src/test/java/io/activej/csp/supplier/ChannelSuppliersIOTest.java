@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.csp.binary.Utils.channelSupplierAsInputStream;
 import static io.activej.csp.supplier.ChannelSuppliers.ofInputStream;
 import static io.activej.promise.TestUtils.await;

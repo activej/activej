@@ -19,7 +19,7 @@ package io.activej.async.function;
 import io.activej.common.function.SupplierEx;
 import io.activej.promise.Promise;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * Represents asynchronous supplier that returns {@link Promise} of some data.

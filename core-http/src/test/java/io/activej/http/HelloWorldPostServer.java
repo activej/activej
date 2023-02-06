@@ -4,7 +4,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.reactor.nio.NioReactor;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 

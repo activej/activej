@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.LongStream;
 
-import static io.activej.common.exception.FatalErrorHandler.haltOnError;
+import static io.activej.common.exception.FatalErrorHandlers.haltOnError;
 import static io.activej.cube.service.MySqlChunkLocker.CHUNK_TABLE;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;

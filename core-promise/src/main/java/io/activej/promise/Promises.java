@@ -44,7 +44,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.*;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.promise.PromisePredicates.isResult;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;

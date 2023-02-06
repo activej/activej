@@ -4,7 +4,7 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.function.ConsumerEx;
 import io.activej.datastream.consumer.AbstractStreamConsumer;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @ExposedInternals
 public final class OfConsumer<T> extends AbstractStreamConsumer<T> {

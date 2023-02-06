@@ -12,7 +12,7 @@ import io.activej.net.socket.tcp.TcpSocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 

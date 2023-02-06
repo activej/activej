@@ -21,7 +21,7 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.Consumer;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * Represents a {@link Consumer} capable of throwing exceptions

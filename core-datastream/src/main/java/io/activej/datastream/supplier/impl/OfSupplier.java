@@ -4,7 +4,7 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.function.SupplierEx;
 import io.activej.datastream.supplier.AbstractStreamSupplier;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @ExposedInternals
 public class OfSupplier<T> extends AbstractStreamSupplier<T> {

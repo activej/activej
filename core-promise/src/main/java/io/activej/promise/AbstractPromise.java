@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 

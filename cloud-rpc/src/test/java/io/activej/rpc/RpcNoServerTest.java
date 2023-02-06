@@ -24,7 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;

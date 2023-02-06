@@ -21,7 +21,7 @@ import io.activej.common.exception.UncheckedException;
 
 import java.util.function.BiFunction;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * Represents a {@link BiFunction} capable of throwing exceptions

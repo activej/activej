@@ -35,7 +35,7 @@ import java.net.InetAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Utils.nullify;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.csp.supplier.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
@@ -92,7 +92,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	/**
 	 * Creates a new instance of HttpServerConnection
 	 *
-	 * @param reactor     eventloop which will handle its tasks
+	 * @param reactor       eventloop which will handle its tasks
 	 * @param remoteAddress an address of remote
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests

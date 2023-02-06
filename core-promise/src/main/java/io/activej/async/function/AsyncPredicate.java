@@ -21,7 +21,7 @@ import io.activej.promise.Promise;
 
 import java.util.function.Predicate;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
 public interface AsyncPredicate<T> {

@@ -22,7 +22,7 @@ import io.activej.promise.Promise;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 public interface AsyncExecutor {
 	<T> Promise<T> execute(AsyncSupplier<T> supplier) throws RejectedExecutionException;

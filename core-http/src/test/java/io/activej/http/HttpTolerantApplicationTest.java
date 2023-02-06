@@ -19,7 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.promise.TestUtils.await;

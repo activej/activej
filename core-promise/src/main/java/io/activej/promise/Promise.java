@@ -34,8 +34,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.exception.FatalErrorHandlers.getExceptionOrThrowError;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.getExceptionOrThrowError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 

@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.common.Utils.union;
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;

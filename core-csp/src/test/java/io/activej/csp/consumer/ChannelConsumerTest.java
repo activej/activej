@@ -17,7 +17,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.csp.binary.Utils.channelConsumerAsOutputStream;
 import static io.activej.csp.consumer.ChannelConsumers.ofOutputStream;
 import static io.activej.promise.TestUtils.await;

@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
 import static java.lang.Math.min;
 import static specializer.ScopedRpcServerExample.PORT;

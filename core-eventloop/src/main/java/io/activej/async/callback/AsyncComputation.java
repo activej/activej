@@ -19,7 +19,7 @@ package io.activej.async.callback;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 public interface AsyncComputation<T> {
 	void run(Callback<? super T> cb);

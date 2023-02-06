@@ -37,7 +37,7 @@ import java.util.Set;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.*;
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.PromisePredicates.isResultOrException;

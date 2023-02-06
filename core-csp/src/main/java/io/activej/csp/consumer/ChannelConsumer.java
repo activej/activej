@@ -33,7 +33,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * This interface represents consumer of data items that should be used serially
@@ -80,7 +80,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * If there was an exception while accepting iterator, a promise of
 	 * exception will be returned.
 	 *
-	 * @param it     an {@link Iterator} which provides some values
+	 * @param it an {@link Iterator} which provides some values
 	 * @return a promise of {@code null} as a marker of completion
 	 */
 	default Promise<Void> acceptAll(Iterator<? extends T> it) {

@@ -19,7 +19,7 @@ package io.activej.common.function;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 
-import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * Represents a {@link Runnable} capable of throwing exceptions

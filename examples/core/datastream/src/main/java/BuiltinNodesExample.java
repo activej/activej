@@ -9,7 +9,7 @@ import io.activej.eventloop.Eventloop;
 
 import java.util.function.ToIntFunction;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 
 /**
  * Example of some simple builtin stream nodes.

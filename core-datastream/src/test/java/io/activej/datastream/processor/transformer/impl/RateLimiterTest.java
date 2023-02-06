@@ -1,6 +1,5 @@
 package io.activej.datastream.processor.transformer.impl;
 
-import io.activej.common.exception.FatalErrorHandler;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +30,7 @@ public class RateLimiterTest {
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
-				.withFatalErrorHandler(FatalErrorHandler.rethrow())
+				.withFatalErrorHandler(rethrow())
 				.build();
 
 		RateLimiter<Integer> limiter = RateLimiter.create(100, ChronoUnit.SECONDS);
@@ -53,7 +53,7 @@ public class RateLimiterTest {
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
-				.withFatalErrorHandler(FatalErrorHandler.rethrow())
+				.withFatalErrorHandler(rethrow())
 				.build();
 
 		RateLimiter<Integer> limiter = RateLimiter.<Integer>builder(0.1, ChronoUnit.MILLIS)
@@ -78,7 +78,7 @@ public class RateLimiterTest {
 		Eventloop.builder()
 				.withTimeProvider(timeSequence)
 				.withCurrentThread()
-				.withFatalErrorHandler(FatalErrorHandler.rethrow())
+				.withFatalErrorHandler(rethrow())
 				.build();
 
 		RateLimiter<Integer> limiter = RateLimiter.<Integer>builder(0.0001, ChronoUnit.MICROS)

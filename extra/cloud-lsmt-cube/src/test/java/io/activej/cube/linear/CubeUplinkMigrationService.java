@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
@@ -53,8 +53,7 @@ public final class CubeUplinkMigrationService {
 	@VisibleForTesting
 	Cube cube = builderOfEmptyCube(eventloop, executor)
 			// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
-			.build()
-			;
+			.build();
 
 	public void migrate(DataSource repoDataSource, DataSource uplinkDataSource) throws ExecutionException, InterruptedException {
 		doMigrate(repoDataSource, uplinkDataSource, null);
@@ -122,25 +121,25 @@ public final class CubeUplinkMigrationService {
 
 	static Cube.Builder builderOfEmptyCube(Reactor reactor, Executor executor) {
 		return Cube.builder(reactor, executor, DefiningClassLoader.create(), new IAggregationChunkStorage<Long>() {
-					@Override
-					public Promise<Long> createId() {
-						throw new AssertionError();
-					}
+			@Override
+			public Promise<Long> createId() {
+				throw new AssertionError();
+			}
 
-					@Override
-					public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-						throw new AssertionError();
-					}
+			@Override
+			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
+				throw new AssertionError();
+			}
 
-					@Override
-					public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-						throw new AssertionError();
-					}
+			@Override
+			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
+				throw new AssertionError();
+			}
 
-					@Override
-					public Promise<Void> finish(Set<Long> chunkIds) {
-						throw new AssertionError();
-					}
-				});
+			@Override
+			public Promise<Void> finish(Set<Long> chunkIds) {
+				throw new AssertionError();
+			}
+		});
 	}
 }

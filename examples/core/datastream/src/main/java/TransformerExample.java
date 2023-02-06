@@ -7,7 +7,7 @@ import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.reactor.ImplicitlyReactive;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 
 /**
  * Example of creating custom StreamTransformer, which takes strings from input stream
