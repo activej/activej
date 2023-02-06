@@ -24,6 +24,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(MySqlChunkLocker.class, "chunkTable", "cube_chunk");
 	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(MySqlChunkLocker.class, "lockTtl", Duration.ofMinutes(5));
-	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(MySqlChunkLocker.class, "lockedBy", null);
+	public static final @Nullable String DEFAULT_LOCKED_BY = ApplicationSettings.getString(MySqlChunkLocker.class, "lockedBy", null);
 
 	private final Executor executor;
 	private final DataSource dataSource;

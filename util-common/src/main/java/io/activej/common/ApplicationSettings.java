@@ -17,6 +17,7 @@
 package io.activej.common;
 
 import io.activej.common.exception.MalformedDataException;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -92,7 +93,8 @@ public final class ApplicationSettings {
 	 * @param name     a name of a setting
 	 * @param defValue default value that will be used if a setting property is not found
 	 */
-	public static <T> T get(Function<String, T> parser, Class<?> type, String name, T defValue) {
+	@Contract("_, _, _, !null -> !null")
+	public static <T> @Nullable T get(Function<String, T> parser, Class<?> type, String name, @Nullable T defValue) {
 		checkState(!type.isAnonymousClass(), "Anonymous classes cannot be used for application settings");
 
 		firstLookupDone = true;
@@ -113,7 +115,8 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static String getString(Class<?> type, String name, String defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable String getString(Class<?> type, String name, @Nullable String defValue) {
 		return get(Function.identity(), type, name, defValue);
 	}
 
@@ -122,8 +125,17 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static Integer getInt(Class<?> type, String name, Integer defValue) {
+	public static int getInt(Class<?> type, String name, int defValue) {
 		return get(Integer::parseInt, type, name, defValue);
+	}
+
+	/**
+	 * Retrieves an {@code Integer} setting. If no setting is set, {@code null} is returned
+	 *
+	 * @see #get(Function, Class, String, Object)
+	 */
+	public static @Nullable Integer getInteger(Class<?> type, String name) {
+		return get(Integer::parseInt, type, name, null);
 	}
 
 	/**
@@ -131,8 +143,17 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static Long getLong(Class<?> type, String name, Long defValue) {
+	public static long getLong(Class<?> type, String name, long defValue) {
 		return get(Long::parseLong, type, name, defValue);
+	}
+
+	/**
+	 * Retrieves a {@code Long} setting. If no setting is set, {@code null} is returned
+	 *
+	 * @see #get(Function, Class, String, Object)
+	 */
+	public static @Nullable Long getLong(Class<?> type, String name) {
+		return get(Long::parseLong, type, name, null);
 	}
 
 	/**
@@ -140,8 +161,17 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static Boolean getBoolean(Class<?> type, String name, Boolean defValue) {
+	public static boolean getBoolean(Class<?> type, String name, boolean defValue) {
 		return get(ApplicationSettings::parseBoolean, type, name, defValue);
+	}
+
+	/**
+	 * Retrieves a {@code Boolean} setting. If no setting is set, {@code null} is returned
+	 *
+	 * @see #get(Function, Class, String, Object)
+	 */
+	public static @Nullable Boolean getBoolean(Class<?> type, String name) {
+		return get(ApplicationSettings::parseBoolean, type, name, null);
 	}
 
 	public static boolean parseBoolean(String s) {
@@ -153,8 +183,17 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static Double getDouble(Class<?> type, String name, Double defValue) {
+	public static double getDouble(Class<?> type, String name, double defValue) {
 		return get(Double::parseDouble, type, name, defValue);
+	}
+
+	/**
+	 * Retrieves a {@code Double} setting. If no setting is set, {@code null} is returned
+	 *
+	 * @see #get(Function, Class, String, Object)
+	 */
+	public static @Nullable Double getDouble(Class<?> type, String name) {
+		return get(Double::parseDouble, type, name, null);
 	}
 
 	/**
@@ -163,7 +202,8 @@ public final class ApplicationSettings {
 	 * @see #get(Function, Class, String, Object)
 	 * @see Duration#parse(CharSequence)
 	 */
-	public static Duration getDuration(Class<?> type, String name, Duration defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Duration getDuration(Class<?> type, String name, @Nullable Duration defValue) {
 		return get(StringFormatUtils::parseDuration, type, name, defValue);
 	}
 
@@ -172,7 +212,8 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static MemSize getMemSize(Class<?> type, String name, MemSize defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable MemSize getMemSize(Class<?> type, String name, @Nullable MemSize defValue) {
 		return get(MemSize::valueOf, type, name, defValue);
 	}
 
@@ -181,7 +222,8 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static InetSocketAddress getInetSocketAddress(Class<?> type, String name, InetSocketAddress defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable InetSocketAddress getInetSocketAddress(Class<?> type, String name, @Nullable InetSocketAddress defValue) {
 		return get(address -> {
 			try {
 				return StringFormatUtils.parseInetSocketAddress(address);
@@ -197,7 +239,8 @@ public final class ApplicationSettings {
 	 * @see #get(Function, Class, String, Object)
 	 * @see Charset#forName(String)
 	 */
-	public static Charset getCharset(Class<?> type, String name, Charset defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Charset getCharset(Class<?> type, String name, @Nullable Charset defValue) {
 		return get(charset -> {
 			try {
 				return Charset.forName(charset);
@@ -213,7 +256,8 @@ public final class ApplicationSettings {
 	 * @see #get(Function, Class, String, Object)
 	 * @see Locale#forLanguageTag(String)
 	 */
-	public static Locale getLocale(Class<?> type, String name, Locale defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Locale getLocale(Class<?> type, String name, @Nullable Locale defValue) {
 		return get(Locale::forLanguageTag, type, name, defValue);
 	}
 
@@ -223,7 +267,8 @@ public final class ApplicationSettings {
 	 * @see #get(Function, Class, String, Object)
 	 * @see Enum#valueOf(Class, String)
 	 */
-	public static <E extends Enum<E>> E getEnum(Class<?> type, String name, Class<E> enumClass, E defValue) {
+	@Contract("_, _, _, !null -> !null")
+	public static <E extends Enum<E>> @Nullable E getEnum(Class<?> type, String name, Class<E> enumClass, @Nullable E defValue) {
 		return get(val -> Enum.valueOf(enumClass, val), type, name, defValue);
 	}
 

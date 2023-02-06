@@ -35,7 +35,7 @@ public final class ServerSocketSettings {
 
 	public static final int DEFAULT_BACKLOG = ApplicationSettings.getInt(ServerSocketSettings.class, "backlog", 16384);
 	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(ServerSocketSettings.class, "receiveBufferSize", null);
-	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(ServerSocketSettings.class, "reuseAddress", null);
+	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(ServerSocketSettings.class, "reuseAddress");
 
 	private int backlog = DEFAULT_BACKLOG;
 	private @Nullable MemSize receiveBufferSize = DEFAULT_RECEIVE_BUFFER_SIZE;

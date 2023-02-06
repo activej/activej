@@ -6,6 +6,7 @@ import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.hamcrest.Matchers;
+import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 
 import java.net.InetSocketAddress;
@@ -23,7 +24,7 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 public final class RedisConnectionTestWithReal extends RedisConnectionTestWithStub {
-	private static final InetSocketAddress ADDRESS = ApplicationSettings.getInetSocketAddress(RedisConnectionTestWithReal.class, "address", null);
+	private static final @Nullable InetSocketAddress ADDRESS = ApplicationSettings.getInetSocketAddress(RedisConnectionTestWithReal.class, "address", null);
 
 	// Authentication tests modify ACL configuration, run at your own risk
 	private static final boolean RUN_AUTH_TESTS = ApplicationSettings.getBoolean(RedisConnectionTestWithReal.class, "runAuthTests", false);

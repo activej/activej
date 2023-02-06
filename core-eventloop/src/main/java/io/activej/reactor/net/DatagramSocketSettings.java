@@ -32,8 +32,8 @@ import static java.net.StandardSocketOptions.*;
 public final class DatagramSocketSettings {
 	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(DatagramSocketSettings.class, "receiveBufferSize", null);
 	public static final @Nullable MemSize DEFAULT_SEND_BUFFER_SIZE = ApplicationSettings.getMemSize(DatagramSocketSettings.class, "sendBufferSize", null);
-	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(DatagramSocketSettings.class, "reuseAddress", null);
-	public static final @Nullable Boolean DEFAULT_BROADCAST = ApplicationSettings.getBoolean(DatagramSocketSettings.class, "broadcast", null);
+	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(DatagramSocketSettings.class, "reuseAddress");
+	public static final @Nullable Boolean DEFAULT_BROADCAST = ApplicationSettings.getBoolean(DatagramSocketSettings.class, "broadcast");
 
 	private @Nullable MemSize receiveBufferSize = DEFAULT_RECEIVE_BUFFER_SIZE;
 	private @Nullable MemSize sendBufferSize = DEFAULT_SEND_BUFFER_SIZE;
