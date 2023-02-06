@@ -1,11 +1,10 @@
-package io.activej.csp.binary;
+package io.activej.csp.binary.codec.impl;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.binary.codec.ByteBufsCodecs;
-import io.activej.csp.binary.codec.impl.OfStreamCodecs;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.test.rules.ByteBufRule;

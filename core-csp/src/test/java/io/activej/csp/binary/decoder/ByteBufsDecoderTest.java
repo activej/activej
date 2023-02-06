@@ -1,11 +1,9 @@
-package io.activej.csp.binary;
+package io.activej.csp.binary.decoder;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.decoder.ByteBufsDecoder;
-import io.activej.csp.binary.decoder.ByteBufsDecoders;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;

@@ -1,9 +1,7 @@
-package io.activej.csp;
+package io.activej.csp.consumer;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ByteBufRule;

@@ -1,9 +1,7 @@
-package io.activej.csp;
+package io.activej.csp.supplier;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
