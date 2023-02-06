@@ -19,7 +19,7 @@ package io.activej.csp.queue;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.csp.consumer.AbstractChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.dsl.ChannelTransformer;
+import io.activej.csp.process.transformer.ChannelTransformer;
 import io.activej.csp.supplier.AbstractChannelSupplier;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;

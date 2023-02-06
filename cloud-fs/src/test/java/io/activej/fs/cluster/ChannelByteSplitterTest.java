@@ -6,7 +6,7 @@ import io.activej.common.MemSize;
 import io.activej.csp.consumer.AbstractChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumers;
-import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.promise.Promise;
@@ -47,7 +47,7 @@ public final class ChannelByteSplitterTest {
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(nOutputs);
 		ByteBuf value = wrapUtf8(source);
 		splitter.withInput(ChannelSuppliers.ofValue(value)
-				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
+				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(5), MemSize.of(10))));
 		List<String> results = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
 			splitter.addOutput().set(ChannelConsumers.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
@@ -72,7 +72,7 @@ public final class ChannelByteSplitterTest {
 		ByteBuf value = wrapUtf8(source);
 		splitter.withInput(ChannelSuppliers.concat(
 				ChannelSuppliers.ofValue(value)
-						.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))),
+						.transformWith(ChannelTransformers.chunkBytes(MemSize.of(5), MemSize.of(10))),
 				failingSupplier()));
 		List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
@@ -99,7 +99,7 @@ public final class ChannelByteSplitterTest {
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(3);
 		ByteBuf value = wrapUtf8(source);
 		splitter.withInput(ChannelSuppliers.ofValue(value)
-				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
+				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(5), MemSize.of(10))));
 		List<String> results = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
 			ChannelConsumer<ByteBuf> consumer = i % 3 == 0 ?
@@ -128,7 +128,7 @@ public final class ChannelByteSplitterTest {
 		ChannelByteSplitter splitter = ChannelByteSplitter.create(8);
 		ByteBuf value = wrapUtf8(source);
 		splitter.withInput(ChannelSuppliers.ofValue(value)
-				.transformWith(ChannelByteChunker.create(MemSize.of(5), MemSize.of(10))));
+				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(5), MemSize.of(10))));
 		List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 		for (int i = 0; i < nOutputs; i++) {
 			if (i % 3 == 0) {

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
-import static io.activej.csp.dsl.ChannelSupplierTransformer.identity;
+import static io.activej.csp.process.transformer.ChannelSupplierTransformer.identity;
 import static io.activej.http.IWebSocket.Frame.FrameType.BINARY;
 import static io.activej.http.TestUtils.*;
 import static io.activej.promise.TestUtils.await;

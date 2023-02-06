@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.dsl;
+package io.activej.csp.process.transformer;
 
 import io.activej.csp.consumer.ChannelConsumer;
 

@@ -22,7 +22,7 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.dsl.ChannelConsumerTransformer;
+import io.activej.csp.process.transformer.ChannelConsumerTransformer;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.*;
 import io.activej.fs.tcp.messaging.FileSystemRequest;

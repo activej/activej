@@ -14,39 +14,24 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process;
+package io.activej.csp.process.transformer.impl;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.dsl.ChannelTransformer;
+import io.activej.csp.process.transformer.AbstractChannelTransformer;
 import io.activej.promise.Promise;
 
 /**
  * Drops exactly N bytes from a csp stream of byte buffers and limits that stream to exactly M bytes in length
  */
-public final class ChannelByteRanger extends AbstractChannelTransformer<ChannelByteRanger, ByteBuf, ByteBuf> {
-	private final long offset;
-	private final long endOffset;
+public final class ByteRanger extends AbstractChannelTransformer<ByteRanger, ByteBuf, ByteBuf> {
+	public final long offset;
+	public final long endOffset;
 
-	private long position;
+	public long position;
 
-	private ChannelByteRanger(long offset, long length) {
+	public ByteRanger(long offset, long length) {
 		this.offset = offset;
 		this.endOffset = length;
-	}
-
-	public static ChannelTransformer<ByteBuf, ByteBuf> range(long offset, long length) {
-		if (offset == 0 && length == Long.MAX_VALUE) {
-			return ChannelTransformer.identity();
-		}
-		return new ChannelByteRanger(offset, length);
-	}
-
-	public static ChannelTransformer<ByteBuf, ByteBuf> drop(long toDrop) {
-		return range(toDrop, Long.MAX_VALUE);
-	}
-
-	public static ChannelTransformer<ByteBuf, ByteBuf> limit(long limit) {
-		return range(0, limit);
 	}
 
 	@Override

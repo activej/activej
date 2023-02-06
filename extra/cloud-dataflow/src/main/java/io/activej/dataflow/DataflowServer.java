@@ -24,9 +24,10 @@ import io.activej.common.MemSize;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.process.transformer.ChannelTransformer;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.dataflow.exception.DataflowException;
@@ -164,7 +165,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema) {
-		return upload(streamId, streamSchema, ChannelTransformer.identity());
+		return upload(streamId, streamSchema, ChannelTransformers.identity());
 	}
 
 	@Override

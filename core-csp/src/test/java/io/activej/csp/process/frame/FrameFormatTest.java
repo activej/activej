@@ -6,7 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.consumer.ChannelConsumers;
-import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.test.rules.ByteBufRule;
@@ -91,9 +91,9 @@ public class FrameFormatTest {
 		byte[] expected = buffers.stream().map(ByteBuf::slice).collect(ByteBufs.collector()).asArray();
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(buffers)
-				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
+				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(64), MemSize.of(128)))
 				.transformWith(ChannelFrameEncoder.create(frameFormat))
-				.transformWith(ChannelByteChunker.create(MemSize.of(64), MemSize.of(128)))
+				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(64), MemSize.of(128)))
 				.transformWith(ChannelFrameDecoder.create(frameFormat));
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));
@@ -233,13 +233,13 @@ public class FrameFormatTest {
 		}
 		ByteBuf value = ByteBuf.wrapForReading(data);
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSuppliers.ofValue(value)
-				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
+				.transformWith(ChannelTransformers.chunkBytes(chunkSizeMin, chunkSizeMin))
 				.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofValue(compressed)
-				.transformWith(ChannelByteChunker.create(chunkSizeMin, chunkSizeMin))
+				.transformWith(ChannelTransformers.chunkBytes(chunkSizeMin, chunkSizeMin))
 				.transformWith(decoderBuilder.build());
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));

@@ -25,7 +25,7 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumers;
-import io.activej.csp.dsl.ChannelSupplierTransformer;
+import io.activej.csp.process.transformer.ChannelSupplierTransformer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;

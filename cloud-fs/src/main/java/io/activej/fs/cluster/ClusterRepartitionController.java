@@ -22,7 +22,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.consumer.ChannelConsumers;
-import io.activej.csp.process.ChannelByteRanger;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
@@ -327,7 +327,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 																				.then(() -> remoteMeta == null ?
 																						fs.upload(name, meta.getSize()) :
 																						fs.append(name, remoteMeta.getSize())
-																								.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
+																								.map(consumer -> consumer.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
 																				.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
 																		.withAcknowledgement(ack -> ack
 																				.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))

@@ -22,9 +22,10 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.binary.codec.ByteBufsCodec;
-import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.process.transformer.ChannelTransformer;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.exception.DataflowStacklessException;
 import io.activej.dataflow.graph.StreamId;
@@ -110,7 +111,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema) {
 		checkInReactorThread(this);
-		return download(address, streamId, streamSchema, ChannelTransformer.identity());
+		return download(address, streamId, streamSchema, ChannelTransformers.identity());
 	}
 
 	public static class StreamTraceCounter<T> implements StreamSupplierTransformer<T, StreamSupplier<T>> {

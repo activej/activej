@@ -1,8 +1,7 @@
-package io.activej.csp.process;
+package io.activej.csp.process.transformer.impl;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.MemSize;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
@@ -15,7 +14,7 @@ import java.util.stream.Stream;
 
 import static io.activej.promise.TestUtils.await;
 
-public class ChannelByteChunkerTest {
+public class ByteChunkerTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -25,9 +24,9 @@ public class ChannelByteChunkerTest {
 
 	@Test
 	public void testForStackOverflow() {
-		ChannelByteChunker channelByteChunker = ChannelByteChunker.create(MemSize.of(10_000), MemSize.of(10_000));
+		ByteChunker byteChunker = new ByteChunker(10_000, 10_000);
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofStream(Stream.generate(() -> ByteBufStrings.wrapAscii("a")).limit(10_000))
-				.transformWith(channelByteChunker);
+				.transformWith(byteChunker);
 		await(supplier.streamTo(ChannelConsumers.ofConsumer(ByteBuf::recycle)));
 	}
 }

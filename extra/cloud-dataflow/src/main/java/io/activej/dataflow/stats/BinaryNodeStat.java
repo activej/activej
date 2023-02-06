@@ -2,7 +2,7 @@ package io.activej.dataflow.stats;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.dsl.ChannelTransformer;
+import io.activej.csp.process.transformer.ChannelTransformer;
 import io.activej.csp.supplier.ChannelSupplier;
 
 import java.util.Objects;

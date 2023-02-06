@@ -17,6 +17,7 @@
 package io.activej.csp.dsl;
 
 import io.activej.csp.consumer.ChannelConsumer;
+import io.activej.csp.process.transformer.ChannelTransformer;
 import io.activej.csp.supplier.ChannelSupplier;
 
 public interface WithChannelTransformer<B, I, O> extends WithChannelInput<B, I>, WithChannelOutput<B, O>,

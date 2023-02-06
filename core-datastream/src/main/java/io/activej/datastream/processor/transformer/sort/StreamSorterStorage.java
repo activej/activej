@@ -20,10 +20,10 @@ import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -158,9 +158,9 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 						.transformWith(ChannelSerializer.builder(serializer)
 								.withInitialBufferSize(readBlockSize)
 								.build())
-						.transformWith(ChannelByteChunker.create(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
+						.transformWith(ChannelTransformers.chunkBytes(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
 						.transformWith(ChannelFrameEncoder.create(frameFormat))
-						.transformWith(ChannelByteChunker.create(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
+						.transformWith(ChannelTransformers.chunkBytes(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
 						.streamTo(ChannelFileWriter.open(executor, path))));
 	}
 

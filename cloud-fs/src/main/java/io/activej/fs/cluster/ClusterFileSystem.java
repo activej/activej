@@ -27,7 +27,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.function.SupplierEx;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.dsl.ChannelConsumerTransformer;
+import io.activej.csp.process.transformer.ChannelConsumerTransformer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
@@ -51,7 +51,7 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.transformIterator;
-import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
+import static io.activej.csp.process.transformer.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;
 import static io.activej.reactor.Reactive.checkInReactorThread;

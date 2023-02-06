@@ -1,4 +1,4 @@
-package io.activej.csp.process;
+package io.activej.csp.process.transformer.impl;
 
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.csp.consumer.ChannelConsumers;
@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ChannelRateLimiterTest {
+public class RateLimiterTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -34,7 +34,7 @@ public class ChannelRateLimiterTest {
 				.withFatalErrorHandler(FatalErrorHandler.rethrow())
 				.build();
 
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(100, ChronoUnit.SECONDS);
+		RateLimiter<Integer> limiter = RateLimiter.create(100, ChronoUnit.SECONDS);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -57,7 +57,7 @@ public class ChannelRateLimiterTest {
 				.withFatalErrorHandler(FatalErrorHandler.rethrow())
 				.build();
 
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>builder(0.0001, ChronoUnit.MICROS)
+		RateLimiter<Integer> limiter = RateLimiter.<Integer>builder(0.0001, ChronoUnit.MICROS)
 				.withInitialTokens(100)
 				.build();
 
@@ -82,7 +82,7 @@ public class ChannelRateLimiterTest {
 				.withFatalErrorHandler(FatalErrorHandler.rethrow())
 				.build();
 
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>builder(0.1, ChronoUnit.MILLIS)
+		RateLimiter<Integer> limiter = RateLimiter.<Integer>builder(0.1, ChronoUnit.MILLIS)
 				.withInitialTokens(200)
 				.build();
 

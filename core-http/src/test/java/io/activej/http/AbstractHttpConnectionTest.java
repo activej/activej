@@ -7,7 +7,7 @@ import io.activej.common.MemSize;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
 import io.activej.csp.consumer.ChannelConsumers;
-import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpClient.JmxInspector;
@@ -524,7 +524,7 @@ public final class AbstractHttpConnectionTest {
 								.map(body -> {
 									HttpResponse httpResponse = HttpResponse.ok200()
 											.withBodyStream(request.takeBodyStream()
-													.transformWith(ChannelByteChunker.create(MemSize.of(1), MemSize.of(1))));
+													.transformWith(ChannelTransformers.chunkBytes(MemSize.of(1), MemSize.of(1))));
 									decorator.accept(httpResponse);
 									return httpResponse;
 								}))

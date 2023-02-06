@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process;
+package io.activej.csp.process.transformer.impl;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.annotation.ExposedInternals;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.csp.process.transformer.AbstractChannelTransformer;
 import io.activej.promise.Promise;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Nullable;
@@ -28,27 +30,28 @@ import java.time.temporal.ChronoUnit;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
 
-public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<ChannelRateLimiter<T>, T, T> {
+@ExposedInternals
+public final class RateLimiter<T> extends AbstractChannelTransformer<RateLimiter<T>, T, T> {
 	private static final Duration MILLIS_DURATION = ChronoUnit.MILLIS.getDuration();
 
-	private final double refillRatePerMillis;
+	public final double refillRatePerMillis;
 
-	private double tokens;
-	private long lastRefillTimestamp;
-	private Tokenizer<T> tokenizer = $ -> 1;
+	public double tokens;
+	public long lastRefillTimestamp;
+	public Tokenizer<T> tokenizer = $ -> 1;
 
-	private @Nullable ScheduledRunnable scheduledRunnable;
+	public @Nullable ScheduledRunnable scheduledRunnable;
 
-	private ChannelRateLimiter(double refillRatePerMillis) {
+	public RateLimiter(double refillRatePerMillis) {
 		this.refillRatePerMillis = refillRatePerMillis;
 		this.lastRefillTimestamp = reactor.currentTimeMillis();
 	}
 
-	public static <T> ChannelRateLimiter<T> create(double refillRate, ChronoUnit perUnit) {
-		return ChannelRateLimiter.<T>builder(refillRate, perUnit).build();
+	public static <T> RateLimiter<T> create(double refillRate, ChronoUnit perUnit) {
+		return RateLimiter.<T>builder(refillRate, perUnit).build();
 	}
 
-	public static <T> ChannelRateLimiter<T>.Builder builder(double refillRate, ChronoUnit perUnit) {
+	public static <T> RateLimiter<T>.Builder builder(double refillRate, ChronoUnit perUnit) {
 		checkArgument(refillRate >= 0, "Negative refill rate");
 
 		Duration perUnitDuration = perUnit.getDuration();
@@ -58,27 +61,27 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 		} else {
 			refillRatePerMillis = refillRate * MILLIS_DURATION.dividedBy(perUnitDuration);
 		}
-		return new ChannelRateLimiter<T>(refillRatePerMillis).new Builder();
+		return new RateLimiter<T>(refillRatePerMillis).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ChannelRateLimiter<T>> {
+	public final class Builder extends AbstractBuilder<Builder, RateLimiter<T>> {
 		private Builder() {}
 
 		public Builder withInitialTokens(double initialTokens) {
 			checkNotBuilt(this);
-			ChannelRateLimiter.this.tokens = initialTokens;
+			RateLimiter.this.tokens = initialTokens;
 			return this;
 		}
 
 		public Builder withTokenizer(Tokenizer<T> tokenizer) {
 			checkNotBuilt(this);
-			ChannelRateLimiter.this.tokenizer = tokenizer;
+			RateLimiter.this.tokenizer = tokenizer;
 			return this;
 		}
 
 		@Override
-		protected ChannelRateLimiter<T> doBuild() {
-			return ChannelRateLimiter.this;
+		protected RateLimiter<T> doBuild() {
+			return RateLimiter.this;
 		}
 	}
 

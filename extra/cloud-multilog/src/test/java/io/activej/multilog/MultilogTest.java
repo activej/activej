@@ -2,9 +2,9 @@ package io.activej.multilog;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
-import io.activej.csp.process.ChannelByteRanger;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.consumer.ToListStreamConsumer;
@@ -107,7 +107,7 @@ public class MultilogTest {
 					Entry<String, FileMetadata> entry = first(map.entrySet());
 					return fs.download(entry.getKey())
 							.then(supplier -> supplier
-									.transformWith(ChannelByteRanger.range(0, entry.getValue().getSize() - endOfStreamBlockSize))
+									.transformWith(ChannelTransformers.rangeBytes(0, entry.getValue().getSize() - endOfStreamBlockSize))
 									.streamTo(fs.upload(entry.getKey())));
 				}));
 

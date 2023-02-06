@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process;
+package io.activej.csp.process.transformer;
 
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.dsl.WithChannelTransformer;
+import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 

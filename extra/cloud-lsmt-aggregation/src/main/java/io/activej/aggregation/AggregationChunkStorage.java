@@ -26,10 +26,10 @@ import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefInt;
-import io.activej.csp.process.ChannelByteChunker;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.consumer.StreamConsumers;
@@ -231,7 +231,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 										.transformWith(writeCompress)
 										.transformWith(ChannelFrameEncoder.create(frameFormat))
 										.transformWith(writeChunker)
-										.transformWith(ChannelByteChunker.create(
+										.transformWith(ChannelTransformers.chunkBytes(
 												bufferSize.map(bytes -> bytes / 2),
 												bufferSize.map(bytes -> bytes * 2)))
 										.transformWith(writeFile)

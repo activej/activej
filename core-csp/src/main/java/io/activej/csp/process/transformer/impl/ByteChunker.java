@@ -14,30 +14,28 @@
  * limitations under the License.
  */
 
-package io.activej.csp.process;
+package io.activej.csp.process.transformer.impl;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.common.MemSize;
+import io.activej.common.annotation.ExposedInternals;
+import io.activej.csp.process.transformer.AbstractChannelTransformer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.min;
 
-public final class ChannelByteChunker extends AbstractChannelTransformer<ChannelByteChunker, ByteBuf, ByteBuf> {
-	private final ByteBufs bufs = new ByteBufs();
+@ExposedInternals
+public final class ByteChunker extends AbstractChannelTransformer<ByteChunker, ByteBuf, ByteBuf> {
+	public final ByteBufs bufs = new ByteBufs();
 
-	private final int minChunkSize;
-	private final int maxChunkSize;
+	public final int minChunkSize;
+	public final int maxChunkSize;
 
-	private ChannelByteChunker(int minChunkSize, int maxChunkSize) {
+	public ByteChunker(int minChunkSize, int maxChunkSize) {
 		this.minChunkSize = checkArgument(minChunkSize, minSize -> minSize > 0, "Minimal chunk size should be greater than 0");
 		this.maxChunkSize = checkArgument(maxChunkSize, maxSize -> maxSize >= minChunkSize, "Maximal chunk size cannot be less than minimal chunk size");
-	}
-
-	public static ChannelByteChunker create(MemSize minChunkSize, MemSize maxChunkSize) {
-		return new ChannelByteChunker(minChunkSize.toInt(), maxChunkSize.toInt());
 	}
 
 	@Override

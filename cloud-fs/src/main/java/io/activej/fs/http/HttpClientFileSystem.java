@@ -19,7 +19,7 @@ package io.activej.fs.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.csp.dsl.ChannelConsumerTransformer;
+import io.activej.csp.process.transformer.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
@@ -38,7 +38,7 @@ import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
-import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
+import static io.activej.csp.process.transformer.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FileSystemCommand.*;
 import static io.activej.fs.util.JsonUtils.fromJson;
 import static io.activej.fs.util.JsonUtils.toJson;

@@ -4,7 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.csp.consumer.AbstractChannelConsumer;
-import io.activej.csp.process.ChannelByteChunker;
+import io.activej.csp.process.transformer.ChannelTransformer;
+import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
@@ -146,9 +147,9 @@ public class TestUtils {
 		return $ -> fail();
 	}
 
-	public static ChannelByteChunker chunker() {
+	public static ChannelTransformer<ByteBuf, ByteBuf> chunker() {
 		MemSize min = MemSize.of(RANDOM.nextInt(5) + 1);
-		return ChannelByteChunker.create(min, min.map(length -> length * 2));
+		return ChannelTransformers.chunkBytes(min, min.map(length -> length * 2));
 	}
 
 	public static byte[] randomBytes(int size) {
@@ -166,6 +167,6 @@ public class TestUtils {
 	}
 
 	public static ChannelSupplier<ByteBuf> chunkedByByte(ChannelSupplier<ByteBuf> supplier) {
-		return supplier.transformWith(ChannelByteChunker.create(MemSize.bytes(1), MemSize.bytes(1)));
+		return supplier.transformWith(ChannelTransformers.chunkBytes(MemSize.bytes(1), MemSize.bytes(1)));
 	}
 }

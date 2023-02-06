@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.csp.dsl;
+package io.activej.csp.process.transformer;
 
+import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSupplier;
 
-@FunctionalInterface
-public interface ChannelSupplierTransformer<T, R> {
-	R transform(ChannelSupplier<T> supplier);
-
-	static <T> ChannelSupplierTransformer<T, ChannelSupplier<T>> identity() {
-		return supplier -> supplier;
-	}
+public interface ChannelTransformer<I, O> extends
+		ChannelSupplierTransformer<I, ChannelSupplier<O>>,
+		ChannelConsumerTransformer<O, ChannelConsumer<I>> {
 }

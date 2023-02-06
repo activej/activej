@@ -20,7 +20,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
-import io.activej.csp.dsl.ChannelConsumerTransformer;
+import io.activej.csp.process.transformer.ChannelConsumerTransformer;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;

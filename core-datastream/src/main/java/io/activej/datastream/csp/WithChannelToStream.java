@@ -16,8 +16,8 @@
 
 package io.activej.datastream.csp;
 
-import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.dsl.WithChannelInput;
+import io.activej.csp.process.transformer.ChannelSupplierTransformer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.datastream.supplier.StreamSupplier;
 
