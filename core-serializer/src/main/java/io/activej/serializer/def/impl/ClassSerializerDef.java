@@ -41,7 +41,7 @@ import static java.lang.reflect.Modifier.*;
 import static org.objectweb.asm.Type.*;
 
 @ExposedInternals
-public final class ClassSerializer extends AbstractSerializerDef {
+public final class ClassSerializerDef extends AbstractSerializerDef {
 
 	public static final class FieldDef {
 		private Field field;
@@ -93,7 +93,7 @@ public final class ClassSerializer extends AbstractSerializerDef {
 	public @Nullable Method staticFactoryMethod;
 	public @Nullable List<String> staticFactoryMethodParams;
 
-	public ClassSerializer(Class<?> encodeType, Class<?> decodeType, LinkedHashMap<String, FieldDef> fields,
+	public ClassSerializerDef(Class<?> encodeType, Class<?> decodeType, LinkedHashMap<String, FieldDef> fields,
 			Map<Method, List<String>> setters, @Nullable Constructor<?> constructor,
 			@Nullable List<String> constructorParams, @Nullable Method staticFactoryMethod,
 			@Nullable List<String> staticFactoryMethodParams) {
@@ -115,11 +115,11 @@ public final class ClassSerializer extends AbstractSerializerDef {
 		checkArgument(!decodeType.isInterface(), "Cannot serialize an interface");
 		checkArgument(encodeType.isAssignableFrom(decodeType), format("Class should be assignable from %s", decodeType));
 
-		return new ClassSerializer(encodeType, decodeType, new LinkedHashMap<>(), new LinkedHashMap<>(), null, null,
+		return new ClassSerializerDef(encodeType, decodeType, new LinkedHashMap<>(), new LinkedHashMap<>(), null, null,
 				null, null).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ClassSerializer> {
+	public final class Builder extends AbstractBuilder<Builder, ClassSerializerDef> {
 		private Builder() {}
 
 		public Builder withSetter(Method method, List<String> fields) {
@@ -135,26 +135,26 @@ public final class ClassSerializer extends AbstractSerializerDef {
 
 		public Builder withStaticFactoryMethod(Method staticFactoryMethod, List<String> fields) {
 			checkNotBuilt(this);
-			checkArgument(ClassSerializer.this.staticFactoryMethod == null, format("Factory is already set: %s", ClassSerializer.this.staticFactoryMethod));
+			checkArgument(ClassSerializerDef.this.staticFactoryMethod == null, format("Factory is already set: %s", ClassSerializerDef.this.staticFactoryMethod));
 			checkArgument(!isPrivate(staticFactoryMethod.getModifiers()), format("Factory cannot be private: %s", staticFactoryMethod));
 			checkArgument(isStatic(staticFactoryMethod.getModifiers()), format("Factory must be static: %s", staticFactoryMethod));
 			checkArgument(staticFactoryMethod.getGenericParameterTypes().length == fields.size(),
 					"Number of arguments of a method should match a size of list of fields");
 
-			ClassSerializer.this.staticFactoryMethod = staticFactoryMethod;
-			ClassSerializer.this.staticFactoryMethodParams = fields;
+			ClassSerializerDef.this.staticFactoryMethod = staticFactoryMethod;
+			ClassSerializerDef.this.staticFactoryMethodParams = fields;
 			return this;
 		}
 
 		public Builder withConstructor(Constructor<?> constructor, List<String> fields) {
 			checkNotBuilt(this);
-			checkArgument(ClassSerializer.this.constructor == null, format("Constructor is already set: %s", ClassSerializer.this.constructor));
+			checkArgument(ClassSerializerDef.this.constructor == null, format("Constructor is already set: %s", ClassSerializerDef.this.constructor));
 			checkArgument(!isPrivate(constructor.getModifiers()), format("Constructor cannot be private: %s", constructor));
 			checkArgument(constructor.getGenericParameterTypes().length == fields.size(),
 					"Number of arguments of a constructor should match a size of list of fields");
 
-			ClassSerializer.this.constructor = constructor;
-			ClassSerializer.this.constructorParams = fields;
+			ClassSerializerDef.this.constructor = constructor;
+			ClassSerializerDef.this.constructorParams = fields;
 			return this;
 		}
 
@@ -224,8 +224,8 @@ public final class ClassSerializer extends AbstractSerializerDef {
 		}
 
 		@Override
-		protected ClassSerializer doBuild() {
-			return ClassSerializer.this;
+		protected ClassSerializerDef doBuild() {
+			return ClassSerializerDef.this;
 		}
 	}
 
@@ -264,7 +264,7 @@ public final class ClassSerializer extends AbstractSerializerDef {
 	}
 
 	private static String stripGet(String getterName, Class<?> type) {
-		if (type == Boolean.TYPE || type == BooleanSerializer.class) {
+		if (type == Boolean.TYPE || type == BooleanSerializerDef.class) {
 			if (getterName.startsWith("is") && getterName.length() > 2) {
 				return Character.toLowerCase(getterName.charAt(2)) + getterName.substring(3);
 			}

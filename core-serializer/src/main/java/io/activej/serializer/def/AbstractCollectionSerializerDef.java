@@ -26,14 +26,14 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.*;
 
-public abstract class AbstractSerializerDefCollection extends AbstractSerializerDef implements SerializerDefWithNullable {
+public abstract class AbstractCollectionSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	protected final SerializerDef valueSerializer;
 	protected final Class<?> encodeType;
 	protected final Class<?> decodeType;
 	protected final Class<?> elementType;
 	protected final boolean nullable;
 
-	protected AbstractSerializerDefCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> elementType, boolean nullable) {
+	protected AbstractCollectionSerializerDef(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> elementType, boolean nullable) {
 		this.valueSerializer = valueSerializer;
 		this.encodeType = encodeType;
 		this.decodeType = decodeType;

@@ -21,44 +21,51 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.util.Utils.hashInitialSize;
 
 @ExposedInternals
-public final class MapSerializer extends RegularMapSerializer {
-	public MapSerializer(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
-		super(keySerializer, valueSerializer, Map.class, Map.class, Object.class, Object.class, nullable);
+public final class ListSerializerDef extends RegularCollectionSerializerDef {
+	public ListSerializerDef(SerializerDef valueSerializer, boolean nullable) {
+		super(valueSerializer, List.class, List.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new MapSerializer(keySerializer, valueSerializer, true);
+		return new ListSerializerDef(valueSerializer, true);
+	}
+
+	@Override
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+		return let(collection, v -> iterateList(v, action));
 	}
 
 	@Override
 	protected Expression doDecode(SerializerDef.StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		SerializerDef.Decoder keyDecoder = keySerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
-		SerializerDef.Decoder valueDecoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
+		SerializerDef.Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return ifEq(length, value(0),
-				staticCall(Collections.class, "emptyMap"),
+				staticCall(Collections.class, "emptyList"),
 				ifEq(length, value(1),
-						staticCall(Collections.class, "singletonMap",
-								keyDecoder.decode(in),
-								valueDecoder.decode(in)),
+						staticCall(Collections.class, "singletonList", decoder.decode(in)),
 						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		Class<?> rawType = keySerializer.getDecodeType();
-		if (rawType.isEnum()) {
-			return constructor(EnumMap.class, value(rawType));
-		}
-		return constructor(HashMap.class, hashInitialSize(length));
+		return arrayNew(Object[].class, length);
+	}
+
+	@Override
+	protected Expression addToBuilder(Expression array, Expression i, Expression element) {
+		return arraySet(array, i, element);
+	}
+
+	@Override
+	protected Expression build(Expression array) {
+		return staticCall(Arrays.class, "asList", array);
 	}
 }

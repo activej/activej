@@ -24,8 +24,8 @@ import io.activej.codegen.expression.Variable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.def.*;
-import io.activej.serializer.def.impl.ClassSerializer;
-import io.activej.serializer.def.impl.SubclassSerializer;
+import io.activej.serializer.def.impl.ClassSerializerDef;
+import io.activej.serializer.def.impl.SubclassSerializerDef;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
 import io.activej.types.scanner.TypeScannerRegistry;
@@ -211,7 +211,7 @@ public final class SerializerFactory {
 							throw new RuntimeException(e);
 						}
 					} else {
-						SubclassSerializer.Builder subclassBuilder = SubclassSerializer.builder(rawClass);
+						SubclassSerializerDef.Builder subclassBuilder = SubclassSerializerDef.builder(rawClass);
 						LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(List.of(annotationClass.subclasses()));
 						subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
 						subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
@@ -221,7 +221,7 @@ public final class SerializerFactory {
 						serializerDef = subclassBuilder.build();
 					}
 				} else if (extraSubclassesMap.containsKey(rawClass)) {
-					SubclassSerializer.Builder subclassBuilder = SubclassSerializer.builder(rawClass);
+					SubclassSerializerDef.Builder subclassBuilder = SubclassSerializerDef.builder(rawClass);
 					for (Class<?> subclass : extraSubclassesMap.get(rawClass)) {
 						subclassBuilder.withSubclass(subclass, ctx.scan(subclass));
 					}
@@ -772,7 +772,7 @@ public final class SerializerFactory {
 		if (rawClass.getEnclosingClass() != null && !Modifier.isStatic(rawClass.getModifiers()))
 			throw new IllegalArgumentException("Class should not be an inner class");
 
-		ClassSerializer.Builder classSerializerBuilder = ClassSerializer.builder(rawClass);
+		ClassSerializerDef.Builder classSerializerBuilder = ClassSerializerDef.builder(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
 			if (!rawClass.isRecord()) {
 				throw new IllegalArgumentException("Non-record type '" + rawClass.getName() +
@@ -787,7 +787,7 @@ public final class SerializerFactory {
 		return classSerializerBuilder.build();
 	}
 
-	private void scanClass(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder) {
+	private void scanClass(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		AnnotatedType annotatedClassType = ctx.getAnnotatedType();
 
 		Class<?> rawClassType = getRawType(annotatedClassType);
@@ -809,7 +809,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void scanInterface(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder) {
+	private void scanInterface(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
@@ -821,7 +821,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void scanRecord(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder) {
+	private void scanRecord(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 
@@ -848,7 +848,7 @@ public final class SerializerFactory {
 		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
 	}
 
-	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder, List<FoundSerializer> foundSerializers) {
+	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder, List<FoundSerializer> foundSerializers) {
 		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
 			Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
 			String pathToClass = ctx.getRawType().getName().replace('.', '/') + ".class";
@@ -931,7 +931,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void scanSetters(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder) {
+	private void scanSetters(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		for (Method method : ctx.getRawType().getDeclaredMethods()) {
 			if (isStatic(method.getModifiers())) {
 				continue;
@@ -948,7 +948,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder) {
+	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
 			if (ctx.getRawType() != factory.getReturnType()) {
@@ -979,7 +979,7 @@ public final class SerializerFactory {
 		return fields;
 	}
 
-	private void scanConstructors(Context<SerializerDef> ctx, ClassSerializer.Builder classSerializerBuilder) {
+	private void scanConstructors(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		boolean found = false;
 		for (Constructor<?> constructor : ctx.getRawType().getDeclaredConstructors()) {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);

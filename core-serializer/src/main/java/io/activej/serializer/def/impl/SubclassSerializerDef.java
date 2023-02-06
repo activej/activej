@@ -37,7 +37,7 @@ import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
 
 @ExposedInternals
-public final class SubclassSerializer extends AbstractSerializerDef implements SerializerDefWithNullable {
+public final class SubclassSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private static final int LOOKUP_SWITCH_THRESHOLD = 10;
 
 	public final Class<?> parentType;
@@ -46,7 +46,7 @@ public final class SubclassSerializer extends AbstractSerializerDef implements S
 
 	public int startIndex;
 
-	public SubclassSerializer(Class<?> parentType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, boolean nullable, int startIndex) {
+	public SubclassSerializerDef(Class<?> parentType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, boolean nullable, int startIndex) {
 		this.startIndex = startIndex;
 		this.parentType = parentType;
 		this.subclassSerializers = new LinkedHashMap<>(subclassSerializers);
@@ -54,10 +54,10 @@ public final class SubclassSerializer extends AbstractSerializerDef implements S
 	}
 
 	public static Builder builder(Class<?> parentType) {
-		return new SubclassSerializer(parentType, new LinkedHashMap<>(), false, 0).new Builder();
+		return new SubclassSerializerDef(parentType, new LinkedHashMap<>(), false, 0).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, SubclassSerializer> {
+	public final class Builder extends AbstractBuilder<Builder, SubclassSerializerDef> {
 		private Builder() {}
 
 		public Builder withSubclass(Class<?> subclass, SerializerDef serializer) {
@@ -66,19 +66,19 @@ public final class SubclassSerializer extends AbstractSerializerDef implements S
 					"A subclass should not be an " +
 							(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
 			checkArgument(parentType.isAssignableFrom(subclass));
-			SubclassSerializer.this.subclassSerializers.put(subclass, serializer);
+			SubclassSerializerDef.this.subclassSerializers.put(subclass, serializer);
 			return this;
 		}
 
 		public Builder withStartIndex(int startIndex) {
 			checkNotBuilt(this);
-			SubclassSerializer.this.startIndex = startIndex;
+			SubclassSerializerDef.this.startIndex = startIndex;
 			return this;
 		}
 
 		@Override
-		protected SubclassSerializer doBuild() {
-			return SubclassSerializer.this;
+		protected SubclassSerializerDef doBuild() {
+			return SubclassSerializerDef.this;
 		}
 	}
 
@@ -87,7 +87,7 @@ public final class SubclassSerializer extends AbstractSerializerDef implements S
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return SerializerDefs.ofNullable(this);
 		}
-		return new SubclassSerializer(parentType, subclassSerializers, true, startIndex);
+		return new SubclassSerializerDef(parentType, subclassSerializers, true, startIndex);
 	}
 
 	@Override

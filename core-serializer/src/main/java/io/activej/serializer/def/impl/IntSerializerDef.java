@@ -22,34 +22,46 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
+import io.activej.serializer.def.SerializerDefWithVarLength;
 
-import static io.activej.serializer.def.SerializerExpressions.readShort;
-import static io.activej.serializer.def.SerializerExpressions.writeShort;
+import static io.activej.codegen.expression.Expressions.cast;
+import static io.activej.serializer.def.SerializerExpressions.*;
 
 @ExposedInternals
-public final class ShortSerializer extends PrimitiveSerializerDef {
+public final class IntSerializerDef extends PrimitiveSerializerDef implements SerializerDefWithVarLength {
+	public final boolean varLength;
 
 	@SuppressWarnings("unused") // used via reflection
-	public ShortSerializer() {
-		this(true);
+	public IntSerializerDef() {
+		this(true, false);
 	}
 
-	public ShortSerializer(boolean wrapped) {
-		super(short.class, wrapped);
+	public IntSerializerDef(boolean wrapped, boolean varLength) {
+		super(int.class, wrapped);
+		this.varLength = varLength;
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new ShortSerializer(true);
+		return new IntSerializerDef(true, varLength);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeShort(byteArray, off, value, !compatibilityLevel.isLittleEndian());
+		return varLength ?
+				writeVarInt(byteArray, off, cast(value, int.class)) :
+				writeInt(byteArray, off, cast(value, int.class), !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readShort(in, !compatibilityLevel.isLittleEndian());
+		return varLength ?
+				readVarInt(in) :
+				readInt(in, !compatibilityLevel.isLittleEndian());
+	}
+
+	@Override
+	public SerializerDef ensureVarLength() {
+		return new IntSerializerDef(wrapped, true);
 	}
 }

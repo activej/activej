@@ -30,14 +30,14 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
 @ExposedInternals
-public final class SetSerializer extends RegularCollectionSerializer {
-	public SetSerializer(SerializerDef valueSerializer, boolean nullable) {
+public final class SetSerializerDef extends RegularCollectionSerializerDef {
+	public SetSerializerDef(SerializerDef valueSerializer, boolean nullable) {
 		super(valueSerializer, Set.class, Set.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new SetSerializer(valueSerializer, true);
+		return new SetSerializerDef(valueSerializer, true);
 	}
 
 	@Override

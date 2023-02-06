@@ -33,16 +33,16 @@ import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.*;
 
 @ExposedInternals
-public final class ByteBufferSerializer extends AbstractSerializerDef implements SerializerDefWithNullable {
+public final class ByteBufferSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	public final boolean wrapped;
 	public final boolean nullable;
 
 	@SuppressWarnings("unused") // used via reflection
-	public ByteBufferSerializer() {
+	public ByteBufferSerializerDef() {
 		this(false, false);
 	}
 
-	public ByteBufferSerializer(boolean wrapped, boolean nullable) {
+	public ByteBufferSerializerDef(boolean wrapped, boolean nullable) {
 		this.wrapped = wrapped;
 		this.nullable = nullable;
 	}
@@ -127,6 +127,6 @@ public final class ByteBufferSerializer extends AbstractSerializerDef implements
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return SerializerDefs.ofNullable(this);
 		}
-		return new ByteBufferSerializer(wrapped, true);
+		return new ByteBufferSerializerDef(wrapped, true);
 	}
 }

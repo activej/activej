@@ -26,7 +26,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.*;
 
-public abstract class AbstractSerializerDefMap extends AbstractSerializerDef implements SerializerDefWithNullable {
+public abstract class AbstractMapSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	protected final SerializerDef keySerializer;
 	protected final SerializerDef valueSerializer;
 	protected final Class<?> encodeType;
@@ -35,7 +35,7 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	protected final Class<?> valueType;
 	protected final boolean nullable;
 
-	protected AbstractSerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
+	protected AbstractMapSerializerDef(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
 		this.keySerializer = keySerializer;
 		this.valueSerializer = valueSerializer;
 		this.encodeType = encodeType;

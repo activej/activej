@@ -22,46 +22,35 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
-import io.activej.serializer.def.SerializerDefWithVarLength;
 
-import static io.activej.codegen.expression.Expressions.cast;
-import static io.activej.serializer.def.SerializerExpressions.*;
+import static io.activej.serializer.def.SerializerExpressions.readDouble;
+import static io.activej.serializer.def.SerializerExpressions.writeDouble;
 
 @ExposedInternals
-public final class IntSerializer extends PrimitiveSerializerDef implements SerializerDefWithVarLength {
-	public final boolean varLength;
+public final class DoubleSerializerDef extends PrimitiveSerializerDef {
 
 	@SuppressWarnings("unused") // used via reflection
-	public IntSerializer() {
-		this(true, false);
+	public DoubleSerializerDef() {
+		this(true);
 	}
 
-	public IntSerializer(boolean wrapped, boolean varLength) {
-		super(int.class, wrapped);
-		this.varLength = varLength;
+	public DoubleSerializerDef(boolean wrapped) {
+		super(double.class, wrapped);
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new IntSerializer(true, varLength);
+		return new DoubleSerializerDef(true);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return varLength ?
-				writeVarInt(byteArray, off, cast(value, int.class)) :
-				writeInt(byteArray, off, cast(value, int.class), !compatibilityLevel.isLittleEndian());
+		return writeDouble(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return varLength ?
-				readVarInt(in) :
-				readInt(in, !compatibilityLevel.isLittleEndian());
-	}
-
-	@Override
-	public SerializerDef ensureVarLength() {
-		return new IntSerializer(wrapped, true);
+		return readDouble(in, !compatibilityLevel.isLittleEndian());
 	}
 }
+

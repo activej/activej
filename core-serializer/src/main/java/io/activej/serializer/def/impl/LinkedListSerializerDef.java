@@ -21,25 +21,23 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
-import java.util.EnumMap;
+import java.util.LinkedList;
 
 import static io.activej.codegen.expression.Expressions.constructor;
-import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class EnumMapSerializer extends RegularMapSerializer {
-	public EnumMapSerializer(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
-		super(keySerializer, valueSerializer, EnumMap.class, EnumMap.class, Enum.class, Object.class, nullable);
+public final class LinkedListSerializerDef extends RegularCollectionSerializerDef {
+	public LinkedListSerializerDef(SerializerDef valueSerializer, boolean nullable) {
+		super(valueSerializer, LinkedList.class, LinkedList.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new EnumMapSerializer(keySerializer, valueSerializer, true);
+		return new LinkedListSerializerDef(valueSerializer, true);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
+		return constructor(LinkedList.class);
 	}
-
 }

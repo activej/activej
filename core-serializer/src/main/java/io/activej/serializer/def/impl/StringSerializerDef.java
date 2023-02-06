@@ -32,27 +32,27 @@ import static io.activej.serializer.StringFormat.UTF8;
 import static io.activej.serializer.util.Utils.get;
 
 @ExposedInternals
-public final class StringSerializer extends AbstractSerializerDef implements SerializerDefWithNullable {
+public final class StringSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	public final StringFormat format;
 	public final boolean nullable;
 
 	@SuppressWarnings("unused") // used via reflection
-	public StringSerializer() {
+	public StringSerializerDef() {
 		this(UTF8, false);
 	}
 
-	public StringSerializer(StringFormat format, boolean nullable) {
+	public StringSerializerDef(StringFormat format, boolean nullable) {
 		this.format = format;
 		this.nullable = nullable;
 	}
 
 	@Override
-	public StringSerializer ensureNullable(CompatibilityLevel compatibilityLevel) {
-		return new StringSerializer(format, true);
+	public StringSerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		return new StringSerializerDef(format, true);
 	}
 
-	public StringSerializer encoding(StringFormat format) {
-		return new StringSerializer(format, nullable);
+	public StringSerializerDef encoding(StringFormat format) {
+		return new StringSerializerDef(format, nullable);
 	}
 
 	@Override

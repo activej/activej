@@ -18,9 +18,7 @@ package io.activej.serializer.def;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
-import io.activej.serializer.def.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.def.SerializerDef;
 
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.types.Primitives.wrap;

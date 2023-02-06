@@ -17,26 +17,29 @@
 package io.activej.serializer.def.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import java.util.EnumMap;
+
+import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class HashMapSerializer extends RegularMapSerializer {
-	public HashMapSerializer(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(keySerializer, valueSerializer, encodeType, decodeType, Object.class, Object.class, nullable);
+public final class EnumMapSerializerDef extends RegularMapSerializerDef {
+	public EnumMapSerializerDef(SerializerDef keySerializer, SerializerDef valueSerializer, boolean nullable) {
+		super(keySerializer, valueSerializer, EnumMap.class, EnumMap.class, Enum.class, Object.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new HashMapSerializer(keySerializer, valueSerializer, encodeType, decodeType, true);
+		return new EnumMapSerializerDef(keySerializer, valueSerializer, true);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return Expressions.constructor(decodeType, hashInitialSize(length));
+		return constructor(EnumMap.class, value(keySerializer.getDecodeType()));
 	}
+
 }

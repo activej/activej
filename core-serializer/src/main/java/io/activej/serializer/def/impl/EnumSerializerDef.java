@@ -30,11 +30,11 @@ import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.*;
 
 @ExposedInternals
-public final class EnumSerializer extends AbstractSerializerDef implements SerializerDefWithNullable {
+public final class EnumSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {
 	public final Class<? extends Enum<?>> enumType;
 	public final boolean nullable;
 
-	public EnumSerializer(Class<? extends Enum<?>> enumType, boolean nullable) {
+	public EnumSerializerDef(Class<? extends Enum<?>> enumType, boolean nullable) {
 		this.enumType = enumType;
 		this.nullable = nullable;
 	}
@@ -90,6 +90,6 @@ public final class EnumSerializer extends AbstractSerializerDef implements Seria
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return SerializerDefs.ofNullable(this);
 		}
-		return new EnumSerializer(enumType, true);
+		return new EnumSerializerDef(enumType, true);
 	}
 }

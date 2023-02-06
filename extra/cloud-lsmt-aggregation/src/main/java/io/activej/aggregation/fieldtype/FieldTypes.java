@@ -25,7 +25,7 @@ import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.def.SerializerDefs;
-import io.activej.serializer.def.impl.ClassSerializer;
+import io.activej.serializer.def.impl.ClassSerializerDef;
 import io.activej.types.Primitives;
 import io.activej.types.Types;
 
@@ -89,7 +89,7 @@ public class FieldTypes {
 
 	private static SerializerDef serializerDefHyperLogLog() {
 		try {
-			return ClassSerializer.builder(HyperLogLog.class)
+			return ClassSerializerDef.builder(HyperLogLog.class)
 					.withGetter(HyperLogLog.class.getMethod("getRegisters"),
 							SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1)
 					.withConstructor(HyperLogLog.class.getConstructor(byte[].class),

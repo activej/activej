@@ -1,8 +1,8 @@
 package io.activej.serializer.examples;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.SerializerFactory;
+import io.activej.serializer.def.SerializerDef;
 import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 
 import java.util.HashMap;

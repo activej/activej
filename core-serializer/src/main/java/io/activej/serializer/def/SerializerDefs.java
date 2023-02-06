@@ -23,69 +23,69 @@ public class SerializerDefs {
 	}
 
 	public static SerializerDef ofArray(SerializerDef elementSerializer, Class<?> elementClass) {
-		return new ArraySerializer(elementSerializer, -1, elementClass, false);
+		return new ArraySerializerDef(elementSerializer, -1, elementClass, false);
 	}
 
 	public static SerializerDef ofBoolean(boolean wrapped) {
-		return new BooleanSerializer(wrapped, false);
+		return new BooleanSerializerDef(wrapped, false);
 	}
 
 	public static SerializerDef ofChar(boolean wrapped) {
-		return new CharSerializer(wrapped);
+		return new CharSerializerDef(wrapped);
 	}
 
 	public static SerializerDef ofByte(boolean wrapped) {
-		return new ByteSerializer(wrapped);
+		return new ByteSerializerDef(wrapped);
 	}
 
 	public static SerializerDef ofShort(boolean wrapped) {
-		return new ShortSerializer(wrapped);
+		return new ShortSerializerDef(wrapped);
 	}
 
 	public static SerializerDef ofInt(boolean wrapped) {
-		return new IntSerializer(wrapped, false);
+		return new IntSerializerDef(wrapped, false);
 	}
 
 	public static SerializerDef ofInt(boolean wrapped, boolean varLength) {
-		return new IntSerializer(wrapped, varLength);
+		return new IntSerializerDef(wrapped, varLength);
 	}
 
 	public static SerializerDef ofLong(boolean wrapped) {
-		return new LongSerializer(wrapped, false);
+		return new LongSerializerDef(wrapped, false);
 	}
 
 	public static SerializerDef ofLong(boolean wrapped, boolean varLength) {
-		return new LongSerializer(wrapped, varLength);
+		return new LongSerializerDef(wrapped, varLength);
 	}
 
 	public static SerializerDef ofFloat(boolean wrapped) {
-		return new FloatSerializer(wrapped);
+		return new FloatSerializerDef(wrapped);
 	}
 
 	public static SerializerDef ofDouble(boolean wrapped) {
-		return new DoubleSerializer(wrapped);
+		return new DoubleSerializerDef(wrapped);
 	}
 
 	public static SerializerDef ofString(StringFormat format) {
-		return new StringSerializer(format, false);
+		return new StringSerializerDef(format, false);
 	}
 
 	public static <E extends Enum<E>> SerializerDef ofEnum(Class<E> enumClass) {
-		return new EnumSerializer(enumClass, false);
+		return new EnumSerializerDef(enumClass, false);
 	}
 
 	public static SerializerDef ofInet4Address() {
-		return new Inet4AddressSerializer();
+		return new Inet4AddressSerializerDef();
 	}
 
 	public static SerializerDef ofInet6Address() {
-		return new Inet6AddressSerializer();
+		return new Inet6AddressSerializerDef();
 	}
 
 	public static SerializerDef ofInetAddress() {
-		SubclassSerializer.Builder subclassBuilder = SubclassSerializer.builder(InetAddress.class);
-		subclassBuilder.withSubclass(Inet4Address.class, new Inet4AddressSerializer());
-		subclassBuilder.withSubclass(Inet6Address.class, new Inet6AddressSerializer());
+		SubclassSerializerDef.Builder subclassBuilder = SubclassSerializerDef.builder(InetAddress.class);
+		subclassBuilder.withSubclass(Inet4Address.class, new Inet4AddressSerializerDef());
+		subclassBuilder.withSubclass(Inet6Address.class, new Inet6AddressSerializerDef());
 		return subclassBuilder.build();
 	}
 
@@ -98,54 +98,54 @@ public class SerializerDefs {
 	@SuppressWarnings("rawtypes")
 	public static SerializerDef ofCollection(SerializerDef elementSerializer,
 			Class<? extends Collection> encodeType, Class<? extends Collection> decodeType) {
-		return new RegularCollectionSerializer(elementSerializer, encodeType, decodeType, Object.class, false);
+		return new RegularCollectionSerializerDef(elementSerializer, encodeType, decodeType, Object.class, false);
 	}
 
 	public static SerializerDef ofList(SerializerDef elementSerializer) {
-		return new ListSerializer(elementSerializer, false);
+		return new ListSerializerDef(elementSerializer, false);
 	}
 
 	public static SerializerDef ofLinkedList(SerializerDef elementSerializer) {
-		return new LinkedListSerializer(elementSerializer, false);
+		return new LinkedListSerializerDef(elementSerializer, false);
 	}
 
 	public static SerializerDef ofSet(SerializerDef elementSerializer) {
-		return new SetSerializer(elementSerializer, false);
+		return new SetSerializerDef(elementSerializer, false);
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static SerializerDef ofHashSet(SerializerDef elementSerializer,
 			Class<? extends HashSet> encodeType, Class<? extends HashSet> decodeType) {
-		return new HashSetSerializer(elementSerializer, encodeType, decodeType, false);
+		return new HashSetSerializerDef(elementSerializer, encodeType, decodeType, false);
 	}
 
 	public static SerializerDef ofEnumSet(SerializerDef elementSerializer) {
-		return new EnumSetSerializer(elementSerializer, false);
+		return new EnumSetSerializerDef(elementSerializer, false);
 	}
 
 	public static SerializerDef ofMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
-		return new MapSerializer(keySerializer, valueSerializer, false);
+		return new MapSerializerDef(keySerializer, valueSerializer, false);
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static SerializerDef ofHashMap(SerializerDef keySerializer, SerializerDef valueSerializer,
 			Class<? extends HashMap> encodeType, Class<? extends HashMap> decodeType) {
-		return new HashMapSerializer(keySerializer, valueSerializer, encodeType, decodeType, false);
+		return new HashMapSerializerDef(keySerializer, valueSerializer, encodeType, decodeType, false);
 	}
 
 	public static SerializerDef ofEnumMap(SerializerDef keySerializer, SerializerDef valueSerializer) {
-		return new EnumMapSerializer(keySerializer, valueSerializer, false);
+		return new EnumMapSerializerDef(keySerializer, valueSerializer, false);
 	}
 
 	public static SerializerDef ofByteBuffer(boolean wrapped) {
-		return new ByteBufferSerializer(wrapped, false);
+		return new ByteBufferSerializerDef(wrapped, false);
 	}
 
 	public static SerializerDef ofByteBuffer() {
-		return new ByteBufferSerializer(false, false);
+		return new ByteBufferSerializerDef(false, false);
 	}
 
 	public static SerializerDef ofNullable(SerializerDef serializer) {
-		return new NullableSerializer(serializer);
+		return new NullableSerializerDef(serializer);
 	}
 }

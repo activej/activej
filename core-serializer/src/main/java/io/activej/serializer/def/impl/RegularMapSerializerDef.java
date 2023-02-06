@@ -19,7 +19,7 @@ package io.activej.serializer.def.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.def.AbstractSerializerDefMap;
+import io.activej.serializer.def.AbstractMapSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 
 import java.util.function.BinaryOperator;
@@ -27,14 +27,14 @@ import java.util.function.BinaryOperator;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public class RegularMapSerializer extends AbstractSerializerDefMap {
-	public RegularMapSerializer(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
+public class RegularMapSerializerDef extends AbstractMapSerializerDef {
+	public RegularMapSerializerDef(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
 		super(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new RegularMapSerializer(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
+		return new RegularMapSerializerDef(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
 	}
 
 	@Override

@@ -19,7 +19,7 @@ package io.activej.serializer.def.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.def.AbstractSerializerDefCollection;
+import io.activej.serializer.def.AbstractCollectionSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 
 import java.util.function.UnaryOperator;
@@ -27,14 +27,14 @@ import java.util.function.UnaryOperator;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
-public class RegularCollectionSerializer extends AbstractSerializerDefCollection {
-	public RegularCollectionSerializer(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> elementType, boolean nullable) {
+public class RegularCollectionSerializerDef extends AbstractCollectionSerializerDef {
+	public RegularCollectionSerializerDef(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> elementType, boolean nullable) {
 		super(valueSerializer, encodeType, decodeType, elementType, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new RegularCollectionSerializer(valueSerializer, encodeType, decodeType, elementType, true);
+		return new RegularCollectionSerializerDef(valueSerializer, encodeType, decodeType, elementType, true);
 	}
 
 	@Override

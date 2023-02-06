@@ -24,7 +24,7 @@ import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
 @ExposedInternals
-public final class Inet6AddressSerializer extends SimpleSerializerDef<Inet6Address> {
+public final class Inet6AddressSerializerDef extends SimpleSerializerDef<Inet6Address> {
 	@Override
 	protected BinarySerializer<Inet6Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
 		return new BinarySerializer<>() {

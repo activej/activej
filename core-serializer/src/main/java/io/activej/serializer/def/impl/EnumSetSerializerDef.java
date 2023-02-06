@@ -17,26 +17,28 @@
 package io.activej.serializer.def.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import java.util.EnumSet;
+
+import static io.activej.codegen.expression.Expressions.staticCall;
+import static io.activej.codegen.expression.Expressions.value;
 
 @ExposedInternals
-public final class HashSetSerializer extends RegularCollectionSerializer {
-	public HashSetSerializer(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, boolean nullable) {
-		super(valueSerializer, encodeType, decodeType, Object.class, nullable);
+public final class EnumSetSerializerDef extends RegularCollectionSerializerDef {
+	public EnumSetSerializerDef(SerializerDef valueSerializer, boolean nullable) {
+		super(valueSerializer, EnumSet.class, EnumSet.class, Enum.class, nullable);
 	}
 
 	@Override
 	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new HashSetSerializer(valueSerializer, encodeType, decodeType, true);
+		return new EnumSetSerializerDef(valueSerializer, true);
 	}
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return Expressions.constructor(decodeType, hashInitialSize(length));
+		return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getDecodeType()));
 	}
 }

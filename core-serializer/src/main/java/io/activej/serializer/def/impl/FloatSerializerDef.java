@@ -27,20 +27,20 @@ import static io.activej.serializer.def.SerializerExpressions.readFloat;
 import static io.activej.serializer.def.SerializerExpressions.writeFloat;
 
 @ExposedInternals
-public final class FloatSerializer extends PrimitiveSerializerDef {
+public final class FloatSerializerDef extends PrimitiveSerializerDef {
 
 	@SuppressWarnings("unused") // used via reflection
-	public FloatSerializer() {
+	public FloatSerializerDef() {
 		this(true);
 	}
 
-	public FloatSerializer(boolean wrapped) {
+	public FloatSerializerDef(boolean wrapped) {
 		super(float.class, wrapped);
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new FloatSerializer(true);
+		return new FloatSerializerDef(true);
 	}
 
 	@Override

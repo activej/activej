@@ -28,10 +28,10 @@ import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
 
 @ExposedInternals
-public final class NullableSerializer extends AbstractSerializerDef implements SerializerDef {
+public final class NullableSerializerDef extends AbstractSerializerDef implements SerializerDef {
 	public final SerializerDef serializer;
 
-	public NullableSerializer(SerializerDef serializer) {
+	public NullableSerializerDef(SerializerDef serializer) {
 		this.serializer = serializer;
 	}
 

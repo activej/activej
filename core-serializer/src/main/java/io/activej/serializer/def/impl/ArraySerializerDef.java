@@ -27,13 +27,13 @@ import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.*;
 
 @ExposedInternals
-public final class ArraySerializer extends AbstractSerializerDef implements SerializerDefWithNullable, SerializerDefWithFixedSize {
+public final class ArraySerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable, SerializerDefWithFixedSize {
 	public final SerializerDef valueSerializer;
 	public final int fixedSize;
 	public final Class<?> type;
 	public final boolean nullable;
 
-	public ArraySerializer(SerializerDef serializer, int fixedSize, Class<?> type, boolean nullable) {
+	public ArraySerializerDef(SerializerDef serializer, int fixedSize, Class<?> type, boolean nullable) {
 		this.valueSerializer = serializer;
 		this.fixedSize = fixedSize;
 		this.type = type;
@@ -41,8 +41,8 @@ public final class ArraySerializer extends AbstractSerializerDef implements Seri
 	}
 
 	@Override
-	public ArraySerializer ensureFixedSize(int fixedSize) {
-		return new ArraySerializer(valueSerializer, fixedSize, type, nullable);
+	public ArraySerializerDef ensureFixedSize(int fixedSize) {
+		return new ArraySerializerDef(valueSerializer, fixedSize, type, nullable);
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public final class ArraySerializer extends AbstractSerializerDef implements Seri
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return SerializerDefs.ofNullable(this);
 		}
-		return new ArraySerializer(valueSerializer, fixedSize, type, true);
+		return new ArraySerializerDef(valueSerializer, fixedSize, type, true);
 	}
 
 	@Override

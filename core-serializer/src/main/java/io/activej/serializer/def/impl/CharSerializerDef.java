@@ -23,34 +23,33 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 
-import static io.activej.serializer.def.SerializerExpressions.readDouble;
-import static io.activej.serializer.def.SerializerExpressions.writeDouble;
+import static io.activej.serializer.def.SerializerExpressions.readChar;
+import static io.activej.serializer.def.SerializerExpressions.writeChar;
 
 @ExposedInternals
-public final class DoubleSerializer extends PrimitiveSerializerDef {
+public final class CharSerializerDef extends PrimitiveSerializerDef {
 
 	@SuppressWarnings("unused") // used via reflection
-	public DoubleSerializer() {
+	public CharSerializerDef() {
 		this(true);
 	}
 
-	public DoubleSerializer(boolean wrapped) {
-		super(double.class, wrapped);
+	public CharSerializerDef(boolean wrapped) {
+		super(char.class, wrapped);
 	}
 
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new DoubleSerializer(true);
+		return new CharSerializerDef(true);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeDouble(byteArray, off, value, !compatibilityLevel.isLittleEndian());
+		return writeChar(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readDouble(in, !compatibilityLevel.isLittleEndian());
+		return readChar(in, !compatibilityLevel.isLittleEndian());
 	}
 }
-

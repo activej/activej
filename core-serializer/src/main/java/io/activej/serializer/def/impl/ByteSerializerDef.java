@@ -17,27 +17,39 @@
 package io.activej.serializer.def.impl;
 
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
+import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
 
-import java.util.LinkedList;
-
-import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.serializer.def.SerializerExpressions.readByte;
+import static io.activej.serializer.def.SerializerExpressions.writeByte;
 
 @ExposedInternals
-public final class LinkedListSerializer extends RegularCollectionSerializer {
-	public LinkedListSerializer(SerializerDef valueSerializer, boolean nullable) {
-		super(valueSerializer, LinkedList.class, LinkedList.class, Object.class, nullable);
+public final class ByteSerializerDef extends PrimitiveSerializerDef {
+
+	@SuppressWarnings("unused") // used via reflection
+	public ByteSerializerDef() {
+		this(true);
+	}
+
+	public ByteSerializerDef(boolean wrapped) {
+		super(byte.class, wrapped);
 	}
 
 	@Override
-	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
-		return new LinkedListSerializer(valueSerializer, true);
+	public SerializerDef ensureWrapped() {
+		return new ByteSerializerDef(true);
 	}
 
 	@Override
-	protected Expression createBuilder(Expression length) {
-		return constructor(LinkedList.class);
+	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
+		return writeByte(byteArray, off, value);
+	}
+
+	@Override
+	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
+		return readByte(in);
 	}
 }
