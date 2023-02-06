@@ -20,7 +20,7 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -85,6 +85,6 @@ public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 	private Promise<Void> doRefresh(ICrdtStorage<K, S> storage) {
 		assert storage != null;
 		return storage.download()
-				.then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));
+				.then(supplier -> supplier.streamTo(StreamConsumers.ofConsumer(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));
 	}
 }

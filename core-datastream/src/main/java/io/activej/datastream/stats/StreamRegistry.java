@@ -21,11 +21,11 @@ import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamConsumerTransformer;
-import io.activej.datastream.processor.StreamSupplierTransformer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.transformer.StreamConsumerTransformer;
+import io.activej.datastream.processor.transformer.StreamSupplierTransformer;
 import io.activej.datastream.stats.IntrusiveLinkedList.Node;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 

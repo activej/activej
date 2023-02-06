@@ -7,7 +7,7 @@ import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.net.SimpleServer;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
@@ -120,7 +120,7 @@ public final class MessagingTest {
 							messaging.receive()
 									.whenResult(msg -> {
 										assertEquals("start", msg);
-										StreamSupplier.ofIterable(source)
+										StreamSuppliers.ofIterable(source)
 												.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
 														.withInitialBufferSize(MemSize.of(1))
 														.build())
@@ -181,7 +181,7 @@ public final class MessagingTest {
 
 					messaging.send("start");
 
-					StreamSupplier.ofIterable(source)
+					StreamSuppliers.ofIterable(source)
 							.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
 									.withInitialBufferSize(MemSize.of(1))
 									.build())
@@ -223,7 +223,7 @@ public final class MessagingTest {
 							Messaging.create(socket, serializer);
 
 					return messaging.send("start")
-							.then(() -> StreamSupplier.ofIterable(source)
+							.then(() -> StreamSuppliers.ofIterable(source)
 									.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
 											.withInitialBufferSize(MemSize.of(1))
 											.build())
@@ -266,7 +266,7 @@ public final class MessagingTest {
 
 					messaging.send("start");
 
-					StreamSupplier.ofIterable(source)
+					StreamSuppliers.ofIterable(source)
 							.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
 									.withInitialBufferSize(MemSize.of(1))
 									.build())

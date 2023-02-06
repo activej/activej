@@ -22,7 +22,7 @@ import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.time.Stopwatch;
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;

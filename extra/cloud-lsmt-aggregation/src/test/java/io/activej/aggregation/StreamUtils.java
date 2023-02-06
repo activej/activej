@@ -1,7 +1,7 @@
 package io.activej.aggregation;
 
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
 
 import java.util.List;
 

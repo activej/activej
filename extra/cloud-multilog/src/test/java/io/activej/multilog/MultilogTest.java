@@ -6,10 +6,10 @@ import io.activej.csp.process.ChannelByteRanger;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.StreamSupplierWithResult;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplierWithResult;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
@@ -76,8 +76,8 @@ public class MultilogTest {
 
 		List<String> values = List.of("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values)
-				.streamTo(StreamConsumer.ofPromise(multilog.write(testPartition))));
+		await(StreamSuppliers.ofIterable(values)
+				.streamTo(StreamConsumers.ofPromise(multilog.write(testPartition))));
 
 		assertEquals(values, readLog(multilog, testPartition));
 	}
@@ -99,7 +99,7 @@ public class MultilogTest {
 
 		List<String> values = List.of("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
+		await(StreamSuppliers.ofIterable(values).streamTo(multilog.write(partition)));
 
 		// Truncated data
 		await(fs.list("*" + partition + "*")
@@ -132,8 +132,8 @@ public class MultilogTest {
 
 		List<String> values = List.of("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition1)));
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition2)));
+		await(StreamSuppliers.ofIterable(values).streamTo(multilog.write(partition1)));
+		await(StreamSuppliers.ofIterable(values).streamTo(multilog.write(partition2)));
 
 		// malformed data
 		await(fs.list("*" + partition1 + "*")
@@ -175,7 +175,7 @@ public class MultilogTest {
 
 		List<String> values = List.of("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
+		await(StreamSuppliers.ofIterable(values).streamTo(multilog.write(partition)));
 
 		ToListStreamConsumer<String> listConsumer = ToListStreamConsumer.create();
 		await(fs.list("*" + partition + "*")
@@ -214,8 +214,8 @@ public class MultilogTest {
 
 		List<String> values = List.of("test1", "test2", "test3");
 
-		await(StreamSupplier.ofIterable(values)
-				.streamTo(StreamConsumer.ofPromise(multilog.write(testPartition))));
+		await(StreamSuppliers.ofIterable(values)
+				.streamTo(StreamConsumers.ofPromise(multilog.write(testPartition))));
 
 		StreamSupplierWithResult<String, LogPosition> supplierWithResult = StreamSupplierWithResult.ofPromise(
 				multilog.read(testPartition, new LogFile("", 0), 0, null));

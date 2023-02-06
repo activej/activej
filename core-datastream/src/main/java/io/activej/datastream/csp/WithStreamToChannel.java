@@ -18,9 +18,9 @@ package io.activej.datastream.csp;
 
 import io.activej.csp.dsl.WithChannelOutput;
 import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamSupplierTransformer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.transformer.StreamSupplierTransformer;
+import io.activej.datastream.supplier.StreamSupplier;
 
 /**
  * This interface is a shortcut for implementing transformers that convert

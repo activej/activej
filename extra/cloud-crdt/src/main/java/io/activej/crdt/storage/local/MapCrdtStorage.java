@@ -27,12 +27,13 @@ import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -148,7 +149,7 @@ public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractRe
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		checkInReactorThread(this);
-		return Promise.of(StreamSupplier.ofStream(extract(timestamp))
+		return Promise.of(StreamSuppliers.ofStream(extract(timestamp))
 				.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 				.transformWith(onItem(downloadedItems::recordEvent))
 				.withEndOfStream(eos -> eos
@@ -167,7 +168,7 @@ public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractRe
 		map.clear();
 		tombstones.clear();
 
-		StreamSupplier<CrdtData<K, S>> supplier = StreamSupplier.ofIterable(takenMap.values())
+		StreamSupplier<CrdtData<K, S>> supplier = StreamSuppliers.ofIterable(takenMap.values())
 				.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 				.transformWith(onItem(takenItems::recordEvent));
 		supplier.getAcknowledgement()

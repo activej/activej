@@ -26,8 +26,8 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamLimiter;
+import io.activej.datastream.processor.transformer.impl.Limiter;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 
@@ -41,7 +41,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 	protected final Dataset<T> input;
 	protected final DataflowClient client;
 
-	protected long limit = StreamLimiter.NO_LIMIT;
+	protected long limit = Limiter.NO_LIMIT;
 
 	protected AbstractCollector(Reactor reactor, Dataset<T> input, DataflowClient client) {
 		super(reactor);
@@ -77,7 +77,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 		DataflowContext context = DataflowContext.of(graph);
 		List<StreamId> inputStreamIds = input.channels(context);
 
-		if (limit != StreamLimiter.NO_LIMIT) {
+		if (limit != Limiter.NO_LIMIT) {
 			int index = context.generateNodeIndex();
 			List<StreamId> newStreamIds = new ArrayList<>(inputStreamIds.size());
 			for (StreamId inputStreamId : inputStreamIds) {

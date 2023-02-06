@@ -14,12 +14,13 @@ import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
-import io.activej.dataflow.calcite.where.*;
+import io.activej.dataflow.calcite.where.WherePredicate;
+import io.activej.dataflow.calcite.where.WherePredicates;
 import io.activej.dataflow.dataset.*;
 import io.activej.dataflow.graph.*;
-import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.reducer.Reducer;
-import io.activej.datastream.processor.StreamSkip;
+import io.activej.datastream.processor.transformer.impl.Limiter;
+import io.activej.datastream.processor.transformer.impl.Skip;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.types.Types;
@@ -176,11 +177,11 @@ public class RelToDatasetConverter {
 		RexNode offsetNode = scan.getOffset();
 		RexNode limitNode = scan.getLimit();
 		Scalar offsetOperand = offsetNode == null ?
-				new Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+				new Scalar(Value.materializedValue(int.class, Skip.NO_SKIP)) :
 				paramsCollector.toScalarOperand(offsetNode);
 
 		Scalar limitOperand = limitNode == null ?
-				new Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+				new Scalar(Value.materializedValue(int.class, Limiter.NO_LIMIT)) :
 				paramsCollector.toScalarOperand(limitNode);
 
 		RecordScheme scheme = mapper.getScheme();
@@ -199,7 +200,7 @@ public class RelToDatasetConverter {
 			long offset = ((Number) offsetOperand.materialize(params).value.getValue()).longValue();
 			long limit = ((Number) limitOperand.materialize(params).value.getValue()).longValue();
 
-			if (limit != StreamLimiter.NO_LIMIT) {
+			if (limit != Limiter.NO_LIMIT) {
 				filtered = Datasets.localLimit(filtered, offset + limit);
 			}
 
@@ -408,11 +409,11 @@ public class RelToDatasetConverter {
 		}
 
 		Scalar offset = sort.offset == null ?
-				new Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+				new Scalar(Value.materializedValue(int.class, Skip.NO_SKIP)) :
 				paramsCollector.toScalarOperand(sort.offset);
 
 		Scalar limit = sort.fetch == null ?
-				new Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+				new Scalar(Value.materializedValue(int.class, Limiter.NO_LIMIT)) :
 				paramsCollector.toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
@@ -435,7 +436,7 @@ public class RelToDatasetConverter {
 							new RecordSortComparator(sorts)
 					);
 
-					if (offsetValue == StreamSkip.NO_SKIP && limitValue == StreamLimiter.NO_LIMIT) {
+					if (offsetValue == Skip.NO_SKIP && limitValue == Limiter.NO_LIMIT) {
 						return sorted;
 					}
 

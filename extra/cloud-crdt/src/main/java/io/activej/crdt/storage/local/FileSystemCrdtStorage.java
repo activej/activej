@@ -32,17 +32,19 @@ import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumers;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.StreamReducer;
+import io.activej.datastream.processor.transformer.AbstractStreamTransformer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
@@ -189,7 +191,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 						() -> fileSystem.list("*")
 								.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
 								.map(supplier -> supplier
-										.transformWith(StreamFilter.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
+										.transformWith(StreamTransformers.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
 										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 										.transformWith(onItem(downloadedItems::recordEvent))))
 				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
@@ -208,7 +210,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 								.then(fileMap -> doDownload(fileMap.keySet(), 0, false)
 										.whenException(e -> taken = null)
 										.map(supplier -> supplier
-												.transformWith(StreamFilter.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
+												.transformWith(StreamTransformers.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
 												.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 												.transformWith(onItem(takenItems::recordEvent)))
 										.whenResult(supplier -> supplier.getAcknowledgement()
@@ -222,7 +224,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 						.map(fileName -> fileSystem.download(fileName)
 								.map(supplier -> supplier
 										.transformWith(ChannelDeserializer.create(serializer))
-										.transformWith(StreamFilter.create(data -> data.timestamp >= timestamp))
+										.transformWith(StreamTransformers.filter(data -> data.timestamp >= timestamp))
 								)))
 				.map(suppliers -> {
 					StreamReducer<K, CrdtReducingData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
@@ -321,10 +323,10 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		NonEmptyFilter<T> nonEmptyFilter = new NonEmptyFilter<>(() -> fileSystem.upload(filename)
 				.whenComplete(consumerPromise::accept));
 
-		return StreamConsumer.ofSupplier(supplier ->
+		return StreamConsumers.ofSupplier(supplier ->
 				supplier
 						.transformWith(nonEmptyFilter)
-						.transformWith(StreamFilter.mapper(mapping))
+						.transformWith(StreamTransformers.mapper(mapping))
 						.transformWith(ChannelSerializer.create(serializer))
 						.withEndOfStream(eos -> eos
 								.whenComplete(() -> {
@@ -433,7 +435,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		}
 	}
 
-	public static final class NonEmptyFilter<T> extends StreamFilter<T, T> {
+	public static final class NonEmptyFilter<T> extends AbstractStreamTransformer<T, T> {
 		private final Runnable onNonEmpty;
 		private boolean empty = true;
 

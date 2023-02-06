@@ -8,7 +8,7 @@ import io.activej.async.service.TaskScheduler;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.hash.ICrdtMap;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;

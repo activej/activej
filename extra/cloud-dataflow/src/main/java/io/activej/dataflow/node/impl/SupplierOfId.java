@@ -23,7 +23,8 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 
 import java.util.Collection;
@@ -61,23 +62,23 @@ public final class SupplierOfId extends AbstractNode {
 		StreamSupplier<?> supplier;
 		Object object = task.get(id);
 		if (object instanceof Iterator) {
-			supplier = StreamSupplier.ofIterator((Iterator<?>) object);
+			supplier = StreamSuppliers.ofIterator((Iterator<?>) object);
 		} else if (object instanceof Iterable) {
-			supplier = StreamSupplier.ofIterable((Iterable<?>) object);
+			supplier = StreamSuppliers.ofIterable((Iterable<?>) object);
 		} else if (object instanceof Supplier) {
-			supplier = StreamSupplier.ofSupplier(((Supplier<?>) object)::get);
+			supplier = StreamSuppliers.ofSupplier(((Supplier<?>) object)::get);
 		} else if (object instanceof SupplierEx) {
-			supplier = StreamSupplier.ofSupplier((SupplierEx<?>) object);
+			supplier = StreamSuppliers.ofSupplier((SupplierEx<?>) object);
 		} else if (object instanceof Stream) {
-			supplier = StreamSupplier.ofStream((Stream<?>) object);
+			supplier = StreamSuppliers.ofStream((Stream<?>) object);
 		} else if (object instanceof StreamSupplier) {
 			supplier = (StreamSupplier<?>) object;
 		} else if (object instanceof ChannelSupplier) {
-			supplier = StreamSupplier.ofChannelSupplier((ChannelSupplier<?>) object);
+			supplier = StreamSuppliers.ofChannelSupplier((ChannelSupplier<?>) object);
 		} else if (object instanceof PartitionedStreamSupplierFactory) {
 			supplier = ((PartitionedStreamSupplierFactory<?>) object).get(partitionIndex, maxPartitions);
 		} else if (object instanceof Promise) {
-			supplier = StreamSupplier.ofPromise(((Promise<StreamSupplier<Object>>) object));
+			supplier = StreamSuppliers.ofPromise(((Promise<StreamSupplier<Object>>) object));
 		} else {
 			throw new IllegalArgumentException("Object with id '" + id + "' is not a valid supplier of data: " + object);
 		}

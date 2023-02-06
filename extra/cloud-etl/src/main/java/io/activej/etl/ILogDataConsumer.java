@@ -17,7 +17,7 @@
 package io.activej.etl;
 
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.datastream.StreamConsumerWithResult;
+import io.activej.datastream.consumer.StreamConsumerWithResult;
 
 import java.util.List;
 

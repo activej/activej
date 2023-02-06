@@ -9,7 +9,8 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,15 +52,15 @@ public final class ConsumerOfId extends AbstractNode {
 		Object object = task.get(id);
 		StreamConsumer<?> streamConsumer;
 		if (object instanceof Collection) {
-			streamConsumer = StreamConsumer.ofConsumer(((Collection<?>) object)::add);
+			streamConsumer = StreamConsumers.ofConsumer(((Collection<?>) object)::add);
 		} else if (object instanceof Consumer) {
-			streamConsumer = StreamConsumer.ofConsumer(((Consumer<?>) object)::accept);
+			streamConsumer = StreamConsumers.ofConsumer(((Consumer<?>) object)::accept);
 		} else if (object instanceof ConsumerEx) {
-			streamConsumer = StreamConsumer.ofConsumer((ConsumerEx<?>) object);
+			streamConsumer = StreamConsumers.ofConsumer((ConsumerEx<?>) object);
 		} else if (object instanceof AsyncConsumer) {
-			streamConsumer = StreamConsumer.ofChannelConsumer(ChannelConsumers.ofAsyncConsumer((AsyncConsumer<?>) object));
+			streamConsumer = StreamConsumers.ofChannelConsumer(ChannelConsumers.ofAsyncConsumer((AsyncConsumer<?>) object));
 		} else if (object instanceof ChannelConsumer) {
-			streamConsumer = StreamConsumer.ofChannelConsumer((ChannelConsumer<?>) object);
+			streamConsumer = StreamConsumers.ofChannelConsumer((ChannelConsumer<?>) object);
 		} else if (object instanceof StreamConsumer) {
 			streamConsumer = (StreamConsumer<?>) object;
 		} else if (object instanceof PartitionedStreamConsumerFactory) {

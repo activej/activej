@@ -1,9 +1,9 @@
 package io.activej.etl;
 
-import io.activej.datastream.StreamConsumerWithResult;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumerWithResult;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -25,7 +25,7 @@ public class SplitterLogDataConsumerTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private <T> void assertStreamResult(List<T> values, StreamConsumerWithResult<T, List<T>> consumer, Promise<List<T>> result) {
-		await(StreamSupplier.ofIterable(values).streamTo(consumer.getConsumer()));
+		await(StreamSuppliers.ofIterable(values).streamTo(consumer.getConsumer()));
 		List<T> list = await(result);
 		assertEquals(values, list);
 	}
@@ -73,7 +73,7 @@ public class SplitterLogDataConsumerTest {
 			}
 		};
 
-		StreamSupplier.ofIterable(VALUES_1).streamTo(splitter.consume().getConsumer());
+		StreamSuppliers.ofIterable(VALUES_1).streamTo(splitter.consume().getConsumer());
 	}
 
 	private static class StubSplitter<T, D> extends SplitterLogDataConsumer<T, D> {

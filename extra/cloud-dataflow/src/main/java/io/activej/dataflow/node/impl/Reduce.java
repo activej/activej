@@ -23,13 +23,11 @@ import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.StreamReducer;
 
 import java.util.Map;
-
-import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.reducer.Reducer;
-
 import java.util.*;
 import java.util.function.Function;
 

@@ -4,8 +4,8 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtEntity;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.local.MapCrdtStorage;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -46,8 +46,8 @@ public final class RepartitionTest {
 		long now = reactor.currentTimeMillis();
 		List<CrdtData<String, Long>> data = LongStream.range(1, 100)
 				.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
-		await(StreamSupplier.ofIterator(data.iterator())
-				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
+		await(StreamSuppliers.ofIterator(data.iterator())
+				.streamTo(StreamConsumers.ofPromise(clients.get(localPartitionId).upload())));
 
 		int replicationCount = 3;
 		ClusterCrdtStorage<String, Long, String> cluster = ClusterCrdtStorage.create(reactor,

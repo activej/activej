@@ -23,8 +23,8 @@ import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
-import io.activej.datastream.processor.IStreamSorterStorage;
-import io.activej.datastream.processor.StreamSorter;
+import io.activej.datastream.processor.transformer.sort.IStreamSorterStorage;
+import io.activej.datastream.processor.transformer.sort.StreamSorter;
 import io.activej.inject.Key;
 
 import java.util.Collection;

@@ -3,8 +3,9 @@ package io.activej.crdt;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -72,8 +73,8 @@ public final class TestSimpleCrdt {
 		localStorage.put("only_local", 47);
 		localStorage.put("only_local", 12);
 
-		await(StreamSupplier.ofIterator(localStorage.iterator())
-				.streamTo(StreamConsumer.ofPromise(client.upload()))
+		await(StreamSuppliers.ofIterator(localStorage.iterator())
+				.streamTo(StreamConsumers.ofPromise(client.upload()))
 				.whenComplete(server::close));
 
 		System.out.println("Data at 'remote' storage:");
@@ -90,7 +91,7 @@ public final class TestSimpleCrdt {
 		MapCrdtStorage<String, Integer> localStorage = MapCrdtStorage.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 
 		await(client.download().then(supplier -> supplier
-				.streamTo(StreamConsumer.ofConsumer(localStorage::put))
+				.streamTo(StreamConsumers.ofConsumer(localStorage::put))
 				.whenComplete(server::close)));
 
 		System.out.println("Data fetched from 'remote' storage:");
@@ -106,7 +107,7 @@ public final class TestSimpleCrdt {
 		MapCrdtStorage<String, Integer> localStorage = MapCrdtStorage.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 
 		await(client.take().then(supplier -> supplier
-				.streamTo(StreamConsumer.ofConsumer(localStorage::put))
+				.streamTo(StreamConsumers.ofConsumer(localStorage::put))
 				.then(() -> client.download().then(StreamSupplier::toList)
 						.whenResult(afterTake -> assertTrue(afterTake.isEmpty())))
 				.whenComplete(server::close)));

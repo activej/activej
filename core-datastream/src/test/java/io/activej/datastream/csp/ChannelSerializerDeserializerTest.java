@@ -1,8 +1,8 @@
 package io.activej.datastream.csp;
 
 import io.activej.common.MemSize;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -29,7 +29,7 @@ public final class ChannelSerializerDeserializerTest {
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
-		await(StreamSupplier.ofIterable(ints)
+		await(StreamSuppliers.ofIterable(ints)
 				.transformWith(ChannelSerializer.builder(BinarySerializers.INT_SERIALIZER)
 						.withInitialBufferSize(MemSize.bytes(1))
 						.build())
@@ -51,7 +51,7 @@ public final class ChannelSerializerDeserializerTest {
 
 		ToListStreamConsumer<byte[]> consumer = ToListStreamConsumer.create();
 
-		await(StreamSupplier.ofIterable(byteArrays)
+		await(StreamSuppliers.ofIterable(byteArrays)
 				.transformWith(ChannelSerializer.builder(BinarySerializers.BYTES_SERIALIZER)
 						.withInitialBufferSize(MemSize.bytes(1))
 						.build())

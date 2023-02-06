@@ -20,7 +20,7 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,7 +44,7 @@ public final class EmptySupplier extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		task.export(output, StreamSupplier.of());
+		task.export(output, StreamSuppliers.empty());
 	}
 
 	@Override

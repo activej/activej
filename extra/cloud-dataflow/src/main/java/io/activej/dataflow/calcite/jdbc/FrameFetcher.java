@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.datastream.BlockingStreamConsumer;
+import io.activej.datastream.consumer.BlockingStreamConsumer;
 import io.activej.record.Record;
 import org.apache.calcite.avatica.Meta.Frame;
 import org.jetbrains.annotations.Nullable;

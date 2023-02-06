@@ -5,7 +5,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.crdt.hash.ICrdtMap;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -60,7 +60,7 @@ public class AdderCrdtMap extends AbstractReactive
 	private Promise<Void> doRefresh(ICrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		return storage.download()
 				.then(supplier -> supplier.streamTo(
-						StreamConsumer.ofConsumer(crdtData -> {
+						StreamConsumers.ofConsumer(crdtData -> {
 							DetailedSumsCrdtState globalState = crdtData.getState();
 
 							float localSum = globalState.getSumFor(localServerId);

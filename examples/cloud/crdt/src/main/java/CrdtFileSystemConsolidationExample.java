@@ -2,8 +2,8 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.local.FileSystemCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.promise.Promise;
@@ -62,23 +62,23 @@ public final class CrdtFileSystemConsolidationExample {
 					// then upload two streams of items to it in parallel
 					long timestamp = Reactor.getCurrentReactor().currentTimeMillis();
 					Promise<Void> firstUpload =
-							StreamSupplier.ofStream(Stream.of(
+							StreamSuppliers.ofStream(Stream.of(
 											new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
 											new CrdtData<>("1_test_2", timestamp, Set.of(2, 3, 7)),
 											new CrdtData<>("1_test_3", timestamp, Set.of(78, 2, 3)),
 											new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125)),
 											new CrdtData<>("12_test_2", timestamp, Set.of(12))).sorted())
-									.streamTo(StreamConsumer.ofPromise(client.upload()));
+									.streamTo(StreamConsumers.ofPromise(client.upload()));
 
 					timestamp += 100;
 					Promise<Void> secondUpload =
-							StreamSupplier.ofStream(Stream.of(
+							StreamSuppliers.ofStream(Stream.of(
 											new CrdtData<>("2_test_1", timestamp, Set.of(1, 2, 3)),
 											new CrdtData<>("2_test_2", timestamp, Set.of(2, 3, 4)),
 											new CrdtData<>("2_test_3", timestamp, Set.of(0, 1, 2)),
 											new CrdtData<>("12_test_1", timestamp, Set.of(123, 542, 125, 2)),
 											new CrdtData<>("12_test_2", timestamp, Set.of(12, 13))).sorted())
-									.streamTo(StreamConsumer.ofPromise(client.upload()));
+									.streamTo(StreamConsumers.ofPromise(client.upload()));
 					//[END REGION_2]
 
 					//[START REGION_3]

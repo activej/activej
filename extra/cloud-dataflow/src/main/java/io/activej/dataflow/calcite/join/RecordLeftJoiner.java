@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.join;
 
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
+import io.activej.datastream.processor.join.LeftJoiner;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.record.Record;
 import io.activej.record.RecordGetter;
 import io.activej.record.RecordScheme;

@@ -25,7 +25,7 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -115,7 +115,7 @@ public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends Abs
 		this.map = new TreeMap<>();
 
 		return storage.upload()
-				.then(consumer -> StreamSupplier.ofIterable(map.values())
+				.then(consumer -> StreamSuppliers.ofIterable(map.values())
 						.streamTo(consumer))
 				.whenException(e -> map.forEach(this::doPut))
 				.whenComplete(toLogger(logger, INFO, INFO, "flush", map.size()));

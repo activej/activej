@@ -1,9 +1,9 @@
 package io.activej.datastream.processor.reducer.impl;
 
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.reducer.ReducerToResult;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 
 /**
  * Represents  a reducer which contains ReducerToResult where identified methods for processing

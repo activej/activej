@@ -8,8 +8,9 @@ import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.FileSystemCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.promise.Promise;
@@ -109,8 +110,10 @@ public final class CrdtClusterExample {
 		Promises.all(fsStartPromises)
 				.then(() -> {
 					// then upload these sets to both partition3 and partition6
-					Promise<Void> uploadTo3 = StreamSupplier.of(firstOn3, secondOn3).streamTo(StreamConsumer.ofPromise(partition3.upload()));
-					Promise<Void> uploadTo6 = StreamSupplier.of(firstOn6, secondOn6).streamTo(StreamConsumer.ofPromise(partition6.upload()));
+					Promise<Void> uploadTo3 = StreamSuppliers.ofValues(firstOn3, secondOn3)
+							.streamTo(StreamConsumers.ofPromise(partition3.upload()));
+					Promise<Void> uploadTo6 = StreamSuppliers.ofValues(firstOn6, secondOn6)
+							.streamTo(StreamConsumers.ofPromise(partition6.upload()));
 
 					// wait for both of uploads to finish
 					return Promises.all(uploadTo3, uploadTo6);

@@ -20,8 +20,8 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
-import io.activej.datastream.processor.StreamLeftJoin;
-import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
+import io.activej.datastream.processor.join.LeftJoiner;
+import io.activej.datastream.processor.join.StreamLeftJoin;
 
 import java.util.Collection;
 import java.util.Comparator;

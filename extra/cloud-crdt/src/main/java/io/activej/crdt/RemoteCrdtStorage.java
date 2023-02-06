@@ -31,13 +31,14 @@ import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.net.Messaging;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -171,7 +172,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 										.then(messaging::receive)
 										.whenResult(validateFn(CrdtResponse.UploadAck.class))
 										.toVoid()))
-						.map(consumer -> StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
+						.map(consumer -> StreamConsumers.<CrdtData<K, S>>ofSupplier(supplier ->
 										supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 												.transformWith(onItem(uploadedItems::recordEvent))
 												.transformWith(ChannelSerializer.create(serializer))
@@ -240,7 +241,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 											.then(messaging::receive)
 											.whenResult(validateFn(CrdtResponse.RemoveAck.class))
 											.toVoid());
-							return StreamConsumer.<CrdtTombstone<K>>ofSupplier(supplier ->
+							return StreamConsumers.<CrdtTombstone<K>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 													.transformWith(onItem(removedItems::recordEvent))
 													.transformWith(ChannelSerializer.create(tombstoneSerializer))

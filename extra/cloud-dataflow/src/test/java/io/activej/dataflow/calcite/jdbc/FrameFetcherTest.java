@@ -1,8 +1,9 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.ref.RefLong;
-import io.activej.datastream.BlockingStreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.BlockingStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -80,7 +81,7 @@ public class FrameFetcherTest {
 		AtomicLong countRef = new AtomicLong(0);
 		RefLong idRef = new RefLong(0);
 
-		StreamSupplier<Record> recordSupplier = StreamSupplier.ofStream(Stream.generate(() -> {
+		StreamSupplier<Record> recordSupplier = StreamSuppliers.ofStream(Stream.generate(() -> {
 					Record record = SCHEME.record();
 					record.set("id", ++idRef.value);
 					return record;

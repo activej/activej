@@ -16,11 +16,11 @@
 
 package io.activej.crdt.util;
 
-import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamTransformer;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 

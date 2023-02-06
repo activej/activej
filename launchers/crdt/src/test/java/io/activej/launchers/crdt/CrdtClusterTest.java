@@ -5,8 +5,8 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.RemoteCrdtStorage;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.http.HttpClient;
@@ -195,8 +195,9 @@ public final class CrdtClusterTest {
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
-		StreamSupplier.ofStream(IntStream.range(0, 1000000)
-						.mapToObj(i -> new CrdtData<>("value_" + i, Reactor.getCurrentReactor().currentTimeMillis(), i))).streamTo(StreamConsumer.ofPromise(client.upload()))
+		StreamSuppliers.ofStream(IntStream.range(0, 1000000)
+						.mapToObj(i -> new CrdtData<>("value_" + i, Reactor.getCurrentReactor().currentTimeMillis(), i)))
+				.streamTo(StreamConsumers.ofPromise(client.upload()))
 				.whenComplete(uploadStat.recordStats())
 				.whenComplete(assertCompleteFn($ -> {
 					System.out.println(uploadStat);
@@ -208,6 +209,6 @@ public final class CrdtClusterTest {
 	public void downloadStuff() {
 		ICrdtStorage<String, Integer> client = RemoteCrdtStorage.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
 
-		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(System.out::println))));
+		await(client.download().then(supplier -> supplier.streamTo(StreamConsumers.ofConsumer(System.out::println))));
 	}
 }

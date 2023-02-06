@@ -8,12 +8,12 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
@@ -82,13 +82,13 @@ public final class LogToCubeTest extends CubeTestBase {
 				List.of("partitionA"),
 				cubeDiffLogOTState);
 
-		StreamSupplier<TestPubRequest> supplier = StreamSupplier.of(
+		StreamSupplier<TestPubRequest> supplier = StreamSuppliers.ofValues(
 				new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),
 				new TestPubRequest(1001, 2, List.of(new TestAdvRequest(10), new TestAdvRequest(20))),
 				new TestPubRequest(1002, 1, List.of(new TestAdvRequest(30))),
 				new TestPubRequest(1002, 2, List.of()));
 
-		await(supplier.streamTo(StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(supplier.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 

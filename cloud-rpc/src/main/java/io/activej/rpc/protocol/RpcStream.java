@@ -23,11 +23,11 @@ import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.net.socket.tcp.ITcpSocket;
 import org.jetbrains.annotations.Nullable;
 

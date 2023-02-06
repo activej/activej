@@ -45,7 +45,7 @@ import io.activej.dataflow.messaging.DataflowResponse.TaskData;
 import io.activej.dataflow.messaging.DataflowResponse.TaskDescription;
 import io.activej.dataflow.messaging.Version;
 import io.activej.dataflow.node.Node;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;

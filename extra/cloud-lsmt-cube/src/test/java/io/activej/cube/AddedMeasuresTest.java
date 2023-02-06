@@ -10,11 +10,11 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.Cube.AggregationConfig;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
@@ -89,7 +89,7 @@ public class AddedMeasuresTest {
 				.withAggregation(basicConfig)
 				.build();
 
-		StreamSupplier<EventRecord> supplier = StreamSupplier.of(
+		StreamSupplier<EventRecord> supplier = StreamSuppliers.ofValues(
 				new EventRecord(1, 0.34),
 				new EventRecord(10, 0.42),
 				new EventRecord(4, 0.13));
@@ -100,7 +100,7 @@ public class AddedMeasuresTest {
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
 		basicCube.apply(diff);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new EventRecord(3, 0.30),
 				new EventRecord(33, 0.22),
 				new EventRecord(21, 0.91));
@@ -110,7 +110,7 @@ public class AddedMeasuresTest {
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
 		basicCube.apply(diff);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new EventRecord(42, 0.01),
 				new EventRecord(12, 0.88),
 				new EventRecord(33, 1.01));
@@ -136,7 +136,7 @@ public class AddedMeasuresTest {
 
 		initialDiffs.forEach(cube::apply);
 
-		StreamSupplier<EventRecord2> supplier = StreamSupplier.of(
+		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 				new EventRecord2(14, 0.35, 500),
 				new EventRecord2(12, 0.59, 17),
 				new EventRecord2(22, 0.85, 50));
@@ -208,7 +208,7 @@ public class AddedMeasuresTest {
 
 		initialDiffs.forEach(cube::apply);
 
-		StreamSupplier<EventRecord2> supplier = StreamSupplier.of(
+		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 				new EventRecord2(14, 0.35, 500),
 				new EventRecord2(12, 0.59, 17),
 				new EventRecord2(22, 0.85, 50));

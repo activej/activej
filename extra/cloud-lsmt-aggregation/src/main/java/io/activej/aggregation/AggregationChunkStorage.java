@@ -31,13 +31,14 @@ import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.fs.IFileSystem;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -220,7 +221,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 		return fileSystem.upload(toTempPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenW.recordStats())
-				.map(consumer -> StreamConsumer.<T>ofSupplier(
+				.map(consumer -> StreamConsumers.<T>ofSupplier(
 								supplier -> supplier
 										.transformWith((StreamStats<T>) (detailed ? writeSerializeDetailed : writeSerialize))
 										.transformWith(ChannelSerializer.builder(

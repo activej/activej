@@ -11,8 +11,8 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -104,7 +104,7 @@ public class CustomFieldsTest {
 				.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 				.build();
 
-		StreamSupplier<EventRecord> supplier = StreamSupplier.of(
+		StreamSupplier<EventRecord> supplier = StreamSuppliers.ofValues(
 				new EventRecord(1, 0.34, 1),
 				new EventRecord(2, 0.42, 3),
 				new EventRecord(3, 0.13, 20));
@@ -113,7 +113,7 @@ public class CustomFieldsTest {
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		aggregation.getState().apply(diff);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new EventRecord(2, 0.30, 20),
 				new EventRecord(1, 0.22, 1000),
 				new EventRecord(2, 0.91, 33));
@@ -122,7 +122,7 @@ public class CustomFieldsTest {
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		aggregation.getState().apply(diff);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new EventRecord(1, 0.01, 1),
 				new EventRecord(3, 0.88, 20),
 				new EventRecord(3, 1.01, 21));
@@ -131,7 +131,7 @@ public class CustomFieldsTest {
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		aggregation.getState().apply(diff);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new EventRecord(1, 0.35, 500),
 				new EventRecord(1, 0.59, 17),
 				new EventRecord(2, 0.85, 50));

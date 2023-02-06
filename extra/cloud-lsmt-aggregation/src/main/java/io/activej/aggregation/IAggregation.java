@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 
 @ComponentInterface
 public interface IAggregation {

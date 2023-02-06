@@ -1,6 +1,6 @@
 package io.activej.datastream.processor.reducer;
 
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 
 /**
  * It is primary interface of Reducer.

@@ -29,15 +29,16 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.process.frame.FrameFormat;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerWithResult;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamReducer;
-import io.activej.datastream.processor.StreamSorter;
-import io.activej.datastream.processor.StreamSorterStorage;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.StreamReducer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
+import io.activej.datastream.processor.transformer.sort.StreamSorter;
+import io.activej.datastream.processor.transformer.sort.StreamSorterStorage;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -64,7 +65,7 @@ import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.*;
-import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
+import static io.activej.datastream.processor.transformer.StreamSupplierTransformer.identity;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
 import static java.util.Comparator.comparing;
@@ -345,7 +346,7 @@ public final class Aggregation extends AbstractReactive
 			try {
 				sortDir = createSortDir();
 			} catch (AggregationException e) {
-				return StreamSupplier.closingWithError(e);
+				return StreamSuppliers.closingWithError(e);
 			}
 		}
 		StreamSorter<T, T> sorter = StreamSorter.create(
@@ -478,7 +479,7 @@ public final class Aggregation extends AbstractReactive
 					queryKeys, measures.stream().filter(sequence.fields::contains).collect(toList()),
 					classLoader);
 			return sequence.stream
-					.transformWith(StreamFilter.mapper(mapper))
+					.transformWith(StreamTransformers.mapper(mapper))
 					.transformWith((StreamStats<R>) stats.mergeMapOutput);
 		}
 
@@ -523,7 +524,7 @@ public final class Aggregation extends AbstractReactive
 			List<AggregationChunk> individualChunks, Class<T> sequenceClass,
 			DefiningClassLoader queryClassLoader) {
 		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
-		return StreamSupplier.concat(new Iterator<>() {
+		return StreamSuppliers.concat(new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return chunkIterator.hasNext();
@@ -539,10 +540,10 @@ public final class Aggregation extends AbstractReactive
 
 	private <T> StreamSupplier<T> chunkReaderWithFilter(AggregationPredicate where, AggregationChunk chunk,
 			Class<T> chunkRecordClass, DefiningClassLoader queryClassLoader) {
-		return StreamSupplier.ofPromise(
+		return StreamSuppliers.ofPromise(
 						aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
 				.transformWith(where != AggregationPredicates.alwaysTrue() ?
-						StreamFilter.create(
+						StreamTransformers.filter(
 								createPredicate(chunkRecordClass, where, queryClassLoader)) :
 						identity());
 	}

@@ -8,10 +8,9 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
@@ -104,8 +103,8 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems = LogItem.getListOfRandomLogItems(100);
-		await(StreamSupplier.ofIterable(listOfRandomLogItems).streamTo(
-				StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofIterable(listOfRandomLogItems).streamTo(
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
 		//		AsynchronousFileChannel channel = AsynchronousFileChannel.open(Files.list(logsDir).findFirst().get(),
@@ -119,15 +118,15 @@ public class CubeIntegrationTest extends CubeTestBase {
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(300);
-		await(StreamSupplier.ofIterable(listOfRandomLogItems2).streamTo(
-				StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofIterable(listOfRandomLogItems2).streamTo(
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<LogItem> listOfRandomLogItems3 = LogItem.getListOfRandomLogItems(50);
-		await(StreamSupplier.ofIterable(listOfRandomLogItems3).streamTo(
-				StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofIterable(listOfRandomLogItems3).streamTo(
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);

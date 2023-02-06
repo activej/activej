@@ -16,7 +16,7 @@
 
 package io.activej.datastream.dsl;
 
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 
 import java.util.List;
 

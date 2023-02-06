@@ -1,8 +1,9 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
@@ -28,13 +29,13 @@ public class StreamUnionTest {
 	public void test1() {
 		StreamUnion<Integer> streamUnion = StreamUnion.create();
 
-		StreamSupplier<Integer> source0 = StreamSupplier.of();
-		StreamSupplier<Integer> source1 = StreamSupplier.of(1);
-		StreamSupplier<Integer> source2 = StreamSupplier.of(2, 3);
-		StreamSupplier<Integer> source3 = StreamSupplier.of();
-		StreamSupplier<Integer> source4 = StreamSupplier.of(4, 5);
-		StreamSupplier<Integer> source5 = StreamSupplier.of(6);
-		StreamSupplier<Integer> source6 = StreamSupplier.of();
+		StreamSupplier<Integer> source0 = StreamSuppliers.empty();
+		StreamSupplier<Integer> source1 = StreamSuppliers.ofValue(1);
+		StreamSupplier<Integer> source2 = StreamSuppliers.ofValues(2, 3);
+		StreamSupplier<Integer> source3 = StreamSuppliers.empty();
+		StreamSupplier<Integer> source4 = StreamSuppliers.ofValues(4, 5);
+		StreamSupplier<Integer> source5 = StreamSuppliers.ofValue(6);
+		StreamSupplier<Integer> source6 = StreamSuppliers.empty();
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
@@ -71,9 +72,9 @@ public class StreamUnionTest {
 	public void testWithError() {
 		StreamUnion<Integer> streamUnion = StreamUnion.create();
 
-		StreamSupplier<Integer> source0 = StreamSupplier.of(1, 2, 3);
-		StreamSupplier<Integer> source1 = StreamSupplier.of(4, 5);
-		StreamSupplier<Integer> source2 = StreamSupplier.of(6, 7);
+		StreamSupplier<Integer> source0 = StreamSuppliers.ofValues(1, 2, 3);
+		StreamSupplier<Integer> source1 = StreamSuppliers.ofValues(4, 5);
+		StreamSupplier<Integer> source2 = StreamSuppliers.ofValues(6, 7);
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
@@ -106,13 +107,13 @@ public class StreamUnionTest {
 		StreamUnion<Integer> streamUnion = StreamUnion.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
-		StreamSupplier<Integer> source0 = StreamSupplier.concat(
-				StreamSupplier.ofIterable(List.of(1, 2)),
-				StreamSupplier.closingWithError(exception)
+		StreamSupplier<Integer> source0 = StreamSuppliers.concat(
+				StreamSuppliers.ofIterable(List.of(1, 2)),
+				StreamSuppliers.closingWithError(exception)
 		);
-		StreamSupplier<Integer> source1 = StreamSupplier.concat(
-				StreamSupplier.ofIterable(List.of(7, 8, 9)),
-				StreamSupplier.closingWithError(exception)
+		StreamSupplier<Integer> source1 = StreamSuppliers.concat(
+				StreamSuppliers.ofIterable(List.of(7, 8, 9)),
+				StreamSuppliers.closingWithError(exception)
 		);
 
 		StreamConsumer<Integer> consumer = ToListStreamConsumer.create();

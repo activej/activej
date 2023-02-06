@@ -19,7 +19,7 @@ package io.activej.launchers.crdt;
 import io.activej.async.service.ReactiveService;
 import io.activej.crdt.storage.local.FileSystemCrdtStorage;
 import io.activej.crdt.storage.local.MapCrdtStorage;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -45,7 +45,7 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 		checkInReactorThread(this);
 		return localFiles.download()
 				.then(supplierWithResult ->
-						supplierWithResult.streamTo(StreamConsumer.ofPromise(inMemory.upload())));
+						supplierWithResult.streamTo(StreamConsumers.ofPromise(inMemory.upload())));
 	}
 
 	public Promise<Void> backup() {
@@ -57,7 +57,7 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 		this.lastTimestamp = reactor.currentTimeMillis();
 		return backupPromise = inMemory.download(lastTimestamp)
 				.then(supplierWithResult -> supplierWithResult
-						.streamTo(StreamConsumer.ofPromise(localFiles.upload()))
+						.streamTo(StreamConsumers.ofPromise(localFiles.upload()))
 						.whenComplete(() -> backupPromise = null));
 	}
 

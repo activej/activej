@@ -17,8 +17,8 @@ import io.activej.cube.CubeTestBase;
 import io.activej.cube.LogItem;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
@@ -116,8 +116,8 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 	@Test
 	public void testMalformedLogs() {
-		await(StreamSupplier.of(new LogItem("test")).streamTo(
-				StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofValue(new LogItem("test")).streamTo(
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		Map<String, FileMetadata> files = await(logsFileSystem.list("**"));
 		assertEquals(1, files.size());

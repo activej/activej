@@ -2,7 +2,7 @@ package io.activej.dataflow.inject;
 
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.inject.Key;
 import io.activej.inject.binding.BindingType;
 import io.activej.inject.module.AbstractModule;

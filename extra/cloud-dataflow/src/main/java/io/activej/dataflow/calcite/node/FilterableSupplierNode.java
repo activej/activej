@@ -24,7 +24,8 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 
 import java.util.Collection;
@@ -69,23 +70,23 @@ public final class FilterableSupplierNode<T> extends AbstractNode {
 		StreamSupplier<T> supplier;
 		Object object = task.get(id);
 		if (object instanceof Iterator) {
-			supplier = StreamSupplier.ofIterator((Iterator<T>) object);
+			supplier = StreamSuppliers.ofIterator((Iterator<T>) object);
 		} else if (object instanceof Iterable) {
-			supplier = StreamSupplier.ofIterable((Iterable<T>) object);
+			supplier = StreamSuppliers.ofIterable((Iterable<T>) object);
 		} else if (object instanceof Supplier) {
-			supplier = StreamSupplier.ofSupplier(((Supplier<T>) object)::get);
+			supplier = StreamSuppliers.ofSupplier(((Supplier<T>) object)::get);
 		} else if (object instanceof SupplierEx) {
-			supplier = StreamSupplier.ofSupplier((SupplierEx<T>) object);
+			supplier = StreamSuppliers.ofSupplier((SupplierEx<T>) object);
 		} else if (object instanceof Stream) {
-			supplier = StreamSupplier.ofStream((Stream<T>) object);
+			supplier = StreamSuppliers.ofStream((Stream<T>) object);
 		} else if (object instanceof StreamSupplier) {
 			supplier = (StreamSupplier<T>) object;
 		} else if (object instanceof ChannelSupplier) {
-			supplier = StreamSupplier.ofChannelSupplier((ChannelSupplier<T>) object);
+			supplier = StreamSuppliers.ofChannelSupplier((ChannelSupplier<T>) object);
 		} else if (object instanceof PartitionedStreamSupplierFactory) {
 			supplier = ((PartitionedStreamSupplierFactory<T>) object).get(partitionIndex, maxPartitions);
 		} else if (object instanceof Promise) {
-			supplier = StreamSupplier.ofPromise(((Promise<StreamSupplier<T>>) object));
+			supplier = StreamSuppliers.ofPromise(((Promise<StreamSupplier<T>>) object));
 		} else if (object instanceof FilteredDataflowSupplier<?> filteredDataflowSupplier) {
 			supplier = (StreamSupplier<T>) filteredDataflowSupplier.create(predicate);
 		} else {

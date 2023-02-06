@@ -9,8 +9,9 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.reactor.Reactor;
@@ -101,8 +102,8 @@ public final class TestDyingPartitions {
 			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}
 
-		Exception exception = awaitException(StreamSupplier.ofIterator(data.iterator())
-				.streamTo(StreamConsumer.ofPromise(cluster.upload()
+		Exception exception = awaitException(StreamSuppliers.ofIterator(data.iterator())
+				.streamTo(StreamConsumers.ofPromise(cluster.upload()
 						.whenResult(this::shutdown2Servers))));
 
 		assertThat(exception, instanceOf(CrdtException.class));
@@ -117,8 +118,8 @@ public final class TestDyingPartitions {
 			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}
 
-		await(StreamSupplier.ofIterator(data.iterator())
-				.streamTo(StreamConsumer.ofPromise(cluster.upload())));
+		await(StreamSuppliers.ofIterator(data.iterator())
+				.streamTo(StreamConsumers.ofPromise(cluster.upload())));
 
 		Exception exception = awaitException(cluster.download()
 				.whenResult(this::shutdown2Servers)

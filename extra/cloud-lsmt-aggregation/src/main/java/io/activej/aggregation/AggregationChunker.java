@@ -20,10 +20,11 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
 import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.datastream.ForwardingStreamConsumer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.SwitcherStreamConsumer;
+import io.activej.datastream.consumer.ForwardingStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.consumer.SwitcherStreamConsumer;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
@@ -130,7 +131,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	}
 
 	private void startNewChunk() {
-		switcher.switchTo(StreamConsumer.ofPromise(
+		switcher.switchTo(StreamConsumers.ofPromise(
 				storage.createId()
 						.then(chunkId -> storage.write(aggregation, fields, recordClass, chunkId, classLoader)
 								.map(streamConsumer -> new ChunkWriter(streamConsumer, chunkId, chunkSize, partitionPredicate))

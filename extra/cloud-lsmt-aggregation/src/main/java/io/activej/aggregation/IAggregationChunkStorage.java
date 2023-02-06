@@ -19,8 +19,8 @@ package io.activej.aggregation;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;
 
 import java.util.List;

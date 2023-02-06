@@ -20,7 +20,8 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
-import io.activej.datastream.processor.StreamFilter;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
 
 import java.util.Collection;
 import java.util.List;
@@ -56,7 +57,7 @@ public final class Filter<T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamFilter<T, T> streamFilter = StreamFilter.create(predicate);
+		StreamTransformer<T, T> streamFilter = StreamTransformers.filter(predicate);
 		task.bindChannel(input, streamFilter.getInput());
 		task.export(output, streamFilter.getOutput());
 	}

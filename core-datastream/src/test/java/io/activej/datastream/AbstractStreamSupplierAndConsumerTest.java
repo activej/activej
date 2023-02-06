@@ -1,5 +1,8 @@
 package io.activej.datastream;
 
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;

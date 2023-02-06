@@ -28,12 +28,13 @@ import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
-import io.activej.datastream.processor.StreamReducer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
+import io.activej.datastream.processor.reducer.StreamReducer;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
@@ -75,8 +76,8 @@ import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
+import static io.activej.datastream.supplier.StreamSuppliers.ofChannelSupplier;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -617,7 +618,7 @@ public final class PartitionedStreamTest {
 		@Override
 		public StreamConsumer<String> transform(ChannelConsumer<ByteBuf> consumer) {
 			RefBoolean first = new RefBoolean(true);
-			return StreamConsumer.ofChannelConsumer(consumer
+			return StreamConsumers.ofChannelConsumer(consumer
 					.map(item -> {
 						if (first.get()) {
 							first.flip();

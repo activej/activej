@@ -47,14 +47,14 @@ import io.activej.cube.function.RecordFunction;
 import io.activej.cube.function.TotalsFunction;
 import io.activej.cube.measure.ComputedMeasure;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerWithResult;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamReducer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.StreamReducer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -626,7 +626,7 @@ public final class Cube extends AbstractReactive
 			if (!dataInputFilterPredicate.equals(AggregationPredicates.alwaysTrue())) {
 				Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate, classLoader, fieldTypes);
 				output = output
-						.transformWith(StreamFilter.create(filterPredicate));
+						.transformWith(StreamTransformers.filter(filterPredicate));
 			}
 			Promise<AggregationDiff> consume = output.streamTo(aggregation.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
 			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
@@ -750,7 +750,7 @@ public final class Cube extends AbstractReactive
 				Function<S, T> mapper = createMapper(aggregationClass, resultClass, dimensions,
 						compatibleMeasures, queryClassLoader);
 				queryResultSupplier = aggregationSupplier
-						.transformWith(StreamFilter.mapper(mapper));
+						.transformWith(StreamTransformers.mapper(mapper));
 				break;
 			}
 

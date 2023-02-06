@@ -108,7 +108,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	@FunctionalInterface
-	public interface DecoderIntoList<T> {
+	public interface DecoderInToListStreamConsumer<T> {
 		void decode(ByteBuf buf, List<T> into) throws MalformedHttpException;
 	}
 

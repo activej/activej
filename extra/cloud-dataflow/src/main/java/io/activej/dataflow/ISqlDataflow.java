@@ -1,7 +1,7 @@
 package io.activej.dataflow;
 
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
 

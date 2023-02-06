@@ -19,9 +19,9 @@ package io.activej.crdt.util;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamFilter;
-import io.activej.datastream.processor.StreamTransformer;
+import io.activej.datastream.processor.transformer.AbstractStreamTransformer;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.promise.Promise;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
@@ -71,7 +71,7 @@ public final class Utils {
 	}
 
 	public static <T> StreamTransformer<T, T> onItem(Runnable consumer) {
-		return new StreamFilter<>() {
+		return new AbstractStreamTransformer<>() {
 			@Override
 			protected StreamDataAcceptor<T> onResumed(StreamDataAcceptor<T> output) {
 				return item -> {

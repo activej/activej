@@ -21,7 +21,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.datastream.processor.StreamLimiter;
+import io.activej.datastream.processor.transformer.impl.Limiter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,7 +44,7 @@ public final class LocalLimit<T> extends Dataset<T> {
 	public List<StreamId> channels(DataflowContext context) {
 		List<StreamId> streamIds = input.channels(context);
 
-		if (limit == StreamLimiter.NO_LIMIT) return streamIds;
+		if (limit == Limiter.NO_LIMIT) return streamIds;
 
 		DataflowGraph graph = context.getGraph();
 

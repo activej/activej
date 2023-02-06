@@ -7,8 +7,8 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
@@ -96,8 +96,8 @@ public final class TestCrdtCluster {
 				ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
-				.then(() -> StreamSupplier.ofIterator(localStorage.iterator())
-						.streamTo(StreamConsumer.ofPromise(cluster.upload())))
+				.then(() -> StreamSuppliers.ofIterator(localStorage.iterator())
+						.streamTo(StreamConsumers.ofPromise(cluster.upload())))
 				.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
 
 		Map<CrdtData<String, Integer>, Integer> result = new HashMap<>();
@@ -171,7 +171,7 @@ public final class TestCrdtCluster {
 		await(cluster.start()
 				.then(() -> cluster.download())
 				.then(supplier -> supplier
-						.streamTo(StreamConsumer.ofConsumer(localStorage::put)))
+						.streamTo(StreamConsumers.ofConsumer(localStorage::put)))
 				.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
 
 		assertEquals(Set.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));

@@ -8,13 +8,12 @@ import io.activej.aggregation.measure.Measure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
@@ -47,12 +46,12 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToMap;
-import static io.activej.cube.measure.ComputedMeasures.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.http.ReportingTest.LogItem.*;
+import static io.activej.cube.measure.ComputedMeasures.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
@@ -324,8 +323,8 @@ public final class ReportingTest extends CubeTestBase {
 				new LogItem(2, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 2, 13, 0.9, 0, 2, 4, "site1.com"),
 				new LogItem(3, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 40, 3, 2, 1.0, 0, 1, 4, "site1.com"));
 
-		await(StreamSupplier.ofIterable(concat(logItemsForAdvertisersAggregations, logItemsForAffiliatesAggregation))
-				.streamTo(StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofIterable(concat(logItemsForAdvertisersAggregations, logItemsForAffiliatesAggregation))
+				.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		LogDiff<CubeDiff> logDiff = await(logOTProcessor.processLog());
 		await(aggregationChunkStorage

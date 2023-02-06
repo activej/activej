@@ -8,12 +8,11 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.Cube.AggregationConfig;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.service.CubeConsolidationController;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
@@ -128,8 +127,8 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				randomRangeLogItems(listOfRandomLogItems);
 			}
 
-			await(StreamSupplier.ofIterable(listOfRandomLogItems).streamTo(
-					StreamConsumer.ofPromise(multilog.write("partitionA"))));
+			await(StreamSuppliers.ofIterable(listOfRandomLogItems).streamTo(
+					StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 			runProcessLogs(chunkStorage, stateManager, logOTProcessor);
 			allLogItems.addAll(listOfRandomLogItems);

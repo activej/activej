@@ -1,7 +1,12 @@
 package io.activej.datastream;
 
 import io.activej.config.Config;
-import io.activej.datastream.processor.StreamFilter;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.InstanceProvider;
 import io.activej.inject.annotation.Inject;
@@ -51,7 +56,7 @@ public class DatastreamBenchmark extends Launcher {
 	InstanceProvider<StreamSupplier<Integer>> inputProvider;
 
 	@Inject
-	InstanceProvider<StreamFilter<Integer, Integer>> mapperProvider;
+	InstanceProvider<StreamTransformer<Integer, Integer>> mapperProvider;
 
 	@Inject
 	InstanceProvider<StreamConsumer<Integer>> outputProvider;
@@ -78,14 +83,14 @@ public class DatastreamBenchmark extends Launcher {
 
 	@Provides
 	@Transient
-	StreamFilter<Integer, Integer> mapper() {
-		return StreamFilter.mapper(Function.identity());
+	StreamTransformer<Integer, Integer> mapper() {
+		return StreamTransformers.mapper(Function.identity());
 	}
 
 	@Provides
 	@Transient
 	StreamConsumer<Integer> streamConsumer() {
-		return StreamConsumer.skip();
+		return StreamConsumers.skip();
 	}
 
 	@Override
@@ -147,7 +152,7 @@ public class DatastreamBenchmark extends Launcher {
 
 	private Promise<Long> roundCall() {
 		StreamSupplier<Integer> input = inputProvider.get();
-		StreamFilter<Integer, Integer> mapper = mapperProvider.get();
+		StreamTransformer<Integer, Integer> mapper = mapperProvider.get();
 		StreamConsumer<Integer> output = outputProvider.get();
 		long start = System.currentTimeMillis();
 		return input

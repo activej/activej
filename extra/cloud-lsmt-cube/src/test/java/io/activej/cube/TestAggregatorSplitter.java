@@ -4,7 +4,7 @@ import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.bean.TestPubRequest.TestEnum;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.etl.SplitterLogDataConsumer;
 
 import java.util.HashSet;

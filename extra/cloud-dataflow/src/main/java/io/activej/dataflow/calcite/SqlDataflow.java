@@ -14,8 +14,9 @@ import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamLimiter;
+import io.activej.datastream.processor.transformer.impl.Limiter;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -113,13 +114,13 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset) {
 		checkInReactorThread(this);
-		return queryDataflow(dataset, StreamLimiter.NO_LIMIT);
+		return queryDataflow(dataset, Limiter.NO_LIMIT);
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset, long limit) {
 		checkInReactorThread(this);
 		if (limit == 0) {
-			return StreamSupplier.of();
+			return StreamSuppliers.empty();
 		}
 
 		ICollector<Record> calciteCollector = createCollector(dataset, limit);
@@ -167,7 +168,7 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 
 	public String explainNodes(String query) throws SqlParseException, DataflowException {
 		Dataset<Record> dataset = convertToDataset(query);
-		ICollector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
+		ICollector<Record> calciteCollector = createCollector(dataset, Limiter.NO_LIMIT);
 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		calciteCollector.compile(graph);
@@ -185,7 +186,7 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 				MergeCollector.builder(reactor, sortedDataset, client) :
 				UnionCollector.builder(reactor, dataset, client));
 
-		if (limit != StreamLimiter.NO_LIMIT) {
+		if (limit != Limiter.NO_LIMIT) {
 			collectorBuilder.withLimit(limit);
 		}
 

@@ -15,10 +15,11 @@ import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.processor.reducer.ReducerToAccumulator;
 import io.activej.datastream.processor.reducer.ReducerToResult;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
@@ -197,7 +198,7 @@ public class DataflowServerTest {
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
 		ICollector<StringCount> collector = ConcatCollector.create(Reactor.getCurrentReactor(), reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
-		ToListStreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create(result);
+		StreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create(result);
 
 		return graph.execute().both(resultSupplier.streamTo(resultConsumer))
 				.whenException(resultConsumer::closeEx);

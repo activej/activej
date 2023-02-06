@@ -38,12 +38,13 @@ import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.messaging.DataflowResponse.HandshakeFailure;
 import io.activej.dataflow.messaging.DataflowResponse.Result;
 import io.activej.dataflow.node.Node;
-import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
-import io.activej.datastream.processor.StreamSupplierTransformer;
+import io.activej.datastream.processor.transformer.StreamSupplierTransformer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
@@ -84,7 +85,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		checkInReactorThread(this);
-		return StreamSupplier.ofPromise(TcpSocket.connect(reactor, address, 0, socketSettings)
+		return StreamSuppliers.ofPromise(TcpSocket.connect(reactor, address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
 					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);

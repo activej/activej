@@ -1,6 +1,9 @@
 package io.activej.datastream;
 
-import io.activej.datastream.processor.StreamTransformer;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.supplier.StreamSupplier;
 
 import java.util.List;
 

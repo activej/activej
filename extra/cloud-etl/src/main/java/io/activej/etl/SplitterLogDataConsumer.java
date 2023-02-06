@@ -17,9 +17,9 @@
 package io.activej.etl;
 
 import io.activej.async.AsyncAccumulator;
-import io.activej.datastream.StreamConsumerWithResult;
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.StreamSplitter;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.ArrayList;

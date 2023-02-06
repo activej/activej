@@ -25,7 +25,7 @@ import io.activej.csp.binary.codec.ByteBufsCodec;
 import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.BasicStreamStats;
@@ -207,7 +207,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private Promise<Void> handleRemove(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(tombstoneSerializer))
-				.streamTo(StreamConsumer.ofPromise(storage.remove()
+				.streamTo(StreamConsumers.ofPromise(storage.remove()
 						.map(consumer -> consumer.transformWith(detailedStats ? removeStatsDetailed : removeStats))
 						.whenComplete(removeBeginPromise.recordStats())))
 				.then(() -> messaging.send(new CrdtResponse.RemoveAck()))
@@ -220,7 +220,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private Promise<Void> handleUpload(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(serializer))
-				.streamTo(StreamConsumer.ofPromise(storage.upload()
+				.streamTo(StreamConsumers.ofPromise(storage.upload()
 						.map(consumer -> consumer.transformWith(detailedStats ? uploadStatsDetailed : uploadStats))
 						.whenComplete(uploadBeginPromise.recordStats())))
 				.then(() -> messaging.send(new CrdtResponse.UploadAck()))

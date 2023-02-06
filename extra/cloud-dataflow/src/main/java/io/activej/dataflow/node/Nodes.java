@@ -4,7 +4,7 @@ import io.activej.common.annotation.StaticFactories;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.impl.*;
-import io.activej.datastream.processor.StreamLeftJoin;
+import io.activej.datastream.processor.join.LeftJoiner;
 
 import java.net.InetSocketAddress;
 import java.util.Comparator;
@@ -28,7 +28,7 @@ public class Nodes {
 
 	public static <K, L, R, V> Node join(int index, StreamId left, StreamId right,
 			Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
-			StreamLeftJoin.LeftJoiner<K, L, R, V> leftJoiner) {
+			LeftJoiner<K, L, R, V> leftJoiner) {
 		return new Join<>(index, left, right, new StreamId(), keyComparator, leftKeyFunction, rightKeyFunction, leftJoiner);
 	}
 

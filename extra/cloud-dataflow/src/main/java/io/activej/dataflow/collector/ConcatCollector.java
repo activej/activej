@@ -18,7 +18,8 @@ package io.activej.dataflow.collector;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.reactor.Reactor;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public final class ConcatCollector<T> extends AbstractCollector<T, List<StreamSu
 
 	@Override
 	protected StreamSupplier<T> getResult(List<StreamSupplier<T>> accumulator) {
-		return StreamSupplier.concat(accumulator)
+		return StreamSuppliers.concat(accumulator)
 				.withEndOfStream(eos -> eos
 						.whenException(e -> accumulator.forEach(supplier -> supplier.closeEx(e))));
 	}

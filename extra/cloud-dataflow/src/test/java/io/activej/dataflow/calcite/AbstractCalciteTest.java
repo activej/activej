@@ -11,13 +11,13 @@ import io.activej.dataflow.calcite.operand.impl.Scalar;
 import io.activej.dataflow.calcite.table.AbstractDataflowTable;
 import io.activej.dataflow.calcite.table.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.table.DataflowTable;
-import io.activej.dataflow.calcite.where.*;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.dataflow.calcite.where.impl.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
-import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.reducer.BinaryAccumulatorReducer;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -2948,10 +2948,10 @@ public abstract class AbstractCalciteTest {
 			DateRange dateRange = predicateToDateRange(predicate);
 
 			if (dateRange == null) {
-				return StreamSupplier.ofIterable(filterableData);
+				return StreamSuppliers.ofIterable(filterableData);
 			}
 
-			return StreamSupplier.ofIterable(filterableData.subSet(
+			return StreamSuppliers.ofIterable(filterableData.subSet(
 					new Filterable(-1, dateRange.from), dateRange.fromInclusive,
 					new Filterable(-1, dateRange.to), dateRange.toInclusive
 			));

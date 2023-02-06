@@ -2,11 +2,10 @@ package module;
 
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.inject.DatasetId;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.StreamSupplierWithResult;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplierWithResult;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.inject.annotation.Named;

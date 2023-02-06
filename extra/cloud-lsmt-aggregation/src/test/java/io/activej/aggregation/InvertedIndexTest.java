@@ -7,8 +7,8 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -107,21 +107,21 @@ public class InvertedIndexTest {
 				.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 				.build();
 
-		StreamSupplier<InvertedIndexRecord> supplier = StreamSupplier.of(
+		StreamSupplier<InvertedIndexRecord> supplier = StreamSuppliers.ofValues(
 				new InvertedIndexRecord("fox", 1),
 				new InvertedIndexRecord("brown", 2),
 				new InvertedIndexRecord("fox", 3));
 
 		doProcess(aggregationChunkStorage, aggregation, supplier);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new InvertedIndexRecord("brown", 3),
 				new InvertedIndexRecord("lazy", 4),
 				new InvertedIndexRecord("dog", 1));
 
 		doProcess(aggregationChunkStorage, aggregation, supplier);
 
-		supplier = StreamSupplier.of(
+		supplier = StreamSuppliers.ofValues(
 				new InvertedIndexRecord("quick", 1),
 				new InvertedIndexRecord("fox", 4),
 				new InvertedIndexRecord("brown", 10));

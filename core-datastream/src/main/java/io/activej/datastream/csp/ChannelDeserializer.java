@@ -25,8 +25,8 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 

@@ -20,9 +20,11 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamSkip;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
+import io.activej.datastream.processor.transformer.impl.Limiter;
+import io.activej.datastream.processor.transformer.impl.Skip;
+import io.activej.datastream.supplier.StreamSupplier;
 
 import java.util.Collection;
 import java.util.List;
@@ -50,11 +52,11 @@ public final class OffsetLimit extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamSkip<?> skip = StreamSkip.create(offset);
+		StreamTransformer<?, ?> skip = StreamTransformers.skip(offset);
 		task.bindChannel(input, skip.getInput());
 
 		StreamSupplier<?> supplier = skip.getOutput()
-				.transformWith(StreamLimiter.create(limit));
+				.transformWith(StreamTransformers.limit(limit));
 		task.export(output, supplier);
 	}
 
@@ -68,8 +70,8 @@ public final class OffsetLimit extends AbstractNode {
 		return "OffsetLimit{" +
 				"input=" + input +
 				", output=" + output +
-				", offset=" + (offset == StreamSkip.NO_SKIP ? "NONE" : offset) +
-				", limit=" + (limit == StreamLimiter.NO_LIMIT ? "NONE" : limit) +
+				", offset=" + (offset == Skip.NO_SKIP ? "NONE" : offset) +
+				", limit=" + (limit == Limiter.NO_LIMIT ? "NONE" : limit) +
 				'}';
 	}
 }

@@ -1,5 +1,6 @@
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 
 /**
@@ -15,7 +16,7 @@ public final class SupplierExample {
 				.withCurrentThread()
 				.build();
 		//create a supplier of some numbers
-		StreamSupplier<Integer> supplier = StreamSupplier.of(0, 1, 2, 3, 4);
+		StreamSupplier<Integer> supplier = StreamSuppliers.ofValues(0, 1, 2, 3, 4);
 		//creating a consumer for our supplier
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 

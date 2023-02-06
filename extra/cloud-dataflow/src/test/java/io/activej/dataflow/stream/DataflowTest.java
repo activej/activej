@@ -20,10 +20,10 @@ import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.StreamSorterStorageFactory;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.reducer.impl.Merge;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -326,7 +326,7 @@ public final class DataflowTest {
 		assertTrue(isSorted(result2.getList(), comparing(testItem -> testItem.value)));
 		assertTrue(isSorted(result3.getList(), comparing(testItem -> testItem.value)));
 
-		Set<TestItem> actualOnServers2And3 = new HashSet<>(concat(result2.getList(), result3.getList()));
+		Set<TestItem> actualOnServers2And3 = Set.copyOf(concat(result2.getList(), result3.getList()));
 		assertEquals(expectedOnServers2And3, actualOnServers2And3);
 		assertTrue(result1.getList().isEmpty());
 	}

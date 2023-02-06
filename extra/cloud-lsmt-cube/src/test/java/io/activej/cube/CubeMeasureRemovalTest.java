@@ -8,11 +8,10 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
@@ -121,8 +120,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems1 = LogItem.getListOfRandomLogItems(100);
-		await(StreamSupplier.ofIterable(listOfRandomLogItems1).streamTo(
-				StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofIterable(listOfRandomLogItems1).streamTo(
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager1 = logCubeStateManager;
 		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager1, logOTProcessor);
@@ -164,8 +163,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(100);
-		await(StreamSupplier.ofIterable(listOfRandomLogItems2).streamTo(
-				StreamConsumer.ofPromise(multilog.write("partitionA"))));
+		await(StreamSuppliers.ofIterable(listOfRandomLogItems2).streamTo(
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager = logCubeStateManager;
 		LogOTProcessor<LogItem, CubeDiff> finalLogOTProcessor = logOTProcessor;
@@ -251,8 +250,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			await(logCubeStateManager1.checkout());
 
-			await(StreamSupplier.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
-					StreamConsumer.ofPromise(multilog.write("partitionA"))));
+			await(StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
+					StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logOTProcessor1);
 		}
@@ -312,8 +311,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			await(logCubeStateManager1.checkout());
 
-			await(StreamSupplier.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
-					StreamConsumer.ofPromise(multilog.write("partitionA"))));
+			await(StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
+					StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logOTProcessor1);
 		}

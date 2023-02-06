@@ -4,8 +4,8 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 
 import java.io.IOException;
@@ -82,8 +82,8 @@ public final class CrdtExample {
 
 		//[START REGION_4]
 		// now stream the local storage into the remote one through the TCP client-server pair
-		StreamSupplier.ofPromise(localStorage.download())
-				.streamTo(StreamConsumer.ofPromise(client.upload()))
+		StreamSuppliers.ofPromise(localStorage.download())
+				.streamTo(StreamConsumers.ofPromise(client.upload()))
 				.whenComplete(() -> {
 
 					// check what is now at the 'remote' storage, the output should differ
@@ -92,8 +92,8 @@ public final class CrdtExample {
 					System.out.println();
 
 					// and now do the reverse process
-					StreamSupplier.ofPromise(client.download())
-							.streamTo(StreamConsumer.ofPromise(localStorage.upload()))
+					StreamSuppliers.ofPromise(client.download())
+							.streamTo(StreamConsumers.ofPromise(localStorage.upload()))
 							.whenComplete(() -> {
 								// now output the local storage, should be identical to the remote one
 								System.out.println("Synced data at the local storage:");

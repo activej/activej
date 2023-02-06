@@ -1,8 +1,8 @@
 package io.activej.datastream.processor.reducer.impl;
 
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 
 /**
  * Represent a reducer which streams received items sorted by keys

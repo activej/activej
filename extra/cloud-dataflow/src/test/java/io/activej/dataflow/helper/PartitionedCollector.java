@@ -6,8 +6,9 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -44,7 +45,7 @@ public final class PartitionedCollector<T> implements ICollector<T> {
 			checkState(prev == null, "Partition provides multiple channels");
 			streamingPromises.add(supplier.streamTo(ToListStreamConsumer.create(partitionItems)));
 		}
-		return StreamSupplier.ofPromise(Promises.all(streamingPromises)
-				.map($ -> StreamSupplier.closing()));
+		return StreamSuppliers.ofPromise(Promises.all(streamingPromises)
+				.map($ -> StreamSuppliers.empty()));
 	}
 }

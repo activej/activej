@@ -1,7 +1,7 @@
 package worker;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.module.Module;
@@ -33,7 +33,7 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	@Override
 	protected void run() throws Exception {
 		reactor.submit(() ->
-						StreamSupplier.ofIterable(LogItem.getListOfRandomLogItems(NUMBER_OF_ITEMS))
+						StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(NUMBER_OF_ITEMS))
 								.streamTo(multilog.write(partitionId)))
 				.get();
 

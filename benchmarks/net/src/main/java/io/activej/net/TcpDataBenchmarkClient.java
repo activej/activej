@@ -3,11 +3,11 @@ package io.activej.net;
 import io.activej.config.Config;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
@@ -126,7 +126,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 
 					return ChannelSuppliers.ofSocket(socket)
 							.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-							.streamTo(StreamConsumer.skip())
+							.streamTo(StreamConsumers.skip())
 							.whenComplete(socket::close)
 							.map($ -> System.currentTimeMillis() - start);
 				});

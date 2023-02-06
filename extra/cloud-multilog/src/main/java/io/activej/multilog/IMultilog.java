@@ -17,8 +17,8 @@
 package io.activej.multilog;
 
 import io.activej.common.annotation.ComponentInterface;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplierWithResult;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.supplier.StreamSupplierWithResult;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 

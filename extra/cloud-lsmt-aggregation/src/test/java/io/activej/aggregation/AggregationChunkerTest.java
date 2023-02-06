@@ -3,9 +3,11 @@ package io.activej.aggregation;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ActivePromisesRule;
@@ -64,12 +66,12 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				return Promise.of(StreamSupplier.ofIterable((Iterable<T>) items));
+				return Promise.of(StreamSuppliers.ofIterable((Iterable<T>) items));
 			}
 
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				ToListStreamConsumer<T> consumer = ToListStreamConsumer.create((List<T>) items);
+				StreamConsumer<T> consumer = ToListStreamConsumer.create((List<T>) items);
 				consumer.getAcknowledgement().whenComplete(assertCompleteFn());
 				return Promise.of(consumer);
 			}
@@ -102,7 +104,7 @@ public final class AggregationChunkerTest {
 				structure, structure.getMeasures(), recordClass, (PartitionPredicate) singlePartition(),
 				aggregationChunkStorage, classLoader, 1);
 
-		StreamSupplier<KeyValuePair> supplier = StreamSupplier.of(
+		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofValues(
 				new KeyValuePair(3, 4, 6),
 				new KeyValuePair(3, 6, 7),
 				new KeyValuePair(1, 2, 1)
@@ -126,12 +128,12 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				return Promise.of(StreamSupplier.ofIterable(items));
+				return Promise.of(StreamSuppliers.ofIterable(items));
 			}
 
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				ToListStreamConsumer<T> consumer = ToListStreamConsumer.create(items);
+				StreamConsumer<T> consumer = ToListStreamConsumer.create(items);
 				listConsumers.add(consumer);
 				return Promise.of(consumer);
 			}
@@ -161,24 +163,24 @@ public final class AggregationChunkerTest {
 		Class<?> recordClass = createRecordClass(structure, structure.getKeys(), fields, classLoader);
 
 		ExpectedException exception = new ExpectedException("Test Exception");
-		StreamSupplier<KeyValuePair> supplier = StreamSupplier.concat(
-				StreamSupplier.of(
+		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.concat(
+				StreamSuppliers.ofValues(
 						new KeyValuePair(1, 1, 0),
 						new KeyValuePair(1, 2, 1),
 						new KeyValuePair(1, 1, 2)),
-				StreamSupplier.of(
+				StreamSuppliers.ofValues(
 						new KeyValuePair(1, 1, 0),
 						new KeyValuePair(1, 2, 1),
 						new KeyValuePair(1, 1, 2)),
-				StreamSupplier.of(
+				StreamSuppliers.ofValues(
 						new KeyValuePair(1, 1, 0),
 						new KeyValuePair(1, 2, 1),
 						new KeyValuePair(1, 1, 2)),
-				StreamSupplier.of(
+				StreamSuppliers.ofValues(
 						new KeyValuePair(1, 1, 0),
 						new KeyValuePair(1, 2, 1),
 						new KeyValuePair(1, 1, 2)),
-				StreamSupplier.closingWithError(exception)
+				StreamSuppliers.closingWithError(exception)
 		);
 		AggregationChunker chunker = AggregationChunker.create(
 				structure, structure.getMeasures(), recordClass, singlePartition(),
@@ -203,17 +205,17 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				return Promise.of(StreamSupplier.ofIterable(items));
+				return Promise.of(StreamSuppliers.ofIterable(items));
 			}
 
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
 				if (chunkId == 1) {
-					ToListStreamConsumer<T> toList = ToListStreamConsumer.create(items);
+					StreamConsumer<T> toList = ToListStreamConsumer.create(items);
 					listConsumers.add(toList);
 					return Promise.of(toList);
 				} else {
-					StreamConsumer<T> consumer = StreamConsumer.closingWithError(new Exception("Test Exception"));
+					StreamConsumer<T> consumer = StreamConsumers.closingWithError(new Exception("Test Exception"));
 					listConsumers.add(consumer);
 					return Promise.of(consumer);
 				}
@@ -243,7 +245,7 @@ public final class AggregationChunkerTest {
 
 		Class<?> recordClass = createRecordClass(structure, structure.getKeys(), fields, classLoader);
 
-		StreamSupplier<KeyValuePair> supplier = StreamSupplier.of(
+		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofValues(
 				new KeyValuePair(1, 1, 0),
 				new KeyValuePair(1, 2, 1),
 				new KeyValuePair(1, 1, 2),

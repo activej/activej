@@ -16,7 +16,7 @@
 
 package io.activej.datastream.dsl;
 
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.reactor.Reactive;
 
 /**

@@ -20,9 +20,10 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
 import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +114,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 			list.add((T) entry.getValue());
 		}
 
-		StreamSupplier<T> supplier = StreamSupplier.ofIterable(list);
+		StreamSupplier<T> supplier = StreamSuppliers.ofIterable(list);
 		AggregationChunker<C, T> chunker = AggregationChunker.create(aggregation, measures, recordClass,
 				partitionPredicate, storage, classLoader, chunkSize);
 

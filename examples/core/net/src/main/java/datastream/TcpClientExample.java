@@ -2,10 +2,9 @@ package datastream;
 
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
@@ -40,19 +39,14 @@ public final class TcpClientExample {
 					throw new RuntimeException(ioEx);
 				}
 
-				StreamSupplier.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+				StreamSuppliers.ofValues(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 						.transformWith(ChannelSerializer.create(INT_SERIALIZER))
 						.streamTo(ChannelConsumers.ofSocket(socket));
 
-				ToListStreamConsumer<String> consumer = ToListStreamConsumer.create();
-
 				ChannelSuppliers.ofSocket(socket)
 						.transformWith(ChannelDeserializer.create(UTF8_SERIALIZER))
-						.streamTo(consumer);
-
-				consumer.getResult()
+						.toList()
 						.whenResult(list -> list.forEach(System.out::println));
-
 			} else {
 				System.out.printf("Could not connect to server, make sure it is started: %s%n", e);
 			}

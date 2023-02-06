@@ -20,7 +20,8 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
-import io.activej.datastream.processor.StreamFilter;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.processor.transformer.StreamTransformers;
 
 import java.util.Collection;
 import java.util.List;
@@ -57,7 +58,7 @@ public final class Map<I, O> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		StreamFilter<I, O> streamMap = StreamFilter.mapper(function);
+		StreamTransformer<I, O> streamMap = StreamTransformers.mapper(function);
 		task.bindChannel(input, streamMap.getInput());
 		task.export(output, streamMap.getOutput());
 	}

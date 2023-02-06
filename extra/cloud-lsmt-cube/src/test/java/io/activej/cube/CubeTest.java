@@ -11,10 +11,9 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.HttpClientFileSystem;
@@ -113,7 +112,7 @@ public final class CubeTest {
 
 	@SuppressWarnings("unchecked")
 	private static <T> Promise<Void> consume(Cube cube, IAggregationChunkStorage<Long> chunkStorage, T item, T... items) {
-		return StreamSupplier.concat(StreamSupplier.of(item), StreamSupplier.of(items))
+		return StreamSuppliers.concat(StreamSuppliers.ofValue(item), StreamSuppliers.ofValues(items))
 				.streamTo(cube.consume(((Class<T>) item.getClass())))
 				.then(cubeDiff -> chunkStorage.finish(cubeDiff.<Long>addedChunks().collect(toSet()))
 						.whenResult(() -> cube.apply(cubeDiff)));

@@ -20,10 +20,11 @@ import io.activej.common.Utils;
 import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import io.activej.dataflow.node.impl.*;
-import io.activej.datastream.processor.StreamLimiter;
+import io.activej.dataflow.node.impl.Reduce;
+import io.activej.dataflow.node.impl.Shard;
 import io.activej.datastream.processor.reducer.Reducer;
-import io.activej.datastream.processor.StreamSkip;
+import io.activej.datastream.processor.transformer.impl.Limiter;
+import io.activej.datastream.processor.transformer.impl.Skip;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -169,7 +170,7 @@ public class DatasetUtils {
 			BiFunction<List<StreamId>, Partition, StreamId> inputReducer
 	) {
 
-		if (offset == StreamSkip.NO_SKIP && limit == StreamLimiter.NO_LIMIT) return inputs;
+		if (offset == Skip.NO_SKIP && limit == Limiter.NO_LIMIT) return inputs;
 
 		DataflowGraph graph = context.getGraph();
 
@@ -179,7 +180,7 @@ public class DatasetUtils {
 			return toOutput(graph, context.generateNodeIndex(), inputs.get(0), offset, limit);
 		}
 
-		if (limit != StreamLimiter.NO_LIMIT) {
+		if (limit != Limiter.NO_LIMIT) {
 			List<StreamId> newStreamIds = new ArrayList<>(inputs.size());
 			for (StreamId streamId : inputs) {
 				newStreamIds.addAll(limitStream(graph, context.generateNodeIndex(), offset + limit, streamId));

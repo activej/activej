@@ -1,6 +1,6 @@
 package io.activej.datastream.processor.reducer;
 
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 
 public abstract class BinaryAccumulatorReducer<K, T> implements Reducer<K, T, T, T> {
 	@Override

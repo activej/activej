@@ -2,7 +2,10 @@ package io.activej.datastream;
 
 import io.activej.csp.consumer.AbstractChannelConsumer;
 import io.activej.csp.consumer.ChannelConsumer;
-import io.activej.datastream.processor.StreamConsumerTransformer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.processor.transformer.StreamConsumerTransformer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +30,7 @@ public class TestStreamTransformers {
 
 	public static <T> StreamConsumerTransformer<T, StreamConsumer<T>> decorate(Function<Promise<T>, Promise<T>> fn) {
 		return consumer ->
-				StreamConsumer.ofChannelConsumer(
+				StreamConsumers.ofChannelConsumer(
 						asStreamConsumer(consumer)
 								.transformWith(channelConsumer -> new AbstractChannelConsumer<T>(channelConsumer) {
 									@Override

@@ -1,7 +1,7 @@
 package io.activej.datastream.stats;
 
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.StreamConsumers;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -24,9 +24,9 @@ public class StreamStatsForwarderTest {
 				.withSizeCounter(number -> number)
 				.build();
 
-		await(StreamSupplier.of(1, 2, 3, 4, 5)
+		await(StreamSuppliers.ofValues(1, 2, 3, 4, 5)
 				.transformWith(stats)
-				.streamTo(StreamConsumer.skip()));
+				.streamTo(StreamConsumers.skip()));
 
 		assertEquals(5, stats.getCount());
 		//noinspection DataFlowIssue
@@ -38,9 +38,9 @@ public class StreamStatsForwarderTest {
 		BasicStreamStats<Integer> stats = StreamStats.basic();
 		Exception exception = new Exception("Test");
 
-		Exception e = awaitException(StreamSupplier.of(1, 2, 3, 4, 5)
+		Exception e = awaitException(StreamSuppliers.ofValues(1, 2, 3, 4, 5)
 				.transformWith(stats)
-				.streamTo(StreamConsumer.<Integer>skip()
+				.streamTo(StreamConsumers.<Integer>skip()
 						.transformWith(decorate(promise ->
 								promise.then(item ->
 										item == 4 ?

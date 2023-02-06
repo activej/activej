@@ -1,5 +1,9 @@
-import io.activej.datastream.*;
-import io.activej.datastream.processor.StreamTransformer;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.reactor.ImplicitlyReactive;
 
@@ -63,12 +67,12 @@ public final class TransformerExample extends ImplicitlyReactive implements Stre
 				.withFatalErrorHandler(rethrow())
 				.build();
 
-		StreamSupplier<String> source = StreamSupplier.of("testdata", "testdata1", "testdata1000");
+		StreamSupplier<String> source = StreamSuppliers.ofValues("testdata", "testdata1", "testdata1000");
 		TransformerExample transformer = new TransformerExample();
-		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
-		source.transformWith(transformer).streamTo(consumer);
-		consumer.getResult().whenResult(v -> System.out.println(v));
+		source.transformWith(transformer)
+				.toList()
+				.whenResult(v -> System.out.println(v));
 
 		eventloop.run();
 	}

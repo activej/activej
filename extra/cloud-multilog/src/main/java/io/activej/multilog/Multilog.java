@@ -27,14 +27,16 @@ import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.StreamSupplierWithResult;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplierWithResult;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
@@ -141,7 +143,7 @@ public final class Multilog<T> extends AbstractReactive
 		checkInReactorThread(this);
 		validateLogPartition(logPartition);
 
-		return Promise.of(StreamConsumer.<T>ofSupplier(
+		return Promise.of(StreamConsumers.<T>ofSupplier(
 						supplier -> supplier
 								.transformWith(ChannelSerializer.builder(serializer)
 										.withAutoFlushInterval(autoFlushInterval)
@@ -229,7 +231,7 @@ public final class Multilog<T> extends AbstractReactive
 				if (logger.isTraceEnabled())
 					logger.trace("Read log file `{}` from: {}", currentLogFile, position);
 
-				return StreamSupplier.ofPromise(
+				return StreamSuppliers.ofPromise(
 						fileSystem.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
 								.then(Promise::of,
 										e -> {
@@ -290,7 +292,7 @@ public final class Multilog<T> extends AbstractReactive
 			}
 		};
 
-		return StreamSupplierWithResult.of(StreamSupplier.concat(logFileStreams), positionPromise);
+		return StreamSupplierWithResult.of(StreamSuppliers.concat(logFileStreams), positionPromise);
 	}
 
 	private static void validateLogPartition(String logPartition) {

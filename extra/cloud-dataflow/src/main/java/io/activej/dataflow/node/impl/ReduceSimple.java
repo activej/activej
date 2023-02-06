@@ -21,8 +21,8 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.AbstractNode;
-import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.processor.reducer.StreamReducer;
 
 import java.util.ArrayList;
 import java.util.Collection;

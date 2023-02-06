@@ -20,11 +20,11 @@ import io.activej.common.annotation.StaticFactories;
 import io.activej.dataflow.dataset.impl.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamSchema;
-import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
-import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamSkip;
+import io.activej.datastream.processor.join.LeftJoiner;
 import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.datastream.processor.reducer.ReducerToResult;
+import io.activej.datastream.processor.transformer.impl.Limiter;
+import io.activej.datastream.processor.transformer.impl.Skip;
 
 import java.util.Comparator;
 import java.util.List;
@@ -229,35 +229,35 @@ public class Datasets {
 	}
 
 	public static <K, T> SortedDataset<K, T> offset(LocallySortedDataset<K, T> dataset, long offset) {
-		return offsetLimit(dataset, offset, StreamLimiter.NO_LIMIT);
+		return offsetLimit(dataset, offset, Limiter.NO_LIMIT);
 	}
 
 	public static <K, T> SortedDataset<K, T> limit(LocallySortedDataset<K, T> dataset, long limit) {
-		return offsetLimit(dataset, StreamSkip.NO_SKIP, limit);
+		return offsetLimit(dataset, Skip.NO_SKIP, limit);
 	}
 
 	public static <K, T> SortedDataset<K, T> offsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
-		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
+		checkArgument(offset >= Skip.NO_SKIP && limit >= Limiter.NO_LIMIT, "Negative offset or limit");
 
 		return new SortedOffsetLimit<>(dataset, offset, limit, ThreadLocalRandom.current().nextInt());
 	}
 
 	public static <T, K> Dataset<T> offset(Dataset<T> dataset, Function<T, K> keyFunction, long offset) {
-		return offsetLimit(dataset, keyFunction, offset, StreamLimiter.NO_LIMIT);
+		return offsetLimit(dataset, keyFunction, offset, Limiter.NO_LIMIT);
 	}
 
 	public static <T, K> Dataset<T> limit(Dataset<T> dataset, Function<T, K> keyFunction, long limit) {
-		return offsetLimit(dataset, keyFunction, StreamSkip.NO_SKIP, limit);
+		return offsetLimit(dataset, keyFunction, Skip.NO_SKIP, limit);
 	}
 
 	public static <T, K> Dataset<T> offsetLimit(Dataset<T> dataset, Function<T, K> keyFunction, long offset, long limit) {
-		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
+		checkArgument(offset >= Skip.NO_SKIP && limit >= Limiter.NO_LIMIT, "Negative offset or limit");
 
 		return new OffsetLimit<>(dataset, keyFunction, offset, limit, ThreadLocalRandom.current().nextInt());
 	}
 
 	public static <T> Dataset<T> localLimit(Dataset<T> dataset, long limit) {
-		checkArgument(limit >= StreamLimiter.NO_LIMIT, "Negative limit");
+		checkArgument(limit >= Limiter.NO_LIMIT, "Negative limit");
 
 		return new LocalLimit<>(dataset, limit);
 	}

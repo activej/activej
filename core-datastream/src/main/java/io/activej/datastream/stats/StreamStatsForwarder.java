@@ -16,8 +16,12 @@
 
 package io.activej.datastream.stats;
 
-import io.activej.datastream.*;
-import io.activej.datastream.processor.StreamTransformer;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.processor.transformer.StreamTransformer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
+import io.activej.datastream.supplier.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.reactor.ImplicitlyReactive;
 
 public final class StreamStatsForwarder<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {

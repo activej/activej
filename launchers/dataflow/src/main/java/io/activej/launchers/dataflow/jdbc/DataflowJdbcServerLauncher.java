@@ -3,7 +3,7 @@ package io.activej.launchers.dataflow.jdbc;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.dataflow.ISqlDataflow;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.inject.annotation.Inject;
@@ -76,7 +76,7 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	@Override
 	protected final void onStart() throws Exception {
 		reactor.submit(() -> sqlDataflow.query("SELECT 1")
-						.then(supplier -> supplier.streamTo(StreamConsumer.skip())))
+						.then(supplier -> supplier.streamTo(StreamConsumers.skip())))
 				.get();
 
 		logger.info("Connection to partitions established");

@@ -1,9 +1,9 @@
 package io.activej.dataflow.codec;
 
 import io.activej.dataflow.codec.module.DataflowStreamCodecsModule;
-import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
+import io.activej.datastream.processor.join.LeftJoiner;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;

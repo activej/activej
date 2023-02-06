@@ -31,9 +31,9 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -325,7 +325,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 		public WalConsumer(Path walFile) {
 			this.walFile = walFile;
 			ChannelConsumer<ByteBuf> writer = ChannelConsumers.ofPromise(ChannelFileWriter.open(executor, walFile));
-			internalSupplier.streamTo(StreamConsumer.ofSupplier(supplier -> supplier
+			internalSupplier.streamTo(StreamConsumers.ofSupplier(supplier -> supplier
 					.transformWith(ChannelSerializer.builder(serializer)
 							.withAutoFlushInterval(Duration.ZERO)
 							.build())

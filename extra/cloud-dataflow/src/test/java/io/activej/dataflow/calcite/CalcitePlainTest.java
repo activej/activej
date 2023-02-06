@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.record.Record;
 import org.junit.Assume;
 

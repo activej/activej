@@ -18,8 +18,8 @@ package io.activej.dataflow.collector;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamUnion;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.reactor.Reactor;
 
 public final class UnionCollector<T> extends AbstractCollector<T, StreamUnion<T>> {

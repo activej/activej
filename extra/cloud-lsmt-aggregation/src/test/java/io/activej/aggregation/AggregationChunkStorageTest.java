@@ -5,8 +5,8 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -79,7 +79,7 @@ public class AggregationChunkStorageTest {
 		Set<Path> expected = IntStream.range(0, nChunks + 1).mapToObj(i -> Paths.get((i + 1) + ".temp")).collect(toSet());
 
 		Random random = ThreadLocalRandom.current();
-		StreamSupplier<KeyValuePair> supplier = StreamSupplier.ofStream(
+		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofStream(
 				Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
 						.limit(nChunks));
 

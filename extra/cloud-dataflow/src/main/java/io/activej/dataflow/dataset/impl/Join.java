@@ -25,7 +25,7 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.Nodes;
-import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
+import io.activej.datastream.processor.join.LeftJoiner;
 
 import java.util.ArrayList;
 import java.util.Collection;

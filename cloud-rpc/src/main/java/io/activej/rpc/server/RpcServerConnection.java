@@ -17,7 +17,7 @@
 package io.activej.rpc.server;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;

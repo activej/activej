@@ -19,8 +19,8 @@ package io.activej.dataflow.collector;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamReducer;
+import io.activej.datastream.processor.reducer.StreamReducer;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.reactor.Reactor;
 
 import java.util.Comparator;

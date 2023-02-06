@@ -5,10 +5,10 @@ import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
-import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -97,7 +97,7 @@ public final class RpcBinaryProtocolTest {
 		List<RpcMessage> sourceList = IntStream.range(0, countRequests).mapToObj(i -> RpcMessage.of(i, testMessage)).collect(toList());
 
 		FrameFormat frameFormat = FrameFormats.lz4();
-		StreamSupplier<RpcMessage> supplier = StreamSupplier.ofIterable(sourceList)
+		StreamSupplier<RpcMessage> supplier = StreamSuppliers.ofIterable(sourceList)
 				.transformWith(ChannelSerializer.builder(binarySerializer)
 						.withInitialBufferSize(MemSize.of(1))
 						.build())

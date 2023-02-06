@@ -1,6 +1,7 @@
-import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.consumer.AbstractStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.eventloop.Eventloop;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
@@ -34,7 +35,7 @@ public final class ConsumerExample<T> extends AbstractStreamConsumer<T> {
 				.build();
 
 		StreamConsumer<Integer> consumer = new ConsumerExample<>();
-		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3);
+		StreamSupplier<Integer> supplier = StreamSuppliers.ofValues(1, 2, 3);
 
 		supplier.streamTo(consumer);
 

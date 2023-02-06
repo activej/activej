@@ -2,7 +2,7 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
-import io.activej.datastream.processor.IStreamSorterStorage;
+import io.activej.datastream.processor.transformer.sort.IStreamSorterStorage;
 import io.activej.promise.Promise;
 
 public interface StreamSorterStorageFactory {

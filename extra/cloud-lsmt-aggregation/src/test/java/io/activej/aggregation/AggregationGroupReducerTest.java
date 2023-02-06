@@ -3,9 +3,10 @@ package io.activej.aggregation;
 import io.activej.aggregation.fieldtype.FieldTypes;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -56,12 +57,12 @@ public class AggregationGroupReducerTest {
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				return Promise.of(StreamSupplier.ofIterable(items));
+				return Promise.of(StreamSuppliers.ofIterable(items));
 			}
 
 			@Override
 			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				ToListStreamConsumer consumer = ToListStreamConsumer.create(items);
+				StreamConsumer<T> consumer = ToListStreamConsumer.create(items);
 				listConsumers.add(consumer);
 				return Promise.of(consumer);
 			}
@@ -91,7 +92,7 @@ public class AggregationGroupReducerTest {
 
 		int aggregationChunkSize = 2;
 
-		StreamSupplier<InvertedIndexRecord> supplier = StreamSupplier.of(
+		StreamSupplier<InvertedIndexRecord> supplier = StreamSuppliers.ofValues(
 				new InvertedIndexRecord("fox", 1),
 				new InvertedIndexRecord("brown", 2),
 				new InvertedIndexRecord("fox", 3),

@@ -7,13 +7,12 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
 import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.ToListStreamConsumer;
+import io.activej.datastream.consumer.ToListStreamConsumer;
+import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -71,12 +70,12 @@ public class StringDimensionTest {
 				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"))
 				.build();
 
-		CubeDiff consumer1Result = await(StreamSupplier.of(
+		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 						new DataItemString1("str1", 2, 10, 20),
 						new DataItemString1("str2", 3, 10, 20))
 				.streamTo(cube.consume(DataItemString1.class)));
 
-		CubeDiff consumer2Result = await(StreamSupplier.of(
+		CubeDiff consumer2Result = await(StreamSuppliers.ofValues(
 						new DataItemString2("str2", 3, 10, 20),
 						new DataItemString2("str1", 4, 10, 20))
 				.streamTo(cube.consume(DataItemString2.class)));
