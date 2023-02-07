@@ -3,7 +3,7 @@ package io.activej.serializer.examples;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.def.SerializerDef;
-import io.activej.types.scanner.TypeScannerRegistry.Mapping;
+import io.activej.types.scanner.TypeScannerRegistry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -94,7 +94,7 @@ public class SerializerFactoryUtils {
 		return toUpperCase(str.charAt(0)) + str.substring(1);
 	}
 
-	private static Mapping<SerializerDef> serializerDefMap(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
+	private static TypeScannerRegistry.Mapping<SerializerDef> serializerDefMap(Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
 		String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 		if (!mapType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected mapType '%s', but was begin '%s'", mapType.getSimpleName(), prefix));
@@ -128,7 +128,7 @@ public class SerializerFactoryUtils {
 		};
 	}
 
-	private static Mapping<SerializerDef> serializerDefCollection(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
+	private static TypeScannerRegistry.Mapping<SerializerDef> serializerDefCollection(Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
 		String prefix = capitalize(valueType.getSimpleName());
 		if (!collectionType.getSimpleName().startsWith(prefix))
 			throw new IllegalArgumentException(format("Expected setType '%s', but was begin '%s'", collectionType.getSimpleName(), prefix));

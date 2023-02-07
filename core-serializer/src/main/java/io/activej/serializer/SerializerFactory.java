@@ -30,7 +30,6 @@ import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
 import io.activej.types.scanner.TypeScannerRegistry;
 import io.activej.types.scanner.TypeScannerRegistry.Context;
-import io.activej.types.scanner.TypeScannerRegistry.Mapping;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
@@ -51,7 +50,6 @@ import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.get;
 import static io.activej.types.AnnotatedTypes.*;
-import static io.activej.types.AnnotationUtils.getAnnotation;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
@@ -98,9 +96,8 @@ public final class SerializerFactory {
 	 * Creates a builder of {@link  SerializerFactory}
 	 */
 	public static Builder builder() {
-		SerializerFactory.Builder builder = new SerializerFactory().new Builder();
-
-		builder
+		SerializerFactory factory = new SerializerFactory();
+		return factory.new Builder()
 				.with(boolean.class, ctx -> SerializerDefs.ofBoolean(false))
 				.with(char.class, ctx -> SerializerDefs.ofChar(false))
 				.with(byte.class, ctx -> SerializerDefs.ofByte(false))
@@ -117,29 +114,29 @@ public final class SerializerFactory {
 				.with(Integer.class, ctx -> SerializerDefs.ofInt(true))
 				.with(Long.class, ctx -> SerializerDefs.ofLong(true))
 				.with(Float.class, ctx -> SerializerDefs.ofFloat(true))
-				.with(Double.class, ctx -> SerializerDefs.ofDouble(true));
+				.with(Double.class, ctx -> SerializerDefs.ofDouble(true))
 
-		for (Type type : new Type[]{
-				boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
-				Object[].class}) {
-			builder.with(type, ctx -> SerializerDefs.ofArray(ctx.scanTypeArgument(0), ctx.getRawType()));
-		}
+				.initialize(builder -> {
+					for (Type type : new Type[]{
+							boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
+							Object[].class}) {
+						builder.with(type, ctx -> SerializerDefs.ofArray(ctx.scanTypeArgument(0), ctx.getRawType()));
+					}
+				})
 
-		builder
 				.with(Inet4Address.class, ctx -> SerializerDefs.ofInet4Address())
 				.with(Inet6Address.class, ctx -> SerializerDefs.ofInet6Address())
-				.with(InetAddress.class, ctx -> SerializerDefs.ofInetAddress());
+				.with(InetAddress.class, ctx -> SerializerDefs.ofInetAddress())
 
-		builder
 				.with(Enum.class, ctx -> {
 					for (Method method : ctx.getRawType().getDeclaredMethods()) {
 						if (AnnotationUtils.hasAnnotation(Serialize.class, method.getAnnotations())) {
-							return builder.scan(ctx);
+							return factory.scan(ctx);
 						}
 					}
 					for (Field field : ctx.getRawType().getDeclaredFields()) {
 						if (AnnotationUtils.hasAnnotation(Serialize.class, field.getAnnotations())) {
-							return builder.scan(ctx);
+							return factory.scan(ctx);
 						}
 					}
 					//noinspection unchecked,rawtypes
@@ -147,7 +144,7 @@ public final class SerializerFactory {
 				})
 
 				.with(String.class, ctx -> {
-					SerializeStringFormat a = builder.getAnnotation(SerializeStringFormat.class, ctx.getAnnotations());
+					SerializeStringFormat a = factory.getAnnotation(SerializeStringFormat.class, ctx.getAnnotations());
 					return SerializerDefs.ofString(a == null ? StringFormat.UTF8 : a.value());
 				})
 
@@ -168,9 +165,7 @@ public final class SerializerFactory {
 				.with(LinkedHashSet.class, ctx -> SerializerDefs.ofHashSet(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
 				.with(EnumSet.class, ctx -> SerializerDefs.ofEnumSet(ctx.scanTypeArgument(0)))
 
-				.with(Object.class, builder::scan);
-
-		return builder;
+				.with(Object.class, factory::scan);
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, SerializerFactory> {
@@ -182,7 +177,7 @@ public final class SerializerFactory {
 		 * @param typeT a type token
 		 * @param fn    a mapping to resolve a serializer
 		 */
-		public Builder with(TypeT<?> typeT, Mapping<SerializerDef> fn) {
+		public Builder with(TypeT<?> typeT, TypeScannerRegistry.Mapping<SerializerDef> fn) {
 			checkNotBuilt(this);
 			return with(typeT.getType(), fn);
 		}
@@ -194,7 +189,7 @@ public final class SerializerFactory {
 		 * @param fn   a mapping to resolve a serializer
 		 */
 		@SuppressWarnings("PointlessBooleanExpression")
-		public Builder with(Type type, Mapping<SerializerDef> fn) {
+		public Builder with(Type type, TypeScannerRegistry.Mapping<SerializerDef> fn) {
 			checkNotBuilt(this);
 			registry.with(type, ctx -> {
 				Class<?> rawClass = ctx.getRawType();
@@ -415,54 +410,6 @@ public final class SerializerFactory {
 		@Override
 		protected SerializerFactory doBuild() {
 			return SerializerFactory.this;
-		}
-
-		@SuppressWarnings("unchecked")
-		private SerializerDef scan(Context<SerializerDef> ctx) {
-			Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.getContextValue();
-			SerializerDef serializerDef = cache.get(ctx.getType());
-			if (serializerDef != null) return serializerDef;
-			ForwardingSerializerDefImpl forwardingSerializerDef = new ForwardingSerializerDefImpl();
-			cache.put(ctx.getType(), forwardingSerializerDef);
-
-			SerializerDef serializer = doScan(ctx);
-
-			forwardingSerializerDef.serializerDef = serializer;
-
-			return serializer;
-		}
-
-		@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
-		private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
-			for (int i = 0; i < annotations.length; i++) {
-				Annotation annotation = annotations[i];
-				if (annotation.annotationType() == type) {
-					return (A) annotation;
-				}
-			}
-			Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
-			if (aliasesMap != null) {
-				for (int i = 0; i < annotations.length; i++) {
-					Annotation annotation = annotations[i];
-					Function<Annotation, ? extends Annotation> mapping = (Function<Annotation, ? extends Annotation>) aliasesMap.get(annotation.annotationType());
-					if (mapping != null) {
-						return (A) mapping.apply(annotation);
-					}
-				}
-			}
-			return null;
-		}
-
-		@SuppressWarnings("ForLoopReplaceableByForEach")
-		private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
-			Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
-			for (int i = 0; i < annotations.length; i++) {
-				Class<? extends Annotation> annotationType = annotations[i].annotationType();
-				if (annotationType == type || aliasesMap.containsKey(annotationType)) {
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 
@@ -761,6 +708,21 @@ public final class SerializerFactory {
 				return in -> staticCallSelf(finalMethodName, in);
 			}
 		};
+	}
+
+	@SuppressWarnings("unchecked")
+	private SerializerDef scan(Context<SerializerDef> ctx) {
+		Map<Type, SerializerDef> cache = (Map<Type, SerializerDef>) ctx.getContextValue();
+		SerializerDef serializerDef = cache.get(ctx.getType());
+		if (serializerDef != null) return serializerDef;
+		ForwardingSerializerDefImpl forwardingSerializerDef = new ForwardingSerializerDefImpl();
+		cache.put(ctx.getType(), forwardingSerializerDef);
+
+		SerializerDef serializer = doScan(ctx);
+
+		forwardingSerializerDef.serializerDef = serializer;
+
+		return serializer;
 	}
 
 	private SerializerDef doScan(Context<SerializerDef> ctx) {
@@ -1103,6 +1065,39 @@ public final class SerializerFactory {
 		}
 
 		return serialize != null ? new FoundSerializer(methodOrField, serialize.order(), added, removed) : null;
+	}
+
+	@SuppressWarnings("ForLoopReplaceableByForEach")
+	private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
+		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
+		for (int i = 0; i < annotations.length; i++) {
+			Class<? extends Annotation> annotationType = annotations[i].annotationType();
+			if (annotationType == type || aliasesMap.containsKey(annotationType)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
+	private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
+		for (int i = 0; i < annotations.length; i++) {
+			Annotation annotation = annotations[i];
+			if (annotation.annotationType() == type) {
+				return (A) annotation;
+			}
+		}
+		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
+		if (aliasesMap != null) {
+			for (int i = 0; i < annotations.length; i++) {
+				Annotation annotation = annotations[i];
+				Function<Annotation, ? extends Annotation> mapping = (Function<Annotation, ? extends Annotation>) aliasesMap.get(annotation.annotationType());
+				if (mapping != null) {
+					return (A) mapping.apply(annotation);
+				}
+			}
+		}
+		return null;
 	}
 
 	private int getProfileVersion(String[] profiles, int[] versions) {
