@@ -125,17 +125,9 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static int getInt(Class<?> type, String name, int defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Integer getInt(Class<?> type, String name, Integer defValue) {
 		return get(Integer::parseInt, type, name, defValue);
-	}
-
-	/**
-	 * Retrieves an {@code Integer} setting. If no setting is set, {@code null} is returned
-	 *
-	 * @see #get(Function, Class, String, Object)
-	 */
-	public static @Nullable Integer getInteger(Class<?> type, String name) {
-		return get(Integer::parseInt, type, name, null);
 	}
 
 	/**
@@ -143,17 +135,9 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static long getLong(Class<?> type, String name, long defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Long getLong(Class<?> type, String name, Long defValue) {
 		return get(Long::parseLong, type, name, defValue);
-	}
-
-	/**
-	 * Retrieves a {@code Long} setting. If no setting is set, {@code null} is returned
-	 *
-	 * @see #get(Function, Class, String, Object)
-	 */
-	public static @Nullable Long getLong(Class<?> type, String name) {
-		return get(Long::parseLong, type, name, null);
 	}
 
 	/**
@@ -161,17 +145,9 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static boolean getBoolean(Class<?> type, String name, boolean defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Boolean getBoolean(Class<?> type, String name, Boolean defValue) {
 		return get(ApplicationSettings::parseBoolean, type, name, defValue);
-	}
-
-	/**
-	 * Retrieves a {@code Boolean} setting. If no setting is set, {@code null} is returned
-	 *
-	 * @see #get(Function, Class, String, Object)
-	 */
-	public static @Nullable Boolean getBoolean(Class<?> type, String name) {
-		return get(ApplicationSettings::parseBoolean, type, name, null);
 	}
 
 	public static boolean parseBoolean(String s) {
@@ -183,17 +159,9 @@ public final class ApplicationSettings {
 	 *
 	 * @see #get(Function, Class, String, Object)
 	 */
-	public static double getDouble(Class<?> type, String name, double defValue) {
+	@Contract("_, _, !null -> !null")
+	public static @Nullable Double getDouble(Class<?> type, String name, Double defValue) {
 		return get(Double::parseDouble, type, name, defValue);
-	}
-
-	/**
-	 * Retrieves a {@code Double} setting. If no setting is set, {@code null} is returned
-	 *
-	 * @see #get(Function, Class, String, Object)
-	 */
-	public static @Nullable Double getDouble(Class<?> type, String name) {
-		return get(Double::parseDouble, type, name, null);
 	}
 
 	/**

@@ -33,9 +33,9 @@ import static java.net.StandardSocketOptions.*;
 public final class SocketSettings {
 	private static final SocketSettings DEFAULT_INSTANCE = builder().withTcpNoDelay(true).build();
 
-	public static final @Nullable Boolean DEFAULT_KEEP_ALIVE = ApplicationSettings.getBoolean(SocketSettings.class, "keepAlive");
-	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(SocketSettings.class, "reuseAddress");
-	public static final @Nullable Boolean DEFAULT_TCP_NO_DELAY = ApplicationSettings.getBoolean(SocketSettings.class, "tcpNoDelay");
+	public static final @Nullable Boolean DEFAULT_KEEP_ALIVE = ApplicationSettings.getBoolean(SocketSettings.class, "keepAlive", null);
+	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(SocketSettings.class, "reuseAddress", null);
+	public static final @Nullable Boolean DEFAULT_TCP_NO_DELAY = ApplicationSettings.getBoolean(SocketSettings.class, "tcpNoDelay", null);
 	public static final @Nullable MemSize DEFAULT_SEND_BUFFER_SIZE = ApplicationSettings.getMemSize(SocketSettings.class, "sendBufferSize", null);
 	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(SocketSettings.class, "receiveBufferSize", null);
 	public static final @Nullable Duration DEFAULT_IMPL_READ_TIMEOUT = ApplicationSettings.getDuration(SocketSettings.class, "implReadTimeout", null);
