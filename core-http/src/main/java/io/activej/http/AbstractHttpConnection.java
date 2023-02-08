@@ -433,7 +433,14 @@ public abstract class AbstractHttpConnection {
 									return Promise.ofException(e);
 								}),
 				Promise::complete,
-				e -> closeEx(translateToHttpException(e)));
+				e -> {
+					Exception httpException = translateToHttpException(e);
+					if (e instanceof MalformedHttpException) {
+						onMalformedHttpException((MalformedHttpException) e);
+					} else {
+						closeEx(httpException);
+					}
+				});
 
 		ChannelOutput<ByteBuf> bodyStream;
 		AsyncProcess process;

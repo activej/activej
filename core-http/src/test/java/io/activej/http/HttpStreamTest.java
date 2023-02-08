@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -31,6 +32,7 @@ import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
@@ -186,7 +188,11 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testTruncatedRequest() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		AsyncHttpServer.JmxInspector inspector = new AsyncHttpServer.JmxInspector();
+		startTestServer(request -> request.loadBody()
+						.map(body -> HttpResponse.ok200()
+								.withBody(body.slice())),
+				inspector);
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -201,7 +207,15 @@ public final class HttpStreamTest {
 						.then(socket::read)
 						.whenComplete(socket::close)));
 
-		assertNull(body);
+		assertEquals(
+				"HTTP/1.1 400 Bad Request\r\n" +
+						"Connection: close\r\n" +
+						"Content-Length: 0\r\n" +
+						"\r\n",
+				body.asString(UTF_8));
+
+		assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
+		assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
 
 //		String response = body.asString(UTF_8);
 //		assertTrue(response.contains("HTTP/1.1 400 Bad Request"));
@@ -230,10 +244,17 @@ public final class HttpStreamTest {
 	}
 
 	private void startTestServer(AsyncServlet servlet) throws IOException {
-		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), servlet)
+		startTestServer(servlet, null);
+	}
+
+	private void startTestServer(AsyncServlet servlet, AsyncHttpServer.JmxInspector inspector) throws IOException {
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), servlet)
 				.withListenPort(port)
-				.withAcceptOnce()
-				.listen();
+				.withAcceptOnce();
+		if (inspector != null) {
+			server.withInspector(inspector);
+		}
+		server.listen();
 	}
 
 	private List<ByteBuf> getBufsList(byte[] array) {

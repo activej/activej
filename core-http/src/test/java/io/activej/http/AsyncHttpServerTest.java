@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.Selector;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Random;
@@ -31,6 +32,7 @@ import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -414,17 +416,24 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testIncompleteRequest() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, request ->
 				request.loadBody()
 						.map(($, e) -> {
 							assertTrue(e instanceof MalformedHttpException);
+							assertEquals("Incomplete HTTP message", e.getMessage());
+							assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
+							assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
+							assertEquals(1, inspector.getHttpErrors().getTotal());
+							assertEquals("Incomplete HTTP message", inspector.getHttpErrors().getLastMessage());
 
 							assertFalse(request.isRecycled());
 							assertTrue(request.getConnection().isClosed());
 
 							assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
 							return HttpResponse.ofCode(400);
-						}));
+						}))
+				.withInspector(inspector);
 		server.withListenPort(port);
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -440,7 +449,12 @@ public final class AsyncHttpServerTest {
 					"field1=value1&field2=value2");
 			socket.shutdownOutput();
 
-			assertEquals(0, toByteArray(socket.getInputStream()).length);
+			assertEquals(
+					"HTTP/1.1 400 Bad Request\r\n" +
+							"Connection: close\r\n" +
+							"Content-Length: 0\r\n" +
+							"\r\n",
+					new String(toByteArray(socket.getInputStream()), UTF_8));
 		}
 
 		server.closeFuture().get();

@@ -156,7 +156,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	protected void onMalformedHttpException(@NotNull MalformedHttpException e) {
 		if (inspector != null) {
-			inspector.onMalformedHttpRequest(this, e, readBuf.getArray());
+			inspector.onMalformedHttpRequest(this, e, readBuf == null ? new byte[0] : readBuf.getArray());
 		}
 
 		writeBuf = ensureWriteBuffer(MALFORMED_HTTP_RESPONSE.length);
