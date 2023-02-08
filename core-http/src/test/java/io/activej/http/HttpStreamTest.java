@@ -216,6 +216,7 @@ public final class HttpStreamTest {
 
 		assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
 		assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
+		assertEquals(0, inspector.getHttpErrors().getTotal());
 
 //		String response = body.asString(UTF_8);
 //		assertTrue(response.contains("HTTP/1.1 400 Bad Request"));

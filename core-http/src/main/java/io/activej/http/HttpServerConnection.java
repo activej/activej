@@ -165,7 +165,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		this.writeBuf = null;
 
 		socket.write(writeBuf)
-				.whenComplete(() -> closeEx(e));
+				.whenComplete(this::close);
 	}
 
 	/**

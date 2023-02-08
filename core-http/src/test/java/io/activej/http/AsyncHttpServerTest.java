@@ -424,8 +424,7 @@ public final class AsyncHttpServerTest {
 							assertEquals("Incomplete HTTP message", e.getMessage());
 							assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
 							assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
-							assertEquals(1, inspector.getHttpErrors().getTotal());
-							assertEquals("Incomplete HTTP message", inspector.getHttpErrors().getLastMessage());
+							assertEquals(0, inspector.getHttpErrors().getTotal());
 
 							assertFalse(request.isRecycled());
 							assertTrue(request.getConnection().isClosed());
