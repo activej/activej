@@ -6,26 +6,21 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractBuilder<B extends WithInitializer<B>, T> implements Builder<T>, WithInitializer<B> {
-	private volatile T instance;
+	private boolean built;
 
 	public final boolean isBuilt() {
-		return instance != null;
+		return built;
 	}
 
 	protected static void checkNotBuilt(AbstractBuilder<?, ?> self) {
-		checkState(!self.isBuilt());
+		checkState(!self.built);
 	}
 
 	@Override
 	public final T build() {
-		T t = instance;
-		if (t != null) return t;
-		return buildImpl();
-	}
-
-	synchronized private T buildImpl() {
-		if (instance != null) return instance;
-		instance = doBuild();
+		checkNotBuilt(this);
+		built = true;
+		T instance = doBuild();
 		checkNotNull(instance);
 		return instance;
 	}
