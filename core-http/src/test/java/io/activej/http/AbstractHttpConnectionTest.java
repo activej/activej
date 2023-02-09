@@ -325,9 +325,9 @@ public final class AbstractHttpConnectionTest {
 
 		assertEquals(400, response.getCode());
 
-		ExceptionStats httpErrors = inspector.getHttpErrors();
-		assertEquals(1, httpErrors.getTotal());
-		Throwable lastException = httpErrors.getLastException();
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		Throwable lastException = malformedHttpExceptions.getLastException();
 		assert lastException != null;
 		assertThat(lastException, instanceOf(MalformedHttpException.class));
 		assertThat(lastException.getMessage(), containsString("Header line exceeds max header size"));

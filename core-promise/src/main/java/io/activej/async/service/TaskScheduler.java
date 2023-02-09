@@ -235,7 +235,7 @@ public final class TaskScheduler extends AbstractReactive
 						e -> {
 							lastException = e;
 							errorCount++;
-							logger.error("Retry attempt " + errorCount, e);
+							logger.warn("Retry attempt " + errorCount, e);
 							if (abortOnError) {
 								scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 								throw new RuntimeException(e);

@@ -249,7 +249,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 						logger.info("Task executed successfully: {}", execute);
 					} else if (exception instanceof AsyncCloseException) {
 						canceledTasks++;
-						logger.error("Canceled task: {}", execute, exception);
+						logger.warn("Canceled task: {}", execute, exception);
 					} else {
 						failedTasks++;
 						logger.error("Failed to execute task: {}", execute, exception);
@@ -260,7 +260,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 		messaging.receive()
 				.whenException(() -> {
 					if (!task.isExecuted()) {
-						logger.error("Client disconnected. Canceling task: {}", execute);
+						logger.warn("Client disconnected. Canceling task: {}", execute);
 						task.cancel();
 					}
 				});

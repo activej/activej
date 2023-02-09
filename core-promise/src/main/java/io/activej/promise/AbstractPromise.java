@@ -510,7 +510,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <E extends Exception> Promise<T> mapException(Class<E> clazz, FunctionEx<E, Exception> exceptionFn) {
+	public <E extends Exception> Promise<T> mapException(Class<E> clazz,
+			FunctionEx<? super E, ? extends Exception> exceptionFn) {
 		if (isComplete()) {
 			try {
 				return exception == null ?
@@ -1341,7 +1342,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<E> fn) {
+	public <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<? super E> fn) {
 		if (isComplete()) {
 			try {
 				if (exception != null && clazz.isAssignableFrom(exception.getClass())) {

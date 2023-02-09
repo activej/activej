@@ -35,6 +35,8 @@ import static io.activej.http.TestUtils.readFully;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
@@ -527,17 +529,23 @@ public final class HttpServerTest {
 
 	@Test
 	public void testIncompleteRequest() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, request ->
-				request.loadBody()
-						.map(($, e) -> {
-							assertTrue(e instanceof MalformedHttpException);
+						request.loadBody()
+								.map(($, e) -> {
+									assertTrue(e instanceof MalformedHttpException);
+									assertEquals("Incomplete HTTP message", e.getMessage());
+									assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
+									assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
+									assertEquals(0, inspector.getHttpErrors().getTotal());
 
-							assertFalse(request.isRecycled());
-							assertTrue(request.getConnection().isClosed());
+									assertFalse(request.isRecycled());
+									assertTrue(request.getConnection().isClosed());
 
-							assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
-							return HttpResponse.ofCode(400);
-						}))
+									assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
+									return HttpResponse.ofCode(400);
+								}))
+				.withInspector(inspector)
 				.withListenPort(port)
 				.build();
 		server.listen();
@@ -555,6 +563,14 @@ public final class HttpServerTest {
 					\r
 					field1=value1&field2=value2""");
 			socket.shutdownOutput();
+
+			readAndAssert(socket.getInputStream(),
+					"""
+							HTTP/1.1 400 Bad Request\r
+							Connection: close\r
+							Content-Length: 0\r
+							\r
+							""");
 
 			assertEmpty(socket.getInputStream());
 		}

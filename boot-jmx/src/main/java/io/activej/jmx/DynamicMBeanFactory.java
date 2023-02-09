@@ -741,13 +741,13 @@ public final class DynamicMBeanFactory {
 			try {
 				value = rootNode.aggregateAttributes(Set.of(attribute), beans).get(attribute);
 			} catch (Exception e) {
-				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, e);
+				logger.warn("Failed to fetch attribute '{}' from beans {}", attribute, beans, e);
 				propagate(e);
 				throw new AssertionError("Never reached");
 			}
 
 			if (value instanceof Throwable throwable) {
-				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, throwable);
+				logger.warn("Failed to fetch attribute '{}' from beans {}", attribute, beans, throwable);
 				propagate(throwable);
 			}
 			return value;
@@ -767,7 +767,7 @@ public final class DynamicMBeanFactory {
 						rootNode.setAttribute(attrName, attrValue, List.of(bean));
 						latch.countDown();
 					} catch (Exception e) {
-						logger.error("Failed to set attribute '{}' of {} with value '{}'", attrName, bean, attrValue, e);
+						logger.warn("Failed to set attribute '{}' of {} with value '{}'", attrName, bean, attrValue, e);
 						exceptionRef.set(e);
 						latch.countDown();
 					}
@@ -803,7 +803,7 @@ public final class DynamicMBeanFactory {
 					}
 				}
 			} catch (Exception e) {
-				logger.error("Failed to get attributes {} from beans {}", attrNames, beans, e);
+				logger.warn("Failed to get attributes {} from beans {}", attrNames, beans, e);
 			}
 			return attrList;
 		}
@@ -855,7 +855,7 @@ public final class DynamicMBeanFactory {
 						lastValueRef.set(result);
 						latch.countDown();
 					} catch (Exception e) {
-						logger.error("Failed to invoke method '{}' on {} with args {}", method, bean, args, e);
+						logger.warn("Failed to invoke method '{}' on {} with args {}", method, bean, args, e);
 						exceptionRef.set(e);
 						latch.countDown();
 					}
@@ -882,7 +882,7 @@ public final class DynamicMBeanFactory {
 			try {
 				return node.aggregateAttributes(Set.of(name), beans).get(name);
 			} catch (Throwable e) {
-				logger.error("Failed to fetch attribute '{}' from beans {}", name, beans, e);
+				logger.warn("Failed to fetch attribute '{}' from beans {}", name, beans, e);
 				propagate(e);
 				return null;
 			}

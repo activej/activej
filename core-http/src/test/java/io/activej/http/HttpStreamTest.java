@@ -6,6 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
+import io.activej.http.HttpServer.JmxInspector;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -188,7 +189,11 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testTruncatedRequest() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		JmxInspector inspector = new JmxInspector();
+		startTestServer(request -> request.loadBody()
+						.map(body -> HttpResponse.ok200()
+								.withBody(body.slice())),
+				inspector);
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -203,7 +208,16 @@ public final class HttpStreamTest {
 						.then(socket::read)
 						.whenComplete(socket::close)));
 
-		assertNull(body);
+		assertEquals(
+				"HTTP/1.1 400 Bad Request\r\n" +
+						"Connection: close\r\n" +
+						"Content-Length: 0\r\n" +
+						"\r\n",
+				body.asString(UTF_8));
+
+		assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
+		assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
+		assertEquals(0, inspector.getHttpErrors().getTotal());
 
 //		String response = body.asString(UTF_8);
 //		assertTrue(response.contains("HTTP/1.1 400 Bad Request"));
@@ -232,11 +246,17 @@ public final class HttpStreamTest {
 	}
 
 	private void startTestServer(AsyncServlet servlet) throws IOException {
-		HttpServer.builder(Reactor.getCurrentReactor(), servlet)
+		startTestServer(servlet, null);
+	}
+
+	private void startTestServer(AsyncServlet servlet, JmxInspector inspector) throws IOException {
+		HttpServer.Builder builder = HttpServer.builder(Reactor.getCurrentReactor(), servlet)
 				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				.withAcceptOnce();
+		if (inspector != null) {
+			builder.withInspector(inspector);
+		}
+		builder.build().listen();
 	}
 
 	private List<ByteBuf> getBufsList(byte[] array) {

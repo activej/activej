@@ -436,7 +436,14 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 									return Promise.ofException(e);
 								}),
 				Promise::complete,
-				AsyncCloseable.of(e -> closeEx(translateToHttpException(e))));
+				AsyncCloseable.of(e -> {
+					Exception httpException = translateToHttpException(e);
+					if (e instanceof MalformedHttpException) {
+						onMalformedHttpException((MalformedHttpException) e);
+					} else {
+						closeEx(httpException);
+					}
+				}));
 
 		ChannelOutput<ByteBuf> bodyStream;
 		ReactiveProcess process;

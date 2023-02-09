@@ -153,7 +153,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	protected void onMalformedHttpException(MalformedHttpException e) {
 		if (inspector != null) {
-			inspector.onMalformedHttpRequest(this, e, readBuf.getArray());
+			inspector.onMalformedHttpRequest(this, e, readBuf == null ? new byte[0] : readBuf.getArray());
 		}
 
 		writeBuf = ensureWriteBuffer(MALFORMED_HTTP_RESPONSE.length);
@@ -162,7 +162,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		this.writeBuf = null;
 
 		socket.write(writeBuf)
-				.whenComplete(() -> closeEx(e));
+				.whenComplete(this::close);
 	}
 
 	/**
