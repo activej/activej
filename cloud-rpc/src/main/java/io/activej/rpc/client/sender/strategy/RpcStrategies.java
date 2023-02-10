@@ -57,4 +57,8 @@ public class RpcStrategies {
 	public static <T> RpcStrategy sharding(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
 		return Sharding.create(shardingFunction, strategies);
 	}
+
+	public static RpcStrategy forced(RpcStrategy strategy) {
+		return new Forced(strategy);
+	}
 }
