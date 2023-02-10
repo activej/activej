@@ -48,40 +48,35 @@ public final class CachedDnsClient extends AbstractReactive
 	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
 
 	private final IDnsClient client;
-
-	private DnsCache cache;
+	private final DnsCache cache;
+	
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private CachedDnsClient(Reactor reactor, IDnsClient client) {
+	private CachedDnsClient(Reactor reactor, IDnsClient client, DnsCache cache) {
 		super(reactor);
 		this.client = client;
+		this.cache = cache;
 	}
 
 	public static CachedDnsClient create(Reactor reactor, IDnsClient client, DnsCache cache) {
-		return builder(reactor, client)
-				.withCache(cache)
-				.build();
+		return builder(reactor, client, cache).build();
 	}
 
 	public static CachedDnsClient create(Reactor reactor, IDnsClient client) {
-		return builder(reactor, client)
-				.withCache(DnsCache.create(reactor))
-				.build();
+		return builder(reactor, client).build();
 	}
 
-	public static Builder builder(Reactor reactor, IDnsClient client){
-		return new CachedDnsClient(reactor, client).new Builder();
+	public static Builder builder(Reactor reactor, IDnsClient client) {
+		return builder(reactor, client, DnsCache.create(reactor));
+	}
+
+	public static Builder builder(Reactor reactor, IDnsClient client, DnsCache cache) {
+		return new CachedDnsClient(reactor, client, cache).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CachedDnsClient> {
 		private Builder() {}
-
-		public Builder withCache(DnsCache cache) {
-			checkNotBuilt(this);
-			CachedDnsClient.this.cache = cache;
-			return this;
-		}
 
 		public Builder withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta) {
 			checkNotBuilt(this);
