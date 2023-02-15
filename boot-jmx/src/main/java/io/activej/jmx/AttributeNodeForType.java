@@ -20,73 +20,112 @@ import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxReducer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toList;
 
-@SuppressWarnings("rawtypes")
-final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
-	private final @Nullable Method setter;
+@SuppressWarnings({"unchecked", "rawtypes"})
+final class AttributeNodeForType<T> extends AbstractAttributeNodeForLeaf {
+	private static final Logger logger = LoggerFactory.getLogger(AttributeNodeForType.class);
+
+	private static final Function<String, ?> NOT_CONVERTABLE = $ -> {
+		throw new AssertionError();
+	};
+
 	private final Class<?> type;
+	private final @Nullable Method setter;
 	private final JmxReducer reducer;
 
-	public AttributeNodeForSimpleType(String name, @Nullable String description, boolean visible,
-			ValueFetcher fetcher, @Nullable Method setter,
-			Class<?> attributeType, @NotNull JmxReducer reducer) {
+	private final @Nullable Function<T, String> to;
+	private final @Nullable Function<String, T> from;
+
+	public AttributeNodeForType(String name, @Nullable String description, ValueFetcher fetcher,
+			boolean visible, @Nullable Method setter, Class<?> attributeType, JmxReducer<T> reducer,
+			@Nullable Function<T, String> to, @Nullable Function<String, T> from) {
 		super(name, description, fetcher, visible);
 		this.setter = setter;
-		this.type = attributeType;
 		this.reducer = reducer;
+		this.type = attributeType;
+		this.to = to;
+		this.from = from;
+	}
+
+	public static <T> AttributeNodeForType<T> createCustom(
+			String name, @Nullable String description, ValueFetcher fetcher,
+			boolean visible, @Nullable Method setter,
+			Function<T, String> to, @Nullable Function<String, T> from, JmxReducer<T> reducer
+	) {
+		return new AttributeNodeForType<>(name, description, fetcher, visible, setter, String.class, reducer,
+				to, from == null ? (Function<String, T>) NOT_CONVERTABLE : from);
+	}
+
+	public static <T> AttributeNodeForType<T> createSimple(
+			String name, @Nullable String description, ValueFetcher fetcher,
+			boolean visible, @Nullable Method setter,
+			Class<?> attributeType, JmxReducer reducer
+	) {
+		return new AttributeNodeForType<>(name, description, fetcher, visible, setter, attributeType, reducer,
+				null, null);
 	}
 
 	@Override
-	public Map<String, OpenType<?>> getOpenTypes() {
-		return singletonMap(name, simpleTypeOf(type));
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Object aggregateAttribute(String attrName, List<?> sources) {
+	protected @Nullable Object aggregateAttribute(String attrName, List<?> sources) {
 		List<Object> values = new ArrayList<>(sources.size());
 		for (Object notNullSource : sources) {
 			Object currentValue = fetcher.fetchFrom(notNullSource);
 			values.add(currentValue);
 		}
 
-		return reducer.reduce(values);
+		Object reduced = reducer.reduce(values);
+
+		if (reduced == null || to == null) {
+			return reduced;
+		}
+
+		return to.apply((T) reduced);
+	}
+
+	@Override
+	public Map<String, OpenType<?>> getOpenTypes() {
+		return Collections.singletonMap(name, simpleTypeOf(type));
 	}
 
 	@Override
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
-		return emptyList();
+		return Collections.emptyList();
 	}
 
 	@Override
 	public boolean isSettable(@NotNull String attrName) {
 		checkArgument(attrName.equals(name), "Attribute names do not match");
-		return setter != null;
+		return setter != null && from != NOT_CONVERTABLE;
 	}
 
 	@Override
 	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
-		checkArgument(attrName.equals(name), "Attribute names do not match");
-		if (setter == null) return;
+		if (!isSettable(attrName)) {
+			throw new SetterException(new IllegalAccessException("Cannot set non writable attribute " + name));
+		}
+		Object result = from != null ?
+				from.apply((String) value)
+				: value;
 
-		for (Object target : targets.stream().filter(Objects::nonNull).collect(toList())) {
+		assert setter != null; // above settable check
+		for (Object target : targets) {
 			try {
-				setter.invoke(target, value);
-			} catch (IllegalAccessException | InvocationTargetException e) {
+				setter.invoke(target, result);
+			} catch (Exception e) {
+				logger.warn("Can't set attribute " + attrName, e);
 				throw new SetterException(e);
 			}
 		}

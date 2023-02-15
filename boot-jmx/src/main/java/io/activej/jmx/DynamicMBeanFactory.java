@@ -332,15 +332,21 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Class<? extends JmxStats> returnClass = (Class<? extends JmxStats>) attrType;
 
 			if (customTypes.containsKey(attrType)) {
+				reducer = reducer == null ? fetchReducerFrom(getter) : reducer;
+
 				JmxCustomTypeAdapter<?> customTypeAdapter = customTypes.get(attrType);
-				return new AttributeNodeForConverterType(attrName, attrDescription, included,
-						defaultFetcher, setter, customTypeAdapter.to, customTypeAdapter.from);
+				return AttributeNodeForType.createCustom(attrName, attrDescription, defaultFetcher,
+						included, setter,
+						(Function<Object, String>) customTypeAdapter.to,
+						(Function<String, Object>) customTypeAdapter.from,
+						(JmxReducer<Object>) reducer
+				);
 
 			} else if (ReflectionUtils.isSimpleType(returnClass)) {
 				reducer = reducer == null ? fetchReducerFrom(getter) : reducer;
 
-				return new AttributeNodeForSimpleType(
-						attrName, attrDescription, included, defaultFetcher, setter, returnClass, reducer
+				return AttributeNodeForType.createSimple(
+						attrName, attrDescription, defaultFetcher, included, setter, returnClass, reducer
 				);
 
 			} else if (isThrowable(returnClass)) {
@@ -489,19 +495,21 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			JmxReducer<?> reducer = fetchReducerFrom(getter);
 			return createMapAttributeNodeFor(attrName, attrDescription, included, fetcher, reducer, valueType, beanClass, customTypes);
 		} else if (customTypes.containsKey(rawType)) {
-			return createConverterAttributeNodeFor(attrName, attrDescription, pType, included, fetcher, setter, customTypes);
+			JmxReducer<?> reducer = fetchReducerFrom(getter);
+			return createConverterAttributeNodeFor(attrName, attrDescription, pType, included, fetcher, setter, customTypes, reducer);
 		} else {
 			throw new IllegalArgumentException(format("There is no support for generic class %s", pType.getTypeName()));
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private AttributeNodeForConverterType createConverterAttributeNodeFor(
+	private AttributeNodeForType createConverterAttributeNodeFor(
 			String attrName,
 			@Nullable String attrDescription,
 			ParameterizedType type, boolean included,
 			ValueFetcher fetcher, @Nullable Method setter,
-			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
+			Map<Type, JmxCustomTypeAdapter<?>> customTypes,
+			JmxReducer<?> reducer) {
 		Type[] actualTypes = type.getActualTypeArguments();
 		for (Type genericType : actualTypes) {
 			if (!customTypes.containsKey(genericType)) {
@@ -509,7 +517,11 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			}
 		}
 		JmxCustomTypeAdapter<?> t = customTypes.get(type.getRawType());
-		return new AttributeNodeForConverterType(attrName, attrDescription, fetcher, included, setter, t.to, t.from);
+		return AttributeNodeForType.createCustom(attrName, attrDescription, fetcher, included, setter,
+				(Function<Object, String>) t.to,
+				(Function<String, Object>) t.from,
+				(JmxReducer<Object>) reducer
+		);
 	}
 
 	private AttributeNodeForList createListAttributeNodeFor(
