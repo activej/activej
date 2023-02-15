@@ -6,14 +6,13 @@ import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducer;
+import io.activej.jmx.api.attribute.JmxReducers.JmxReducerMax;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 import javax.management.DynamicMBean;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
@@ -98,23 +97,14 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 			this.seconds = seconds;
 		}
 
-		@JmxAttribute(reducer = OldestValueReducer.class)
+		@JmxAttribute(reducer = JmxReducerMax.class)
 		public Duration getAttr() {
 			return Duration.ofSeconds(seconds);
 		}
 
-		@JmxOperation(reducer = OldestValueReducer.class)
+		@JmxOperation(reducer = JmxReducerMax.class)
 		public Duration getOp() {
 			return Duration.ofSeconds(seconds);
-		}
-	}
-
-	public static final class OldestValueReducer implements JmxReducer<Duration> {
-		@Override
-		public @Nullable Duration reduce(List<? extends Duration> list) {
-			return list.stream()
-					.max(Comparator.naturalOrder())
-					.orElse(null);
 		}
 	}
 	// endregion

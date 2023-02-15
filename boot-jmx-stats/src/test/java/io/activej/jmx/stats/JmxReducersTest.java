@@ -2,6 +2,7 @@ package io.activej.jmx.stats;
 
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,66 +77,90 @@ public class JmxReducersTest {
 
 	@Test
 	public void minReducerWorksCorrectlyWithFloatingPointNumbers() {
-		JmxReducerMin minReducer = new JmxReducerMin();
-		List<Number> numbers = new ArrayList<>();
+		JmxReducerMin<Double> minReducer = new JmxReducerMin<>();
+		List<Double> numbers = new ArrayList<>();
 		numbers.add(5.0);
 		numbers.add(2.5);
 		numbers.add(10.0);
 
-		double result = (double) minReducer.reduce(numbers);
+		double result = minReducer.reduce(numbers);
 		double acceptableError = 10E-3;
 		assertEquals(2.5, result, acceptableError);
 	}
 
 	@Test
 	public void minReducerWorksCorrectlyWithIntegerNumbers() {
-		JmxReducerMin minReducer = new JmxReducerMin();
+		JmxReducerMin<Integer> minReducer = new JmxReducerMin<>();
 		List<Integer> numbers = new ArrayList<>();
 		numbers.add(5);
 		numbers.add(2);
 		numbers.add(10);
 
-		int result = (int) minReducer.reduce(numbers);
+		int result = minReducer.reduce(numbers);
 		assertEquals(2, result);
 	}
 
 	@Test
+	public void minReducerWorksCorrectlyWithDuration() {
+		JmxReducerMin<Duration> minReducer = new JmxReducerMin<>();
+		List<Duration> durations = new ArrayList<>();
+		durations.add(Duration.ofSeconds(5));
+		durations.add(Duration.ofSeconds(2));
+		durations.add(Duration.ofSeconds(10));
+
+		Duration result = minReducer.reduce(durations);
+		assertEquals(Duration.ofSeconds(2), result);
+	}
+
+	@Test
 	public void minReducerReturnsNullInCaseOfEmptyList() {
-		JmxReducerMin minReducer = new JmxReducerMin();
-		List<Number> numbers = new ArrayList<>();
+		JmxReducerMin<Integer> minReducer = new JmxReducerMin<>();
+		List<Integer> numbers = new ArrayList<>();
 
 		assertNull(minReducer.reduce(numbers));
 	}
 
 	@Test
 	public void maxReducerWorksCorrectlyWithFloatingPointNumbers() {
-		JmxReducerMax maxReducer = new JmxReducerMax();
+		JmxReducerMax<Double> maxReducer = new JmxReducerMax<>();
 		List<Double> numbers = new ArrayList<>();
 		numbers.add(5.0);
 		numbers.add(2.5);
 		numbers.add(10.0);
 
-		double result = (double) maxReducer.reduce(numbers);
+		double result = maxReducer.reduce(numbers);
 		double acceptableError = 10E-3;
 		assertEquals(10.0, result, acceptableError);
 	}
 
 	@Test
 	public void maxReducerWorksCorrectlyWithIntegerNumbers() {
-		JmxReducerMax maxReducer = new JmxReducerMax();
+		JmxReducerMax<Long> maxReducer = new JmxReducerMax<>();
 		List<Long> numbers = new ArrayList<>();
 		numbers.add(5L);
 		numbers.add(2L);
 		numbers.add(10L);
 
-		long result = (long) maxReducer.reduce(numbers);
+		long result = maxReducer.reduce(numbers);
 		assertEquals(10L, result);
 	}
 
 	@Test
+	public void maxReducerWorksCorrectlyWithDuration() {
+		JmxReducerMax<Duration> maxReducer = new JmxReducerMax<>();
+		List<Duration> durations = new ArrayList<>();
+		durations.add(Duration.ofSeconds(5));
+		durations.add(Duration.ofSeconds(2));
+		durations.add(Duration.ofSeconds(10));
+
+		Duration result = maxReducer.reduce(durations);
+		assertEquals(Duration.ofSeconds(10), result);
+	}
+
+	@Test
 	public void maxReducerReturnsNullInCaseOfEmptyList() {
-		JmxReducerMin maxReducer = new JmxReducerMin();
-		List<Number> numbers = new ArrayList<>();
+		JmxReducerMin<Integer> maxReducer = new JmxReducerMin<>();
+		List<Integer> numbers = new ArrayList<>();
 
 		assertNull(maxReducer.reduce(numbers));
 	}

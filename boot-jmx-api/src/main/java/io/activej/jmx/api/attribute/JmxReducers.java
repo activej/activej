@@ -18,6 +18,8 @@ package io.activej.jmx.api.attribute;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.ToDoubleFunction;
@@ -27,7 +29,6 @@ import java.util.stream.LongStream;
 
 import static java.util.stream.Collectors.toList;
 
-@SuppressWarnings("OptionalGetWithoutIsPresent")
 public final class JmxReducers {
 
 	public static final class JmxReducerDistinct implements JmxReducer<Object> {
@@ -39,33 +40,53 @@ public final class JmxReducers {
 		}
 	}
 
-	public static final class JmxReducerSum implements JmxReducer<Number> {
+	public static final class JmxReducerSum implements JmxReducer<Object> {
 		@Override
-		public Number reduce(List<? extends Number> list) {
-			return reduceNumbers(list, DoubleStream::sum, LongStream::sum);
+		public @Nullable Object reduce(List<?> list) {
+			list = list.stream().filter(Objects::nonNull).collect(toList());
+
+			if (list.isEmpty()) return null;
+
+			Class<?> attributeClass = list.get(0).getClass();
+			if (Number.class.isAssignableFrom(attributeClass)) {
+				//noinspection unchecked
+				return reduceNumbers((List<? extends Number>) list, DoubleStream::sum, LongStream::sum);
+			}
+
+			if (attributeClass == Duration.class) {
+				Duration initial = Duration.ZERO;
+				for (Object o : list) {
+					initial = initial.plus((Duration) o);
+				}
+				return initial;
+			}
+
+			throw new IllegalStateException("Cannot sum values of type: " + attributeClass);
 		}
 	}
 
-	public static final class JmxReducerMin implements JmxReducer<Number> {
+	public static final class JmxReducerMin<C extends Comparable<C>> implements JmxReducer<C> {
 		@Override
-		public Number reduce(List<? extends Number> list) {
-			return reduceNumbers(list, s -> s.min().getAsDouble(), s -> s.min().getAsLong());
+		public @Nullable C reduce(List<? extends C> list) {
+			return list.stream()
+					.filter(Objects::nonNull)
+					.min(Comparator.naturalOrder())
+					.orElse(null);
 		}
 	}
 
-	public static final class JmxReducerMax implements JmxReducer<Number> {
+	public static final class JmxReducerMax<C extends Comparable<C>> implements JmxReducer<C> {
 		@Override
-		public Number reduce(List<? extends Number> list) {
-			return reduceNumbers(list, s -> s.max().getAsDouble(), s -> s.max().getAsLong());
+		public @Nullable C reduce(List<? extends C> list) {
+			return list.stream()
+					.filter(Objects::nonNull)
+					.max(Comparator.naturalOrder())
+					.orElse(null);
 		}
 	}
 
 	private static @Nullable Number reduceNumbers(List<? extends Number> list,
 			ToDoubleFunction<DoubleStream> opDouble, ToLongFunction<LongStream> opLong) {
-		list = list.stream().filter(Objects::nonNull).collect(toList());
-
-		if (list.isEmpty()) return null;
-
 		Class<?> numberClass = list.get(0).getClass();
 		if (isFloatingPointNumber(numberClass)) {
 			return convert(numberClass,
