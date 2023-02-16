@@ -54,11 +54,33 @@ public final class JmxReducers {
 			}
 
 			if (attributeClass == Duration.class) {
-				Duration initial = Duration.ZERO;
-				for (Object o : list) {
-					initial = initial.plus((Duration) o);
-				}
-				return initial;
+				//noinspection unchecked
+				return sumDuration((List<Duration>) list);
+			}
+
+			throw new IllegalStateException("Cannot sum values of type: " + attributeClass);
+		}
+	}
+
+	public static final class JmxReducerAvg implements JmxReducer<Object> {
+		@Override
+		public @Nullable Object reduce(List<?> list) {
+			list = list.stream().filter(Objects::nonNull).collect(toList());
+
+			if (list.isEmpty()) return null;
+
+			Class<?> attributeClass = list.get(0).getClass();
+			if (Number.class.isAssignableFrom(attributeClass)) {
+				//noinspection unchecked,OptionalGetWithoutIsPresent
+				return reduceNumbers((List<? extends Number>) list,
+						d -> d.average().getAsDouble(),
+						l -> (long) l.average().getAsDouble()
+				);
+			}
+
+			if (attributeClass == Duration.class) {
+				//noinspection unchecked
+				return sumDuration((List<Duration>) list).dividedBy(list.size());
 			}
 
 			throw new IllegalStateException("Cannot sum values of type: " + attributeClass);
@@ -127,4 +149,11 @@ public final class JmxReducers {
 		}
 	}
 
+	private static Duration sumDuration(List<Duration> list) {
+		Duration initial = Duration.ZERO;
+		for (Duration o : list) {
+			initial = initial.plus(o);
+		}
+		return initial;
+	}
 }

@@ -56,6 +56,17 @@ public class JmxReducersTest {
 	}
 
 	@Test
+	public void sumReducerWorksCorrectlyWithDuration() {
+		JmxReducerSum sumReducer = new JmxReducerSum();
+		List<Duration> durations = new ArrayList<>();
+		durations.add(Duration.ofMinutes(3));
+		durations.add(Duration.ofSeconds(35));
+
+		Duration result = (Duration) sumReducer.reduce(durations);
+		assertEquals(Duration.ofMinutes(3).plus(Duration.ofSeconds(35)), result);
+	}
+
+	@Test
 	public void sumReducerIgnoresNullValues() {
 		JmxReducerSum sumReducer = new JmxReducerSum();
 		List<Integer> numbers = new ArrayList<>();
@@ -73,6 +84,60 @@ public class JmxReducersTest {
 		List<Number> numbers = new ArrayList<>();
 
 		assertNull(sumReducer.reduce(numbers));
+	}
+
+	@Test
+	public void avgReducerWorksCorrectlyWithIntegerNumbers() {
+		JmxReducerAvg avgReducer = new JmxReducerAvg();
+		List<Integer> numbers = new ArrayList<>();
+		numbers.add(10);
+		numbers.add(20);
+
+		int result = (int) avgReducer.reduce(numbers);
+		assertEquals(15, result);
+	}
+
+	@Test
+	public void avgReducerWorksCorrectlyWithFloatingPointNumbers() {
+		JmxReducerAvg avgReducer = new JmxReducerAvg();
+		List<Double> numbers = new ArrayList<>();
+		numbers.add(5.0);
+		numbers.add(2.5);
+
+		double result = (double) avgReducer.reduce(numbers);
+		double acceptableError = 10E-3;
+		assertEquals(7.5/2, result, acceptableError);
+	}
+
+	@Test
+	public void avgReducerWorksCorrectlyWithDuration() {
+		JmxReducerAvg avgReducer = new JmxReducerAvg();
+		List<Duration> durations = new ArrayList<>();
+		durations.add(Duration.ofMinutes(3));
+		durations.add(Duration.ofSeconds(35));
+
+		Duration result = (Duration) avgReducer.reduce(durations);
+		assertEquals(Duration.ofMinutes(3).plus(Duration.ofSeconds(35)).dividedBy(2), result);
+	}
+
+	@Test
+	public void avgReducerIgnoresNullValues() {
+		JmxReducerAvg avgReducer = new JmxReducerAvg();
+		List<Integer> numbers = new ArrayList<>();
+		numbers.add(10);
+		numbers.add(null);
+		numbers.add(15);
+
+		int result = (int) avgReducer.reduce(numbers);
+		assertEquals(12, result);
+	}
+
+	@Test
+	public void avgReducerReturnsNullInCaseOfEmptyList() {
+		JmxReducerAvg avgReducer = new JmxReducerAvg();
+		List<Number> numbers = new ArrayList<>();
+
+		assertNull(avgReducer.reduce(numbers));
 	}
 
 	@Test

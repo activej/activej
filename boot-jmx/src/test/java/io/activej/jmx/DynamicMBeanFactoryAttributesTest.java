@@ -6,6 +6,8 @@ import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.api.attribute.JmxReducers;
+import io.activej.jmx.api.attribute.JmxReducers.JmxReducerAvg;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
 import io.activej.jmx.helper.JmxStatsStub;
@@ -206,6 +208,48 @@ public class DynamicMBeanFactoryAttributesTest {
 			assertEquals("5 seconds", row_4.get("value"));
 
 			TabularData operationTabularData = (TabularData) mbean.invoke("getNameToDurationSumOperation", new Object[0], new String[0]);
+			assertEquals(tabularData, operationTabularData);
+		}
+
+		{
+			TabularData tabularData = (TabularData) mbean.getAttribute("nameToNumberAvg");
+
+			assertEquals(4, tabularData.size());
+
+			CompositeData row_1 = tabularData.get(keyForTabularData("a"));
+			assertEquals(1, row_1.get("value"));
+
+			CompositeData row_2 = tabularData.get(keyForTabularData("b"));
+			assertEquals(2, row_2.get("value"));
+
+			CompositeData row_3 = tabularData.get(keyForTabularData("c"));
+			assertEquals(150, row_3.get("value"));
+
+			CompositeData row_4 = tabularData.get(keyForTabularData("d"));
+			assertEquals(5, row_4.get("value"));
+
+			TabularData operationTabularData = (TabularData) mbean.invoke("getNameToNumberAvgOperation", new Object[0], new String[0]);
+			assertEquals(tabularData, operationTabularData);
+		}
+
+		{
+			TabularData tabularData = (TabularData) mbean.getAttribute("nameToDurationAvg");
+
+			assertEquals(4, tabularData.size());
+
+			CompositeData row_1 = tabularData.get(keyForTabularData("a"));
+			assertEquals("1 seconds", row_1.get("value"));
+
+			CompositeData row_2 = tabularData.get(keyForTabularData("b"));
+			assertEquals("2 seconds", row_2.get("value"));
+
+			CompositeData row_3 = tabularData.get(keyForTabularData("c"));
+			assertEquals("2 minutes 30 seconds", row_3.get("value"));
+
+			CompositeData row_4 = tabularData.get(keyForTabularData("d"));
+			assertEquals("5 seconds", row_4.get("value"));
+
+			TabularData operationTabularData = (TabularData) mbean.invoke("getNameToDurationAvgOperation", new Object[0], new String[0]);
 			assertEquals(tabularData, operationTabularData);
 		}
 	}
@@ -493,6 +537,28 @@ public class DynamicMBeanFactoryAttributesTest {
 
 		@JmxOperation(reducer = JmxReducerSum.class)
 		public Map<String, Duration> getNameToDurationSumOperation() {
+			return nameToNumber.entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+		}
+
+		@JmxAttribute(reducer = JmxReducerAvg.class)
+		public Map<String, Integer> getNameToNumberAvg() {
+			return nameToNumber;
+		}
+
+		@JmxAttribute(reducer = JmxReducerAvg.class)
+		public Map<String, Duration> getNameToDurationAvg() {
+			return nameToNumber.entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+		}
+
+		@JmxOperation(reducer = JmxReducerAvg.class)
+		public Map<String, Integer> getNameToNumberAvgOperation() {
+			return nameToNumber;
+		}
+
+		@JmxOperation(reducer = JmxReducerAvg.class)
+		public Map<String, Duration> getNameToDurationAvgOperation() {
 			return nameToNumber.entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
 		}
