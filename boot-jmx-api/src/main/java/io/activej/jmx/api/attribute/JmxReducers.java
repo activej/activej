@@ -31,6 +31,16 @@ import static java.util.stream.Collectors.toList;
 
 public final class JmxReducers {
 
+	public static final class JmxReducerAny implements JmxReducer<Object> {
+		@Override
+		public Object reduce(List<?> list) {
+			return list.stream()
+					.filter(Objects::nonNull)
+					.findAny()
+					.orElse(null);
+		}
+	}
+
 	public static final class JmxReducerDistinct implements JmxReducer<Object> {
 		@Override
 		public Object reduce(List<?> list) {

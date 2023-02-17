@@ -8,8 +8,7 @@ import java.util.List;
 
 import static io.activej.jmx.api.attribute.JmxReducers.*;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
 public class JmxReducersTest {
@@ -28,6 +27,25 @@ public class JmxReducersTest {
 		JmxReducerDistinct reducer = new JmxReducerDistinct();
 
 		List<String> input = asList("data", "non-data", "data");
+
+		assertNull(reducer.reduce(input));
+	}
+
+	@Test
+	public void anyReducerReturnsAnyNonNullValue() {
+		JmxReducerAny reducer = new JmxReducerAny();
+
+		List<String> input = asList(null, "data1", "data2");
+
+		Object result = reducer.reduce(input);
+		assertTrue("data1".equals(result) || "data2".equals(result));
+	}
+
+	@Test
+	public void anyReducerReturnsNullIfThereAreNoNonNullValues() {
+		JmxReducerAny reducer = new JmxReducerAny();
+
+		List<String> input = asList(null, null, null);
 
 		assertNull(reducer.reduce(input));
 	}
