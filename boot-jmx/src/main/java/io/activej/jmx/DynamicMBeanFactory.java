@@ -286,8 +286,9 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 	private void processSetter(Map<String, AttributeDescriptor> nameToAttr, Method setter, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		Class<?> attrType = setter.getParameterTypes()[0];
-		checkArgument(ReflectionUtils.isSimpleType(attrType) || customTypes.containsKey(attrType), "Setters are allowed only on SimpleType attributes."
-				+ " But setter \"%s\" is not SimpleType setter", setter.getName());
+		checkArgument(ReflectionUtils.isSimpleType(attrType) || customTypes.containsKey(attrType) || Enum.class.isAssignableFrom(attrType),
+				"Setters are allowed only on attributes of simple, custom or Enum types. " +
+						"But setter \"%s\" is for neither of the above types", setter.getName());
 
 		String name = extractFieldNameFromSetter(setter);
 
@@ -328,7 +329,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		if (attrType instanceof Class) {
 			ValueFetcher defaultFetcher = createAppropriateFetcher(getter);
-			// 4 cases: custom-type, simple-type, JmxRefreshableStats, POJO
+			// 5 cases: custom-type, simple-type, JmxRefreshableStats, POJO, enum
 			Class<? extends JmxStats> returnClass = (Class<? extends JmxStats>) attrType;
 
 			if (customTypes.containsKey(attrType)) {
@@ -376,6 +377,16 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 				return new AttributeNodeForPojo(attrName, attrDescription, included, defaultFetcher,
 						createReducerForJmxStats(returnClass), subNodes);
+
+			} else if (Enum.class.isAssignableFrom(returnClass)) {
+				reducer = reducer == null ? fetchReducerFrom(getter) : reducer;
+
+				return AttributeNodeForType.createCustom(attrName, attrDescription, defaultFetcher,
+						included, setter,
+						anEnum -> ((Enum<?>) anEnum).name(),
+						name -> Enum.valueOf(((Class<? extends Enum>) returnClass), name),
+						(JmxReducer<Object>) reducer
+				);
 
 			} else {
 				String[] extraSubAttributes =
