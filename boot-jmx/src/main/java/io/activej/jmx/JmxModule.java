@@ -44,7 +44,9 @@ import org.jetbrains.annotations.Nullable;
 import javax.management.DynamicMBean;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Type;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -96,15 +98,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 				.withCustomType(MemSize.class, StringFormatUtils::formatMemSize, StringFormatUtils::parseMemSize)
 				.withCustomType(TriggerWithResult.class, TriggerWithResult::toString)
 				.withCustomType(Severity.class, Severity::toString)
-				.withCustomType(InetSocketAddress.class,
-						address -> address.getAddress().getHostAddress() + ":" + address.getPort(),
-						addressString -> {
-							try {
-								return StringFormatUtils.parseInetSocketAddress(addressString);
-							} catch (MalformedDataException e) {
-								throw new IllegalArgumentException(e);
-							}
-						})
+				.withCustomType(InetSocketAddress.class, JmxModule::formatInetSocketAddress, JmxModule::parseInetSocketAddress)
 				.withGlobalSingletons(ByteBufPool.getStats());
 	}
 
@@ -350,4 +344,22 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 		return settings;
 	}
 
+	private static String formatInetSocketAddress(InetSocketAddress address) {
+		return address.getAddress().getHostAddress() + ":" + address.getPort();
+	}
+
+	private static InetSocketAddress parseInetSocketAddress(String addressString) {
+		int portPos = addressString.lastIndexOf(':');
+		if (portPos == -1) {
+			return new InetSocketAddress(Integer.parseInt(addressString));
+		}
+		String addressStr = addressString.substring(0, portPos);
+		String portStr = addressString.substring(portPos + 1);
+		int port = Integer.parseInt(portStr);
+
+		if ("*".equals(addressStr)) {
+			return new InetSocketAddress(port);
+		}
+		return new InetSocketAddress(addressString, port);
+	}
 }
