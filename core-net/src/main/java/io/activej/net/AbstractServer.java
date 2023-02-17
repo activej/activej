@@ -355,10 +355,12 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		return serverSocketSettings;
 	}
 
+	@JmxAttribute
 	public List<InetSocketAddress> getListenAddresses() {
 		return listenAddresses;
 	}
 
+	@JmxAttribute
 	public List<InetSocketAddress> getSslListenAddresses() {
 		return sslListenAddresses;
 	}
