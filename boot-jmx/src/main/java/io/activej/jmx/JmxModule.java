@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
@@ -43,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.management.DynamicMBean;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Type;
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -94,6 +96,15 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 				.withCustomType(MemSize.class, StringFormatUtils::formatMemSize, StringFormatUtils::parseMemSize)
 				.withCustomType(TriggerWithResult.class, TriggerWithResult::toString)
 				.withCustomType(Severity.class, Severity::toString)
+				.withCustomType(InetSocketAddress.class,
+						address -> address.getAddress().getHostAddress() + ":" + address.getPort(),
+						addressString -> {
+							try {
+								return StringFormatUtils.parseInetSocketAddress(addressString);
+							} catch (MalformedDataException e) {
+								throw new IllegalArgumentException(e);
+							}
+						})
 				.withGlobalSingletons(ByteBufPool.getStats());
 	}
 
