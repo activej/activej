@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 
 public interface AsyncOTCommitFactory<K, D> {
 	record DiffsWithLevel<D>(long level, List<D> diffs) {
@@ -37,7 +37,8 @@ public interface AsyncOTCommitFactory<K, D> {
 	}
 
 	default Promise<OTCommit<K, D>> createCommit(Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> level) {
-		return createCommit(keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(level.applyAsLong(parent), diffs.apply(parent))));
+		return createCommit(parents.stream()
+				.collect(toLinkedHashMap(parent -> new DiffsWithLevel<>(level.applyAsLong(parent), diffs.apply(parent)))));
 	}
 
 	default Promise<OTCommit<K, D>> createCommit(K parent, List<D> diffs, long level) {

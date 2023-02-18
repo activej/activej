@@ -618,8 +618,10 @@ public final class Cube extends AbstractReactive
 			Aggregation aggregation = aggregationContainer.aggregation;
 
 			List<String> keys = aggregation.getKeys();
-			Map<String, String> aggregationKeyFields = entriesToMap(filterEntryKeys(dimensionFields.entrySet().stream(), keys::contains));
-			Map<String, String> aggregationMeasureFields = entriesToMap(filterEntryKeys(measureFields.entrySet().stream(), aggregationContainer.measures::contains));
+			Map<String, String> aggregationKeyFields = filterEntryKeys(dimensionFields.entrySet().stream(), keys::contains)
+					.collect(entriesToLinkedHashMap());
+			Map<String, String> aggregationMeasureFields = filterEntryKeys(measureFields.entrySet().stream(), aggregationContainer.measures::contains)
+					.collect(entriesToLinkedHashMap());
 
 			AggregationPredicate dataInputFilterPredicate = aggregationToDataInputFilterPredicate.getValue();
 			StreamSupplier<T> output = streamSplitter.newOutput();
@@ -646,7 +648,8 @@ public final class Cube extends AbstractReactive
 			Set<String> dimensions = dimensionFields.keySet();
 			if (!dimensions.containsAll(aggregation.getKeys())) continue;
 
-			Map<String, String> aggregationMeasureFields = entriesToMap(filterEntryKeys(measureFields.entrySet().stream(), container.measures::contains));
+			Map<String, String> aggregationMeasureFields = filterEntryKeys(measureFields.entrySet().stream(), container.measures::contains)
+					.collect(entriesToLinkedHashMap());
 			if (aggregationMeasureFields.isEmpty()) continue;
 
 			AggregationPredicate containerPredicate = container.predicate.simplify();
@@ -714,7 +717,8 @@ public final class Cube extends AbstractReactive
 		sort(containerWithScores);
 
 		Class<K> resultKeyClass = createKeyClass(
-				keysToMap(dimensions.stream(), dimensionTypes::get),
+				dimensions.stream()
+						.collect(toLinkedHashMap(dimensionTypes::get)),
 				queryClassLoader);
 
 		StreamReducer<K, T, A> streamReducer = StreamReducer.create();
@@ -730,8 +734,10 @@ public final class Cube extends AbstractReactive
 			storedMeasures.removeAll(compatibleMeasures);
 
 			Class<S> aggregationClass = createRecordClass(
-					keysToMap(dimensions.stream(), dimensionTypes::get),
-					keysToMap(compatibleMeasures.stream(), m -> measures.get(m).getFieldType()),
+					dimensions.stream()
+							.collect(toLinkedHashMap(dimensionTypes::get)),
+					compatibleMeasures.stream()
+							.collect(toLinkedHashMap(m -> measures.get(m).getFieldType())),
 					queryClassLoader);
 
 			StreamSupplier<S> aggregationSupplier = aggregationContainer.aggregation.query(
@@ -756,8 +762,9 @@ public final class Cube extends AbstractReactive
 
 			Function<S, K> keyFunction = io.activej.aggregation.util.Utils.createKeyFunction(aggregationClass, resultKeyClass, dimensions, queryClassLoader);
 
-			Map<String, Measure> extraFields = keysToMap(allMeasures.stream()
-					.filter(io.activej.common.Utils.not(compatibleMeasures::contains)), measures::get);
+			Map<String, Measure> extraFields = allMeasures.stream()
+					.filter(io.activej.common.Utils.not(compatibleMeasures::contains))
+					.collect(toLinkedHashMap(measures::get));
 			Reducer<K, S, T, A> reducer = aggregationReducer(aggregationContainer.aggregation.getStructure(), aggregationClass, resultClass,
 					dimensions, compatibleMeasures, extraFields, queryClassLoader);
 
@@ -1422,8 +1429,9 @@ public final class Cube extends AbstractReactive
 
 	@JmxOperation
 	public Map<String, String> getIrrelevantChunksIds() {
-		return transformMap(getIrrelevantChunks(), chunks -> chunks.stream()
-				.map(chunk -> String.valueOf(chunk.getChunkId()))
-				.collect(Collectors.joining(", ")));
+		return getIrrelevantChunks().entrySet().stream()
+				.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
+						.map(chunk -> String.valueOf(chunk.getChunkId()))
+						.collect(Collectors.joining(", "))));
 	}
 }

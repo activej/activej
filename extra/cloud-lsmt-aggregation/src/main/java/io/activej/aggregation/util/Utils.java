@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.concat;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.common.reflection.ReflectionUtils.extractFieldNameFromGetter;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -114,8 +114,10 @@ public class Utils {
 			Collection<String> keys, Collection<String> fields,
 			DefiningClassLoader classLoader) {
 		return createRecordClass(
-				keysToMap(keys.stream(), aggregation.getKeyTypes()::get),
-				keysToMap(fields.stream(), aggregation.getMeasureTypes()::get),
+				keys.stream()
+						.collect(toLinkedHashMap(aggregation.getKeyTypes()::get)),
+				fields.stream()
+						.collect(toLinkedHashMap(aggregation.getMeasureTypes()::get)),
 				classLoader);
 	}
 
@@ -140,8 +142,10 @@ public class Utils {
 			List<String> keys, List<String> fields,
 			DefiningClassLoader classLoader) {
 		return createBinarySerializer(recordClass,
-				keysToMap(keys.stream(), aggregation.getKeyTypes()::get),
-				keysToMap(fields.stream(), aggregation.getMeasureTypes()::get),
+				keys.stream()
+						.collect(toLinkedHashMap(aggregation.getKeyTypes()::get)),
+				fields.stream()
+						.collect(toLinkedHashMap(aggregation.getMeasureTypes()::get)),
 				classLoader);
 	}
 

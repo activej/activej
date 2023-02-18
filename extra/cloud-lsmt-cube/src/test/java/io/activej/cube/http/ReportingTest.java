@@ -45,7 +45,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.concat;
-import static io.activej.common.Utils.entriesToMap;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.ReportType.DATA;
@@ -67,38 +67,43 @@ public final class ReportingTest extends CubeTestBase {
 	private Cube cube;
 	private int serverPort;
 
-	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("advertiser", ofInt()),
-			Map.entry("campaign", ofInt()),
-			Map.entry("banner", ofInt()),
-			Map.entry("affiliate", ofInt()),
-			Map.entry("site", ofString())));
+	private static final Map<String, FieldType> DIMENSIONS_CUBE = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+					Map.entry("advertiser", ofInt()),
+					Map.entry("campaign", ofInt()),
+					Map.entry("banner", ofInt()),
+					Map.entry("affiliate", ofInt()),
+					Map.entry("site", ofString()))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION =
-			Map.of("date", ofLocalDate(LocalDate.parse("2000-01-01")));
+	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = entriesToMap(Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("advertiser", ofInt()),
-			Map.entry("campaign", ofInt()),
-			Map.entry("banner", ofInt())));
+	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+					Map.entry("advertiser", ofInt()),
+					Map.entry("campaign", ofInt()),
+					Map.entry("banner", ofInt()))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = entriesToMap(Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("affiliate", ofInt()),
-			Map.entry("site", ofString())));
+	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+					Map.entry("affiliate", ofInt()),
+					Map.entry("site", ofString()))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, Measure> MEASURES = entriesToMap(Stream.of(
-			Map.entry("impressions", sum(ofLong())),
-			Map.entry("clicks", sum(ofLong())),
-			Map.entry("conversions", sum(ofLong())),
-			Map.entry("revenue", sum(ofDouble())),
-			Map.entry("eventCount", count(ofInt())),
-			Map.entry("minRevenue", min(ofDouble())),
-			Map.entry("maxRevenue", max(ofDouble())),
-			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
-			Map.entry("errors", sum(ofLong()))));
+	private static final Map<String, Measure> MEASURES = Stream.of(
+					Map.entry("impressions", sum(ofLong())),
+					Map.entry("clicks", sum(ofLong())),
+					Map.entry("conversions", sum(ofLong())),
+					Map.entry("revenue", sum(ofDouble())),
+					Map.entry("eventCount", count(ofInt())),
+					Map.entry("minRevenue", min(ofDouble())),
+					Map.entry("maxRevenue", max(ofDouble())),
+					Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
+					Map.entry("errors", sum(ofLong())))
+			.collect(entriesToLinkedHashMap());
 
 	private static class AdvertiserAttributeResolver extends AbstractAttributeResolver<Integer, String> {
 		public AdvertiserAttributeResolver(Reactor reactor) {

@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 
@@ -60,13 +60,17 @@ public class TestAggregatorSplitter extends SplitterLogDataConsumer<TestPubReque
 
 			private final StreamDataAcceptor<AggregationItem> pubAggregator = ctx.addOutput(
 					cube.logStreamConsumer(AggregationItem.class,
-							keysToMap(PUB_DIMENSIONS.stream(), identity()),
-							keysToMap(PUB_METRICS.stream(), identity())));
+							PUB_DIMENSIONS.stream()
+									.collect(toLinkedHashMap(identity())),
+							PUB_METRICS.stream()
+									.collect(toLinkedHashMap(identity()))));
 
 			private final StreamDataAcceptor<AggregationItem> advAggregator = ctx.addOutput(
 					cube.logStreamConsumer(AggregationItem.class,
-							keysToMap(ADV_DIMENSIONS.stream(), identity()),
-							keysToMap(ADV_METRICS.stream(), identity())));
+							ADV_DIMENSIONS.stream()
+									.collect(toLinkedHashMap(identity())),
+							ADV_METRICS.stream()
+									.collect(toLinkedHashMap(identity()))));
 
 			@SuppressWarnings("ConstantConditions")
 			@Override

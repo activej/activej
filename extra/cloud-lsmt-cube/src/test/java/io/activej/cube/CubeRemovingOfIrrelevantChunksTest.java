@@ -39,7 +39,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.predicate.AggregationPredicates.gt;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
@@ -173,7 +173,8 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	}
 
 	private static Map<String, Integer> getChunksByAggregation(Cube cube) {
-		return keysToMap(cube.getAggregationIds().stream(), id -> cube.getAggregation(id).getChunks());
+		return cube.getAggregationIds().stream()
+				.collect(toLinkedHashMap(id -> cube.getAggregation(id).getChunks()));
 	}
 
 	private Cube.Builder builderOfBasicCube() {

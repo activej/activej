@@ -229,7 +229,8 @@ public final class OTAlgorithms {
 									}
 								})
 								.then(mergeResult -> repository.createCommit(
-										keysToMap(heads.stream(), head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head))))));
+										heads.stream()
+												.collect(toLinkedHashMap(head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)))))));
 	}
 
 	public static <K, D> Promise<Set<K>> findCut(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,

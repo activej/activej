@@ -272,7 +272,8 @@ public final class Aggregation extends AbstractReactive
 		logger.info("Started consuming data in aggregation {}. Keys: {} Measures: {}", this, keyFields.keySet(), measureFields.keySet());
 
 		Class<K> keyClass = createKeyClass(
-				keysToMap(getKeys().stream(), structure.getKeyTypes()::get),
+				getKeys().stream()
+						.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
 				classLoader);
 		Set<String> measureFieldKeys = measureFields.keySet();
 		List<String> measures = getMeasureTypes().keySet().stream().filter(measureFieldKeys::contains).collect(toList());
@@ -490,7 +491,8 @@ public final class Aggregation extends AbstractReactive
 		StreamReducer<K, R, Object> streamReducer = streamReducerBuilder.build();
 
 		Class<K> keyClass = createKeyClass(
-				keysToMap(queryKeys.stream(), structure.getKeyTypes()::get),
+				queryKeys.stream()
+						.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
 				this.classLoader);
 
 		for (SequenceStream<S> sequence : sequences) {

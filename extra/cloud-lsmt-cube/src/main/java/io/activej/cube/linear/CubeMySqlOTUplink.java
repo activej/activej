@@ -323,7 +323,8 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				}
 			}
 
-			cubeDiff = CubeDiff.of(transformMap(aggregationDiffs, tuple -> AggregationDiff.of(tuple.value1(), tuple.value2())));
+			cubeDiff = CubeDiff.of(aggregationDiffs.entrySet().stream()
+					.collect(entriesToLinkedHashMap(tuple -> AggregationDiff.of(tuple.value1(), tuple.value2()))));
 		}
 		return cubeDiff;
 	}

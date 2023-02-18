@@ -79,7 +79,8 @@ public class LogOT {
 					return LogDiff.of(positions, otSystem.squash(ops));
 				})
 				.withInvertFunction(LogDiff.class, commit -> List.of(LogDiff.of(
-						transformMap(commit.getPositions(), LogPositionDiff::inverse),
+						commit.getPositions().entrySet().stream()
+								.collect(entriesToLinkedHashMap(LogPositionDiff::inverse)),
 						otSystem.invert(commit.getDiffs()))))
 				.build();
 	}

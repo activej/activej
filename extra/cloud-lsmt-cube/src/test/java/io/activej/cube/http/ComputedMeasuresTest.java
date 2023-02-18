@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -37,7 +37,8 @@ public class ComputedMeasuresTest {
 	}
 
 	private static final Map<String, Measure> MEASURES =
-			keysToMap(Stream.of("a", "b", "c", "d"), k -> M.sum(ofDouble()));
+			Stream.of("a", "b", "c", "d")
+					.collect(toLinkedHashMap(k -> M.sum(ofDouble())));
 
 	@Test
 	public void test() {

@@ -34,7 +34,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.promise.TestUtils.await;
@@ -358,7 +358,8 @@ public final class ClusterFileSystemTest {
 
 		await(client.copyAll(sourceToTarget));
 
-		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet().stream(), $ -> 0);
+		Map<String, Integer> copies = sourceToTarget.keySet().stream()
+				.collect(toLinkedHashMap($ -> 0));
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			for (Path path : paths) {
@@ -438,7 +439,8 @@ public final class ClusterFileSystemTest {
 
 		await(client.moveAll(sourceToTarget));
 
-		Map<String, Integer> copies = keysToMap(sourceToTarget.keySet().stream(), $ -> 0);
+		Map<String, Integer> copies = sourceToTarget.keySet().stream()
+				.collect(toLinkedHashMap($ -> 0));
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			for (Path path : paths) {

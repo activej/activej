@@ -28,8 +28,8 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.entriesToMap;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 
 public final class OTCommit<K, D> {
 	public static final int INITIAL_EPOCH = 0;
@@ -46,7 +46,8 @@ public final class OTCommit<K, D> {
 		this.epoch = epoch;
 		this.id = id;
 		this.parentsWithLevels = parents;
-		this.parents = entriesToMap(parentsWithLevels.entrySet().stream(), DiffsWithLevel::diffs);
+		this.parents = parentsWithLevels.entrySet().stream()
+				.collect(entriesToLinkedHashMap(DiffsWithLevel::diffs));
 		this.level = parents.values().stream().mapToLong(DiffsWithLevel::level).max().orElse(0L) + 1L;
 	}
 
@@ -59,7 +60,8 @@ public final class OTCommit<K, D> {
 	}
 
 	public static <K, D> OTCommit<K, D> of(int epoch, K id, Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> levels) {
-		return of(epoch, id, keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(levels.applyAsLong(parent), diffs.apply(parent))));
+		return of(epoch, id, parents.stream()
+				.collect(toLinkedHashMap(parent -> new DiffsWithLevel<>(levels.applyAsLong(parent), diffs.apply(parent)))));
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, K id, K parent, DiffsWithLevel<D> diffs) {

@@ -69,7 +69,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.activej.common.Utils.entriesToMap;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.crdt.util.CrdtDataBinarySerializer.TIMESTAMP_SERIALIZER;
 import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -277,7 +277,9 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		return fileSystem.list("*")
 				.map(fileMap -> taken == null ?
 						fileMap :
-						entriesToMap(fileMap.entrySet().stream().filter(entry -> !taken.contains(entry.getKey()))))
+						fileMap.entrySet().stream()
+								.filter(entry -> !taken.contains(entry.getKey()))
+								.collect(entriesToLinkedHashMap()))
 				.map(FileSystemCrdtStorage::pickFilesForConsolidation)
 				.then(filesToConsolidate -> {
 					if (filesToConsolidate.isEmpty()) {

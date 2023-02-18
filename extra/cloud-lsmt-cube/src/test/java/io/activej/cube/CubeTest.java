@@ -43,7 +43,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.DefiningClassLoader.create;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -442,8 +442,10 @@ public final class CubeTest {
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
-				keysToMap(Stream.of("unknownKey"), identity()),
-				keysToMap(Stream.of("metric1", "metric2", "metric3"), identity()),
+				Stream.of("unknownKey")
+						.collect(toLinkedHashMap(identity())),
+				Stream.of("metric1", "metric2", "metric3")
+						.collect(toLinkedHashMap(identity())),
 				AggregationPredicates.alwaysTrue());
 	}
 
@@ -458,8 +460,10 @@ public final class CubeTest {
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
-				keysToMap(Stream.of("key1", "key2"), identity()),
-				keysToMap(Stream.of("UnknownMetric"), identity()),
+				Stream.of("key1", "key2")
+						.collect(toLinkedHashMap(identity())),
+				Stream.of("UnknownMetric")
+						.collect(toLinkedHashMap(identity())),
 				AggregationPredicates.alwaysTrue());
 	}
 

@@ -22,11 +22,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.lang.Math.max;
-import static java.util.stream.Collectors.*;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Utility helper methods for internal use
@@ -361,20 +365,102 @@ public class Utils {
 		return (BinaryOperator<T>) NO_MERGE_FUNCTION;
 	}
 
-	public static <K, V> Map<K, V> keysToMap(Stream<? extends K> stream, Function<? super K, ? extends V> fn) {
-		return stream.collect(toMap(Function.identity(), fn, noMergeFunction(), LinkedHashMap::new));
+	public static <K, V, M extends Map<K, V>>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(
+			Supplier<M> mapFactory) {
+		return toMap(Map.Entry::getKey, Map.Entry::getValue, mapFactory);
 	}
 
-	public static <K, V> Map<K, V> entriesToMap(Stream<? extends Map.Entry<? extends K, ? extends V>> stream) {
-		return entriesToMap(stream, Function.identity());
+	public static <K, V>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, LinkedHashMap<K, V>> entriesToLinkedHashMap() {
+		return toMap(Map.Entry::getKey, Map.Entry::getValue, LinkedHashMap::new);
 	}
 
-	public static <K, V, R> Map<K, R> entriesToMap(Stream<? extends Map.Entry<? extends K, ? extends V>> stream, Function<? super V, ? extends R> fn) {
-		return stream.collect(toMap(Map.Entry::getKey, entry -> fn.apply(entry.getValue()), noMergeFunction(), LinkedHashMap::new));
+	public static <K, V>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, HashMap<K, V>> entriesToHashMap() {
+		return toMap(Map.Entry::getKey, Map.Entry::getValue, HashMap::new);
 	}
 
-	public static <K, V, R> Map<K, R> transformMap(Map<? extends K, ? extends V> map, Function<? super V, ? extends R> function) {
-		return entriesToMap(map.entrySet().stream(), function);
+	public static <K, V, K1, V1, M extends Map<K1, V1>>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(
+			Function<? super K, ? extends K1> keyMapper,
+			Function<? super V, ? extends V1> valueMapper,
+			Supplier<M> mapFactory) {
+		return toMap(entry -> keyMapper.apply(entry.getKey()), entry -> valueMapper.apply(entry.getValue()), mapFactory);
+	}
+
+	public static <K, V, K1, V1>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, LinkedHashMap<K1, V1>> entriesToLinkedHashMap(
+			Function<? super K, ? extends K1> keyMapper,
+			Function<? super V, ? extends V1> valueMapper) {
+		return entriesToMap(keyMapper, valueMapper, LinkedHashMap::new);
+	}
+
+	public static <K, V, K1, V1>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, HashMap<K1, V1>> entriesToHashMap(
+			Function<? super K, ? extends K1> keyMapper,
+			Function<? super V, ? extends V1> valueMapper) {
+		return entriesToMap(keyMapper, valueMapper, HashMap::new);
+	}
+
+	public static <K, V, V1, M extends Map<K, V1>>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(
+			Function<? super V, ? extends V1> valueMapper,
+			Supplier<M> mapFactory) {
+		return toMap(Map.Entry::getKey, entry -> valueMapper.apply(entry.getValue()), mapFactory);
+	}
+
+	public static <K, V, V1>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, LinkedHashMap<K, V1>> entriesToLinkedHashMap(
+			Function<? super V, ? extends V1> valueMapper) {
+		return entriesToMap(valueMapper, LinkedHashMap::new);
+	}
+
+	public static <K, V, V1>
+	Collector<Map.Entry<? extends K, ? extends V>, ?, HashMap<K, V1>> entriesToHashMap(
+			Function<? super V, ? extends V1> valueMapper) {
+		return entriesToMap(valueMapper, HashMap::new);
+	}
+
+	public static <T, K, V, M extends Map<K, V>>
+	Collector<T, ?, M> toMap(
+			Function<? super T, ? extends K> keyMapper,
+			Function<? super T, ? extends V> valueMapper,
+			Supplier<M> mapFactory) {
+		return Collectors.toMap(keyMapper, valueMapper, noMergeFunction(), mapFactory);
+	}
+
+	public static <T, K, V>
+	Collector<T, ?, LinkedHashMap<K, V>> toLinkedHashMap(
+			Function<? super T, ? extends K> keyMapper,
+			Function<? super T, ? extends V> valueMapper) {
+		return toMap(keyMapper, valueMapper, LinkedHashMap::new);
+	}
+
+	public static <T, K, V>
+	Collector<T, ?, HashMap<K, V>> toHashMap(
+			Function<? super T, ? extends K> keyMapper,
+			Function<? super T, ? extends V> valueMapper) {
+		return toMap(keyMapper, valueMapper, HashMap::new);
+	}
+
+	public static <K, V, M extends Map<K, V>>
+	Collector<K, ?, M> toMap(
+			Function<? super K, ? extends V> valueMapper,
+			Supplier<M> mapFactory) {
+		return toMap(identity(), valueMapper, mapFactory);
+	}
+
+	public static <K, V>
+	Collector<K, ?, LinkedHashMap<K, V>> toLinkedHashMap(
+			Function<? super K, ? extends V> valueMapper) {
+		return toLinkedHashMap(identity(), valueMapper);
+	}
+
+	public static <K, V>
+	Collector<K, ?, HashMap<K, V>> toHashMap(
+			Function<? super K, ? extends V> valueMapper) {
+		return toHashMap(identity(), valueMapper);
 	}
 
 	public static <T> String toString(Collection<? extends T> collection) {

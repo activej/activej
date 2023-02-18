@@ -14,67 +14,74 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.common.Utils.entriesToMap;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
-import static java.util.stream.Stream.of;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
 public class TestCompatibleAggregations {
-	private static final Map<String, String> DATA_ITEM_DIMENSIONS = entriesToMap(of(
-			Map.entry("date", "date"),
-			Map.entry("advertiser", "advertiser"),
-			Map.entry("campaign", "campaign"),
-			Map.entry("banner", "banner"),
-			Map.entry("affiliate", "affiliate"),
-			Map.entry("site", "site"),
-			Map.entry("placement", "placement")));
+	private static final Map<String, String> DATA_ITEM_DIMENSIONS = Stream.of(
+					Map.entry("date", "date"),
+					Map.entry("advertiser", "advertiser"),
+					Map.entry("campaign", "campaign"),
+					Map.entry("banner", "banner"),
+					Map.entry("affiliate", "affiliate"),
+					Map.entry("site", "site"),
+					Map.entry("placement", "placement"))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, String> DATA_ITEM_MEASURES = entriesToMap(of(
-			Map.entry("eventCount", "null"),
-			Map.entry("minRevenue", "revenue"),
-			Map.entry("maxRevenue", "revenue"),
-			Map.entry("revenue", "revenue"),
-			Map.entry("impressions", "impressions"),
-			Map.entry("clicks", "clicks"),
-			Map.entry("conversions", "conversions"),
-			Map.entry("uniqueUserIdsCount", "userId"),
-			Map.entry("errors", "errors")));
+	private static final Map<String, String> DATA_ITEM_MEASURES = Stream.of(
+					Map.entry("eventCount", "null"),
+					Map.entry("minRevenue", "revenue"),
+					Map.entry("maxRevenue", "revenue"),
+					Map.entry("revenue", "revenue"),
+					Map.entry("impressions", "impressions"),
+					Map.entry("clicks", "clicks"),
+					Map.entry("conversions", "conversions"),
+					Map.entry("uniqueUserIdsCount", "userId"),
+					Map.entry("errors", "errors"))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_DAILY_AGGREGATION = entriesToMap(of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01")))));
+	private static final Map<String, FieldType> DIMENSIONS_DAILY_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = entriesToMap(of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("advertiser", ofInt()),
-			Map.entry("campaign", ofInt()),
-			Map.entry("banner", ofInt())));
+	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+					Map.entry("advertiser", ofInt()),
+					Map.entry("campaign", ofInt()),
+					Map.entry("banner", ofInt()))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = entriesToMap(of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("affiliate", ofInt()),
-			Map.entry("site", ofString())));
+	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+					Map.entry("affiliate", ofInt()),
+					Map.entry("site", ofString()))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, FieldType> DIMENSIONS_DETAILED_AFFILIATES_AGGREGATION = entriesToMap(of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("affiliate", ofInt()),
-			Map.entry("site", ofString()),
-			Map.entry("placement", ofInt())));
+	private static final Map<String, FieldType> DIMENSIONS_DETAILED_AFFILIATES_AGGREGATION = Stream.of(
+					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+					Map.entry("affiliate", ofInt()),
+					Map.entry("site", ofString()),
+					Map.entry("placement", ofInt()))
+			.collect(entriesToLinkedHashMap());
 
-	private static final Map<String, Measure> MEASURES = entriesToMap(of(
-			Map.entry("impressions", sum(ofLong())),
-			Map.entry("clicks", sum(ofLong())),
-			Map.entry("conversions", sum(ofLong())),
-			Map.entry("revenue", sum(ofDouble())),
-			Map.entry("eventCount", count(ofInt())),
-			Map.entry("minRevenue", min(ofDouble())),
-			Map.entry("maxRevenue", max(ofDouble())),
-			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
-			Map.entry("errors", sum(ofLong()))));
+	private static final Map<String, Measure> MEASURES = Stream.of(
+					Map.entry("impressions", sum(ofLong())),
+					Map.entry("clicks", sum(ofLong())),
+					Map.entry("conversions", sum(ofLong())),
+					Map.entry("revenue", sum(ofDouble())),
+					Map.entry("eventCount", count(ofInt())),
+					Map.entry("minRevenue", min(ofDouble())),
+					Map.entry("maxRevenue", max(ofDouble())),
+					Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
+					Map.entry("errors", sum(ofLong())))
+			.collect(entriesToLinkedHashMap());
 
 	private static final AggregationPredicate DAILY_AGGREGATION_PREDICATE = alwaysTrue();
 	private static final AggregationConfig DAILY_AGGREGATION = id("daily")

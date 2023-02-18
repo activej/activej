@@ -26,7 +26,7 @@ import static io.activej.aggregation.StreamUtils.assertEndOfStream;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.measure.Measures.union;
 import static io.activej.aggregation.util.Utils.*;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
 
@@ -80,7 +80,8 @@ public class AggregationGroupReducerTest {
 
 		Class<InvertedIndexRecord> inputClass = InvertedIndexRecord.class;
 		Class<Comparable> keyClass = createKeyClass(
-				keysToMap(Stream.of("word"), structure.getKeyTypes()::get),
+				Stream.of("word")
+						.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
 				classLoader);
 		Class<InvertedIndexRecord> aggregationClass = createRecordClass(structure, List.of("word"), List.of("documents"), classLoader);
 

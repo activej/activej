@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 
 public class DataItemResultString {
 	public String key1;
@@ -29,10 +29,12 @@ public class DataItemResultString {
 	}
 
 	public static final Map<String, Class<?>> DIMENSIONS =
-			keysToMap(Stream.of("key1", "key2"), k -> k.equals("key1") ? String.class : int.class);
+			Stream.of("key1", "key2")
+					.collect(toLinkedHashMap(k -> k.equals("key1") ? String.class : int.class));
 
 	public static final Map<String, Measure> METRICS =
-			keysToMap(Stream.of("metric1", "metric2", "metric3"), k -> sum(ofLong()));
+			Stream.of("metric1", "metric2", "metric3")
+					.collect(toLinkedHashMap(k -> sum(ofLong())));
 
 	@Override
 	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})

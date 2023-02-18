@@ -25,8 +25,8 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
+import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.transformMap;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -211,7 +211,8 @@ public final class FileSystemCrdtStorageTest {
 	}
 
 	private static void testPickFilesForConsolidation(Set<String> expected, Map<String, Integer> fileToSizeMap) {
-		Map<String, FileMetadata> files = transformMap(fileToSizeMap, size -> FileMetadata.of(size, 0));
+		Map<String, FileMetadata> files = fileToSizeMap.entrySet().stream()
+				.collect(entriesToLinkedHashMap(size -> FileMetadata.of(size, 0)));
 		Set<String> filesForConsolidation = FileSystemCrdtStorage.pickFilesForConsolidation(files);
 
 		assertEquals(expected, filesForConsolidation);

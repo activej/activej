@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.keysToMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -18,9 +18,8 @@ public class RendezvousHashSharderTest {
 	@Test
 	public void testSharder() {
 		RefInt index = new RefInt(0);
-		Map<String, Integer> partitionsWithIndexes = keysToMap(
-				Stream.of("one", "two", "three", "four", "five"),
-				s -> index.value++);
+		Map<String, Integer> partitionsWithIndexes = Stream.of("one", "two", "three", "four", "five")
+				.collect(toLinkedHashMap(s -> index.value++));
 		Set<String> alive = new HashSet<>(partitionsWithIndexes.keySet());
 		RendezvousHashSharder<Integer> sharder1 = RendezvousHashSharder.create(
 				Object::hashCode, Object::hashCode,
