@@ -389,7 +389,14 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				return AttributeNodeForType.createCustom(attrName, attrDescription, defaultFetcher,
 						included, setter,
 						anEnum -> ((Enum<?>) anEnum).name(),
-						name -> Enum.valueOf(((Class<? extends Enum>) returnClass), name),
+						name -> {
+							try {
+								return Enum.valueOf(((Class<? extends Enum>) returnClass),name);
+							} catch (IllegalArgumentException ignored) {
+								throw new IllegalArgumentException(format("Invalid value of enum %s: %s. Possible enum values: %s",
+										returnClass.getSimpleName(), name, Arrays.toString(returnClass.getEnumConstants())));
+							}
+						},
 						(JmxReducer<Object>) reducer
 				);
 
