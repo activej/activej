@@ -31,6 +31,7 @@ import io.activej.jmx.api.attribute.JmxReducer;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerDistinct;
 import io.activej.jmx.stats.JmxRefreshableStats;
 import io.activej.jmx.stats.JmxStats;
+import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -210,15 +211,19 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			}
 			checkArgument(!attrName.contains("_"), "@JmxAttribute with name \"%s\" contains underscores", attrName);
 
+			Type type = attrGetter.getGenericReturnType();
+			Class<?> rawType = Types.getRawType(type);
+
 			String attrDescription = null;
 			if (!attrAnnotation.description().equals(JmxAttribute.NO_DESCRIPTION)) {
 				attrDescription = attrAnnotation.description();
+			} else if (Enum.class.isAssignableFrom(rawType)) {
+				attrDescription = "Possible enum values: " + Arrays.toString(rawType.getEnumConstants());
 			}
 
 			boolean included = !attrAnnotation.optional() || includedOptionals.contains(attrName);
 			includedOptionals.remove(attrName);
 
-			Type type = attrGetter.getGenericReturnType();
 			Method attrSetter = descriptor.getSetter();
 			AttributeNode attrNode = createAttributeNodeFor(attrName, attrDescription, type, included,
 					attrAnnotation, null, attrGetter, attrSetter, beanClass,
@@ -668,6 +673,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 				Class<?>[] parameterTypes = method.getParameterTypes();
 				Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+				Parameter[] parameters = method.getParameters();
 				MBeanParameterInfo[] parameterInfos = new MBeanParameterInfo[parameterTypes.length];
 				for (int i = 0; i < parameterTypes.length; i++) {
 					parameterInfos[i] = new MBeanParameterInfo(
@@ -676,7 +682,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 									.map(JmxParameter.class::cast)
 									.map(JmxParameter::value)
 									.findFirst()
-									.orElse(String.format("arg%d", i)),
+									.orElse(parameters[i].getName()),
 							parameterTypes[i].getName(),
 							"");
 				}
