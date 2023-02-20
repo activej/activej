@@ -4,18 +4,14 @@ import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 import javax.management.Attribute;
 import javax.management.DynamicMBean;
 
-import java.util.Collections;
-
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class DynamicMBeanFactoryAttributesEnumTest {
 
@@ -57,7 +53,7 @@ public class DynamicMBeanFactoryAttributesEnumTest {
 
 		assertEquals("A", mbean.getAttribute("testEnum"));
 
-		mbean.invoke("setTestEnumOp", new Object[]{TestEnum.C}, new String[]{TestEnum.class.getName()});
+		mbean.invoke("setTestEnumOp", new Object[]{"C"}, new String[]{String.class.getName()});
 
 		assertEquals("C", mbean.getAttribute("testEnum"));
 	}

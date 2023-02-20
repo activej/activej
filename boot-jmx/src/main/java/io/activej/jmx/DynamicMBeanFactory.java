@@ -16,7 +16,6 @@
 
 package io.activej.jmx;
 
-import io.activej.common.collection.Either;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.common.reflection.ReflectionUtils;
@@ -47,8 +46,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.reflection.ReflectionUtils.*;
@@ -157,10 +155,10 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			}
 		}
 
-		MBeanInfo mBeanInfo = createMBeanInfo(rootNode, beanClass);
-		Map<OperationKey, Either<Method, AttributeNode>> opkeyToMethodOrNode = fetchOpkeyToMethodOrNode(beanClass, setting.getCustomTypes());
+		MBeanInfo mBeanInfo = createMBeanInfo(rootNode, beanClass, setting.getCustomTypes());
+		Map<OperationKey, Invokable> opkeyToInvokable = fetchOpkeyToInvokable(beanClass, setting.getCustomTypes());
 
-		DynamicMBeanAggregator mbean = new DynamicMBeanAggregator(mBeanInfo, adapter, beans, rootNode, opkeyToMethodOrNode);
+		DynamicMBeanAggregator mbean = new DynamicMBeanAggregator(mBeanInfo, adapter, beans, rootNode, opkeyToInvokable);
 
 		// TODO(vmykhalko): maybe try to get all attributes and log warn message in case of exception? (to prevent potential errors during viewing jmx stats using jconsole)
 //		tryGetAllAttributes(mbean);
@@ -389,14 +387,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				return AttributeNodeForType.createCustom(attrName, attrDescription, defaultFetcher,
 						included, setter,
 						anEnum -> ((Enum<?>) anEnum).name(),
-						name -> {
-							try {
-								return Enum.valueOf(((Class<? extends Enum>) returnClass),name);
-							} catch (IllegalArgumentException ignored) {
-								throw new IllegalArgumentException(format("Invalid value of enum %s: %s. Possible enum values: %s",
-										returnClass.getSimpleName(), name, Arrays.toString(returnClass.getEnumConstants())));
-							}
-						},
+						name -> parseEnum((Class<? extends Enum>) returnClass, name),
 						(JmxReducer<Object>) reducer
 				);
 
@@ -619,13 +610,13 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	}
 
 	// region creating jmx metadata - MBeanInfo
-	private static MBeanInfo createMBeanInfo(AttributeNodeForPojo rootNode, Class<?> beanClass) {
+	private static MBeanInfo createMBeanInfo(AttributeNodeForPojo rootNode, Class<?> beanClass, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		String beanName = "";
 		String beanDescription = "";
 		MBeanAttributeInfo[] attributes = rootNode != null ?
 				fetchAttributesInfo(rootNode) :
 				new MBeanAttributeInfo[0];
-		MBeanOperationInfo[] operations = fetchOperationsInfo(beanClass);
+		MBeanOperationInfo[] operations = fetchOperationsInfo(beanClass, customTypes);
 		return new MBeanInfo(
 				beanName,
 				beanDescription,
@@ -666,38 +657,54 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				.collect(joining("  |  "));
 	}
 
-	private static MBeanOperationInfo[] fetchOperationsInfo(Class<?> beanClass) {
+	private static MBeanOperationInfo[] fetchOperationsInfo(Class<?> beanClass, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		List<MBeanOperationInfo> operations = new ArrayList<>();
 		List<Method> methods = getAllMethods(beanClass);
 		for (Method method : methods) {
-			if (method.isAnnotationPresent(JmxOperation.class)) {
-				validateJmxMethod(method, JmxOperation.class);
-				JmxOperation annotation = method.getAnnotation(JmxOperation.class);
-				String opName = annotation.name();
-				if (opName.equals("")) {
-					opName = method.getName();
-				}
+			if (!method.isAnnotationPresent(JmxOperation.class)) continue;
 
-				Class<?>[] parameterTypes = method.getParameterTypes();
-				Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-				Parameter[] parameters = method.getParameters();
-				MBeanParameterInfo[] parameterInfos = new MBeanParameterInfo[parameterTypes.length];
-				for (int i = 0; i < parameterTypes.length; i++) {
-					parameterInfos[i] = new MBeanParameterInfo(
-							Arrays.stream(parameterAnnotations[i])
-									.filter(a -> a.annotationType() == JmxParameter.class)
-									.map(JmxParameter.class::cast)
-									.map(JmxParameter::value)
-									.findFirst()
-									.orElse(parameters[i].getName()),
-							parameterTypes[i].getName(),
-							"");
-				}
-
-				MBeanOperationInfo operationInfo = new MBeanOperationInfo(
-						opName, annotation.description(), parameterInfos, method.getReturnType().getName(), MBeanOperationInfo.ACTION);
-				operations.add(operationInfo);
+			validateJmxMethod(method, JmxOperation.class);
+			JmxOperation annotation = method.getAnnotation(JmxOperation.class);
+			String opName = annotation.name();
+			if (opName.equals("")) {
+				opName = method.getName();
 			}
+
+			Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+			Parameter[] parameters = method.getParameters();
+			MBeanParameterInfo[] parameterInfos = new MBeanParameterInfo[parameters.length];
+			for (int i = 0; i < parameters.length; i++) {
+				Parameter parameter = parameters[i];
+				Class<?> parameterType = parameter.getType();
+
+				String defaultName = parameter.isNamePresent() ?
+						parameter.getName() :
+						parameterType.getSimpleName();
+
+				boolean isEnum = Enum.class.isAssignableFrom(parameterType);
+				if (isEnum || customTypes.containsKey(parameterType)) {
+					parameterType = String.class;
+				}
+
+				String description = "";
+				if (isEnum) {
+					description = "Possible enum values: " + Arrays.toString(parameter.getType().getEnumConstants());
+				}
+
+				parameterInfos[i] = new MBeanParameterInfo(
+						Arrays.stream(parameterAnnotations[i])
+								.filter(a -> a.annotationType() == JmxParameter.class)
+								.map(JmxParameter.class::cast)
+								.map(JmxParameter::value)
+								.findFirst()
+								.orElse(defaultName),
+						parameterType.getName(),
+						description);
+			}
+
+			MBeanOperationInfo operationInfo = new MBeanOperationInfo(
+					opName, annotation.description(), parameterInfos, method.getReturnType().getName(), MBeanOperationInfo.ACTION);
+			operations.add(operationInfo);
 		}
 
 		return operations.toArray(new MBeanOperationInfo[0]);
@@ -705,39 +712,53 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	// endregion
 
 	// region jmx operations fetching
-	private Map<OperationKey, Either<Method, AttributeNode>> fetchOpkeyToMethodOrNode(Class<?> beanClass, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
-		Map<OperationKey, Either<Method, AttributeNode>> opkeyToMethod = new HashMap<>();
+	@SuppressWarnings("unchecked")
+	private Map<OperationKey, Invokable> fetchOpkeyToInvokable(Class<?> beanClass, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
+		Map<OperationKey, Invokable> opkeyToInvokable = new HashMap<>();
 		List<Method> methods = getAllMethods(beanClass);
 		for (Method method : methods) {
-			if (method.isAnnotationPresent(JmxOperation.class)) {
-				JmxOperation annotation = method.getAnnotation(JmxOperation.class);
-				String opName = annotation.name();
-				if (opName.equals("")) {
-					opName = method.getName();
-				}
-				Class<?>[] paramTypes = method.getParameterTypes();
-				Annotation[][] paramAnnotations = method.getParameterAnnotations();
+			if (!method.isAnnotationPresent(JmxOperation.class)) continue;
 
-				assert paramAnnotations.length == paramTypes.length;
-
-				String[] paramTypesNames = new String[paramTypes.length];
-				for (int i = 0; i < paramTypes.length; i++) {
-					paramTypesNames[i] = paramTypes[i].getName();
-				}
-
-				Either<Method, AttributeNode> either;
-				if (isGetter(method)) {
-					String name = extractFieldNameFromGetter(method);
-					AttributeNode node = createAttributeNodeFor(name, null, method.getGenericReturnType(), true, null, null, method, null, beanClass, customTypes);
-					either = Either.right(node);
-				} else {
-					either = Either.left(method);
-				}
-
-				opkeyToMethod.put(new OperationKey(opName, paramTypesNames), either);
+			JmxOperation annotation = method.getAnnotation(JmxOperation.class);
+			String opName = annotation.name();
+			if (opName.equals("")) {
+				opName = method.getName();
 			}
+			Class<?>[] paramTypes = method.getParameterTypes();
+			Annotation[][] paramAnnotations = method.getParameterAnnotations();
+
+			assert paramAnnotations.length == paramTypes.length;
+
+			Function<Object, Object>[] converters = new Function[paramTypes.length];
+
+			String[] paramTypesNames = new String[paramTypes.length];
+			for (int i = 0; i < paramTypes.length; i++) {
+				Class<?> paramType = paramTypes[i];
+				JmxCustomTypeAdapter<?> customAdapter = customTypes.get(paramType);
+				if (customAdapter != null || Enum.class.isAssignableFrom(paramType)) {
+					paramTypesNames[i] = String.class.getName();
+					converters[i] = customAdapter != null ?
+							(Function) customAdapter.from :
+							name -> parseEnum((Class<? extends Enum>) paramType, ((String) name));
+				} else {
+					paramTypesNames[i] = paramType.getName();
+					converters[i] = Function.identity();
+				}
+			}
+
+			Invokable invokable;
+			if (isGetter(method)) {
+				String name = extractFieldNameFromGetter(method);
+				AttributeNode node = createAttributeNodeFor(name, null, method.getGenericReturnType(), true, null, null, method, null, beanClass, customTypes);
+				invokable = Invokable.ofAttributeNode(node);
+			} else {
+				invokable = Invokable.ofMethod(method, converters);
+			}
+
+			Invokable prev = opkeyToInvokable.put(new OperationKey(opName, paramTypesNames), invokable);
+			checkState(prev == null, "Ambiguous JMX operations: `" + opName + "` in " + beanClass.getName());
 		}
-		return opkeyToMethod;
+		return opkeyToInvokable;
 	}
 	// endregion
 
@@ -811,16 +832,16 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		private final JmxBeanAdapter adapter;
 		private final List<?> beans;
 		private final AttributeNodeForPojo rootNode;
-		private final Map<OperationKey, Either<Method, AttributeNode>> opKeyToMethodOrNode;
+		private final Map<OperationKey, Invokable> opKeyToInvokable;
 
 		public DynamicMBeanAggregator(MBeanInfo mBeanInfo, JmxBeanAdapter adapter, List<?> beans,
-				AttributeNodeForPojo rootNode, Map<OperationKey, Either<Method, AttributeNode>> opKeyToMethodOrNode) {
+				AttributeNodeForPojo rootNode, Map<OperationKey, Invokable> opKeyToInvokable) {
 			this.mBeanInfo = mBeanInfo;
 			this.adapter = adapter;
 			this.beans = beans;
 
 			this.rootNode = rootNode;
-			this.opKeyToMethodOrNode = opKeyToMethodOrNode;
+			this.opKeyToInvokable = opKeyToInvokable;
 		}
 
 		@Override
@@ -917,94 +938,14 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Object[] args = nonNullElse(params, new Object[0]);
 			String[] argTypes = nonNullElse(signature, new String[0]);
 			OperationKey opkey = new OperationKey(actionName, argTypes);
-			Either<Method, AttributeNode> methodOrNode = opKeyToMethodOrNode.get(opkey);
-			if (methodOrNode == null) {
+			Invokable invokable = opKeyToInvokable.get(opkey);
+			if (invokable == null) {
 				String operationName = prettyOperationName(actionName, argTypes);
 				String errorMsg = format("There is no operation \"%s\"", operationName);
 				throw new RuntimeOperationsException(new IllegalArgumentException("Operation not found"), errorMsg);
 			}
 
-			if (methodOrNode.isLeft()) {
-				return invokeMethod(methodOrNode.getLeft(), args);
-			} else {
-				if (args.length != 0) {
-					throw new MBeanException(new IllegalArgumentException("Passing arguments to getter operation"));
-				}
-				return invokeNode(extractFieldNameFromGetterName(actionName), methodOrNode.getRight());
-			}
-		}
-
-		private Object invokeMethod(Method method, Object[] args) throws MBeanException {
-			CountDownLatch latch = new CountDownLatch(beans.size());
-			Ref<Object> lastValueRef = new Ref<>();
-			Ref<Exception> exceptionRef = new Ref<>();
-			for (Object bean : beans) {
-				adapter.execute(bean, () -> {
-					try {
-						Object result = method.invoke(bean, args);
-						lastValueRef.set(result);
-						latch.countDown();
-					} catch (Exception e) {
-						logger.warn("Failed to invoke method '{}' on {} with args {}", method, bean, args, e);
-						exceptionRef.set(e);
-						latch.countDown();
-					}
-				});
-			}
-
-			try {
-				latch.await();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				throw new MBeanException(e);
-			}
-
-			Exception e = exceptionRef.get();
-			if (e != null) {
-				propagate(e);
-			}
-
-			// We don't know how to aggregate return values if there are several beans
-			return beans.size() == 1 ? lastValueRef.get() : null;
-		}
-
-		private Object invokeNode(String name, AttributeNode node) throws MBeanException {
-			try {
-				return node.aggregateAttributes(singleton(name), beans).get(name);
-			} catch (Throwable e) {
-				logger.warn("Failed to fetch attribute '{}' from beans {}", name, beans, e);
-				propagate(e);
-				return null;
-			}
-		}
-
-		private void propagate(Throwable e) throws MBeanException {
-			if (e instanceof InvocationTargetException) {
-				Throwable targetException = ((InvocationTargetException) e).getTargetException();
-
-				if (targetException instanceof Exception) {
-					throw new MBeanException((Exception) targetException);
-				} else {
-					throw new MBeanException(
-							new Exception(format("Throwable of type \"%s\" and message \"%s\" " +
-											"was thrown during method invocation",
-									targetException.getClass().getName(), targetException.getMessage())
-							)
-					);
-				}
-
-			} else {
-				if (e instanceof Exception) {
-					throw new MBeanException((Exception) e);
-				} else {
-					throw new MBeanException(
-							new Exception(format("Throwable of type \"%s\" and message \"%s\" " +
-											"was thrown",
-									e.getClass().getName(), e.getMessage())
-							)
-					);
-				}
-			}
+			return invokable.invoke(beans, adapter, args);
 		}
 
 		@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
@@ -1026,6 +967,35 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		}
 	}
 
+	private static void propagate(Throwable e) throws MBeanException {
+		if (e instanceof InvocationTargetException) {
+			Throwable targetException = ((InvocationTargetException) e).getTargetException();
+
+			if (targetException instanceof Exception) {
+				throw new MBeanException((Exception) targetException);
+			} else {
+				throw new MBeanException(
+						new Exception(format("Throwable of type \"%s\" and message \"%s\" " +
+										"was thrown during method invocation",
+								targetException.getClass().getName(), targetException.getMessage())
+						)
+				);
+			}
+
+		}
+
+		if (e instanceof Exception) {
+			throw new MBeanException((Exception) e);
+		} else {
+			throw new MBeanException(
+					new Exception(format("Throwable of type \"%s\" and message \"%s\" " +
+									"was thrown",
+							e.getClass().getName(), e.getMessage())
+					)
+			);
+		}
+	}
+
 	static class JmxCustomTypeAdapter<T> {
 		public final @Nullable Function<String, T> from;
 		public final Function<T, String> to;
@@ -1038,6 +1008,90 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		public JmxCustomTypeAdapter(Function<T, String> to) {
 			this.to = to;
 			this.from = null;
+		}
+
+		private static <E extends Enum<E>> JmxCustomTypeAdapter<E> ofEnum(Class<E> enumClass) {
+			return new JmxCustomTypeAdapter<>(
+					Enum::name,
+					name -> parseEnum(enumClass, name)
+			);
+		}
+	}
+
+	private static <E extends Enum<E>> E parseEnum(Class<E> enumClass, String name) {
+		try {
+			return Enum.valueOf(enumClass, name);
+		} catch (IllegalArgumentException ignored) {
+			throw new IllegalArgumentException(format("Invalid value of enum %s: %s. Possible enum values: %s",
+					enumClass.getSimpleName(), name, Arrays.toString(enumClass.getEnumConstants())));
+		}
+	}
+
+	private interface Invokable {
+		Object invoke(List<?> beans, JmxBeanAdapter adapter, Object[] args) throws MBeanException;
+
+		static Invokable ofAttributeNode(AttributeNode attributeNode) {
+			String name = attributeNode.getName();
+			Set<String> nameSet = singleton(name);
+			return (beans, adapter, args) -> {
+				if (args.length != 0) {
+					throw new MBeanException(new IllegalArgumentException("Passing arguments to getter operation"));
+				}
+
+				try {
+					return attributeNode.aggregateAttributes(nameSet, beans).get(name);
+				} catch (Throwable e) {
+					logger.warn("Failed to fetch attribute '{}' from beans {}", name, beans, e);
+					propagate(e);
+					return null;
+				}
+			};
+		}
+
+		static Invokable ofMethod(Method method, Function<Object, Object>[] argsMappers) {
+			return (beans, adapter, args) -> {
+				if (args.length != argsMappers.length) {
+					throw new MBeanException(new IllegalArgumentException("Arguments counts mismatch"));
+				}
+
+				Object[] newArgs = new Object[args.length];
+				for (int i = 0; i < args.length; i++) {
+					Function<Object, Object> converter = argsMappers[i];
+					newArgs[i] = converter.apply(args[i]);
+				}
+
+				CountDownLatch latch = new CountDownLatch(beans.size());
+				Ref<Object> lastValueRef = new Ref<>();
+				Ref<Exception> exceptionRef = new Ref<>();
+				for (Object bean : beans) {
+					adapter.execute(bean, () -> {
+						try {
+							Object result = method.invoke(bean, newArgs);
+							lastValueRef.set(result);
+							latch.countDown();
+						} catch (Exception e) {
+							logger.warn("Failed to invoke method '{}' on {} with args {}", method, bean, newArgs, e);
+							exceptionRef.set(e);
+							latch.countDown();
+						}
+					});
+				}
+
+				try {
+					latch.await();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					throw new MBeanException(e);
+				}
+
+				Exception e = exceptionRef.get();
+				if (e != null) {
+					propagate(e);
+				}
+
+				// We don't know how to aggregate return values if there are several beans
+				return beans.size() == 1 ? lastValueRef.get() : null;
+			};
 		}
 	}
 	// endregion
