@@ -215,7 +215,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			String attrDescription = null;
 			if (!attrAnnotation.description().equals(JmxAttribute.NO_DESCRIPTION)) {
 				attrDescription = attrAnnotation.description();
-			} else if (Enum.class.isAssignableFrom(rawType)) {
+			} else if (isEnumType(rawType)) {
 				attrDescription = "Possible enum values: " + Arrays.toString(rawType.getEnumConstants());
 			}
 
@@ -289,7 +289,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 	private void processSetter(Map<String, AttributeDescriptor> nameToAttr, Method setter, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		Class<?> attrType = setter.getParameterTypes()[0];
-		checkArgument(ReflectionUtils.isSimpleType(attrType) || customTypes.containsKey(attrType) || Enum.class.isAssignableFrom(attrType),
+		checkArgument(ReflectionUtils.isSimpleType(attrType) || isStringWrappedType(customTypes, attrType),
 				"Setters are allowed only on attributes of simple, custom or Enum types. " +
 						"But setter \"%s\" is for neither of the above types", setter.getName());
 
@@ -381,7 +381,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				return new AttributeNodeForPojo(attrName, attrDescription, included, defaultFetcher,
 						createReducerForJmxStats(returnClass), subNodes);
 
-			} else if (Enum.class.isAssignableFrom(returnClass)) {
+			} else if (isEnumType(returnClass)) {
 				reducer = reducer == null ? fetchReducerFrom(getter) : reducer;
 
 				return AttributeNodeForType.createCustom(attrName, attrDescription, defaultFetcher,
@@ -681,13 +681,12 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 						parameter.getName() :
 						parameterType.getSimpleName();
 
-				boolean isEnum = Enum.class.isAssignableFrom(parameterType);
-				if (isEnum || customTypes.containsKey(parameterType)) {
+				if (isStringWrappedType(customTypes, parameterType)) {
 					parameterType = String.class;
 				}
 
 				String description = "";
-				if (isEnum) {
+				if (isEnumType(parameterType)) {
 					description = "Possible enum values: " + Arrays.toString(parameter.getType().getEnumConstants());
 				}
 
@@ -702,12 +701,33 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 						description);
 			}
 
+			Class<?> returnType = method.getReturnType();
+
+			String description = annotation.description();
+			String returnTypeName;
+			if (isStringWrappedType(customTypes, returnType)) {
+				returnTypeName = String.class.getName();
+				if (description.isEmpty()) {
+					description = returnType.getName();
+				}
+			} else {
+				returnTypeName = returnType.getName();
+			}
+
 			MBeanOperationInfo operationInfo = new MBeanOperationInfo(
-					opName, annotation.description(), parameterInfos, method.getReturnType().getName(), MBeanOperationInfo.ACTION);
+					opName, description, parameterInfos, returnTypeName, MBeanOperationInfo.ACTION);
 			operations.add(operationInfo);
 		}
 
 		return operations.toArray(new MBeanOperationInfo[0]);
+	}
+
+	private static boolean isStringWrappedType(Map<Type, JmxCustomTypeAdapter<?>> customTypes, Class<?> parameterType) {
+		return isEnumType(parameterType) || customTypes.containsKey(parameterType);
+	}
+
+	private static boolean isEnumType(Class<?> parameterType) {
+		return Enum.class.isAssignableFrom(parameterType);
 	}
 	// endregion
 
@@ -734,9 +754,9 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			String[] paramTypesNames = new String[paramTypes.length];
 			for (int i = 0; i < paramTypes.length; i++) {
 				Class<?> paramType = paramTypes[i];
-				JmxCustomTypeAdapter<?> customAdapter = customTypes.get(paramType);
-				if (customAdapter != null || Enum.class.isAssignableFrom(paramType)) {
+				if (isStringWrappedType(customTypes, paramType)) {
 					paramTypesNames[i] = String.class.getName();
+					JmxCustomTypeAdapter<?> customAdapter = customTypes.get(paramType);
 					converters[i] = customAdapter != null ?
 							(Function) customAdapter.from :
 							name -> parseEnum((Class<? extends Enum>) paramType, ((String) name));
@@ -752,7 +772,18 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				AttributeNode node = createAttributeNodeFor(name, null, method.getGenericReturnType(), true, null, null, method, null, beanClass, customTypes);
 				invokable = Invokable.ofAttributeNode(node);
 			} else {
-				invokable = Invokable.ofMethod(method, converters);
+				Class<?> returnType = method.getReturnType();
+				Function<Object, Object> resultMapper;
+				if (customTypes.containsKey(returnType)) {
+					JmxCustomTypeAdapter<?> customAdapter = customTypes.get(returnType);
+					resultMapper = (Function<Object, Object>) (Function) customAdapter.to;
+				} else if (isEnumType(returnType)) {
+					resultMapper = anEnum -> ((Enum<?>) anEnum).name();
+				} else {
+					resultMapper = Function.identity();
+				}
+
+				invokable = Invokable.ofMethod(method, converters, resultMapper);
 			}
 
 			Invokable prev = opkeyToInvokable.put(new OperationKey(opName, paramTypesNames), invokable);
@@ -1009,13 +1040,6 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			this.to = to;
 			this.from = null;
 		}
-
-		private static <E extends Enum<E>> JmxCustomTypeAdapter<E> ofEnum(Class<E> enumClass) {
-			return new JmxCustomTypeAdapter<>(
-					Enum::name,
-					name -> parseEnum(enumClass, name)
-			);
-		}
 	}
 
 	private static <E extends Enum<E>> E parseEnum(Class<E> enumClass, String name) {
@@ -1048,7 +1072,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			};
 		}
 
-		static Invokable ofMethod(Method method, Function<Object, Object>[] argsMappers) {
+		static Invokable ofMethod(Method method, Function<Object, Object>[] argsMappers, Function<Object, Object> resultMapper) {
 			return (beans, adapter, args) -> {
 				if (args.length != argsMappers.length) {
 					throw new MBeanException(new IllegalArgumentException("Arguments counts mismatch"));
@@ -1090,7 +1114,10 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				}
 
 				// We don't know how to aggregate return values if there are several beans
-				return beans.size() == 1 ? lastValueRef.get() : null;
+				Object result = beans.size() == 1 ? lastValueRef.get() : null;
+				return result == null ?
+						null :
+						resultMapper.apply(result);
 			};
 		}
 	}
