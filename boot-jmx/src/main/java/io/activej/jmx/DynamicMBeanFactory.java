@@ -45,6 +45,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.first;
@@ -749,21 +750,9 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 			assert paramAnnotations.length == paramTypes.length;
 
-			Function<Object, Object>[] converters = new Function[paramTypes.length];
-
 			String[] paramTypesNames = new String[paramTypes.length];
 			for (int i = 0; i < paramTypes.length; i++) {
-				Class<?> paramType = paramTypes[i];
-				if (isStringWrappedType(customTypes, paramType)) {
-					paramTypesNames[i] = String.class.getName();
-					JmxCustomTypeAdapter<?> customAdapter = customTypes.get(paramType);
-					converters[i] = customAdapter != null ?
-							(Function) customAdapter.from :
-							name -> parseEnum((Class<? extends Enum>) paramType, ((String) name));
-				} else {
-					paramTypesNames[i] = paramType.getName();
-					converters[i] = Function.identity();
-				}
+				paramTypesNames[i] = paramTypes[i].getName();
 			}
 
 			Invokable invokable;
@@ -772,18 +761,30 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				AttributeNode node = createAttributeNodeFor(name, null, method.getGenericReturnType(), true, null, null, method, null, beanClass, customTypes);
 				invokable = Invokable.ofAttributeNode(node);
 			} else {
-				Class<?> returnType = method.getReturnType();
-				Function<Object, Object> resultMapper;
-				if (customTypes.containsKey(returnType)) {
-					JmxCustomTypeAdapter<?> customAdapter = customTypes.get(returnType);
-					resultMapper = (Function<Object, Object>) (Function) customAdapter.to;
-				} else if (isEnumType(returnType)) {
-					resultMapper = anEnum -> ((Enum<?>) anEnum).name();
-				} else {
-					resultMapper = Function.identity();
+				invokable = Invokable.ofMethod(method);
+				for (int i = 0; i < paramTypes.length; i++) {
+					Class<?> paramType = paramTypes[i];
+					if (!isStringWrappedType(customTypes, paramType)) continue;
+
+					paramTypesNames[i] = String.class.getName();
+					JmxCustomTypeAdapter<?> customAdapter = customTypes.get(paramType);
+					if (customAdapter == null) {
+						invokable = invokable.mapArgument(i, name -> parseEnum((Class<? extends Enum>) paramType, ((String) name)));
+						continue;
+					}
+
+					if (customAdapter.from != null) {
+						invokable = invokable.mapArgument(i, x -> customAdapter.from.apply((String) x));
+					}
 				}
 
-				invokable = Invokable.ofMethod(method, converters, resultMapper);
+				Class<?> returnType = method.getReturnType();
+				if (customTypes.containsKey(returnType)) {
+					JmxCustomTypeAdapter<?> customAdapter = customTypes.get(returnType);
+					invokable = invokable.mapResult(result -> ((Function) customAdapter.to).apply(result));
+				} else if (isEnumType(returnType)) {
+					invokable = invokable.mapResult(anEnum -> ((Enum<?>) anEnum).name());
+				}
 			}
 
 			Invokable prev = opkeyToInvokable.put(new OperationKey(opName, paramTypesNames), invokable);
@@ -1054,6 +1055,22 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	private interface Invokable {
 		Object invoke(List<?> beans, JmxBeanAdapter adapter, Object[] args) throws MBeanException;
 
+		default Invokable mapArgument(int index, UnaryOperator<Object> mapper) {
+			return (beans, adapter, args) -> {
+				args[index] = mapper.apply(args[index]);
+				return invoke(beans, adapter, args);
+			};
+		}
+
+		default Invokable mapResult(UnaryOperator<Object> mapper) {
+			return (beans, adapter, args) -> {
+				Object result = invoke(beans, adapter, args);
+				return result == null ?
+						null :
+						mapper.apply(result);
+			};
+		}
+
 		static Invokable ofAttributeNode(AttributeNode attributeNode) {
 			String name = attributeNode.getName();
 			Set<String> nameSet = singleton(name);
@@ -1072,29 +1089,19 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			};
 		}
 
-		static Invokable ofMethod(Method method, Function<Object, Object>[] argsMappers, Function<Object, Object> resultMapper) {
+		static Invokable ofMethod(Method method) {
 			return (beans, adapter, args) -> {
-				if (args.length != argsMappers.length) {
-					throw new MBeanException(new IllegalArgumentException("Arguments counts mismatch"));
-				}
-
-				Object[] newArgs = new Object[args.length];
-				for (int i = 0; i < args.length; i++) {
-					Function<Object, Object> converter = argsMappers[i];
-					newArgs[i] = converter.apply(args[i]);
-				}
-
 				CountDownLatch latch = new CountDownLatch(beans.size());
 				Ref<Object> lastValueRef = new Ref<>();
 				Ref<Exception> exceptionRef = new Ref<>();
 				for (Object bean : beans) {
 					adapter.execute(bean, () -> {
 						try {
-							Object result = method.invoke(bean, newArgs);
+							Object result = method.invoke(bean, args);
 							lastValueRef.set(result);
 							latch.countDown();
 						} catch (Exception e) {
-							logger.warn("Failed to invoke method '{}' on {} with args {}", method, bean, newArgs, e);
+							logger.warn("Failed to invoke method '{}' on {} with args {}", method, bean, args, e);
 							exceptionRef.set(e);
 							latch.countDown();
 						}
@@ -1114,10 +1121,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				}
 
 				// We don't know how to aggregate return values if there are several beans
-				Object result = beans.size() == 1 ? lastValueRef.get() : null;
-				return result == null ?
-						null :
-						resultMapper.apply(result);
+				return beans.size() == 1 ? lastValueRef.get() : null;
 			};
 		}
 	}
