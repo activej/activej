@@ -98,7 +98,13 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 				.withCustomType(MemSize.class, StringFormatUtils::formatMemSize, StringFormatUtils::parseMemSize)
 				.withCustomType(TriggerWithResult.class, TriggerWithResult::toString)
 				.withCustomType(Severity.class, Severity::toString)
-				.withCustomType(InetSocketAddress.class, JmxModule::formatInetSocketAddress, JmxModule::parseInetSocketAddress)
+				.withCustomType(InetSocketAddress.class, StringFormatUtils::formatInetSocketAddress, addressString -> {
+					try {
+						return StringFormatUtils.parseInetSocketAddress(addressString);
+					} catch (MalformedDataException e) {
+						throw new IllegalArgumentException(e);
+					}
+				})
 				.withGlobalSingletons(ByteBufPool.getStats());
 	}
 
@@ -342,24 +348,5 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 			settings.merge(typeToSettings.get(key.getType()));
 		}
 		return settings;
-	}
-
-	private static String formatInetSocketAddress(InetSocketAddress address) {
-		return address.getAddress().getHostAddress() + ":" + address.getPort();
-	}
-
-	private static InetSocketAddress parseInetSocketAddress(String addressString) {
-		int portPos = addressString.lastIndexOf(':');
-		if (portPos == -1) {
-			return new InetSocketAddress(Integer.parseInt(addressString));
-		}
-		String addressStr = addressString.substring(0, portPos);
-		String portStr = addressString.substring(portPos + 1);
-		int port = Integer.parseInt(portStr);
-
-		if ("*".equals(addressStr)) {
-			return new InetSocketAddress(port);
-		}
-		return new InetSocketAddress(addressString, port);
 	}
 }

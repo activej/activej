@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
+import static io.activej.common.StringFormatUtils.parseInetSocketAddressResolving;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStats;
@@ -67,7 +67,7 @@ public final class Initializers {
 			if (toAdd.startsWith("http")) {
 				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
 			} else {
-				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
+				client = RemoteActiveFs.create(eventloop, parseInetSocketAddressResolving(toAdd));
 			}
 			partitions.put(toAdd, client);
 		}
@@ -86,7 +86,7 @@ public final class Initializers {
 			if (toAdd.startsWith("http")) {
 				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
 			} else {
-				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
+				client = RemoteActiveFs.create(eventloop, parseInetSocketAddressResolving(toAdd));
 			}
 			partitions.put(toAdd, client);
 		}

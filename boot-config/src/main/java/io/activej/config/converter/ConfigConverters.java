@@ -45,7 +45,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
-import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
+import static io.activej.common.StringFormatUtils.parseInetSocketAddressResolving;
 import static io.activej.common.exception.FatalErrorHandler.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
@@ -319,7 +319,7 @@ public final class ConfigConverters {
 			@Override
 			public InetSocketAddress fromString(String addressPort) {
 				try {
-					return parseInetSocketAddress(addressPort);
+					return parseInetSocketAddressResolving(addressPort);
 				} catch (MalformedDataException e) {
 					throw new IllegalArgumentException(e);
 				}
