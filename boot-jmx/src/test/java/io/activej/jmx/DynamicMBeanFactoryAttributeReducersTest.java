@@ -87,6 +87,7 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 
 		assertEquals(maxDuration, mbean.getAttribute("attr"));
 		assertEquals(maxDuration, mbean.invoke("getOp", new String[0], new String[0]));
+		assertEquals(maxDuration, mbean.invoke("retrieveDuration", new String[0], new String[0]));
 	}
 
 	@JmxBean(JmxBeanAdapterStub.class)
@@ -104,6 +105,11 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 
 		@JmxOperation(reducer = JmxReducerMax.class)
 		public Duration getOp() {
+			return Duration.ofSeconds(seconds);
+		}
+
+		@JmxOperation(reducer = JmxReducerMax.class)
+		public Duration retrieveDuration() {
 			return Duration.ofSeconds(seconds);
 		}
 	}

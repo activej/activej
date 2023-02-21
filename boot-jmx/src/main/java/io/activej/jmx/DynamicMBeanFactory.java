@@ -23,10 +23,7 @@ import io.activej.jmx.api.ConcurrentJmxBeanAdapter;
 import io.activej.jmx.api.JmxBeanAdapter;
 import io.activej.jmx.api.JmxBeanAdapterWithRefresh;
 import io.activej.jmx.api.JmxRefreshable;
-import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.jmx.api.attribute.JmxParameter;
-import io.activej.jmx.api.attribute.JmxReducer;
+import io.activej.jmx.api.attribute.*;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerDistinct;
 import io.activej.jmx.stats.JmxRefreshableStats;
 import io.activej.jmx.stats.JmxStats;
@@ -440,14 +437,14 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	}
 
 	@SuppressWarnings("unchecked")
-	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) {
-		if (getter == null) {
+	private static JmxReducer<?> fetchReducerFrom(@Nullable Method method) {
+		if (method == null) {
 			return DEFAULT_REDUCER;
 		}
 		Class<?> reducerClass = null;
-		JmxAttribute attrAnnotation = getter.getAnnotation(JmxAttribute.class);
+		JmxAttribute attrAnnotation = method.getAnnotation(JmxAttribute.class);
 		if (attrAnnotation != null) reducerClass = attrAnnotation.reducer();
-		JmxOperation opAnnotation = getter.getAnnotation(JmxOperation.class);
+		JmxOperation opAnnotation = method.getAnnotation(JmxOperation.class);
 		if (opAnnotation != null) reducerClass = opAnnotation.reducer();
 
 		if (reducerClass == null || reducerClass == DEFAULT_REDUCER.getClass()) {
@@ -1094,15 +1091,18 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		}
 
 		static Invokable ofMethod(Method method) {
+			//noinspection unchecked
+			JmxReducer<Object> reducer = (JmxReducer<Object>) fetchReducerFrom(method);
+
 			return (beans, adapter, args) -> {
 				CountDownLatch latch = new CountDownLatch(beans.size());
-				Ref<Object> lastValueRef = new Ref<>();
+				List<Object> values = new ArrayList<>(beans.size());
 				Ref<Exception> exceptionRef = new Ref<>();
 				for (Object bean : beans) {
 					adapter.execute(bean, () -> {
 						try {
 							Object result = method.invoke(bean, args);
-							lastValueRef.set(result);
+							values.add(result);
 							latch.countDown();
 						} catch (Exception e) {
 							logger.warn("Failed to invoke method '{}' on {} with args {}", method, bean, args, e);
@@ -1124,8 +1124,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 					propagate(e);
 				}
 
-				// We don't know how to aggregate return values if there are several beans
-				return beans.size() == 1 ? lastValueRef.get() : null;
+				return reducer.reduce(values);
 			};
 		}
 	}
