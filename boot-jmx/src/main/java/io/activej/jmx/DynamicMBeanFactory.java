@@ -1047,8 +1047,12 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		try {
 			return Enum.valueOf(enumClass, name);
 		} catch (IllegalArgumentException ignored) {
-			throw new IllegalArgumentException(format("Invalid value of enum %s: %s. Possible enum values: %s",
-					enumClass.getSimpleName(), name, Arrays.toString(enumClass.getEnumConstants())));
+			try {
+				return Enum.valueOf(enumClass, name.toUpperCase());
+			} catch (IllegalArgumentException ignored2) {
+				throw new IllegalArgumentException(format("Invalid value of enum %s: %s. Possible enum values: %s",
+						enumClass.getSimpleName(), name, Arrays.toString(enumClass.getEnumConstants())));
+			}
 		}
 	}
 
