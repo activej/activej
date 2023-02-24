@@ -10,7 +10,6 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
@@ -35,23 +34,13 @@ public class TcpDataBenchmarkClient extends Launcher {
 	private int benchmarkRounds;
 
 	@Inject
-	@Named("benchmark")
-	Eventloop benchmarkEventloop;
-
-	@Inject
-	@Named("client")
-	Eventloop clientEventloop;
+	Eventloop eventloop;
 
 	@Inject
 	Config config;
 
 	@Provides
-	@Named("benchmark")
-	Eventloop benchmarkEventloop() { return Eventloop.create(); }
-
-	@Provides
-	@Named("client")
-	Eventloop clientEventloop() { return Eventloop.create(); }
+	Eventloop eventloop() { return Eventloop.create(); }
 
 	@Provides
 	Config config() {
@@ -108,7 +97,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return benchmarkEventloop.submit(this::roundGet).get();
+		return eventloop.submit(this::roundGet).get();
 	}
 
 	private Promise<Long> roundGet() {
