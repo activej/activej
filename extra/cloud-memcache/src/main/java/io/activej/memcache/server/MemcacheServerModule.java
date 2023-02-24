@@ -54,11 +54,6 @@ public class MemcacheServerModule extends AbstractModule {
 	}
 
 	@Provides
-	DefiningClassLoader classLoader() {
-		return DefiningClassLoader.create();
-	}
-
-	@Provides
 	RpcServer server(NioReactor reactor, Config config, RingBuffer storage, DefiningClassLoader classLoader) {
 		return RpcServer.builder(reactor)
 				.withHandler(GetRequest.class,

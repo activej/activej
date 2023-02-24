@@ -2,6 +2,7 @@ package io.activej.rpc.memcache;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
@@ -57,6 +58,11 @@ public class MemcacheRpcBenchmark extends Launcher {
 
 	@Inject
 	Config config;
+
+	@Provides
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
+	}
 
 	@Provides
 	Config config() {

@@ -45,11 +45,6 @@ public class MemcacheClientModule extends AbstractModule {
 	public static MemcacheClientModule create() {return new MemcacheClientModule();}
 
 	@Provides
-	DefiningClassLoader classLoader() {
-		return DefiningClassLoader.create();
-	}
-
-	@Provides
 	IRpcClient rpcClient(NioReactor reactor, Config config, DefiningClassLoader classLoader) {
 		return RpcClient.builder(reactor)
 				.withStrategy(

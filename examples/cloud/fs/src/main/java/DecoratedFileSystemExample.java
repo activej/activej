@@ -31,7 +31,7 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 			@Provides
 			FileSystemServer fileSystemServer(NioReactor reactor, @Named("decorated") IFileSystem decoratedFS, Config config) {
 				return FileSystemServer.builder(reactor, decoratedFS)
-						.initialize(ofFileSystemServer(config.getChild("asyncfs")))
+						.initialize(ofFileSystemServer(config.getChild("fs")))
 						.build();
 			}
 

@@ -1,5 +1,6 @@
 package memcached;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -20,6 +21,11 @@ public class MemcacheLikeServer extends Launcher {
 	@Provides
 	WorkerPool workerPool(WorkerPools workerPools) {
 		return workerPools.createPool(3);
+	}
+
+	@Provides
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
 	}
 
 	@Provides

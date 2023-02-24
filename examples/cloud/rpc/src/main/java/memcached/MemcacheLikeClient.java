@@ -1,5 +1,6 @@
 package memcached;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
@@ -22,6 +23,13 @@ import static java.util.stream.IntStream.range;
 
 //[START REGION_1]
 public class MemcacheLikeClient extends Launcher {
+
+	@Inject
+	RawMemcacheClientAdapter client;
+
+	@Inject
+	NioReactor reactor;
+
 	@Provides
 	NioReactor reactor() {
 		return Eventloop.create();
@@ -39,11 +47,10 @@ public class MemcacheLikeClient extends Launcher {
 				.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002");
 	}
 
-	@Inject
-	RawMemcacheClientAdapter client;
-
-	@Inject
-	NioReactor reactor;
+	@Provides
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
+	}
 
 	@Override
 	protected Module getModule() {

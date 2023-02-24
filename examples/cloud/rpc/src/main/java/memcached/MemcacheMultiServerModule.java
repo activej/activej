@@ -48,11 +48,6 @@ public class MemcacheMultiServerModule extends AbstractModule {
 	}
 
 	@Provides
-	DefiningClassLoader classLoader() {
-		return DefiningClassLoader.create();
-	}
-
-	@Provides
 	@Worker
 	RpcServer server(NioReactor reactor, RingBuffer storage, InetSocketAddress address, DefiningClassLoader classLoader) {
 		return RpcServer.builder(reactor)

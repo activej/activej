@@ -87,7 +87,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 
 	@Provides
 	IDiscoveryService discoveryService(NioReactor reactor, Config config) throws MalformedDataException {
-		return Initializers.constantDiscoveryService(reactor, config.getChild("fs.cluster"));
+		return Initializers.constantDiscoveryService(reactor, config);
 	}
 
 	@Provides
