@@ -17,8 +17,8 @@
 package io.activej.service;
 
 import io.activej.async.service.ReactiveService;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.Initializer;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
@@ -90,7 +90,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * <p>
  * An application terminates if a circular dependency found.
  */
-public final class ServiceGraphModule extends AbstractModule implements ServiceGraphModuleSettings, WithInitializer<ServiceGraphModule> {
+public final class ServiceGraphModule extends AbstractModule {
 	private static final Logger logger = getLogger(ServiceGraphModule.class);
 
 	private final Map<Class<?>, ServiceAdapter<?>> registeredServiceAdapters = new LinkedHashMap<>();
@@ -102,98 +102,118 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	private final Executor executor;
 
-	public ServiceGraphModule() {
+	private ServiceGraphModule() {
 		this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
 				10, TimeUnit.MILLISECONDS,
 				new SynchronousQueue<>());
 	}
 
 	/**
-	 * Creates a service graph with default configuration, which is able to
+	 * Creates a builder for service graph module with default configuration, which is able to
 	 * handle {@code Service, BlockingService, AutoCloseable, ExecutorService,
 	 * Timer, DataSource, ReactiveService, ReactiveServer} and
 	 * {@code Eventloop} as services.
 	 *
-	 * @return default service graph
+	 * @return builder for {@link ServiceGraphModule}
 	 */
-	public static ServiceGraphModule create() {
-		ServiceGraphModule serviceGraphModule = new ServiceGraphModule()
-				.register(Service.class, forService())
-				.register(BlockingService.class, forBlockingService())
-				.register(AutoCloseable.class, forAutoCloseable())
-				.register(ExecutorService.class, forExecutorService())
-				.register(Timer.class, forTimer())
-				.initialize(module -> {
+	public static Builder builder() {
+		return new ServiceGraphModule().new Builder()
+				.with(Service.class, forService())
+				.with(BlockingService.class, forBlockingService())
+				.with(AutoCloseable.class, forAutoCloseable())
+				.with(ExecutorService.class, forExecutorService())
+				.with(Timer.class, forTimer())
+				.initialize(b -> {
 					try {
 						currentThread().getContextClassLoader().loadClass("javax.sql.DataSource");
-						module.register(DataSource.class, forDataSource());
+						b.with(DataSource.class, forDataSource());
 					} catch (ClassNotFoundException ignored) {
 					}
-				});
-
-		tryRegisterAsyncComponents(serviceGraphModule);
-
-		return serviceGraphModule;
+				})
+				.initialize(ServiceGraphModule::tryRegisterAsyncComponents);
 	}
 
 	/**
-	 * Puts an instance of class and its factory to the factoryMap
+	 * Creates a default service graph module with default configuration, which is able to
+	 * handle {@code Service, BlockingService, AutoCloseable, ExecutorService,
+	 * Timer, DataSource, ReactiveService, ReactiveServer} and
+	 * {@code Eventloop} as services.
 	 *
-	 * @param <T>     type of service
-	 * @param type    key with which the specified factory is to be associated
-	 * @param factory value to be associated with the specified type
-	 * @return ServiceGraphModule with change
+	 * @return default {@link ServiceGraphModule}
 	 */
-	@Override
-	public <T> ServiceGraphModule register(Class<? extends T> type, ServiceAdapter<T> factory) {
-		registeredServiceAdapters.put(type, factory);
-		return this;
+	public static ServiceGraphModule create() {
+		return builder().build();
 	}
 
-	/**
-	 * Puts the key and its factory to the keys
-	 *
-	 * @param key     key with which the specified factory is to be associated
-	 * @param factory value to be associated with the specified key
-	 * @param <T>     type of service
-	 * @return ServiceGraphModule with change
-	 */
-	@Override
-	public <T> ServiceGraphModule registerForSpecificKey(Key<T> key, ServiceAdapter<T> factory) {
-		keys.put(key, factory);
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, ServiceGraphModule>
+			implements ServiceGraphModuleSettings {
 
-	@Override
-	public <T> ServiceGraphModule excludeSpecificKey(Key<T> key) {
-		excludedKeys.add(key);
-		return this;
-	}
+		private Builder() {}
 
-	/**
-	 * Adds the dependency for key
-	 *
-	 * @param key           key for adding dependency
-	 * @param keyDependency key of dependency
-	 * @return ServiceGraphModule with change
-	 */
-	@Override
-	public ServiceGraphModule addDependency(Key<?> key, Key<?> keyDependency) {
-		addedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
-		return this;
-	}
+		/**
+		 * Puts an instance of class and its factory to the builder
+		 *
+		 * @param <T>     type of service
+		 * @param type    key with which the specified factory is to be associated
+		 * @param factory value to be associated with the specified type
+		 * @return Builder with change
+		 */
+		@Override
+		public <T> Builder with(Class<? extends T> type, ServiceAdapter<T> factory) {
+			registeredServiceAdapters.put(type, factory);
+			return this;
+		}
 
-	/**
-	 * Removes the dependency
-	 *
-	 * @param key           key for removing dependency
-	 * @param keyDependency key of dependency
-	 * @return ServiceGraphModule with change
-	 */
-	@Override
-	public ServiceGraphModule removeDependency(Key<?> key, Key<?> keyDependency) {
-		removedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
-		return this;
+		/**
+		 * Puts the key and its factory to the builder
+		 *
+		 * @param key     key with which the specified factory is to be associated
+		 * @param factory value to be associated with the specified key
+		 * @param <T>     type of service
+		 * @return Builder with change
+		 */
+		@Override
+		public <T> Builder withSpecificKey(Key<T> key, ServiceAdapter<T> factory) {
+			keys.put(key, factory);
+			return this;
+		}
+
+		@Override
+		public <T> Builder withExcludedSpecificKey(Key<T> key) {
+			excludedKeys.add(key);
+			return this;
+		}
+
+		/**
+		 * Adds the dependency for key
+		 *
+		 * @param key           key for adding dependency
+		 * @param keyDependency key of dependency
+		 * @return Builder with change
+		 */
+		@Override
+		public Builder withDependency(Key<?> key, Key<?> keyDependency) {
+			addedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
+			return this;
+		}
+
+		/**
+		 * Removes the dependency
+		 *
+		 * @param key           key for removing dependency
+		 * @param keyDependency key of dependency
+		 * @return Builder with change
+		 */
+		@Override
+		public Builder withRemovedDependency(Key<?> key, Key<?> keyDependency) {
+			removedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
+			return this;
+		}
+
+		@Override
+		protected ServiceGraphModule doBuild() {
+			return ServiceGraphModule.this;
+		}
 	}
 
 	public static final class ServiceKey implements ServiceGraph.Key {
@@ -259,18 +279,18 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	//  Registers service adapters for asynchronous components if they are present in classpath
-	private static void tryRegisterAsyncComponents(ServiceGraphModule serviceGraphModule) {
+	private static void tryRegisterAsyncComponents(Builder builder) {
 		if (isClassPresent("io.activej.eventloop.Eventloop")) {
 			// 'eventloop' module is present
-			serviceGraphModule
-					.register(Eventloop.class, forEventloop())
-					.register(ReactiveService.class, forReactiveService());
+			builder
+					.with(Eventloop.class, forEventloop())
+					.with(ReactiveService.class, forReactiveService());
 		}
 		if (isClassPresent("io.activej.net.ReactiveServer")) {
 			// 'net' module is present
-			serviceGraphModule
-					.register(BlockingSocketServer.class, forBlockingSocketServer())
-					.register(ReactiveServer.class, forReactiveServer());
+			builder
+					.with(BlockingSocketServer.class, forBlockingSocketServer())
+					.with(ReactiveServer.class, forReactiveServer());
 		}
 	}
 
@@ -283,8 +303,9 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	@ProvidesIntoSet
 	LauncherService service(ServiceGraph serviceGraph, OptionalDependency<Set<Initializer<ServiceGraphModuleSettings>>> initializers) {
+		Builder builder = this.new Builder();
 		for (Initializer<ServiceGraphModuleSettings> initializer : initializers.orElse(Set.of())) {
-			initializer.initialize(this);
+			initializer.initialize(builder);
 		}
 		return new LauncherService() {
 			@Override

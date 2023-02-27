@@ -76,6 +76,6 @@ public class BannerServerModule extends AbstractModule {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
-		return settings -> settings.addDependency(new Key<ICrdtMap<Long, GSet<Integer>>>() {}, new Key<IWriteAheadLog<Long, GSet<Integer>>>() {});
+		return settings -> settings.withDependency(new Key<ICrdtMap<Long, GSet<Integer>>>() {}, new Key<IWriteAheadLog<Long, GSet<Integer>>>() {});
 	}
 }

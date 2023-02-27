@@ -99,7 +99,7 @@ public final class AdderServerModule extends AbstractModule {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
-		return settings -> settings.addDependency(new Key<ICrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<IWriteAheadLog<Long, DetailedSumsCrdtState>>() {});
+		return settings -> settings.withDependency(new Key<ICrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<IWriteAheadLog<Long, DetailedSumsCrdtState>>() {});
 	}
 
 	@Provides

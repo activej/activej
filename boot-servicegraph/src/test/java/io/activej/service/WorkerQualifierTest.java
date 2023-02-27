@@ -34,13 +34,14 @@ public final class WorkerQualifierTest {
 	public static class TestModule extends AbstractModule {
 		@Override
 		protected void configure() {
-			install(ServiceGraphModule.create()
-					.register(Element4.class, combinedAdapter(
+			install(ServiceGraphModule.builder()
+					.with(Element4.class, combinedAdapter(
 							immediateServiceAdapter(),
 							immediateServiceAdapter()))
-					.register(Element1.class, immediateServiceAdapter())
-					.register(Element2.class, immediateServiceAdapter())
-					.register(Element3.class, immediateServiceAdapter()));
+					.with(Element1.class, immediateServiceAdapter())
+					.with(Element2.class, immediateServiceAdapter())
+					.with(Element3.class, immediateServiceAdapter())
+					.build());
 			install(WorkerPoolModule.create());
 		}
 

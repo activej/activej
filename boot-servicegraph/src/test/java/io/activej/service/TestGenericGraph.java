@@ -28,8 +28,8 @@ public class TestGenericGraph {
 		@Override
 		protected void configure() {
 			//noinspection Convert2Diamond - compilation issue
-			install(ServiceGraphModule.create()
-					.register(Pojo.class, new SimpleServiceAdapter<Pojo>(false, false) {
+			install(ServiceGraphModule.builder()
+					.with(Pojo.class, new SimpleServiceAdapter<Pojo>(false, false) {
 						@Override
 						protected void start(Pojo instance) {
 							System.out.println("...starting " + instance + " : " + instance.object);
@@ -39,7 +39,8 @@ public class TestGenericGraph {
 						protected void stop(Pojo instance) {
 							System.out.println("...stopping " + instance + " : " + instance.object);
 						}
-					}));
+					})
+					.build());
 			install(WorkerPoolModule.create());
 		}
 

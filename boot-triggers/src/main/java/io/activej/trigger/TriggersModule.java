@@ -124,9 +124,9 @@ public final class TriggersModule extends AbstractModule {
 
 	@ProvidesIntoSet
 	LauncherService service(Injector injector, Triggers triggers, OptionalDependency<Set<Initializer<TriggersModuleSettings>>> initializers) {
-
+		Builder builder = this.new Builder();
 		for (Initializer<TriggersModuleSettings> initializer : initializers.orElse(Set.of())) {
-			initializer.initialize(this.new Builder());
+			initializer.initialize(builder);
 		}
 		return new LauncherService() {
 			@Override

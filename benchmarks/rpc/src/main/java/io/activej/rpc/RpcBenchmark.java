@@ -89,7 +89,7 @@ public class RpcBenchmark extends Launcher {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts client only after it started the server
-		return settings -> settings.addDependency(Key.of(IRpcClient.class), Key.of(RpcServer.class));
+		return settings -> settings.withDependency(Key.of(IRpcClient.class), Key.of(RpcServer.class));
 	}
 
 	@Provides

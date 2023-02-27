@@ -21,13 +21,13 @@ import io.activej.service.adapter.ServiceAdapter;
 
 @SuppressWarnings("unused")
 public interface ServiceGraphModuleSettings {
-	<T> ServiceGraphModule register(Class<? extends T> type, ServiceAdapter<T> factory);
+	<T> ServiceGraphModuleSettings with(Class<? extends T> type, ServiceAdapter<T> factory);
 
-	<T> ServiceGraphModule registerForSpecificKey(Key<T> key, ServiceAdapter<T> factory);
+	<T> ServiceGraphModuleSettings withSpecificKey(Key<T> key, ServiceAdapter<T> factory);
 
-	<T> ServiceGraphModule excludeSpecificKey(Key<T> key);
+	<T> ServiceGraphModuleSettings withExcludedSpecificKey(Key<T> key);
 
-	ServiceGraphModule addDependency(Key<?> key, Key<?> keyDependency);
+	ServiceGraphModuleSettings withDependency(Key<?> key, Key<?> keyDependency);
 
-	ServiceGraphModule removeDependency(Key<?> key, Key<?> keyDependency);
+	ServiceGraphModuleSettings withRemovedDependency(Key<?> key, Key<?> keyDependency);
 }
