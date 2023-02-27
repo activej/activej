@@ -97,8 +97,8 @@ public final class ServiceGraphModule extends AbstractModule {
 	private final Set<Key<?>> excludedKeys = new LinkedHashSet<>();
 	private final Map<Key<?>, ServiceAdapter<?>> keys = new LinkedHashMap<>();
 
-	private final Map<Key<?>, Set<Key<?>>> addedDependencies = new HashMap<>();
-	private final Map<Key<?>, Set<Key<?>>> removedDependencies = new HashMap<>();
+	private final Map<Key<?>, Set<Key<?>>> dependencies = new HashMap<>();
+	private final Map<Key<?>, Set<Key<?>>> excludedDependencies = new HashMap<>();
 
 	private final Executor executor;
 
@@ -173,13 +173,13 @@ public final class ServiceGraphModule extends AbstractModule {
 		 * @return Builder with change
 		 */
 		@Override
-		public <T> Builder withSpecificKey(Key<T> key, ServiceAdapter<T> factory) {
+		public <T> Builder withKey(Key<T> key, ServiceAdapter<T> factory) {
 			keys.put(key, factory);
 			return this;
 		}
 
 		@Override
-		public <T> Builder withExcludedSpecificKey(Key<T> key) {
+		public <T> Builder withExcludedKey(Key<T> key) {
 			excludedKeys.add(key);
 			return this;
 		}
@@ -193,7 +193,7 @@ public final class ServiceGraphModule extends AbstractModule {
 		 */
 		@Override
 		public Builder withDependency(Key<?> key, Key<?> keyDependency) {
-			addedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
+			dependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
 			return this;
 		}
 
@@ -205,8 +205,8 @@ public final class ServiceGraphModule extends AbstractModule {
 		 * @return Builder with change
 		 */
 		@Override
-		public Builder withRemovedDependency(Key<?> key, Key<?> keyDependency) {
-			removedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
+		public Builder withExcludedDependency(Key<?> key, Key<?> keyDependency) {
+			excludedDependencies.computeIfAbsent(key, key1 -> new HashSet<>()).add(keyDependency);
 			return this;
 		}
 
@@ -454,15 +454,15 @@ public final class ServiceGraphModule extends AbstractModule {
 			Key<?> key = serviceKey.getKey();
 			Set<ServiceKey> dependencies = new HashSet<>(entry.getValue());
 
-			if (!difference(removedDependencies.getOrDefault(key, Set.of()), dependencies).isEmpty()) {
-				logger.warn("Unused removed dependencies for {} : {}", key, difference(removedDependencies.getOrDefault(key, Set.of()), dependencies));
+			if (!difference(excludedDependencies.getOrDefault(key, Set.of()), dependencies).isEmpty()) {
+				logger.warn("Unused removed dependencies for {} : {}", key, difference(excludedDependencies.getOrDefault(key, Set.of()), dependencies));
 			}
 
-			if (!intersection(dependencies, addedDependencies.getOrDefault(key, Set.of())).isEmpty()) {
-				logger.warn("Unused added dependencies for {} : {}", key, intersection(dependencies, addedDependencies.getOrDefault(key, Set.of())));
+			if (!intersection(dependencies, this.dependencies.getOrDefault(key, Set.of())).isEmpty()) {
+				logger.warn("Unused added dependencies for {} : {}", key, intersection(dependencies, this.dependencies.getOrDefault(key, Set.of())));
 			}
 
-			Set<Key<?>> added = addedDependencies.getOrDefault(key, Set.of());
+			Set<Key<?>> added = this.dependencies.getOrDefault(key, Set.of());
 			for (Key<?> k : added) {
 				List<ServiceKey> found = instances.keySet().stream().filter(s -> s.getKey().equals(k)).toList();
 				if (found.isEmpty()) {
@@ -474,7 +474,7 @@ public final class ServiceGraphModule extends AbstractModule {
 				dependencies.add(found.get(0));
 			}
 
-			Set<Key<?>> removed = removedDependencies.getOrDefault(key, Set.of());
+			Set<Key<?>> removed = excludedDependencies.getOrDefault(key, Set.of());
 			dependencies.removeIf(k -> removed.contains(k.getKey()));
 
 			for (ServiceKey dependency : dependencies) {
