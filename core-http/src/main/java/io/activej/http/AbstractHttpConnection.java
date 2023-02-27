@@ -115,7 +115,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	/**
 	 * Creates a new instance of AbstractHttpConnection
 	 *
-	 * @param reactor   eventloop which will handle its I/O operations
+	 * @param reactor   reactor which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
 	protected AbstractHttpConnection(Reactor reactor, ITcpSocket socket, int maxBodySize) {

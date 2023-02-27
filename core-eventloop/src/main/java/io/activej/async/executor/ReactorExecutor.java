@@ -41,7 +41,7 @@ public interface ReactorExecutor extends Executor {
 	<T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation);
 
 	/**
-	 * Executes the given computation at some time in the future in some underlying eventloop
+	 * Executes the given computation at some time in the future in some underlying reactor
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
 	default <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<? extends T>> computation) {

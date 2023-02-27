@@ -23,7 +23,7 @@ import java.io.IOException;
 
 /**
  * Represents non-blocking server which listens to new connections and accepts them asynchronously.
- * It operates on eventloop in eventloop thread and uses eventloop integration with Java NIO.
+ * It operates on reactor in reactor thread and uses reactor integration with Java NIO.
  */
 public interface ReactiveServer extends NioReactive {
 	/**

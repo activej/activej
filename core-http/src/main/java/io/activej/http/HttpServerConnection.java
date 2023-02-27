@@ -92,7 +92,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	/**
 	 * Creates a new instance of HttpServerConnection
 	 *
-	 * @param reactor       eventloop which will handle its tasks
+	 * @param reactor       reactor which will handle its tasks
 	 * @param remoteAddress an address of remote
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests

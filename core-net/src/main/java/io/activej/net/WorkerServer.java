@@ -25,7 +25,7 @@ import java.nio.channels.SocketChannel;
 /**
  * This is an interface for a server that can be used in a {@link PrimaryServer}.
  * <p>
- * It should be eventloop-based and should be able to accept and manage client connections.
+ * It should be reactive and should be able to accept and manage client connections.
  */
 public interface WorkerServer extends NioReactive {
 	void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
