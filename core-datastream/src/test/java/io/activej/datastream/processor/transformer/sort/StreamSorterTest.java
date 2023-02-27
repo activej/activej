@@ -187,7 +187,9 @@ public final class StreamSorterTest {
 
 	@Test
 	public void testErrorsOnStorage() throws IOException {
-		FailingStubStreamSorterStorage<Integer> failingNewPartitionStorage = FailingStubStreamSorterStorage.<Integer>create().withFailNewPartition();
+		FailingStubStreamSorterStorage<Integer> failingNewPartitionStorage = FailingStubStreamSorterStorage.<Integer>builder()
+				.withFailNewPartition()
+				.build();
 		doTestFailingStorage(failingNewPartitionStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -196,7 +198,9 @@ public final class StreamSorterTest {
 			assertTrue(consumerToList.getList().isEmpty());
 		});
 
-		FailingStubStreamSorterStorage<Integer> failingWriteStorage = FailingStubStreamSorterStorage.<Integer>create().withFailWrite();
+		FailingStubStreamSorterStorage<Integer> failingWriteStorage = FailingStubStreamSorterStorage.<Integer>builder()
+				.withFailWrite()
+				.build();
 		doTestFailingStorage(failingWriteStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -205,7 +209,9 @@ public final class StreamSorterTest {
 			assertTrue(consumerToList.getList().isEmpty());
 		});
 
-		FailingStubStreamSorterStorage<Integer> failingReadStorage = FailingStubStreamSorterStorage.<Integer>create().withFailRead();
+		FailingStubStreamSorterStorage<Integer> failingReadStorage = FailingStubStreamSorterStorage.<Integer>builder()
+				.withFailRead()
+				.build();
 		doTestFailingStorage(failingReadStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -215,7 +221,9 @@ public final class StreamSorterTest {
 			assertTrue(consumerToList.getList().isEmpty());
 		});
 
-		FailingStubStreamSorterStorage<Integer> failingCleanup = FailingStubStreamSorterStorage.<Integer>create().withFailCleanup();
+		FailingStubStreamSorterStorage<Integer> failingCleanup = FailingStubStreamSorterStorage.<Integer>builder()
+				.withFailCleanup()
+				.build();
 		doTestFailingStorage(failingCleanup, (streamPromise, sorter, supplier, consumerToList) -> {
 			await(streamPromise);
 			assertEndOfStream(sorter);

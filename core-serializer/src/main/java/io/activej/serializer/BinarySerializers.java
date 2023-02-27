@@ -371,7 +371,7 @@ public final class BinarySerializers {
 	}
 
 	public static <E extends Enum<E>> BinarySerializer<E> ofEnum(Class<E> enumType) {
-		return new BinarySerializer<E>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, E item) {
 				out.writeVarInt(item.ordinal());

@@ -1,5 +1,6 @@
 package io.activej.datastream.processor.transformer.sort;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;
@@ -22,36 +23,48 @@ public final class FailingStubStreamSorterStorage<T> extends ImplicitlyReactive
 	boolean failRead;
 	boolean failCleanup;
 
-	private FailingStubStreamSorterStorage(IStreamSorterStorage<T> storage) {
-		this.storage = storage;
+	private FailingStubStreamSorterStorage() {
 	}
 
-	public static <T> FailingStubStreamSorterStorage<T> create(IStreamSorterStorage<T> storage) {
-		return new FailingStubStreamSorterStorage<>(storage);
+	public static <T> FailingStubStreamSorterStorage<T>.Builder builder() {
+		return new FailingStubStreamSorterStorage<T>().new Builder();
 	}
 
 	public static <T> FailingStubStreamSorterStorage<T> create() {
-		return new FailingStubStreamSorterStorage<>(null);
+		return FailingStubStreamSorterStorage.<T>builder().build();
 	}
 
-	public FailingStubStreamSorterStorage<T> withFailNewPartition() {
-		this.failNewPartition = true;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, FailingStubStreamSorterStorage<T>> {
+		private Builder() {}
 
-	public FailingStubStreamSorterStorage<T> withFailWrite() {
-		this.failWrite = true;
-		return this;
-	}
+		public Builder withFailNewPartition() {
+			checkNotBuilt(this);
+			FailingStubStreamSorterStorage.this.failNewPartition = true;
+			return this;
+		}
 
-	public FailingStubStreamSorterStorage<T> withFailRead() {
-		this.failRead = true;
-		return this;
-	}
+		public Builder withFailWrite() {
+			checkNotBuilt(this);
+			FailingStubStreamSorterStorage.this.failWrite = true;
+			return this;
+		}
 
-	public FailingStubStreamSorterStorage<T> withFailCleanup() {
-		this.failCleanup = true;
-		return this;
+		public Builder withFailRead() {
+			checkNotBuilt(this);
+			FailingStubStreamSorterStorage.this.failRead = true;
+			return this;
+		}
+
+		public Builder withFailCleanup() {
+			checkNotBuilt(this);
+			FailingStubStreamSorterStorage.this.failCleanup = true;
+			return this;
+		}
+
+		@Override
+		protected FailingStubStreamSorterStorage<T> doBuild() {
+			return FailingStubStreamSorterStorage.this;
+		}
 	}
 
 	public void setStorage(IStreamSorterStorage<T> storage) {

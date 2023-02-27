@@ -30,7 +30,7 @@ public class NoopWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	public static <K extends Comparable<K>, S> NoopWriteAheadLog<K, S> create(Reactor reactor) {
-		return new NoopWriteAheadLog<K, S>(reactor);
+		return new NoopWriteAheadLog<>(reactor);
 	}
 
 	@Override
