@@ -27,7 +27,6 @@ import io.activej.service.Service;
 import org.slf4j.Logger;
 
 import javax.sql.DataSource;
-import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.*;
@@ -180,16 +179,16 @@ public class ServiceAdapters {
 	}
 
 	/**
-	 * Returns factory which transforms Closeable object to CompletableFuture. On starting it doing nothing, on stopping it close Closeable.
+	 * Returns factory which transforms AutoCloseable object to CompletableFuture. On starting it doing nothing, on stopping it close AutoCloseable.
 	 */
-	public static ServiceAdapter<Closeable> forCloseable() {
+	public static ServiceAdapter<AutoCloseable> forAutoCloseable() {
 		return new SimpleServiceAdapter<>(false, true) {
 			@Override
-			protected void start(Closeable instance) {
+			protected void start(AutoCloseable instance) {
 			}
 
 			@Override
-			protected void stop(Closeable instance) throws Exception {
+			protected void stop(AutoCloseable instance) throws Exception {
 				instance.close();
 			}
 		};

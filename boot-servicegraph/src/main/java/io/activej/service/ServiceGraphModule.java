@@ -43,7 +43,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import javax.sql.DataSource;
-import java.io.Closeable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
@@ -111,8 +110,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	/**
 	 * Creates a service graph with default configuration, which is able to
-	 * handle {@code Service, BlockingService, Closeable, ExecutorService,
-	 * Timer, DataSource, EventloopService, EventloopServer} and
+	 * handle {@code Service, BlockingService, AutoCloseable, ExecutorService,
+	 * Timer, DataSource, ReactiveService, ReactiveServer} and
 	 * {@code Eventloop} as services.
 	 *
 	 * @return default service graph
@@ -121,7 +120,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		ServiceGraphModule serviceGraphModule = new ServiceGraphModule()
 				.register(Service.class, forService())
 				.register(BlockingService.class, forBlockingService())
-				.register(Closeable.class, forCloseable())
+				.register(AutoCloseable.class, forAutoCloseable())
 				.register(ExecutorService.class, forExecutorService())
 				.register(Timer.class, forTimer())
 				.initialize(module -> {
