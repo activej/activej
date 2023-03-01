@@ -46,6 +46,7 @@ import java.util.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.toLinkedHashMap;
 
 /**
  * An RPC server that works asynchronously. This server uses fast serializers
@@ -203,15 +204,13 @@ public final class RpcServer extends AbstractReactiveServer {
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(Class<?>... messageTypes) {
-			checkNotBuilt(this);
-			return withMessageTypes(DefiningClassLoader.create(), List.of(messageTypes));
+			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
 		}
 
 		/**
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
-			checkNotBuilt(this);
 			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
 		}
 
@@ -219,7 +218,7 @@ public final class RpcServer extends AbstractReactiveServer {
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, Class<?>... messageTypes) {
-			return withMessageTypes(classLoader, List.of(messageTypes));
+			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
 		}
 
 		/**
@@ -227,6 +226,20 @@ public final class RpcServer extends AbstractReactiveServer {
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, List<Class<?>> messageTypes) {
 			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
+		}
+
+		/**
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
+		 */
+		public Builder withMessageTypes(SerializerFactory serializerFactory, Class<?>... messageTypes) {
+			return withMessageTypes(DefiningClassLoader.create(), serializerFactory, messageTypes);
+		}
+
+		/**
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
+		 */
+		public Builder withMessageTypes(SerializerFactory serializerFactory, List<Class<?>> messageTypes) {
+			return withMessageTypes(DefiningClassLoader.create(), serializerFactory, messageTypes);
 		}
 
 		/**
@@ -260,14 +273,22 @@ public final class RpcServer extends AbstractReactiveServer {
 		public Builder withMessageTypes(
 				DefiningClassLoader classLoader,
 				SerializerFactory serializerFactory,
-				List<Class<?>> messageTypes) {
-			checkNotBuilt(this);
-			checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-			LinkedHashMap<Class<?>, BinarySerializer<?>> map = new LinkedHashMap<>();
-			for (Class<?> messageType : messageTypes) {
-				map.put(messageType, serializerFactory.create(classLoader, messageType));
-			}
-			return withSerializers(map, map);
+				List<Class<?>> messageTypes
+		) {
+			return withMessageTypes(classLoader, serializerFactory, messageTypes, messageTypes);
+		}
+
+		public Builder withMessageTypes(
+				DefiningClassLoader classLoader,
+				SerializerFactory serializerFactory,
+				List<Class<?>> requestMessageTypes,
+				List<Class<?>> responseMessageTypes
+		) {
+			return withSerializers(
+					requestMessageTypes.stream()
+							.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))),
+					responseMessageTypes.stream()
+							.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))));
 		}
 
 		/**

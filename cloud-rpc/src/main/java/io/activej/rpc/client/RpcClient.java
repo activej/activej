@@ -62,9 +62,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.callback.Callback.toAnotherReactor;
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nonNullElseGet;
-import static io.activej.common.Utils.not;
+import static io.activej.common.Utils.*;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
@@ -247,14 +245,13 @@ public final class RpcClient extends AbstractNioReactive
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(Class<?>... messageTypes) {
-			return withMessageTypes(DefiningClassLoader.create(), List.of(messageTypes));
+			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
 		}
 
 		/**
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
-			checkNotBuilt(this);
 			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
 		}
 
@@ -262,15 +259,28 @@ public final class RpcClient extends AbstractNioReactive
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, Class<?>... messageTypes) {
-			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), List.of(messageTypes));
+			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
 		}
 
 		/**
 		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
 		 */
 		public Builder withMessageTypes(DefiningClassLoader classLoader, List<Class<?>> messageTypes) {
-			checkNotBuilt(this);
 			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
+		}
+
+		/**
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
+		 */
+		public Builder withMessageTypes(SerializerFactory serializerFactory, Class<?>... messageTypes) {
+			return withMessageTypes(DefiningClassLoader.create(), serializerFactory, messageTypes);
+		}
+
+		/**
+		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
+		 */
+		public Builder withMessageTypes(SerializerFactory serializerFactory, List<Class<?>> messageTypes) {
+			return withMessageTypes(DefiningClassLoader.create(), serializerFactory, messageTypes);
 		}
 
 		/**
@@ -306,13 +316,20 @@ public final class RpcClient extends AbstractNioReactive
 				SerializerFactory serializerFactory,
 				List<Class<?>> messageTypes
 		) {
-			checkNotBuilt(this);
-			checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-			LinkedHashMap<Class<?>, BinarySerializer<?>> map = new LinkedHashMap<>();
-			for (Class<?> messageType : messageTypes) {
-				map.put(messageType, serializerFactory.create(classLoader, messageType));
-			}
-			return withSerializers(map, map);
+			return withMessageTypes(classLoader, serializerFactory, messageTypes, messageTypes);
+		}
+
+		public Builder withMessageTypes(
+				DefiningClassLoader classLoader,
+				SerializerFactory serializerFactory,
+				List<Class<?>> requestMessageTypes,
+				List<Class<?>> responseMessageTypes
+		) {
+			return withSerializers(
+					requestMessageTypes.stream()
+							.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))),
+					responseMessageTypes.stream()
+							.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))));
 		}
 
 		/**
