@@ -134,7 +134,6 @@ public final class DnsCache extends AbstractReactive {
 	 * @return DnsQueryCacheResult for this query
 	 */
 	public @Nullable DnsCache.DnsQueryCacheResult tryToResolve(DnsQuery query) {
-		checkInReactorThread(this);
 		CachedDnsQueryResult cachedResult = cache.get(query);
 
 		if (cachedResult == null) {
@@ -201,7 +200,6 @@ public final class DnsCache extends AbstractReactive {
 	}
 
 	public void performCleanup() {
-		checkInReactorThread(this);
 		if (!cleaningUpNow.compareAndSet(false, true)) {
 			return;
 		}

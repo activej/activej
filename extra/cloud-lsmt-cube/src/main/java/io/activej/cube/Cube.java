@@ -573,7 +573,6 @@ public final class Cube extends AbstractReactive
 
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			AggregationPredicate predicate) {
-		checkInReactorThread(this);
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
 				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
