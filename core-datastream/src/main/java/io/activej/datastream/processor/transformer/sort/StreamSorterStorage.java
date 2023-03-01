@@ -30,7 +30,8 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;
-import io.activej.reactor.ImplicitlyReactive;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import io.activej.serializer.BinarySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ import static java.lang.String.format;
  *
  * @param <T> type of storing data
  */
-public final class StreamSorterStorage<T> extends ImplicitlyReactive
+public final class StreamSorterStorage<T> extends AbstractReactive
 		implements IStreamSorterStorage<T> {
 	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage.class);
 
@@ -71,8 +72,9 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 	private MemSize readBlockSize = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 	private MemSize writeBlockSize = DEFAULT_SORTER_BLOCK_SIZE;
 
-	private StreamSorterStorage(Executor executor, BinarySerializer<T> serializer,
+	private StreamSorterStorage(Reactor reactor, Executor executor, BinarySerializer<T> serializer,
 			FrameFormat frameFormat, Path path) {
+		super(reactor);
 		this.executor = executor;
 		this.serializer = serializer;
 		this.frameFormat = frameFormat;
@@ -82,23 +84,25 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 	/**
 	 * Creates a new stream sorter storage
 	 *
+	 * @param reactor    reactor which executes tasks asynchronously
 	 * @param executor   executor for running tasks in new thread
 	 * @param serializer for serialization to bytes
 	 * @param path       path in which will store received data
 	 */
-	public static <T> StreamSorterStorage<T> create(Executor executor,
+	public static <T> StreamSorterStorage<T> create(Reactor reactor, Executor executor,
 			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
-		return StreamSorterStorage.builder(executor, serializer, frameFormat, path).build();
+		return StreamSorterStorage.builder(reactor, executor, serializer, frameFormat, path).build();
 	}
 
 	/**
 	 * Creates a builder for stream sorter storage
 	 *
+	 * @param reactor    reactor which executes tasks asynchronously
 	 * @param executor   executor for running tasks in new thread
 	 * @param serializer for serialization to bytes
 	 * @param path       path in which will store received data
 	 */
-	public static <T> StreamSorterStorage<T>.Builder builder(Executor executor,
+	public static <T> StreamSorterStorage<T>.Builder builder(Reactor reactor, Executor executor,
 			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
 		checkArgument(!path.getFileName().toString().contains("%d"), "Filename should not contain '%d'");
 		try {
@@ -106,7 +110,7 @@ public final class StreamSorterStorage<T> extends ImplicitlyReactive
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-		return new StreamSorterStorage<>(executor, serializer, frameFormat, path).new Builder();
+		return new StreamSorterStorage<>(reactor, executor, serializer, frameFormat, path).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, StreamSorterStorage<T>> {

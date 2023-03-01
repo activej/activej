@@ -22,6 +22,7 @@ import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,7 @@ public final class DataflowServerModule extends AbstractModule {
 
 	@Provides
 	@Eager
-	StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
+	StreamSorterStorageFactory storageFactory(@Named("Dataflow") Reactor reactor, Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
 		Path providedSortDir = config.get(ofPath(), "dataflow.sortDir", null);
 		Path sortDir = providedSortDir == null ? Files.createTempDirectory("dataflow-sort-dir") : providedSortDir;
 		return new StreamSorterStorageFactory() {
@@ -89,7 +90,7 @@ public final class DataflowServerModule extends AbstractModule {
 			@Override
 			public <T> IStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted) {
 				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
-				return StreamSorterStorage.create(executor, streamSchema.createSerializer(serializerLocator), FrameFormats.lz4(), taskSortDir);
+				return StreamSorterStorage.create(reactor, executor, streamSchema.createSerializer(serializerLocator), FrameFormats.lz4(), taskSortDir);
 			}
 
 			@Override

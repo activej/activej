@@ -20,7 +20,8 @@ import io.activej.async.AsyncAccumulator;
 import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.supplier.StreamDataAcceptor;
-import io.activej.reactor.ImplicitlyReactive;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,7 +31,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("unchecked")
-public abstract class SplitterLogDataConsumer<T, D> extends ImplicitlyReactive
+public abstract class SplitterLogDataConsumer<T, D> extends AbstractReactive
 		implements ILogDataConsumer<T, D> {
 
 	public final class Context {
@@ -46,6 +47,10 @@ public abstract class SplitterLogDataConsumer<T, D> extends ImplicitlyReactive
 			// receivers must correspond outputs for recorded scheme
 			return (StreamDataAcceptor<X>) acceptors.next();
 		}
+	}
+
+	public SplitterLogDataConsumer(Reactor reactor) {
+		super(reactor);
 	}
 
 	@Override

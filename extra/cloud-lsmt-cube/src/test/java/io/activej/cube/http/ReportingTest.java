@@ -222,6 +222,7 @@ public final class ReportingTest extends CubeTestBase {
 		private final Cube cube;
 
 		public LogItemSplitter(Cube cube) {
+			super(cube.getReactor());
 			this.cube = cube;
 		}
 

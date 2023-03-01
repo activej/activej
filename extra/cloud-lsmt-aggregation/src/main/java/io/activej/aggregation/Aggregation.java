@@ -351,7 +351,7 @@ public final class Aggregation extends AbstractReactive
 			}
 		}
 		StreamSorter<T, T> sorter = StreamSorter.create(
-				StreamSorterStorage.create(executor, binarySerializer, frameFormat, sortDir),
+				StreamSorterStorage.create(reactor, executor, binarySerializer, frameFormat, sortDir),
 				Function.identity(), keyComparator, false, sorterItemsInMemory);
 		sorter.getInput().getAcknowledgement()
 				.whenComplete(() -> {

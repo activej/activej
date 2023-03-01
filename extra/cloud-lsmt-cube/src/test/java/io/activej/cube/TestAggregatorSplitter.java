@@ -19,6 +19,7 @@ public class TestAggregatorSplitter extends SplitterLogDataConsumer<TestPubReque
 	private final Cube cube;
 
 	public TestAggregatorSplitter(Cube cube) {
+		super(cube.getReactor());
 		this.cube = cube;
 	}
 

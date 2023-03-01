@@ -192,7 +192,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	private StreamSorter<K, CrdtData<K, S>> createSorter(Path sortDir) {
-		StreamSorterStorage<CrdtData<K, S>> sorterStorage = StreamSorterStorage.create(executor, serializer, FRAME_FORMAT, sortDir);
+		StreamSorterStorage<CrdtData<K, S>> sorterStorage = StreamSorterStorage.create(reactor, executor, serializer, FRAME_FORMAT, sortDir);
 		Function<CrdtData<K, S>, K> keyFn = CrdtData::getKey;
 		return StreamSorter.create(sorterStorage, keyFn, naturalOrder(), false, sortItemsInMemory);
 	}

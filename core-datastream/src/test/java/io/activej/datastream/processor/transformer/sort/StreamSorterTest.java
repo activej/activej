@@ -10,6 +10,7 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -55,7 +56,7 @@ public final class StreamSorterTest {
 		//		StreamSupplier<Integer> source2 = StreamSuppliers.ofValues(111);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		StreamSorterStorage<Integer> storage = StreamSorterStorage.builder(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.getRoot().toPath())
+		StreamSorterStorage<Integer> storage = StreamSorterStorage.builder(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.getRoot().toPath())
 				.withWriteBlockSize(MemSize.of(64))
 				.build();
 
@@ -86,7 +87,7 @@ public final class StreamSorterTest {
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(3, 1, 3, 2, 5, 1, 4, 3, 2);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
+		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 2);
 
 		ToListStreamConsumer<Integer> consumerToList = ToListStreamConsumer.create();
@@ -104,7 +105,7 @@ public final class StreamSorterTest {
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(3, 1, 3, 2, 5, 1, 4, 3, 2);
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
+		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
 				storage, Function.identity(), Integer::compareTo, true, 2);
 
@@ -136,7 +137,7 @@ public final class StreamSorterTest {
 				StreamSuppliers.closingWithError(exception)
 		);
 
-		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
+		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
 				storage, Function.identity(), Integer::compareTo, true, 10);
 
@@ -157,7 +158,7 @@ public final class StreamSorterTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		Path storagePath = tempFolder.newFolder().toPath();
-		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, storagePath);
+		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, storagePath);
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 0);
 
 		StreamConsumer<Integer> consumer = StreamConsumers.skip();
@@ -237,7 +238,7 @@ public final class StreamSorterTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		Path path = tempFolder.newFolder().toPath();
-		failingStorage.setStorage(StreamSorterStorage.create(executor, INT_SERIALIZER, FRAME_FORMAT, path));
+		failingStorage.setStorage(StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, path));
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(failingStorage, Function.identity(), Integer::compareTo, true, 2);
 
 		ToListStreamConsumer<Integer> consumerToList = ToListStreamConsumer.create();

@@ -5,6 +5,7 @@ import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -37,8 +38,9 @@ public class SplitterLogDataConsumerTest {
 				ToListStreamConsumer.create());
 
 		Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
+		Reactor reactor = Reactor.getCurrentReactor();
 		SplitterLogDataConsumer<Integer, Integer> splitter =
-				new StubSplitter<>(() -> {
+				new StubSplitter<>(reactor, () -> {
 					ToListStreamConsumer<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
 				});
@@ -54,8 +56,9 @@ public class SplitterLogDataConsumerTest {
 				ToListStreamConsumer.create());
 
 		Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
+		Reactor reactor = Reactor.getCurrentReactor();
 		SplitterLogDataConsumer<Integer, Integer> splitter =
-				new StubSplitter<>(() -> {
+				new StubSplitter<>(reactor, () -> {
 					ToListStreamConsumer<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
 				});
@@ -66,7 +69,8 @@ public class SplitterLogDataConsumerTest {
 
 	@Test(expected = IllegalStateException.class)
 	public void testIncorrectImplementation() {
-		SplitterLogDataConsumer<Integer, Integer> splitter = new SplitterLogDataConsumer<>() {
+		Reactor reactor = Reactor.getCurrentReactor();
+		SplitterLogDataConsumer<Integer, Integer> splitter = new SplitterLogDataConsumer<>(reactor) {
 			@Override
 			protected StreamDataAcceptor<Integer> createSplitter(Context ctx) {
 				return item -> {};
@@ -79,7 +83,8 @@ public class SplitterLogDataConsumerTest {
 	private static class StubSplitter<T, D> extends SplitterLogDataConsumer<T, D> {
 		private final ILogDataConsumer<T, D> logConsumer;
 
-		private StubSplitter(ILogDataConsumer<T, D> logConsumer) {
+		private StubSplitter(Reactor reactor, ILogDataConsumer<T, D> logConsumer) {
+			super(reactor);
 			this.logConsumer = logConsumer;
 		}
 
