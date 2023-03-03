@@ -389,7 +389,8 @@ public final class SerializerFactory {
 		 */
 		public <T> Builder withSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
 			checkNotBuilt(this);
-			addSubclasses(subclassesId, subclasses);
+			//noinspection unchecked,rawtypes
+			extraSubclassesMap.put(subclassesId, (List) subclasses);
 			return this;
 		}
 
@@ -403,7 +404,8 @@ public final class SerializerFactory {
 		 */
 		public <T> Builder withSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
 			checkNotBuilt(this);
-			addSubclasses(type, subclasses);
+			//noinspection unchecked,rawtypes
+			extraSubclassesMap.put(type, (List) subclasses);
 			return this;
 		}
 
@@ -414,83 +416,81 @@ public final class SerializerFactory {
 	}
 
 	/**
-	 * Adds subclasses to be serialized.
-	 * Uses custom string id to identify subclasses
-	 *
-	 * @param subclassesId an id of subclasses
-	 * @param subclasses   actual subclasses classes
-	 * @param <T>          a parent of subclasses
-	 */
-	public <T> void addSubclasses(String subclassesId, List<Class<? extends T>> subclasses) {
-		//noinspection unchecked,rawtypes
-		extraSubclassesMap.put(subclassesId, (List) subclasses);
-	}
-
-	/**
-	 * Adds subclasses to be serialized.
-	 * Uses parent class to identify subclasses
-	 *
-	 * @param type       a parent class  of subclasses
-	 * @param subclasses actual subclasses classes
-	 * @param <T>        a parent type of subclasses
-	 */
-	public <T> void addSubclasses(Class<T> type, List<Class<? extends T>> subclasses) {
-		//noinspection unchecked,rawtypes
-		extraSubclassesMap.put(type, (List) subclasses);
-	}
-
-	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #create(AnnotatedType)
+	 * @see #toClassGenerator(AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, Type type) {
-		return create(classLoader, annotatedTypeOf(type));
+		return this.<T>toClassGenerator(type).generateClassAndCreateInstance(classLoader);
+	}
+
+	public <T> BinarySerializer<T> create(Type type) {
+		return create(DefiningClassLoader.create(), type);
 	}
 
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #create(AnnotatedType)
+	 * @see #toClassGenerator(AnnotatedType)
 	 */
-	public <T> ClassGenerator<BinarySerializer<T>> create(Type type) {
-		return create(annotatedTypeOf(type));
+	public <T> ClassGenerator<BinarySerializer<T>> toClassGenerator(Type type) {
+		return toClassGenerator(toSerializerDef(type));
+	}
+
+	public SerializerDef toSerializerDef(Type type) {
+		return toSerializerDef(annotatedTypeOf(type));
 	}
 
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #create(AnnotatedType)
+	 * @see #toClassGenerator(AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, Class<T> type) {
-		return create(classLoader, annotatedTypeOf(type));
+		return toClassGenerator(type).generateClassAndCreateInstance(classLoader);
+	}
+
+	public <T> BinarySerializer<T> create(Class<T> type) {
+		return create(DefiningClassLoader.create(), type);
 	}
 
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #create(AnnotatedType)
+	 * @see #toClassGenerator(AnnotatedType)
 	 */
-	public <T> ClassGenerator<BinarySerializer<T>> create(Class<T> type) {
-		return create(annotatedTypeOf(type));
+	public <T> ClassGenerator<BinarySerializer<T>> toClassGenerator(Class<T> type) {
+		return toClassGenerator(toSerializerDef(type));
+	}
+
+	public <T> SerializerDef toSerializerDef(Class<T> type) {
+		return toSerializerDef(annotatedTypeOf(type));
 	}
 
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #create(AnnotatedType)
+	 * @see #toClassGenerator(AnnotatedType)
 	 */
 	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, TypeT<T> typeT) {
-		return create(classLoader, typeT.getAnnotatedType());
+		return toClassGenerator(typeT).generateClassAndCreateInstance(classLoader);
+	}
+
+	public <T> BinarySerializer<T> create(TypeT<T> typeT) {
+		return create(DefiningClassLoader.create(), typeT);
 	}
 
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerFactory}.
 	 *
-	 * @see #create(AnnotatedType)
+	 * @see #toClassGenerator(AnnotatedType)
 	 */
-	public <T> ClassGenerator<BinarySerializer<T>> create(TypeT<T> typeT) {
-		return create(typeT.getAnnotatedType());
+	public <T> ClassGenerator<BinarySerializer<T>> toClassGenerator(TypeT<T> typeT) {
+		return toClassGenerator(toSerializerDef(typeT));
+	}
+
+	public <T> SerializerDef toSerializerDef(TypeT<T> typeT) {
+		return toSerializerDef(typeT.getAnnotatedType());
 	}
 
 	/**
@@ -501,9 +501,11 @@ public final class SerializerFactory {
 	 * @return a generated {@link BinarySerializer}
 	 */
 	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, AnnotatedType type) {
-		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
-		ClassGenerator<BinarySerializer<T>> classGenerator = toClassGenerator(serializer);
-		return classGenerator.generateClassAndCreateInstance(classLoader);
+		return this.<T>toClassGenerator(type).generateClassAndCreateInstance(classLoader);
+	}
+
+	public <T> BinarySerializer<T> create(AnnotatedType type) {
+		return create(DefiningClassLoader.create(), type);
 	}
 
 	/**
@@ -513,20 +515,23 @@ public final class SerializerFactory {
 	 * @param type a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> ClassGenerator<BinarySerializer<T>> create(AnnotatedType type) {
-		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
-		return toClassGenerator(serializer);
+	public <T> ClassGenerator<BinarySerializer<T>> toClassGenerator(AnnotatedType type) {
+		return toClassGenerator(toSerializerDef(type));
+	}
+
+	private SerializerDef toSerializerDef(AnnotatedType type) {
+		return registry.scanner(new HashMap<>()).scan(type);
 	}
 
 	/**
 	 * Builds a {@link BinarySerializer} out of some {@link SerializerDef}.
 	 *
-	 * @param serializer a {@link SerializerDef} that would be used to create a {@link BinarySerializer}
+	 * @param serializerDef a {@link SerializerDef} that would be used to create a {@link BinarySerializer}
 	 * @return a generated {@link BinarySerializer}
 	 */
-	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, SerializerDef serializer) {
+	public <T> BinarySerializer<T> create(DefiningClassLoader classLoader, SerializerDef serializerDef) {
 		//noinspection unchecked
-		return (BinarySerializer<T>) toClassGenerator(serializer).generateClassAndCreateInstance(classLoader);
+		return (BinarySerializer<T>) toClassGenerator(serializerDef).generateClassAndCreateInstance(classLoader);
 	}
 
 	/**
