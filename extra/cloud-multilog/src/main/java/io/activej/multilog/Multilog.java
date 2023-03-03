@@ -304,4 +304,38 @@ public final class Multilog<T> extends AbstractReactive
 	public boolean isIgnoreMalformedLogs() {
 		return ignoreMalformedLogs;
 	}
+
+	@JmxAttribute
+	public MemSize getBufferSize() {
+		return bufferSize;
+	}
+
+	@JmxAttribute
+	public Duration getAutoFlushInterval() {
+		return autoFlushInterval;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@JmxAttribute
+	public StreamRegistry getStreamReads() {
+		return streamReads;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@JmxAttribute
+	public StreamRegistry getStreamWrites() {
+		return streamWrites;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@JmxAttribute
+	public DetailedStreamStats getStreamReadStats() {
+		return streamReadStats;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@JmxAttribute
+	public DetailedStreamStats getStreamWriteStats() {
+		return streamWriteStats;
+	}
 }
