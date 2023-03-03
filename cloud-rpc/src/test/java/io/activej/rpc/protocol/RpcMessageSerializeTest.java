@@ -31,7 +31,7 @@ public final class RpcMessageSerializeTest {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
 		RpcMessage message1 = RpcMessage.of(1, messageData1);
 		BinarySerializer<TestRpcMessageData> testRpcMessageDataSerializer = SerializerFactory.defaultInstance()
-				.create(DefiningClassLoader.create(), TestRpcMessageData.class);
+				.create(TestRpcMessageData.class);
 
 		LinkedHashMap<Class<?>, BinarySerializer<?>> serializersMap = new LinkedHashMap<>();
 		serializersMap.put(TestRpcMessageData.class, testRpcMessageDataSerializer);

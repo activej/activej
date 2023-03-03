@@ -22,13 +22,12 @@ import java.util.Arrays;
  */
 public final class LocalDateSerializerExample {
 	public static void main(String[] args) {
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
 				SerializerFactory.builder()
 						.with(LocalDate.class, ctx -> new LocalDateSerializerDef())
 						.build()
-						.create(classLoader, LocalDateHolder.class);
+						.create(LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
 
 		byte[] array = new byte[1024];

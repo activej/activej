@@ -14,9 +14,8 @@ public final class SimpleObjectExample {
 		Person john = new Person(34, "Jim");
 		john.setSurname("Smith");
 		byte[] buffer = new byte[200];
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		BinarySerializer<Person> serializer = SerializerFactory.defaultInstance()
-				.create(classLoader, Person.class);
+				.create(Person.class);
 		//[END REGION_2]
 
 		//[START REGION_3]

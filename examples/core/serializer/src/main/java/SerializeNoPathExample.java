@@ -35,10 +35,9 @@ public class SerializeNoPathExample {
 	}
 
 	public static void main(String[] args) {
-		DefiningClassLoader definingClassLoader = DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
 		//[START Serializer]
 		BinarySerializer<Storage> serializer = SerializerFactory.defaultInstance()
-				.create(definingClassLoader, Storage.class);
+				.create(Storage.class);
 		//[END Serializer]
 
 		Storage storage = new Storage();

@@ -15,9 +15,8 @@ public final class GenericsAndInterfacesExample {
 				new Skill<>(2, "ActiveJ")));
 
 		byte[] buffer = new byte[200];
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		BinarySerializer<Developer> serializer = SerializerFactory.defaultInstance()
-				.create(classLoader, Developer.class);
+				.create(Developer.class);
 		//[END REGION_4]
 
 		//[START REGION_5]
