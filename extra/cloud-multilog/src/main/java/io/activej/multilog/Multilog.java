@@ -39,6 +39,7 @@ import io.activej.datastream.supplier.StreamSupplierWithResult;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.IllegalOffsetException;
+import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractReactive;
@@ -299,4 +300,8 @@ public final class Multilog<T> extends AbstractReactive
 		checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
 	}
 
+	@JmxAttribute
+	public boolean isIgnoreMalformedLogs() {
+		return ignoreMalformedLogs;
+	}
 }
