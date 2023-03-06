@@ -146,6 +146,6 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 
 	@Override
 	public String toString() {
-		return "MessagingWithBinaryStreaming{socket=" + socket + "}";
+		return "Messaging{socket=" + socket + "}";
 	}
 }

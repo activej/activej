@@ -582,7 +582,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	@Override
 	public String toString() {
-		return "AsyncTcpSocketImpl{" +
+		return "TcpSocket{" +
 				"channel=" + (channel != null ? channel : "") +
 				", readBuf=" + readBuf +
 				", writeBuf=" + writeBuf +

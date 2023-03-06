@@ -386,6 +386,6 @@ public final class HttpServer extends AbstractReactiveServer {
 
 	@Override
 	public String toString() {
-		return "AsyncHttpServer" + "{" + "new:" + poolNew.size() + " read/write:" + poolReadWrite.size() + " serving:" + poolServing.size() + " keep-alive:" + poolKeepAlive.size() + "}";
+		return "HttpServer" + "{" + "new:" + poolNew.size() + " read/write:" + poolReadWrite.size() + " serving:" + poolServing.size() + " keep-alive:" + poolKeepAlive.size() + "}";
 	}
 }

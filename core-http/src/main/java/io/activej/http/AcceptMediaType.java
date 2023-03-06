@@ -156,6 +156,6 @@ public final class AcceptMediaType {
 
 	@Override
 	public String toString() {
-		return "AcceptContentType{mime=" + mime + ", q=" + q + '}';
+		return "AcceptMediaType{mime=" + mime + ", q=" + q + '}';
 	}
 }

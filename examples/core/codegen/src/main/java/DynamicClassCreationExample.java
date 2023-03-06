@@ -126,7 +126,7 @@ public class DynamicClassCreationExample {
 
 		@Override
 		public String toString() {
-			return "PersonPojo{id=" + id + ", name=" + name + '}';
+			return "ExamplePojo{id=" + id + ", name=" + name + '}';
 		}
 	}
 }

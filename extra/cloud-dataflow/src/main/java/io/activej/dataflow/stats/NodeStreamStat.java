@@ -25,6 +25,6 @@ public class NodeStreamStat<T> extends NodeStat implements StreamSupplierTransfo
 
 	@Override
 	public String toString() {
-		return "NodeStreamStats{}";
+		return "NodeStreamStat{}";
 	}
 }

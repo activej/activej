@@ -442,7 +442,7 @@ public final class RemoteFileSystem extends AbstractNioReactive
 
 	@Override
 	public String toString() {
-		return "FileSystem_Remote{address=" + address + '}';
+		return "RemoteFileSystem{address=" + address + '}';
 	}
 
 	//region JMX

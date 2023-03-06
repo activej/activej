@@ -449,6 +449,6 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 
 	@Override
 	public String toString() {
-		return "ClassDef{" + encodeType.getSimpleName() + '}';
+		return "ClassSerializerDef{" + encodeType.getSimpleName() + '}';
 	}
 }

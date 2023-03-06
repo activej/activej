@@ -319,7 +319,7 @@ public final class BlockingFileSystem implements IBlockingFileSystem, BlockingSe
 
 	@Override
 	public String toString() {
-		return "LocalBlockingFileSystem{storage=" + storage + '}';
+		return "BlockingFileSystem{storage=" + storage + '}';
 	}
 
 	private static FileMetadata toFileMetadata(Path path) throws IOException {

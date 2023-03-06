@@ -655,6 +655,6 @@ public final class HttpClient extends AbstractNioReactive
 
 	@Override
 	public String toString() {
-		return "AsyncHttpClient" + "{" + "read/write:" + poolReadWrite.size() + " keep-alive:" + poolKeepAlive.size() + "}";
+		return "HttpClient" + "{" + "read/write:" + poolReadWrite.size() + " keep-alive:" + poolKeepAlive.size() + "}";
 	}
 }

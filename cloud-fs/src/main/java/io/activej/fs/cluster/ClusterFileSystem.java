@@ -317,7 +317,7 @@ public final class ClusterFileSystem extends AbstractReactive
 
 	@Override
 	public String toString() {
-		return "FileSystem_Cluster{partitions=" + partitions + '}';
+		return "ClusterFileSystem{partitions=" + partitions + '}';
 	}
 
 	public boolean isAlive() {

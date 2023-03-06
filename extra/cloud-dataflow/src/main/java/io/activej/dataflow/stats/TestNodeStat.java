@@ -14,6 +14,6 @@ public class TestNodeStat extends NodeStat {
 
 	@Override
 	public String toString() {
-		return "TestNodeStats{nodeIndex=" + nodeIndex + '}';
+		return "TestNodeStat{nodeIndex=" + nodeIndex + '}';
 	}
 }
