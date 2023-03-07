@@ -7,6 +7,7 @@ import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.protocol.RpcRemoteException;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
@@ -68,7 +69,7 @@ public final class RpcHelloWorldTest {
 
 	private static RpcServer createServer(NioReactor reactor) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
+				.withSerializer(RpcMessageSerializer.of(HelloRequest.class, HelloResponse.class))
 				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
 					if (name.equals("--")) {
 						throw new Exception("Illegal name");
@@ -85,7 +86,7 @@ public final class RpcHelloWorldTest {
 		public BlockingHelloClient(NioReactor reactor) throws Exception {
 			super(reactor);
 			this.rpcClient = RpcClient.builder(reactor)
-					.withMessageTypes(HelloRequest.class, HelloResponse.class)
+					.withSerializer(RpcMessageSerializer.of(HelloRequest.class, HelloResponse.class))
 					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
 					.build();
 

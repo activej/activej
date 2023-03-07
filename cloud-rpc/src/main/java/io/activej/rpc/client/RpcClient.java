@@ -19,7 +19,6 @@ package io.activej.rpc.client;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.service.ReactiveService;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
@@ -46,11 +45,10 @@ import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
-import io.activej.rpc.protocol.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.SerializerFactory;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -62,7 +60,9 @@ import java.util.*;
 import java.util.concurrent.Executor;
 
 import static io.activej.async.callback.Callback.toAnotherReactor;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.nonNullElseGet;
+import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
@@ -123,8 +123,8 @@ public final class RpcClient extends AbstractNioReactive
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private long reconnectIntervalMillis = DEFAULT_RECONNECT_INTERVAL.toMillis();
 
-	private RpcMessageSerializer requestSerializer;
-	private RpcMessageSerializer responseSerializer;
+	private BinarySerializer<RpcMessage> requestSerializer;
+	private BinarySerializer<RpcMessage> responseSerializer;
 
 	private RpcSender requestSender = new NoSenderAvailable();
 
@@ -151,81 +151,28 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
-		private final LinkedHashMap<Class<?>, BinarySerializer<?>> requestSerializers = new LinkedHashMap<>();
-		private final LinkedHashMap<Class<?>, BinarySerializer<?>> responseSerializers = new LinkedHashMap<>();
-
 		private Builder() {}
 
-		/**
-		 * Sets serializers for RPC messages.
-		 *
-		 * @param requestSerializers  RPC request serializers
-		 * @param responseSerializers RPC response serializers
-		 * @return the builder for RPC client with specified serializers for RPC messages
-		 */
-		public Builder withSerializers(
-				LinkedHashMap<Class<?>, BinarySerializer<?>> requestSerializers,
-				LinkedHashMap<Class<?>, BinarySerializer<?>> responseSerializers) {
-			return this
-					.withRequestsSerializers(requestSerializers)
-					.withResponseSerializers(responseSerializers);
+		public Builder withSerializer(BinarySerializer<RpcMessage> serializer) {
+			return withSerializer(serializer, serializer);
 		}
 
-		/**
-		 * Sets serializers for RPC requests.
-		 *
-		 * @param serializers RPC request serializers
-		 * @return the builder for RPC client with specified serializers for RPC requests
-		 */
-		public Builder withRequestsSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
+		public Builder withSerializer(BinarySerializer<RpcMessage> requestSerializer, BinarySerializer<RpcMessage> responseSerializer) {
 			checkNotBuilt(this);
-			RpcClient.this.requestSerializer = new RpcMessageSerializer(serializers);
+			RpcClient.this.requestSerializer = requestSerializer;
+			RpcClient.this.responseSerializer = responseSerializer;
 			return this;
 		}
 
-		/**
-		 * Adds serializer for one of RPC requests.
-		 * <p>
-		 * <b>
-		 * Note: order of added request serializers matters. It should match an order on the {@link RpcServer}
-		 * </b>
-		 *
-		 * @param requestClass      class of RPC request
-		 * @param requestSerializer RPC request serializer
-		 * @return the builder for RPC client with specified serializer for one of RPC requests
-		 */
-		public <T> Builder withRequestSerializer(Class<T> requestClass, BinarySerializer<T> requestSerializer) {
+		public Builder withRequestsSerializer(BinarySerializer<RpcMessage> serializer) {
 			checkNotBuilt(this);
-			requestSerializers.put(requestClass, requestSerializer);
+			RpcClient.this.requestSerializer = serializer;
 			return this;
 		}
 
-		/**
-		 * Sets serializers for RPC responses.
-		 *
-		 * @param serializers RPC responses serializers
-		 * @return the builder for RPC client with specified serializers for RPC responses
-		 */
-		public Builder withResponseSerializers(LinkedHashMap<Class<?>, BinarySerializer<?>> serializers) {
+		public Builder withResponsesSerializer(BinarySerializer<RpcMessage> serializer) {
 			checkNotBuilt(this);
-			RpcClient.this.responseSerializer = new RpcMessageSerializer(serializers);
-			return this;
-		}
-
-		/**
-		 * Adds serializer for one of RPC responses.
-		 * <p>
-		 * <b>
-		 * Note: order of added response serializers matters. It should match an order on the {@link RpcServer}
-		 * </b>
-		 *
-		 * @param responseClass      class of RPC response
-		 * @param responseSerializer RPC response serializer
-		 * @return the builder for RPC client with specified serializer for one of RPC responses
-		 */
-		public <T> Builder withResponseSerializer(Class<T> responseClass, BinarySerializer<T> responseSerializer) {
-			checkNotBuilt(this);
-			responseSerializers.put(responseClass, responseSerializer);
+			RpcClient.this.responseSerializer = serializer;
 			return this;
 		}
 
@@ -239,97 +186,6 @@ public final class RpcClient extends AbstractNioReactive
 			checkNotBuilt(this);
 			RpcClient.this.socketSettings = socketSettings;
 			return this;
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(Class<?>... messageTypes) {
-			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(List<Class<?>> messageTypes) {
-			return withMessageTypes(DefiningClassLoader.create(), messageTypes);
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(DefiningClassLoader classLoader, Class<?>... messageTypes) {
-			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(DefiningClassLoader classLoader, List<Class<?>> messageTypes) {
-			return withMessageTypes(classLoader, SerializerFactory.defaultInstance(), messageTypes);
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(SerializerFactory serializerFactory, Class<?>... messageTypes) {
-			return withMessageTypes(DefiningClassLoader.create(), serializerFactory, messageTypes);
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(SerializerFactory serializerFactory, List<Class<?>> messageTypes) {
-			return withMessageTypes(DefiningClassLoader.create(), serializerFactory, messageTypes);
-		}
-
-		/**
-		 * @see #withMessageTypes(DefiningClassLoader, SerializerFactory, List)
-		 */
-		public Builder withMessageTypes(
-				DefiningClassLoader classLoader,
-				SerializerFactory serializerFactory,
-				Class<?>... messageTypes
-		) {
-			return withMessageTypes(classLoader, serializerFactory, List.of(messageTypes));
-		}
-
-		/**
-		 * Adds an ability to serialize specified message types.
-		 * <p>
-		 * <b>
-		 * Note: order of added message types matters. It should match an order on the {@link RpcServer}
-		 * <p>
-		 * Message types should be serializable by passed {@link SerializerFactory}
-		 * </b>
-		 *
-		 * @param classLoader       defining class loader used for creating instances of serializers for specified
-		 *                          message types
-		 * @param serializerFactory serializer factory used for creating instances of serializers for specified message
-		 *                          types
-		 * @param messageTypes      classes of messages serialized by the client
-		 * @return the builder for RPC client instance capable of serializing provided
-		 * message types
-		 */
-		public Builder withMessageTypes(
-				DefiningClassLoader classLoader,
-				SerializerFactory serializerFactory,
-				List<Class<?>> messageTypes
-		) {
-			return withMessageTypes(classLoader, serializerFactory, messageTypes, messageTypes);
-		}
-
-		public Builder withMessageTypes(
-				DefiningClassLoader classLoader,
-				SerializerFactory serializerFactory,
-				List<Class<?>> requestMessageTypes,
-				List<Class<?>> responseMessageTypes
-		) {
-			return withSerializers(
-					requestMessageTypes.stream()
-							.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))),
-					responseMessageTypes.stream()
-							.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))));
 		}
 
 		/**
@@ -449,19 +305,7 @@ public final class RpcClient extends AbstractNioReactive
 
 		@Override
 		protected RpcClient doBuild() {
-			if (requestSerializer == null) {
-				if (requestSerializers.isEmpty()) {
-					throw new IllegalStateException("No serializer for RPC request is set or no RPC message types are specified");
-				}
-				requestSerializer = new RpcMessageSerializer(requestSerializers);
-			}
-			if (responseSerializer == null) {
-				if (responseSerializers.isEmpty()) {
-					throw new IllegalStateException("No serializer for RPC response is set or no RPC message types are specified");
-				}
-				responseSerializer = new RpcMessageSerializer(responseSerializers);
-			}
-
+			checkState(requestSerializer != null && responseSerializer != null);
 			return RpcClient.this;
 		}
 	}
@@ -473,7 +317,7 @@ public final class RpcClient extends AbstractNioReactive
 	@Override
 	public Promise<Void> start() {
 		checkInReactorThread(this);
-		Checks.checkState(stopPromise == null);
+		checkState(stopPromise == null);
 
 		return changeStrategy(newStrategy, false);
 	}
@@ -704,6 +548,16 @@ public final class RpcClient extends AbstractNioReactive
 	@VisibleForTesting
 	public RpcSender getRequestSender() {
 		return requestSender;
+	}
+
+	@VisibleForTesting
+	public BinarySerializer<RpcMessage> getRequestSerializer() {
+		return requestSerializer;
+	}
+
+	@VisibleForTesting
+	public BinarySerializer<RpcMessage> getResponseSerializer() {
+		return responseSerializer;
 	}
 
 	@Override

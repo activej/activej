@@ -24,6 +24,7 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -53,7 +54,7 @@ public class CrdtRpcClientModule extends AbstractModule {
 	@Provides
 	IRpcClient client(NioReactor reactor, RpcStrategy strategy, List<Class<?>> messageTypes) {
 		return RpcClient.builder(reactor)
-				.withMessageTypes(messageTypes)
+				.withSerializer(RpcMessageSerializer.of(messageTypes))
 				.withStrategy(strategy)
 				.build();
 	}

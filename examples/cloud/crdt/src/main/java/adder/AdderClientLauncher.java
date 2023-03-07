@@ -18,6 +18,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -49,7 +50,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 			@Provides
 			IRpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
 				RpcClient rpcClient = RpcClient.builder(reactor)
-						.withMessageTypes(messageTypes)
+						.withSerializer(RpcMessageSerializer.of(messageTypes))
 						.build();
 				strategyService.setRpcClient(rpcClient);
 				return rpcClient;

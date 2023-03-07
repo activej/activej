@@ -11,6 +11,7 @@ import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.rpc.client.sender.strategy.impl.RendezvousHashing;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -31,7 +32,7 @@ public class AdvancedRpcClientModule extends AbstractModule {
 	IRpcClient rpcClient(NioReactor reactor, RpcStrategy strategy) {
 		return RpcClient.builder(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
-				.withMessageTypes(Integer.class)
+				.withSerializer(RpcMessageSerializer.of(Integer.class))
 				.withStrategy(strategy)
 				.build();
 	}

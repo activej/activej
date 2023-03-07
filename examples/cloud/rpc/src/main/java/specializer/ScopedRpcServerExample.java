@@ -7,6 +7,7 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -31,7 +32,7 @@ public final class ScopedRpcServerExample extends Launcher {
 	@Eager
 	RpcServer rpcServer(NioReactor reactor, RpcRequestHandler<RpcRequest, RpcResponse> handler) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(RpcRequest.class, RpcResponse.class)
+				.withSerializer(RpcMessageSerializer.of(RpcRequest.class, RpcResponse.class))
 				.withHandler(RpcRequest.class, handler)
 				.withListenPort(PORT)
 				.build();

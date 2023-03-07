@@ -11,6 +11,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 import io.activej.service.ServiceGraphModuleSettings;
@@ -42,7 +43,7 @@ public class RpcExample extends Launcher {
 	@Provides
 	RpcServer rpcServer(NioReactor reactor) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(String.class)
+				.withSerializer(RpcMessageSerializer.of(String.class))
 				.withHandler(String.class,
 						request -> Promise.of("Hello " + request))
 				.withListenPort(SERVICE_PORT)
@@ -52,7 +53,7 @@ public class RpcExample extends Launcher {
 	@Provides
 	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
-				.withMessageTypes(String.class)
+				.withSerializer(RpcMessageSerializer.of(String.class))
 				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)))
 				.build();
 	}

@@ -15,6 +15,7 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,7 +59,7 @@ public class RpcBenchmarkClient extends Launcher {
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.frameFormat", null))
-				.withMessageTypes(Integer.class)
+				.withSerializer(RpcMessageSerializer.of(Integer.class))
 				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
 				.build();
 	}

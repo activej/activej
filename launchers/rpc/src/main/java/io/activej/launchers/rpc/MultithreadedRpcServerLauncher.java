@@ -30,6 +30,7 @@ import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;
@@ -125,7 +126,7 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 					@Worker
 					RpcServer server(NioReactor reactor, Config config, @WorkerId int id) {
 						return RpcServer.builder(reactor)
-								.withMessageTypes(String.class)
+								.withSerializer(RpcMessageSerializer.of(String.class))
 								.withHandler(String.class,
 										req -> Promise.of("Request served by worker #" + id + ": " + req))
 								.build();

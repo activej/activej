@@ -7,6 +7,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.RpcClientConnection;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -53,7 +54,7 @@ public final class TestRpcClientShutdown {
 		List<Class<?>> messageTypes = List.of(Request.class, Response.class);
 
 		RpcServer rpcServer = RpcServer.builder(reactor)
-				.withMessageTypes(messageTypes)
+				.withSerializer(RpcMessageSerializer.of(messageTypes))
 				.withHandler(Request.class,
 						request -> Promise.ofBlocking(executor, () -> {
 							Thread.sleep(100);
@@ -63,7 +64,7 @@ public final class TestRpcClientShutdown {
 				.build();
 
 		RpcClient rpcClient = RpcClient.builder(reactor)
-				.withMessageTypes(messageTypes)
+				.withSerializer(RpcMessageSerializer.of(messageTypes))
 				.withStrategy(server(new InetSocketAddress(port)))
 				.build();
 

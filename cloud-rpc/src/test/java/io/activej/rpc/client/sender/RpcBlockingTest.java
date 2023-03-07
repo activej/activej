@@ -6,6 +6,7 @@ import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
 import io.activej.rpc.client.sender.strategy.impl.Sharding;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.SerializeRecord;
@@ -53,7 +54,7 @@ public final class RpcBlockingTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 
 		serverOne = RpcServer.builder(eventloop)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
+				.withSerializer(RpcMessageSerializer.of(HelloRequest.class, HelloResponse.class))
 				.withHandler(HelloRequest.class,
 						helloServiceRequestHandler(new HelloServiceImplOne()))
 				.withListenPort(port1)
@@ -61,7 +62,7 @@ public final class RpcBlockingTest {
 		serverOne.listen();
 
 		serverTwo = RpcServer.builder(eventloop)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
+				.withSerializer(RpcMessageSerializer.of(HelloRequest.class, HelloResponse.class))
 				.withHandler(HelloRequest.class,
 						helloServiceRequestHandler(new HelloServiceImplTwo()))
 				.withListenPort(port2)
@@ -69,7 +70,7 @@ public final class RpcBlockingTest {
 		serverTwo.listen();
 
 		serverThree = RpcServer.builder(eventloop)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
+				.withSerializer(RpcMessageSerializer.of(HelloRequest.class, HelloResponse.class))
 				.withHandler(HelloRequest.class,
 						helloServiceRequestHandler(new HelloServiceImplThree()))
 				.withListenPort(port3)
@@ -92,7 +93,7 @@ public final class RpcBlockingTest {
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
 
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
+				.withSerializer(RpcMessageSerializer.of(HelloRequest.class, HelloResponse.class))
 				.withStrategy(
 						RpcStrategies.roundRobin(
 								server(address1),

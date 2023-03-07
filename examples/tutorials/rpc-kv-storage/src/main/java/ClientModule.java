@@ -4,6 +4,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -27,7 +28,7 @@ public class ClientModule extends AbstractModule {
 	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
-				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
+				.withSerializer(RpcMessageSerializer.of(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class))
 				.withStrategy(server(new InetSocketAddress("localhost", RPC_SERVER_PORT)))
 				.build();
 	}

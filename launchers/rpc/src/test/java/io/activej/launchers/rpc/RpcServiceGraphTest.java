@@ -12,6 +12,7 @@ import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.impl.RoundRobin;
 import io.activej.rpc.protocol.RpcException;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraph;
 import io.activej.service.ServiceGraphModule;
@@ -53,7 +54,7 @@ public class RpcServiceGraphTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		port = getFreePort();
 		RpcServer.builder(eventloop)
-				.withMessageTypes(String.class)
+				.withSerializer(RpcMessageSerializer.of(String.class))
 				.withHandler(String.class, Promise::of)
 				.withListenPort(port)
 				.build()
@@ -75,7 +76,7 @@ public class RpcServiceGraphTest {
 					@Eager
 					IRpcClient client(NioReactor reactor) {
 						return RpcClient.builder(reactor)
-								.withMessageTypes(String.class)
+								.withSerializer(RpcMessageSerializer.of(String.class))
 								.withStrategy(RoundRobin.builder(
 												servers(
 														new InetSocketAddress(port),

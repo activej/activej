@@ -5,6 +5,7 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -55,7 +56,7 @@ public final class RpcTimeoutTest {
 		List<Class<?>> messageTypes = List.of(String.class);
 
 		server = RpcServer.builder(reactor)
-				.withMessageTypes(messageTypes)
+				.withSerializer(RpcMessageSerializer.of(messageTypes))
 				.withHandler(String.class,
 						request -> Promise.ofBlocking(executor, () -> {
 							Thread.sleep(SERVER_DELAY);
@@ -65,7 +66,7 @@ public final class RpcTimeoutTest {
 				.build();
 
 		client = RpcClient.builder(reactor)
-				.withMessageTypes(messageTypes)
+				.withSerializer(RpcMessageSerializer.of(messageTypes))
 				.withStrategy(server(new InetSocketAddress(port)))
 				.build();
 

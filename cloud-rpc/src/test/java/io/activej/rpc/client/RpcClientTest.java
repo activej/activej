@@ -9,6 +9,7 @@ import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -60,7 +61,7 @@ public final class RpcClientTest {
 
 			int finalI = i;
 			RpcServer rpcServer = RpcServer.builder(serverEventloop)
-					.withMessageTypes(Request.class, Integer.class)
+					.withSerializer(RpcMessageSerializer.of(Request.class, Integer.class))
 					.withHandler(Request.class, $ -> Promise.of(finalI))
 					.withListenPort(getFreePort())
 					.build();
@@ -418,7 +419,7 @@ public final class RpcClientTest {
 
 	private void initRpcClient(RpcStrategy strategy) {
 		this.rpcClient = RpcClient.builder(clientEventloop)
-				.withMessageTypes(Request.class, Integer.class)
+				.withSerializer(RpcMessageSerializer.of(Request.class, Integer.class))
 				.withStrategy(strategy)
 				.build();
 		await(rpcClient::start);

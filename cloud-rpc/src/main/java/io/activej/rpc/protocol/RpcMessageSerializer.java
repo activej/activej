@@ -1,13 +1,17 @@
 package io.activej.rpc.protocol;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Checks;
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.*;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.toLinkedHashMap;
 
 public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
 	private static final boolean CHECK = Checks.isEnabled(RpcMessageSerializer.class);
@@ -32,17 +36,8 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 			);
 		}
 	};
-	private static final BinarySerializer<RpcControlMessage> RPC_CONTROL_MESSAGE_SERIALIZER = BinarySerializers.ofEnum(RpcControlMessage.class);
-	private static final BinarySerializer<Object> NULL_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public void encode(BinaryOutput out, Object item) {
-		}
 
-		@Override
-		public Object decode(BinaryInput in) throws CorruptedDataException {
-			return null;
-		}
-	};
+	private static final BinarySerializer<RpcControlMessage> RPC_CONTROL_MESSAGE_SERIALIZER = BinarySerializers.ofEnum(RpcControlMessage.class);
 
 	public record Entry(Class<?> key, byte index, BinarySerializer<?> serializer, Entry next) {}
 
@@ -50,30 +45,137 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 	private final Entry[] serializersMap;
 
 	public RpcMessageSerializer(LinkedHashMap<Class<?>, BinarySerializer<?>> serializersMap) {
-		checkArgument(serializersMap.size() < Byte.MAX_VALUE - 3, "Too many subclasses");
+		checkArgument(serializersMap.size() < Byte.MAX_VALUE, "Too many subclasses");
 
 		{
-			this.serializers = new BinarySerializer[serializersMap.size() + 3];
+			this.serializers = new BinarySerializer[serializersMap.size()];
 			int n = 0;
-			this.serializers[n++] = RPC_CONTROL_MESSAGE_SERIALIZER;
-			this.serializers[n++] = NULL_SERIALIZER;
-			this.serializers[n++] = RPC_REMOTE_EXCEPTION_SERIALIZER;
 			for (Map.Entry<Class<?>, BinarySerializer<?>> entry : serializersMap.entrySet()) {
 				this.serializers[n++] = entry.getValue();
 			}
 		}
 		{
 			Entry[] map = new Entry[nextPowerOf2((serializersMap.size() + 3) * 3 / 2)];
-			byte n = -1;
-			put(map, RpcControlMessage.class, n++, RPC_CONTROL_MESSAGE_SERIALIZER);
-			put(map, Void.class, n++, NULL_SERIALIZER);
-			put(map, RpcRemoteException.class, n++, RPC_REMOTE_EXCEPTION_SERIALIZER);
+			byte n = 0;
 			for (Map.Entry<Class<?>, BinarySerializer<?>> entry : serializersMap.entrySet()) {
 				Class<?> key = entry.getKey();
-				checkArgument(key != Void.class, "Void message type is not supported");
 				put(map, key, n++, entry.getValue());
 			}
 			this.serializersMap = map;
+		}
+	}
+
+	@Deprecated
+	public static BinarySerializer<RpcMessage> ofV5(List<Class<?>> messages) {
+		return SerializerFactory.builder()
+				.withSubclasses(RpcMessage.SUBCLASSES_ID, messages)
+				.build()
+				.create(DefiningClassLoader.create(), RpcMessage.class);
+	}
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static RpcMessageSerializer of(Class<?>... messageTypes) {
+		return builder().withMessageTypes(messageTypes).build();
+	}
+
+	public static RpcMessageSerializer of(List<Class<?>> messageTypes) {
+		return builder().withMessageTypes(messageTypes).build();
+	}
+
+	public static final class Builder extends AbstractBuilder<Builder, RpcMessageSerializer> {
+		private DefiningClassLoader classLoader;
+		private SerializerFactory serializerFactory;
+		private final LinkedHashMap<Class<?>, BinarySerializer<?>> messageSerializers = new LinkedHashMap<>();
+
+		private Builder() {
+			this.messageSerializers.put(RpcControlMessage.class, RpcMessageSerializer.RPC_CONTROL_MESSAGE_SERIALIZER);
+			this.messageSerializers.put(RpcRemoteException.class, RpcMessageSerializer.RPC_REMOTE_EXCEPTION_SERIALIZER);
+		}
+
+		private DefiningClassLoader ensureClassLoader() {
+			if (classLoader == null) {
+				classLoader = DefiningClassLoader.create();
+			}
+			return classLoader;
+		}
+
+		private SerializerFactory ensureSerializerFactory() {
+			if (serializerFactory == null) {
+				serializerFactory = SerializerFactory.defaultInstance();
+			}
+			return serializerFactory;
+		}
+
+		public Builder withClassLoader(DefiningClassLoader classLoader) {
+			this.classLoader = classLoader;
+			return this;
+		}
+
+		public Builder withSerializerFactory(SerializerFactory serializerFactory) {
+			this.serializerFactory = serializerFactory;
+			return this;
+		}
+
+		public Builder with(Class<?> messageType, BinarySerializer<?> serializer) {
+			this.messageSerializers.put(messageType, serializer);
+			return this;
+		}
+
+		public Builder withMessageTypes(Class<?>... messageTypes) {
+			return with(ensureClassLoader(), ensureSerializerFactory(), messageTypes);
+		}
+
+		/**
+		 * @see #with(DefiningClassLoader, SerializerFactory, List)
+		 */
+		public Builder withMessageTypes(List<Class<?>> messageTypes) {
+			return with(ensureClassLoader(), ensureSerializerFactory(), messageTypes);
+		}
+
+		/**
+		 * @see #with(DefiningClassLoader, SerializerFactory, List)
+		 */
+		public Builder with(
+				DefiningClassLoader classLoader,
+				SerializerFactory serializerFactory,
+				Class<?>... messageTypes
+		) {
+			return with(classLoader, serializerFactory, List.of(messageTypes));
+		}
+
+		/**
+		 * Adds an ability to serialize specified message types.
+		 * <p>
+		 * <b>
+		 * Note: order of added message types matters. It should match an order on the {@link RpcServer}
+		 * <p>
+		 * Message types should be serializable by passed {@link SerializerFactory}
+		 * </b>
+		 *
+		 * @param classLoader       defining class loader used for creating instances of serializers for specified
+		 *                          message types
+		 * @param serializerFactory serializer factory used for creating instances of serializers for specified message
+		 *                          types
+		 * @param messageTypes      classes of messages serialized by the client
+		 * @return the builder for RPC client instance capable of serializing provided
+		 * message types
+		 */
+		public Builder with(
+				DefiningClassLoader classLoader,
+				SerializerFactory serializerFactory,
+				List<Class<?>> messageTypes
+		) {
+			this.messageSerializers.putAll(messageTypes.stream()
+					.collect(toLinkedHashMap(messageType -> serializerFactory.create(classLoader, messageType))));
+			return this;
+		}
+
+		@Override
+		protected RpcMessageSerializer doBuild() {
+			return new RpcMessageSerializer(this.messageSerializers);
 		}
 	}
 
@@ -94,7 +196,7 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 	}
 
 	private static int getMapIdx(int mapLength, Class<?> key) {
-		return key == Void.class ? 0 : key.hashCode() & mapLength - 1;
+		return key.hashCode() & mapLength - 1;
 	}
 
 	@Override
@@ -103,9 +205,6 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 		Object data = item.getData();
 		Class<?> key = data == null ? Void.class : data.getClass();
 		Entry entry = get(serializersMap, key);
-		if (CHECK) {
-			checkState(entry != null, "No serializer for RPC message of type: " + key.getName());
-		}
 		out.writeByte(entry.index);
 		//noinspection unchecked
 		((BinarySerializer<Object>) entry.serializer).encode(out, data);
@@ -115,11 +214,7 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 	public RpcMessage decode(BinaryInput in) throws CorruptedDataException {
 		int cookie = in.readInt();
 		int subClassId = in.readByte();
-		if (CHECK) {
-			checkState(subClassId < serializers.length - 1,
-					"No serializer for RPC message with subclass index: " + subClassId);
-		}
-		Object data = serializers[subClassId + 1].decode(in);
+		Object data = serializers[subClassId].decode(in);
 		return RpcMessage.of(cookie, data);
 	}
 }

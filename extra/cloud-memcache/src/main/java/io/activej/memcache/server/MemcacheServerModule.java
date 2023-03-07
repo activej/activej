@@ -16,7 +16,6 @@
 
 package io.activej.memcache.server;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
@@ -26,6 +25,7 @@ import io.activej.promise.Promise;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerFactory;
 
@@ -54,7 +54,7 @@ public class MemcacheServerModule extends AbstractModule {
 	}
 
 	@Provides
-	RpcServer server(NioReactor reactor, Config config, RingBuffer storage, DefiningClassLoader classLoader) {
+	RpcServer server(NioReactor reactor, Config config, RingBuffer storage) {
 		return RpcServer.builder(reactor)
 				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
@@ -64,12 +64,10 @@ public class MemcacheServerModule extends AbstractModule {
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
 							return Promise.of(PutResponse.INSTANCE);
 						})
-				.withMessageTypes(
-						classLoader,
-						SerializerFactory.builder()
-								.with(Slice.class, ctx -> new SliceSerializerDef())
-								.build(),
-						MESSAGE_TYPES)
+				.withSerializer(RpcMessageSerializer.builder()
+						.withSerializerFactory(SerializerFactory.builder().with(Slice.class, ctx -> new SliceSerializerDef()).build())
+						.withMessageTypes(MESSAGE_TYPES)
+						.build())
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))

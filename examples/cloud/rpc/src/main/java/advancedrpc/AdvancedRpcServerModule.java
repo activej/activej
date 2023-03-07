@@ -6,6 +6,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.protocol.RpcMessageSerializer;
 import io.activej.rpc.server.RpcServer;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.annotation.Worker;
@@ -40,7 +41,7 @@ public class AdvancedRpcServerModule extends AbstractModule {
 	@Worker
 	RpcServer rpcServer(NioReactor reactor, Integer port) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(Integer.class)
+				.withSerializer(RpcMessageSerializer.of(Integer.class))
 				.withHandler(Integer.class, in -> {
 					System.out.println("Incoming message: on port #" + port + " : " + in);
 					return Promise.of(in);

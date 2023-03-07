@@ -213,7 +213,9 @@ public final class SerializerFactory {
 						for (Class<?> subclass : subclassesSet) {
 							subclassBuilder.withSubclass(subclass, ctx.scan(subclass));
 						}
-						serializerDef = subclassBuilder.build();
+						serializerDef = subclassBuilder
+								.withStartIndex(annotationClass.subclassesIdx())
+								.build();
 					}
 				} else if (extraSubclassesMap.containsKey(rawClass)) {
 					SubclassSerializerDef.Builder subclassBuilder = SubclassSerializerDef.builder(rawClass);
