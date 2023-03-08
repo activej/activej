@@ -289,7 +289,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
 		if (isClosed()) return;
-		logger.error("Serialization error: {} for data {}", address, message.getMessage(), e);
+		logger.error("Serialization error: {} for message {}", address, message.getMessage(), e);
 		rpcClient.getLastProtocolError().recordException(e, address);
 		activeRequests.remove(message.getIndex()).accept(null, e);
 	}

@@ -138,7 +138,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
-		logger.error("Serialization error: {} for data {}", remoteAddress, message.getMessage(), e);
+		logger.error("Serialization error: {} for message {}", remoteAddress, message.getMessage(), e);
 		Object data = new RpcRemoteException(e);
 		RpcMessage errorMessage = new RpcMessage(message.getIndex(), data);
 		sendError(errorMessage, message.getMessage(), e);

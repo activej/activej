@@ -32,8 +32,8 @@ public final class RpcMessage {
 		this.message = message;
 	}
 
-	public RpcMessage(Object message) {
-		this(0, message);
+	public RpcMessage(RpcControlMessage controlMessage) {
+		this(0, controlMessage);
 	}
 
 	@Serialize(order = 1)
@@ -55,7 +55,7 @@ public final class RpcMessage {
 	public String toString() {
 		return "RpcMessage{" +
 				"index=" + index +
-				", data=" + message +
+				", message=" + message +
 				'}';
 	}
 }
