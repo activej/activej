@@ -82,10 +82,10 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	public void accept(RpcMessage message) {
 		activeRequests++;
 
-		int cookie = message.getCookie();
+		int index = message.getIndex();
 		long startTime = monitoring ? System.currentTimeMillis() : 0;
 
-		Object messageData = message.getData();
+		Object messageData = message.getMessage();
 		serve(messageData)
 				.run((result, e) -> {
 					if (startTime != 0) {
@@ -94,13 +94,14 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 						rpcServer.getRequestHandlingTime().recordValue(value);
 					}
 					if (e == null) {
-						downstreamDataAcceptor.accept(RpcMessage.of(cookie, result));
+						downstreamDataAcceptor.accept(new RpcMessage(index, result));
 
 						successfulRequests.recordEvent();
 						rpcServer.getSuccessfulRequests().recordEvent();
 					} else {
-						logger.warn("Exception while processing request ID {}", cookie, e);
-						RpcMessage errorMessage = RpcMessage.of(cookie, new RpcRemoteException(e));
+						logger.warn("Exception while processing request ID {}", index, e);
+						Object data = new RpcRemoteException(e);
+						RpcMessage errorMessage = new RpcMessage(index, data);
 						sendError(errorMessage, messageData, e);
 					}
 					if (--activeRequests == 0) {
@@ -137,9 +138,10 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
-		logger.error("Serialization error: {} for data {}", remoteAddress, message.getData(), e);
-		RpcMessage errorMessage = RpcMessage.of(message.getCookie(), new RpcRemoteException(e));
-		sendError(errorMessage, message.getData(), e);
+		logger.error("Serialization error: {} for data {}", remoteAddress, message.getMessage(), e);
+		Object data = new RpcRemoteException(e);
+		RpcMessage errorMessage = new RpcMessage(message.getIndex(), data);
+		sendError(errorMessage, message.getMessage(), e);
 	}
 
 	@Override
@@ -168,7 +170,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 	public void shutdown() {
 		if (downstreamDataAcceptor != null) {
-			downstreamDataAcceptor.accept(RpcMessage.of(-1, RpcControlMessage.CLOSE));
+			downstreamDataAcceptor.accept(new RpcMessage(RpcControlMessage.CLOSE));
 		}
 	}
 

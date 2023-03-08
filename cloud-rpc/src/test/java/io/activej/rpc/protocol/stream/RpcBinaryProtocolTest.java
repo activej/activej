@@ -94,7 +94,7 @@ public final class RpcBinaryProtocolTest {
 		int countRequests = 10;
 
 		String testMessage = "Test";
-		List<RpcMessage> sourceList = IntStream.range(0, countRequests).mapToObj(i -> RpcMessage.of(i, testMessage)).collect(toList());
+		List<RpcMessage> sourceList = IntStream.range(0, countRequests).mapToObj(i -> new RpcMessage(i, testMessage)).collect(toList());
 
 		FrameFormat frameFormat = FrameFormats.lz4();
 		StreamSupplier<RpcMessage> supplier = StreamSuppliers.ofIterable(sourceList)
@@ -108,8 +108,8 @@ public final class RpcBinaryProtocolTest {
 		List<RpcMessage> list = await(supplier.toList());
 		assertEquals(countRequests, list.size());
 		for (int i = 0; i < countRequests; i++) {
-			assertEquals(i, list.get(i).getCookie());
-			String data = (String) list.get(i).getData();
+			assertEquals(i, list.get(i).getIndex());
+			String data = (String) list.get(i).getMessage();
 			assertEquals(testMessage, data);
 		}
 	}

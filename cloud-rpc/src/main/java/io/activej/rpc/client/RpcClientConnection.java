@@ -64,7 +64,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	private ArrayList<RpcMessage> initialBuffer = new ArrayList<>();
 
-	private int cookie = 0;
+	private int index = 0;
 	private boolean serverClosing;
 
 	// JMX
@@ -100,7 +100,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		connectionRequests.recordEvent();
 
 		if (!overloaded || request instanceof RpcMandatoryData) {
-			cookie++;
+			index++;
 
 			// jmx
 			if (monitoring) {
@@ -108,14 +108,14 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 			}
 
 			if (timeout == Integer.MAX_VALUE) {
-				activeRequests.put(cookie, cb);
+				activeRequests.put(index, cb);
 			} else {
-				ScheduledCallback<O> scheduledCallback = new ScheduledCallback<>(cookie, cb);
+				ScheduledCallback<O> scheduledCallback = new ScheduledCallback<>(index, cb);
 				scheduledCallback.scheduledRunnable = reactor.delayBackground(timeout, scheduledCallback);
-				activeRequests.put(cookie, scheduledCallback);
+				activeRequests.put(index, scheduledCallback);
 			}
 
-			downstreamDataAcceptor.accept(RpcMessage.of(cookie, request));
+			downstreamDataAcceptor.accept(new RpcMessage(index, request));
 		} else {
 			doProcessOverloaded(cb);
 		}
@@ -124,10 +124,10 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	public class ScheduledCallback<O> implements Runnable, Callback<O> {
 		ScheduledRunnable scheduledRunnable;
 		final Callback<O> cb;
-		final int cookie;
+		final int index;
 
-		ScheduledCallback(int cookie, Callback<O> cb) {
-			this.cookie = cookie;
+		ScheduledCallback(int index, Callback<O> cb) {
+			this.index = index;
 			this.cb = cb;
 		}
 
@@ -144,7 +144,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		@Override
 		public void run() {
 			scheduledRunnable = null;
-			Callback<?> expiredCb = activeRequests.remove(cookie);
+			Callback<?> expiredCb = activeRequests.remove(index);
 			if (expiredCb != null) {
 				assert expiredCb == this;
 				// jmx
@@ -168,16 +168,16 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		connectionRequests.recordEvent();
 
 		if (!overloaded || request instanceof RpcMandatoryData) {
-			cookie++;
+			index++;
 
 			// jmx
 			if (monitoring) {
 				cb = doJmxMonitoring(request, Integer.MAX_VALUE, cb);
 			}
 
-			activeRequests.put(cookie, cb);
+			activeRequests.put(index, cb);
 
-			downstreamDataAcceptor.accept(RpcMessage.of(cookie, request));
+			downstreamDataAcceptor.accept(new RpcMessage(index, request));
 		} else {
 			doProcessOverloaded(cb);
 		}
@@ -201,16 +201,16 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	@Override
 	public void accept(RpcMessage message) {
 		if (CHECKS) checkInReactorThread(this);
-		if (message.getData().getClass() == RpcRemoteException.class) {
+		if (message.getMessage().getClass() == RpcRemoteException.class) {
 			processErrorMessage(message);
-		} else if (message.getData().getClass() == RpcControlMessage.class) {
-			processControlMessage((RpcControlMessage) message.getData());
+		} else if (message.getMessage().getClass() == RpcControlMessage.class) {
+			processControlMessage((RpcControlMessage) message.getMessage());
 		} else {
 			@SuppressWarnings("unchecked")
-			Callback<Object> cb = (Callback<Object>) activeRequests.remove(message.getCookie());
+			Callback<Object> cb = (Callback<Object>) activeRequests.remove(message.getIndex());
 			if (cb == null) return;
 
-			cb.accept(message.getData(), null);
+			cb.accept(message.getMessage(), null);
 			if (serverClosing && activeRequests.size() == 0) {
 				shutdown();
 			}
@@ -218,14 +218,14 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	private void processErrorMessage(RpcMessage message) {
-		RpcRemoteException remoteException = (RpcRemoteException) message.getData();
+		RpcRemoteException remoteException = (RpcRemoteException) message.getMessage();
 		// jmx
 		connectionStats.getFailedRequests().recordEvent();
 		rpcClient.getGeneralRequestsStats().getFailedRequests().recordEvent();
 		connectionStats.getServerExceptions().recordException(remoteException, null);
 		rpcClient.getGeneralRequestsStats().getServerExceptions().recordException(remoteException, null);
 
-		Callback<?> cb = activeRequests.remove(message.getCookie());
+		Callback<?> cb = activeRequests.remove(message.getIndex());
 		if (cb != null) {
 			cb.accept(null, remoteException);
 		}
@@ -249,7 +249,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		if (isClosed()) return;
 		if (keepAliveMillis == 0) return;
 		pongReceived = false;
-		downstreamDataAcceptor.accept(RpcMessage.of(-1, RpcControlMessage.PING));
+		downstreamDataAcceptor.accept(new RpcMessage(RpcControlMessage.PING));
 		reactor.delayBackground(keepAliveMillis, () -> {
 			if (isClosed()) return;
 			if (!pongReceived) {
@@ -289,9 +289,9 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	@Override
 	public void onSerializationError(RpcMessage message, Exception e) {
 		if (isClosed()) return;
-		logger.error("Serialization error: {} for data {}", address, message.getData(), e);
+		logger.error("Serialization error: {} for data {}", address, message.getMessage(), e);
 		rpcClient.getLastProtocolError().recordException(e, address);
-		activeRequests.remove(message.getCookie()).accept(null, e);
+		activeRequests.remove(message.getIndex()).accept(null, e);
 	}
 
 	@Override
@@ -320,8 +320,8 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		rpcClient.onClosedConnection(address);
 
 		while (!activeRequests.isEmpty()) {
-			for (Integer cookie : new HashSet<>(activeRequests.keySet())) {
-				Callback<?> cb = activeRequests.remove(cookie);
+			for (Integer index : new HashSet<>(activeRequests.keySet())) {
+				Callback<?> cb = activeRequests.remove(index);
 				if (cb != null) {
 					cb.accept(null, new AsyncCloseException("Connection closed"));
 				}

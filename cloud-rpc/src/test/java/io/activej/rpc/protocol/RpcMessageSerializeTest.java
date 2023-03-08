@@ -33,7 +33,7 @@ public final class RpcMessageSerializeTest {
 	@Test
 	public void testRpcMessage() {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
-		RpcMessage message1 = RpcMessage.of(1, messageData1);
+		RpcMessage message1 = new RpcMessage(1, messageData1);
 		BinarySerializer<TestRpcMessageData> testRpcMessageDataSerializer = SerializerFactory.defaultInstance()
 				.create(TestRpcMessageData.class);
 
@@ -44,9 +44,9 @@ public final class RpcMessageSerializeTest {
 		byte[] buf = new byte[1000];
 		serializer.encode(buf, 0, message1);
 		RpcMessage message2 = serializer.decode(buf, 0);
-		assertEquals(message1.getCookie(), message2.getCookie());
-		assertTrue(message2.getData() instanceof TestRpcMessageData);
-		TestRpcMessageData messageData2 = (TestRpcMessageData) message2.getData();
+		assertEquals(message1.getIndex(), message2.getIndex());
+		assertTrue(message2.getMessage() instanceof TestRpcMessageData);
+		TestRpcMessageData messageData2 = (TestRpcMessageData) message2.getMessage();
 		assertEquals(messageData1.s, messageData2.s);
 	}
 
@@ -63,21 +63,21 @@ public final class RpcMessageSerializeTest {
 		assertSame(requestSerializer, responseSerializer);
 
 		byte[] bytes = new byte[1024];
-		int encoded = requestSerializer.encode(bytes, 0, RpcMessage.of(2, new Data1(7)));
+		int encoded = requestSerializer.encode(bytes, 0, new RpcMessage(2, new Data1(7)));
 		assertArrayEquals(
 				new byte[]{
 						5,    		// max version
-						0, 0, 0, 2,	// cookie,
+						0, 0, 0, 2,	// index,
 						2, 			// subclass index
 						0, 0, 0, 7  // number
 				},
 					Arrays.copyOf(bytes, encoded));
 
-		encoded = requestSerializer.encode(bytes, 0, RpcMessage.of(9, new Data2("test")));
+		encoded = requestSerializer.encode(bytes, 0, new RpcMessage(9, new Data2("test")));
 		assertArrayEquals(
 				new byte[]{
 						5,    				// max version
-						0, 0, 0, 9,			// cookie,
+						0, 0, 0, 9,			// index,
 						3, 					// subclass index
 						4, 					// name length
 						116, 101, 115, 116	// name

@@ -24,21 +24,21 @@ import io.activej.serializer.annotations.SerializeNullable;
 public final class RpcMessage {
 	public static final String SUBCLASSES_ID = "data";
 
-	private final int cookie;
-	private final Object data;
+	private final int index;
+	private final Object message;
 
-	public RpcMessage(@Deserialize("cookie") int cookie, @Deserialize("data") Object data) {
-		this.cookie = cookie;
-		this.data = data;
+	public RpcMessage(@Deserialize("index") int index, @Deserialize("message") Object message) {
+		this.index = index;
+		this.message = message;
 	}
 
-	public static RpcMessage of(int cookie, Object data) {
-		return new RpcMessage(cookie, data);
+	public RpcMessage(Object message) {
+		this(0, message);
 	}
 
 	@Serialize(order = 1)
-	public int getCookie() {
-		return cookie;
+	public int getIndex() {
+		return index;
 	}
 
 	@Serialize(order = 2)
@@ -47,15 +47,15 @@ public final class RpcMessage {
 			subclassesId = SUBCLASSES_ID
 	)
 	@SerializeNullable
-	public Object getData() {
-		return data;
+	public Object getMessage() {
+		return message;
 	}
 
 	@Override
 	public String toString() {
 		return "RpcMessage{" +
-				"cookie=" + cookie +
-				", data=" + data +
+				"index=" + index +
+				", data=" + message +
 				'}';
 	}
 }

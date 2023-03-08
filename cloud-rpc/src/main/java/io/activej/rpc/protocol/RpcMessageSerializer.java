@@ -1,7 +1,6 @@
 package io.activej.rpc.protocol;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.*;
@@ -14,8 +13,6 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.toLinkedHashMap;
 
 public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> {
-	private static final boolean CHECK = Checks.isEnabled(RpcMessageSerializer.class);
-
 	private static final BinarySerializer<RpcRemoteException> RPC_REMOTE_EXCEPTION_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, RpcRemoteException item) {
@@ -201,8 +198,8 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 
 	@Override
 	public void encode(BinaryOutput out, RpcMessage item) {
-		out.writeInt(item.getCookie());
-		Object data = item.getData();
+		out.writeInt(item.getIndex());
+		Object data = item.getMessage();
 		Class<?> key = data == null ? Void.class : data.getClass();
 		Entry entry = get(serializersMap, key);
 		out.writeByte(entry.index);
@@ -212,9 +209,9 @@ public final class RpcMessageSerializer implements BinarySerializer<RpcMessage> 
 
 	@Override
 	public RpcMessage decode(BinaryInput in) throws CorruptedDataException {
-		int cookie = in.readInt();
+		int index = in.readInt();
 		int subClassId = in.readByte();
 		Object data = serializers[subClassId].decode(in);
-		return RpcMessage.of(cookie, data);
+		return new RpcMessage(index, data);
 	}
 }
