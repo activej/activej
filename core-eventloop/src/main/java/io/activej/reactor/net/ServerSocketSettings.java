@@ -31,11 +31,11 @@ import static java.net.StandardSocketOptions.SO_REUSEADDR;
  * This class used to change settings for server socket. It will be applying with creating new server socket
  */
 public final class ServerSocketSettings {
-	private static final ServerSocketSettings DEFAULT_INSTANCE = builder().build();
-
 	public static final int DEFAULT_BACKLOG = ApplicationSettings.getInt(ServerSocketSettings.class, "backlog", 16384);
 	public static final @Nullable MemSize DEFAULT_RECEIVE_BUFFER_SIZE = ApplicationSettings.getMemSize(ServerSocketSettings.class, "receiveBufferSize", null);
 	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(ServerSocketSettings.class, "reuseAddress", null);
+
+	private static final ServerSocketSettings DEFAULT_INSTANCE = builder().build();
 
 	private int backlog = DEFAULT_BACKLOG;
 	private @Nullable MemSize receiveBufferSize = DEFAULT_RECEIVE_BUFFER_SIZE;

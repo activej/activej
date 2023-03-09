@@ -31,8 +31,6 @@ import static java.net.StandardSocketOptions.*;
  * This class is used to hold settings for a socket. Settings  will be applied when creating new socket
  */
 public final class SocketSettings {
-	private static final SocketSettings DEFAULT_INSTANCE = builder().withTcpNoDelay(true).build();
-
 	public static final @Nullable Boolean DEFAULT_KEEP_ALIVE = ApplicationSettings.getBoolean(SocketSettings.class, "keepAlive", null);
 	public static final @Nullable Boolean DEFAULT_REUSE_ADDRESS = ApplicationSettings.getBoolean(SocketSettings.class, "reuseAddress", null);
 	public static final @Nullable Boolean DEFAULT_TCP_NO_DELAY = ApplicationSettings.getBoolean(SocketSettings.class, "tcpNoDelay", null);
@@ -42,6 +40,8 @@ public final class SocketSettings {
 	public static final @Nullable Duration DEFAULT_IMPL_WRITE_TIMEOUT = ApplicationSettings.getDuration(SocketSettings.class, "implWriteTimeout", null);
 	public static final @Nullable MemSize DEFAULT_IMPL_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(SocketSettings.class, "implReadBufferSize", null);
 	public static final @Nullable Duration DEFAULT_LINGER_TIMEOUT = ApplicationSettings.getDuration(SocketSettings.class, "lingerTimeout", null);
+
+	private static final SocketSettings DEFAULT_INSTANCE = builder().withTcpNoDelay(true).build();
 
 	private @Nullable Boolean keepAlive = DEFAULT_KEEP_ALIVE;
 	private @Nullable Boolean reuseAddress = DEFAULT_REUSE_ADDRESS;
