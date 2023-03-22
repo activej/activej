@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.where.*;
+import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.dataflow.calcite.where.impl.*;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;

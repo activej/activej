@@ -6,7 +6,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffJsonCodec;

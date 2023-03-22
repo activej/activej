@@ -194,7 +194,7 @@ public final class ApplicationSettings {
 	public static @Nullable InetSocketAddress getInetSocketAddress(Class<?> type, String name, @Nullable InetSocketAddress defValue) {
 		return get(address -> {
 			try {
-				return StringFormatUtils.parseInetSocketAddress(address);
+				return StringFormatUtils.parseInetSocketAddressResolving(address);
 			} catch (MalformedDataException e) {
 				throw new RuntimeException("Malformed inet socket address: " + address, e);
 			}

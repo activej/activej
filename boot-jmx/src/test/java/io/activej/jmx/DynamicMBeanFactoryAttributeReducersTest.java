@@ -1,13 +1,18 @@
 package io.activej.jmx;
 
+import io.activej.common.StringFormatUtils;
+import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducer;
+import io.activej.jmx.api.attribute.JmxReducers.JmxReducerMax;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
 import org.junit.Test;
 
 import javax.management.DynamicMBean;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -24,6 +29,7 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 						false);
 
 		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.getAttribute("attr"));
+		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.invoke("getOp", new String[0], new String[0]));
 	}
 
 	@JmxBean(JmxBeanAdapterStub.class)
@@ -51,6 +57,59 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 		@Override
 		public Object reduce(List<?> list) {
 			return CONSTANT_VALUE;
+		}
+	}
+	// endregion
+
+	// region custom type reducers
+	@Test
+	public void createdCustomMBeanShouldUseSpecifiedReducerForAggregation() throws Exception {
+		DynamicMBean mbean = DynamicMBeanFactory.create()
+				.createDynamicMBean(
+						List.of(
+								new CustomMBeanWithCustomReducer(200),
+								new CustomMBeanWithCustomReducer(350),
+								new CustomMBeanWithCustomReducer(100)
+						),
+						JmxBeanSettings.builder()
+								.withCustomTypes(Collections.singletonMap(
+										Duration.class,
+										new JmxCustomTypeAdapter<>(
+												StringFormatUtils::formatDuration,
+												StringFormatUtils::parseDuration
+										)
+								))
+								.build(),
+						false);
+
+		String maxDuration = StringFormatUtils.formatDuration(Duration.ofSeconds(350));
+
+		assertEquals(maxDuration, mbean.getAttribute("attr"));
+		assertEquals(maxDuration, mbean.invoke("getOp", new String[0], new String[0]));
+		assertEquals(maxDuration, mbean.invoke("retrieveDuration", new String[0], new String[0]));
+	}
+
+	@JmxBean(JmxBeanAdapterStub.class)
+	public static final class CustomMBeanWithCustomReducer {
+		private final int seconds;
+
+		public CustomMBeanWithCustomReducer(int seconds) {
+			this.seconds = seconds;
+		}
+
+		@JmxAttribute(reducer = JmxReducerMax.class)
+		public Duration getAttr() {
+			return Duration.ofSeconds(seconds);
+		}
+
+		@JmxOperation(reducer = JmxReducerMax.class)
+		public Duration getOp() {
+			return Duration.ofSeconds(seconds);
+		}
+
+		@JmxOperation(reducer = JmxReducerMax.class)
+		public Duration retrieveDuration() {
+			return Duration.ofSeconds(seconds);
 		}
 	}
 	// endregion

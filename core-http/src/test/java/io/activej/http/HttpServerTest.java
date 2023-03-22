@@ -35,8 +35,6 @@ import static io.activej.http.TestUtils.readFully;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;

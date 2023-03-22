@@ -4,7 +4,6 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.Checks;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.Operands;
-import io.activej.dataflow.calcite.operand.impl.RecordField;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
 import io.activej.record.RecordScheme;

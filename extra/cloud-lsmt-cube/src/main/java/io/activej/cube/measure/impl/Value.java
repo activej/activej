@@ -5,7 +5,6 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.cube.measure.ComputedMeasure;
-import io.activej.cube.measure.ComputedMeasures;
 import io.activej.types.Primitives;
 
 import java.util.Map;

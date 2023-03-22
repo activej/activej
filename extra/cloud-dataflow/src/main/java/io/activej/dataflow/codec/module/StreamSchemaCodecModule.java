@@ -1,7 +1,6 @@
 package io.activej.dataflow.codec.module;
 
 import io.activej.dataflow.codec.Subtype;
-import io.activej.dataflow.graph.StreamSchemas;
 import io.activej.dataflow.graph.StreamSchemas.SimpleStreamSchema;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;

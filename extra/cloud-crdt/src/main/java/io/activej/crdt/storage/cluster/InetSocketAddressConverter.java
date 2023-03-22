@@ -22,7 +22,7 @@ public abstract class InetSocketAddressConverter {
 
 		String addressString = reader.readString();
 		try {
-			return StringFormatUtils.parseInetSocketAddress(addressString);
+			return StringFormatUtils.parseInetSocketAddressResolving(addressString);
 		} catch (MalformedDataException e) {
 			throw reader.newParseError(e.getMessage());
 		}

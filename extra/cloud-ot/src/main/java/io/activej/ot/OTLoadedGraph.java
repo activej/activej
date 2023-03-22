@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.*;
 
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")

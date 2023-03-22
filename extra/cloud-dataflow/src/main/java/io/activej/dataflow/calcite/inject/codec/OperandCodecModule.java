@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.calcite.operand.*;
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.impl.*;
 import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.dataflow.codec.Subtype;

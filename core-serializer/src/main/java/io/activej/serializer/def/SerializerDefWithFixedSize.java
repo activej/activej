@@ -16,8 +16,6 @@
 
 package io.activej.serializer.def;
 
-import io.activej.serializer.def.SerializerDef;
-
 public interface SerializerDefWithFixedSize extends SerializerDef {
 	SerializerDef ensureFixedSize(int fixedSize);
 }

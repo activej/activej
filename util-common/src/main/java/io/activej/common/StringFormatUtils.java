@@ -346,17 +346,37 @@ public final class StringFormatUtils {
 		return Instant.parse(string.replace(' ', 'T') + "Z");
 	}
 
-	public static InetSocketAddress parseInetSocketAddress(String addressAndPort) throws MalformedDataException {
-		int portPos = addressAndPort.lastIndexOf(':');
+	public static String formatInetSocketAddress(InetSocketAddress address) {
+		return address.getAddress().getHostAddress() + ":" + address.getPort();
+	}
+
+	public static InetSocketAddress parseInetSocketAddressResolving(String addressAndPort) throws MalformedDataException {
+		InetSocketAddress inetSocketAddress = parseInetSocketAddress(addressAndPort);
+
+		if (!inetSocketAddress.isUnresolved()) return inetSocketAddress;
+
+		String hostName = inetSocketAddress.getHostName();
+		hostName = hostName.substring(0, hostName.lastIndexOf(':'));
+
+		try {
+			InetAddress address = InetAddress.getByName(hostName);
+			return new InetSocketAddress(address, inetSocketAddress.getPort());
+		} catch (UnknownHostException e) {
+			throw new MalformedDataException(e);
+		}
+	}
+
+	public static InetSocketAddress parseInetSocketAddress(String addressString) throws MalformedDataException{
+		int portPos = addressString.lastIndexOf(':');
 		if (portPos == -1) {
 			try {
-				return new InetSocketAddress(Integer.parseInt(addressAndPort));
+				return new InetSocketAddress(Integer.parseInt(addressString));
 			} catch (NumberFormatException nfe) {
 				throw new MalformedDataException(nfe);
 			}
 		}
-		String addressStr = addressAndPort.substring(0, portPos);
-		String portStr = addressAndPort.substring(portPos + 1);
+		String addressStr = addressString.substring(0, portPos);
+		String portStr = addressString.substring(portPos + 1);
 		int port;
 		try {
 			port = Integer.parseInt(portStr);
@@ -370,12 +390,7 @@ public final class StringFormatUtils {
 		if ("*".equals(addressStr)) {
 			return new InetSocketAddress(port);
 		}
-		try {
-			InetAddress address = InetAddress.getByName(addressStr);
-			return new InetSocketAddress(address, port);
-		} catch (UnknownHostException e) {
-			throw new MalformedDataException(e);
-		}
-	}
 
+		return InetSocketAddress.createUnresolved(addressString, port);
+	}
 }

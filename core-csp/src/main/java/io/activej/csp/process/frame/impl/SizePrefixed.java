@@ -9,7 +9,6 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frame.BlockDecoder;
 import io.activej.csp.process.frame.BlockEncoder;
 import io.activej.csp.process.frame.FrameFormat;
-import io.activej.csp.process.frame.FrameFormats;
 import org.jetbrains.annotations.Nullable;
 
 @ExposedInternals

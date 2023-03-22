@@ -1,9 +1,8 @@
 package io.activej.dataflow.codec.module;
 
 import io.activej.dataflow.codec.Subtype;
-import io.activej.datastream.processor.reducer.impl.*;
 import io.activej.datastream.processor.reducer.ReducerToResult;
-import io.activej.datastream.processor.reducer.impl.AccumulatorToAccumulator;
+import io.activej.datastream.processor.reducer.impl.*;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;

@@ -8,7 +8,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.csp.process.frame.impl.LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTState;

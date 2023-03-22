@@ -17,7 +17,6 @@
 package io.activej.serializer.def;
 
 import io.activej.serializer.CompatibilityLevel;
-import io.activej.serializer.def.SerializerDef;
 
 public interface SerializerDefWithNullable extends SerializerDef {
 	SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel);

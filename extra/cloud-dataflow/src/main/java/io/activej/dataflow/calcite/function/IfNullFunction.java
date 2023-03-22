@@ -3,7 +3,6 @@ package io.activej.dataflow.calcite.function;
 import io.activej.dataflow.calcite.operand.FunctionOperand;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.Operands;
-import io.activej.dataflow.calcite.operand.impl.IfNull;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.InferTypes;

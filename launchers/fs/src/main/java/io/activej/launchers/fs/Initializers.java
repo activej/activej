@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
+import static io.activej.common.StringFormatUtils.parseInetSocketAddressResolving;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStats;
@@ -74,7 +74,7 @@ public class Initializers {
 			if (toAdd.startsWith("http")) {
 				client = HttpClientFileSystem.create(reactor, toAdd, HttpClient.create(reactor));
 			} else {
-				client = RemoteFileSystem.create(reactor, parseInetSocketAddress(toAdd));
+				client = RemoteFileSystem.create(reactor, parseInetSocketAddressResolving(toAdd));
 			}
 			partitions.put(toAdd, client);
 		}

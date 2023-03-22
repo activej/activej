@@ -50,8 +50,8 @@ public final class DynamicMBeanFactoryOperationsTest {
 		assertThat(addInfoOperation, hasReturnType("void"));
 
 		// parameter names are not annotated
-		assertThat(multiplyAndAddOperation, hasParameter("arg0", "long"));
-		assertThat(multiplyAndAddOperation, hasParameter("arg1", "long"));
+		assertThat(multiplyAndAddOperation, hasParameter("long", "long"));
+		assertThat(multiplyAndAddOperation, hasParameter("long", "long"));
 		assertThat(multiplyAndAddOperation, hasReturnType("void"));
 	}
 

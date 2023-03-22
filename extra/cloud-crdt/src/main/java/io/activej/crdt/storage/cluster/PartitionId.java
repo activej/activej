@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 import java.util.Objects;
 
-import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
+import static io.activej.common.StringFormatUtils.parseInetSocketAddressResolving;
 
 public final class PartitionId {
 	private final String id;
@@ -63,8 +63,8 @@ public final class PartitionId {
 			throw new MalformedDataException("");
 		}
 		String id = split[0];
-		InetSocketAddress crdtAddress = split.length > 1 && !split[1].trim().isEmpty() ? parseInetSocketAddress(split[1]) : null;
-		InetSocketAddress rpcAddress = split.length > 2 && !split[2].trim().isEmpty() ? parseInetSocketAddress(split[2]) : null;
+		InetSocketAddress crdtAddress = split.length > 1 && !split[1].trim().isEmpty() ? parseInetSocketAddressResolving(split[1]) : null;
+		InetSocketAddress rpcAddress = split.length > 2 && !split[2].trim().isEmpty() ? parseInetSocketAddressResolving(split[2]) : null;
 
 		return new PartitionId(id, crdtAddress, rpcAddress);
 	}

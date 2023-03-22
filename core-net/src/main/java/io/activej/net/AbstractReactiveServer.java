@@ -374,10 +374,12 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		return serverSocketSettings;
 	}
 
+	@JmxAttribute
 	public List<InetSocketAddress> getListenAddresses() {
 		return listenAddresses;
 	}
 
+	@JmxAttribute
 	public List<InetSocketAddress> getSslListenAddresses() {
 		return sslListenAddresses;
 	}
@@ -387,6 +389,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	 * listening. Use this method to get the actual port numbers in case any
 	 * {@link #getListenAddresses() listen address} uses port {@literal 0}.
 	 */
+	@JmxAttribute
 	public List<InetSocketAddress> getBoundAddresses() {
 		return getBoundAddresses(serverSocketChannels);
 	}
@@ -397,6 +400,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	 * any {@link #getSslListenAddresses() SSL listen address} uses port {@literal
 	 * 0}.
 	 */
+	@JmxAttribute
 	public List<InetSocketAddress> getSslBoundAddresses() {
 		return getBoundAddresses(sslServerSocketChannels);
 	}

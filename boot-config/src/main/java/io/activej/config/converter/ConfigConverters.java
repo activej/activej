@@ -149,7 +149,7 @@ public class ConfigConverters {
 
 	public static ConfigConverter<InetSocketAddress> ofInetSocketAddress() {
 		return SimpleConfigConverter.of(
-				StringFormatUtils::parseInetSocketAddress,
+				StringFormatUtils::parseInetSocketAddressResolving,
 				value -> value.getAddress().getHostAddress() + ":" + value.getPort()
 		);
 	}
