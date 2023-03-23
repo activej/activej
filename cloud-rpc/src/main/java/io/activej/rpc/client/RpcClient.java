@@ -62,8 +62,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import static io.activej.async.callback.Callback.toAnotherEventloop;
 import static io.activej.common.Utils.nonNullElseGet;
+import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
@@ -309,17 +309,17 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					return addresses;
 				})
 				.then(addresses -> Promises.all(
-						addresses.stream()
-								.map(address -> {
-									logger.info("Connecting: {}", address);
-									return connect(address)
-											.map(($, e) -> null);
-								}))
+								addresses.stream()
+										.map(address -> {
+											logger.info("Connecting: {}", address);
+											return connect(address)
+													.map(($, e) -> null);
+										}))
 						.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
 								Promise.ofException(START_EXCEPTION) :
 								Promise.complete()))
 				.whenResult(this::rediscover)
-				.whenException(() -> doStop());
+				.whenException(this::doStop);
 	}
 
 	@Override
@@ -487,7 +487,12 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 				if (CHECK) Checks.checkState(anotherEventloop.inEventloopThread(), "Not in eventloop thread");
 				if (timeout > 0) {
-					eventloop.execute(() -> requestSender.sendRequest(request, timeout, toAnotherEventloop(anotherEventloop, cb)));
+					anotherEventloop.startExternalTask();
+					eventloop.execute(() ->
+							requestSender.sendRequest(request, timeout, (Callback<O>) (result, e) -> {
+								anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
+								anotherEventloop.completeExternalTask();
+							}));
 				} else {
 					cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 				}
