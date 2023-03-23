@@ -10,7 +10,6 @@ import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
@@ -36,23 +35,13 @@ public class TcpDataBenchmarkClient extends Launcher {
 	private int benchmarkRounds;
 
 	@Inject
-	@Named("benchmark")
-	NioReactor benchmarkReactor;
-
-	@Inject
-	@Named("client")
-	NioReactor clientReactor;
+	NioReactor reactor;
 
 	@Inject
 	Config config;
 
 	@Provides
-	@Named("benchmark")
-	NioReactor benchmarkReactor() {return Eventloop.create();}
-
-	@Provides
-	@Named("client")
-	NioReactor clientReactor() {return Eventloop.create();}
+	NioReactor reactor() { return Eventloop.create(); }
 
 	@Provides
 	Config config() {
@@ -109,7 +98,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return benchmarkReactor.submit(this::roundGet).get();
+		return reactor.submit(this::roundGet).get();
 	}
 
 	private Promise<Long> roundGet() {
@@ -118,7 +107,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 		InetSocketAddress address = config.get(ofInetSocketAddress(), "echo.address", new InetSocketAddress(9001));
 		int limit = config.get(ofInteger(), "benchmark.totalElements", TOTAL_ELEMENTS);
 
-		return TcpSocket.connect(clientReactor, address)
+		return TcpSocket.connect(reactor, address)
 				.then(socket -> {
 					StreamSupplierOfSequence.create(limit)
 							.transformWith(ChannelSerializer.create(INT_SERIALIZER))

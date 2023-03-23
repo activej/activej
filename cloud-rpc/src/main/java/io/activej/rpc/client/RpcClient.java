@@ -59,13 +59,13 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -536,7 +536,12 @@ public final class RpcClient extends AbstractNioReactive
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 				if (CHECKS) checkInReactorThread(anotherReactor);
 				if (timeout > 0) {
-					reactor.execute(() -> requestSender.sendRequest(request, timeout, toAnotherReactor(anotherReactor, cb)));
+					anotherReactor.startExternalTask();
+					reactor.execute(() ->
+							requestSender.sendRequest(request, timeout, (Callback<O>) (result, e) -> {
+								anotherReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
+								anotherReactor.completeExternalTask();
+							}));
 				} else {
 					cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 				}

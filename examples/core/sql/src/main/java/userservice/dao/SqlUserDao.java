@@ -35,7 +35,7 @@ public final class SqlUserDao extends AbstractReactive
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
-						"SELECT first_name, last_name FROM user WHERE id=?")) {
+						"SELECT first_name, last_name FROM users WHERE id=?")) {
 					statement.setLong(1, id);
 					try (ResultSet resultSet = statement.executeQuery()) {
 						if (!resultSet.next()) {
@@ -57,7 +57,7 @@ public final class SqlUserDao extends AbstractReactive
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
-						"SELECT * FROM user")) {
+						"SELECT * FROM users")) {
 					try (ResultSet resultSet = statement.executeQuery()) {
 						Map<Long, User> result = new LinkedHashMap<>();
 
@@ -81,7 +81,7 @@ public final class SqlUserDao extends AbstractReactive
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
-						"INSERT INTO user(first_name, last_name) VALUES(?, ?)")) {
+						"INSERT INTO users(first_name, last_name) VALUES(?, ?)")) {
 
 					statement.setString(1, user.firstName());
 					statement.setString(2, user.lastName());
@@ -98,7 +98,7 @@ public final class SqlUserDao extends AbstractReactive
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
-						"UPDATE user SET first_name=?, last_name=? WHERE id=?")) {
+						"UPDATE users SET first_name=?, last_name=? WHERE id=?")) {
 
 					statement.setString(1, newUser.firstName());
 					statement.setString(2, newUser.lastName());
@@ -116,7 +116,7 @@ public final class SqlUserDao extends AbstractReactive
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
-						"DELETE FROM user WHERE id=?")) {
+						"DELETE FROM users WHERE id=?")) {
 
 					statement.setLong(1, id);
 
