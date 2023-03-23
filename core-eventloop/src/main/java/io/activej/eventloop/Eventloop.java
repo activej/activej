@@ -1151,7 +1151,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 
 	private void onFatalError(Throwable e, @Nullable Runnable runnable) {
 		if (runnable instanceof RunnableWithContext) {
-			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
+			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).context());
 		} else {
 			handleError(fatalErrorHandler, e, runnable);
 		}

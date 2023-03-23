@@ -18,35 +18,15 @@ package io.activej.reactor.util;
 
 import io.activej.common.ApplicationSettings;
 
-public interface RunnableWithContext extends Runnable {
-	boolean WRAP_CONTEXT = ApplicationSettings.getBoolean(RunnableWithContext.class, "wrapContext", false);
+public record RunnableWithContext(Object context, Runnable runnable) implements Runnable {
+	public static final boolean WRAP_CONTEXT = ApplicationSettings.getBoolean(RunnableWithContext.class, "wrapContext", false);
 
-	Object getContext();
-
-	static RunnableWithContext of(Object context, Runnable runnable) {
-		return new RunnableWithContext() {
-			@Override
-			public Object getContext() {
-				return context;
-			}
-
-			@Override
-			public void run() {
-				runnable.run();
-			}
-
-			@Override
-			public String toString() {
-				return "RunnableWithContext{" +
-						"runnable=" + runnable +
-						", context=" + context +
-						'}';
-			}
-		};
+	public static Runnable wrapContext(Object context, Runnable runnable) {
+		return WRAP_CONTEXT ? new RunnableWithContext(context, runnable) : runnable;
 	}
 
-	static Runnable wrapContext(Object context, Runnable runnable) {
-		return WRAP_CONTEXT ? of(context, runnable) : runnable;
+	@Override
+	public void run() {
+		runnable.run();
 	}
-
 }

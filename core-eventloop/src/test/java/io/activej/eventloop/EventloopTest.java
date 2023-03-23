@@ -30,7 +30,7 @@ public final class EventloopTest {
 				return contextString;
 			}
 		};
-		eventloop.post(RunnableWithContext.of(context, () -> {
+		eventloop.post(new RunnableWithContext(context, () -> {
 			throw error;
 		}));
 		eventloop.run();
