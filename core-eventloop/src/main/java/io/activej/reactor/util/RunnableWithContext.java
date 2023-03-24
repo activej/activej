@@ -19,10 +19,10 @@ package io.activej.reactor.util;
 import io.activej.common.ApplicationSettings;
 
 public record RunnableWithContext(Object context, Runnable runnable) implements Runnable {
-	public static final boolean WRAP_CONTEXT = ApplicationSettings.getBoolean(RunnableWithContext.class, "wrapContext", false);
+	public static final boolean WITH_CONTEXT = ApplicationSettings.getBoolean(RunnableWithContext.class, "withContext", false);
 
-	public static Runnable wrapContext(Object context, Runnable runnable) {
-		return WRAP_CONTEXT ? new RunnableWithContext(context, runnable) : runnable;
+	public static Runnable runnableOf(Object context, Runnable runnable) {
+		return WITH_CONTEXT ? new RunnableWithContext(context, runnable) : runnable;
 	}
 
 	@Override

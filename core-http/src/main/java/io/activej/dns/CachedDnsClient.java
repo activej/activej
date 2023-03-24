@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
-import static io.activej.reactor.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Implementation of {@link IDnsClient} that asynchronously
@@ -49,7 +49,7 @@ public final class CachedDnsClient extends AbstractReactive
 
 	private final IDnsClient client;
 	private final DnsCache cache;
-	
+
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -124,7 +124,7 @@ public final class CachedDnsClient extends AbstractReactive
 						reactor.execute(() ->
 								CachedDnsClient.this.resolve(query)
 										.run((result, e) -> {
-											anotherReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
+											anotherReactor.execute(runnableOf(cb, () -> cb.accept(result, e)));
 											anotherReactor.completeExternalTask();
 										})));
 			}

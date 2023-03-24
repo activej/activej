@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.reactor.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 @StaticFactories(AsyncExecutor.class)
 public class AsyncExecutors {
@@ -53,9 +53,9 @@ public class AsyncExecutors {
 				}
 				return Promise.ofCallback(cb -> {
 					currentReactor.startExternalTask();
-					reactor.execute(wrapContext(cb, () -> supplier.get()
+					reactor.execute(runnableOf(cb, () -> supplier.get()
 							.run((result, e) -> {
-								currentReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
+								currentReactor.execute(runnableOf(cb, () -> cb.accept(result, e)));
 								currentReactor.completeExternalTask();
 							})));
 				});

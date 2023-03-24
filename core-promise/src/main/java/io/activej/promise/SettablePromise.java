@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Represents a {@link Promise} which can be completed or completedExceptionally
@@ -125,27 +125,27 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	}
 
 	public void post(T result) {
-		getCurrentReactor().post(wrapContext(this, () -> set(result)));
+		getCurrentReactor().post(runnableOf(this, () -> set(result)));
 	}
 
 	public void postException(Exception e) {
-		getCurrentReactor().post(wrapContext(this, () -> setException(e)));
+		getCurrentReactor().post(runnableOf(this, () -> setException(e)));
 	}
 
 	public void post(T result, @Nullable Exception e) {
-		getCurrentReactor().post(wrapContext(this, () -> accept(result, e)));
+		getCurrentReactor().post(runnableOf(this, () -> accept(result, e)));
 	}
 
 	public void tryPost(T result) {
-		getCurrentReactor().post(wrapContext(this, () -> trySet(result)));
+		getCurrentReactor().post(runnableOf(this, () -> trySet(result)));
 	}
 
 	public void tryPostException(Exception e) {
-		getCurrentReactor().post(wrapContext(this, () -> trySetException(e)));
+		getCurrentReactor().post(runnableOf(this, () -> trySetException(e)));
 	}
 
 	public void tryPost(T result, @Nullable Exception e) {
-		getCurrentReactor().post(wrapContext(this, () -> trySet(result, e)));
+		getCurrentReactor().post(runnableOf(this, () -> trySet(result, e)));
 	}
 
 	@Override

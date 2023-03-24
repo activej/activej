@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 @SuppressWarnings({"unchecked", "WeakerAccess", "unused"})
 public abstract class AbstractPromise<T> implements Promise<T> {
@@ -1497,7 +1497,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	public Promise<T> async() {
 		if (isComplete()) {
 			SettablePromise<T> promise = new SettablePromise<>();
-			getCurrentReactor().post(wrapContext(promise,
+			getCurrentReactor().post(runnableOf(promise,
 					exception == null ?
 							() -> promise.set(result) :
 							() -> promise.setException(exception)));

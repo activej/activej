@@ -19,7 +19,7 @@ package io.activej.async.callback;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.reactor.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Represents a universal Callback interface
@@ -32,6 +32,6 @@ public interface Callback<T> {
 	void accept(T result, @Nullable Exception e);
 
 	static <T> Callback<T> toAnotherReactor(Reactor anotherReactor, Callback<T> cb) {
-		return (result, e) -> anotherReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
+		return (result, e) -> anotherReactor.execute(runnableOf(cb, () -> cb.accept(result, e)));
 	}
 }
