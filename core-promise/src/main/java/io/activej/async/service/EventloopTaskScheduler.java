@@ -174,7 +174,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	private void scheduleTask() {
-		if (schedule == null || scheduledTask != null && scheduledTask.isCancelled())
+		if (schedule == null)
 			return;
 
 		if (!enabled) return;
@@ -237,7 +237,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	public void setSchedule(Schedule schedule) {
 		this.schedule = schedule;
-		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled()) {
+		if (stats.getActivePromises() != 0 && scheduledTask != null) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 			scheduleTask();
 		}
@@ -246,7 +246,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	public void setRetryPolicy(RetryPolicy<?> retryPolicy) {
 		//noinspection unchecked
 		this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
-		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled() && lastException != null) {
+		if (stats.getActivePromises() != 0 && scheduledTask != null && lastException != null) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 			scheduleTask();
 		}
