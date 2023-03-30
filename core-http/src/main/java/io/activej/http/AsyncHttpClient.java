@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.service.EventloopService;
 import io.activej.common.ApplicationSettings;
@@ -114,6 +115,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	private @Nullable AsyncTcpSocketNio.Inspector socketInspector;
 	private @Nullable AsyncTcpSocketNio.Inspector socketSslInspector;
 	@Nullable Inspector inspector;
+
+	private int pendingResolves;
+	private int pendingConnects;
+	private boolean forcedShutdown;
+	@Nullable SettablePromise<Void> shutdownPromise;
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onRequest(HttpRequest request);
@@ -371,6 +377,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		this.socketSslInspector = socketSslInspector;
 		return this;
 	}
+
+	public AsyncHttpClient withForcedShutdown(boolean forcedShutdown) {
+		this.forcedShutdown = forcedShutdown;
+		return this;
+	}
 	// endregion
 
 	private void scheduleExpiredConnectionsCheck() {
@@ -378,7 +389,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		expiredConnectionsCheck = eventloop.delayBackground(1000L, () -> {
 			expiredConnectionsCheck = null;
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(eventloop.currentTimeMillis() - keepAliveTimeoutMillis);
-			boolean isClosing = closePromise != null;
+			boolean isClosing = shutdownPromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(eventloop.currentTimeMillis() -
 						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
@@ -451,6 +462,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		return (Promise<WebSocket>) doRequest(request, true);
 	}
 
+
 	private @NotNull Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (inspector != null) inspector.onRequest(request);
@@ -458,7 +470,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		assert host != null;
 
+		++pendingResolves;
 		return asyncDnsClient.resolve4(host)
+				.then((v, e) -> handleShutdown(v, e, --pendingResolves))
 				.then(
 						dnsResponse -> {
 							if (inspector != null) inspector.onResolve(request, dnsResponse);
@@ -497,8 +511,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		if (inspector != null) inspector.onConnecting(request, address);
-
+		++pendingConnects;
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
+				.then((v, e) -> handleShutdown(v, e, --pendingConnects))
 				.then(
 						asyncTcpSocketImpl -> {
 							AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
@@ -536,6 +551,23 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 						});
 	}
 
+	private <T> Promise<T> handleShutdown(T value, Exception e, int countdown) {
+		if (shutdownPromise != null) {
+			if (countdown == 0) handleShutdown();
+			if (e == null && forcedShutdown) {
+				return Promise.ofException(new AsyncCloseException("Connection closed"));
+			}
+		}
+		return Promise.of(value, e);
+	}
+
+	void handleShutdown() {
+		if (shutdownPromise != null && pendingResolves == 0 && pendingConnects == 0 && getConnectionsCount() == 0) {
+			shutdownPromise.post(null);
+			shutdownPromise = null;
+		}
+	}
+
 	@Override
 	public @NotNull Eventloop getEventloop() {
 		return eventloop;
@@ -547,15 +579,6 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		return Promise.complete();
 	}
 
-	private @Nullable SettablePromise<Void> closePromise;
-
-	public void onConnectionClosed() {
-		if (getConnectionsCount() == 0 && closePromise != null) {
-			closePromise.set(null);
-			closePromise = null;
-		}
-	}
-
 	@Override
 	public @NotNull Promise<Void> stop() {
 		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
@@ -563,13 +586,16 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		SettablePromise<Void> promise = new SettablePromise<>();
 
 		poolKeepAlive.closeAllConnections();
+		if (forcedShutdown) {
+			poolReadWrite.closeAllConnections();
+		}
 		assert addresses.isEmpty();
 		keepAliveTimeoutMillis = 0;
-		if (getConnectionsCount() == 0) {
+		if (pendingResolves == 0 && pendingConnects == 0 && getConnectionsCount() == 0) {
 			assert poolReadWrite.isEmpty();
 			promise.set(null);
 		} else {
-			closePromise = promise;
+			shutdownPromise = promise;
 			logger.info("Waiting for {}", this);
 		}
 		return promise;
