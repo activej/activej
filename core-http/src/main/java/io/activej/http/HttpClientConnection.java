@@ -443,7 +443,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		//noinspection ConstantConditions
 		pool.removeNode(this);
 
-		client.onConnectionClosed();
+		client.handleShutdown();
 		response = nullify(response, HttpMessage::recycle);
 		readBuf = nullify(readBuf, ByteBuf::recycle);
 		stashedBufs = nullify(stashedBufs, Recyclable::recycle);
