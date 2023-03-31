@@ -24,7 +24,8 @@ import java.util.function.Predicate;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
-public interface AsyncPredicate<T> {
+public interface AsyncPredicate<T> extends AsyncPredicateEx<T> {
+	@Override
 	Promise<Boolean> test(T t);
 
 	/**
@@ -37,6 +38,17 @@ public interface AsyncPredicate<T> {
 		return value -> {
 			try {
 				return Promise.of(predicate.test(value));
+			} catch (Exception e) {
+				handleError(e, predicate);
+				return Promise.ofException(e);
+			}
+		};
+	}
+
+	static <T> AsyncPredicate<T> sanitize(AsyncPredicateEx<T> predicate) {
+		return value -> {
+			try {
+				return predicate.test(value);
 			} catch (Exception e) {
 				handleError(e, predicate);
 				return Promise.ofException(e);

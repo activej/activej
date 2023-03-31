@@ -25,10 +25,11 @@ import static io.activej.common.exception.FatalErrorHandler.handleError;
  * Represents asynchronous supplier that returns {@link Promise} of some data.
  */
 @FunctionalInterface
-public interface AsyncSupplier<T> {
+public interface AsyncSupplier<T> extends AsyncSupplierEx<T> {
 	/**
 	 * Gets {@link Promise} of data item asynchronously.
 	 */
+	@Override
 	Promise<T> get();
 
 	/**
@@ -41,6 +42,17 @@ public interface AsyncSupplier<T> {
 		return () -> {
 			try {
 				return Promise.of(supplier.get());
+			} catch (Exception e) {
+				handleError(e, supplier);
+				return Promise.ofException(e);
+			}
+		};
+	}
+
+	static <T> AsyncSupplier<T> sanitize(AsyncSupplierEx<T> supplier) {
+		return () -> {
+			try {
+				return supplier.get();
 			} catch (Exception e) {
 				handleError(e, supplier);
 				return Promise.ofException(e);

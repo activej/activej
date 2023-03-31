@@ -22,7 +22,8 @@ import io.activej.promise.Promise;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
-public interface AsyncBiFunction<T, U, R> {
+public interface AsyncBiFunction<T, U, R> extends AsyncBiFunctionEx<T, U, R> {
+	@Override
 	Promise<R> apply(T t, U u);
 
 	/**
@@ -35,6 +36,17 @@ public interface AsyncBiFunction<T, U, R> {
 		return (t, u) -> {
 			try {
 				return Promise.of(function.apply(t, u));
+			} catch (Exception e) {
+				handleError(e, function);
+				return Promise.ofException(e);
+			}
+		};
+	}
+
+	static <T, U, R> AsyncBiFunction<T, U, R> sanitize(AsyncBiFunctionEx<? super T, ? super U, R> function) {
+		return (t, u) -> {
+			try {
+				return function.apply(t, u);
 			} catch (Exception e) {
 				handleError(e, function);
 				return Promise.ofException(e);

@@ -22,7 +22,8 @@ import io.activej.promise.Promise;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
-public interface AsyncFunction<T, R> {
+public interface AsyncFunction<T, R> extends AsyncFunctionEx<T, R> {
+	@Override
 	Promise<R> apply(T t);
 
 	/**
@@ -35,6 +36,17 @@ public interface AsyncFunction<T, R> {
 		return value -> {
 			try {
 				return Promise.of(function.apply(value));
+			} catch (Exception e) {
+				handleError(e, function);
+				return Promise.ofException(e);
+			}
+		};
+	}
+
+	static <T, R> AsyncFunction<T, R> sanitize(AsyncFunctionEx<? super T, R> function) {
+		return value -> {
+			try {
+				return function.apply(value);
 			} catch (Exception e) {
 				handleError(e, function);
 				return Promise.ofException(e);

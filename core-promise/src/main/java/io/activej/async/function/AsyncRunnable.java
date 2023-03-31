@@ -22,7 +22,8 @@ import io.activej.promise.Promise;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
-public interface AsyncRunnable {
+public interface AsyncRunnable extends AsyncRunnableEx {
+	@Override
 	Promise<Void> run();
 
 	/**
@@ -40,6 +41,17 @@ public interface AsyncRunnable {
 				return Promise.ofException(e);
 			}
 			return Promise.complete();
+		};
+	}
+
+	static AsyncRunnable sanitize(AsyncRunnableEx runnable) {
+		return () -> {
+			try {
+				return runnable.run();
+			} catch (Exception e) {
+				handleError(e, runnable);
+				return Promise.ofException(e);
+			}
 		};
 	}
 }

@@ -22,7 +22,8 @@ import io.activej.promise.Promise;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
-public interface AsyncBiConsumer<T, U> {
+public interface AsyncBiConsumer<T, U> extends AsyncBiConsumerEx<T, U> {
+	@Override
 	Promise<Void> accept(T t, U u);
 
 	/**
@@ -40,6 +41,17 @@ public interface AsyncBiConsumer<T, U> {
 				return Promise.ofException(e);
 			}
 			return Promise.complete();
+		};
+	}
+
+	static <T, U> AsyncBiConsumer<T, U> sanitize(AsyncBiConsumerEx<? super T, U> consumer) {
+		return (t, u) -> {
+			try {
+				return consumer.accept(t, u);
+			} catch (Exception e) {
+				handleError(e, consumer);
+				return Promise.ofException(e);
+			}
 		};
 	}
 }

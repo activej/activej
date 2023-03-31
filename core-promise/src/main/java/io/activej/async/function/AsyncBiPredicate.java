@@ -24,7 +24,8 @@ import java.util.function.Predicate;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 @FunctionalInterface
-public interface AsyncBiPredicate<T, U> {
+public interface AsyncBiPredicate<T, U> extends AsyncBiPredicateEx<T, U> {
+	@Override
 	Promise<Boolean> test(T t, U u);
 
 	/**
@@ -37,6 +38,17 @@ public interface AsyncBiPredicate<T, U> {
 		return (t, u) -> {
 			try {
 				return Promise.of(predicate.test(t, u));
+			} catch (Exception e) {
+				handleError(e, predicate);
+				return Promise.ofException(e);
+			}
+		};
+	}
+
+	static <T, U> AsyncBiPredicate<T, U> sanitize(AsyncBiPredicateEx<? super T, ? super U> predicate) {
+		return (t, u) -> {
+			try {
+				return predicate.test(t, u);
 			} catch (Exception e) {
 				handleError(e, predicate);
 				return Promise.ofException(e);

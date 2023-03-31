@@ -16,51 +16,18 @@
 
 package io.activej.async.function;
 
-import io.activej.common.function.ConsumerEx;
 import io.activej.promise.Promise;
-
-import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 /**
  * Represents an asynchronous consumer that consumes data items.
  */
 @FunctionalInterface
-public interface AsyncConsumer<T> extends AsyncConsumerEx<T> {
+public interface AsyncConsumerEx<T> {
 	/**
 	 * Consumes some data asynchronously.
 	 *
 	 * @param value value to be consumed
 	 * @return {@link Promise} of {@link Void} that represents successful consumption of data
 	 */
-	@Override
-	Promise<Void> accept(T value);
-
-	/**
-	 * Wraps a {@link ConsumerEx} interface.
-	 *
-	 * @param consumer a {@link ConsumerEx}
-	 * @return {@link AsyncConsumer} that works on top of {@link ConsumerEx} interface
-	 */
-	static <T> AsyncConsumer<T> of(ConsumerEx<? super T> consumer) {
-		return value -> {
-			try {
-				consumer.accept(value);
-			} catch (Exception e) {
-				handleError(e, consumer);
-				return Promise.ofException(e);
-			}
-			return Promise.complete();
-		};
-	}
-
-	static <T> AsyncConsumer<T> sanitize(AsyncConsumerEx<? super T> consumer) {
-		return value -> {
-			try {
-				return consumer.accept(value);
-			} catch (Exception e) {
-				handleError(e, consumer);
-				return Promise.ofException(e);
-			}
-		};
-	}
+	Promise<Void> accept(T value) throws Exception;
 }
