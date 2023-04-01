@@ -24,7 +24,6 @@ import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import static io.activej.common.exception.FatalErrorHandler.handleError;
@@ -192,46 +191,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, BiConsumerEx<? super T, Exception> fn) {
-		try {
-			if (predicate.test(null, exception)) {
-				fn.accept(null, exception);
-			}
-			return this;
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, @Nullable ConsumerEx<? super T> fn, @Nullable ConsumerEx<Exception> exceptionFn) {
-		try {
-			if (predicate.test(null, exception)) {
-				//noinspection ConstantConditions
-				exceptionFn.accept(exception);
-			}
-			return this;
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, RunnableEx action) {
-		try {
-			if (predicate.test(null, exception)) {
-				action.run();
-			}
-			return this;
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
 	public Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn) {
 		try {
 			fn.accept(null, exception);
@@ -270,17 +229,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> whenResult(Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
-		return this;
-	}
-
-	@Override
 	public Promise<T> whenResult(RunnableEx action) {
-		return this;
-	}
-
-	@Override
-	public Promise<T> whenResult(Predicate<? super T> predicate, RunnableEx action) {
 		return this;
 	}
 
@@ -288,19 +237,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public Promise<T> whenException(ConsumerEx<Exception> fn) {
 		try {
 			fn.accept(exception);
-			return this;
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> whenException(Predicate<Exception> predicate, ConsumerEx<Exception> fn) {
-		try {
-			if (predicate.test(exception)) {
-				fn.accept(exception);
-			}
 			return this;
 		} catch (Exception ex) {
 			handleError(ex, this);
@@ -325,19 +261,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public Promise<T> whenException(RunnableEx action) {
 		try {
 			action.run();
-			return this;
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> whenException(Predicate<Exception> predicate, RunnableEx action) {
-		try {
-			if (predicate.test(exception)) {
-				action.run();
-			}
 			return this;
 		} catch (Exception ex) {
 			handleError(ex, this);

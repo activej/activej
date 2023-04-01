@@ -112,8 +112,10 @@ public final class RemoteFileSystemUtils {
 						return Promise.of(byteBuf);
 					})
 					.withAcknowledgement(ack -> ack
-							.whenResult($ -> total.get() > 0, () -> {
-								throw new TruncatedDataException();
+							.whenResult(() -> {
+								if (total.get() > 0) {
+									throw new TruncatedDataException();
+								}
 							}));
 		};
 	}

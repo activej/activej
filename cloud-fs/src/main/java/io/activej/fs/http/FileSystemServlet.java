@@ -28,8 +28,6 @@ import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
-import java.util.Objects;
-
 import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.fs.http.FileSystemCommand.*;
 import static io.activej.fs.util.JsonUtils.fromJson;
@@ -150,9 +148,7 @@ public final class FileSystemServlet {
 	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, boolean inline, String name, String rangeHeader) {
 		//noinspection ConstantConditions
 		return fs.info(name)
-				.whenResult(Objects::isNull, $ -> {
-					throw new FileNotFoundException();
-				})
+				.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
 				.then(meta -> HttpResponse.file(
 						(offset, limit) -> fs.download(name, offset, limit),
 						name,

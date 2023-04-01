@@ -173,7 +173,9 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 				.mapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e))
 				.then(() -> Promises.all(cube.getAggregationIds().stream()
 						.map(aggregationId -> findAndLockChunksForConsolidation(aggregationId, chunksFn)
-								.whenResult(chunks -> !chunks.isEmpty(), chunks -> chunksForConsolidation.put(aggregationId, chunks)))))
+								.whenResult(chunks -> {
+									if (!chunks.isEmpty()) chunksForConsolidation.put(aggregationId, chunks);
+								}))))
 				.then(() -> cube.consolidate(aggregation -> {
 							String aggregationId = aggregationsMapReversed.get(aggregation);
 							List<AggregationChunk> chunks = chunksForConsolidation.get(aggregationId);

@@ -31,7 +31,7 @@ public final class WriteAheadLogAdapters {
 			@Override
 			public Promise<Void> put(K key, S value) {
 				return super.put(key, value)
-						.whenResult($ -> ++count == updatesCount, this::flush);
+						.whenResult(v -> {if (++count == updatesCount) this.flush();});
 			}
 
 			@Override

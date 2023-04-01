@@ -125,7 +125,7 @@ public final class AbstractReactiveServerTest {
 									ByteBufs bufs = new ByteBufs();
 									return Promises.<ByteBuf>until(null,
 													$2 -> socket.read()
-															.whenResult(Objects::nonNull, bufs::add),
+															.whenResult(buf -> {if (buf != null) bufs.add(buf);}),
 													Objects::isNull)
 											.map($2 -> bufs.takeRemaining());
 								})

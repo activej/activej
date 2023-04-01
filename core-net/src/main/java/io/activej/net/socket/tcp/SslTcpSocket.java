@@ -186,7 +186,8 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 		writePromise
 				.whenException(this::closeEx)
 				.whenComplete(() -> this.pendingUpstreamWrite = null)
-				.whenResult($ -> !isClosed(), () -> {
+				.whenResult(() -> {
+					if (isClosed()) return;
 					if (engine.isOutboundDone()) {
 						close();
 						return;
@@ -293,7 +294,8 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 			Runnable task = engine.getDelegatedTask();
 			if (task == null) break;
 			Promise.ofBlocking(executor, task::run)
-					.whenResult($ -> !isClosed(), () -> {
+					.whenResult(() -> {
+						if (isClosed()) return;
 						try {
 							doHandshake();
 						} catch (SSLException e) {

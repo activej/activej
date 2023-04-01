@@ -29,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -556,80 +555,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 
 	/**
 	 * Subscribes given consumer to be executed
-	 * after this {@code Promise} completes (either successfully or exceptionally) and
-	 * promise result and exception satisfy a given {@link BiPredicate}.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * A consumer may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate a predicate that tests a result and an exception of {@code this} promise
-	 * @param fn        a consumer that consumes a result
-	 *                  and an exception of {@code this} promise
-	 */
-	default Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, BiConsumerEx<? super T, Exception> fn) {
-		return then((v, e) -> {
-			if (predicate.test(v, e)) {
-				fn.accept(v, e);
-			}
-			return Promise.of(v, e);
-		});
-	}
-
-	/**
-	 * Subscribes given consumers to be executed
-	 * after {@code this} Promise completes (either successfully or exceptionally)
-	 * and promise result and exception satisfy a given {@link BiPredicate}.
-	 * The first consumer will be executed if {@code this} Promise completes
-	 * successfully, otherwise the second promise will be executed.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * Each consumer may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate   a predicate that tests a result and an exception of {@code this} promise
-	 * @param fn          consumer that consumes a result of {@code this} promise
-	 * @param exceptionFn consumer that consumes an exception of {@code this} promise
-	 */
-	default Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate,
-			@Nullable ConsumerEx<? super T> fn,
-			@Nullable ConsumerEx<Exception> exceptionFn) {
-		return when(predicate, (v, e) -> {
-			if (e == null) {
-				//noinspection ConstantConditions
-				fn.accept(v);
-			} else {
-				//noinspection ConstantConditions
-				exceptionFn.accept(e);
-			}
-		});
-	}
-
-	/**
-	 * Subscribes given runnable to be executed
-	 * after this {@code Promise} completes (either successfully or exceptionally)
-	 * and promise result and exception satisfy a given {@link BiPredicate}.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * A runnable may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate a predicate that tests a result and an exception of {@code this} promise
-	 * @param action    runnable to be executed after {@code this} promise completes
-	 *                  and promise result and exception satisfy a given {@link BiPredicate}
-	 */
-	default Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, RunnableEx action) {
-		return when(predicate, (v, e) -> action.run());
-	}
-
-	/**
-	 * Subscribes given consumer to be executed
 	 * after this {@code Promise} completes (either successfully or exceptionally).
 	 * Returns a new {@code Promise}.
 	 *
@@ -641,9 +566,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a consumer that consumes a result
 	 *           and an exception of {@code this} promise
 	 */
-	default Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn) {
-		return when(P.isComplete(), fn);
-	}
+	Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn);
 
 	/**
 	 * Subscribes given consumers to be executed
@@ -660,9 +583,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn          consumer that consumes a result of {@code this} promise
 	 * @param exceptionFn consumer that consumes an exception of {@code this} promise
 	 */
-	default Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<Exception> exceptionFn) {
-		return when(P.isComplete(), fn, exceptionFn);
-	}
+	Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<Exception> exceptionFn);
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -676,9 +597,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param action runnable to be executed after {@code this} promise completes
 	 */
-	default Promise<T> whenComplete(RunnableEx action) {
-		return when(P.isComplete(), action);
-	}
+	Promise<T> whenComplete(RunnableEx action);
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -692,27 +611,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param fn consumer that consumes a result of {@code this} promise
 	 */
-	default Promise<T> whenResult(ConsumerEx<? super T> fn) {
-		return when(P.isResult(), fn, null);
-	}
-
-	/**
-	 * Subscribes given consumer to be executed
-	 * after this {@code Promise} completes successfully
-	 * and a result of this {@code Promise} satisfy a given {@link Predicate}.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * A consumer may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate a predicate that tests a result of {@code this} promise
-	 * @param fn        consumer that consumes a result of {@code this} promise
-	 */
-	default Promise<T> whenResult(Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
-		return when(P.isResult(predicate), fn, null);
-	}
+	Promise<T> whenResult(ConsumerEx<? super T> fn);
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -728,29 +627,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes successfully
 	 */
-	default Promise<T> whenResult(RunnableEx action) {
-		return when(P.isResult(), action);
-	}
-
-	/**
-	 * Subscribes given runnable to be executed
-	 * after this {@code Promise} completes successfully
-	 * and a result of this {@code Promise} satisfy a given {@link Predicate}.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * A runnable may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate a predicate that tests a result of {@code this} promise
-	 * @param action    runnable to be executed after {@code this} promise
-	 *                  completes successfully and a result of this {@code Promise}
-	 *                  satisfy a given {@link Predicate}
-	 */
-	default Promise<T> whenResult(Predicate<? super T> predicate, RunnableEx action) {
-		return when(P.isResult(predicate), action);
-	}
+	Promise<T> whenResult(RunnableEx action);
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -764,27 +641,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param fn consumer that consumes an exception of {@code this} promise
 	 */
-	default Promise<T> whenException(ConsumerEx<Exception> fn) {
-		return when(P.isException(), null, fn);
-	}
-
-	/**
-	 * Subscribes given consumer to be executed
-	 * after this {@code Promise} completes exceptionally
-	 * and an exception of this {@code Promise} satisfy a given {@link Predicate}.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * A consumer may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate a predicate that tests an exception of {@code this} promise
-	 * @param fn        consumer that consumes an exception of {@code this} promise
-	 */
-	default Promise<T> whenException(Predicate<Exception> predicate, ConsumerEx<Exception> fn) {
-		return when(P.isException(predicate), null, fn);
-	}
+	Promise<T> whenException(ConsumerEx<Exception> fn);
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -801,10 +658,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              only if an exception of {@code this} promise is an instance of the specified class
 	 * @param fn    consumer that consumes an exception of {@code this} promise
 	 */
-	default <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<? super E> fn) {
-		//noinspection unchecked
-		return when(P.isException(clazz), null, (ConsumerEx<Exception>) fn);
-	}
+	<E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<? super E> fn);
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -819,29 +673,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes exceptionally
 	 */
-	default Promise<T> whenException(RunnableEx action) {
-		return when(P.isException(), action);
-	}
-
-	/**
-	 * Subscribes given runnable to be executed
-	 * after this {@code Promise} completes exceptionally
-	 * and an exception of this {@code Promise} satisfy a given {@link Predicate}.
-	 * Returns a new {@code Promise}.
-	 *
-	 * <p>
-	 * A runnable may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate a predicate that tests an exception of {@code this} promise
-	 * @param action    runnable to be executed after {@code this} promise
-	 *                  completes exceptionally and an exception of this {@code Promise}
-	 *                  satisfies a given {@link Predicate}.
-	 */
-	default Promise<T> whenException(Predicate<Exception> predicate, RunnableEx action) {
-		return when(P.isException(predicate), action);
-	}
+	Promise<T> whenException(RunnableEx action);
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -860,9 +692,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *               completes exceptionally and an exception of this {@code Promise}
 	 *               is an instance of a given exception {@link Class}.
 	 */
-	default Promise<T> whenException(Class<? extends Exception> clazz, RunnableEx action) {
-		return when(P.isException(clazz), action);
-	}
+	Promise<T> whenException(Class<? extends Exception> clazz, RunnableEx action);
 
 	/**
 	 * Casts {@code this} promise to a promise of some other type {@link U}

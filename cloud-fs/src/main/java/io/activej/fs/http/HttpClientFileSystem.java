@@ -292,9 +292,8 @@ public final class HttpClientFileSystem extends AbstractReactive
 											.transformWith(transformer)
 											.withAcknowledgement(ack -> ack.both(response.loadBody()
 													.map(body -> fromJson(UploadAcknowledgement.class, body))
-													.whenResult(uploadAck -> !uploadAck.isOk(), ack1 -> {
-														//noinspection ConstantConditions
-														throw ack1.getError();
+													.whenResult(uploadAck -> {
+														if (!uploadAck.isOk()) throw uploadAck.getError();
 													})
 													.whenException(e -> {
 														channelPromise.trySetException(e);

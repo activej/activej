@@ -226,13 +226,13 @@ public final class TaskScheduler extends AbstractReactive
 				retry(task, ($, e) -> e == null || !enabled, retryPolicy))
 				.whenComplete(stats.recordStats())
 				.whenComplete(() -> lastCompleteTime = reactor.currentTimeMillis())
-				.when(($1, $2) -> enabled,
-						$ -> {
+				.whenComplete(($, e) -> {
+					if (enabled) {
+						if (e == null) {
 							lastException = null;
 							errorCount = 0;
 							scheduleTask();
-						},
-						e -> {
+						} else {
 							lastException = e;
 							errorCount++;
 							logger.warn("Retry attempt " + errorCount, e);
@@ -242,7 +242,9 @@ public final class TaskScheduler extends AbstractReactive
 							} else {
 								scheduleTask();
 							}
-						})
+						}
+					}
+				})
 				.toVoid();
 	}
 

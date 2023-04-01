@@ -32,7 +32,6 @@ import io.activej.promise.Promise;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -90,13 +89,13 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 					return Promise.ofException(exception);
 				}
 				return input.get()
-						.whenResult(Objects::nonNull,
-								buf -> {
-									buf.recycle();
-									Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
-									input.closeEx(exception);
-									throw exception;
-								})
+						.whenResult(buf -> {
+							if (buf == null) return;
+							buf.recycle();
+							Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+							input.closeEx(exception);
+							throw exception;
+						})
 						.toVoid();
 			}
 

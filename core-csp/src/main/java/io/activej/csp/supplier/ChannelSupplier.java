@@ -32,7 +32,6 @@ import io.activej.promise.SettableCallback;
 import io.activej.promise.SettablePromise;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -105,7 +104,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.whenResult(Objects::nonNull, fn::accept);
+						.whenResult(v -> {if (v != null) fn.accept(v);});
 			}
 		};
 	}

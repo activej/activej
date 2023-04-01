@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -730,132 +729,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, BiConsumerEx<? super T, Exception> fn) {
-		if (isComplete()) {
-			try {
-				if (predicate.test(result, exception)) {
-					fn.accept(result, exception);
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (predicate.test(result, e)) {
-						fn.accept(result, e);
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".when(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
-	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, @Nullable ConsumerEx<? super T> fn, @Nullable ConsumerEx<Exception> exceptionFn) {
-		if (isComplete()) {
-			try {
-				if (predicate.test(result, exception)) {
-					if (exception == null) {
-						//noinspection ConstantConditions
-						fn.accept(result);
-					} else {
-						//noinspection ConstantConditions
-						exceptionFn.accept(exception);
-					}
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (predicate.test(result, e)) {
-						if (e == null) {
-							//noinspection ConstantConditions
-							fn.accept(result);
-						} else {
-							//noinspection ConstantConditions
-							exceptionFn.accept(e);
-						}
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".when(" + formatToString(predicate) + ", " +
-						(fn != null ? formatToString(fn) : null) + ", " +
-						(exceptionFn != null ? formatToString(exceptionFn) : null) +
-						')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
-	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, RunnableEx action) {
-		if (isComplete()) {
-			try {
-				if (predicate.test(result, exception)) {
-					action.run();
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (predicate.test(result, e)) {
-						action.run();
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".when(" + formatToString(predicate) + ", " + formatToString(action) + ')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
 	public Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn) {
 		if (isComplete()) {
 			try {
@@ -1002,43 +875,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> whenResult(Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
-		if (isComplete()) {
-			try {
-				if (exception == null && predicate.test(result)) {
-					fn.accept(result);
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (e == null && predicate.test(result)) {
-						fn.accept(result);
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".whenResult(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
 	public Promise<T> whenResult(RunnableEx action) {
 		if (isComplete()) {
 			if (isResult()) {
@@ -1078,43 +914,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public Promise<T> whenResult(Predicate<? super T> predicate, RunnableEx action) {
-		if (isComplete()) {
-			try {
-				if (exception == null && predicate.test(result)) {
-					action.run();
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (e == null && predicate.test(result)) {
-						action.run();
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".whenResult(" + formatToString(predicate) + ", " + formatToString(action) + ')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
 	public Promise<T> whenException(ConsumerEx<Exception> fn) {
 		if (isComplete()) {
 			if (isException()) {
@@ -1147,43 +946,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".whenException(" + formatToString(fn) + ')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
-	public Promise<T> whenException(Predicate<Exception> predicate, ConsumerEx<Exception> fn) {
-		if (isComplete()) {
-			try {
-				if (exception != null && predicate.test(exception)) {
-					fn.accept(exception);
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (e != null && predicate.test(e)) {
-						fn.accept(e);
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".whenException(" + formatToString(predicate) + ", " + formatToString(fn) + ')';
 			}
 		};
 		subscribe(resultPromise);
@@ -1260,43 +1022,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".whenException(" + formatToString(action) + ')';
-			}
-		};
-		subscribe(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
-	public Promise<T> whenException(Predicate<Exception> predicate, RunnableEx action) {
-		if (isComplete()) {
-			try {
-				if (exception != null && predicate.test(exception)) {
-					action.run();
-				}
-				return this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				try {
-					if (e != null && predicate.test(e)) {
-						action.run();
-					}
-				} catch (Exception ex) {
-					handleError(ex, this);
-					completeExceptionally(ex);
-					return;
-				}
-				complete(result, e);
-			}
-
-			@Override
-			public String describe() {
-				return ".whenException(" + formatToString(predicate) + ", " + formatToString(action) + ')';
 			}
 		};
 		subscribe(resultPromise);

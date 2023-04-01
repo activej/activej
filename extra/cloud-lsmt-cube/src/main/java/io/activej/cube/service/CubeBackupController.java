@@ -93,8 +93,8 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 		checkInReactorThread(this);
 		return repository.getHeads()
 				.mapException(e -> new CubeException("Failed to get heads", e))
-				.whenResult(Set::isEmpty, $ -> {
-					throw new CubeException("Heads are empty");
+				.whenResult(heads -> {
+					if (heads.isEmpty()) throw new CubeException("Heads are empty");
 				})
 				.then(heads -> backup(first(heads)))
 				.whenComplete(promiseBackup.recordStats())

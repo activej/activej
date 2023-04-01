@@ -37,7 +37,6 @@ import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetAddress;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -225,9 +224,7 @@ public final class FileSystemServer extends AbstractReactiveServer {
 		long offset = download.offset();
 		long limit = download.limit();
 		return fileSystem.info(name)
-				.whenResult(Objects::isNull, $ -> {
-					throw new FileNotFoundException();
-				})
+				.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
 				.then(meta -> {
 					//noinspection ConstantConditions
 					long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));

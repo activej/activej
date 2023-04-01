@@ -222,13 +222,14 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		if (!isValid()) return Promise.complete();
 		K pollCommitId = this.originCommitId;
 		return uplink.poll(pollCommitId)
-				.whenResult($ -> !isSyncing() && pollCommitId == this.originCommitId,
-						fetchData -> {
-							updateOrigin(fetchData);
-							if (pendingProtoCommit == null) {
-								rebase();
-							}
-						})
+				.whenResult(fetchData -> {
+					if (!isSyncing() && pollCommitId == this.originCommitId) {
+						updateOrigin(fetchData);
+						if (pendingProtoCommit == null) {
+							rebase();
+						}
+					}
+				})
 				.toVoid()
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}

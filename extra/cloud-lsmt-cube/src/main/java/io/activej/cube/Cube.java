@@ -846,7 +846,7 @@ public final class Cube extends AbstractReactive
 			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
-					.whenResult(diff -> !diff.isEmpty(), diff -> map.put(aggregationId, diff))
+					.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
 					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
 					.toVoid());
 		}
