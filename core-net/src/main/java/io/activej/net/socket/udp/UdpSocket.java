@@ -28,7 +28,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
@@ -55,10 +55,10 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	private final DatagramChannel channel;
 
-	private final ArrayDeque<SettablePromise<UdpPacket>> readQueue = new ArrayDeque<>();
+	private final ArrayDeque<SettableCallback<UdpPacket>> readQueue = new ArrayDeque<>();
 	private final ArrayDeque<UdpPacket> readBuffer = new ArrayDeque<>();
 
-	private final ArrayDeque<Tuple2<UdpPacket, SettablePromise<Void>>> writeQueue = new ArrayDeque<>();
+	private final ArrayDeque<Tuple2<UdpPacket, SettableCallback<Void>>> writeQueue = new ArrayDeque<>();
 
 	private int ops = 0;
 
@@ -235,7 +235,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 			// at this point the packet is *received* so we either
 			// complete one of the listening callbacks or store it in the buffer
 
-			SettablePromise<UdpPacket> cb = readQueue.poll();
+			SettableCallback<UdpPacket> cb = readQueue.poll();
 			if (cb != null) {
 				cb.set(packet);
 				return;
@@ -260,7 +260,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 	public void onWriteReady() {
 		checkInReactorThread(this);
 		while (true) {
-			Tuple2<UdpPacket, SettablePromise<Void>> entry = writeQueue.peek();
+			Tuple2<UdpPacket, SettableCallback<Void>> entry = writeQueue.peek();
 			if (entry == null) {
 				break;
 			}

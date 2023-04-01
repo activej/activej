@@ -24,7 +24,7 @@ import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.TcpSocket.Inspector;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.ServerSocketSettings;
@@ -209,7 +209,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	protected void onListen() {
 	}
 
-	protected void onClose(SettablePromise<Void> cb) {
+	protected void onClose(SettableCallback<Void> cb) {
 		cb.set(null);
 	}
 

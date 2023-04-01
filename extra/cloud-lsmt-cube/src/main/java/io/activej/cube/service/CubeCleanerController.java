@@ -33,7 +33,7 @@ import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -202,7 +202,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 		return Promise.ofCallback(cb -> findSnapshotImpl(heads, skipSnapshots, cb));
 	}
 
-	private void findSnapshotImpl(Set<K> heads, int skipSnapshots, SettablePromise<Optional<K>> cb) {
+	private void findSnapshotImpl(Set<K> heads, int skipSnapshots, SettableCallback<Optional<K>> cb) {
 		findParent(repository, otSystem, heads, DiffsReducer.toVoid(),
 				commit -> repository.hasSnapshot(commit.getId()))
 				.async()

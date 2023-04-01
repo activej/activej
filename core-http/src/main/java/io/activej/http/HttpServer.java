@@ -28,6 +28,7 @@ import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
+import io.activej.promise.SettableCallback;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
@@ -311,7 +312,7 @@ public final class HttpServer extends AbstractReactiveServer {
 
 	private final SettablePromise<@Nullable Void> closeNotification = new SettablePromise<>();
 
-	private @Nullable SettablePromise<Void> closeCallback;
+	private @Nullable SettableCallback<Void> closeCallback;
 
 	void onConnectionClosed() {
 		if (getConnectionsCount() == 0 && closeCallback != null) {
@@ -321,7 +322,7 @@ public final class HttpServer extends AbstractReactiveServer {
 	}
 
 	@Override
-	protected void onClose(SettablePromise<@Nullable Void> cb) {
+	protected void onClose(SettableCallback<@Nullable Void> cb) {
 		closeNotification.set(null);
 		poolKeepAlive.closeAllConnections();
 		keepAliveTimeoutMillis = 0;

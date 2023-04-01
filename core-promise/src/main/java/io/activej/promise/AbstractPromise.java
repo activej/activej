@@ -17,12 +17,7 @@
 package io.activej.promise;
 
 import io.activej.async.callback.Callback;
-import io.activej.async.callback.CallbackBiFunctionEx;
-import io.activej.async.callback.CallbackFunctionEx;
-import io.activej.async.callback.CallbackSupplierEx;
-import io.activej.async.function.AsyncBiFunctionEx;
-import io.activej.async.function.AsyncFunctionEx;
-import io.activej.async.function.AsyncSupplierEx;
+import io.activej.async.function.*;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
@@ -464,7 +459,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	public <U> Promise<U> then2(CallbackSupplierEx<U> fn) {
 		if (isComplete()) {
 			try {
-				return isResult() ? Promise.ofCallback2(fn) : (Promise<U>) this;
+				return isResult() ? Promise.ofCallback(fn) : (Promise<U>) this;
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -535,7 +530,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn) {
 		if (isComplete()) {
 			try {
-				return isResult() ? Promise.ofCallback2(result, fn) : (Promise<U>) this;
+				return isResult() ? Promise.ofCallback(result, fn) : (Promise<U>) this;
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -614,7 +609,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
 		if (isComplete()) {
 			try {
-				return Promise.ofCallback2(result, exception, fn);
+				return Promise.ofCallback(result, exception, fn);
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -699,7 +694,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
 		if (isComplete()) {
 			try {
-				return Promise.ofCallback2(result, exception, fn, exceptionFn);
+				return Promise.ofCallback(result, exception, fn, exceptionFn);
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);

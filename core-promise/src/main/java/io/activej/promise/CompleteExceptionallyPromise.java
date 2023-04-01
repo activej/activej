@@ -17,12 +17,7 @@
 package io.activej.promise;
 
 import io.activej.async.callback.Callback;
-import io.activej.async.callback.CallbackBiFunctionEx;
-import io.activej.async.callback.CallbackFunctionEx;
-import io.activej.async.callback.CallbackSupplierEx;
-import io.activej.async.function.AsyncBiFunctionEx;
-import io.activej.async.function.AsyncFunctionEx;
-import io.activej.async.function.AsyncSupplierEx;
+import io.activej.async.function.*;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.common.recycle.Recyclers;
@@ -167,7 +162,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@Override
 	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
 		try {
-			return Promise.ofCallback2(null, exception, fn);
+			return Promise.ofCallback(null, exception, fn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
@@ -179,7 +174,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 			AsyncFunctionEx<? super T, U> fn,
 			AsyncFunctionEx<Exception, U> exceptionFn) {
 		try {
-			return (Promise<U>) exceptionFn.apply(exception);
+			return exceptionFn.apply(exception);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
@@ -189,7 +184,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@Override
 	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
 		try {
-			return Promise.ofCallback2(null, exception, fn, exceptionFn);
+			return Promise.ofCallback(null, exception, fn, exceptionFn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);

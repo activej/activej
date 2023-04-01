@@ -28,7 +28,7 @@ import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,7 @@ public final class OTAlgorithms {
 	}
 
 	private static <K, D, R> void walkGraphImpl(AsyncOTRepository<K, D> repository, GraphReducer<K, D, R> reducer,
-			PriorityQueue<OTCommit<K, D>> queue, Set<K> visited, SettablePromise<R> cb) {
+			PriorityQueue<OTCommit<K, D>> queue, Set<K> visited, SettableCallback<R> cb) {
 		OTCommit<K, D> commit = queue.peek();
 		if (commit == null) {
 			cb.setException(new GraphExhaustedException());

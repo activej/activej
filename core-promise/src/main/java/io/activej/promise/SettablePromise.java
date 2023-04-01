@@ -32,7 +32,7 @@ import static io.activej.reactor.util.RunnableWithContext.runnableOf;
  *
  * @param <T> result type
  */
-public final class SettablePromise<T> extends AbstractPromise<T> implements Callback<T> {
+public final class SettablePromise<T> extends AbstractPromise<T> implements SettableCallback<T>, Callback<T> {
 	/**
 	 * Accepts the provided values and performs this operation
 	 * on them. If the {@code Exception e} is {@code null},
@@ -48,6 +48,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 *               be set to this {@code SettablePromise}
 	 *               if not {@code null}
 	 */
+	@Override
 	public void set(T result, @Nullable Exception e) {
 		if (e == null) {
 			set(result);
@@ -61,6 +62,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * completes it. {@code AssertionError} is thrown when you
 	 * try to set result for an already completed {@code Promise}.
 	 */
+	@Override
 	@Async.Execute
 	public void set(T result) {
 		complete(result);
@@ -73,6 +75,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 *
 	 * @param e exception
 	 */
+	@Override
 	@Async.Execute
 	public void setException(Exception e) {
 		completeExceptionally(e);
@@ -83,6 +86,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * {@code SettablePromise} if it is not completed yet.
 	 * Otherwise, does nothing.
 	 */
+	@Override
 	@Async.Execute
 	public boolean trySet(T result) {
 		if (!isComplete()) {
@@ -97,6 +101,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * {@code SettablePromise} if it is not completed yet.
 	 * Otherwise, does nothing.
 	 */
+	@Override
 	@Async.Execute
 	public boolean trySetException(Exception e) {
 		if (!isComplete()) {
@@ -110,6 +115,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * Tries to set result or exception for this {@code SettablePromise}
 	 * if it is not completed yet. Otherwise, does nothing.
 	 */
+	@Override
 	@Async.Execute
 	public boolean trySet(T result, @Nullable Exception e) {
 		if (!isComplete()) {
@@ -123,26 +129,32 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 		return false;
 	}
 
+	@Override
 	public void post(T result) {
 		getCurrentReactor().post(runnableOf(this, () -> set(result)));
 	}
 
+	@Override
 	public void postException(Exception e) {
 		getCurrentReactor().post(runnableOf(this, () -> setException(e)));
 	}
 
+	@Override
 	public void post(T result, @Nullable Exception e) {
 		getCurrentReactor().post(runnableOf(this, () -> set(result, e)));
 	}
 
+	@Override
 	public void tryPost(T result) {
 		getCurrentReactor().post(runnableOf(this, () -> trySet(result)));
 	}
 
+	@Override
 	public void tryPostException(Exception e) {
 		getCurrentReactor().post(runnableOf(this, () -> trySetException(e)));
 	}
 
+	@Override
 	public void tryPost(T result, @Nullable Exception e) {
 		getCurrentReactor().post(runnableOf(this, () -> trySet(result, e)));
 	}

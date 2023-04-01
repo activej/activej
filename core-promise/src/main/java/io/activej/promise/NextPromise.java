@@ -17,16 +17,48 @@
 package io.activej.promise;
 
 import io.activej.async.callback.Callback;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Helps to create sequent chains of {@code Promise}s.
  */
-public abstract class NextPromise<T, R> extends AbstractPromise<R> implements Callback<R> {
+@ApiStatus.Internal
+public abstract class NextPromise<T, R> extends AbstractPromise<R> implements SettableCallback<R>, Callback<R> {
+	public abstract void acceptNext(T result, @Nullable Exception e);
+
 	@Override
 	public void accept(R result, @Nullable Exception e) {
 		complete(result, e);
 	}
 
-	public abstract void acceptNext(T result, @Nullable Exception e);
+	@Override
+	public void set(R result, @Nullable Exception e) {
+		complete(result, e);
+	}
+
+	@Override
+	public void set(R result) {
+		complete(result);
+	}
+
+	@Override
+	public void setException(Exception e) {
+		completeExceptionally(e);
+	}
+
+	@Override
+	public boolean trySet(R result, @Nullable Exception e) {
+		return tryComplete(result, e);
+	}
+
+	@Override
+	public boolean trySet(R result) {
+		return tryComplete(result);
+	}
+
+	@Override
+	public boolean trySetException(Exception e) {
+		return tryCompleteExceptionally(e);
+	}
 }

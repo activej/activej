@@ -269,7 +269,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 	}
 
 	public static Promise<TcpSocket> connect(NioReactor reactor, InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
-		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb))
+		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb::set))
 				.map(channel -> {
 					try {
 						return wrapChannel(reactor, channel, address, socketSettings);

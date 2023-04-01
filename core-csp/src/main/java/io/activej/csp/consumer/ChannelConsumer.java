@@ -22,6 +22,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.process.transformer.ChannelConsumerTransformer;
 import io.activej.promise.Promise;
+import io.activej.promise.SettableCallback;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;
 
@@ -265,7 +266,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		};
 	}
 
-	private static <T> void acceptAllImpl(ChannelConsumer<T> output, Iterator<? extends T> it, boolean ownership, SettablePromise<Void> cb) {
+	private static <T> void acceptAllImpl(ChannelConsumer<T> output, Iterator<? extends T> it, boolean ownership, SettableCallback<Void> cb) {
 		while (it.hasNext()) {
 			Promise<Void> accept = output.accept(it.next());
 			if (accept.isResult()) continue;

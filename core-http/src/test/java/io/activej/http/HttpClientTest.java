@@ -12,7 +12,7 @@ import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.SimpleServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
@@ -132,7 +132,7 @@ public final class HttpClientTest {
 	public void testActiveRequestsCounter() throws IOException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		List<SettablePromise<HttpResponse>> responses = new ArrayList<>();
+		List<SettableCallback<HttpResponse>> responses = new ArrayList<>();
 
 		HttpServer server = HttpServer.builder(reactor,
 						request -> Promise.ofCallback(responses::add))

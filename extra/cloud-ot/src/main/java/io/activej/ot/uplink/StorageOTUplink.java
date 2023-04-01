@@ -21,7 +21,7 @@ import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.StorageOTUplink.AsyncStorage.SyncData;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
@@ -175,7 +175,7 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 						Promise.of(syncData));
 	}
 
-	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettablePromise<Void> cb) {
+	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettableCallback<Void> cb) {
 		storage.fetch(commitId)
 				.whenResult(fetchData -> {
 					TransformResult<D> transformResult = otSystem.transform(uplinkDiffs, fetchData.diffs());
@@ -225,7 +225,7 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 		return Promise.ofCallback(cb -> doPush(protoCommit.getId(), protoCommit.getDiffs(), List.of(), cb));
 	}
 
-	void doPush(long commitId, List<D> diffs, List<D> fetchedDiffs, SettablePromise<FetchData<Long, D>> cb) {
+	void doPush(long commitId, List<D> diffs, List<D> fetchedDiffs, SettableCallback<FetchData<Long, D>> cb) {
 		storage.add(commitId, diffs)
 				.whenResult(ok -> {
 					if (ok) {

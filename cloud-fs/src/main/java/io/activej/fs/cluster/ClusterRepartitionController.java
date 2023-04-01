@@ -32,7 +32,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -86,7 +86,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 	private Set<Object> lastAlivePartitionIds = Set.of();
 	private long lastPlanRecalculation;
 
-	private @Nullable SettablePromise<Void> closeCallback;
+	private @Nullable SettableCallback<Void> closeCallback;
 
 	private final PromiseStats repartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));

@@ -28,6 +28,7 @@ import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.transformer.ChannelSupplierTransformer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.promise.SettableCallback;
 import io.activej.promise.SettablePromise;
 
 import java.util.List;
@@ -329,7 +330,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		return Promise.ofException(exception);
 	}
 
-	private static <T> void streamToImpl(ChannelSupplier<T> supplier, ChannelConsumer<T> consumer, SettablePromise<Void> cb) {
+	private static <T> void streamToImpl(ChannelSupplier<T> supplier, ChannelConsumer<T> consumer, SettableCallback<Void> cb) {
 		Promise<T> supplierPromise;
 		while (true) {
 			supplierPromise = supplier.get();
@@ -373,7 +374,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 
 	private static <T, A, R> void toCollectorImpl(ChannelSupplier<T> supplier,
 			A accumulatedValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher,
-			SettablePromise<R> cb) {
+			SettableCallback<R> cb) {
 		Promise<T> promise;
 		while (true) {
 			promise = supplier.get();

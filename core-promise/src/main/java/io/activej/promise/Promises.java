@@ -814,7 +814,7 @@ public class Promises {
 				sequenceImpl(promises, cb));
 	}
 
-	private static void sequenceImpl(Iterator<? extends Promise<Void>> promises, SettablePromise<Void> cb) {
+	private static void sequenceImpl(Iterator<? extends Promise<Void>> promises, SettableCallback<Void> cb) {
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
 			if (promise.isResult()) continue;
@@ -901,7 +901,7 @@ public class Promises {
 
 	private static <T> void firstImpl(Iterator<? extends Promise<? extends T>> promises,
 			BiPredicate<? super T, ? super Exception> predicate,
-			SettablePromise<T> cb) {
+			SettableCallback<T> cb) {
 		while (promises.hasNext()) {
 			Promise<? extends T> nextPromise = promises.next();
 			if (nextPromise.isComplete()) {
@@ -982,7 +982,7 @@ public class Promises {
 				untilImpl(seed, next, breakCondition, cb));
 	}
 
-	private static <T> void untilImpl(@Nullable T value, FunctionEx<T, Promise<T>> next, Predicate<T> breakCondition, SettablePromise<T> cb) throws Exception {
+	private static <T> void untilImpl(@Nullable T value, FunctionEx<T, Promise<T>> next, Predicate<T> breakCondition, SettableCallback<T> cb) throws Exception {
 		while (true) {
 			Promise<T> promise = next.apply(value);
 			if (promise.isResult()) {
@@ -1032,7 +1032,7 @@ public class Promises {
 
 	private static <T> void retryImpl(AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition,
 			RetryPolicy<Object> retryPolicy, Object retryState,
-			SettablePromise<T> cb) {
+			SettableCallback<T> cb) {
 		next.get()
 				.run((v, e) -> {
 					if (breakCondition.test(v, e)) {

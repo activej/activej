@@ -16,10 +16,9 @@
 
 package io.activej.promise;
 
-import io.activej.async.callback.*;
-import io.activej.async.function.AsyncBiFunctionEx;
-import io.activej.async.function.AsyncFunctionEx;
-import io.activej.async.function.AsyncSupplierEx;
+import io.activej.async.callback.AsyncComputation;
+import io.activej.async.callback.Callback;
+import io.activej.async.function.*;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.reactor.Reactor;
@@ -93,18 +92,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * that is accepted by the provided {@link ConsumerEx} of
 	 * {@link SettablePromise}
 	 */
-	static <T> Promise<T> ofCallback(ConsumerEx<SettablePromise<T>> callbackConsumer) {
-		SettablePromise<T> cb = new SettablePromise<>();
-		try {
-			callbackConsumer.accept(cb);
-		} catch (Exception ex) {
-			handleError(ex, callbackConsumer);
-			return Promise.ofException(ex);
-		}
-		return cb;
-	}
-
-	static <T> Promise<T> ofCallback2(CallbackSupplierEx<T> fn) {
+	static <T> Promise<T> ofCallback(CallbackSupplierEx<T> fn) {
 		SettablePromise<T> cb = new SettablePromise<>();
 		try {
 			fn.get(cb);
@@ -115,7 +103,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return cb;
 	}
 
-	static <T, R> Promise<R> ofCallback2(T value, CallbackFunctionEx<? super T, R> fn) {
+	static <T, R> Promise<R> ofCallback(T value, CallbackFunctionEx<? super T, R> fn) {
 		SettablePromise<R> cb = new SettablePromise<>();
 		try {
 			fn.apply(value, cb);
@@ -126,7 +114,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return cb;
 	}
 
-	static <T, R> Promise<R> ofCallback2(T value, @Nullable Exception exception, CallbackBiFunctionEx<? super T, @Nullable Exception, R> fn) {
+	static <T, R> Promise<R> ofCallback(T value, @Nullable Exception exception, CallbackBiFunctionEx<? super T, @Nullable Exception, R> fn) {
 		SettablePromise<R> cb = new SettablePromise<>();
 		try {
 			fn.apply(value, exception, cb);
@@ -137,7 +125,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return cb;
 	}
 
-	static <T, R> Promise<R> ofCallback2(T value, @Nullable Exception exception,
+	static <T, R> Promise<R> ofCallback(T value, @Nullable Exception exception,
 			CallbackFunctionEx<? super T, R> fn,
 			CallbackFunctionEx<Exception, R> fnException) {
 		SettablePromise<R> cb = new SettablePromise<>();
@@ -535,9 +523,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	default <U> Promise<U> then(AsyncBiFunctionEx<? super T, @Nullable Exception, U> fn) {
-		return then2((t, e, cb) -> fn.apply(t, e).run(cb));
-	}
+	<U> Promise<U> then(AsyncBiFunctionEx<? super T, @Nullable Exception, U> fn);
 
 	<U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn);
 

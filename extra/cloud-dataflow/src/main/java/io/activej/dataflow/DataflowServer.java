@@ -54,7 +54,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.Nullable;
 
@@ -293,7 +293,7 @@ public final class DataflowServer extends AbstractReactiveServer {
 	}
 
 	@Override
-	protected void onClose(SettablePromise<Void> cb) {
+	protected void onClose(SettableCallback<Void> cb) {
 		List<ChannelQueue<ByteBuf>> pending = new ArrayList<>(pendingStreams.values());
 		pendingStreams.clear();
 		pending.forEach(AsyncCloseable::close);

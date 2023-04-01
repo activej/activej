@@ -4,7 +4,7 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.csp.supplier.AbstractChannelSupplier;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 
 import java.util.Iterator;
 import java.util.function.Function;
@@ -32,7 +32,7 @@ public final class Remap<T, V> extends AbstractChannelSupplier<V> {
 		return Promise.ofCallback(this::next);
 	}
 
-	private void next(SettablePromise<V> cb) {
+	private void next(SettableCallback<V> cb) {
 		if (!endOfStream) {
 			supplier.get()
 					.run((item, e) -> {

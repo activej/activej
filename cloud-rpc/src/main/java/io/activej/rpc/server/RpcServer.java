@@ -29,7 +29,7 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcControlMessage;
@@ -87,7 +87,7 @@ public final class RpcServer extends AbstractReactiveServer {
 	private BinarySerializer<RpcMessage> requestSerializer;
 	private BinarySerializer<RpcMessage> responseSerializer;
 
-	private SettablePromise<Void> closeCallback;
+	private SettableCallback<Void> closeCallback;
 
 	// region JMX vars
 	static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
@@ -222,7 +222,7 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	@Override
-	protected void onClose(SettablePromise<Void> cb) {
+	protected void onClose(SettableCallback<Void> cb) {
 		if (connections.isEmpty()) {
 			logger.info("RpcServer is closing. Active connections count: 0.");
 			cb.set(null);
