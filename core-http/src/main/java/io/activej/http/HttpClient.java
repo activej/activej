@@ -552,9 +552,9 @@ public final class HttpClient extends AbstractNioReactive
 								scheduleExpiredConnectionsCheck();
 
 							if (isWebSocket) {
-								return connection.sendWebSocketRequest(request);
+								return connection.sendWebSocketRequest(request).cast();
 							} else {
-								return connection.send(request);
+								return connection.send(request).cast();
 							}
 						},
 						e -> {

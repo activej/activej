@@ -16,6 +16,7 @@
 
 package io.activej.fs;
 
+import io.activej.async.function.AsyncBiFunctionEx;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
@@ -23,7 +24,6 @@ import io.activej.common.MemSize;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.UncheckedException;
-import io.activej.common.function.BiFunctionEx;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
 import io.activej.common.time.CurrentTimeProvider;
@@ -595,11 +595,11 @@ public final class FileSystem extends AbstractReactive
 		return Promise.ofBlocking(executor, runnable);
 	}
 
-	private <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> translateScalarErrorsFn() {
+	private <T> AsyncBiFunctionEx<T, @Nullable Exception, T> translateScalarErrorsFn() {
 		return translateScalarErrorsFn(null);
 	}
 
-	private <T> BiFunctionEx<T, @Nullable Exception, Promise<? extends T>> translateScalarErrorsFn(@Nullable String name) {
+	private <T> AsyncBiFunctionEx<T, @Nullable Exception, T> translateScalarErrorsFn(@Nullable String name) {
 		return (v, e) -> {
 			if (e == null) {
 				return Promise.of(v);

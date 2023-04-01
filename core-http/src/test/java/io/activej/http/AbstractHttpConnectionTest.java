@@ -1,10 +1,10 @@
 package io.activej.http;
 
+import io.activej.async.function.AsyncFunctionEx;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
-import io.activej.common.function.FunctionEx;
 import io.activej.common.ref.Ref;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.transformer.ChannelTransformers;
@@ -472,7 +472,7 @@ public final class AbstractHttpConnectionTest {
 		assertSame(fatalError, errorRef.get());
 	}
 
-	private FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
+	private AsyncFunctionEx<HttpResponse, ByteBuf> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
 				.then(AbstractHttpConnectionTest::post);

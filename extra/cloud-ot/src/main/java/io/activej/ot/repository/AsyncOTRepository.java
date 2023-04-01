@@ -81,8 +81,10 @@ public interface AsyncOTRepository<K, D> extends AsyncOTCommitFactory<K, D> {
 	Promise<Set<K>> getAllHeads();
 
 	default Promise<Collection<OTCommit<K, D>>> getAllHeadCommits() {
+		//noinspection RedundantTypeArguments
 		return getAllHeads()
-				.then(allHeads -> Promises.toList(allHeads.stream().map(this::loadCommit)));
+				.then(allHeads -> Promises.toList(allHeads.stream().map(this::loadCommit)))
+				.<Collection<OTCommit<K, D>>>cast();
 	}
 
 	default AsyncSupplier<Set<K>> pollHeads() {

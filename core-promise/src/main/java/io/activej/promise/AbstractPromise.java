@@ -17,6 +17,12 @@
 package io.activej.promise;
 
 import io.activej.async.callback.Callback;
+import io.activej.async.callback.CallbackBiFunctionEx;
+import io.activej.async.callback.CallbackFunctionEx;
+import io.activej.async.callback.CallbackSupplierEx;
+import io.activej.async.function.AsyncBiFunctionEx;
+import io.activej.async.function.AsyncFunctionEx;
+import io.activej.async.function.AsyncSupplierEx;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
@@ -418,10 +424,10 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(SupplierEx<Promise<? extends U>> fn) {
+	public <U> Promise<U> then(AsyncSupplierEx<U> fn) {
 		if (isComplete()) {
 			try {
-				return isResult() ? (Promise<U>) fn.get() : (Promise<U>) this;
+				return isResult() ? fn.get() : (Promise<U>) this;
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -455,10 +461,44 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn) {
+	public <U> Promise<U> then2(CallbackSupplierEx<U> fn) {
 		if (isComplete()) {
 			try {
-				return isResult() ? (Promise<U>) fn.apply(result) : (Promise<U>) this;
+				return isResult() ? Promise.ofCallback2(fn) : (Promise<U>) this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
+			@Override
+			public void acceptNext(T result, @Nullable Exception e) {
+				if (e == null) {
+					try {
+						fn.get(this);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+					}
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".then(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn) {
+		if (isComplete()) {
+			try {
+				return isResult() ? fn.apply(result) : (Promise<U>) this;
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -492,10 +532,44 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
+	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn) {
 		if (isComplete()) {
 			try {
-				return (Promise<U>) fn.apply(result, exception);
+				return isResult() ? Promise.ofCallback2(result, fn) : (Promise<U>) this;
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
+			@Override
+			public void acceptNext(T result, @Nullable Exception e) {
+				if (e == null) {
+					try {
+						fn.apply(result, this);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+					}
+				} else {
+					completeExceptionally(e);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".then(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public <U> Promise<U> then(AsyncBiFunctionEx<? super T, Exception, U> fn) {
+		if (isComplete()) {
+			try {
+				return fn.apply(result, exception);
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -537,10 +611,50 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn, FunctionEx<Exception, Promise<? extends U>> exceptionFn) {
+	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
 		if (isComplete()) {
 			try {
-				return (Promise<U>) (exception == null ? fn.apply(result) : exceptionFn.apply(exception));
+				return Promise.ofCallback2(result, exception, fn);
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
+			@Override
+			public void acceptNext(T result, @Nullable Exception e) {
+				if (e == null) {
+					try {
+						fn.apply(result, null, this);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+					}
+				} else {
+					Promise<? extends U> promise;
+					try {
+						fn.apply(null, e, this);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+					}
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".then(" + formatToString(fn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn, AsyncFunctionEx<Exception, U> exceptionFn) {
+		if (isComplete()) {
+			try {
+				return exception == null ? fn.apply(result) : exceptionFn.apply(exception);
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -569,6 +683,45 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						return;
 					}
 					promise.run(this);
+				}
+			}
+
+			@Override
+			public String describe() {
+				return ".then(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
+			}
+		};
+		subscribe(resultPromise);
+		return resultPromise;
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
+		if (isComplete()) {
+			try {
+				return Promise.ofCallback2(result, exception, fn, exceptionFn);
+			} catch (Exception ex) {
+				handleError(ex, this);
+				return Promise.ofException(ex);
+			}
+		}
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
+			@Override
+			public void acceptNext(T result, @Nullable Exception e) {
+				if (e == null) {
+					try {
+						fn.apply(result, this);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+					}
+				} else {
+					try {
+						exceptionFn.apply(e, this);
+					} catch (Exception ex) {
+						handleError(ex, this);
+						completeExceptionally(ex);
+					}
 				}
 			}
 

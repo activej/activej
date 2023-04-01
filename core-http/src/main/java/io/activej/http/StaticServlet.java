@@ -205,7 +205,7 @@ public final class StaticServlet extends AbstractReactive
 				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 
-	private Promise<? extends HttpResponse> tryLoadDefaultResource() {
+	private Promise<HttpResponse> tryLoadDefaultResource() {
 		return defaultResource != null ?
 				resourceLoader.load(defaultResource)
 						.map(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :

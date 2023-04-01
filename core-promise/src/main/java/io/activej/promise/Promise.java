@@ -16,8 +16,10 @@
 
 package io.activej.promise;
 
-import io.activej.async.callback.AsyncComputation;
-import io.activej.async.callback.Callback;
+import io.activej.async.callback.*;
+import io.activej.async.function.AsyncBiFunctionEx;
+import io.activej.async.function.AsyncFunctionEx;
+import io.activej.async.function.AsyncSupplierEx;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.reactor.Reactor;
@@ -102,6 +104,53 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return cb;
 	}
 
+	static <T> Promise<T> ofCallback2(CallbackSupplierEx<T> fn) {
+		SettablePromise<T> cb = new SettablePromise<>();
+		try {
+			fn.get(cb);
+		} catch (Exception ex) {
+			handleError(ex, fn);
+			return Promise.ofException(ex);
+		}
+		return cb;
+	}
+
+	static <T, R> Promise<R> ofCallback2(T value, CallbackFunctionEx<? super T, R> fn) {
+		SettablePromise<R> cb = new SettablePromise<>();
+		try {
+			fn.apply(value, cb);
+		} catch (Exception ex) {
+			handleError(ex, fn);
+			return Promise.ofException(ex);
+		}
+		return cb;
+	}
+
+	static <T, R> Promise<R> ofCallback2(T value, @Nullable Exception exception, CallbackBiFunctionEx<? super T, @Nullable Exception, R> fn) {
+		SettablePromise<R> cb = new SettablePromise<>();
+		try {
+			fn.apply(value, exception, cb);
+		} catch (Exception ex) {
+			handleError(ex, fn);
+			return Promise.ofException(ex);
+		}
+		return cb;
+	}
+
+	static <T, R> Promise<R> ofCallback2(T value, @Nullable Exception exception,
+			CallbackFunctionEx<? super T, R> fn,
+			CallbackFunctionEx<Exception, R> fnException) {
+		SettablePromise<R> cb = new SettablePromise<>();
+		try {
+			if (exception == null) fn.apply(value, cb);
+			else fnException.apply(exception, cb);
+		} catch (Exception ex) {
+			handleError(ex, fn);
+			return Promise.ofException(ex);
+		}
+		return cb;
+	}
+
 	/**
 	 * Creates a new {@code Promise} of the given value
 	 *
@@ -133,7 +182,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Creates a completed {@code Promise} from {@code T value} and
 	 * {@code Exception e} parameters, any of them can be {@code null}.
-	 * Useful for {@link #then(BiFunctionEx)} passthroughs
+	 * Useful for {@link #then} passthroughs
 	 * (for example, when mapping specific exceptions).
 	 *
 	 * @param value value to wrap when exception is null
@@ -445,7 +494,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a supplier of a new promise which will be called
 	 *           if {@code this} promise completes successfully
 	 */
-	<U> Promise<U> then(SupplierEx<Promise<? extends U>> fn);
+	<U> Promise<U> then(AsyncSupplierEx<U> fn);
+
+	<U> Promise<U> then2(CallbackSupplierEx<U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -464,7 +515,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of {@code this} promise
 	 * @see CompletionStage#thenCompose(Function)
 	 */
-	<U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn);
+	<U> Promise<U> then(AsyncFunctionEx<? super T, U> fn);
+
+	<U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -482,7 +535,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	<U> Promise<U> then(BiFunctionEx<? super T, @Nullable Exception, Promise<? extends U>> fn);
+	default <U> Promise<U> then(AsyncBiFunctionEx<? super T, @Nullable Exception, U> fn) {
+		return then2((t, e, cb) -> fn.apply(t, e).run(cb));
+	}
+
+	<U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -502,10 +559,14 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * function applied either to a result or an exception of {@code this} promise.
 	 */
 	default <U> Promise<U> then(
-			FunctionEx<? super T, Promise<? extends U>> fn,
-			FunctionEx<Exception, Promise<? extends U>> exceptionFn) {
+			AsyncFunctionEx<? super T, U> fn,
+			AsyncFunctionEx<Exception, U> exceptionFn) {
 		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
+
+	<U> Promise<U> then2(
+			CallbackFunctionEx<? super T, U> fn,
+			CallbackFunctionEx<Exception, U> exceptionFn);
 
 	/**
 	 * Subscribes given consumer to be executed

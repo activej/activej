@@ -17,6 +17,12 @@
 package io.activej.promise;
 
 import io.activej.async.callback.Callback;
+import io.activej.async.callback.CallbackBiFunctionEx;
+import io.activej.async.callback.CallbackFunctionEx;
+import io.activej.async.callback.CallbackSupplierEx;
+import io.activej.async.function.AsyncBiFunctionEx;
+import io.activej.async.function.AsyncFunctionEx;
+import io.activej.async.function.AsyncSupplierEx;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.common.recycle.Recyclers;
@@ -110,11 +116,10 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public final <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn) {
+	public final <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn) {
 		try {
-			return (Promise<U>) fn.apply(getResult());
+			return fn.apply(getResult());
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
@@ -122,20 +127,49 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(SupplierEx<Promise<? extends U>> fn) {
+	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn) {
 		try {
-			return (Promise<U>) fn.get();
+			return Promise.ofCallback2(getResult(), fn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public final <U> Promise<U> then(BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
+	public <U> Promise<U> then(AsyncSupplierEx<U> fn) {
 		try {
-			return (Promise<U>) fn.apply(getResult(), null);
+			return fn.get();
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackSupplierEx<U> fn) {
+		try {
+			return Promise.ofCallback2(fn);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public final <U> Promise<U> then(AsyncBiFunctionEx<? super T, Exception, U> fn) {
+		try {
+			return fn.apply(getResult(), null);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
+		try {
+			return Promise.ofCallback2(getResult(), null, fn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
@@ -144,10 +178,20 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@Override
 	public <U> Promise<U> then(
-			FunctionEx<? super T, Promise<? extends U>> fn,
-			FunctionEx<Exception, Promise<? extends U>> exceptionFn) {
+			AsyncFunctionEx<? super T, U> fn,
+			AsyncFunctionEx<Exception, U> exceptionFn) {
 		try {
-			return (Promise<U>) fn.apply(getResult());
+			return fn.apply(getResult());
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
+		try {
+			return Promise.ofCallback2(getResult(), null, fn, exceptionFn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);

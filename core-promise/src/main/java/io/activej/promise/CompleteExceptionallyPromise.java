@@ -17,6 +17,12 @@
 package io.activej.promise;
 
 import io.activej.async.callback.Callback;
+import io.activej.async.callback.CallbackBiFunctionEx;
+import io.activej.async.callback.CallbackFunctionEx;
+import io.activej.async.callback.CallbackSupplierEx;
+import io.activej.async.function.AsyncBiFunctionEx;
+import io.activej.async.function.AsyncFunctionEx;
+import io.activej.async.function.AsyncSupplierEx;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.common.recycle.Recyclers;
@@ -129,19 +135,39 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn) {
+	public <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public <U> Promise<U> then(SupplierEx<Promise<? extends U>> fn) {
+	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public <U> Promise<U> then(BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
+	public <U> Promise<U> then(AsyncSupplierEx<U> fn) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackSupplierEx<U> fn) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public <U> Promise<U> then(AsyncBiFunctionEx<? super T, Exception, U> fn) {
 		try {
-			return (Promise<U>) fn.apply(null, exception);
+			return fn.apply(null, exception);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
+		try {
+			return Promise.ofCallback2(null, exception, fn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
@@ -150,10 +176,20 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@Override
 	public <U> Promise<U> then(
-			FunctionEx<? super T, Promise<? extends U>> fn,
-			FunctionEx<Exception, Promise<? extends U>> exceptionFn) {
+			AsyncFunctionEx<? super T, U> fn,
+			AsyncFunctionEx<Exception, U> exceptionFn) {
 		try {
 			return (Promise<U>) exceptionFn.apply(exception);
+		} catch (Exception ex) {
+			handleError(ex, this);
+			return Promise.ofException(ex);
+		}
+	}
+
+	@Override
+	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
+		try {
+			return Promise.ofCallback2(null, exception, fn, exceptionFn);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);
