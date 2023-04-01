@@ -323,7 +323,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 	private <T> StreamConsumer<T> uploadNonEmpty(String filename, Function<T, CrdtReducingData<K, S>> mapping) {
 		SettablePromise<ChannelConsumer<ByteBuf>> consumerPromise = new SettablePromise<>();
 		NonEmptyFilter<T> nonEmptyFilter = new NonEmptyFilter<>(() -> fileSystem.upload(filename)
-				.whenComplete(consumerPromise::accept));
+				.whenComplete(consumerPromise::set));
 
 		return StreamConsumers.ofSupplier(supplier ->
 				supplier

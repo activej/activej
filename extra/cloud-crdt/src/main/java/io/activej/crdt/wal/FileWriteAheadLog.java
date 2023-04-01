@@ -336,7 +336,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 						SettablePromise<Void> writeCallback = this.writeCallback;
 						this.writeCallback = null;
 						return writer.accept(value)
-								.whenComplete(writeCallback::accept);
+								.whenComplete(writeCallback::set);
 					}))));
 		}
 

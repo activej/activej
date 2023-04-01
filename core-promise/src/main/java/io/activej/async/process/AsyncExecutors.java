@@ -55,7 +55,7 @@ public class AsyncExecutors {
 					currentReactor.startExternalTask();
 					reactor.execute(runnableOf(cb, () -> supplier.get()
 							.run((result, e) -> {
-								currentReactor.execute(runnableOf(cb, () -> cb.accept(result, e)));
+								currentReactor.execute(runnableOf(cb, () -> cb.set(result, e)));
 								currentReactor.completeExternalTask();
 							})));
 				});
@@ -98,14 +98,14 @@ public class AsyncExecutors {
 					Promise<Object> promise = supplier.get();
 					if (promise.isComplete()) {
 						pendingCalls--;
-						cb.accept(promise.getResult(), promise.getException());
+						cb.set(promise.getResult(), promise.getException());
 						continue;
 					}
 					promise
 							.run((result, e) -> {
 								pendingCalls--;
 								processBuffer();
-								cb.accept(result, e);
+								cb.set(result, e);
 							});
 				}
 			}

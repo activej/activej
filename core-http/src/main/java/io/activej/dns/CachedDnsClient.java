@@ -124,7 +124,7 @@ public final class CachedDnsClient extends AbstractReactive
 						reactor.execute(() ->
 								CachedDnsClient.this.resolve(query)
 										.run((result, e) -> {
-											anotherReactor.execute(runnableOf(cb, () -> cb.accept(result, e)));
+											anotherReactor.execute(runnableOf(cb, () -> cb.set(result, e)));
 											anotherReactor.completeExternalTask();
 										})));
 			}

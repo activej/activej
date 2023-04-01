@@ -51,7 +51,10 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 
 	protected @Nullable Exception exception;
 
-	protected @Nullable Callback<? super T> next;
+	// instanceof NextPromise<? super T, ?>
+	// instanceof Callback<? super T>
+	// instanceof Object[]
+	protected @Nullable Object next;
 
 	public void reset() {
 		this.result = (T) PROMISE_NOT_SET;
@@ -104,28 +107,56 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 	}
 
+	@SuppressWarnings({"rawtypes", "ForLoopReplaceableByForEach"})
 	@Async.Execute
 	protected void complete(@Nullable T value) {
 		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		result = value;
-		if (next != null) {
-			next.accept(value, null);
-			if (RESET_CALLBACKS) {
-				next = null;
+		if (next instanceof NextPromise cb) {
+			cb.acceptNext(value, null);
+		} else if (next instanceof Callback cb) {
+			cb.accept(value, null);
+		} else if (next instanceof Object[] list) {
+			for (int i = 0; i < list.length; i++) {
+				Object it = list[i];
+				if (it instanceof NextPromise cb) {
+					cb.acceptNext(value, null);
+				} else if (it instanceof Callback cb) {
+					cb.accept(value, null);
+				} else {
+					break;
+				}
 			}
+		}
+		if (RESET_CALLBACKS) {
+			next = null;
 		}
 	}
 
+	@SuppressWarnings({"rawtypes", "ForLoopReplaceableByForEach"})
 	@Async.Execute
 	protected void completeExceptionally(@Nullable Exception e) {
 		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		result = null;
 		exception = e;
-		if (next != null) {
-			next.accept(null, e);
-			if (RESET_CALLBACKS) {
-				next = null;
+		if (next instanceof NextPromise cb) {
+			cb.acceptNext(null, exception);
+		} else if (next instanceof Callback cb) {
+			cb.accept(null, exception);
+		} else if (next instanceof Object[] list) {
+			for (int i = 0; i < list.length; i++) {
+				Object it = list[i];
+				if (it instanceof NextPromise cb) {
+					cb.acceptNext(null, exception);
+				} else if (it instanceof Callback cb) {
+					cb.accept(null, exception);
+				} else {
+					break;
+				}
 			}
+		}
+		if (RESET_CALLBACKS) {
+			next = null;
 		}
 	}
 
@@ -153,25 +184,20 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		return false;
 	}
 
-	@Override
-	public <U> Promise<U> next(@Async.Schedule NextPromise<T, U> promise) {
-		if (isComplete()) {
-			promise.accept(result, exception);
-			return promise;
-		}
-		subscribe(promise);
-		return promise;
-	}
-
 	@Async.Schedule
-	protected void subscribe(Callback<? super T> callback) {
+	protected void subscribe(NextPromise<? super T, ?> callback) {
 		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		if (next == null) {
 			next = callback;
-		} else if (next instanceof CallbackList) {
-			((CallbackList<T>) next).add(callback);
+		} else if (next instanceof Object[] array) {
+			array = Arrays.copyOf(array, array.length + 1);
+			array[array.length - 1] = callback;
+			next = array;
 		} else {
-			next = new CallbackList<>(next, callback);
+			Object[] array = new Object[2];
+			array[0] = next;
+			array[1] = callback;
+			next = array;
 		}
 	}
 
@@ -187,7 +213,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					U newResult;
 					try {
@@ -224,7 +250,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, Exception e) {
+			public void acceptNext(T result, Exception e) {
 				U newResult;
 				try {
 					newResult = fn.apply(result, e);
@@ -257,7 +283,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, Exception e) {
+			public void acceptNext(T result, Exception e) {
 				U newResult;
 				try {
 					newResult = e == null ? fn.apply(result) : exceptionFn.apply(e);
@@ -290,7 +316,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(result);
 				} else {
@@ -328,7 +354,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(result);
 				} else {
@@ -367,7 +393,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(result);
 				} else {
@@ -403,7 +429,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					Promise<? extends U> promise;
 					try {
@@ -413,7 +439,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this::complete);
+					promise.run(this);
 				} else {
 					completeExceptionally(e);
 				}
@@ -440,7 +466,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					Promise<? extends U> promise;
 					try {
@@ -450,7 +476,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this::complete);
+					promise.run(this);
 				} else {
 					completeExceptionally(e);
 				}
@@ -477,7 +503,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					Promise<? extends U> promise;
 					try {
@@ -487,7 +513,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this::complete);
+					promise.run(this);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -497,7 +523,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this::complete);
+					promise.run(this);
 				}
 			}
 
@@ -522,7 +548,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					Promise<? extends U> promise;
 					try {
@@ -532,7 +558,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this::complete);
+					promise.run(this);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -542,7 +568,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this::complete);
+					promise.run(this);
 				}
 			}
 
@@ -570,7 +596,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (predicate.test(result, e)) {
 						fn.accept(result, e);
@@ -613,7 +639,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (predicate.test(result, e)) {
 						if (e == null) {
@@ -659,7 +685,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (predicate.test(result, e)) {
 						action.run();
@@ -694,7 +720,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					fn.accept(result, e);
 				} catch (Exception ex) {
@@ -731,7 +757,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (e == null) {
 						fn.accept(result);
@@ -768,7 +794,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					action.run();
 				} catch (Exception ex) {
@@ -803,7 +829,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					try {
 						fn.accept(result);
@@ -842,7 +868,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (e == null && predicate.test(result)) {
 						fn.accept(result);
@@ -879,7 +905,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					try {
 						action.run();
@@ -918,7 +944,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (e == null && predicate.test(result)) {
 						action.run();
@@ -955,7 +981,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(result);
 				} else {
@@ -994,7 +1020,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (e != null && predicate.test(e)) {
 						fn.accept(e);
@@ -1031,7 +1057,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result1, @Nullable Exception e) {
+			public void acceptNext(T result1, @Nullable Exception e) {
 				try {
 					if (e != null && clazz.isAssignableFrom(e.getClass())) {
 						fn.accept((E) e);
@@ -1068,7 +1094,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(result);
 				} else {
@@ -1107,7 +1133,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (e != null && predicate.test(e)) {
 						action.run();
@@ -1144,7 +1170,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				try {
 					if (e != null && clazz.isAssignableFrom(e.getClass())) {
 						action.run();
@@ -1218,7 +1244,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 
 		@Override
-		public void accept(T result, @Nullable Exception e) {
+		public void acceptNext(T result, @Nullable Exception e) {
 			if (e == null) {
 				if (otherResult != NO_RESULT) {
 					onBothResults(result, otherResult);
@@ -1283,7 +1309,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			return (Promise<Void>) other;
 		}
 		PromiseBoth<Object> resultPromise = new PromiseBoth<>();
-		other.run(resultPromise);
+		other.next(resultPromise);
 		subscribe(resultPromise);
 		return resultPromise;
 	}
@@ -1297,7 +1323,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		int counter = 2;
 
 		@Override
-		public void accept(T result, @Nullable Exception e) {
+		public void acceptNext(T result, @Nullable Exception e) {
 			if (e == null) {
 				Recyclers.recycle(result);
 				if (--counter == 0) {
@@ -1331,7 +1357,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			return this;
 		}
 		EitherPromise<T> resultPromise = new EitherPromise<>();
-		other.run(resultPromise);
+		other.next(resultPromise);
 		subscribe(resultPromise);
 		return resultPromise;
 	}
@@ -1340,7 +1366,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		int errors = 2;
 
 		@Override
-		public void accept(T result, @Nullable Exception e) {
+		public void acceptNext(T result, @Nullable Exception e) {
 			if (e == null) {
 				if (!tryComplete(result)) {
 					Recyclers.recycle(result);
@@ -1365,7 +1391,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, Try<T>> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(Try.of(result));
 				} else {
@@ -1389,7 +1415,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		NextPromise<T, Void> resultPromise = new NextPromise<>() {
 			@Override
-			public void accept(T result, @Nullable Exception e) {
+			public void acceptNext(T result, @Nullable Exception e) {
 				if (e == null) {
 					complete(null);
 				} else {
@@ -1407,12 +1433,35 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
+	public void next(NextPromise<? super T, ?> cb) {
+		if (isComplete()) {
+			cb.acceptNext(result, exception);
+			return;
+		}
+		subscribe(cb);
+	}
+
+	@Override
 	public void run(Callback<? super T> cb) {
 		if (isComplete()) {
 			cb.accept(result, exception);
 			return;
 		}
-		subscribe(cb);
+		if (cb instanceof NextPromise) {
+			cb = cb::accept;
+		}
+		if (next == null) {
+			next = cb;
+		} else if (next instanceof Object[] array) {
+			array = Arrays.copyOf(array, array.length + 1);
+			array[array.length - 1] = cb;
+			next = array;
+		} else {
+			Object[] array = new Object[2];
+			array[0] = next;
+			array[1] = cb;
+			next = array;
+		}
 	}
 
 	@Override
@@ -1427,7 +1476,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			}
 		}
 		CompletableFuture<T> future = new CompletableFuture<>();
-		subscribe(new SimpleCallback<>() {
+		run(new Callback<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1445,52 +1494,24 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		return future;
 	}
 
-	public static class CallbackList<T> implements Callback<T> {
-		private int index = 2;
-		private Callback<? super T>[] callbacks = new Callback[4];
-
-		public CallbackList(Callback<? super T> first, Callback<? super T> second) {
-			callbacks[0] = first;
-			callbacks[1] = second;
-		}
-
-		public void add(Callback<? super T> callback) {
-			if (index == callbacks.length) {
-				callbacks = Arrays.copyOf(callbacks, callbacks.length * 2);
-			}
-			callbacks[index++] = callback;
-		}
-
-		@Override
-		public void accept(T result, @Nullable Exception e) {
-			for (int i = 0; i < index; i++) {
-				callbacks[i].accept(result, e);
-			}
-		}
-	}
-
 	private static final String INDENT = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
 	private static final Pattern PACKAGE_NAME_AND_LAMBDA_PART = Pattern.compile("^(?:" + INDENT + "\\.)*((?:" + INDENT + "?)\\$\\$Lambda\\$\\d+)/.*$");
 
 	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-	private static <T> void appendChildren(StringBuilder sb, Callback<T> callback, String indent) {
+	private static <T> void appendChildren(StringBuilder sb, Object callback, String indent) {
 		if (callback == null) {
 			return;
 		}
-		if (callback instanceof CallbackList<? super T> callbackList) {
-			for (int i = 0; i < callbackList.index; i++) {
-				appendChildren(sb, callbackList.callbacks[i], indent);
+		if (callback instanceof Object[] nextCallbacks) {
+			for (int i = 0; i < nextCallbacks.length; i++) {
+				appendChildren(sb, nextCallbacks[i], indent);
+				if (nextCallbacks[i] == null) break;
 			}
 		} else {
 			indent += "\t";
 			sb.append("\n");
 			if (callback instanceof AbstractPromise) {
 				sb.append(((AbstractPromise<T>) callback).toString(indent));
-			} else if (!(callback instanceof SimpleCallback)) {
-				sb.append(indent)
-						.append(".whenComplete(")
-						.append(formatToString(callback))
-						.append(')');
 			} else {
 				sb.append(indent + callback);
 			}

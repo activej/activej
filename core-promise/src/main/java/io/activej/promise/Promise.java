@@ -21,6 +21,7 @@ import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.reactor.Reactor;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -174,11 +175,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			completionStage.whenCompleteAsync((result, throwable) -> {
 				reactor.execute(runnableOf(cb, () -> {
 					if (throwable == null) {
-						cb.accept(result, null);
+						cb.set(result, null);
 					} else {
 						Exception e = getExceptionOrThrowError(throwable);
 						handleError(e, cb);
-						cb.accept(null, e);
+						cb.set(null, e);
 					}
 				}));
 				reactor.completeExternalTask();
@@ -309,17 +310,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	@Contract(pure = true)
 	Promise<T> async();
-
-	/**
-	 * Executes given {@link NextPromise} after execution
-	 * of this {@code Promise} completes.
-	 *
-	 * @param promise given {@link NextPromise}
-	 * @param <U>     type of result
-	 * @return subscribed {@code Promise}
-	 */
-	@Contract("_ -> param1")
-	<U> Promise<U> next(NextPromise<T, U> promise);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -930,6 +920,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param cb a callback to be called once a promise completes
 	 */
+	@ApiStatus.Internal
+	void next(NextPromise<? super T, ?> cb);
+
 	@Override
 	void run(Callback<? super T> cb);
 

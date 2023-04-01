@@ -24,7 +24,7 @@ public final class OfAnotherReactor<T> extends AbstractChannelSupplier<T> {
 		anotherReactor.execute(() ->
 				anotherReactorSupplier.get()
 						.run((item, e) -> {
-							reactor.execute(() -> promise.accept(item, e));
+							reactor.execute(() -> promise.set(item, e));
 							reactor.completeExternalTask();
 						}));
 		return promise;

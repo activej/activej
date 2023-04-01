@@ -16,9 +16,17 @@
 
 package io.activej.promise;
 
+import io.activej.async.callback.Callback;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Helps to create sequent chains of {@code Promise}s.
  */
-public abstract class NextPromise<T, R> extends AbstractPromise<R> implements SimpleCallback<T> {
+public abstract class NextPromise<T, R> extends AbstractPromise<R> implements Callback<R> {
+	@Override
+	public void accept(R result, @Nullable Exception e) {
+		complete(result, e);
+	}
 
+	public abstract void acceptNext(T result, @Nullable Exception e);
 }

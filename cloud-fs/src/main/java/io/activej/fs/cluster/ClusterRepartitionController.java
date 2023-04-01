@@ -205,7 +205,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 						logger.info("repartition finished, {} files ensured, {} errored", ensuredFiles, failedFiles);
 					}
 					if (closeCallback != null) {
-						closeCallback.accept($, e);
+						closeCallback.set($, e);
 					}
 					return Promise.complete();
 				});
@@ -335,7 +335,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 																			logger.warn("failed uploading to partition {}", partitionId, e);
 																			partitions.markIfDead(partitionId, e);
 																		})
-																				.whenComplete(cb::accept))));
+																				.whenComplete(cb::set))));
 									})
 									.map(Promise::toTry))
 							.then(tries -> {

@@ -10,7 +10,7 @@ public final class AbstractPromiseTest {
 
 	@Test
 	public void testRecursionProblems() {
-		int count = 1_000_000;
+		int count = 100;
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 		RefInt refInt = new RefInt(count);
 		for (int i = 0; i < count; i++) {

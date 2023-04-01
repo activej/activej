@@ -71,12 +71,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return Try.ofException(exception);
 	}
 
-	@Override
-	public <U> Promise<U> next(NextPromise<T, U> promise) {
-		promise.accept(null, exception);
-		return promise;
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn) {
@@ -365,6 +359,11 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@Override
 	public Promise<Void> toVoid() {
 		return (Promise<Void>) this;
+	}
+
+	@Override
+	public void next(NextPromise<? super T, ?> cb) {
+		cb.acceptNext(null, exception);
 	}
 
 	@Override

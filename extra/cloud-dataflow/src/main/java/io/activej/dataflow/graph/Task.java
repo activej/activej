@@ -141,7 +141,7 @@ public final class Task {
 							e instanceof AsyncCloseException ?
 									TaskStatus.CANCELED :
 									TaskStatus.FAILED;
-					executionPromise.accept($, e);
+					executionPromise.set($, e);
 				});
 	}
 

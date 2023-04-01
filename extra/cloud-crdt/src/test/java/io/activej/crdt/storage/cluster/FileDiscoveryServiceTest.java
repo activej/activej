@@ -320,7 +320,7 @@ public class FileDiscoveryServiceTest {
 								if (onChangePromise != null) {
 									SettablePromise<Void> onChangePromise = this.onChangePromise;
 									this.onChangePromise = null;
-									onChangePromise.accept(null, e);
+									onChangePromise.set(null, e);
 								}
 							}
 					);

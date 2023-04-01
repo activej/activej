@@ -48,8 +48,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 *               be set to this {@code SettablePromise}
 	 *               if not {@code null}
 	 */
-	@Override
-	public void accept(T result, @Nullable Exception e) {
+	public void set(T result, @Nullable Exception e) {
 		if (e == null) {
 			set(result);
 		} else {
@@ -133,7 +132,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	}
 
 	public void post(T result, @Nullable Exception e) {
-		getCurrentReactor().post(runnableOf(this, () -> accept(result, e)));
+		getCurrentReactor().post(runnableOf(this, () -> set(result, e)));
 	}
 
 	public void tryPost(T result) {
@@ -151,5 +150,10 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	@Override
 	public String describe() {
 		return "SettablePromise";
+	}
+
+	@Override
+	public void accept(T result, @Nullable Exception e) {
+		set(result, e);
 	}
 }

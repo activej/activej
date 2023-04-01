@@ -43,7 +43,8 @@ import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.iteratorOf;
+import static io.activej.common.Utils.transformIterator;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.promise.PromisePredicates.isResult;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -76,24 +77,16 @@ public class Promises {
 	public static <T> Promise<T> timeout(long delay, Promise<T> promise) {
 		if (promise.isComplete()) return promise;
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
-		return promise.next(new NextPromise<>() {
-			@Nullable ScheduledRunnable schedule = getCurrentReactor().delay(delay,
-					runnableOf(this, () -> {
-						promise.whenResult(Recyclers::recycle);
-						schedule = null;
-						tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"));
-					}));
-
-			@Override
-			public void accept(T result, @Nullable Exception e) {
-				schedule = nullify(schedule, ScheduledRunnable::cancel);
-				if (e == null) {
-					tryComplete(result);
-				} else {
-					tryCompleteExceptionally(e);
-				}
+		SettablePromise<T> settablePromise = new SettablePromise<>();
+		ScheduledRunnable schedule = getCurrentReactor().delay(delay,
+				runnableOf(promise, () -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"))));
+		promise.run((result, e) -> {
+			schedule.cancel();
+			if (!settablePromise.trySet(result, e)) {
+				Recyclers.recycle(result);
 			}
 		});
+		return settablePromise;
 	}
 
 	@Contract(pure = true)
@@ -139,7 +132,7 @@ public class Promises {
 	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.run(cb))));
+				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.whenComplete(cb::set))));
 	}
 
 	@Contract(pure = true)
@@ -204,7 +197,7 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.run(cb))));
+				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.whenComplete(cb::set))));
 	}
 
 	/**
@@ -290,7 +283,7 @@ public class Promises {
 				return Promise.ofException(promise.getException());
 			}
 			resultPromise.countdown++;
-			promise.run(resultPromise);
+			promise.next(resultPromise);
 		}
 		resultPromise.countdown--;
 		return resultPromise.countdown == 0 ? Promise.complete() : resultPromise;
@@ -408,7 +401,7 @@ public class Promises {
 				continue;
 			}
 			resultPromise.countdown++;
-			promise.run(resultPromise);
+			promise.next(resultPromise);
 		}
 		resultPromise.countdown--;
 		return resultPromise.countdown == 0 ? any() : resultPromise;
@@ -915,7 +908,7 @@ public class Promises {
 				T v = nextPromise.getResult();
 				Exception e = nextPromise.getException();
 				if (predicate.test(v, e)) {
-					cb.accept(v, e);
+					cb.set(v, e);
 					return;
 				}
 				Recyclers.recycle(v);
@@ -923,7 +916,7 @@ public class Promises {
 			}
 			nextPromise.run((v, e) -> {
 				if (predicate.test(v, e)) {
-					cb.accept(v, e);
+					cb.set(v, e);
 				} else {
 					Recyclers.recycle(v);
 					firstImpl(promises, predicate, cb);
@@ -1043,7 +1036,7 @@ public class Promises {
 		next.get()
 				.run((v, e) -> {
 					if (breakCondition.test(v, e)) {
-						cb.accept(v, e);
+						cb.set(v, e);
 					} else {
 						Reactor reactor = getCurrentReactor();
 						long now = reactor.currentTimeMillis();
@@ -1220,7 +1213,7 @@ public class Promises {
 		int countdown = 1;
 
 		@Override
-		public void accept(@Nullable T result, @Nullable Exception e) {
+		public void acceptNext(@Nullable T result, @Nullable Exception e) {
 			if (e == null) {
 				Recyclers.recycle(result);
 				if (--countdown == 0) {
@@ -1246,7 +1239,7 @@ public class Promises {
 		}
 
 		@Override
-		public void accept(@Nullable T result, @Nullable Exception e) {
+		public void acceptNext(@Nullable T result, @Nullable Exception e) {
 			if (predicate.test(result, e)) {
 				if (!tryComplete(result, e)) {
 					Recyclers.recycle(result);

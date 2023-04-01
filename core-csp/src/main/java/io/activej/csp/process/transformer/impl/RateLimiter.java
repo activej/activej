@@ -101,7 +101,7 @@ public final class RateLimiter<T> extends AbstractChannelTransformer<RateLimiter
 				scheduledRunnable = reactor.delay(
 						calculateDelay(itemTokens),
 						() -> onItem(item)
-								.whenComplete(cb::accept))
+								.whenComplete(cb::set))
 		);
 	}
 

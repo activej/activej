@@ -65,12 +65,6 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public final <U> Promise<U> next(NextPromise<T, U> promise) {
-		promise.accept(getResult(), null);
-		return promise;
-	}
-
-	@Override
 	public final <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult()));
@@ -345,6 +339,11 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@Override
 	public final Promise<Void> toVoid() {
 		return Promise.complete();
+	}
+
+	@Override
+	public void next(NextPromise<? super T, ?> cb) {
+		cb.acceptNext(getResult(), null);
 	}
 
 	@Override
