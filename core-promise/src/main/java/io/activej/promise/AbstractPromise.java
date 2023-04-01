@@ -439,7 +439,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this);
+					promise.call(this);
 				} else {
 					completeExceptionally(e);
 				}
@@ -510,7 +510,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this);
+					promise.call(this);
 				} else {
 					completeExceptionally(e);
 				}
@@ -581,7 +581,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this);
+					promise.call(this);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -591,7 +591,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this);
+					promise.call(this);
 				}
 			}
 
@@ -666,7 +666,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this);
+					promise.call(this);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -676,7 +676,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.run(this);
+					promise.call(this);
 				}
 			}
 
@@ -1101,7 +1101,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			return (Promise<V>) other;
 		}
 		PromiseCombine<T, V, U> resultPromise = new PromiseCombine<>(fn);
-		other.run(resultPromise::acceptOther);
+		other.call(resultPromise::acceptOther);
 		subscribe(resultPromise);
 		return resultPromise;
 	}
@@ -1315,7 +1315,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(Callback<? super T> cb) {
+	public void call(Callback<? super T> cb) {
 		if (isComplete()) {
 			cb.accept(result, exception);
 			return;
@@ -1349,7 +1349,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			}
 		}
 		CompletableFuture<T> future = new CompletableFuture<>();
-		run(new Callback<>() {
+		call(new Callback<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {

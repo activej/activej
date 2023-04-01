@@ -123,7 +123,7 @@ public final class CachedDnsClient extends AbstractReactive
 				return Promise.ofCallback(cb ->
 						reactor.execute(() ->
 								CachedDnsClient.this.resolve(query)
-										.run((result, e) -> {
+										.call((result, e) -> {
 											anotherReactor.execute(runnableOf(cb, () -> cb.set(result, e)));
 											anotherReactor.completeExternalTask();
 										})));
@@ -152,7 +152,7 @@ public final class CachedDnsClient extends AbstractReactive
 		}
 		logger.trace("Refreshing {}", query);
 		client.resolve(query)
-				.run((response, e) -> {
+				.call((response, e) -> {
 					addToCache(query, response, e);
 					refreshingNow.remove(query);
 				});
@@ -179,7 +179,7 @@ public final class CachedDnsClient extends AbstractReactive
 		Promise<DnsResponse> promise = pending.get(query);
 		if (promise != null) return promise;
 		Promise<DnsResponse> resolve = client.resolve(query);
-		resolve.run((response, e) -> addToCache(query, response, e));
+		resolve.call((response, e) -> addToCache(query, response, e));
 		if (resolve.isComplete()) return resolve;
 		pending.put(query, resolve);
 		return resolve.whenComplete(() -> pending.remove(query));

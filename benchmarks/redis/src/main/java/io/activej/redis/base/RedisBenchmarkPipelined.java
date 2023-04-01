@@ -23,7 +23,7 @@ public abstract class RedisBenchmarkPipelined extends AbstractRedisBenchmark {
 	@Override
 	protected void onStart(RedisConnection connection, Callback<Object> cb) {
 		for (int i = 0; i < min(activeRequestsMax, totalRequests); i++, sent++) {
-			redisCommand(connection).run(cb);
+			redisCommand(connection).call(cb);
 		}
 	}
 
@@ -31,7 +31,7 @@ public abstract class RedisBenchmarkPipelined extends AbstractRedisBenchmark {
 	protected void onResponse(RedisConnection connection, Callback<Object> cb, int active) {
 		if (active <= activeRequestsMin) {
 			for (int i = 0; i < min(activeRequestsMax - active, totalRequests - sent); i++, sent++) {
-				redisCommand(connection).run(cb);
+				redisCommand(connection).call(cb);
 			}
 		}
 	}

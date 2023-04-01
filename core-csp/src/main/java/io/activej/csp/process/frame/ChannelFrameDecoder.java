@@ -107,7 +107,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	protected void doProcess() {
 		decode()
-				.run((result, e) -> {
+				.call((result, e) -> {
 					if (e instanceof TruncatedDataException) {
 						if (bufs.isEmpty()) {
 							if (decoder.ignoreMissingEndOfStreamBlock()) {

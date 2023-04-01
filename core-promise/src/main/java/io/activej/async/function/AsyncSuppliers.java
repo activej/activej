@@ -93,7 +93,7 @@ public final class AsyncSuppliers {
 					prefetchCalls++;
 					prefetchSupplier.get()
 							.async()
-							.run((value, e) -> {
+							.call((value, e) -> {
 								prefetchCalls--;
 								if (e == null) {
 									prefetched.addLast(value);

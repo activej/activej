@@ -80,7 +80,7 @@ public class Promises {
 		SettablePromise<T> settablePromise = new SettablePromise<>();
 		ScheduledRunnable schedule = getCurrentReactor().delay(delay,
 				runnableOf(promise, () -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"))));
-		promise.run((result, e) -> {
+		promise.call((result, e) -> {
 			schedule.cancel();
 			if (!settablePromise.trySet(result, e)) {
 				Recyclers.recycle(result);
@@ -818,7 +818,7 @@ public class Promises {
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
 			if (promise.isResult()) continue;
-			promise.run((result, e) -> {
+			promise.call((result, e) -> {
 				if (e == null) {
 					sequenceImpl(promises, cb);
 				} else {
@@ -914,7 +914,7 @@ public class Promises {
 				Recyclers.recycle(v);
 				continue;
 			}
-			nextPromise.run((v, e) -> {
+			nextPromise.call((v, e) -> {
 				if (predicate.test(v, e)) {
 					cb.set(v, e);
 				} else {
@@ -945,7 +945,7 @@ public class Promises {
 				cb.set(null);
 				break;
 			}
-			promise.run((b, e) -> {
+			promise.call((b, e) -> {
 				if (e == null) {
 					if (b == Boolean.TRUE) {
 						repeatImpl(supplier, cb);
@@ -992,7 +992,7 @@ public class Promises {
 					break;
 				}
 			} else {
-				promise.run((newValue, e) -> {
+				promise.call((newValue, e) -> {
 					if (e == null) {
 						if (breakCondition.test(newValue)) {
 							cb.set(newValue);
@@ -1034,7 +1034,7 @@ public class Promises {
 			RetryPolicy<Object> retryPolicy, Object retryState,
 			SettableCallback<T> cb) {
 		next.get()
-				.run((v, e) -> {
+				.call((v, e) -> {
 					if (breakCondition.test(v, e)) {
 						cb.set(v, e);
 					} else {
@@ -1281,7 +1281,7 @@ public class Promises {
 				}
 			} else {
 				countdown++;
-				promise.run((result, e) -> {
+				promise.call((result, e) -> {
 					if (e == null) {
 						if (!isComplete()) {
 							array[i] = result;

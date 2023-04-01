@@ -338,7 +338,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			if (item == null) break;
 			Promise<Void> consumerPromise = consumer.accept(item);
 			if (consumerPromise.isResult()) continue;
-			consumerPromise.run(($, e) -> {
+			consumerPromise.call(($, e) -> {
 				if (e == null) {
 					streamToImpl(supplier, consumer, cb);
 				} else {
@@ -349,10 +349,10 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			return;
 		}
 		supplierPromise
-				.run((item, e1) -> {
+				.call((item, e1) -> {
 					if (e1 == null) {
 						consumer.accept(item)
-								.run(($, e2) -> {
+								.call(($, e2) -> {
 									if (e2 == null) {
 										if (item != null) {
 											streamToImpl(supplier, consumer, cb);
@@ -392,7 +392,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			}
 			break;
 		}
-		promise.run((value, e) -> {
+		promise.call((value, e) -> {
 			if (e == null) {
 				if (value != null) {
 					try {

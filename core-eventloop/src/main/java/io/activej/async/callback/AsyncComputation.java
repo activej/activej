@@ -22,7 +22,7 @@ import io.activej.common.function.SupplierEx;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 
 public interface AsyncComputation<T> {
-	void run(Callback<? super T> cb);
+	void call(Callback<? super T> cb);
 
 	static AsyncComputation<Void> of(RunnableEx runnable) {
 		return cb -> {
@@ -61,7 +61,7 @@ public interface AsyncComputation<T> {
 				cb.accept(null, ex);
 				return;
 			}
-			computation.run(cb);
+			computation.call(cb);
 		};
 	}
 }

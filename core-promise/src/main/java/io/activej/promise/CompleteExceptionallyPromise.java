@@ -321,7 +321,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(Callback<? super T> cb) {
+	public void call(Callback<? super T> cb) {
 		cb.accept(null, exception);
 	}
 

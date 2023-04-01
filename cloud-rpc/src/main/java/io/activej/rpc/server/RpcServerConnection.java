@@ -87,7 +87,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 		Object messageData = message.getMessage();
 		serve(messageData)
-				.run((result, e) -> {
+				.call((result, e) -> {
 					if (startTime != 0) {
 						int value = (int) (System.currentTimeMillis() - startTime);
 						requestHandlingTime.recordValue(value);

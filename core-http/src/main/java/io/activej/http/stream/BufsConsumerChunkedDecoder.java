@@ -123,7 +123,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							this.bufs.skip(bytes - 1);
 							return chunkLength;
 						})
-				.run((chunkLength, e) -> {
+				.call((chunkLength, e) -> {
 					if (e == null) {
 						if (chunkLength != 0) {
 							consumeCRLF(chunkLength);
@@ -161,7 +161,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							}
 							return maybeResult;
 						})
-				.run((buf, e) -> {
+				.call((buf, e) -> {
 					if (e == null) {
 						buf.recycle();
 						processData(chunkLength);

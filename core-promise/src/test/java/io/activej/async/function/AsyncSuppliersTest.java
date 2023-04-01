@@ -80,9 +80,9 @@ public class AsyncSuppliersTest {
 		Promise<Void> promise1 = subscribe.get()
 				.whenComplete(() -> {
 					nextPromise[0] = subscribe.get();
-					nextPromise[0].run(($, e) -> {
+					nextPromise[0].call(($, e) -> {
 						nextPromise[1] = subscribe.get();
-						nextPromise[1].run(($2, e2) -> nextPromise[2] = subscribe.get());
+						nextPromise[1].call(($2, e2) -> nextPromise[2] = subscribe.get());
 					});
 				});
 
@@ -115,7 +115,7 @@ public class AsyncSuppliersTest {
 
 		Promise<Void> promise2 = subscribe.get();
 		Promise<Void> promise3 = subscribe.get();
-		promise3.run(($, e) -> nextPromiseRef.value = subscribe.get());
+		promise3.call(($, e) -> nextPromiseRef.value = subscribe.get());
 		Promise<Void> promise4 = subscribe.get();
 
 		await(promise1);
@@ -140,11 +140,11 @@ public class AsyncSuppliersTest {
 
 		Promise<Void> promise2 = subscribe.get();
 		Promise<Void> promise3 = subscribe.get();
-		promise3.run(($, e) -> {
+		promise3.call(($, e) -> {
 			nextPromise[0] = subscribe.get();
-			nextPromise[0].run(($2, e2) -> {
+			nextPromise[0].call(($2, e2) -> {
 				nextPromise[1] = subscribe.get();
-				nextPromise[1].run(($3, e3) -> nextPromise[2] = subscribe.get());
+				nextPromise[1].call(($3, e3) -> nextPromise[2] = subscribe.get());
 			});
 		});
 		Promise<Void> promise4 = subscribe.get();
@@ -176,19 +176,19 @@ public class AsyncSuppliersTest {
 
 		Promise<Void> promise2 = subscribe.get();
 		Promise<Void> promise3 = subscribe.get();
-		promise3.run(($, e) -> {
+		promise3.call(($, e) -> {
 			nextPromise1[0] = subscribe.get();
-			nextPromise1[0].run(($2, e2) -> {
+			nextPromise1[0].call(($2, e2) -> {
 				nextPromise1[1] = subscribe.get();
-				nextPromise1[1].run(($3, e3) -> nextPromise1[2] = subscribe.get());
+				nextPromise1[1].call(($3, e3) -> nextPromise1[2] = subscribe.get());
 			});
 		});
 		Promise<Void> promise4 = subscribe.get();
-		promise4.run(($, e) -> {
+		promise4.call(($, e) -> {
 			nextPromise2[0] = subscribe.get();
-			nextPromise2[0].run(($2, e2) -> {
+			nextPromise2[0].call(($2, e2) -> {
 				nextPromise2[1] = subscribe.get();
-				nextPromise2[1].run(($3, e3) -> nextPromise2[2] = subscribe.get());
+				nextPromise2[1].call(($3, e3) -> nextPromise2[2] = subscribe.get());
 			});
 		});
 

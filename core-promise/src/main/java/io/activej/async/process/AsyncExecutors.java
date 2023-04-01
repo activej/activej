@@ -54,7 +54,7 @@ public class AsyncExecutors {
 				return Promise.ofCallback(cb -> {
 					currentReactor.startExternalTask();
 					reactor.execute(runnableOf(cb, () -> supplier.get()
-							.run((result, e) -> {
+							.call((result, e) -> {
 								currentReactor.execute(runnableOf(cb, () -> cb.set(result, e)));
 								currentReactor.completeExternalTask();
 							})));
@@ -102,7 +102,7 @@ public class AsyncExecutors {
 						continue;
 					}
 					promise
-							.run((result, e) -> {
+							.call((result, e) -> {
 								pendingCalls--;
 								processBuffer();
 								cb.set(result, e);

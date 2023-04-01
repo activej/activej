@@ -126,7 +126,7 @@ public final class BlockingReactorExecutor implements ReactorExecutor {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		post(() -> {
 			try {
-				computation.run((result, e) -> {
+				computation.call((result, e) -> {
 					if (e == null) {
 						future.complete(result);
 					} else {

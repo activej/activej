@@ -1109,7 +1109,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 		CompletableFuture<T> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
-				computation.run((result, e) -> {
+				computation.call((result, e) -> {
 					if (e == null) {
 						future.complete(result);
 					} else {

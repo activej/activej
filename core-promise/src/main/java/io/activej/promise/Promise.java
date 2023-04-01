@@ -801,7 +801,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	void next(NextPromise<? super T, ?> cb);
 
 	@Override
-	void run(Callback<? super T> cb);
+	void call(Callback<? super T> cb);
 
 	/**
 	 * Wraps {@code Promise} into {@link CompletableFuture}.

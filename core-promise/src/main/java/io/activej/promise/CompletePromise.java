@@ -309,7 +309,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(Callback<? super T> cb) {
+	public void call(Callback<? super T> cb) {
 		cb.accept(getResult(), null);
 	}
 

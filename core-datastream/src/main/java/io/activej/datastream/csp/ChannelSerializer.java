@@ -209,7 +209,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 				Promise<Void> acceptPromise = output.accept(bufs.poll());
 				if (acceptPromise.isResult()) continue;
 				acceptPromise
-						.run(($, e) -> {
+						.call(($, e) -> {
 							if (e == null) {
 								sending = false;
 								send();

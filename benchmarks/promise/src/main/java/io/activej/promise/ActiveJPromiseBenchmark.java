@@ -22,7 +22,7 @@ public class ActiveJPromiseBenchmark {
 	@Benchmark
 	public void oneCallMeasure(Blackhole blackhole) {
 		SettablePromise<Integer> promise = new SettablePromise<>();
-		promise.map(a -> a + a).run((result, e) -> blackhole.consume(result));
+		promise.map(a -> a + a).call((result, e) -> blackhole.consume(result));
 		promise.set(10);
 	}
 
@@ -30,7 +30,7 @@ public class ActiveJPromiseBenchmark {
 	public void combineMeasure(Blackhole blackhole) {
 		SettablePromise<Integer> promise = new SettablePromise<>();
 		SettablePromise<Integer> additional = new SettablePromise<>();
-		promise.map(a -> a + a).then(a -> additional).run((result, e) -> blackhole.consume(result));
+		promise.map(a -> a + a).then(a -> additional).call((result, e) -> blackhole.consume(result));
 		promise.set(10);
 		additional.set(10);
 	}
