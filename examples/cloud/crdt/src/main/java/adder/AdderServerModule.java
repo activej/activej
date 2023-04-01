@@ -69,8 +69,8 @@ public final class AdderServerModule extends AbstractModule {
 					logger.info("Received 'Get' request for user {}", userId);
 
 					return map.get(userId)
-							.mapIfNonNull(SimpleSumsCrdtState::value)
-							.mapIfNull(() -> 0f)
+							.map(t -> t != null ? t.value() : null)
+							.map(t -> t == null ? 0f : t)
 							.map(GetResponse::new);
 				}
 		);

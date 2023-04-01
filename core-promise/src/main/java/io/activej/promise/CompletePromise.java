@@ -81,49 +81,6 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> mapIfElse(Predicate<? super T> predicate, FunctionEx<? super T, ? extends U> fn, FunctionEx<? super T, ? extends U> fnElse) {
-		try {
-			return Promise.of(predicate.test(getResult()) ? fn.apply(getResult()) : fnElse.apply(getResult()));
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> mapIf(Predicate<? super T> predicate, FunctionEx<? super T, ? extends T> fn) {
-		try {
-			T result = getResult();
-			return Promise.of(predicate.test(result) ? fn.apply(result) : result);
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> mapIfNull(SupplierEx<? extends T> supplier) {
-		try {
-			T result = getResult();
-			return Promise.of(result == null ? supplier.get() : result);
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public <U> Promise<U> mapIfNonNull(FunctionEx<? super T, ? extends U> fn) {
-		try {
-			T result = getResult();
-			return Promise.of(result != null ? fn.apply(result) : null);
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
 	public final <U> Promise<U> map(BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
@@ -164,47 +121,6 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	public final <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(getResult());
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public <U> Promise<U> thenIfElse(Predicate<? super T> predicate, FunctionEx<? super T, Promise<? extends U>> fn, FunctionEx<? super T, Promise<? extends U>> fnElse) {
-		try {
-			return (Promise<U>) (predicate.test(getResult()) ? fn.apply(getResult()) : fnElse.apply(getResult()));
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> thenIf(Predicate<? super T> predicate, FunctionEx<? super T, Promise<? extends T>> fn) {
-		try {
-			return (Promise<T>) (predicate.test(getResult()) ? fn.apply(getResult()) : this);
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> thenIfNull(SupplierEx<Promise<? extends T>> supplier) {
-		try {
-			return (Promise<T>) (getResult() == null ? supplier.get() : this);
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public <U> Promise<U> thenIfNonNull(FunctionEx<? super T, Promise<? extends U>> fn) {
-		try {
-			T result = getResult();
-			return (Promise<U>) (result != null ? fn.apply(result) : this);
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);

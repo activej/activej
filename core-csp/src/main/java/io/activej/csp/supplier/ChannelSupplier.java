@@ -119,9 +119,10 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
-						.mapIfNonNull(value -> {
+						.map(t -> {
+							if (t == null) return null;
 							try {
-								return fn.apply(value);
+								return fn.apply(t);
 							} catch (Exception ex) {
 								handleError(ex, fn);
 								ChannelSupplier.this.closeEx(ex);
@@ -142,7 +143,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
-						.thenIfNonNull(fn::apply);
+						.then(value -> value != null ? fn.apply(value) : Promise.of(null));
 			}
 		};
 	}
@@ -165,11 +166,11 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 						continue;
 					}
 					return promise
-							.thenIf(value -> value != null && !predicate.test(value),
-									value -> {
-										Recyclers.recycle(value);
-										return get();
-									});
+							.then(value -> {
+								if (value == null || predicate.test(value)) return Promise.of(value);
+								Recyclers.recycle(value);
+								return get();
+							});
 				}
 			}
 		};
@@ -191,7 +192,8 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 					return Promise.of(null);
 				}
 				return ChannelSupplier.this.get()
-						.mapIfNonNull(value -> {
+						.map(value -> {
+							if (value == null) return null;
 							if (predicate.test(value)) {
 								stop = true;
 							}

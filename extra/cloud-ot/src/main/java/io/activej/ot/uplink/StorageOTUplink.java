@@ -162,8 +162,8 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 
 	Promise<SyncData<K, D>> startSync() {
 		return storage.getSyncData()
-				.thenIf(syncData -> syncData.getProtoCommit() == null,
-						syncData -> storage.fetch(syncData.getCommitId())
+				.then(syncData -> syncData.getProtoCommit() == null ?
+						storage.fetch(syncData.getCommitId())
 								.then(fetchedData -> {
 									long headCommitId = fetchedData.commitId();
 									List<D> diffs = fetchedData.diffs();
@@ -171,7 +171,8 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 											.then(protoCommit ->
 													storage.startSync(headCommitId, syncData.getUplinkCommitId(), protoCommit)
 															.map($ -> new SyncData<>(headCommitId, syncData.getUplinkCommitId(), syncData.getUplinkLevel(), diffs, protoCommit)));
-								}));
+								}) :
+						Promise.of(syncData));
 	}
 
 	void completeSync(long commitId, List<D> accumulatedDiffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs, SettablePromise<Void> cb) {
@@ -200,11 +201,13 @@ public final class StorageOTUplink<K, D> extends AbstractReactive
 		return retry(
 				isResultOrException(Objects::nonNull),
 				() -> storage.getSnapshot()
-						.thenIfNull(() -> uplink.checkout()
-								.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.diffs(), uplinkSnapshotData.commitId(), uplinkSnapshotData.level())
-										.mapIfElse(ok -> ok,
-												$ -> new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.diffs()),
-												$ -> null))))
+						.then(t1 -> t1 == null ?
+								uplink.checkout()
+										.then(uplinkSnapshotData -> storage.init(FIRST_COMMIT_ID, uplinkSnapshotData.diffs(), uplinkSnapshotData.commitId(), uplinkSnapshotData.level())
+												.map(t2 -> t2 ?
+														new FetchData<>(FIRST_COMMIT_ID, NO_LEVEL, uplinkSnapshotData.diffs()) :
+														null)) :
+								Promise.of(t1)))
 				.then(snapshotData -> storage.fetch(snapshotData.commitId())
 						.map(fetchData ->
 								new FetchData<>(fetchData.commitId(), NO_LEVEL, concat(snapshotData.diffs(), fetchData.diffs()))));

@@ -287,10 +287,10 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 	private Promise<Void> awaitExternalFlush() {
 		return getWalFiles(executor, path)
-				.thenIfElse(List::isEmpty,
-						$ -> Promise.complete(),
-						$ -> Promises.delay(Duration.ofSeconds(1))
-								.then(this::awaitExternalFlush));
+				.then(list -> list.isEmpty() ?
+						Promise.complete() :
+						Promises.delay(Duration.ofSeconds(1))
+				.then(this::awaitExternalFlush));
 	}
 
 	private Promise<List<Path>> getLostFiles() {

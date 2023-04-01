@@ -177,12 +177,13 @@ public final class ClusterRepartitionController extends AbstractReactive
 									if (!repartitionPlan.hasNext()) return Promise.of(false);
 									String name = repartitionPlan.next();
 									return fileSystem.info(name)
-											.thenIfElse(Objects::isNull,
-													$ -> {
-														logger.warn("File '{}' that should be repartitioned has been deleted", name);
-														return Promise.of(false);
-													},
-													meta -> repartitionFile(name, meta))
+											.then(meta -> {
+												if (meta == null) {
+													logger.warn("File '{}' that should be repartitioned has been deleted", name);
+													return Promise.of(false);
+												}
+												return repartitionFile(name, meta);
+											})
 											.whenComplete(singleFileRepartitionPromiseStats.recordStats())
 											.then(b -> {
 												processedFiles.add(name);
@@ -280,83 +281,81 @@ public final class ClusterRepartitionController extends AbstractReactive
 		List<Object> ids = new ArrayList<>(selected);
 		boolean belongsToLocal = ids.remove(localPartitionId);
 		return getInfoResults(name, meta, ids)
-				.thenIfElse(Objects::isNull,
-						$ -> Promise.of(false),
-						infoResults -> {
-							if (infoResults.shouldBeDeleted()) { // everybody had the file
-								logger.trace("deleting file {} locally", meta);
-								return fileSystem.delete(name) // so we delete the copy which does not belong to local partition
+				.then(infoResults -> {
+					if (infoResults == null) return Promise.of(false);
+					if (infoResults.shouldBeDeleted()) { // everybody had the file
+						logger.trace("deleting file {} locally", meta);
+						return fileSystem.delete(name) // so we delete the copy which does not belong to local partition
+								.map($ -> {
+									logger.info("handled file {} : {} (ensured on {})", name, meta, ids);
+									return true;
+								});
+					}
+					if (!infoResults.shouldBeUploaded()) {                             // everybody had the file AND
+						logger.trace("handled file {} : {} (ensured on {})", name, meta, ids);     // we don't delete the local copy
+						return Promise.of(true);
+					}
+
+					// else we need to upload to at least one non-local partition
+
+					logger.trace("uploading file {} to partitions {}...", meta, infoResults);
+
+					//noinspection OptionalGetWithoutIsPresent
+					long offset = infoResults.remoteMetadata.stream()
+							.mapToLong(metadata -> metadata == null ? 0 : metadata.getSize())
+							.min()
+							.getAsLong();
+
+					ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
+							.withInput(ChannelSuppliers.ofPromise(fileSystem.download(name, offset, meta.getSize())));
+
+					RefInt idx = new RefInt(0);
+					return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
+									.map(remoteMeta -> {
+										Object partitionId = ids.get(idx.value++);
+										if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
+											return Promise.of(Try.of(null));
+										}
+										// upload file to this partition
+										IFileSystem fs = partitions.get(partitionId);
+										if (fs == null) {
+											return Promise.ofException(new FileSystemIOException("File system '" + partitionId + "' is not alive"));
+										}
+										return Promise.<Void>ofCallback(cb ->
+												splitter.addOutput()
+														.set(ChannelConsumers.ofPromise(Promise.complete()
+																		.then(() -> remoteMeta == null ?
+																				fs.upload(name, meta.getSize()) :
+																				fs.append(name, remoteMeta.getSize())
+																						.map(consumer -> consumer.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
+																		.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
+																.withAcknowledgement(ack -> ack
+																		.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
+																		.whenException(e -> {
+																			logger.warn("failed uploading to partition {}", partitionId, e);
+																			partitions.markIfDead(partitionId, e);
+																		})
+																				.whenComplete(cb::accept))));
+									})
+									.map(Promise::toTry))
+							.then(tries -> {
+								if (!tries.stream().allMatch(Try::isSuccess)) {
+									logger.warn("failed uploading file {}, skipping", meta);
+									return Promise.of(false);
+								}
+								if (belongsToLocal) { // don't delete local if it was marked
+									logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
+									return Promise.of(true);
+								}
+
+								logger.trace("deleting file {} on {}", meta, localPartitionId);
+								return fileSystem.delete(name)
 										.map($ -> {
-											logger.info("handled file {} : {} (ensured on {})", name, meta, ids);
+											logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
 											return true;
 										});
-							}
-							if (!infoResults.shouldBeUploaded()) {                             // everybody had the file AND
-								logger.trace("handled file {} : {} (ensured on {})", name, meta, ids);     // we don't delete the local copy
-								return Promise.of(true);
-							}
-
-							// else we need to upload to at least one non-local partition
-
-							logger.trace("uploading file {} to partitions {}...", meta, infoResults);
-
-							//noinspection OptionalGetWithoutIsPresent
-							long offset = infoResults.remoteMetadata.stream()
-									.mapToLong(metadata -> metadata == null ? 0 : metadata.getSize())
-									.min()
-									.getAsLong();
-
-							ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
-									.withInput(ChannelSuppliers.ofPromise(fileSystem.download(name, offset, meta.getSize())));
-
-							RefInt idx = new RefInt(0);
-							return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
-											.map(remoteMeta -> {
-												Object partitionId = ids.get(idx.value++);
-												if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
-													return Promise.of(Try.of(null));
-												}
-												// upload file to this partition
-												IFileSystem fs = partitions.get(partitionId);
-												if (fs == null) {
-													return Promise.ofException(new FileSystemIOException("File system '" + partitionId + "' is not alive"));
-												}
-												return Promise.<Void>ofCallback(cb ->
-														splitter.addOutput()
-																.set(ChannelConsumers.ofPromise(Promise.complete()
-																				.then(() -> remoteMeta == null ?
-																						fs.upload(name, meta.getSize()) :
-																						fs.append(name, remoteMeta.getSize())
-																								.map(consumer -> consumer.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
-																				.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
-																		.withAcknowledgement(ack -> ack
-																				.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
-																				.whenException(e -> {
-																					logger.warn("failed uploading to partition {}", partitionId, e);
-																					partitions.markIfDead(partitionId, e);
-																				})
-																				.whenComplete(cb::accept))));
-											})
-											.map(Promise::toTry))
-									.thenIfElse(tries -> !tries.stream().allMatch(Try::isSuccess),
-											$ -> {
-												logger.warn("failed uploading file {}, skipping", meta);
-												return Promise.of(false);
-											},
-											tries -> {
-												if (belongsToLocal) { // don't delete local if it was marked
-													logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
-													return Promise.of(true);
-												}
-
-												logger.trace("deleting file {} on {}", meta, localPartitionId);
-												return fileSystem.delete(name)
-														.map($ -> {
-															logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
-															return true;
-														});
-											});
-						})
+							});
+				})
 				.whenComplete(toLogger(logger, TRACE, "repartitionFile", meta));
 	}
 

@@ -121,13 +121,11 @@ public final class BasicAuthServlet extends AbstractReactive
 			throw HttpError.ofCode(400, "No ':' separator");
 		}
 		return credentialsLookup.test(authData[0], authData[1])
-				.thenIfElse(ok -> ok,
-						$ -> {
-							request.attach(new BasicAuthCredentials(authData[0], authData[1]));
-							return next.serveAsync(request);
-						},
-						$ -> Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)))
-				);
+				.then(ok -> {
+					if (!ok) return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));
+					request.attach(new BasicAuthCredentials(authData[0], authData[1]));
+					return next.serveAsync(request);
+				});
 	}
 
 	public record BasicAuthCredentials(String username, String password) {

@@ -84,26 +84,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> mapIfElse(Predicate<? super T> predicate, FunctionEx<? super T, ? extends U> fn, FunctionEx<? super T, ? extends U> fnElse) {
-		return (Promise<U>) this;
-	}
-
-	@Override
-	public Promise<T> mapIf(Predicate<? super T> predicate, FunctionEx<? super T, ? extends T> fn) {
-		return this;
-	}
-
-	@Override
-	public Promise<T> mapIfNull(SupplierEx<? extends T> supplier) {
-		return this;
-	}
-
-	@Override
-	public <U> Promise<U> mapIfNonNull(FunctionEx<? super T, ? extends U> fn) {
-		return (Promise<U>) this;
-	}
-
-	@Override
 	public <U> Promise<U> map(BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
@@ -156,26 +136,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 
 	@Override
 	public <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn) {
-		return (Promise<U>) this;
-	}
-
-	@Override
-	public <U> Promise<U> thenIfElse(Predicate<? super T> predicate, FunctionEx<? super T, Promise<? extends U>> fn, FunctionEx<? super T, Promise<? extends U>> fnElse) {
-		return (Promise<U>) this;
-	}
-
-	@Override
-	public Promise<T> thenIf(Predicate<? super T> predicate, FunctionEx<? super T, Promise<? extends T>> fn) {
-		return this;
-	}
-
-	@Override
-	public Promise<T> thenIfNull(SupplierEx<Promise<? extends T>> supplier) {
-		return this;
-	}
-
-	@Override
-	public <U> Promise<U> thenIfNonNull(FunctionEx<? super T, Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 

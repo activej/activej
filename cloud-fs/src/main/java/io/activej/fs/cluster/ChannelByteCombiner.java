@@ -94,19 +94,18 @@ public final class ChannelByteCombiner extends AbstractCommunicatingProcess
 								e -> ++errorCount == inputs.size() ?
 										Promise.ofException(e) :
 										Promise.of(null))
-						.thenIfElse(Objects::isNull,
-								$ -> Promise.of(false),
-								buf -> {
-									int toSkip = (int) Math.min(outputOffset - inputOffset.value, buf.readRemaining());
-									inputOffset.value += buf.readRemaining();
-									buf.moveHead(toSkip);
-									if (!buf.canRead()) {
-										buf.recycle();
-										return Promise.of(true);
-									}
-									outputOffset += buf.readRemaining();
-									return output.accept(buf).map($ -> true);
-								}));
+						.then(buf -> {
+							if (buf == null) return Promise.of(false);
+							int toSkip = (int) Math.min(outputOffset - inputOffset.value, buf.readRemaining());
+							inputOffset.value += buf.readRemaining();
+							buf.moveHead(toSkip);
+							if (!buf.canRead()) {
+								buf.recycle();
+								return Promise.of(true);
+							}
+							outputOffset += buf.readRemaining();
+							return output.accept(buf).map($ -> true);
+						}));
 	}
 
 	@Override

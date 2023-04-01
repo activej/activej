@@ -24,7 +24,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.LongStream;
 
 import static io.activej.csp.binary.decoder.ByteBufsDecoders.ofNullTerminatedBytes;
@@ -64,12 +63,13 @@ public final class MessagingTest {
 
 	private static void pong(IMessaging<Integer, Integer> messaging) {
 		messaging.receive()
-				.thenIfElse(Objects::nonNull,
-						msg -> messaging.send(msg).whenResult(() -> pong(messaging)),
-						$ -> {
-							messaging.close();
-							return Promise.complete();
-						})
+				.then(msg -> {
+					if (msg == null) {
+						messaging.close();
+						return Promise.complete();
+					}
+					return messaging.send(msg).whenResult(() -> pong(messaging));
+				})
 				.whenException(e -> messaging.close());
 	}
 

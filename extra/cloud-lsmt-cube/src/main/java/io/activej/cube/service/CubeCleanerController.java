@@ -164,12 +164,13 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 		return findAllCommonParents(repository, otSystem, frozenCut)
 				.then(parents -> findAnyCommonParent(repository, otSystem, parents))
 				.then(checkpointNode -> repository.hasSnapshot(checkpointNode)
-						.thenIfElse(hasSnapshot -> hasSnapshot,
-								$ -> {
-									logger.info("Snapshot already exists, skip cleanup");
-									return Promise.complete();
-								},
-								$ -> trySaveSnapshotAndCleanupChunks(checkpointNode)))
+						.then(hasSnapshot -> {
+							if (hasSnapshot) {
+								logger.info("Snapshot already exists, skip cleanup");
+								return Promise.complete();
+							}
+							return trySaveSnapshotAndCleanupChunks(checkpointNode);
+						}))
 				.mapException(e -> !(e instanceof GraphExhaustedException),
 						e -> new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
@@ -178,22 +179,22 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	public record Tuple<K, D, C>(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {}
 
 	private Promise<Void> trySaveSnapshotAndCleanupChunks(K checkpointNode) {
-		//noinspection OptionalGetWithoutIsPresent
 		return checkout(repository, otSystem, checkpointNode)
 				.then(checkpointDiffs -> repository.saveSnapshot(checkpointNode, checkpointDiffs)
 						.then(() -> findSnapshot(Set.of(checkpointNode), extraSnapshotsCount))
-						.thenIfElse(Optional::isPresent,
-								lastSnapshot -> Promises.toTuple(Tuple::new,
-												collectRequiredChunks(checkpointNode),
-												repository.loadCommit(lastSnapshot.get()))
-										.then(tuple ->
-												cleanup(lastSnapshot.get(),
-														union(chunksInDiffs(cubeDiffScheme, checkpointDiffs), tuple.collectedChunks),
-														tuple.lastSnapshot.getInstant().minus(chunksCleanupDelay))),
-								$ -> {
-									logger.info("Not enough snapshots, skip cleanup");
-									return Promise.complete();
-								}))
+						.then(lastSnapshot -> {
+							if (lastSnapshot.isEmpty()) {
+								logger.info("Not enough snapshots, skip cleanup");
+								return Promise.complete();
+							}
+							return Promises.toTuple(Tuple::new,
+											collectRequiredChunks(checkpointNode),
+											repository.loadCommit(lastSnapshot.get()))
+									.then(tuple ->
+											cleanup(lastSnapshot.get(),
+													union(chunksInDiffs(cubeDiffScheme, checkpointDiffs), tuple.collectedChunks),
+													tuple.lastSnapshot.getInstant().minus(chunksCleanupDelay)));
+						}))
 				.whenComplete(toLogger(logger, thisMethod(), checkpointNode));
 	}
 

@@ -143,31 +143,31 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 				.map($ -> stateManager.getCommitId())
 				.then(commitId -> predicate.test(commitId)
 						.mapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e)))
-				.thenIfElse(ok -> ok,
-						$ -> {
-							logger.info("Pull to commit: {}, start log processing", stateManager.getCommitId());
+				.then(ok -> {
+					if (!ok) return Promise.of(false);
 
-							List<AsyncSupplier<LogDiff<CubeDiff>>> tasks = logProcessors.stream()
-									.map(logProcessor -> (AsyncSupplier<LogDiff<CubeDiff>>) logProcessor::processLog)
-									.collect(toList());
+					logger.info("Pull to commit: {}, start log processing", stateManager.getCommitId());
 
-							Promise<List<LogDiff<CubeDiff>>> promise = parallelRunner ?
-									Promises.toList(tasks.stream().map(AsyncSupplier::get)) :
-									Promises.reduce(toList(), 1, asPromises(tasks));
+					List<AsyncSupplier<LogDiff<CubeDiff>>> tasks = logProcessors.stream()
+							.map(logProcessor -> (AsyncSupplier<LogDiff<CubeDiff>>) logProcessor::processLog)
+							.collect(toList());
 
-							return promise
-									.mapException(e -> new CubeException("Failed to process logs", e))
-									.whenComplete(promiseProcessLogsImpl.recordStats())
-									.whenResult(this::cubeDiffJmx)
-									.then(diffs -> chunkStorage.finish(addedChunks(diffs))
-											.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-											.whenResult(() -> stateManager.addAll(diffs))
-											.then(() -> stateManager.sync()
-													.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
-											.whenException(e -> stateManager.reset())
-											.map($2 -> true));
-						},
-						$ -> Promise.of(false))
+					Promise<List<LogDiff<CubeDiff>>> promise = parallelRunner ?
+							Promises.toList(tasks.stream().map(AsyncSupplier::get)) :
+							Promises.reduce(toList(), 1, asPromises(tasks));
+
+					return promise
+							.mapException(e -> new CubeException("Failed to process logs", e))
+							.whenComplete(promiseProcessLogsImpl.recordStats())
+							.whenResult(this::cubeDiffJmx)
+							.then(diffs -> chunkStorage.finish(addedChunks(diffs))
+									.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
+									.whenResult(() -> stateManager.addAll(diffs))
+									.then(() -> stateManager.sync()
+											.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
+									.whenException(e -> stateManager.reset())
+									.map($2 -> true));
+				})
 				.whenComplete(toLogger(logger, thisMethod(), stateManager));
 	}
 

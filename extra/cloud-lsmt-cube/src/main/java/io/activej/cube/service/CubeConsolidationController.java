@@ -183,15 +183,16 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 						.whenComplete(promiseConsolidateImpl.recordStats()))
 				.whenResult(this::cubeDiffJmx)
 				.whenComplete(this::logCubeDiff)
-				.thenIfElse(CubeDiff::isEmpty,
-						$ -> Promise.complete(),
-						cubeDiff -> aggregationChunkStorage.finish(addedChunks(cubeDiff))
-								.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-								.whenResult(() -> stateManager.add(cubeDiffScheme.wrap(cubeDiff)))
-								.then(() -> stateManager.sync()
-										.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
-								.whenException(e -> stateManager.reset())
-								.whenComplete(toLogger(logger, thisMethod(), cubeDiff)))
+				.then(cubeDiff -> {
+					if (cubeDiff.isEmpty()) return Promise.complete();
+					return aggregationChunkStorage.finish(addedChunks(cubeDiff))
+							.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
+							.whenResult(() -> stateManager.add(cubeDiffScheme.wrap(cubeDiff)))
+							.then(() -> stateManager.sync()
+									.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
+							.whenException(e -> stateManager.reset())
+							.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
+				})
 				.then((result, e) -> releaseChunks(chunksForConsolidation)
 						.then(() -> Promise.of(result, e)))
 				.whenComplete(promiseConsolidate.recordStats())
@@ -207,13 +208,14 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 				() -> locker.getLockedChunks()
 						.then(lockedChunkIds -> chunksFn.apply(aggregation, lockedChunkIds))
-						.thenIfElse(List::isEmpty,
-								chunks -> {
-									logger.info("Nothing to consolidate in aggregation '{}", this);
-									return Promise.of(chunks);
-								},
-								chunks -> locker.lockChunks(collectChunkIds(chunks))
-										.map($ -> chunks)));
+						.then(chunks -> {
+							if (chunks.isEmpty()) {
+								logger.info("Nothing to consolidate in aggregation '{}", this);
+								return Promise.of(chunks);
+							}
+							return locker.lockChunks(collectChunkIds(chunks))
+									.map($ -> chunks);
+						}));
 	}
 
 	private Promise<Void> releaseChunks(Map<String, List<AggregationChunk>> chunksForConsolidation) {

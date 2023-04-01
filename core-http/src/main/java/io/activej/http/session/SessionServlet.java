@@ -23,7 +23,6 @@ import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -74,11 +73,13 @@ public final class SessionServlet<T> extends AbstractReactive
 		}
 
 		return store.get(id)
-				.thenIfElse(Objects::nonNull,
-						sessionObject -> {
-							request.attach(sessionObject);
-							return privateServlet.serveAsync(request);
-						},
-						$ -> publicServlet.serveAsync(request));
+				.then(sessionObject -> {
+					if (sessionObject != null) {
+						request.attach(sessionObject);
+						return privateServlet.serveAsync(request);
+					} else {
+						return publicServlet.serveAsync(request);
+					}
+				});
 	}
 }
