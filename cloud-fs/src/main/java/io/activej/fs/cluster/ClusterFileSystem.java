@@ -409,7 +409,7 @@ public final class ClusterFileSystem extends AbstractReactive
 												.then(aTry -> ensureIsAlive()
 														.map($ -> aTry)
 														.whenException(e -> aTry.ifSuccess(cleanup)))))
-								.whenComplete(cb::set)));
+								.call(cb)));
 	}
 
 	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn() {

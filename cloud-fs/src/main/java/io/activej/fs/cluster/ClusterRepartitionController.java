@@ -335,7 +335,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 																			logger.warn("failed uploading to partition {}", partitionId, e);
 																			partitions.markIfDead(partitionId, e);
 																		})
-																				.whenComplete(cb::set))));
+																		.whenComplete(cb::set))));
 									})
 									.map(Promise::toTry))
 							.then(tries -> {

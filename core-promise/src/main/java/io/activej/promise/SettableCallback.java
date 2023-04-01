@@ -16,13 +16,16 @@
 
 package io.activej.promise;
 
+import io.activej.async.callback.Callback;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
-public interface SettableCallback<T> {
-	void set(T result, @Nullable Exception e);
+public interface SettableCallback<T> extends Callback<T> {
+	default void set(T result, @Nullable Exception e) {
+		accept(result, e);
+	}
 
 	default void set(T result) {
 		set(result, null);

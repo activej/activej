@@ -132,7 +132,7 @@ public class Promises {
 	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.whenComplete(cb::set))));
+				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.call(cb))));
 	}
 
 	@Contract(pure = true)
@@ -197,7 +197,7 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.whenComplete(cb::set))));
+				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.call(cb))));
 	}
 
 	/**
