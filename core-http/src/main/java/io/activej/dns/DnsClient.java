@@ -229,15 +229,15 @@ public final class DnsClient extends AbstractNioReactive
 							});
 
 					return timeout(timeout, promise)
-							.then(
-									queryResult -> {
+							.thenCallback(
+									(queryResult, cb) -> {
 										if (inspector != null) {
 											inspector.onDnsQueryResult(query, queryResult);
 										}
 										logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
-										return Promise.of(queryResult);
+										cb.set(queryResult);
 									},
-									e -> {
+									(e, cb) -> {
 										if (e instanceof AsyncTimeoutException) {
 											if (inspector != null) {
 												inspector.onDnsQueryExpiration(query);
@@ -249,7 +249,7 @@ public final class DnsClient extends AbstractNioReactive
 										} else if (inspector != null) {
 											inspector.onDnsQueryError(query, e);
 										}
-										return Promise.ofException(e);
+										cb.setException(e);
 									});
 				});
 	}

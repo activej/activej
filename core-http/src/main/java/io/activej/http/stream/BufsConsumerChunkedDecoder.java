@@ -141,14 +141,20 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		int newChunkLength = chunkLength - buf.readRemaining();
 		if (newChunkLength != 0) {
 			Promise.complete()
-					.then(() -> buf.canRead() ? output.accept(buf) : Promise.complete())
-					.then(() -> bufs.isEmpty() ? input.needMoreData() : Promise.complete())
+					.thenCallback(cb -> {
+						if (buf.canRead()) output.accept(buf).call(cb);
+						else cb.set(null);
+					})
+					.thenCallback(cb -> {
+						if (bufs.isEmpty()) input.needMoreData().call(cb);
+						else cb.set(null);
+					})
 					.whenResult(() -> processData(newChunkLength));
 			return;
 		}
 		input.decode(assertBytes(CRLF))
 				.whenException(buf::recycle)
-				.then(() -> output.accept(buf))
+				.thenCallback(cb -> output.accept(buf).call(cb))
 				.whenResult(this::processLength);
 	}
 

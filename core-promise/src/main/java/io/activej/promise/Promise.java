@@ -483,7 +483,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	<U> Promise<U> then(AsyncSupplierEx<U> fn);
 
-	<U> Promise<U> then2(CallbackSupplierEx<U> fn);
+	<U> Promise<U> thenCallback(CallbackSupplierEx<U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -504,7 +504,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	<U> Promise<U> then(AsyncFunctionEx<? super T, U> fn);
 
-	<U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn);
+	<U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -524,7 +524,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	<U> Promise<U> then(AsyncBiFunctionEx<? super T, @Nullable Exception, U> fn);
 
-	<U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn);
+	<U> Promise<U> thenCallback(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -549,7 +549,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 
-	<U> Promise<U> then2(
+	<U> Promise<U> thenCallback(
 			CallbackFunctionEx<? super T, U> fn,
 			CallbackFunctionEx<Exception, U> exceptionFn);
 

@@ -134,7 +134,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn) {
+	public <U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn) {
 		return (Promise<U>) this;
 	}
 
@@ -144,7 +144,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackSupplierEx<U> fn) {
+	public <U> Promise<U> thenCallback(CallbackSupplierEx<U> fn) {
 		return (Promise<U>) this;
 	}
 
@@ -159,7 +159,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
+	public <U> Promise<U> thenCallback(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
 		try {
 			return Promise.ofCallback(null, exception, fn);
 		} catch (Exception ex) {
@@ -181,7 +181,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
+	public <U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
 		try {
 			return Promise.ofCallback(null, exception, fn, exceptionFn);
 		} catch (Exception ex) {

@@ -487,21 +487,21 @@ public final class HttpClient extends AbstractNioReactive
 		assert host != null;
 
 		return dnsClient.resolve4(host)
-				.then(
-						dnsResponse -> {
+				.thenCallback(
+						(dnsResponse, cb) -> {
 							if (inspector != null) inspector.onResolve(request, dnsResponse);
-							if (dnsResponse.isSuccessful()) {
-								//noinspection ConstantConditions - dnsResponse is successful (not null)
-								return doSend(request, dnsResponse.getRecord().getIps(), isWebSocket);
-							} else {
+							if (!dnsResponse.isSuccessful()) {
 								request.recycleBody();
-								return Promise.ofException(new HttpException(new DnsQueryException(dnsResponse)));
+								cb.setException(new HttpException(new DnsQueryException(dnsResponse)));
+								return;
 							}
+							//noinspection ConstantConditions - dnsResponse is successful (not null)
+							doSend(request, dnsResponse.getRecord().getIps(), isWebSocket).call(cb);
 						},
-						e -> {
+						(e, cb) -> {
 							if (inspector != null) inspector.onResolveError(request, e);
 							request.recycleBody();
-							return Promise.ofException(translateToHttpException(e));
+							cb.setException(translateToHttpException(e));
 						});
 	}
 

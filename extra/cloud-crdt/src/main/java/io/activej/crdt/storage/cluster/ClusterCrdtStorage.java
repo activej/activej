@@ -142,11 +142,12 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 				.then(result -> {
 					updatePartitionScheme(result);
 					return ping()
-							.then((v, e) -> {
+							.thenCallback((v, e, cb) -> {
 								if (e instanceof CrdtException && forceStart) {
-									return Promise.complete();
+									cb.set(null);
+									return;
 								}
-								return Promise.of(v, e);
+								cb.set(v, e);
 							});
 				})
 				.whenResult(() -> Promises.repeat(() ->

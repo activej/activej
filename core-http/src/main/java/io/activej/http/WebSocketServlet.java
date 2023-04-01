@@ -22,6 +22,7 @@ import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
+import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 
@@ -64,7 +65,7 @@ public abstract class WebSocketServlet extends AbstractReactive
 	public final Promise<HttpResponse> serve(HttpRequest request) {
 		checkInReactorThread(this);
 		return validateHeaders(request)
-				.then(() -> processAnswer(request))
+				.<String>thenCallback(cb -> processAnswer(request, cb))
 				.then(answer -> {
 					ChannelSupplier<ByteBuf> rawStream = request.takeBodyStream();
 					assert rawStream != null;
@@ -140,12 +141,13 @@ public abstract class WebSocketServlet extends AbstractReactive
 		return Promise.complete();
 	}
 
-	private static Promise<String> processAnswer(HttpRequest request) {
+	private static void processAnswer(HttpRequest request, SettableCallback<String> cb) {
 		String header = request.getHeader(SEC_WEBSOCKET_KEY);
 		if (header == null) {
-			return Promise.ofException(NOT_A_WEB_SOCKET_REQUEST);
+			cb.setException(NOT_A_WEB_SOCKET_REQUEST);
+			return;
 		}
-		return Promise.of(getWebSocketAnswer(header.trim()));
+		cb.set(getWebSocketAnswer(header.trim()));
 	}
 
 	private static void recycleStream(ChannelSupplier<ByteBuf> rawStream) {

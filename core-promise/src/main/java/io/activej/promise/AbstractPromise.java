@@ -455,7 +455,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackSupplierEx<U> fn) {
+	public <U> Promise<U> thenCallback(CallbackSupplierEx<U> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ? Promise.ofCallback(fn) : (Promise<U>) this;
@@ -526,7 +526,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn) {
+	public <U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn) {
 		if (isComplete()) {
 			try {
 				return isResult() ? Promise.ofCallback(result, fn) : (Promise<U>) this;
@@ -605,7 +605,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
+	public <U> Promise<U> thenCallback(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn) {
 		if (isComplete()) {
 			try {
 				return Promise.ofCallback(result, exception, fn);
@@ -690,7 +690,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then2(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
+	public <U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn, CallbackFunctionEx<Exception, U> exceptionFn) {
 		if (isComplete()) {
 			try {
 				return Promise.ofCallback(result, exception, fn, exceptionFn);

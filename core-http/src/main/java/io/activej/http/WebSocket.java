@@ -31,6 +31,7 @@ import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.http.IWebSocket.Message.MessageType;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.promise.SettableCallback;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,40 +84,43 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
 			return Promises.repeat(() -> frameInput.get()
-					.then(frame -> {
-						if (frame == null) {
-							if (typeRef.get() == null) {
-								return Promise.of(false);
-							}
-							// hence, all other exceptions would fail get() promise
-							return Promise.ofException(REGULAR_CLOSE);
-						}
-						if (typeRef.get() == null) {
-							typeRef.set(frameToMessageType(frame.getType()));
-						}
-						ByteBuf payload = frame.getPayload();
-						if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
-							return protocolError(MESSAGE_TOO_BIG);
-						}
-						messageBufs.add(payload);
-						return Promise.of(!frame.isLastFrame());
-					}))
+							.thenCallback((frame, cb) -> {
+								if (frame == null) {
+									if (typeRef.get() == null) {
+										cb.set(false);
+										return;
+									}
+									// hence, all other exceptions would fail get() promise
+									cb.setException(REGULAR_CLOSE);
+									return;
+								}
+								if (typeRef.get() == null) {
+									typeRef.set(frameToMessageType(frame.getType()));
+								}
+								ByteBuf payload = frame.getPayload();
+								if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
+									protocolError(MESSAGE_TOO_BIG, cb);
+									return;
+								}
+								messageBufs.add(payload);
+								cb.set(!frame.isLastFrame());
+							}))
 					.whenException(e -> messageBufs.recycle())
-					.then($ -> {
+					.thenCallback(($, cb) -> {
 						ByteBuf payload = messageBufs.takeRemaining();
 						MessageType type = typeRef.get();
 						if (type == MessageType.TEXT) {
 							try {
-								return Promise.of(Message.text(getUTF8(payload)));
+								cb.set(Message.text(getUTF8(payload)));
 							} catch (CharacterCodingException e) {
-								return protocolError(NOT_A_VALID_UTF_8);
+								protocolError(NOT_A_VALID_UTF_8, cb);
 							} finally {
 								payload.recycle();
 							}
 						} else if (type == MessageType.BINARY) {
-							return Promise.of(Message.binary(payload));
+							cb.set(Message.binary(payload));
 						} else {
-							return Promise.of(null);
+							cb.set(null);
 						}
 					});
 		});
@@ -173,10 +177,10 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 		response.recycle();
 	}
 
-	private <T> Promise<T> protocolError(WebSocketException exception) {
+	private void protocolError(WebSocketException exception, SettableCallback<?> cb) {
 		onProtocolError.accept(exception);
 		closeEx(exception);
-		return Promise.ofException(exception);
+		cb.setException(exception);
 	}
 
 	// region sanitizers

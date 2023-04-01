@@ -287,11 +287,12 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			readHttpResponse();
 		}
 		return promise
-				.then(res -> {
+				.<IWebSocket>thenCallback((res, cb) -> {
 					assert res.getCode() == 101;
 					if (isAnswerInvalid(res, encodedKey)) {
 						closeEx(HANDSHAKE_FAILED);
-						return Promise.ofException(HANDSHAKE_FAILED);
+						cb.setException(HANDSHAKE_FAILED);
+						return;
 					}
 					int maxWebSocketMessageSize = client.maxWebSocketMessageSize;
 
@@ -304,7 +305,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 					bindWebSocketTransformers(encoder, decoder);
 
-					return Promise.of((IWebSocket) new WebSocket(
+					cb.set(new WebSocket(
 							request,
 							res,
 							res.takeBodyStream().transformWith(decoder),

@@ -10,7 +10,6 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.redis.RedisClient;
 import io.activej.redis.RedisConnection;
@@ -169,9 +168,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	private Promise<Long> roundCall() {
 		return redisClient.connect()
 				.then(connection -> beforeRound(connection)
-						.then(() -> {
-							SettablePromise<Long> promise = new SettablePromise<>();
-
+						.thenCallback(cb -> {
 							long start = System.currentTimeMillis();
 
 							sent = 0;
@@ -181,7 +178,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 								@Override
 								public void accept(Object $, @Nullable Exception e) {
 									if (e != null) {
-										promise.setException(e);
+										cb.setException(e);
 										return;
 									}
 									completed++;
@@ -193,8 +190,8 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 										long elapsed = System.currentTimeMillis() - start;
 										afterRound(connection)
 												.whenComplete(connection::close)
-												.whenResult(() -> promise.set(elapsed))
-												.whenException(promise::setException);
+												.whenResult(() -> cb.set(elapsed))
+												.whenException(cb::setException);
 										return;
 									}
 
@@ -203,8 +200,6 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 							};
 
 							onStart(connection, callback);
-
-							return promise;
 						}));
 	}
 

@@ -180,14 +180,14 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.then(supplier -> supplier
 						.transformWith(ackTransformer(ack -> ack
 								.then(messaging::receive)
-								.then(msg -> {
+								.thenCallback((msg, cb) -> {
 									if (!(msg instanceof CrdtRequest.TakeAck)) {
-										return Promise.ofException(new CrdtException(
+										cb.setException(new CrdtException(
 												"Received message " + msg +
-														" instead of " + CrdtRequest.TakeAck.class
-										));
+														" instead of " + CrdtRequest.TakeAck.class));
+										return;
 									}
-									return Promise.complete();
+									cb.set(null);
 								})))
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 						.transformWith(ChannelSerializer.create(serializer))

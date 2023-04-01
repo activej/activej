@@ -220,9 +220,10 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 						return results;
 					}
 				})
-				.then(results -> results == null ?
-						Promise.ofException(new TransactionFailedException()) :
-						Promise.of(results))
+				.<Object[]>thenCallback((results, cb) -> {
+					if (results == null) cb.setException(new TransactionFailedException());
+					else cb.set(results);
+				})
 				.whenException(e -> abortTransaction(transactionQueue, e));
 	}
 

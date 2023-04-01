@@ -115,7 +115,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	/**
 	 * Creates a new instance of AbstractHttpConnection
 	 *
-	 * @param reactor   reactor which will handle its I/O operations
+	 * @param reactor     reactor which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
 	protected AbstractHttpConnection(Reactor reactor, ITcpSocket socket, int maxBodySize) {
@@ -421,19 +421,19 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedBufs(
 				readBufs,
 				() -> socket.read()
-						.then(
-								buf -> {
-									if (buf != null) {
-										readBufs.add(buf);
-										return Promise.complete();
-									} else {
-										return Promise.ofException(new MalformedHttpException("Incomplete HTTP message"));
+						.thenCallback(
+								(buf, cb) -> {
+									if (buf == null) {
+										cb.setException(new MalformedHttpException("Incomplete HTTP message"));
+										return;
 									}
+									readBufs.add(buf);
+									cb.set(null);
 								},
-								e -> {
+								(e, cb) -> {
 									e = translateToHttpException(e);
 									closeEx(e);
-									return Promise.ofException(e);
+									cb.setException(e);
 								}),
 				Promise::complete,
 				AsyncCloseable.of(e -> {
@@ -646,15 +646,16 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 					return Promise.ofException(closeException);
 				}
 				return bodyStream.get()
-						.then(result -> {
+						.thenCallback((result, cb) -> {
 							if (closeException != null) {
 								if (result != null) {
 									result.recycle();
 								}
 								closeEx(closeException);
-								return Promise.ofException(closeException);
+								cb.setException(closeException);
+								return;
 							}
-							return Promise.of(result);
+							cb.set(result);
 						});
 			}
 		};
