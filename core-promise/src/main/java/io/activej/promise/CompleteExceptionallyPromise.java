@@ -24,7 +24,6 @@ import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -101,16 +100,6 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public Promise<T> mapException(FunctionEx<Exception, Exception> exceptionFn) {
 		try {
 			return Promise.ofException(exceptionFn.apply(exception));
-		} catch (Exception ex) {
-			handleError(ex, this);
-			return Promise.ofException(ex);
-		}
-	}
-
-	@Override
-	public Promise<T> mapException(Predicate<Exception> predicate, FunctionEx<Exception, Exception> exceptionFn) {
-		try {
-			return predicate.test(exception) ? Promise.ofException(exceptionFn.apply(exception)) : this;
 		} catch (Exception ex) {
 			handleError(ex, this);
 			return Promise.ofException(ex);

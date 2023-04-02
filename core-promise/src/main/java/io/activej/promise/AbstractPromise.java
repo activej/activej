@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
@@ -317,44 +316,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			@Override
 			public String describe() {
 				return ".mapException(" + formatToString(exceptionFn) + ')';
-			}
-		};
-		next0(resultPromise);
-		return resultPromise;
-	}
-
-	@Override
-	public Promise<T> mapException(Predicate<Exception> predicate, FunctionEx<Exception, Exception> exceptionFn) {
-		if (isComplete()) {
-			try {
-				return exception == null ?
-						this :
-						predicate.test(exception) ? Promise.ofException(exceptionFn.apply(exception)) : this;
-			} catch (Exception ex) {
-				handleError(ex, this);
-				return Promise.ofException(ex);
-			}
-		}
-		NextPromise<T, T> resultPromise = new NextPromise<>() {
-			@Override
-			public void acceptNext(T result, @Nullable Exception e) {
-				if (e == null) {
-					complete(result);
-				} else {
-					try {
-						e = predicate.test(e) ? exceptionFn.apply(e) : e;
-					} catch (Exception ex) {
-						handleError(ex, this);
-						completeExceptionally(ex);
-						return;
-					}
-					completeExceptionally(e);
-				}
-			}
-
-			@Override
-			public String describe() {
-				return ".mapException(" + formatToString(predicate) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
 		next0(resultPromise);

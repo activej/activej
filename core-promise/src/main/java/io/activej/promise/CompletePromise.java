@@ -24,7 +24,6 @@ import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -96,11 +95,6 @@ public abstract class CompletePromise<T> implements Promise<T> {
 
 	@Override
 	public Promise<T> mapException(FunctionEx<Exception, Exception> exceptionFn) {
-		return this;
-	}
-
-	@Override
-	public Promise<T> mapException(Predicate<Exception> predicate, FunctionEx<Exception, Exception> exceptionFn) {
 		return this;
 	}
 

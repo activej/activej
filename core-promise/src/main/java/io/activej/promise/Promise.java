@@ -430,27 +430,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Returns a new {@code Promise} which is obtained by mapping
 	 * an exception of {@code this} promise to some other exception.
 	 * The mapping function will be called only if {@code this} promise
-	 * completes with an exception that satisfies a given {@link Predicate}
-	 *
-	 * <p>
-	 * A mapping function may throw a checked exception. In this case
-	 * the resulting promise is completed exceptionally with a
-	 * thrown exception.
-	 *
-	 * @param predicate   a predicate that tests whether to map a received exception
-	 * @param exceptionFn a function to map an exception of {@code this} promise to some other value
-	 * @return new {@code Promise} whose result is the result of a mapping
-	 * function applied either to an exception of {@code this} promise.
-	 */
-	default Promise<T> mapException(Predicate<Exception> predicate,
-			FunctionEx<Exception, Exception> exceptionFn) {
-		return mapException(e -> predicate.test(e) ? exceptionFn.apply(e) : e);
-	}
-
-	/**
-	 * Returns a new {@code Promise} which is obtained by mapping
-	 * an exception of {@code this} promise to some other exception.
-	 * The mapping function will be called only if {@code this} promise
 	 * completes with an exception that is an instance of a given {@link Class}
 	 *
 	 * <p>
@@ -464,11 +443,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default <E extends Exception> Promise<T> mapException(Class<E> clazz,
-			FunctionEx<? super E, ? extends Exception> exceptionFn) {
-		//noinspection unchecked
-		return mapException(e -> clazz.isAssignableFrom(e.getClass()), (FunctionEx<Exception, Exception>) exceptionFn);
-	}
+	<E extends Exception> Promise<T> mapException(Class<E> clazz,
+			FunctionEx<? super E, ? extends Exception> exceptionFn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by calling

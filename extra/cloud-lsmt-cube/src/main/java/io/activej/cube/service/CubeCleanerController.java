@@ -141,7 +141,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private Promise<Void> doCleanup() {
 		return repository.getHeads()
 				.then(heads -> excludeParents(repository, otSystem, heads))
-				.mapException(e -> !(e instanceof GraphExhaustedException), e -> new CubeException("Failed to get heads", e))
+				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e))
 				.then(heads -> findFrozenCut(heads, reactor.currentInstant().minus(freezeTimeout)))
 				.then(this::cleanupFrozenCut)
 				.then((v, e) -> {
@@ -155,8 +155,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private Promise<Set<K>> findFrozenCut(Set<K> heads, Instant freezeTimestamp) {
 		return findCut(repository, otSystem, heads,
 				commits -> commits.stream().allMatch(commit -> commit.getInstant().compareTo(freezeTimestamp) < 0))
-				.mapException(e -> !(e instanceof GraphExhaustedException),
-						e -> new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e))
+				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e))
 				.whenComplete(toLogger(logger, thisMethod(), heads, freezeTimestamp));
 	}
 
@@ -171,8 +170,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 							}
 							return trySaveSnapshotAndCleanupChunks(checkpointNode);
 						}))
-				.mapException(e -> !(e instanceof GraphExhaustedException),
-						e -> new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
+				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
