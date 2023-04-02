@@ -366,7 +366,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of {@code this} promise
 	 * @see CompletionStage#thenApply(Function)
 	 */
-	<U> Promise<U> map(FunctionEx<? super T, ? extends U> fn);
+	default <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn) {
+		return thenCallback((t, cb) -> cb.set(fn.apply(t)));
+	}
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -384,7 +386,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	<U> Promise<U> map(BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
+	default <U> Promise<U> map(BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn) {
+		return thenCallback((t, e, cb) -> cb.set(fn.apply(t, e)));
+	}
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -404,7 +408,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * function applied either to a result or an exception of {@code this} promise.
 	 */
 	default <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn, FunctionEx<Exception, ? extends U> exceptionFn) {
-		return map((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
+		return thenCallback((t, e, cb) -> cb.set(e == null ? fn.apply(t) : exceptionFn.apply(e)));
 	}
 
 	/**
@@ -423,7 +427,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * function applied either to an exception of {@code this} promise.
 	 */
 	default Promise<T> mapException(FunctionEx<Exception, Exception> exceptionFn) {
-		return then(Promise::of, e -> Promise.ofException(exceptionFn.apply(e)));
+		return thenCallback((t, e, cb) -> {
+			if (e == null) cb.set(t);
+			else cb.setException(exceptionFn.apply(e));
+		});
 	}
 
 	/**
@@ -443,8 +450,13 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	<E extends Exception> Promise<T> mapException(Class<E> clazz,
-			FunctionEx<? super E, ? extends Exception> exceptionFn);
+	default <E extends Exception> Promise<T> mapException(Class<E> clazz,
+			FunctionEx<? super E, ? extends Exception> exceptionFn) {
+		return thenCallback((t, e, cb) -> {
+			if (e == null) cb.set(t);
+			else cb.setException(clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply((E) e) : e);
+		});
+	}
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by calling
@@ -459,9 +471,16 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a supplier of a new promise which will be called
 	 *           if {@code this} promise completes successfully
 	 */
-	<U> Promise<U> then(AsyncSupplierEx<U> fn);
+	default <U> Promise<U> then(AsyncSupplierEx<U> fn) {
+		return thenCallback(cb -> fn.get().subscribe(cb));
+	}
 
-	<U> Promise<U> thenCallback(CallbackSupplierEx<U> fn);
+	default <U> Promise<U> thenCallback(CallbackSupplierEx<U> fn) {
+		return thenCallback((t, e, cb) -> {
+			if (e == null) fn.get(cb);
+			else cb.setException(e);
+		});
+	}
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -480,9 +499,16 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of {@code this} promise
 	 * @see CompletionStage#thenCompose(Function)
 	 */
-	<U> Promise<U> then(AsyncFunctionEx<? super T, U> fn);
+	default <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn) {
+		return thenCallback((t, cb) -> fn.apply(t).subscribe(cb));
+	}
 
-	<U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn);
+	default <U> Promise<U> thenCallback(CallbackFunctionEx<? super T, U> fn) {
+		return thenCallback((t, e, cb) -> {
+			if (e == null) fn.apply(t, cb);
+			else cb.setException(e);
+		});
+	}
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -500,7 +526,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	<U> Promise<U> then(AsyncBiFunctionEx<? super T, @Nullable Exception, U> fn);
+	default <U> Promise<U> then(AsyncBiFunctionEx<? super T, @Nullable Exception, U> fn) {
+		return thenCallback((t, e, cb) -> fn.apply(t, e).subscribe(cb));
+	}
 
 	<U> Promise<U> thenCallback(CallbackBiFunctionEx<? super T, @Nullable Exception, U> fn);
 
@@ -524,12 +552,17 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	default <U> Promise<U> then(
 			AsyncFunctionEx<? super T, U> fn,
 			AsyncFunctionEx<Exception, U> exceptionFn) {
-		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
+		return thenCallback((t, e, cb) -> (e == null ? fn.apply(t) : exceptionFn.apply(e)).subscribe(cb));
 	}
 
-	<U> Promise<U> thenCallback(
+	default <U> Promise<U> thenCallback(
 			CallbackFunctionEx<? super T, U> fn,
-			CallbackFunctionEx<Exception, U> exceptionFn);
+			CallbackFunctionEx<Exception, U> exceptionFn) {
+		return thenCallback((t, e, cb) -> {
+			if (e == null) fn.apply(t, cb);
+			else exceptionFn.apply(e, cb);
+		});
+	}
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -544,7 +577,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a consumer that consumes a result
 	 *           and an exception of {@code this} promise
 	 */
-	Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn);
+	default Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn) {
+		return thenCallback((t, e, cb) -> {
+			fn.accept(t, e);
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Subscribes given consumers to be executed
@@ -561,7 +599,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn          consumer that consumes a result of {@code this} promise
 	 * @param exceptionFn consumer that consumes an exception of {@code this} promise
 	 */
-	Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<Exception> exceptionFn);
+	default Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<Exception> exceptionFn) {
+		return thenCallback((t, e, cb) -> {
+			fn.accept(t);
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -575,7 +618,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param action runnable to be executed after {@code this} promise completes
 	 */
-	Promise<T> whenComplete(RunnableEx action);
+	default Promise<T> whenComplete(RunnableEx action) {
+		return thenCallback((t, e, cb) -> {
+			action.run();
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -589,7 +637,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param fn consumer that consumes a result of {@code this} promise
 	 */
-	Promise<T> whenResult(ConsumerEx<? super T> fn);
+	default Promise<T> whenResult(ConsumerEx<? super T> fn) {
+		return thenCallback((t, cb) -> {
+			fn.accept(t);
+			cb.set(t);
+		});
+	}
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -605,7 +658,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes successfully
 	 */
-	Promise<T> whenResult(RunnableEx action);
+	default Promise<T> whenResult(RunnableEx action) {
+		return thenCallback((t, cb) -> {
+			action.run();
+			cb.set(t);
+		});
+	}
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -619,7 +677,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param fn consumer that consumes an exception of {@code this} promise
 	 */
-	Promise<T> whenException(ConsumerEx<Exception> fn);
+	default Promise<T> whenException(ConsumerEx<Exception> fn) {
+		return thenCallback((t, e, cb) -> {
+			if (e != null) fn.accept(e);
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Subscribes given consumer to be executed
@@ -636,7 +699,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              only if an exception of {@code this} promise is an instance of the specified class
 	 * @param fn    consumer that consumes an exception of {@code this} promise
 	 */
-	<E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<? super E> fn);
+	default <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<? super E> fn) {
+		return thenCallback((t, e, cb) -> {
+			if (e != null && clazz.isAssignableFrom(e.getClass())) fn.accept((E) e);
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -651,7 +719,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes exceptionally
 	 */
-	Promise<T> whenException(RunnableEx action);
+	default Promise<T> whenException(RunnableEx action) {
+		return thenCallback((t, e, cb) -> {
+			if (e != null) action.run();
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Subscribes given runnable to be executed
@@ -670,7 +743,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *               completes exceptionally and an exception of this {@code Promise}
 	 *               is an instance of a given exception {@link Class}.
 	 */
-	Promise<T> whenException(Class<? extends Exception> clazz, RunnableEx action);
+	default Promise<T> whenException(Class<? extends Exception> clazz, RunnableEx action) {
+		return thenCallback((t, e, cb) -> {
+			if (e != null && clazz.isAssignableFrom(e.getClass())) action.run();
+			cb.set(t, e);
+		});
+	}
 
 	/**
 	 * Casts {@code this} promise to a promise of some other type {@link U}
