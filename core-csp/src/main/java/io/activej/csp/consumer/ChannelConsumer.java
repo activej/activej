@@ -254,7 +254,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 										return newAcknowledgement;
 									});
 				} else {
-					ChannelConsumer.this.accept(null).call(acknowledgement::trySet);
+					ChannelConsumer.this.accept(null).subscribe(acknowledgement::trySet);
 					return newAcknowledgement;
 				}
 			}
@@ -270,7 +270,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		while (it.hasNext()) {
 			Promise<Void> accept = output.accept(it.next());
 			if (accept.isResult()) continue;
-			accept.call(($, e) -> {
+			accept.subscribe(($, e) -> {
 				if (e == null) {
 					acceptAllImpl(output, it, ownership, cb);
 				} else {

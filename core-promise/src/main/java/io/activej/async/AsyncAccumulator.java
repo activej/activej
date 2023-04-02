@@ -89,7 +89,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 			return;
 		}
 		activePromises++;
-		promise.call((v, e) -> {
+		promise.subscribe((v, e) -> {
 			activePromises--;
 			if (resultPromise.isComplete()) {
 				Recyclers.recycle(v);

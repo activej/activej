@@ -187,7 +187,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	}
 
 	private void doGet(Callback<HttpResponse> callback) {
-		client.request(HttpRequest.get(address)).call(callback);
+		client.request(HttpRequest.get(address)).subscribe(callback);
 	}
 
 	public static void main(String[] args) throws Exception {

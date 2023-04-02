@@ -309,8 +309,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void call(Callback<? super T> cb) {
+	public Promise<T> subscribe(Callback<? super T> cb) {
 		cb.accept(getResult(), null);
+		return this;
 	}
 
 	@Override

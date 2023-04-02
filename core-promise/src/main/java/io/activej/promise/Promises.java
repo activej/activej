@@ -80,7 +80,7 @@ public class Promises {
 		SettablePromise<T> settablePromise = new SettablePromise<>();
 		ScheduledRunnable schedule = getCurrentReactor().delay(delay,
 				runnableOf(promise, () -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"))));
-		promise.call((result, e) -> {
+		promise.subscribe((result, e) -> {
 			schedule.cancel();
 			if (!settablePromise.trySet(result, e)) {
 				Recyclers.recycle(result);
@@ -132,7 +132,7 @@ public class Promises {
 	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.call(cb))));
+				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.subscribe(cb))));
 	}
 
 	@Contract(pure = true)
@@ -197,7 +197,7 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.call(cb))));
+				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.subscribe(cb))));
 	}
 
 	/**
@@ -818,7 +818,7 @@ public class Promises {
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
 			if (promise.isResult()) continue;
-			promise.call((result, e) -> {
+			promise.subscribe((result, e) -> {
 				if (e == null) {
 					sequenceImpl(promises, cb);
 				} else {
@@ -914,7 +914,7 @@ public class Promises {
 				Recyclers.recycle(v);
 				continue;
 			}
-			nextPromise.call((v, e) -> {
+			nextPromise.subscribe((v, e) -> {
 				if (predicate.test(v, e)) {
 					cb.set(v, e);
 				} else {
@@ -945,7 +945,7 @@ public class Promises {
 				cb.set(null);
 				break;
 			}
-			promise.call((b, e) -> {
+			promise.subscribe((b, e) -> {
 				if (e == null) {
 					if (b == Boolean.TRUE) {
 						repeatImpl(supplier, cb);
@@ -992,7 +992,7 @@ public class Promises {
 					break;
 				}
 			} else {
-				promise.call((newValue, e) -> {
+				promise.subscribe((newValue, e) -> {
 					if (e == null) {
 						if (breakCondition.test(newValue)) {
 							cb.set(newValue);
@@ -1034,7 +1034,7 @@ public class Promises {
 			RetryPolicy<Object> retryPolicy, Object retryState,
 			SettableCallback<T> cb) {
 		next.get()
-				.call((v, e) -> {
+				.subscribe((v, e) -> {
 					if (breakCondition.test(v, e)) {
 						cb.set(v, e);
 					} else {
@@ -1281,7 +1281,7 @@ public class Promises {
 				}
 			} else {
 				countdown++;
-				promise.call((result, e) -> {
+				promise.subscribe((result, e) -> {
 					if (e == null) {
 						if (!isComplete()) {
 							array[i] = result;

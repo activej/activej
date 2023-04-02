@@ -45,6 +45,6 @@ public interface ReactorExecutor extends Executor {
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
 	default <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<? extends T>> computation) {
-		return submit(AsyncComputation.ofDeferred(computation));
+		return submit(AsyncComputation.ofSupplier(computation));
 	}
 }

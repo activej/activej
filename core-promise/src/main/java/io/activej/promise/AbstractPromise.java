@@ -184,23 +184,6 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		return false;
 	}
 
-	@Async.Schedule
-	protected void subscribe(NextPromise<? super T, ?> callback) {
-		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
-		if (next == null) {
-			next = callback;
-		} else if (next instanceof Object[] array) {
-			array = Arrays.copyOf(array, array.length + 1);
-			array[array.length - 1] = callback;
-			next = array;
-		} else {
-			Object[] array = new Object[2];
-			array[0] = next;
-			array[1] = callback;
-			next = array;
-		}
-	}
-
 	@Override
 	public <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn) {
 		if (isComplete()) {
@@ -234,7 +217,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".map(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -267,7 +250,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".map(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -300,7 +283,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".map(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -336,7 +319,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".mapException(" + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -374,7 +357,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".mapException(" + formatToString(predicate) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -413,7 +396,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".mapException(" + clazz.getName() + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -439,7 +422,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.call(this);
+					promise.subscribe(this);
 				} else {
 					completeExceptionally(e);
 				}
@@ -450,7 +433,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -484,7 +467,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -510,7 +493,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.call(this);
+					promise.subscribe(this);
 				} else {
 					completeExceptionally(e);
 				}
@@ -521,7 +504,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -555,7 +538,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -581,7 +564,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.call(this);
+					promise.subscribe(this);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -591,7 +574,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.call(this);
+					promise.subscribe(this);
 				}
 			}
 
@@ -600,7 +583,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -640,7 +623,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -666,7 +649,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.call(this);
+					promise.subscribe(this);
 				} else {
 					Promise<? extends U> promise;
 					try {
@@ -676,7 +659,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 						completeExceptionally(ex);
 						return;
 					}
-					promise.call(this);
+					promise.subscribe(this);
 				}
 			}
 
@@ -685,7 +668,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -724,7 +707,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".then(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -757,7 +740,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenComplete(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -798,7 +781,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenComplete(" + formatToString(fn) + ", " + formatToString(exceptionFn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -831,7 +814,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenComplete(" + formatToString(action) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -870,7 +853,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenResult(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -909,7 +892,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenResult(" + formatToString(action) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -948,7 +931,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenException(" + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -985,7 +968,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenException(" + clazz.getName() + ", " + formatToString(fn) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1024,7 +1007,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenException(" + formatToString(action) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1061,7 +1044,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".whenException(" + clazz.getName() + ", " + formatToString(action) + ')';
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1101,8 +1084,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			return (Promise<V>) other;
 		}
 		PromiseCombine<T, V, U> resultPromise = new PromiseCombine<>(fn);
-		other.call(resultPromise::acceptOther);
-		subscribe(resultPromise);
+		other.subscribe(resultPromise::acceptOther);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1183,7 +1166,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		PromiseBoth<Object> resultPromise = new PromiseBoth<>();
 		other.next(resultPromise);
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1231,7 +1214,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		}
 		EitherPromise<T> resultPromise = new EitherPromise<>();
 		other.next(resultPromise);
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1277,7 +1260,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".toTry()";
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1301,7 +1284,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				return ".toVoid()";
 			}
 		};
-		subscribe(resultPromise);
+		next0(resultPromise);
 		return resultPromise;
 	}
 
@@ -1311,14 +1294,31 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			cb.acceptNext(result, exception);
 			return;
 		}
-		subscribe(cb);
+		next0(cb);
+	}
+
+	@Async.Schedule
+	private void next0(NextPromise<? super T, ?> callback) {
+		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
+		if (next == null) {
+			next = callback;
+		} else if (next instanceof Object[] array) {
+			array = Arrays.copyOf(array, array.length + 1);
+			array[array.length - 1] = callback;
+			next = array;
+		} else {
+			Object[] array = new Object[2];
+			array[0] = next;
+			array[1] = callback;
+			next = array;
+		}
 	}
 
 	@Override
-	public void call(Callback<? super T> cb) {
+	public Promise<T> subscribe(Callback<? super T> cb) {
 		if (isComplete()) {
 			cb.accept(result, exception);
-			return;
+			return this;
 		}
 		if (cb instanceof NextPromise) {
 			cb = cb::accept;
@@ -1335,6 +1335,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			array[1] = cb;
 			next = array;
 		}
+		return this;
 	}
 
 	@Override
@@ -1349,7 +1350,7 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			}
 		}
 		CompletableFuture<T> future = new CompletableFuture<>();
-		call(new Callback<>() {
+		subscribe(new Callback<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {

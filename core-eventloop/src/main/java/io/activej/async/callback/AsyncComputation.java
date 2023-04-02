@@ -51,7 +51,7 @@ public interface AsyncComputation<T> {
 		};
 	}
 
-	static <T> AsyncComputation<T> ofDeferred(SupplierEx<? extends AsyncComputation<? extends T>> computationSupplier) {
+	static <T> AsyncComputation<T> ofSupplier(SupplierEx<? extends AsyncComputation<? extends T>> computationSupplier) {
 		return cb -> {
 			AsyncComputation<? extends T> computation;
 			try {

@@ -110,7 +110,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (inspector != null) inspector.onAccept(this);
 		(pool = server.poolNew).addLastNode(this);
 		poolTimestamp = reactor.currentTimeMillis();
-		socket.read().call(readMessageConsumer);
+		socket.read().subscribe(readMessageConsumer);
 	}
 
 	public PoolLabel getCurrentPool() {
@@ -364,7 +364,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			handleError(e, this);
 			servletResult = Promise.ofException(e);
 		}
-		servletResult.call((response, e) -> {
+		servletResult.subscribe((response, e) -> {
 			checkInReactorThread(this);
 			if (isClosed()) {
 				request.recycle();

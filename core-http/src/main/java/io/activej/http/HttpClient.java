@@ -496,7 +496,7 @@ public final class HttpClient extends AbstractNioReactive
 								return;
 							}
 							//noinspection ConstantConditions - dnsResponse is successful (not null)
-							doSend(request, dnsResponse.getRecord().getIps(), isWebSocket).call(cb);
+							doSend(request, dnsResponse.getRecord().getIps(), isWebSocket).subscribe(cb);
 						},
 						(e, cb) -> {
 							if (inspector != null) inspector.onResolveError(request, e);

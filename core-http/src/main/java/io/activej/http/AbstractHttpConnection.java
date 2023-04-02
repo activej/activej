@@ -225,7 +225,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 	protected void read() {
 		if (readBuf == null) {
-			socket.read().call(readMessageConsumer);
+			socket.read().subscribe(readMessageConsumer);
 			return;
 		}
 		try {
@@ -250,7 +250,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		}
 		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
-		socket.read().call(readMessageConsumer);
+		socket.read().subscribe(readMessageConsumer);
 	}
 
 	private void readHeaders(int from) throws MalformedHttpException {
@@ -305,7 +305,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		readBuf.head(offset);
 		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");
-		socket.read().call(readHeadersConsumer);
+		socket.read().subscribe(readHeadersConsumer);
 	}
 
 	private int scanHeader(int from, byte[] array, int head, int tail) throws MalformedHttpException {
@@ -474,7 +474,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		onHeadersReceived(null, supplier);
 
 		process.getProcessCompletion()
-				.call(($, e) -> {
+				.subscribe(($, e) -> {
 					if (isClosed()) return;
 					if (e == null) {
 						assert this.readBuf == null;
@@ -550,7 +550,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 	protected void writeBuf(ByteBuf buf) {
 		socket.write(buf)
-				.call(($, e) -> {
+				.subscribe(($, e) -> {
 					if (isClosed()) return;
 					if (e == null) {
 						onBodySent();

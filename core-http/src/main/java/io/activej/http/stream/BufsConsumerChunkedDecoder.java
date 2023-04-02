@@ -123,7 +123,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							this.bufs.skip(bytes - 1);
 							return chunkLength;
 						})
-				.call((chunkLength, e) -> {
+				.subscribe((chunkLength, e) -> {
 					if (e == null) {
 						if (chunkLength != 0) {
 							consumeCRLF(chunkLength);
@@ -142,11 +142,11 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		if (newChunkLength != 0) {
 			Promise.complete()
 					.thenCallback(cb -> {
-						if (buf.canRead()) output.accept(buf).call(cb);
+						if (buf.canRead()) output.accept(buf).subscribe(cb);
 						else cb.set(null);
 					})
 					.thenCallback(cb -> {
-						if (bufs.isEmpty()) input.needMoreData().call(cb);
+						if (bufs.isEmpty()) input.needMoreData().subscribe(cb);
 						else cb.set(null);
 					})
 					.whenResult(() -> processData(newChunkLength));
@@ -154,7 +154,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		}
 		input.decode(assertBytes(CRLF))
 				.whenException(buf::recycle)
-				.thenCallback(cb -> output.accept(buf).call(cb))
+				.thenCallback(cb -> output.accept(buf).subscribe(cb))
 				.whenResult(this::processLength);
 	}
 
@@ -167,7 +167,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 							}
 							return maybeResult;
 						})
-				.call((buf, e) -> {
+				.subscribe((buf, e) -> {
 					if (e == null) {
 						buf.recycle();
 						processData(chunkLength);

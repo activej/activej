@@ -347,6 +347,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@Contract(pure = true)
 	Promise<T> async();
 
+	Promise<T> subscribe(Callback<? super T> cb);
+
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
 	 * a result of {@code this} promise to some other value.
@@ -800,8 +802,11 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	@ApiStatus.Internal
 	void next(NextPromise<? super T, ?> cb);
 
+	@ApiStatus.Internal
 	@Override
-	void call(Callback<? super T> cb);
+	default void call(Callback<? super T> cb) {
+		subscribe(cb);
+	}
 
 	/**
 	 * Wraps {@code Promise} into {@link CompletableFuture}.

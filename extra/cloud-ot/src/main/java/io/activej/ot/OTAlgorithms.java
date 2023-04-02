@@ -69,7 +69,7 @@ public final class OTAlgorithms {
 			return;
 		}
 		reducer.onCommit(commit)
-				.call((maybeResult, e) -> {
+				.subscribe((maybeResult, e) -> {
 					if (e != null) {
 						cb.setException(e);
 						return;
@@ -79,7 +79,7 @@ public final class OTAlgorithms {
 					if (maybeResult.isResume()) {
 						toList(commit.getParents().keySet().stream().filter(visited::add).map(repository::loadCommit))
 								.async()
-								.call((parentCommits, e2) -> {
+								.subscribe((parentCommits, e2) -> {
 									if (e2 == null) {
 										queue.addAll(parentCommits);
 										walkGraphImpl(repository, reducer, queue, visited, cb);
