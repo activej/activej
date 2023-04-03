@@ -201,9 +201,6 @@ public final class TaskScheduler extends AbstractReactive
 	}
 
 	private void scheduleTask() {
-		if (scheduledTask != null && scheduledTask.isCancelled())
-			return;
-
 		if (!enabled) return;
 
 		long now = reactor.currentTimeMillis();
@@ -270,7 +267,7 @@ public final class TaskScheduler extends AbstractReactive
 	public void setSchedule(Schedule schedule) {
 		checkInReactorThread(this);
 		this.schedule = checkNotNull(schedule);
-		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled()) {
+		if (stats.getActivePromises() != 0 && scheduledTask != null) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 			scheduleTask();
 		}
@@ -279,7 +276,7 @@ public final class TaskScheduler extends AbstractReactive
 	public void setRetryPolicy(RetryPolicy<?> retryPolicy) {
 		//noinspection unchecked
 		this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
-		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled() && lastException != null) {
+		if (stats.getActivePromises() != 0 && scheduledTask != null && lastException != null) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 			scheduleTask();
 		}
