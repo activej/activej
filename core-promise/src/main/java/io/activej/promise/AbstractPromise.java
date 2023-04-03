@@ -120,10 +120,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				Object it = list[i];
 				if (it instanceof NextPromise cb) {
 					cb.acceptNext(value, null);
-				} else if (it instanceof Callback cb) {
-					cb.accept(value, null);
 				} else {
-					break;
+					((Callback<T>) it).accept(value, null);
 				}
 			}
 		}
@@ -147,10 +145,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 				Object it = list[i];
 				if (it instanceof NextPromise cb) {
 					cb.acceptNext(null, exception);
-				} else if (it instanceof Callback cb) {
-					cb.accept(null, exception);
 				} else {
-					break;
+					((Callback<?>) it).accept(null, exception);
 				}
 			}
 		}
@@ -1260,7 +1256,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 
 	@Async.Schedule
 	private void next0(NextPromise<? super T, ?> callback) {
-		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
+		assert !isComplete();
+
 		if (next == null) {
 			next = callback;
 		} else if (next instanceof Object[] array) {
@@ -1282,6 +1279,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			return this;
 		}
 		if (cb instanceof NextPromise) {
+			//type of `cb` matters
+			//noinspection FunctionalExpressionCanBeFolded
 			cb = cb::accept;
 		}
 		if (next == null) {
@@ -1338,9 +1337,9 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 			return;
 		}
 		if (callback instanceof Object[] nextCallbacks) {
-			for (int i = 0; i < nextCallbacks.length; i++) {
-				appendChildren(sb, nextCallbacks[i], indent);
-				if (nextCallbacks[i] == null) break;
+			for (Object nextCallback : nextCallbacks) {
+				appendChildren(sb, nextCallback, indent);
+				if (nextCallback == null) break;
 			}
 		} else {
 			indent += "\t";

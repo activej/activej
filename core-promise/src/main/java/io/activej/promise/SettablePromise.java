@@ -16,7 +16,6 @@
 
 package io.activej.promise;
 
-import io.activej.async.callback.Callback;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +31,7 @@ import static io.activej.reactor.util.RunnableWithContext.runnableOf;
  *
  * @param <T> result type
  */
-public final class SettablePromise<T> extends AbstractPromise<T> implements SettableCallback<T>, Callback<T> {
+public final class SettablePromise<T> extends AbstractPromise<T> implements SettableCallback<T> {
 	/**
 	 * Accepts the provided values and performs this operation
 	 * on them. If the {@code Exception e} is {@code null},
