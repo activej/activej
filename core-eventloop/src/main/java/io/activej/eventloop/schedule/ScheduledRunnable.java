@@ -16,28 +16,46 @@
 
 package io.activej.eventloop.schedule;
 
-import java.time.Duration;
+import io.activej.common.StringFormatUtils;
+
 import java.time.Instant;
 
-public final class ScheduledRunnable {
+public abstract class ScheduledRunnable implements Runnable {
 	final long timestamp;
 	ScheduledPriorityQueue queue;
 	int index;
-	private final Runnable runnable;
 
-	public ScheduledRunnable(long timestamp, Runnable runnable) {
+	public ScheduledRunnable(long timestamp) {
 		this.timestamp = timestamp;
-		this.runnable = runnable;
+	}
+
+	public static ScheduledRunnable of(long timestamp, Runnable runnable) {
+		return new ScheduledRunnableImpl(timestamp, runnable);
+	}
+
+	private static final class ScheduledRunnableImpl extends ScheduledRunnable {
+		private final Runnable runnable;
+
+		public ScheduledRunnableImpl(long timestamp, Runnable runnable) {
+			super(timestamp);
+			this.runnable = runnable;
+		}
+
+		@Override
+		public void run() {
+			runnable.run();
+		}
+
+		@Override
+		protected String runnableToString() {
+			return runnable.toString();
+		}
 	}
 
 	public void cancel() {
 		if (queue != null) {
 			queue.remove(this);
 		}
-	}
-
-	public Runnable runnable() {
-		return runnable;
 	}
 
 	public long timestamp() {
@@ -48,8 +66,16 @@ public final class ScheduledRunnable {
 		return queue != null;
 	}
 
+	protected String timestampToString() {
+		return StringFormatUtils.formatInstant(Instant.ofEpochMilli(timestamp));
+	}
+
+	protected String runnableToString() {
+		return super.toString();
+	}
+
 	@Override
 	public String toString() {
-		return "{" + Duration.between(Instant.now(), Instant.ofEpochMilli(timestamp)) + " : " + runnable + "}";
+		return "{ " + (queue != null ? index : "-") + " @ " + timestampToString() + " : " + runnableToString() + " }";
 	}
 }

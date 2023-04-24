@@ -28,7 +28,13 @@ public interface Scheduler extends CurrentTimeProvider {
 		return schedule(instant.toEpochMilli(), runnable);
 	}
 
-	@NotNull ScheduledRunnable schedule(long timestamp, @NotNull Runnable runnable);
+	default ScheduledRunnable schedule(long timestamp, Runnable runnable) {
+		ScheduledRunnable scheduledRunnable = ScheduledRunnable.of(timestamp, runnable);
+		schedule(scheduledRunnable);
+		return scheduledRunnable;
+	}
+
+	void schedule(ScheduledRunnable scheduledRunnable);
 
 	default @NotNull ScheduledRunnable delay(@NotNull Duration delay, @NotNull Runnable runnable) {
 		return delay(delay.toMillis(), runnable);
@@ -42,7 +48,13 @@ public interface Scheduler extends CurrentTimeProvider {
 		return scheduleBackground(instant.toEpochMilli(), runnable);
 	}
 
-	@NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull Runnable runnable);
+	default ScheduledRunnable scheduleBackground(long timestamp, Runnable runnable) {
+		ScheduledRunnable scheduledRunnable = ScheduledRunnable.of(timestamp, runnable);
+		scheduleBackground(scheduledRunnable);
+		return scheduledRunnable;
+	}
+
+	void scheduleBackground(ScheduledRunnable scheduledRunnable);
 
 	default @NotNull ScheduledRunnable delayBackground(@NotNull Duration delay, @NotNull Runnable runnable) {
 		return delayBackground(delay.toMillis(), runnable);

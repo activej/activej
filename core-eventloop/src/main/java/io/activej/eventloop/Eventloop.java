@@ -749,9 +749,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		Stopwatch sw = monitoring ? Stopwatch.createUnstarted() : null;
 
 		for (; ; ) {
-			ScheduledRunnable scheduledRunnable = taskQueue.take(currentTimeMillis());
-			if (scheduledRunnable == null) break;
-			Runnable runnable = scheduledRunnable.runnable();
+			ScheduledRunnable runnable = taskQueue.take(currentTimeMillis());
+			if (runnable == null) break;
 
 			if (sw != null) {
 				sw.reset();
@@ -759,7 +758,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			}
 
 			if (monitoring && inspector != null) {
-				int overdue = (int) (System.currentTimeMillis() - scheduledRunnable.timestamp());
+				int overdue = (int) (System.currentTimeMillis() - runnable.timestamp());
 				inspector.onScheduledTaskOverdue(overdue, background);
 			}
 
@@ -1087,39 +1086,14 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
-	/**
-	 * Schedules new task. Returns {@link ScheduledRunnable} with this runnable.
-	 *
-	 * @param timestamp timestamp after which task will be run
-	 * @param runnable  runnable of this task
-	 * @return scheduledRunnable, which could used for cancelling the task
-	 */
 	@Override
-	public @NotNull ScheduledRunnable schedule(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
-		return addScheduledTask(timestamp, runnable, scheduledTasks);
+	public void schedule(ScheduledRunnable scheduledTask) {
+		scheduledTasks.add(scheduledTask);
 	}
 
-	/**
-	 * Schedules new background task. Returns {@link ScheduledRunnable} with this runnable.
-	 * <p>
-	 * If eventloop contains only background tasks, it will be closed
-	 *
-	 * @param timestamp timestamp after which task will be run
-	 * @param runnable  runnable of this task
-	 * @return scheduledRunnable, which could used for cancelling the task
-	 */
 	@Override
-	public @NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK)
-			checkState(inEventloopThread(), "Not in eventloop thread");
-		return addScheduledTask(timestamp, runnable, backgroundTasks);
-	}
-
-	private @NotNull ScheduledRunnable addScheduledTask(long timestamp, Runnable runnable, ScheduledPriorityQueue queue) {
-		ScheduledRunnable scheduledTask = new ScheduledRunnable(timestamp, runnable);
-		queue.add(scheduledTask);
-		return scheduledTask;
+	public void scheduleBackground(ScheduledRunnable scheduledTask) {
+		backgroundTasks.add(scheduledTask);
 	}
 
 	/**

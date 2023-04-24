@@ -112,9 +112,9 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			if (timeout == Integer.MAX_VALUE) {
 				activeRequests.put(cookie, cb);
 			} else {
-				ScheduledCallback<O> scheduledCallback = new ScheduledCallback<>(cookie, cb);
-				scheduledCallback.scheduledRunnable = eventloop.delayBackground(timeout, scheduledCallback);
-				activeRequests.put(cookie, scheduledCallback);
+				ScheduledCallback<O> scheduledRunnable = new ScheduledCallback<>(eventloop.currentTimeMillis() + timeout, cookie, cb);
+				eventloop.scheduleBackground(scheduledRunnable);
+				activeRequests.put(cookie, scheduledRunnable);
 			}
 
 			downstreamDataAcceptor.accept(RpcMessage.of(cookie, request));
@@ -123,20 +123,20 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		}
 	}
 
-	private class ScheduledCallback<O> implements Runnable, Callback<O> {
-		ScheduledRunnable scheduledRunnable;
+	private class ScheduledCallback<O> extends ScheduledRunnable implements Callback<O> {
 		final Callback<O> cb;
 		final int cookie;
 
-		ScheduledCallback(int cookie, @NotNull Callback<O> cb) {
+		ScheduledCallback(long timestamp, int cookie, @NotNull Callback<O> cb) {
+			super(timestamp);
 			this.cookie = cookie;
 			this.cb = cb;
 		}
 
 		@Override
 		public void accept(O result, @Nullable Exception e) {
-			if (scheduledRunnable != null) {
-				scheduledRunnable.cancel();
+			if (isActive()) {
+				cancel();
 				cb.accept(result, e);
 			} else {
 				Recyclers.recycle(result);
@@ -145,7 +145,6 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 		@Override
 		public void run() {
-			scheduledRunnable = null;
 			Callback<?> expiredCb = activeRequests.remove(cookie);
 			if (expiredCb != null) {
 				assert expiredCb == this;
