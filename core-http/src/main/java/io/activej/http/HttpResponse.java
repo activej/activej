@@ -114,7 +114,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	private static final byte[] CODE_511_BYTES = encodeAscii("HTTP/1.1 511 Network Authentication Required");
 	private static final int LONGEST_FIRST_LINE_SIZE = CODE_511_BYTES.length;
 
-	private final int code;
+	private       int                  code;
 	private final HttpClientConnection connection;
 
 	private @Nullable Map<String, HttpCookie> parsedCookies;
@@ -351,6 +351,14 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	public int getCode() {
 		return code;
+	}
+	public void setCode(int code) {
+		this.code = code;
+	}
+
+	public HttpResponse withCode(int code) {
+		setCode(code);
+		return this;
 	}
 
 	public Map<String, HttpCookie> getCookies() {
