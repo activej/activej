@@ -28,7 +28,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Checks.*;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
@@ -44,7 +43,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 	public synchronized void execute(Object bean, Runnable command) {
 		Eventloop eventloop = beanToEventloop.get(bean);
 		checkNotNull(eventloop, () -> "Unregistered bean " + bean);
-		eventloop.execute(wrapContext(bean, command));
+		eventloop.execute(command);
 	}
 
 	@Override

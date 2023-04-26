@@ -63,7 +63,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Utils.nonNullElseGet;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
@@ -490,7 +489,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					anotherEventloop.startExternalTask();
 					eventloop.execute(() ->
 							requestSender.sendRequest(request, timeout, (Callback<O>) (result, e) -> {
-								anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
+								anotherEventloop.execute(() -> cb.accept(result, e));
 								anotherEventloop.completeExternalTask();
 							}));
 				} else {

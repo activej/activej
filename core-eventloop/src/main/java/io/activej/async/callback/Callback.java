@@ -19,8 +19,6 @@ package io.activej.async.callback;
 import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
-
 /**
  * Represents a universal Callback interface
  */
@@ -32,6 +30,6 @@ public interface Callback<T> {
 	void accept(T result, @Nullable Exception e);
 
 	static <T> Callback<T> toAnotherEventloop(Eventloop anotherEventloop, Callback<T> cb) {
-		return (result, e) -> anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
+		return (result, e) -> anotherEventloop.execute(() -> cb.accept(result, e));
 	}
 }

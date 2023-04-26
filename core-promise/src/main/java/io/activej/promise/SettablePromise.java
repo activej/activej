@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Represents a {@link Promise} which can be completed or completedExceptionally
@@ -126,27 +125,27 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	}
 
 	public void post(T result) {
-		getCurrentEventloop().post(wrapContext(this, () -> set(result)));
+		getCurrentEventloop().post(() -> set(result));
 	}
 
 	public void postException(@NotNull Exception e) {
-		getCurrentEventloop().post(wrapContext(this, () -> setException(e)));
+		getCurrentEventloop().post(() -> setException(e));
 	}
 
 	public void post(T result, @Nullable Exception e) {
-		getCurrentEventloop().post(wrapContext(this, () -> accept(result, e)));
+		getCurrentEventloop().post(() -> accept(result, e));
 	}
 
 	public void tryPost(T result) {
-		getCurrentEventloop().post(wrapContext(this, () -> trySet(result)));
+		getCurrentEventloop().post(() -> trySet(result));
 	}
 
 	public void tryPostException(@NotNull Exception e) {
-		getCurrentEventloop().post(wrapContext(this, () -> trySetException(e)));
+		getCurrentEventloop().post(() -> trySetException(e));
 	}
 
 	public void tryPost(T result, @Nullable Exception e) {
-		getCurrentEventloop().post(wrapContext(this, () -> trySet(result, e)));
+		getCurrentEventloop().post(() -> trySet(result, e));
 	}
 
 	@Override

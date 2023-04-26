@@ -29,7 +29,6 @@ import java.util.function.Predicate;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Represents a {@code Promise} which is completed with an exception.
@@ -394,7 +393,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@Override
 	public @NotNull Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
-		getCurrentEventloop().post(wrapContext(result, () -> result.setException(exception)));
+		getCurrentEventloop().post(() -> result.setException(exception));
 		return result;
 	}
 

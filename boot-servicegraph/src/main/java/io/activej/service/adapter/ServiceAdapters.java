@@ -32,7 +32,6 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("WeakerAccess")
@@ -215,7 +214,7 @@ public final class ServiceAdapters {
 			@Override
 			public CompletableFuture<?> start(EventloopService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> {
+				instance.getEventloop().execute(() -> {
 					try {
 						instance.start()
 								.whenResult(future::complete)
@@ -223,14 +222,14 @@ public final class ServiceAdapters {
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
-				}));
+				});
 				return future;
 			}
 
 			@Override
 			public CompletableFuture<?> stop(EventloopService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> {
+				instance.getEventloop().execute(() -> {
 					try {
 						instance.stop()
 								.whenResult(future::complete)
@@ -238,7 +237,7 @@ public final class ServiceAdapters {
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
-				}));
+				});
 				return future;
 			}
 		};
@@ -249,23 +248,23 @@ public final class ServiceAdapters {
 			@Override
 			public CompletableFuture<?> start(EventloopServer instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> {
+				instance.getEventloop().execute(() -> {
 					try {
 						instance.listen();
 						future.complete(null);
 					} catch (IOException e) {
 						future.completeExceptionally(e);
 					}
-				}));
+				});
 				return future;
 			}
 
 			@Override
 			public CompletableFuture<?> stop(EventloopServer instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> instance.close()
+				instance.getEventloop().execute(() -> instance.close()
 						.whenResult(future::complete)
-						.whenException(future::completeExceptionally)));
+						.whenException(future::completeExceptionally));
 				return future;
 			}
 		};

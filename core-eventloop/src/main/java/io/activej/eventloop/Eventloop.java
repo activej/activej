@@ -38,7 +38,6 @@ import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.eventloop.schedule.ScheduledPriorityQueue;
 import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.eventloop.schedule.Scheduler;
-import io.activej.eventloop.util.RunnableWithContext;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import org.jetbrains.annotations.Async;
@@ -677,7 +676,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 				tick++;
 				if (sw != null && inspector != null) inspector.onUpdateLocalTaskDuration(runnable, sw);
 			} catch (Throwable e) {
-				onFatalError(e, runnable);
+				handleError(eventloopFatalErrorHandler, e, runnable);
 			}
 			localTasks++;
 		}
@@ -718,7 +717,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 				executeTask(runnable);
 				if (sw != null && inspector != null) inspector.onUpdateConcurrentTaskDuration(runnable, sw);
 			} catch (Throwable e) {
-				onFatalError(e, runnable);
+				handleError(eventloopFatalErrorHandler, e, runnable);
 			}
 			concurrentTasks++;
 		}
@@ -769,7 +768,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 				tick++;
 				if (sw != null && inspector != null) inspector.onUpdateScheduledTaskDuration(runnable, sw, background);
 			} catch (Throwable e) {
-				onFatalError(e, runnable);
+				handleError(eventloopFatalErrorHandler, e, runnable);
 			}
 
 			scheduledTasks++;
@@ -1249,14 +1248,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	private void recordIoError(@NotNull Exception e, @Nullable Object context) {
 		logger.warn("IO Error in {}", context, e);
-	}
-
-	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
-		if (runnable instanceof RunnableWithContext) {
-			handleError(eventloopFatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
-		} else {
-			handleError(eventloopFatalErrorHandler, e, runnable);
-		}
 	}
 
 	/**

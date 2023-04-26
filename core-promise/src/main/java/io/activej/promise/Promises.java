@@ -43,7 +43,6 @@ import java.util.stream.Stream;
 import static io.activej.common.Utils.*;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.PromisePredicates.isResult;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -76,11 +75,11 @@ public final class Promises {
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
 		return promise.next(new NextPromise<T, T>() {
 			@Nullable ScheduledRunnable schedule = getCurrentEventloop().delay(delay,
-					wrapContext(this, () -> {
+					() -> {
 						promise.whenResult(Recyclers::recycle);
 						schedule = null;
 						tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"));
-					}));
+					});
 
 			@Override
 			public void accept(T result, @Nullable Exception e) {
@@ -113,7 +112,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> delay(long delayMillis, T value) {
 		if (delayMillis <= 0) return Promise.of(value);
 		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> cb.set(value)));
+		getCurrentEventloop().delay(delayMillis, () -> cb.set(value));
 		return cb;
 	}
 
@@ -137,7 +136,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> delay(long delayMillis, @NotNull Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> promise.run(cb))));
+				getCurrentEventloop().delay(delayMillis, () -> promise.run(cb)));
 	}
 
 	@Contract(pure = true)
@@ -149,7 +148,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> interval(long intervalMillis, @NotNull Promise<T> promise) {
 		return intervalMillis <= 0 ?
 				promise :
-				promise.then(value -> Promise.ofCallback(cb -> getCurrentEventloop().delay(intervalMillis, wrapContext(cb, () -> cb.set(value)))));
+				promise.then(value -> Promise.ofCallback(cb -> getCurrentEventloop().delay(intervalMillis, () -> cb.set(value))));
 	}
 
 	/**
@@ -182,7 +181,7 @@ public final class Promises {
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> schedule(T value, long timestamp) {
 		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> cb.set(value)));
+		getCurrentEventloop().schedule(timestamp, () -> cb.set(value));
 		return cb;
 	}
 
@@ -202,7 +201,7 @@ public final class Promises {
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> schedule(@NotNull Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> promise.run(cb))));
+				getCurrentEventloop().schedule(timestamp, () -> promise.run(cb)));
 	}
 
 	/**
@@ -1051,7 +1050,7 @@ public final class Promises {
 							cb.setException(e != null ? e : new Exception("RetryPolicy: giving up " + retryState));
 						} else {
 							eventloop.schedule(nextRetryTimestamp,
-									wrapContext(cb, () -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb)));
+									() -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb));
 						}
 					}
 				});

@@ -37,7 +37,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
 /**
  * Implementation of {@link AsyncDnsClient} that asynchronously
@@ -112,7 +111,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 						eventloop.execute(() ->
 								CachedAsyncDnsClient.this.resolve(query)
 										.run((result, e) -> {
-											anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
+											anotherEventloop.execute(() -> cb.accept(result, e));
 											anotherEventloop.completeExternalTask();
 										})));
 			}
