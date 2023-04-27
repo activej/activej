@@ -37,7 +37,6 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.exception.FatalErrorHandler.getExceptionOrThrowError;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Replacement of default Java {@link CompletionStage} interface with
@@ -209,7 +208,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			Reactor reactor = getCurrentReactor();
 			reactor.startExternalTask();
 			completionStage.whenCompleteAsync((result, throwable) -> {
-				reactor.execute(runnableOf(cb, () -> {
+				reactor.execute(() -> {
 					if (throwable == null) {
 						cb.set(result, null);
 					} else {
@@ -217,7 +216,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						handleError(e, cb);
 						cb.set(null, e);
 					}
-				}));
+				});
 				reactor.completeExternalTask();
 			});
 		});
@@ -238,24 +237,24 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 				executor.execute(() -> {
 					try {
 						T value = future.get();
-						reactor.execute(runnableOf(cb, () -> cb.set(value)));
+						reactor.execute(() -> cb.set(value));
 					} catch (ExecutionException ex) {
-						reactor.execute(runnableOf(cb, () -> {
+						reactor.execute(() -> {
 							Exception e = getExceptionOrThrowError(ex.getCause());
 							handleError(e, cb);
 							cb.setException(e);
-						}));
+						});
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
-						reactor.execute(runnableOf(cb, () -> cb.setException(e)));
+						reactor.execute(() -> cb.setException(e));
 					} catch (CancellationException e) {
-						reactor.execute(runnableOf(cb, () -> cb.setException(e)));
+						reactor.execute(() -> cb.setException(e));
 					} catch (Throwable throwable) {
-						reactor.execute(runnableOf(cb, () -> {
+						reactor.execute(() -> {
 							Exception e = getExceptionOrThrowError(throwable);
 							handleError(e, cb);
 							cb.setException(e);
-						}));
+						});
 					} finally {
 						reactor.completeExternalTask();
 					}
@@ -284,13 +283,13 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 				executor.execute(() -> {
 					try {
 						T result = supplier.get();
-						reactor.execute(runnableOf(cb, () -> cb.set(result)));
+						reactor.execute(() -> cb.set(result));
 					} catch (Throwable throwable) {
-						reactor.execute(runnableOf(cb, () -> {
+						reactor.execute(() -> {
 							Exception e = getExceptionOrThrowError(throwable);
 							handleError(e, cb);
 							cb.setException(e);
-						}));
+						});
 					} finally {
 						reactor.completeExternalTask();
 					}

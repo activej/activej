@@ -123,7 +123,7 @@ public final class RateLimiter<T> extends ImplicitlyReactive implements StreamTr
 
 		@Override
 		protected void onEndOfStream() {
-			if (scheduledRunnable == null || scheduledRunnable.isComplete()) {
+			if (scheduledRunnable == null) {
 				output.sendEndOfStream();
 			}
 		}

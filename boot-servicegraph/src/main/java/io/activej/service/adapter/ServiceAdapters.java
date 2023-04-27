@@ -32,7 +32,6 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("WeakerAccess")
@@ -216,7 +215,7 @@ public class ServiceAdapters {
 			@Override
 			public CompletableFuture<?> start(ReactiveService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getReactor().execute(runnableOf(instance, () -> {
+				instance.getReactor().execute(() -> {
 					try {
 						instance.start()
 								.whenResult(future::complete)
@@ -224,14 +223,14 @@ public class ServiceAdapters {
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
-				}));
+				});
 				return future;
 			}
 
 			@Override
 			public CompletableFuture<?> stop(ReactiveService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getReactor().execute(runnableOf(instance, () -> {
+				instance.getReactor().execute(() -> {
 					try {
 						instance.stop()
 								.whenResult(future::complete)
@@ -239,7 +238,7 @@ public class ServiceAdapters {
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
-				}));
+				});
 				return future;
 			}
 		};
@@ -250,23 +249,23 @@ public class ServiceAdapters {
 			@Override
 			public CompletableFuture<?> start(ReactiveServer instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
-				instance.getReactor().execute(runnableOf(instance, () -> {
+				instance.getReactor().execute(() -> {
 					try {
 						instance.listen();
 						future.complete(null);
 					} catch (IOException e) {
 						future.completeExceptionally(e);
 					}
-				}));
+				});
 				return future;
 			}
 
 			@Override
 			public CompletableFuture<?> stop(ReactiveServer instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getReactor().execute(runnableOf(instance, () -> instance.close()
+				instance.getReactor().execute(() -> instance.close()
 						.whenResult(future::complete)
-						.whenException(future::completeExceptionally)));
+						.whenException(future::completeExceptionally));
 				return future;
 			}
 		};

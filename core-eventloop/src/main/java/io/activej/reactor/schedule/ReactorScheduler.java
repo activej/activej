@@ -27,7 +27,13 @@ public interface ReactorScheduler extends CurrentTimeProvider {
 		return schedule(instant.toEpochMilli(), runnable);
 	}
 
-	ScheduledRunnable schedule(long timestamp, Runnable runnable);
+	default ScheduledRunnable schedule(long timestamp, Runnable runnable) {
+		ScheduledRunnable scheduledRunnable = ScheduledRunnable.of(timestamp, runnable);
+		schedule(scheduledRunnable);
+		return scheduledRunnable;
+	}
+
+	void schedule(ScheduledRunnable scheduledRunnable);
 
 	default ScheduledRunnable delay(Duration delay, Runnable runnable) {
 		return delay(delay.toMillis(), runnable);
@@ -41,7 +47,13 @@ public interface ReactorScheduler extends CurrentTimeProvider {
 		return scheduleBackground(instant.toEpochMilli(), runnable);
 	}
 
-	ScheduledRunnable scheduleBackground(long timestamp, Runnable runnable);
+	default ScheduledRunnable scheduleBackground(long timestamp, Runnable runnable) {
+		ScheduledRunnable scheduledRunnable = ScheduledRunnable.of(timestamp, runnable);
+		scheduleBackground(scheduledRunnable);
+		return scheduledRunnable;
+	}
+
+	void scheduleBackground(ScheduledRunnable scheduledRunnable);
 
 	default ScheduledRunnable delayBackground(Duration delay, Runnable runnable) {
 		return delayBackground(delay.toMillis(), runnable);

@@ -37,8 +37,8 @@ import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.schedule.ScheduledPriorityQueue;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import io.activej.reactor.util.RunnableWithContext;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -50,7 +50,10 @@ import java.net.SocketAddress;
 import java.nio.channels.*;
 import java.nio.channels.spi.SelectorProvider;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -103,13 +106,13 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 	 * Collection of scheduled tasks that are scheduled
 	 * to be executed at particular timestamp.
 	 */
-	private final PriorityQueue<ScheduledRunnable> scheduledTasks = new PriorityQueue<>();
+	private final ScheduledPriorityQueue scheduledTasks = new ScheduledPriorityQueue();
 
 	/**
 	 * Collection of background tasks,
 	 * if eventloop contains only background tasks, it will be closed.
 	 */
-	private final PriorityQueue<ScheduledRunnable> backgroundTasks = new PriorityQueue<>();
+	private final ScheduledPriorityQueue backgroundTasks = new ScheduledPriorityQueue();
 
 	/**
 	 * Amount of concurrent operations in other threads,
@@ -501,21 +504,11 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 	private long getSelectTimeout() {
 		if (!concurrentTasks.isEmpty() || !localTasks.isEmpty())
 			return 0L;
-		if (scheduledTasks.isEmpty() && backgroundTasks.isEmpty())
-			return idleInterval.toMillis();
 		return Math.min(getTimeBeforeExecution(scheduledTasks), getTimeBeforeExecution(backgroundTasks));
 	}
 
-	private long getTimeBeforeExecution(PriorityQueue<ScheduledRunnable> taskQueue) {
-		while (!taskQueue.isEmpty()) {
-			ScheduledRunnable first = taskQueue.peek();
-			if (first.isCancelled()) {
-				taskQueue.poll();
-				continue;
-			}
-			return first.getTimestamp() - currentTimeMillis();
-		}
-		return idleInterval.toMillis();
+	private long getTimeBeforeExecution(ScheduledPriorityQueue taskQueue) {
+		return taskQueue.isEmpty() ? idleInterval.toMillis() : taskQueue.peek().timestamp() - currentTimeMillis();
 	}
 
 	/**
@@ -608,7 +601,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 				tick++;
 				if (sw != null && inspector != null) inspector.onUpdateLocalTaskDuration(runnable, sw);
 			} catch (Throwable e) {
-				onFatalError(e, runnable);
+				handleError(fatalErrorHandler, e, runnable);
 			}
 			localTasks++;
 		}
@@ -649,7 +642,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 				executeTask(runnable);
 				if (sw != null && inspector != null) inspector.onUpdateConcurrentTaskDuration(runnable, sw);
 			} catch (Throwable e) {
-				onFatalError(e, runnable);
+				handleError(fatalErrorHandler, e, runnable);
 			}
 			concurrentTasks++;
 		}
@@ -673,7 +666,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 		return executeScheduledTasks(backgroundTasks);
 	}
 
-	private int executeScheduledTasks(PriorityQueue<ScheduledRunnable> taskQueue) {
+	private int executeScheduledTasks(ScheduledPriorityQueue taskQueue) {
 		long startTimestamp = timestamp;
 		boolean background = taskQueue == backgroundTasks;
 
@@ -681,36 +674,25 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 		Stopwatch sw = monitoring ? Stopwatch.createUnstarted() : null;
 
 		for (; ; ) {
-			ScheduledRunnable peeked = taskQueue.peek();
-			if (peeked == null)
-				break;
-			if (peeked.isCancelled()) {
-				taskQueue.poll();
-				continue;
-			}
-			if (peeked.getTimestamp() > currentTimeMillis()) {
-				break;
-			}
-			taskQueue.poll();
+			ScheduledRunnable runnable = taskQueue.take(currentTimeMillis());
+			if (runnable == null) break;
 
-			Runnable runnable = peeked.getRunnable();
 			if (sw != null) {
 				sw.reset();
 				sw.start();
 			}
 
 			if (monitoring && inspector != null) {
-				int overdue = (int) (System.currentTimeMillis() - peeked.getTimestamp());
+				int overdue = (int) (System.currentTimeMillis() - runnable.timestamp());
 				inspector.onScheduledTaskOverdue(overdue, background);
 			}
 
 			try {
 				executeTask(runnable);
 				tick++;
-				peeked.complete();
 				if (sw != null && inspector != null) inspector.onUpdateScheduledTaskDuration(runnable, sw, background);
 			} catch (Throwable e) {
-				onFatalError(e, runnable);
+				handleError(fatalErrorHandler, e, runnable);
 			}
 
 			scheduledTasks++;
@@ -1004,39 +986,14 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 		}
 	}
 
-	/**
-	 * Schedules new task. Returns {@link ScheduledRunnable} with this runnable.
-	 *
-	 * @param timestamp timestamp after which task will be run
-	 * @param runnable  runnable of this task
-	 * @return scheduledRunnable, which could used for cancelling the task
-	 */
 	@Override
-	public ScheduledRunnable schedule(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECKS) Reactor.checkInReactorThread(this);
-		return addScheduledTask(timestamp, runnable, false);
+	public void schedule(ScheduledRunnable scheduledTask) {
+		scheduledTasks.add(scheduledTask);
 	}
 
-	/**
-	 * Schedules new background task. Returns {@link ScheduledRunnable} with this runnable.
-	 * <p>
-	 * If eventloop contains only background tasks, it will be closed
-	 *
-	 * @param timestamp timestamp after which task will be run
-	 * @param runnable  runnable of this task
-	 * @return scheduledRunnable, which could used for cancelling the task
-	 */
 	@Override
-	public ScheduledRunnable scheduleBackground(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECKS) Reactor.checkInReactorThread(this);
-		return addScheduledTask(timestamp, runnable, true);
-	}
-
-	private ScheduledRunnable addScheduledTask(long timestamp, Runnable runnable, boolean background) {
-		ScheduledRunnable scheduledTask = ScheduledRunnable.create(timestamp, runnable);
-		PriorityQueue<ScheduledRunnable> taskQueue = background ? backgroundTasks : scheduledTasks;
-		taskQueue.offer(scheduledTask);
-		return scheduledTask;
+	public void scheduleBackground(ScheduledRunnable scheduledTask) {
+		backgroundTasks.add(scheduledTask);
 	}
 
 	/**
@@ -1147,14 +1104,6 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 
 	private void recordIoError(Exception e, @Nullable Object context) {
 		logger.warn("IO Error in {}", context, e);
-	}
-
-	private void onFatalError(Throwable e, @Nullable Runnable runnable) {
-		if (runnable instanceof RunnableWithContext) {
-			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).context());
-		} else {
-			handleError(fatalErrorHandler, e, runnable);
-		}
 	}
 
 	/**

@@ -48,7 +48,6 @@ import static io.activej.common.Utils.transformIterator;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.promise.PromisePredicates.isResult;
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 import static java.util.Arrays.asList;
 
 /**
@@ -79,7 +78,7 @@ public class Promises {
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
 		SettablePromise<T> settablePromise = new SettablePromise<>();
 		ScheduledRunnable schedule = getCurrentReactor().delay(delay,
-				runnableOf(promise, () -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout"))));
+				() -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout")));
 		promise.subscribe((result, e) -> {
 			schedule.cancel();
 			if (!settablePromise.trySet(result, e)) {
@@ -108,7 +107,7 @@ public class Promises {
 	public static <T> Promise<T> delay(long delayMillis, T value) {
 		if (delayMillis <= 0) return Promise.of(value);
 		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> cb.set(value)));
+		getCurrentReactor().delay(delayMillis, () -> cb.set(value));
 		return cb;
 	}
 
@@ -132,7 +131,7 @@ public class Promises {
 	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().delay(delayMillis, runnableOf(cb, () -> promise.subscribe(cb))));
+				getCurrentReactor().delay(delayMillis, () -> promise.subscribe(cb)));
 	}
 
 	@Contract(pure = true)
@@ -144,7 +143,7 @@ public class Promises {
 	public static <T> Promise<T> interval(long intervalMillis, Promise<T> promise) {
 		return intervalMillis <= 0 ?
 				promise :
-				promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, runnableOf(cb, () -> cb.set(value)))));
+				promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, () -> cb.set(value))));
 	}
 
 	/**
@@ -177,7 +176,7 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> schedule(T value, long timestamp) {
 		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> cb.set(value)));
+		getCurrentReactor().schedule(timestamp, () -> cb.set(value));
 		return cb;
 	}
 
@@ -197,7 +196,7 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().schedule(timestamp, runnableOf(cb, () -> promise.subscribe(cb))));
+				getCurrentReactor().schedule(timestamp, () -> promise.subscribe(cb)));
 	}
 
 	/**
@@ -1046,7 +1045,7 @@ public class Promises {
 							cb.setException(e != null ? e : new Exception("RetryPolicy: giving up " + retryState));
 						} else {
 							reactor.schedule(nextRetryTimestamp,
-									runnableOf(cb, () -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb)));
+									() -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb));
 						}
 					}
 				});

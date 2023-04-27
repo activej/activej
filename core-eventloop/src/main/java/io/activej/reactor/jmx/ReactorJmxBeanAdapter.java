@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
@@ -44,7 +43,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	public synchronized void execute(Object bean, Runnable command) {
 		Reactor reactor = beanToReactor.get(bean);
 		checkNotNull(reactor, () -> "Unregistered bean " + bean);
-		reactor.execute(runnableOf(bean, command));
+		reactor.execute(command);
 	}
 
 	@Override

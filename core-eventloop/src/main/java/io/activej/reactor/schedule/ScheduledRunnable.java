@@ -16,70 +16,66 @@
 
 package io.activej.reactor.schedule;
 
-public final class ScheduledRunnable implements Comparable<ScheduledRunnable> {
-	private final long timestamp;
-	private Runnable runnable;
-	private boolean cancelled;
-	private boolean complete;
+import io.activej.common.StringFormatUtils;
 
-	private ScheduledRunnable(long timestamp, Runnable runnable) {
+import java.time.Instant;
+
+public abstract class ScheduledRunnable implements Runnable {
+	final long timestamp;
+	ScheduledPriorityQueue queue;
+	int index;
+
+	public ScheduledRunnable(long timestamp) {
 		this.timestamp = timestamp;
-		this.runnable = runnable;
 	}
 
-	public static ScheduledRunnable create(long timestamp, Runnable runnable) {
-		return new ScheduledRunnable(timestamp, runnable);
+	public static ScheduledRunnable of(long timestamp, Runnable runnable) {
+		return new ScheduledRunnableImpl(timestamp, runnable);
 	}
 
-	@SuppressWarnings("AssignmentToNull") // runnable has been cancelled
+	private static final class ScheduledRunnableImpl extends ScheduledRunnable {
+		private final Runnable runnable;
+
+		public ScheduledRunnableImpl(long timestamp, Runnable runnable) {
+			super(timestamp);
+			this.runnable = runnable;
+		}
+
+		@Override
+		public void run() {
+			runnable.run();
+		}
+
+		@Override
+		protected String runnableToString() {
+			return runnable.toString();
+		}
+	}
+
 	public void cancel() {
-		cancelled = true;
-		runnable = null;
+		if (queue != null) {
+			queue.remove(this);
+		}
 	}
 
-	@SuppressWarnings("AssignmentToNull") // runnable has been completed
-	public void complete() {
-		complete = true;
-		runnable = null;
-	}
-
-	public long getTimestamp() {
+	public long timestamp() {
 		return timestamp;
 	}
 
-	public Runnable getRunnable() {
-		return runnable;
+	public boolean isActive() {
+		return queue != null;
 	}
 
-	public boolean isCancelled() {
-		return cancelled;
+	protected String timestampToString() {
+		return StringFormatUtils.formatInstant(Instant.ofEpochMilli(timestamp));
 	}
 
-	public boolean isComplete() {
-		return complete;
-	}
-
-	@Override
-	public int compareTo(ScheduledRunnable o) {
-		return Long.compare(timestamp, o.timestamp);
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		ScheduledRunnable that = (ScheduledRunnable) o;
-		return timestamp == that.timestamp;
-	}
-
-	@Override
-	public int hashCode() {
-		return (int) (timestamp ^ (timestamp >>> 32));
+	protected String runnableToString() {
+		return super.toString();
 	}
 
 	@Override
 	public String toString() {
-		return "ScheduledRunnable{timestamp=" + timestamp + ", cancelled="
-				+ cancelled + ", complete=" + complete + ", runnable=" + runnable + '}';
+		return "{ " + (queue != null ? index : "-") + " @ " + timestampToString() + " : " + runnableToString() + " }";
 	}
 }

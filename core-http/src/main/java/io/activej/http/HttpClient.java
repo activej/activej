@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
@@ -113,7 +114,14 @@ public final class HttpClient extends AbstractNioReactive
 
 	private @Nullable TcpSocket.Inspector socketInspector;
 	private @Nullable TcpSocket.Inspector socketSslInspector;
-	@Nullable Inspector inspector;
+	@Nullable
+	Inspector inspector;
+
+	private int pendingResolves;
+	private int pendingConnects;
+	private boolean forcedShutdown;
+	@Nullable
+	SettablePromise<Void> shutdownPromise;
 
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onRequest(HttpRequest request);
@@ -393,18 +401,25 @@ public final class HttpClient extends AbstractNioReactive
 			return this;
 		}
 
+		public Builder withForcedShutdown(boolean forcedShutdown) {
+			checkNotBuilt(this);
+			HttpClient.this.forcedShutdown = forcedShutdown;
+			return this;
+		}
+
 		@Override
 		protected HttpClient doBuild() {
 			return HttpClient.this;
 		}
 	}
+	// endregion
 
 	private void scheduleExpiredConnectionsCheck() {
 		assert expiredConnectionsCheck == null;
 		expiredConnectionsCheck = reactor.delayBackground(1000L, () -> {
 			expiredConnectionsCheck = null;
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(reactor.currentTimeMillis() - keepAliveTimeoutMillis);
-			boolean isClosing = closePromise != null;
+			boolean isClosing = shutdownPromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(reactor.currentTimeMillis() -
 						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
@@ -486,7 +501,9 @@ public final class HttpClient extends AbstractNioReactive
 
 		assert host != null;
 
+		++pendingResolves;
 		return dnsClient.resolve4(host)
+				.then((v, e) -> handleShutdown(v, e, --pendingResolves))
 				.thenCallback(
 						(dnsResponse, cb) -> {
 							if (inspector != null) inspector.onResolve(request, dnsResponse);
@@ -525,8 +542,9 @@ public final class HttpClient extends AbstractNioReactive
 		}
 
 		if (inspector != null) inspector.onConnecting(request, address);
-
+		++pendingConnects;
 		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
+				.then((v, e) -> handleShutdown(v, e, --pendingConnects))
 				.then(
 						tcpSocket -> {
 							TcpSocket.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
@@ -564,19 +582,27 @@ public final class HttpClient extends AbstractNioReactive
 						});
 	}
 
+	private <T> Promise<T> handleShutdown(T value, Exception e, int countdown) {
+		if (shutdownPromise != null) {
+			if (countdown == 0) handleShutdown();
+			if (e == null && forcedShutdown) {
+				return Promise.ofException(new AsyncCloseException("Connection closed"));
+			}
+		}
+		return Promise.of(value, e);
+	}
+
+	void handleShutdown() {
+		if (shutdownPromise != null && pendingResolves == 0 && pendingConnects == 0 && getConnectionsCount() == 0) {
+			shutdownPromise.post(null);
+			shutdownPromise = null;
+		}
+	}
+
 	@Override
 	public Promise<?> start() {
 		checkInReactorThread(this);
 		return Promise.complete();
-	}
-
-	private @Nullable SettablePromise<Void> closePromise;
-
-	public void onConnectionClosed() {
-		if (getConnectionsCount() == 0 && closePromise != null) {
-			closePromise.set(null);
-			closePromise = null;
-		}
 	}
 
 	@Override
@@ -585,13 +611,16 @@ public final class HttpClient extends AbstractNioReactive
 		SettablePromise<Void> promise = new SettablePromise<>();
 
 		poolKeepAlive.closeAllConnections();
+		if (forcedShutdown) {
+			poolReadWrite.closeAllConnections();
+		}
 		assert addresses.isEmpty();
 		keepAliveTimeoutMillis = 0;
-		if (getConnectionsCount() == 0) {
+		if (pendingResolves == 0 && pendingConnects == 0 && getConnectionsCount() == 0) {
 			assert poolReadWrite.isEmpty();
 			promise.set(null);
 		} else {
-			closePromise = promise;
+			shutdownPromise = promise;
 			logger.info("Waiting for {}", this);
 		}
 		return promise;

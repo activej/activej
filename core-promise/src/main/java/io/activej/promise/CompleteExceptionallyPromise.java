@@ -27,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Represents a {@code Promise} which is completed with an exception.
@@ -290,7 +289,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	@Override
 	public Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
-		getCurrentReactor().post(runnableOf(result, () -> result.setException(exception)));
+		getCurrentReactor().post(() -> result.setException(exception));
 		return result;
 	}
 

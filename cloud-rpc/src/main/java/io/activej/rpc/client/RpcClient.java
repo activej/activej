@@ -65,7 +65,6 @@ import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -539,7 +538,7 @@ public final class RpcClient extends AbstractNioReactive
 					anotherReactor.startExternalTask();
 					reactor.execute(() ->
 							requestSender.sendRequest(request, timeout, (Callback<O>) (result, e) -> {
-								anotherReactor.execute(runnableOf(cb, () -> cb.accept(result, e)));
+								anotherReactor.execute(() -> cb.accept(result, e));
 								anotherReactor.completeExternalTask();
 							}));
 				} else {

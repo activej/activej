@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.checkInReactorThread;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Implementation of {@link IDnsClient} that asynchronously
@@ -124,7 +123,7 @@ public final class CachedDnsClient extends AbstractReactive
 						reactor.execute(() ->
 								CachedDnsClient.this.resolve(query)
 										.subscribe((result, e) -> {
-											anotherReactor.execute(runnableOf(cb, () -> cb.set(result, e)));
+											anotherReactor.execute(() -> cb.set(result, e));
 											anotherReactor.completeExternalTask();
 										})));
 			}

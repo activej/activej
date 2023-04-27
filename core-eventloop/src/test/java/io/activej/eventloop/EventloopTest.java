@@ -2,7 +2,6 @@ package io.activej.eventloop;
 
 import io.activej.common.ref.Ref;
 import io.activej.eventloop.inspector.EventloopStats;
-import io.activej.reactor.util.RunnableWithContext;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -24,15 +23,17 @@ public final class EventloopTest {
 				.build();
 		RuntimeException error = new RuntimeException("error");
 		String contextString = "Failed component";
-		Object context = new Object() {
+		eventloop.post(new Runnable() {
+			@Override
+			public void run() {
+				throw error;
+			}
+
 			@Override
 			public String toString() {
 				return contextString;
 			}
-		};
-		eventloop.post(new RunnableWithContext(context, () -> {
-			throw error;
-		}));
+		});
 		eventloop.run();
 		assertEquals(error, errorRef.get());
 		assertEquals(contextString, sb.toString());

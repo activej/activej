@@ -110,9 +110,9 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 			if (timeout == Integer.MAX_VALUE) {
 				activeRequests.put(index, cb);
 			} else {
-				ScheduledCallback<O> scheduledCallback = new ScheduledCallback<>(index, cb);
-				scheduledCallback.scheduledRunnable = reactor.delayBackground(timeout, scheduledCallback);
-				activeRequests.put(index, scheduledCallback);
+				ScheduledCallback<O> scheduledRunnable = new ScheduledCallback<>(reactor.currentTimeMillis() + timeout, index, cb);
+				reactor.scheduleBackground(scheduledRunnable);
+				activeRequests.put(index, scheduledRunnable);
 			}
 
 			downstreamDataAcceptor.accept(new RpcMessage(index, request));
@@ -121,20 +121,20 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		}
 	}
 
-	public class ScheduledCallback<O> implements Runnable, Callback<O> {
-		ScheduledRunnable scheduledRunnable;
+	public class ScheduledCallback<O> extends ScheduledRunnable implements Callback<O> {
 		final Callback<O> cb;
 		final int index;
 
-		ScheduledCallback(int index, Callback<O> cb) {
+		ScheduledCallback(long timestamp, int index, Callback<O> cb) {
+			super(timestamp);
 			this.index = index;
 			this.cb = cb;
 		}
 
 		@Override
 		public void accept(O result, @Nullable Exception e) {
-			if (scheduledRunnable != null) {
-				scheduledRunnable.cancel();
+			if (isActive()) {
+				cancel();
 				cb.accept(result, e);
 			} else {
 				Recyclers.recycle(result);
@@ -143,7 +143,6 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 		@Override
 		public void run() {
-			scheduledRunnable = null;
 			Callback<?> expiredCb = activeRequests.remove(index);
 			if (expiredCb != null) {
 				assert expiredCb == this;

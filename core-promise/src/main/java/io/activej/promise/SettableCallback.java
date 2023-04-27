@@ -20,7 +20,6 @@ import io.activej.async.callback.Callback;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 public interface SettableCallback<T> extends Callback<T> {
 	default void set(T result, @Nullable Exception e) {
@@ -50,27 +49,27 @@ public interface SettableCallback<T> extends Callback<T> {
 	}
 
 	default void post(T result, @Nullable Exception e) {
-		getCurrentReactor().post(runnableOf(this, () -> set(result, e)));
+		getCurrentReactor().post(() -> set(result, e));
 	}
 
 	default void post(T result) {
-		getCurrentReactor().post(runnableOf(this, () -> set(result)));
+		getCurrentReactor().post(() -> set(result));
 	}
 
 	default void postException(Exception e) {
-		getCurrentReactor().post(runnableOf(this, () -> setException(e)));
+		getCurrentReactor().post(() -> setException(e));
 	}
 
 	default void tryPost(T result, @Nullable Exception e) {
-		getCurrentReactor().post(runnableOf(this, () -> trySet(result, e)));
+		getCurrentReactor().post(() -> trySet(result, e));
 	}
 
 	default void tryPost(T result) {
-		getCurrentReactor().post(runnableOf(this, () -> trySet(result)));
+		getCurrentReactor().post(() -> trySet(result));
 	}
 
 	default void tryPostException(Exception e) {
-		getCurrentReactor().post(runnableOf(this, () -> trySetException(e)));
+		getCurrentReactor().post(() -> trySetException(e));
 	}
 
 	boolean isComplete();

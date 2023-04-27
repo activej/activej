@@ -27,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.reactor.Reactor.getCurrentReactor;
-import static io.activej.reactor.util.RunnableWithContext.runnableOf;
 
 /**
  * Represents a completed {@code Promise} with a result of unspecified type.
@@ -283,7 +282,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@Override
 	public final Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
-		getCurrentReactor().post(runnableOf(result, () -> result.set(getResult())));
+		getCurrentReactor().post(() -> result.set(getResult()));
 		return result;
 	}
 
