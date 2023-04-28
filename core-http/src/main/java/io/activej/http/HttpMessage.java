@@ -20,10 +20,11 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.session.SessionServlet;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
 import org.intellij.lang.annotations.MagicConstant;
@@ -83,96 +84,92 @@ public abstract class HttpMessage {
 	}
 
 	@SuppressWarnings("unchecked")
-	public abstract class Builder<Self extends Builder<Self, S>, S extends HttpMessage>
-			extends AbstractBuilder<Self, S> {
+	public abstract class Builder<B extends Builder<B, T>, T extends HttpMessage>
+			implements io.activej.common.builder.Builder<T>, WithInitializer<B>, Promisable<T> {
 		protected Builder() {}
 
-		public final Self withHeader(HttpHeader header, String string) {
-			checkNotBuilt(this);
-			headers.add(header, HttpHeaderValue.of(string));
-			return (Self) this;
+		public final B withHeader(HttpHeader header, String string) {
+			HttpHeaderValue headerValue = HttpHeaderValue.of(string);
+			headers.add(header, headerValue);
+			return (B) this;
 		}
 
-		public final Self withHeader(HttpHeader header, byte[] value) {
-			checkNotBuilt(this);
-			headers.add(header, HttpHeaderValue.ofBytes(value, 0, value.length));
-			return (Self) this;
+		public final B withHeader(HttpHeader header, byte[] value) {
+			HttpHeaderValue headerValue = HttpHeaderValue.ofBytes(value, 0, value.length);
+			headers.add(header, headerValue);
+			return (B) this;
 		}
 
-		public final Self withHeader(HttpHeader header, byte[] array, int off, int len) {
-			checkNotBuilt(this);
-			headers.add(header, HttpHeaderValue.ofBytes(array, off, len));
-			return (Self) this;
+		public final B withHeader(HttpHeader header, byte[] array, int off, int len) {
+			HttpHeaderValue headerValue = HttpHeaderValue.ofBytes(array, off, len);
+			headers.add(header, headerValue);
+			return (B) this;
 		}
 
-		public final Self withHeader(HttpHeader header, HttpHeaderValue value) {
-			checkNotBuilt(this);
+		public final B withHeader(HttpHeader header, HttpHeaderValue value) {
 			headers.add(header, value);
-			return (Self) this;
+			return (B) this;
 		}
 
-		public final Self withCookies(HttpCookie... cookies) {
-			checkNotBuilt(this);
+		public final B withCookies(HttpCookie... cookies) {
 			addCookies(List.of(cookies));
-			return (Self) this;
+			return (B) this;
 		}
 
-		public final Self withCookies(List<HttpCookie> cookies) {
-			checkNotBuilt(this);
+		public final B withCookies(List<HttpCookie> cookies) {
 			addCookies(cookies);
-			return (Self) this;
+			return (B) this;
 		}
 
-		public final Self withCookie(HttpCookie cookie) {
-			checkNotBuilt(this);
+		public final B withCookie(HttpCookie cookie) {
 			addCookie(cookie);
-			return (Self) this;
+			return (B) this;
 		}
 
 		protected abstract void addCookies(List<HttpCookie> cookies);
 
 		protected abstract void addCookie(HttpCookie cookie);
 
-		public final Self withBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
-			checkNotBuilt(this);
+		public final B withBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
 			HttpMessage.this.bodyStream = bodySupplier;
-			return (Self) this;
+			return (B) this;
 		}
 
-		public final Self withBody(ByteBuf body) {
-			checkNotBuilt(this);
+		public final B withBody(ByteBuf body) {
 			HttpMessage.this.body = body;
-			return (Self) this;
+			return (B) this;
 		}
 
-		public final Self withBody(byte[] body) {
+		public final B withBody(byte[] body) {
 			return withBody(ByteBuf.wrapForReading(body));
 		}
 
-		public final Self withMaxBodySize(MemSize maxBodySize) {
-			checkNotBuilt(this);
+		public final B withMaxBodySize(MemSize maxBodySize) {
 			HttpMessage.this.maxBodySize = maxBodySize.toInt();
-			return (Self) this;
+			return (B) this;
 		}
 
-		public final Self withMaxBodySize(int maxBodySize) {
-			checkNotBuilt(this);
+		public final B withMaxBodySize(int maxBodySize) {
 			HttpMessage.this.maxBodySize = maxBodySize;
-			return (Self) this;
+			return (B) this;
 		}
 
 		/**
 		 * Sets this message to use the DEFLATE compression algorithm.
 		 */
-		public final Self withBodyGzipCompression() {
-			checkNotBuilt(this);
+		public final B withBodyGzipCompression() {
 			HttpMessage.this.flags |= USE_GZIP;
-			return (Self) this;
+			return (B) this;
 		}
 
 		@Override
-		protected S doBuild() {
-			return (S) HttpMessage.this;
+		public final Promise<T> promise() {
+			return Promise.of(build());
+		}
+
+		@Override
+		public final T build() {
+			return (T) HttpMessage.this;
 		}
 	}
 

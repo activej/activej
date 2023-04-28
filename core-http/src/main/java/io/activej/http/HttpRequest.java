@@ -19,7 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
@@ -106,7 +105,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return builder;
 	}
 
-	public final class Builder extends HttpMessage.Builder<Builder, HttpRequest>{
+	public final class Builder extends HttpMessage.Builder<Builder, HttpRequest> {
 		private Builder() {}
 
 		public static Builder get(String url) {

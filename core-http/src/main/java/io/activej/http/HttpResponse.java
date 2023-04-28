@@ -32,7 +32,8 @@ import java.util.Map;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.putPositiveInt;
-import static io.activej.common.Checks.*;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.http.ContentTypes.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.*;
@@ -298,19 +299,16 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		}
 
 		public Builder withPlainText(String text) {
-			checkNotBuilt(this);
 			return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody(text.getBytes(UTF_8));
 		}
 
 		public Builder withHtml(String text) {
-			checkNotBuilt(this);
 			return withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
 					.withBody(text.getBytes(UTF_8));
 		}
 
 		public Builder withJson(String text) {
-			checkNotBuilt(this);
 			return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 					.withBody(text.getBytes(UTF_8));
 		}
