@@ -73,9 +73,10 @@ public final class HttpStreamTest {
 				.then(s -> Promise.of(HttpResponse.ok200())));
 
 		Integer code = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.post("http://127.0.0.1:" + port)
+				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
-								.mapAsync(item -> Promises.delay(200L, item))))
+								.mapAsync(item -> Promises.delay(200L, item)))
+						.build())
 				.async()
 				.map(HttpResponse::getCode));
 
@@ -85,9 +86,10 @@ public final class HttpStreamTest {
 	@Test
 	public void testStreamDownload() throws IOException {
 		startTestServer(request ->
-				HttpResponse.ok200()
+				HttpResponse.Builder.ok200()
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
-								.mapAsync(item -> Promises.delay(1L, item))));
+								.mapAsync(item -> Promises.delay(1L, item)))
+						.build());
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port))
@@ -105,12 +107,13 @@ public final class HttpStreamTest {
 				.async()
 				.toList()
 				.map(ChannelSuppliers::ofList)
-				.then(bodyStream -> Promise.of(HttpResponse.ok200().withBodyStream(bodyStream.async()))));
+				.then(bodyStream -> Promise.of(HttpResponse.Builder.ok200().withBodyStream(bodyStream.async()).build())));
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.post("http://127.0.0.1:" + port)
+				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
-								.mapAsync(item -> Promises.delay(1L, item))))
+								.mapAsync(item -> Promises.delay(1L, item)))
+						.build())
 				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
 				.then(response -> response.takeBodyStream().async().toCollector(ByteBufs.collector())));
 
@@ -126,8 +129,9 @@ public final class HttpStreamTest {
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(expectedList);
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.post("http://127.0.0.1:" + port)
-						.withBodyStream(supplier))
+				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
+						.withBodyStream(supplier)
+						.build())
 				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 
 		assertTrue(body.asString(UTF_8).contains(exceptionMessage));
@@ -135,7 +139,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testChunkedEncodingMessage() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		startTestServer(request -> request.loadBody().map(body -> HttpResponse.Builder.ok200().withBody(body.slice()).build()));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -163,7 +167,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testMalformedChunkedEncodingMessage() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		startTestServer(request -> request.loadBody().map(body -> HttpResponse.Builder.ok200().withBody(body.slice()).build()));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -191,8 +195,9 @@ public final class HttpStreamTest {
 	public void testTruncatedRequest() throws IOException {
 		JmxInspector inspector = new JmxInspector();
 		startTestServer(request -> request.loadBody()
-						.map(body -> HttpResponse.ok200()
-								.withBody(body.slice())),
+						.map(body -> HttpResponse.Builder.ok200()
+								.withBody(body.slice())
+								.build()),
 				inspector);
 
 		String chunkedRequest =
@@ -231,14 +236,15 @@ public final class HttpStreamTest {
 	public void testSendingErrors() throws IOException {
 		Exception exception = new Exception("Test Exception");
 
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		startTestServer(request -> request.loadBody().map(body -> HttpResponse.Builder.ok200().withBody(body.slice()).build()));
 
 		Exception e = awaitException(
 				HttpClient.create(Reactor.getCurrentReactor())
-						.request(HttpRequest.post("http://127.0.0.1:" + port)
+						.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSuppliers.ofList(expectedList),
-										ChannelSuppliers.ofException(exception))))
+										ChannelSuppliers.ofException(exception)))
+								.build())
 						.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 
 		assertThat(e, instanceOf(HttpException.class));

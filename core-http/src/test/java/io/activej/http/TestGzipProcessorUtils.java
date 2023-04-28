@@ -112,19 +112,21 @@ public final class TestGzipProcessorUtils {
 
 									String receivedData = body.getString(UTF_8);
 									assertEquals(text, receivedData);
-									return HttpResponse.ok200()
+									return HttpResponse.Builder.ok200()
 											.withBodyGzipCompression()
-											.withBody(ByteBufStrings.wrapAscii(receivedData));
+											.withBody(ByteBufStrings.wrapAscii(receivedData))
+											.build();
 								}))
 				.withListenPort(port)
 				.build();
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 
-		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.Builder.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")
 				.withBodyGzipCompression()
-				.withBody(wrapUtf8(text));
+				.withBody(wrapUtf8(text))
+				.build();
 
 		server.listen();
 

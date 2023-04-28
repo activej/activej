@@ -129,7 +129,9 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@Worker
 	AsyncServlet workerServlet(@WorkerId int workerId) {
-		return $ -> HttpResponse.ok200().withPlainText("Hello from worker #" + workerId);
+		return $ -> HttpResponse.Builder.ok200()
+				.withPlainText("Hello from worker #" + workerId)
+				.build();
 	}
 	// endregion
 
@@ -149,7 +151,9 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@MyWorker
 	AsyncServlet myWorkerServlet(@WorkerId int workerId) {
-		return $ -> HttpResponse.ok200().withPlainText("Hello from my worker #" + workerId);
+		return $ -> HttpResponse.Builder.ok200()
+				.withPlainText("Hello from my worker #" + workerId)
+				.build();
 	}
 	// endregion
 

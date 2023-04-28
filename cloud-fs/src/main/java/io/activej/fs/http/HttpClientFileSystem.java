@@ -90,7 +90,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (offset != 0) {
 			urlBuilder.appendQuery("offset", offset);
 		}
-		return uploadData(HttpRequest.post(url + urlBuilder.build()), identity());
+		return uploadData(HttpRequest.Builder.post(url + urlBuilder.build()), identity());
 	}
 
 	@Override
@@ -146,11 +146,12 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(
+						HttpRequest.Builder.get(
 										url + UrlBuilder.relative()
 												.appendPathPart(INFO_ALL)
 												.build())
-								.withBody(toJson(names)))
+								.withBody(toJson(names))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.then(response -> response.loadBody())
 				.map(body -> fromJson(STRING_META_MAP_TYPE, body));
@@ -189,11 +190,12 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-						HttpRequest.post(
+						HttpRequest.Builder.post(
 										url + UrlBuilder.relative()
 												.appendPathPart(MOVE_ALL)
 												.build())
-								.withBody(toJson(sourceToTarget)))
+								.withBody(toJson(sourceToTarget))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -219,11 +221,12 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-						HttpRequest.post(
+						HttpRequest.Builder.post(
 										url + UrlBuilder.relative()
 												.appendPathPart(COPY_ALL)
 												.build())
-								.withBody(toJson(sourceToTarget)))
+								.withBody(toJson(sourceToTarget))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -245,11 +248,12 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.post(
+						HttpRequest.Builder.post(
 										url + UrlBuilder.relative()
 												.appendPathPart(DELETE_ALL)
 												.build())
-								.withBody(toJson(toDelete)))
+								.withBody(toJson(toDelete))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -271,19 +275,19 @@ public final class HttpClientFileSystem extends AbstractReactive
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String filename, @Nullable Long size) {
 		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
-		HttpRequest request = HttpRequest.post(url + urlBuilder.build());
+		HttpRequest.Builder builder = HttpRequest.Builder.post(url + urlBuilder.build());
 
 		if (size != null) {
-			request.addHeader(CONTENT_LENGTH, String.valueOf(size));
+			builder.withHeader(CONTENT_LENGTH, String.valueOf(size));
 		}
 
-		return uploadData(request, size == null ? identity() : ofFixedSize(size));
+		return uploadData(builder, size == null ? identity() : ofFixedSize(size));
 	}
 
-	private Promise<ChannelConsumer<ByteBuf>> uploadData(HttpRequest request, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
+	private Promise<ChannelConsumer<ByteBuf>> uploadData(HttpRequest.Builder builder, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
 		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
-		client.request(request
+		client.request(builder
 						.withBodyStream(ChannelSuppliers.ofPromise(responsePromise
 								.map(response -> {
 									ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
@@ -300,7 +304,8 @@ public final class HttpClientFileSystem extends AbstractReactive
 														buffer.closeEx(e);
 													}))));
 									return buffer.getSupplier();
-								}))))
+								})))
+						.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.whenException(channelPromise::trySetException)
 				.whenComplete(responsePromise::trySet);

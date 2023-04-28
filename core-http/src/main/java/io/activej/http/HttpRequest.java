@@ -38,8 +38,6 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
-import static io.activej.http.HttpClientConnection.CONNECTION_UPGRADE_HEADER;
-import static io.activej.http.HttpClientConnection.UPGRADE_WEBSOCKET_HEADER;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.Protocol.WS;
@@ -77,95 +75,63 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	public static HttpRequest of(HttpMethod method, String url) {
-		UrlParser urlParser = UrlParser.of(url);
-		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null);
-		String hostAndPort = urlParser.getHostAndPort();
-		if (hostAndPort != null) {
-			request.headers.add(HOST, HttpHeaderValue.of(hostAndPort));
-		}
-		Protocol protocol = urlParser.getProtocol();
-		if (protocol == WS || protocol == WSS) {
-			request.addHeader(CONNECTION, CONNECTION_UPGRADE_HEADER);
-			request.addHeader(HttpHeaders.UPGRADE, UPGRADE_WEBSOCKET_HEADER);
-			request.addHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
-		}
-		return request;
+		return builder(method, url).build();
 	}
 
 	public static HttpRequest get(String url) {
-		return HttpRequest.of(GET, url);
+		return Builder.get(url).build();
 	}
 
 	public static HttpRequest post(String url) {
-		return HttpRequest.of(POST, url);
+		return Builder.post(url).build();
 	}
 
 	public static HttpRequest put(String url) {
-		return HttpRequest.of(PUT, url);
+		return Builder.put(url).build();
 	}
 
-	public HttpRequest withHeader(HttpHeader header, String value) {
-		addHeader(header, value);
-		return this;
+	public static Builder builder(HttpMethod method, String url) {
+		UrlParser urlParser = UrlParser.of(url);
+		Builder builder = new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null).new Builder();
+		String hostAndPort = urlParser.getHostAndPort();
+		if (hostAndPort != null) {
+			builder.withHeader(HOST, HttpHeaderValue.of(hostAndPort));
+		}
+		Protocol protocol = urlParser.getProtocol();
+		if (protocol == WS || protocol == WSS) {
+			builder.withHeader(CONNECTION, HttpHeaderValue.of("upgrade"));
+			builder.withHeader(UPGRADE, HttpHeaderValue.of("websocket"));
+			builder.withHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
+		}
+		return builder;
 	}
 
-	public HttpRequest withHeader(HttpHeader header, byte[] value) {
-		addHeader(header, value);
-		return this;
-	}
+	public final class Builder extends HttpMessage.Builder<Builder, HttpRequest>{
+		private Builder() {}
 
-	public HttpRequest withHeader(HttpHeader header, HttpHeaderValue value) {
-		addHeader(header, value);
-		return this;
-	}
+		public static Builder get(String url) {
+			return HttpRequest.builder(GET, url);
+		}
 
-	public HttpRequest withBody(byte[] array) {
-		setBody(array);
-		return this;
-	}
+		public static Builder post(String url) {
+			return HttpRequest.builder(POST, url);
+		}
 
-	public HttpRequest withBody(ByteBuf body) {
-		setBody(body);
-		return this;
-	}
+		public static Builder put(String url) {
+			return HttpRequest.builder(PUT, url);
+		}
 
-	public HttpRequest withBodyStream(ChannelSupplier<ByteBuf> stream) {
-		setBodyStream(stream);
-		return this;
-	}
+		@Override
+		protected void addCookies(List<HttpCookie> cookies) {
+			headers.add(COOKIE, new HttpHeaderValueOfSimpleCookies(cookies));
+		}
 
-	public HttpRequest withCookies(List<HttpCookie> cookies) {
-		addCookies(cookies);
-		return this;
-	}
-
-	public HttpRequest withCookies(HttpCookie... cookie) {
-		addCookies(cookie);
-		return this;
-	}
-
-	public HttpRequest withCookie(HttpCookie cookie) {
-		addCookie(cookie);
-		return this;
-	}
-
-	public HttpRequest withBodyGzipCompression() {
-		setBodyGzipCompression();
-		return this;
+		@Override
+		protected void addCookie(HttpCookie cookie) {
+			addCookies(List.of(cookie));
+		}
 	}
 	// endregion
-
-	@Override
-	public void addCookies(List<HttpCookie> cookies) {
-		if (CHECKS) checkState(!isRecycled());
-		headers.add(COOKIE, new HttpHeaderValueOfSimpleCookies(cookies));
-	}
-
-	@Override
-	public void addCookie(HttpCookie cookie) {
-		if (CHECKS) checkState(!isRecycled());
-		addCookies(List.of(cookie));
-	}
 
 	@Contract(pure = true)
 	public HttpMethod getMethod() {

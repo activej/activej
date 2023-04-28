@@ -36,7 +36,9 @@ public class TestHttpsServer {
 				.build();
 		Executor executor = newCachedThreadPool();
 
-		AsyncServlet bobServlet = request -> HttpResponse.ok200().withBody(wrapAscii("Hello, I am Bob!"));
+		AsyncServlet bobServlet = request -> HttpResponse.Builder.ok200()
+				.withBody(wrapAscii("Hello, I am Bob!"))
+				.build();
 
 		KeyManager[] keyManagers = createKeyManagers(new File("./src/test/resources/keystore.jks"), "testtest", "testtest");
 		TrustManager[] trustManagers = createTrustManagers(new File("./src/test/resources/truststore.jks"), "testtest");

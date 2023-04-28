@@ -20,8 +20,9 @@ public final class CustomHttpServerExample extends Launcher {
 
 	@Provides
 	AsyncServlet servlet() {
-		return request -> HttpResponse.ok200()
-				.withPlainText("Hello from HTTP server");
+		return request -> HttpResponse.Builder.ok200()
+				.withPlainText("Hello from HTTP server")
+				.build();
 	}
 
 	@Provides

@@ -20,10 +20,15 @@ public final class GzipCompressingBehaviourExample {
 		RoutingServlet servlet = RoutingServlet.create(eventloop)
 				// always responds in gzip
 				.map(GET, "/gzip/",
-						request -> HttpResponse.ok200().withBodyGzipCompression().withBody(encodeAscii("Hello!")))
+						request -> HttpResponse.Builder.ok200()
+								.withBodyGzipCompression()
+								.withBody(encodeAscii("Hello!"))
+								.build())
 				// never responds in gzip
 				.map(GET, "/nogzip/",
-						request -> HttpResponse.ok200().withBody(encodeAscii("Hello!")));
+						request -> HttpResponse.Builder.ok200()
+								.withBody(encodeAscii("Hello!"))
+								.build());
 
 		HttpServer.builder(eventloop, servlet)
 				.withListenPort(getFreePort())
@@ -38,9 +43,10 @@ public final class GzipCompressingBehaviourExample {
 
 		// !sic, you should call withAcceptEncodingGzip for your request if you want to get the response gzipped
 		client.request(
-				HttpRequest.post("http://example.com")
+				HttpRequest.Builder.post("http://example.com")
 						.withBody(encodeAscii("Hello, world!"))
 						.withBodyGzipCompression()
-						.withHeader(ACCEPT_ENCODING, "gzip"));
+						.withHeader(ACCEPT_ENCODING, "gzip")
+						.build());
 	}
 }

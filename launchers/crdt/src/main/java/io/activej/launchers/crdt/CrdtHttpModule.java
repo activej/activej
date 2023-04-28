@@ -67,11 +67,13 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								K key = fromJson(descriptor.keyManifest(), body);
 								S state = client.get(key);
 								if (state != null) {
-									return HttpResponse.ok200()
-											.withBody(toJson(descriptor.stateManifest(), state));
+									return HttpResponse.Builder.ok200()
+											.withBody(toJson(descriptor.stateManifest(), state))
+											.build();
 								}
-								return HttpResponse.ofCode(404)
-										.withBody(("Key '" + key + "' not found").getBytes(UTF_8));
+								return HttpResponse.builder(404)
+										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
+										.build();
 							} catch (MalformedDataException e) {
 								throw HttpError.ofCode(400, e);
 							}
@@ -92,8 +94,9 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								if (client.remove(key)) {
 									return HttpResponse.ok200();
 								}
-								return HttpResponse.ofCode(404)
-										.withBody(("Key '" + key + "' not found").getBytes(UTF_8));
+								return HttpResponse.builder(404)
+										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
+										.build();
 							} catch (MalformedDataException e) {
 								throw HttpError.ofCode(400, e);
 							}
@@ -105,16 +108,18 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 		return servlet
 				.map(POST, "/backup", request -> {
 					if (backupService.backupInProgress()) {
-						return Promise.of(HttpResponse.ofCode(403)
-								.withBody("Backup is already in progress".getBytes(UTF_8)));
+						return Promise.of(HttpResponse.builder(403)
+								.withBody("Backup is already in progress".getBytes(UTF_8))
+								.build());
 					}
 					backupService.backup();
 					return Promise.of(HttpResponse.ofCode(202));
 				})
 				.map(POST, "/awaitBackup", request ->
 						backupService.backupInProgress() ?
-								backupService.backup().map($ -> HttpResponse.ofCode(204)
-										.withBody("Finished already running backup".getBytes(UTF_8))) :
+								backupService.backup().map($ -> HttpResponse.builder(204)
+										.withBody("Finished already running backup".getBytes(UTF_8))
+										.build()) :
 								backupService.backup().map($ -> HttpResponse.ok200()));
 	}
 }

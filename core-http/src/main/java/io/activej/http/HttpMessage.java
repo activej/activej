@@ -20,6 +20,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.session.SessionServlet;
@@ -81,24 +82,98 @@ public abstract class HttpMessage {
 		return version;
 	}
 
-	public void addHeader(HttpHeader header, String string) {
-		if (CHECKS) checkState(!isRecycled());
-		addHeader(header, HttpHeaderValue.of(string));
-	}
+	@SuppressWarnings("unchecked")
+	public abstract class Builder<Self extends Builder<Self, S>, S extends HttpMessage>
+			extends AbstractBuilder<Self, S> {
+		protected Builder() {}
 
-	public void addHeader(HttpHeader header, byte[] value) {
-		if (CHECKS) checkState(!isRecycled());
-		addHeader(header, HttpHeaderValue.ofBytes(value, 0, value.length));
-	}
+		public final Self withHeader(HttpHeader header, String string) {
+			checkNotBuilt(this);
+			headers.add(header, HttpHeaderValue.of(string));
+			return (Self) this;
+		}
 
-	public void addHeader(HttpHeader header, byte[] array, int off, int len) {
-		if (CHECKS) checkState(!isRecycled());
-		addHeader(header, HttpHeaderValue.ofBytes(array, off, len));
-	}
+		public final Self withHeader(HttpHeader header, byte[] value) {
+			checkNotBuilt(this);
+			headers.add(header, HttpHeaderValue.ofBytes(value, 0, value.length));
+			return (Self) this;
+		}
 
-	public void addHeader(HttpHeader header, HttpHeaderValue value) {
-		if (CHECKS) checkState(!isRecycled());
-		headers.add(header, value);
+		public final Self withHeader(HttpHeader header, byte[] array, int off, int len) {
+			checkNotBuilt(this);
+			headers.add(header, HttpHeaderValue.ofBytes(array, off, len));
+			return (Self) this;
+		}
+
+		public final Self withHeader(HttpHeader header, HttpHeaderValue value) {
+			checkNotBuilt(this);
+			headers.add(header, value);
+			return (Self) this;
+		}
+
+		public final Self withCookies(HttpCookie... cookies) {
+			checkNotBuilt(this);
+			addCookies(List.of(cookies));
+			return (Self) this;
+		}
+
+		public final Self withCookies(List<HttpCookie> cookies) {
+			checkNotBuilt(this);
+			addCookies(cookies);
+			return (Self) this;
+		}
+
+		public final Self withCookie(HttpCookie cookie) {
+			checkNotBuilt(this);
+			addCookie(cookie);
+			return (Self) this;
+		}
+
+		protected abstract void addCookies(List<HttpCookie> cookies);
+
+		protected abstract void addCookie(HttpCookie cookie);
+
+		public final Self withBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
+			checkNotBuilt(this);
+			HttpMessage.this.bodyStream = bodySupplier;
+			return (Self) this;
+		}
+
+		public final Self withBody(ByteBuf body) {
+			checkNotBuilt(this);
+			HttpMessage.this.body = body;
+			return (Self) this;
+		}
+
+		public final Self withBody(byte[] body) {
+			return withBody(ByteBuf.wrapForReading(body));
+		}
+
+		public final Self withMaxBodySize(MemSize maxBodySize) {
+			checkNotBuilt(this);
+			HttpMessage.this.maxBodySize = maxBodySize.toInt();
+			return (Self) this;
+		}
+
+		public final Self withMaxBodySize(int maxBodySize) {
+			checkNotBuilt(this);
+			HttpMessage.this.maxBodySize = maxBodySize;
+			return (Self) this;
+		}
+
+		/**
+		 * Sets this message to use the DEFLATE compression algorithm.
+		 */
+		public final Self withBodyGzipCompression() {
+			checkNotBuilt(this);
+			HttpMessage.this.flags |= USE_GZIP;
+			return (Self) this;
+		}
+
+		@Override
+		protected S doBuild() {
+			return (S) HttpMessage.this;
+		}
 	}
 
 	public final Collection<Map.Entry<HttpHeader, HttpHeaderValue>> getHeaders() {
@@ -149,20 +224,6 @@ public abstract class HttpMessage {
 		return headerBuf != null ? headerBuf.getBuf() : null;
 	}
 
-	public void addCookies(HttpCookie... cookies) {
-		if (CHECKS) checkState(!isRecycled());
-		addCookies(List.of(cookies));
-	}
-
-	public abstract void addCookies(List<HttpCookie> cookies);
-
-	public abstract void addCookie(HttpCookie cookie);
-
-	public void setBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
-		if (CHECKS) checkState(!isRecycled());
-		this.bodyStream = bodySupplier;
-	}
-
 	/**
 	 * This method transfers the "rust-like ownership" from this message object
 	 * to the caller.
@@ -197,16 +258,6 @@ public abstract class HttpMessage {
 		throw new IllegalStateException("Body stream is missing or already consumed");
 	}
 
-	public void setBody(ByteBuf body) {
-		if (CHECKS) checkState(!isRecycled());
-		this.body = body;
-	}
-
-	public void setBody(byte[] body) {
-		if (CHECKS) checkState(!isRecycled());
-		setBody(ByteBuf.wrapForReading(body));
-	}
-
 	/**
 	 * Allows you to peak at the body when it is available without taking the ownership.
 	 */
@@ -234,16 +285,6 @@ public abstract class HttpMessage {
 	 */
 	public final boolean isBodyLoaded() {
 		return (flags & MUST_LOAD_BODY) == 0 && body != null;
-	}
-
-	public void setMaxBodySize(MemSize maxBodySize) {
-		if (CHECKS) checkState(!isRecycled());
-		this.maxBodySize = maxBodySize.toInt();
-	}
-
-	public void setMaxBodySize(int maxBodySize) {
-		if (CHECKS) checkState(!isRecycled());
-		this.maxBodySize = maxBodySize;
 	}
 
 	/**
@@ -409,14 +450,6 @@ public abstract class HttpMessage {
 	 */
 	public Set<Object> getAttachmentKeys() {
 		return attachments != null ? attachments.keySet() : Set.of();
-	}
-
-	/**
-	 * Sets this message to use the DEFLATE compression algorithm.
-	 */
-	public void setBodyGzipCompression() {
-		if (CHECKS) checkState(!isRecycled());
-		this.flags |= USE_GZIP;
 	}
 
 	boolean isRecycled() {

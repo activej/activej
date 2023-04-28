@@ -65,7 +65,8 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	HttpServer server() {
 		return HttpServer.builder(serverReactor,
 						request ->
-								HttpResponse.ok200().withPlainText("Response!!"))
+								HttpResponse.Builder.ok200().withPlainText("Response!!")
+										.build())
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"))
 				.build();
 	}

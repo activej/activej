@@ -48,8 +48,9 @@ public final class HttpTolerantApplicationTest {
 						request ->
 								Promise.ofCallback(cb ->
 										eventloop.post(() -> cb.set(
-												HttpResponse.ok200()
-														.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
+												HttpResponse.Builder.ok200()
+														.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
+														.build()))))
 				.withListenPort(port)
 				.build();
 

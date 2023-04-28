@@ -8,7 +8,9 @@ public class HelloWorldHttpServer extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet() {
-		return request -> HttpResponse.ok200().withPlainText("Hello, world!");
+		return request -> HttpResponse.Builder.ok200()
+				.withPlainText("Hello, world!")
+				.build();
 	}
 
 	public static void main(String[] args) throws Exception {

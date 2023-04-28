@@ -113,8 +113,9 @@ public final class DoubleServersSinglePool extends Launcher {
 		@Worker
 		@Named("First")
 		HttpServer workerServerFirst(NioReactor reactor, @WorkerId int workerId) {
-			return HttpServer.builder(reactor, request -> HttpResponse.ok200()
-					.withPlainText("Hello from the first server, worker #" + workerId))
+			return HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from the first server, worker #" + workerId)
+							.build())
 					.build();
 		}
 
@@ -122,8 +123,9 @@ public final class DoubleServersSinglePool extends Launcher {
 		@Worker
 		@Named("Second")
 		HttpServer workerServerSecond(NioReactor reactor, @WorkerId int workerId) {
-			return HttpServer.builder(reactor, request -> HttpResponse.ok200()
-					.withPlainText("Hello from the second server, worker #" + workerId))
+			return HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from the second server, worker #" + workerId)
+							.build())
 					.build();
 		}
 

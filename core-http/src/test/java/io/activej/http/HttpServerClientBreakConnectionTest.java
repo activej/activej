@@ -42,8 +42,9 @@ public class HttpServerClientBreakConnectionTest {
 									server.close()
 											.whenComplete(() -> logger.info("Server Closed")));
 							return Promises.delay(100L,
-									HttpResponse.ok200()
+									HttpResponse.Builder.ok200()
 											.withBody("Hello World".getBytes())
+											.build()
 							);
 						})
 				.withListenPort(freePort)
@@ -57,8 +58,9 @@ public class HttpServerClientBreakConnectionTest {
 	@Test
 	public void testBreakConnection() {
 		String result = await(client.request(
-						HttpRequest.post("http://127.0.0.1:" + freePort)
-								.withBody("Hello World".getBytes()))
+						HttpRequest.Builder.post("http://127.0.0.1:" + freePort)
+								.withBody("Hello World".getBytes())
+								.build())
 				.then(response ->
 						response.loadBody()
 								.map(body -> body.getString(UTF_8))));

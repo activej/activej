@@ -49,7 +49,9 @@ public final class RoutingServletTest {
 		Reactor reactor = getCurrentReactor();
 		RoutingServlet servlet1 = RoutingServlet.create(reactor);
 
-		AsyncServlet subservlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
+		AsyncServlet subservlet = request -> HttpResponse.builder(200)
+				.withBody("".getBytes(UTF_8))
+				.build();
 
 		servlet1.map(GET, "/a/b/c", subservlet);
 
@@ -69,7 +71,9 @@ public final class RoutingServletTest {
 	@Test
 	public void testProcessWildCardRequest() throws Exception {
 		RoutingServlet servlet = RoutingServlet.create(getCurrentReactor());
-		servlet.map("/a/b/c/d", request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8)));
+		servlet.map("/a/b/c/d", request -> HttpResponse.builder(200)
+				.withBody("".getBytes(UTF_8))
+				.build());
 
 		check(servlet.serve(HttpRequest.get("http://some-test.com/a/b/c/d")), "", 200);
 		check(servlet.serve(HttpRequest.post("http://some-test.com/a/b/c/d")), "", 200);
@@ -89,7 +93,7 @@ public final class RoutingServletTest {
 
 		AsyncServlet action = request -> {
 			ByteBuf msg = wrapUtf8("Executed: " + request.getPath());
-			return HttpResponse.ofCode(200).withBody(msg);
+			return HttpResponse.builder(200).withBody(msg).build();
 		};
 
 		Reactor reactor = getCurrentReactor();
@@ -135,7 +139,7 @@ public final class RoutingServletTest {
 
 		AsyncServlet action = request -> {
 			ByteBuf msg = wrapUtf8("Executed: " + request.getPath());
-			return HttpResponse.ofCode(200).withBody(msg);
+			return HttpResponse.builder(200).withBody(msg).build();
 		};
 
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
@@ -173,7 +177,7 @@ public final class RoutingServletTest {
 
 		AsyncServlet action = request -> {
 			ByteBuf msg = wrapUtf8("Executed: " + request.getPath());
-			return HttpResponse.ofCode(200).withBody(msg);
+			return HttpResponse.builder(200).withBody(msg).build();
 		};
 
 		Reactor reactor = getCurrentReactor();
@@ -204,12 +208,12 @@ public final class RoutingServletTest {
 
 		AsyncServlet action = req -> {
 			ByteBuf msg = wrapUtf8("Executed: " + req.getPath());
-			return HttpResponse.ofCode(200).withBody(msg);
+			return HttpResponse.builder(200).withBody(msg).build();
 		};
 
 		AsyncServlet anotherAction = req -> {
 			ByteBuf msg = wrapUtf8("Shall not be executed: " + req.getPath());
-			return HttpResponse.ofCode(200).withBody(msg);
+			return HttpResponse.builder(200).withBody(msg).build();
 		};
 
 		RoutingServlet main;
@@ -235,7 +239,7 @@ public final class RoutingServletTest {
 			String body = request.getPathParameter("id")
 					+ " " + request.getPathParameter("uid");
 			ByteBuf bodyByteBuf = wrapUtf8(body);
-			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
+			return HttpResponse.builder(200).withBody(bodyByteBuf).build();
 		};
 
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
@@ -254,11 +258,11 @@ public final class RoutingServletTest {
 		RoutingServlet ms = RoutingServlet.create(getCurrentReactor())
 				.map(GET, "/serve/:cid/wash", request -> {
 					ByteBuf body = wrapUtf8("served car: " + request.getPathParameter("cid"));
-					return HttpResponse.ofCode(200).withBody(body);
+					return HttpResponse.builder(200).withBody(body).build();
 				})
 				.map(GET, "/serve/:mid/feed", request -> {
 					ByteBuf body = wrapUtf8("served man: " + request.getPathParameter("mid"));
-					return HttpResponse.ofCode(200).withBody(body);
+					return HttpResponse.builder(200).withBody(body).build();
 				});
 
 		System.out.println("Multi parameters " + DELIM);
@@ -275,11 +279,11 @@ public final class RoutingServletTest {
 
 		RoutingServlet servlet = RoutingServlet.create(getCurrentReactor())
 				.map("/a/b/c/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("WILDCARD")))
+						HttpResponse.builder(200).withBody(wrapUtf8("WILDCARD")).build())
 				.map(POST, "/a/b/c/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("POST")))
+						HttpResponse.builder(200).withBody(wrapUtf8("POST")).build())
 				.map(GET, "/a/b/c/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("GET")));
+						HttpResponse.builder(200).withBody(wrapUtf8("GET")).build());
 
 		System.out.println("Different methods " + DELIM);
 		check(servlet.serve(request1), "GET", 200);
@@ -295,9 +299,11 @@ public final class RoutingServletTest {
 
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
 				.map(GET, "/html/admin/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Action executed")))
+						HttpResponse.builder(200).withBody(wrapUtf8("Action executed")).build())
 				.map("/html/admin/*", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Stopped at admin: " + request.getRelativePath())));
+						HttpResponse.builder(200)
+								.withBody(wrapUtf8("Stopped at admin: " + request.getRelativePath()))
+								.build());
 
 		System.out.println("Default stop " + DELIM);
 		check(main.serve(request1), "Action executed", 200);
@@ -309,7 +315,7 @@ public final class RoutingServletTest {
 	public void test404() throws Exception {
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
 				.map("/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("All OK")));
+						HttpResponse.builder(200).withBody(wrapUtf8("All OK")).build());
 
 		System.out.println("404 " + DELIM);
 		HttpRequest request = HttpRequest.get(TEMPLATE + "/a/123/b/c");
@@ -321,7 +327,7 @@ public final class RoutingServletTest {
 	public void test405() throws Exception {
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
 				.map(GET, "/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")));
+						HttpResponse.builder(200).withBody(wrapUtf8("Should not execute")).build());
 
 		HttpRequest request = HttpRequest.post(TEMPLATE + "/a/123/b/d");
 		check(main.serve(request), "", 404);
@@ -331,9 +337,9 @@ public final class RoutingServletTest {
 	public void test405WithFallback() throws Exception {
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
 				.map(GET, "/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")))
+						HttpResponse.builder(200).withBody(wrapUtf8("Should not execute")).build())
 				.map("/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Fallback executed")));
+						HttpResponse.builder(200).withBody(wrapUtf8("Fallback executed")).build());
 		check(main.serve(HttpRequest.post(TEMPLATE + "/a/123/b/d")), "Fallback executed", 200);
 	}
 
@@ -342,7 +348,7 @@ public final class RoutingServletTest {
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
 				.map(GET, "/method/:var/*", request -> {
 					ByteBuf body = wrapUtf8("Success: " + request.getRelativePath());
-					return HttpResponse.ofCode(200).withBody(body);
+					return HttpResponse.builder(200).withBody(body).build();
 				});
 
 		check(main.serve(HttpRequest.get(TEMPLATE + "/method/dfbdb/oneArg")), "Success: oneArg", 200);
@@ -358,10 +364,10 @@ public final class RoutingServletTest {
 		String wsPath = "/web/socket";
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
 				.mapWebSocket(wsPath, request -> HttpResponse.ok200())
-				.map(POST, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("post")))
-				.map(GET, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("get")))
-				.map(wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("all")))
-				.map(wsPath + "/inside", request -> HttpResponse.ok200().withBody(wrapUtf8("inner")));
+				.map(POST, wsPath, request -> HttpResponse.Builder.ok200().withBody(wrapUtf8("post")).build().promise())
+				.map(GET, wsPath, request -> HttpResponse.Builder.ok200().withBody(wrapUtf8("get")).build().promise())
+				.map(wsPath, request -> HttpResponse.Builder.ok200().withBody(wrapUtf8("all")).build().promise())
+				.map(wsPath + "/inside", request -> HttpResponse.Builder.ok200().withBody(wrapUtf8("inner")).build().promise());
 
 		checkWebSocket(main.serve(HttpRequest.get(TEMPLATE_WS + wsPath)));
 		check(main.serve(HttpRequest.post(TEMPLATE + wsPath)), "post", 200);
@@ -385,7 +391,7 @@ public final class RoutingServletTest {
 	public void testPercentEncoding() throws Exception {
 		RoutingServlet router = RoutingServlet.create(getCurrentReactor());
 
-		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
+		AsyncServlet servlet = request -> HttpResponse.builder(200).withBody("".getBytes(UTF_8)).build();
 
 		router.map(GET, "/a%2fb", servlet);
 
@@ -405,7 +411,7 @@ public final class RoutingServletTest {
 	public void testPercentEncodingCyrillic() throws Exception {
 		RoutingServlet router = RoutingServlet.create(getCurrentReactor());
 
-		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
+		AsyncServlet servlet = request -> HttpResponse.builder(200).withBody("".getBytes(UTF_8)).build();
 
 		router.map(GET, "/абв", servlet);
 
@@ -431,7 +437,7 @@ public final class RoutingServletTest {
 		AsyncServlet printParameters = request -> {
 			String body = new TreeMap<>(request.getPathParameters()).toString();
 			ByteBuf bodyByteBuf = wrapUtf8(body);
-			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
+			return HttpResponse.builder(200).withBody(bodyByteBuf).build();
 		};
 
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
@@ -448,7 +454,7 @@ public final class RoutingServletTest {
 		AsyncServlet printParameters = request -> {
 			String body = new TreeMap<>(request.getPathParameters()).toString();
 			ByteBuf bodyByteBuf = wrapUtf8(body);
-			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
+			return HttpResponse.builder(200).withBody(bodyByteBuf).build();
 		};
 
 		RoutingServlet main = RoutingServlet.create(getCurrentReactor())
@@ -460,7 +466,7 @@ public final class RoutingServletTest {
 	@Test
 	public void testBadPercentEncoding() throws Exception {
 		RoutingServlet router = RoutingServlet.create(getCurrentReactor());
-		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody(new byte[0]);
+		AsyncServlet servlet = request -> HttpResponse.builder(200).withBody(new byte[0]).build();
 		RoutingServlet main = router.map(GET, "/a", servlet);
 
 		try {

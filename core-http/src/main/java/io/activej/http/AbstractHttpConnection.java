@@ -491,7 +491,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 			ByteBuf body = httpMessage.body;
 			httpMessage.body = null;
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) == 0) {
-				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
+				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
 				ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize() + body.readRemaining());
 				httpMessage.writeTo(buf);
 				buf.put(body);
@@ -499,8 +499,8 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				return buf;
 			} else {
 				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
-				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
-				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
+				httpMessage.headers.add(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
 				ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize() + gzippedBody.readRemaining());
 				httpMessage.writeTo(buf);
 				buf.put(gzippedBody);
@@ -511,7 +511,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (httpMessage.bodyStream == null) {
 			if (httpMessage.isContentLengthExpected()) {
-				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(0));
+				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(0));
 			}
 			ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize());
 			httpMessage.writeTo(buf);
@@ -528,14 +528,14 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (!IWebSocket.ENABLED || !isWebSocket()) {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
-				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
+			httpMessage.headers.add(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
 				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
 				bodyStream.bindTo(deflater.getInput());
 				bodyStream = deflater.getOutput().getSupplier();
 			}
 
 			if (httpMessage.headers.get(CONTENT_LENGTH) == null) {
-				httpMessage.addHeader(TRANSFER_ENCODING, ofBytes(TRANSFER_ENCODING_CHUNKED));
+			httpMessage.headers.add(TRANSFER_ENCODING, ofBytes(TRANSFER_ENCODING_CHUNKED));
 				BufsConsumerChunkedEncoder chunker = BufsConsumerChunkedEncoder.create();
 				bodyStream.bindTo(chunker.getInput());
 				bodyStream = chunker.getOutput().getSupplier();

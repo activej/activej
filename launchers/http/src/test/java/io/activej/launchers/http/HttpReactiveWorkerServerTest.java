@@ -54,8 +54,9 @@ public final class HttpReactiveWorkerServerTest {
 			@Worker
 			AsyncServlet servlet(@WorkerId int worker) {
 				return request ->
-						HttpResponse.ok200()
-								.withBody(ByteBuf.wrapForReading(encodeAscii("Hello, world! #" + worker)));
+						HttpResponse.Builder.ok200()
+								.withBody(ByteBuf.wrapForReading(encodeAscii("Hello, world! #" + worker)))
+								.build();
 			}
 
 			@Override

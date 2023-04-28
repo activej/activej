@@ -52,7 +52,7 @@ public final class StaticServlet extends AbstractReactive
 	private final IStaticLoader resourceLoader;
 	private Function<String, ContentType> contentTypeResolver = StaticServlet::getContentType;
 	private Function<HttpRequest, @Nullable String> pathMapper = HttpRequest::getRelativePath;
-	private Supplier<HttpResponse> responseSupplier = HttpResponse::ok200;
+	private Supplier<HttpResponse.Builder> responseBuilderSupplier = HttpResponse.Builder::ok200;
 	private final Set<String> indexResources = new LinkedHashSet<>();
 
 	private @Nullable String defaultResource;
@@ -130,9 +130,9 @@ public final class StaticServlet extends AbstractReactive
 			return this;
 		}
 
-		public Builder withResponse(Supplier<HttpResponse> responseSupplier) {
+		public Builder withResponse(Supplier<HttpResponse.Builder> responseBuilderSupplier) {
 			checkNotBuilt(this);
-			StaticServlet.this.responseSupplier = responseSupplier;
+			StaticServlet.this.responseBuilderSupplier = responseBuilderSupplier;
 			return this;
 		}
 
@@ -166,9 +166,10 @@ public final class StaticServlet extends AbstractReactive
 	}
 
 	private HttpResponse createHttpResponse(ByteBuf buf, ContentType contentType) {
-		return responseSupplier.get()
+		return responseBuilderSupplier.get()
 				.withBody(buf)
-				.withHeader(CONTENT_TYPE, ofContentType(contentType));
+				.withHeader(CONTENT_TYPE, ofContentType(contentType))
+				.build();
 	}
 
 	@Override

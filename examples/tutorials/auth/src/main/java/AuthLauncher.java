@@ -72,8 +72,9 @@ public final class AuthLauncher extends HttpServerLauncher {
 								String sessionId = UUID.randomUUID().toString();
 
 								return store.save(sessionId, "My object saved in session")
-										.map($ -> HttpResponse.redirect302("/members")
-												.withCookie(HttpCookie.of(SESSION_ID, sessionId)));
+										.map($ -> HttpResponse.Builder.redirect302("/members")
+												.withCookie(HttpCookie.of(SESSION_ID, sessionId))
+												.build());
 							}
 							return staticServlet.serve(request);
 						}))
@@ -105,14 +106,17 @@ public final class AuthLauncher extends HttpServerLauncher {
 						.map(GET, "/", StaticServlet.create(reactor, staticLoader, "index.html"))
 						//[START REGION_8]
 						.map(GET, "/cookie", request ->
-								HttpResponse.ok200().withBody(wrapUtf8(request.getAttachment(String.class))))
+								HttpResponse.Builder.ok200()
+										.withBody(wrapUtf8(request.getAttachment(String.class)))
+										.build())
 						//[END REGION_8]
 						.map(POST, "/logout", request ->
-								HttpResponse.redirect302("/")
+								HttpResponse.Builder.redirect302("/")
 										.withCookie(HttpCookie.builder(SESSION_ID)
 												.withPath("/")
 												.withMaxAge(Duration.ZERO)
-												.build())));
+												.build())
+										.build()));
 		//[END REGION_7]
 	}
 	//[END REGION_5]

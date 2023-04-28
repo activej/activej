@@ -31,11 +31,9 @@ public final class TestClientMultilineHeaders {
 	@Test
 	public void testMultilineHeaders() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> {
-							HttpResponse response = HttpResponse.ok200();
-							response.addHeader(ALLOW, "GET,\r\n HEAD");
-							return response;
-						})
+						request -> HttpResponse.Builder.ok200()
+								.withHeader(ALLOW, "GET,\r\n HEAD")
+								.build())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()

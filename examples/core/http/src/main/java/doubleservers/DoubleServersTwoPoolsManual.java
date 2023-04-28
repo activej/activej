@@ -89,8 +89,9 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 									.build(),
 							Key.of(NioReactor.class, "First"), new Key<WorkerPool.Instances<HttpServer>>("First") {});
 			bind(HttpServer.class)
-					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.ok200()
-											.withPlainText("Hello from the first server, worker #" + workerId))
+					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
+											.withPlainText("Hello from the first server, worker #" + workerId)
+											.build())
 									.build(),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerFirst.class);
 			bind(WorkerPool.class, "First")
@@ -117,8 +118,9 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 									.build(),
 							Key.of(NioReactor.class, "Second"), new Key<WorkerPool.Instances<HttpServer>>("Second") {});
 			bind(HttpServer.class)
-					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.ok200()
-											.withPlainText("Hello from the second server, worker #" + workerId))
+					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
+											.withPlainText("Hello from the second server, worker #" + workerId)
+											.build())
 									.build(),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
 			bind(WorkerPool.class, "Second")

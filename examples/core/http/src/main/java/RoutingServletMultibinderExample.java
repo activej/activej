@@ -67,9 +67,15 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.create(reactor)
-					.map(GET, "/a", request -> HttpResponse.ok200().withPlainText("Hello from '/a' path\n"))
-					.map(GET, "/b", request -> HttpResponse.ok200().withPlainText("Hello from '/b' path\n"))
-					.map(GET, "/", request -> HttpResponse.ok200().withPlainText("Hello from '/' path\n"));
+					.map(GET, "/a", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/a' path\n")
+							.build())
+					.map(GET, "/b", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/b' path\n")
+							.build())
+					.map(GET, "/", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/' path\n")
+							.build());
 		}
 	}
 	//[END MODULE_A]
@@ -79,9 +85,15 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.create(reactor)
-					.map(GET, "/a/b", request -> HttpResponse.ok200().withPlainText("Hello from '/a/b' path\n"))
-					.map(GET, "/b/a", request -> HttpResponse.ok200().withPlainText("Hello from '/b/a' path\n"))
-					.map(GET, "/d", request -> HttpResponse.ok200().withPlainText("Hello from '/d' path\n"));
+					.map(GET, "/a/b", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/a/b' path\n")
+							.build())
+					.map(GET, "/b/a", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/b/a' path\n")
+							.build())
+					.map(GET, "/d", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/d' path\n")
+							.build());
 		}
 	}
 	//[END MODULE_B]
@@ -91,9 +103,15 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.create(reactor)
-					.map(GET, "/a/c", request -> HttpResponse.ok200().withPlainText("Hello from '/a/c' path\n"))
-					.map(GET, "/b/c", request -> HttpResponse.ok200().withPlainText("Hello from '/b/c' path\n"))
-					.map(POST, "/d", request -> HttpResponse.ok200().withPlainText("Hello from POST '/d' path\n"));
+					.map(GET, "/a/c", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/a/c' path\n")
+							.build())
+					.map(GET, "/b/c", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from '/b/c' path\n")
+							.build())
+					.map(POST, "/d", request -> HttpResponse.Builder.ok200()
+							.withPlainText("Hello from POST '/d' path\n")
+							.build());
 		}
 	}
 	//[END MODULE_C]

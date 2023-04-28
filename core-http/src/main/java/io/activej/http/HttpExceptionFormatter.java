@@ -57,18 +57,23 @@ public interface HttpExceptionFormatter {
 	 * HttpExceptions are mapped to a response with their status code, message and stacktrace of the cause if it was specified.
 	 */
 	HttpExceptionFormatter DEFAULT_FORMATTER = e -> {
-		HttpResponse response;
+		HttpResponse.Builder responseBuilder;
 		if (e instanceof HttpError) {
 			int code = ((HttpError) e).getCode();
-			response = HttpResponse.ofCode(code).withHtml(HTTP_ERROR_HTML.replace("{title}", HttpUtils.getHttpErrorTitle(code)).replace("{message}", e.toString()));
+			responseBuilder = HttpResponse.builder(code)
+					.withHtml(HTTP_ERROR_HTML
+							.replace("{title}", HttpUtils.getHttpErrorTitle(code))
+							.replace("{message}", e.toString()));
 		} else {
-			response = HttpResponse.ofCode(500).withHtml(INTERNAL_SERVER_ERROR_HTML);
+			responseBuilder = HttpResponse.builder(500)
+					.withHtml(INTERNAL_SERVER_ERROR_HTML);
 		}
 		// default formatter leaks no information about unknown exceptions
-		return response
+		return responseBuilder
 				.withHeader(CACHE_CONTROL, "no-store")
 				.withHeader(PRAGMA, "no-cache")
-				.withHeader(AGE, "0");
+				.withHeader(AGE, "0")
+				.build();
 	};
 
 	/**
@@ -78,7 +83,8 @@ public interface HttpExceptionFormatter {
 			DebugStacktraceRenderer.render(e, e instanceof HttpError ? ((HttpError) e).getCode() : 500)
 					.withHeader(CACHE_CONTROL, "no-store")
 					.withHeader(PRAGMA, "no-cache")
-					.withHeader(AGE, "0");
+					.withHeader(AGE, "0")
+					.build();
 
 	/**
 	 * This formatter if either one of {@link #DEFAULT_FORMATTER} or {@link #DEBUG_FORMATTER},

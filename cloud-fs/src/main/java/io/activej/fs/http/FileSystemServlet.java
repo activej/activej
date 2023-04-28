@@ -87,32 +87,36 @@ public final class FileSystemServlet {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
 					return fs.download(name, offset, limit)
-							.map(res -> HttpResponse.ok200()
+							.map(res -> HttpResponse.Builder.ok200()
 											.withHeader(ACCEPT_RANGES, "bytes")
-											.withBodyStream(res),
+											.withBodyStream(res)
+											.build(),
 									errorResponseFn());
 				})
 				.map(GET, "/" + LIST, request -> {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
 					return fs.list(glob)
-							.map(list -> HttpResponse.ok200()
+							.map(list -> HttpResponse.Builder.ok200()
 											.withBody(toJson(list))
-											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)),
+											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+											.build(),
 									errorResponseFn());
 				})
 				.map(GET, "/" + INFO + "/*", request ->
 						fs.info(decodePath(request))
-								.map(meta -> HttpResponse.ok200()
+								.map(meta -> HttpResponse.Builder.ok200()
 												.withBody(toJson(meta))
-												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)),
+												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+												.build(),
 										errorResponseFn()))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::infoAll)
-						.map(map -> HttpResponse.ok200()
+						.map(map -> HttpResponse.Builder.ok200()
 										.withBody(toJson(map))
-										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)),
+										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+										.build(),
 								errorResponseFn()))
 				.map(GET, "/" + PING, request -> fs.ping()
 						.map(voidResponseFn(), errorResponseFn()))
@@ -191,22 +195,26 @@ public final class FileSystemServlet {
 	}
 
 	private static FunctionEx<Exception, HttpResponse> errorResponseFn() {
-		return e -> HttpResponse.ofCode(500)
+		return e -> HttpResponse.builder(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBody(toJson(FileSystemException.class, castError(e)));
+				.withBody(toJson(FileSystemException.class, castError(e)))
+				.build();
 	}
 
 	private static <T> FunctionEx<T, HttpResponse> voidResponseFn() {
-		return $ -> HttpResponse.ok200().withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8));
+		return $ -> HttpResponse.Builder.ok200()
+				.withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
+				.build();
 	}
 
 	private static FunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
-		return consumer -> HttpResponse.ok200()
+		return consumer -> HttpResponse.Builder.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
 						.streamTo(consumer)
 						.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
-						.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))));
+						.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))))
+				.build();
 	}
 
 }

@@ -34,13 +34,15 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 				.map(POST, "/hello", request -> request.loadBody()
 						.map($ -> {
 							String name = request.getPostParameters().get("name");
-							return HttpResponse.ok200()
-									.withHtml("<h1><center>Hello from POST, " + name + "!</center></h1>");
+							return HttpResponse.Builder.ok200()
+									.withHtml("<h1><center>Hello from POST, " + name + "!</center></h1>")
+									.build();
 						}))
 				.map(GET, "/hello", request -> {
 					String name = request.getQueryParameter("name");
-					return HttpResponse.ok200()
-							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>");
+					return HttpResponse.Builder.ok200()
+							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>")
+							.build();
 				})
 				.map("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()

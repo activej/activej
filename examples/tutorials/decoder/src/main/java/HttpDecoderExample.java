@@ -59,8 +59,9 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 	AsyncServlet mainServlet(Reactor reactor, ContactDAO contactDAO) {
 		Mustache contactListView = new DefaultMustacheFactory().compile("static/contactList.html");
 		return RoutingServlet.create(reactor)
-				.map("/", request -> HttpResponse.ok200()
-						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list()))))
+				.map("/", request -> HttpResponse.Builder.ok200()
+						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list())))
+						.build())
 				.map(POST, "/add", request -> request.loadBody()
 						.map($ -> {
 							//[START REGION_3]
@@ -74,8 +75,9 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 								//noinspection ConstantConditions - is 'right', hence not 'null'
 								scopes.put("errors", decodedUser.getRight().toMap(SEPARATOR));
 							}
-							return HttpResponse.ok200()
-									.withBody(applyTemplate(contactListView, scopes));
+							return HttpResponse.Builder.ok200()
+									.withBody(applyTemplate(contactListView, scopes))
+									.build();
 						}));
 	}
 	//[END REGION_2]

@@ -82,10 +82,12 @@ public abstract class WebSocketServlet extends AbstractReactive
 								checkState(response.body == null && response.bodyStream == null, "Illegal body or stream");
 
 								ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-								response.withBodyStream(buffer.getSupplier())
-										.withHeader(UPGRADE, "Websocket")
-										.withHeader(CONNECTION, "Upgrade")
-										.withHeader(SEC_WEBSOCKET_ACCEPT, answer);
+
+								ChannelSupplier<ByteBuf> bodySupplier = buffer.getSupplier();
+								response.bodyStream = bodySupplier;
+								response.headers.add(UPGRADE, HttpHeaderValue.of("Websocket"));
+								response.headers.add(CONNECTION, HttpHeaderValue.of("Upgrade"));
+								response.headers.add(SEC_WEBSOCKET_ACCEPT, HttpHeaderValue.of(answer));
 
 								WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(false);
 								WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(

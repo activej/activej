@@ -57,14 +57,15 @@ public final class HttpClientTest {
 
 	public void startServer() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
+						request -> HttpResponse.Builder.ok200()
 								.withBodyStream(ChannelSuppliers.ofStream(
 										IntStream.range(0, HELLO_WORLD.length)
 												.mapToObj(idx -> {
 													ByteBuf buf = ByteBufPool.allocate(1);
 													buf.put(HELLO_WORLD[idx]);
 													return buf;
-												}))))
+												})))
+								.build())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()

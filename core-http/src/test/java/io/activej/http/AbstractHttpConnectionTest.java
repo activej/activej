@@ -79,10 +79,11 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testMultiLineHeader() throws Exception {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
+						request -> HttpResponse.Builder.ok200()
 								.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 								.withHeader(CONTENT_TYPE, "text/\n          html")
-								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>")))
+								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>"))
+								.build())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
@@ -99,16 +100,18 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testGzipCompression() throws Exception {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
+						request -> HttpResponse.Builder.ok200()
 								.withBodyGzipCompression()
-								.withBody(encodeAscii("Test message")))
+								.withBody(encodeAscii("Test message"))
+								.build())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
 				.listen();
 
-		await(client.request(HttpRequest.get(url)
-						.withHeader(ACCEPT_ENCODING, "gzip"))
+		await(client.request(HttpRequest.Builder.get(url)
+						.withHeader(ACCEPT_ENCODING, "gzip")
+						.build())
 				.then(response -> response.loadBody()
 						.whenComplete(TestUtils.assertCompleteFn(body -> {
 							assertEquals("Test message", body.getString(UTF_8));
@@ -189,13 +192,13 @@ public final class AbstractHttpConnectionTest {
 				.build();
 
 		// regular
-		doTestHugeStreams(client, socketSettings, size, httpMessage -> httpMessage.addHeader(CONTENT_LENGTH, String.valueOf(size)));
+		doTestHugeStreams(client, socketSettings, size, httpMessage -> httpMessage.withHeader(CONTENT_LENGTH, String.valueOf(size)));
 
 		// chunked
 		doTestHugeStreams(client, socketSettings, size, httpMessage -> {});
 
 		// gzipped + chunked
-		doTestHugeStreams(client, socketSettings, size, HttpMessage::setBodyGzipCompression);
+		doTestHugeStreams(client, socketSettings, size, HttpMessage.Builder::withBodyGzipCompression);
 	}
 
 	@Test
@@ -209,14 +212,15 @@ public final class AbstractHttpConnectionTest {
 		long size = 3_000_000_000L;
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
+						request -> HttpResponse.Builder.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
-								.withBodyStream(request.takeBodyStream()))
+								.withBodyStream(request.takeBodyStream())
+								.build())
 				.withListenPort(port)
 				.build();
 		server.listen();
 
-		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.Builder.post("http://127.0.0.1:" + port)
 				.withHeader(CONTENT_LENGTH, String.valueOf(size))
 				.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
 					int length = 1_000_000;
@@ -224,7 +228,8 @@ public final class AbstractHttpConnectionTest {
 					RANDOM.nextBytes(temp);
 					outChecksum.update(temp, 0, length);
 					return ByteBuf.wrapForReading(temp);
-				}).limit(3_000)));
+				}).limit(3_000)))
+				.build();
 
 		await(client.request(request)
 				.then(response -> response.takeBodyStream()
@@ -247,9 +252,10 @@ public final class AbstractHttpConnectionTest {
 							RANDOM.nextBytes(bytes);
 							expected.put(bytes);
 							ByteBuf value = expected.slice();
-							return HttpResponse.ok200()
+							return HttpResponse.Builder.ok200()
 									.withBodyGzipCompression()
-									.withBodyStream(ChannelSuppliers.ofValue(value));
+									.withBodyStream(ChannelSuppliers.ofValue(value))
+									.build();
 						})
 				.withAcceptOnce()
 				.withListenPort(port)
@@ -263,42 +269,35 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testEmptyRequestResponse() {
-		List<Consumer<HttpMessage>> messageDecorators = List.of(
-				message -> {},
-				HttpMessage::setBodyGzipCompression,
-				message -> message.addHeader(CONTENT_LENGTH, "0"),
-				message -> {
-					message.setBodyGzipCompression();
-					message.addHeader(CONTENT_LENGTH, "0");
-				},
-				message -> message.setBody(ByteBuf.empty()),
-				message -> {
-					message.setBody(ByteBuf.empty());
-					message.setBodyGzipCompression();
-				},
-				message -> {
-					message.setBody(ByteBuf.empty());
-					message.addHeader(CONTENT_LENGTH, "0");
-				},
-				message -> {
-					message.setBody(ByteBuf.empty());
-					message.setBodyGzipCompression();
-					message.addHeader(CONTENT_LENGTH, "0");
-				},
-				message -> message.setBodyStream(ChannelSuppliers.empty()),
-				message -> {
-					message.setBodyStream(ChannelSuppliers.empty());
-					message.setBodyGzipCompression();
-				},
-				message -> {
-					message.setBodyStream(ChannelSuppliers.empty());
-					message.addHeader(CONTENT_LENGTH, "0");
-				},
-				message -> {
-					message.setBodyStream(ChannelSuppliers.empty());
-					message.setBodyGzipCompression();
-					message.addHeader(CONTENT_LENGTH, "0");
-				}
+		List<Consumer<HttpMessage.Builder<?, ?>>> messageDecorators = List.of(
+				builder -> {},
+				HttpMessage.Builder::withBodyGzipCompression,
+				builder -> builder.withHeader(CONTENT_LENGTH, "0"),
+				builder -> builder
+						.withBodyGzipCompression()
+						.withHeader(CONTENT_LENGTH, "0"),
+				builder -> builder.withBody(ByteBuf.empty()),
+				builder -> builder
+						.withBody(ByteBuf.empty())
+						.withBodyGzipCompression(),
+				builder -> builder
+						.withBody(ByteBuf.empty())
+						.withHeader(CONTENT_LENGTH, "0"),
+				builder -> builder
+						.withBody(ByteBuf.empty())
+						.withBodyGzipCompression()
+						.withHeader(CONTENT_LENGTH, "0"),
+				builder -> builder.withBodyStream(ChannelSuppliers.empty()),
+				builder -> builder
+						.withBodyStream(ChannelSuppliers.empty())
+						.withBodyGzipCompression(),
+				builder -> builder
+						.withBodyStream(ChannelSuppliers.empty())
+						.withHeader(CONTENT_LENGTH, "0"),
+				builder -> builder
+						.withBodyStream(ChannelSuppliers.empty())
+						.withBodyGzipCompression()
+						.withHeader(CONTENT_LENGTH, "0")
 		);
 
 		doTestEmptyRequestResponsePermutations(messageDecorators);
@@ -341,8 +340,9 @@ public final class AbstractHttpConnectionTest {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> {
 							ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
-							return HttpResponse.ok200()
-									.withBodyStream(ChannelSuppliers.ofValue(value));
+							return HttpResponse.Builder.ok200()
+									.withBodyStream(ChannelSuppliers.ofValue(value))
+									.build();
 						})
 				.withInspector(serverInspector)
 				.withListenPort(port)
@@ -391,8 +391,9 @@ public final class AbstractHttpConnectionTest {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-								.map($ -> HttpResponse.ok200()
-										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))))
+								.map($ -> HttpResponse.Builder.ok200()
+										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))
+										.build()))
 				.withInspector(serverInspector)
 				.withListenPort(port)
 				.build();
@@ -412,8 +413,9 @@ public final class AbstractHttpConnectionTest {
 
 		String url = "http://127.0.0.1:" + port;
 		ByteBuf value1 = ByteBuf.wrapForReading(HELLO_WORLD);
-		await(client.request(HttpRequest.get(url)
-						.withBodyStream(ChannelSuppliers.ofValue(value1)))
+		await(client.request(HttpRequest.Builder.get(url)
+						.withBodyStream(ChannelSuppliers.ofValue(value1))
+						.build())
 				.then(ensureHelloWorldAsyncFn())
 				.whenResult(() -> {
 					assertEquals(1, client.getConnectionsKeepAliveCount());
@@ -424,8 +426,9 @@ public final class AbstractHttpConnectionTest {
 				})
 				.then(() -> {
 					ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
-					return client.request(HttpRequest.get(url)
-							.withBodyStream(ChannelSuppliers.ofValue(value)));
+					return client.request(HttpRequest.Builder.get(url)
+							.withBodyStream(ChannelSuppliers.ofValue(value))
+							.build());
 				})
 				.then(ensureHelloWorldAsyncFn())
 				.whenResult(() -> {
@@ -478,17 +481,17 @@ public final class AbstractHttpConnectionTest {
 				.then(AbstractHttpConnectionTest::post);
 	}
 
-	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage>> messageDecorators) {
+	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage.Builder<?, ?>>> messageDecorators) {
 		NioReactor reactor = Reactor.getCurrentReactor();
 		for (int i = 0; i < messageDecorators.size(); i++) {
 			for (int j = 0; j < messageDecorators.size(); j++) {
 				try {
-					Consumer<HttpMessage> responseDecorator = messageDecorators.get(j);
+					Consumer<HttpMessage.Builder<?, ?>> responseDecorator = messageDecorators.get(j);
 					HttpServer server = HttpServer.builder(reactor,
 									$ -> {
-										HttpResponse response = HttpResponse.ok200();
-										responseDecorator.accept(response);
-										return response;
+										HttpResponse.Builder responseBuilder = HttpResponse.Builder.ok200();
+										responseDecorator.accept(responseBuilder);
+										return responseBuilder.build();
 									})
 							.withListenPort(port)
 							.withAcceptOnce()
@@ -500,10 +503,10 @@ public final class AbstractHttpConnectionTest {
 						throw new AssertionError(e);
 					}
 
-					HttpRequest request = HttpRequest.post(url);
-					messageDecorators.get(i).accept(request);
+					HttpRequest.Builder requestBuilder = HttpRequest.Builder.post(url);
+					messageDecorators.get(i).accept(requestBuilder);
 
-					String responseText = await(client.request(request)
+					String responseText = await(client.request(requestBuilder.build())
 							.then(response -> response.loadBody())
 							.map(buf -> buf.getString(UTF_8)));
 
@@ -517,23 +520,23 @@ public final class AbstractHttpConnectionTest {
 		}
 	}
 
-	private void doTestHugeStreams(IHttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage> decorator) throws IOException {
+	private void doTestHugeStreams(IHttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage.Builder<?, ?>> decorator) throws IOException {
 		ByteBuf expected = ByteBufPool.allocate(size);
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.map(body -> {
-									HttpResponse httpResponse = HttpResponse.ok200()
+									HttpResponse.Builder httpResponseBuilder = HttpResponse.Builder.ok200()
 											.withBodyStream(request.takeBodyStream()
 													.transformWith(ChannelTransformers.chunkBytes(MemSize.of(1), MemSize.of(1))));
-									decorator.accept(httpResponse);
-									return httpResponse;
+									decorator.accept(httpResponseBuilder);
+									return httpResponseBuilder.build();
 								}))
 				.withListenPort(port)
 				.withSocketSettings(socketSettings)
 				.build();
 		server.listen();
 
-		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
+		HttpRequest.Builder requestBuilder = HttpRequest.Builder.post("http://127.0.0.1:" + port)
 				.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
 					byte[] temp = new byte[1];
 					RANDOM.nextBytes(temp);
@@ -542,9 +545,9 @@ public final class AbstractHttpConnectionTest {
 					return buf;
 				}).limit(size)));
 
-		decorator.accept(request);
+		decorator.accept(requestBuilder);
 
-		ByteBuf result = await(client.request(request)
+		ByteBuf result = await(client.request(requestBuilder.build())
 				.then(response -> response.takeBodyStream()
 						.toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));

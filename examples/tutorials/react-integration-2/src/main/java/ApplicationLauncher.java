@@ -72,8 +72,9 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					} catch (IOException e) {
 						throw new AssertionError(e);
 					}
-					return HttpResponse.ok200()
-							.withJson(writer.toString());
+					return HttpResponse.Builder.ok200()
+							.withJson(writer.toString())
+							.build();
 				})
 				//[START REGION_4]
 				.map(GET, "/delete/:recordId", request -> {

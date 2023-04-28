@@ -34,9 +34,9 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.SP;
-import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Utils.nullify;
 import static io.activej.csp.supplier.ChannelSuppliers.concat;
+import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaders.CONNECTION;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_KEY;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
@@ -90,9 +90,6 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  */
 public final class HttpClientConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
-
-	static final HttpHeaderValue CONNECTION_UPGRADE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("upgrade"));
-	static final HttpHeaderValue UPGRADE_WEBSOCKET_HEADER = HttpHeaderValue.ofBytes(encodeAscii("websocket"));
 
 	private @Nullable SettablePromise<HttpResponse> promise;
 	private @Nullable HttpResponse response;
@@ -190,7 +187,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	protected void onHeader(HttpHeader header, byte[] array, int off, int len) throws MalformedHttpException {
 		assert response != null;
 		if (response.headers.size() >= MAX_HEADERS) throw new MalformedHttpException("Too many headers");
-		response.addHeader(header, array, off, len);
+		response.headers.add(header, ofBytes(array, off, len));
 	}
 
 	@Override
@@ -276,7 +273,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		flags |= WEB_SOCKET;
 
 		byte[] encodedKey = generateWebSocketKey();
-		request.addHeader(SEC_WEBSOCKET_KEY, encodedKey);
+		request.headers.add(SEC_WEBSOCKET_KEY, ofBytes(encodedKey));
 
 		ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 		request.bodyStream = sanitize(buffer.getSupplier());
@@ -405,7 +402,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				|| client.keepAliveTimeoutMillis == 0) {
 			connectionHeader = CONNECTION_CLOSE_HEADER;
 		}
-		request.addHeader(CONNECTION, connectionHeader);
+		request.headers.add(CONNECTION, connectionHeader);
 		ByteBuf buf = renderHttpMessage(request);
 		if (buf != null) {
 			writeBuf(buf);

@@ -82,7 +82,9 @@ public class HttpThrottlingServer {
 		if (result % 3 != 0) {
 			response += "!";
 		}
-		return HttpResponse.ok200().withBody(ByteBufStrings.encodeAscii(response));
+		return HttpResponse.Builder.ok200()
+				.withBody(ByteBufStrings.encodeAscii(response))
+				.build();
 	}
 
 	public void start() throws Exception {

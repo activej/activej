@@ -170,12 +170,13 @@ public final class CrdtClusterTest {
 
 		Promises.sequence(IntStream.range(0, 1_000_000)
 						.mapToObj(i ->
-								() -> client.request(HttpRequest.of(PUT, "http://127.0.0.1:7000")
+								() -> client.request(HttpRequest.builder(PUT, "http://127.0.0.1:7000")
 												.withBody(toJson(manifest, new CrdtData<>(
 														"value_" + i,
 														Reactor.getCurrentReactor().currentTimeMillis(),
 														i
-												))))
+												)))
+												.build())
 										.toVoid()))
 				.whenException(Exception::printStackTrace)
 				.whenComplete(uploadStat.recordStats())

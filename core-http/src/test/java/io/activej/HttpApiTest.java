@@ -103,24 +103,26 @@ public final class HttpApiTest {
 	}
 
 	private HttpResponse createResponse() {
-		return HttpResponse.ok200()
+		return HttpResponse.Builder.ok200()
 				.withHeader(DATE, ofInstant(responseDate))
 				.withHeader(EXPIRES, ofInstant(expiresDate))
 				.withHeader(CONTENT_TYPE, ofContentType(responseContentType))
 				.withHeader(LAST_MODIFIED, ofInstant(lastModified))
 				.withHeader(AGE, ofDecimal(age))
-				.withCookies(responseCookies);
+				.withCookies(responseCookies)
+				.build();
 	}
 
 	private HttpRequest createRequest() {
-		return HttpRequest.get("http://127.0.0.1:" + port)
+		return HttpRequest.Builder.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT, ofAcceptMediaTypes(requestAcceptContentTypes))
 				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(requestAcceptCharsets))
 				.withHeader(DATE, ofInstant(requestDate))
 				.withHeader(CONTENT_TYPE, ofContentType(requestContentType))
 				.withHeader(IF_MODIFIED_SINCE, ofInstant(dateIMS))
 				.withHeader(IF_UNMODIFIED_SINCE, ofInstant(dateIUMS))
-				.initialize(httpRequest -> requestCookies.forEach(httpRequest::addCookie));
+				.initialize(httpRequestBuilder -> requestCookies.forEach(httpRequestBuilder::withCookie))
+				.build();
 	}
 
 	@SuppressWarnings("ConstantConditions")

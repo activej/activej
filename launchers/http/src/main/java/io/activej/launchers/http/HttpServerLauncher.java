@@ -112,7 +112,9 @@ public abstract class HttpServerLauncher extends Launcher {
 					@Provides
 					public AsyncServlet servlet(Config config) {
 						String message = config.get("message", "Hello, world!");
-						return request -> HttpResponse.ok200().withPlainText(message);
+						return request -> HttpResponse.Builder.ok200()
+								.withPlainText(message)
+								.build();
 					}
 				};
 			}

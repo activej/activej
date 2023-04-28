@@ -54,7 +54,7 @@ public final class BasicAuthServlet extends AbstractReactive
 	private final String challenge;
 	private final AsyncBiPredicate<String, String> credentialsLookup;
 
-	private UnaryOperator<HttpResponse> failureResponse =
+	private UnaryOperator<HttpResponse.Builder> failureResponse =
 			response -> response
 					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody("Authentication is required".getBytes(UTF_8));
@@ -78,7 +78,7 @@ public final class BasicAuthServlet extends AbstractReactive
 	public final class Builder extends AbstractBuilder<Builder, BasicAuthServlet> {
 		private Builder() {}
 
-		public Builder withFailureResponse(UnaryOperator<HttpResponse> failureResponse) {
+		public Builder withFailureResponse(UnaryOperator<HttpResponse.Builder> failureResponse) {
 			checkNotBuilt(this);
 			BasicAuthServlet.this.failureResponse = failureResponse;
 			return this;
@@ -96,7 +96,7 @@ public final class BasicAuthServlet extends AbstractReactive
 
 	public static Function<AsyncServlet, AsyncServlet> decorator(Reactor reactor, String realm,
 			AsyncBiPredicate<String, String> credentialsLookup,
-			UnaryOperator<HttpResponse> failureResponse) {
+			UnaryOperator<HttpResponse.Builder> failureResponse) {
 		return next -> builder(reactor, next, realm, credentialsLookup)
 				.withFailureResponse(failureResponse)
 				.build();
@@ -107,7 +107,7 @@ public final class BasicAuthServlet extends AbstractReactive
 		checkInReactorThread(this);
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
-			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));
+			return Promise.of(failureResponse.apply(HttpResponse.Builder.unauthorized401(challenge)).build());
 		}
 		byte[] raw;
 		try {
@@ -122,7 +122,7 @@ public final class BasicAuthServlet extends AbstractReactive
 		}
 		return credentialsLookup.test(authData[0], authData[1])
 				.then(ok -> {
-					if (!ok) return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));
+					if (!ok) return Promise.of(failureResponse.apply(HttpResponse.Builder.unauthorized401(challenge)).build());
 					request.attach(new BasicAuthCredentials(authData[0], authData[1]));
 					return next.serveAsync(request);
 				});

@@ -32,8 +32,7 @@ import java.util.Map;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.putPositiveInt;
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkState;
+import static io.activej.common.Checks.*;
 import static io.activej.http.ContentTypes.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.*;
@@ -116,7 +115,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	private final HttpClientConnection connection;
 
-	private int code;
+	private final int code;
 
 	private @Nullable Map<String, HttpCookie> parsedCookies;
 
@@ -131,60 +130,49 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		this(version, code, null);
 	}
 
-	public static HttpResponse ofCode(int code) {
+	public static Builder builder(int code) {
 		if (CHECKS) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
-		return new HttpResponse(HTTP_1_1, code);
+		return new HttpResponse(HTTP_1_1, code).new Builder();
+	}
+
+	public static HttpResponse ofCode(int code) {
+		return builder(code).build();
 	}
 
 	public static HttpResponse ok200() {
-		return new HttpResponse(HTTP_1_1, 200);
+		return Builder.ok200().build();
 	}
 
 	public static HttpResponse ok201() {
-		return new HttpResponse(HTTP_1_1, 201);
+		return Builder.ok201().build();
 	}
 
 	public static HttpResponse ok206() {
-		return new HttpResponse(HTTP_1_1, 206);
+		return Builder.ok206().build();
 	}
 
 	public static HttpResponse redirect301(String url) {
-		HttpResponse response = new HttpResponse(HTTP_1_1, 301);
-		// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
-		response.addHeader(LOCATION, url);
-		return response;
+		return Builder.redirect301(url).build();
 	}
 
 	public static HttpResponse redirect302(String url) {
-		HttpResponse response = new HttpResponse(HTTP_1_1, 302);
-		// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
-		response.addHeader(LOCATION, url);
-		return response;
+		return Builder.redirect302(url).build();
 	}
 
 	public static HttpResponse redirect307(String url) {
-		HttpResponse response = new HttpResponse(HTTP_1_1, 307);
-		// RFC-7231, section 6.4.7 (https://tools.ietf.org/html/rfc7231#section-6.4.7)
-		response.addHeader(LOCATION, url);
-		return response;
+		return Builder.redirect307(url).build();
 	}
 
 	public static HttpResponse redirect308(String url) {
-		HttpResponse response = new HttpResponse(HTTP_1_1, 308);
-		// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
-		response.addHeader(LOCATION, url);
-		return response;
+		return Builder.redirect308(url).build();
 	}
 
 	public static HttpResponse unauthorized401(String challenge) {
-		HttpResponse response = new HttpResponse(HTTP_1_1, 401);
-		// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
-		response.addHeader(WWW_AUTHENTICATE, challenge);
-		return response;
+		return Builder.unauthorized401(challenge).build();
 	}
 
 	public static HttpResponse notFound404() {
-		return new HttpResponse(HTTP_1_1, 404);
+		return Builder.notFound404().build();
 	}
 
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
@@ -192,7 +180,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
-		HttpResponse response = new HttpResponse(HTTP_1_1, rangeHeader == null ? 200 : 206);
+		Builder builder = builder(rangeHeader == null ? 200 : 206);
 
 		String localName = name.substring(name.lastIndexOf('/') + 1);
 		MediaType mediaType = MediaTypes.getByExtension(localName.substring(localName.lastIndexOf('.') + 1));
@@ -200,9 +188,9 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 			mediaType = OCTET_STREAM;
 		}
 
-		response.addHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(ContentType.of(mediaType)));
-		response.addHeader(ACCEPT_RANGES, "bytes");
-		response.addHeader(CONTENT_DISPOSITION, inline ? "inline" : "attachment; filename=\"" + localName + "\"");
+		builder.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(ContentType.of(mediaType)));
+		builder.withHeader(ACCEPT_RANGES, "bytes");
+		builder.withHeader(CONTENT_DISPOSITION, inline ? "inline" : "attachment; filename=\"" + localName + "\"");
 
 		long contentLength, offset;
 		if (rangeHeader != null) {
@@ -234,14 +222,14 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 				return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
 			}
 			contentLength = endOffset - offset + 1;
-			response.addHeader(CONTENT_RANGE, "bytes " + offset + "-" + endOffset + "/" + size);
+			builder.withHeader(CONTENT_RANGE, "bytes " + offset + "-" + endOffset + "/" + size);
 		} else {
 			contentLength = size;
 			offset = 0;
 		}
-		response.addHeader(CONTENT_LENGTH, Long.toString(contentLength));
-		response.setBodyStream(ChannelSuppliers.ofPromise(downloader.getFileSlice(offset, contentLength)));
-		return Promise.of(response);
+		builder.withHeader(CONTENT_LENGTH, Long.toString(contentLength));
+		builder.withBodyStream(ChannelSuppliers.ofPromise(downloader.getFileSlice(offset, contentLength)));
+		return Promise.of(builder.build());
 	}
 
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size) {
@@ -249,72 +237,84 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 	// endregion
 
-	// region common builder methods
-	public HttpResponse withHeader(HttpHeader header, String value) {
-		addHeader(header, value);
-		return this;
-	}
+	public final class Builder extends HttpMessage.Builder<Builder, HttpResponse> {
+		private Builder() {}
 
-	public HttpResponse withHeader(HttpHeader header, byte[] bytes) {
-		addHeader(header, bytes);
-		return this;
-	}
+		public static Builder ok200() {
+			return builder(200);
+		}
 
-	public HttpResponse withHeader(HttpHeader header, HttpHeaderValue value) {
-		addHeader(header, value);
-		return this;
-	}
+		public static Builder ok201() {
+			return builder(201);
+		}
 
-	public HttpResponse withCookies(List<HttpCookie> cookies) {
-		addCookies(cookies);
-		return this;
-	}
+		public static Builder ok206() {
+			return builder(206);
+		}
 
-	public HttpResponse withCookies(HttpCookie... cookies) {
-		addCookies(cookies);
-		return this;
-	}
+		public static Builder redirect301(String url) {
+			// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
+			return builder(301)
+					.withHeader(LOCATION, url);
+		}
 
-	public HttpResponse withCookie(HttpCookie cookie) {
-		addCookie(cookie);
-		return this;
-	}
+		public static Builder redirect302(String url) {
+			// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
+			return builder(302)
+					.withHeader(LOCATION, url);
+		}
 
-	public HttpResponse withBodyGzipCompression() {
-		setBodyGzipCompression();
-		return this;
-	}
+		public static Builder redirect307(String url) {
+			return builder(307)
+					.withHeader(LOCATION, url);
+		}
 
-	public HttpResponse withBody(ByteBuf body) {
-		setBody(body);
-		return this;
-	}
+		public static Builder redirect308(String url) {
+			// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
+			return builder(308)
+					.withHeader(LOCATION, url);
+		}
 
-	public HttpResponse withBody(byte[] array) {
-		setBody(array);
-		return this;
-	}
+		public static Builder unauthorized401(String challenge) {
+			// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
+			return builder(401)
+					.withHeader(WWW_AUTHENTICATE, challenge);
+		}
 
-	public HttpResponse withBodyStream(ChannelSupplier<ByteBuf> stream) {
-		setBodyStream(stream);
-		return this;
-	}
+		public static Builder notFound404() {
+			return builder(404);
+		}
 
-	public HttpResponse withPlainText(String text) {
-		return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
-				.withBody(text.getBytes(UTF_8));
-	}
+		@Override
+		public void addCookies(List<HttpCookie> cookies) {
+			for (HttpCookie cookie : cookies) {
+				addCookie(cookie);
+			}
+		}
 
-	public HttpResponse withHtml(String text) {
-		return withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
-				.withBody(text.getBytes(UTF_8));
-	}
+		@Override
+		public void addCookie(HttpCookie cookie) {
+			headers.add(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
+		}
 
-	public HttpResponse withJson(String text) {
-		return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBody(text.getBytes(UTF_8));
+		public Builder withPlainText(String text) {
+			checkNotBuilt(this);
+			return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
+					.withBody(text.getBytes(UTF_8));
+		}
+
+		public Builder withHtml(String text) {
+			checkNotBuilt(this);
+			return withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
+					.withBody(text.getBytes(UTF_8));
+		}
+
+		public Builder withJson(String text) {
+			checkNotBuilt(this);
+			return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+					.withBody(text.getBytes(UTF_8));
+		}
 	}
-	// endregion
 
 	@Override
 	public Promise<HttpResponse> promise() {
@@ -328,31 +328,12 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	@Override
-	public void addCookies(List<HttpCookie> cookies) {
-		if (CHECKS) checkState(!isRecycled());
-		for (HttpCookie cookie : cookies) {
-			addCookie(cookie);
-		}
-	}
-
-	@Override
-	public void addCookie(HttpCookie cookie) {
-		if (CHECKS) checkState(!isRecycled());
-		addHeader(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
-	}
-
-	@Override
 	boolean isContentLengthExpected() {
 		return true;
 	}
 
 	public HttpClientConnection getConnection() {
 		return connection;
-	}
-
-	public void setCode(int code) {
-		if (CHECKS) checkState(!isRecycled());
-		this.code = code;
 	}
 
 	public int getCode() {

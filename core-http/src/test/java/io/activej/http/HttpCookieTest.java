@@ -172,8 +172,9 @@ public class HttpCookieTest {
 
 	@Test
 	public void testCommaDelimiter() {
-		HttpResponse response = HttpResponse.ofCode(200);
-		response.addCookies(List.of(HttpCookie.of("key1", "value1"), HttpCookie.of("key2", "value2")));
+		HttpResponse response = HttpResponse.builder(200)
+				.withCookies(List.of(HttpCookie.of("key1", "value1"), HttpCookie.of("key2", "value2")))
+				.build();
 		assertEquals(2, response.getCookies().size());
 	}
 

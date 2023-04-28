@@ -30,19 +30,23 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("First")
 	AsyncServlet firstServlet() {
-		return request -> HttpResponse.ok200().withHtml(
-				"<h1>This page is served by first servlet</h1>" +
-						"<h3>Try to reload the page</h3>"
-		);
+		return request -> HttpResponse.Builder.ok200()
+				.withHtml(
+						"<h1>This page is served by first servlet</h1>" +
+								"<h3>Try to reload the page</h3>"
+				)
+				.build();
 	}
 
 	@Provides
 	@Named("Second")
 	AsyncServlet secondServlet() {
-		return request -> HttpResponse.ok200().withHtml(
-				"<h1>This page is served by second servlet</h1>" +
-						"<h3>Try to reload the page</h3>"
-		);
+		return request -> HttpResponse.Builder.ok200()
+				.withHtml(
+						"<h1>This page is served by second servlet</h1>" +
+								"<h3>Try to reload the page</h3>"
+				)
+				.build();
 	}
 
 	public static void main(String[] args) throws Exception {

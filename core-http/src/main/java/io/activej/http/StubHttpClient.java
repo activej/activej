@@ -55,9 +55,9 @@ public final class StubHttpClient extends ImplicitlyReactive
 					ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
 					Reactor reactor = Reactor.getCurrentReactor();
 					if (bodyStream != null) {
-						res.setBodyStream(bodyStream
+						res.bodyStream = bodyStream
 								.withEndOfStream(eos -> eos
-										.whenComplete(() -> reactor.post(res::recycle))));
+										.whenComplete(() -> reactor.post(res::recycle)));
 					} else {
 						reactor.post(res::recycle);
 					}

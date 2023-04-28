@@ -111,13 +111,13 @@ public class UiKernelServlets {
 				K id = fromJson(gson, request.getPathParameter("id"), model.getIdType());
 				return model.delete(id)
 						.map(response -> {
-							HttpResponse res = HttpResponse.ok200();
+							HttpResponse.Builder builder = HttpResponse.Builder.ok200();
 							if (response.hasErrors()) {
 								String json = gson.toJson(response.getErrors());
-								res.addHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
-								res.setBody(ByteBufStrings.wrapUtf8(json));
+								builder.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
+								builder.withBody(ByteBufStrings.wrapUtf8(json));
 							}
-							return res;
+							return builder.build();
 						});
 			} catch (MalformedDataException e) {
 				throw HttpError.ofCode(400, e);
@@ -126,8 +126,9 @@ public class UiKernelServlets {
 	}
 
 	private static HttpResponse createResponse(String body) {
-		return HttpResponse.ok200()
+		return HttpResponse.Builder.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8))
-				.withBody(ByteBufStrings.wrapUtf8(body));
+				.withBody(ByteBufStrings.wrapUtf8(body))
+				.build();
 	}
 }

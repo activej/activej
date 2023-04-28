@@ -70,7 +70,9 @@ public final class FileSystemGuiServlet {
 						.then(() -> {
 							String dir = request.getPostParameter("dir");
 							if (dir == null || dir.isEmpty())
-								return Promise.of(HttpResponse.ofCode(400).withPlainText("Dir should not be empty"));
+								return Promise.of(HttpResponse.builder(400)
+										.withPlainText("Dir should not be empty")
+										.build());
 							return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
 									.map($ -> HttpResponse.ok200());
 						}))
@@ -80,16 +82,18 @@ public final class FileSystemGuiServlet {
 							.map(
 									files -> !dir.isEmpty() && files.isEmpty() ?
 											redirect302("/") :
-											HttpResponse.ok200()
+											HttpResponse.Builder.ok200()
 													.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
 													.withBody(applyTemplate(mustache, Map.of(
 															"title", title,
 															"dirContents", filesToDirView(new HashMap<>(files), dir),
-															"breadcrumbs", dirToBreadcrumbs(dir)))),
+															"breadcrumbs", dirToBreadcrumbs(dir))))
+													.build(),
 									e -> {
 										if (e instanceof FileSystemException) {
-											return HttpResponse.ofCode(500)
-													.withPlainText("Service unavailable");
+											return HttpResponse.builder(500)
+													.withPlainText("Service unavailable")
+													.build();
 										} else {
 											throw e;
 										}

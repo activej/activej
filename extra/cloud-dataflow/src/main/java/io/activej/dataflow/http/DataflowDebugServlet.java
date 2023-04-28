@@ -53,7 +53,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import static io.activej.http.HttpMethod.GET;
-import static io.activej.http.HttpResponse.ok200;
+import static io.activej.http.HttpResponse.Builder.ok200;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.types.Types.parameterizedType;
@@ -80,7 +80,8 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 						.map(GET, "/partitions", request -> ok200()
 								.withJson(objectMapper.writeValueAsString(partitions.stream()
 										.map(Partition::address)
-										.collect(Collectors.toList()))))
+										.collect(Collectors.toList())))
+								.build())
 						.map(GET, "/tasks", request ->
 								Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
 										.map(partitionStats -> {
@@ -93,7 +94,8 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 												}
 											}
 											return ok200()
-													.withJson(objectMapper.writeValueAsString(tasks));
+													.withJson(objectMapper.writeValueAsString(tasks))
+													.build();
 										}))
 						.map(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
@@ -126,7 +128,8 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 
 										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).graphViz(), reduced);
 										return ok200()
-												.withJson(objectMapper.writeValueAsString(taskData));
+												.withJson(objectMapper.writeValueAsString(taskData))
+												.build();
 									});
 						})
 						.map(GET, "/tasks/:taskID/:index", request -> {
@@ -145,7 +148,8 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 															.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
 													task.startTime(),
 													task.finishTime(),
-													task.error()))));
+													task.error())))
+											.build());
 						}));
 	}
 

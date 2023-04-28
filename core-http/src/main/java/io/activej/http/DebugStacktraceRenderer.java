@@ -77,7 +77,7 @@ public final class DebugStacktraceRenderer {
 		STACK_TRACE_ELEMENT = Pattern.compile("(at ((?:" + ident + "\\.)+)" + ident + "\\()(" + ident + "(\\." + ident + ")(:\\d+)?)\\)");
 	}
 
-	public static HttpResponse render(Exception e, int code) {
+	public static HttpResponse.Builder render(Exception e, int code) {
 		StringWriter writer = new StringWriter();
 		e.printStackTrace(new PrintWriter(writer));
 		Matcher matcher = STACK_TRACE_ELEMENT.matcher(writer.toString());
@@ -88,7 +88,7 @@ public final class DebugStacktraceRenderer {
 			matcher.appendReplacement(stacktrace, "$1<a data-target=\"api/file/" + quotedFile + "$4$5\">$3</a>)");
 		}
 		matcher.appendTail(stacktrace);
-		return HttpResponse.ofCode(code)
+		return HttpResponse.builder(code)
 				.withHtml(DEBUG_SERVER_ERROR_HTML
 						.replace("{title}", HttpUtils.getHttpErrorTitle(code))
 						.replace("{stacktrace}", stacktrace));

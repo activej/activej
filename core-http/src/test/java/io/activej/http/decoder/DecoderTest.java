@@ -17,8 +17,9 @@ public class DecoderTest {
 	public void test() throws DecodeException {
 		Decoder<String> parser = Decoders.ofCookie("tmp");
 		assertEquals("1",
-				parser.decodeOrThrow(HttpRequest.get("http://example.com")
-						.withCookie(HttpCookie.of("tmp", "1"))));
+				parser.decodeOrThrow(HttpRequest.Builder.get("http://example.com")
+						.withCookie(HttpCookie.of("tmp", "1"))
+						.build()));
 	}
 
 	@Test
@@ -29,8 +30,9 @@ public class DecoderTest {
 				.map(Mapper.of(Integer::doubleValue))
 				.validate(Validator.of(value -> value % 2 == 0, "Is even"));
 
-		Either<Double, DecodeErrors> key = parser.decode(HttpRequest.get("http://example.com")
-				.withCookie(HttpCookie.of("key", "11")));
+		Either<Double, DecodeErrors> key = parser.decode(HttpRequest.Builder.get("http://example.com")
+				.withCookie(HttpCookie.of("key", "11"))
+				.build());
 		DecodeErrors exception = key.getRight();
 		//noinspection ConstantConditions
 		assertEquals("Is even", exception.getErrors().get(0).getMessage());

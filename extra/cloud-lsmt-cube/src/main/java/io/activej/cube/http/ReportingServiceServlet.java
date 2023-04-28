@@ -131,19 +131,19 @@ public final class ReportingServiceServlet extends ServletWithStats {
 	}
 
 	private static HttpResponse createResponse(ByteBuf body) {
-		HttpResponse response = HttpResponse.ok200();
-		response.addHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)));
-		response.setBody(body);
-		response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-		return response;
+		return HttpResponse.Builder.ok200()
+				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)))
+				.withBody(body)
+				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+				.build();
 	}
 
 	private static HttpResponse createErrorResponse(String body) {
-		HttpResponse response = HttpResponse.ofCode(400);
-		response.addHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.PLAIN_TEXT, StandardCharsets.UTF_8)));
-		response.setBody(wrapUtf8(body));
-		response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-		return response;
+		return HttpResponse.builder(400)
+				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.PLAIN_TEXT, StandardCharsets.UTF_8)))
+				.withBody(wrapUtf8(body))
+				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+				.build();
 	}
 
 	private static final Pattern SPLITTER = Pattern.compile(",");

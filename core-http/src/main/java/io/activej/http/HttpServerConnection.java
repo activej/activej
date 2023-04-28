@@ -261,7 +261,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (request.headers.size() >= MAX_HEADERS) {
 			throw new MalformedHttpException("Too many headers");
 		}
-		request.addHeader(header, array, off, len);
+		request.headers.add(header, ofBytes(array, off, len));
 	}
 
 	private void writeHttpResponse(HttpResponse httpResponse) {
@@ -272,7 +272,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 					numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
 				connectionHeader = CONNECTION_CLOSE_HEADER;
 			}
-			httpResponse.addHeader(CONNECTION, connectionHeader);
+		httpResponse.headers.add(CONNECTION, connectionHeader);
 
 			if (isWebSocket) {
 				// if web socket upgrade request was unsuccessful, it is not a web socket connection
@@ -299,7 +299,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			ByteBuf body = httpMessage.body;
 			httpMessage.body = null;
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) == 0) {
-				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
+				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + body.readRemaining();
 				writeBuf = ensureWriteBuffer(messageSize);
 				httpMessage.writeTo(writeBuf);
@@ -307,8 +307,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				body.recycle();
 			} else {
 				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
-				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
-				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
+				httpMessage.headers.add(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + gzippedBody.readRemaining();
 				writeBuf = ensureWriteBuffer(messageSize);
 				httpMessage.writeTo(writeBuf);
@@ -320,7 +320,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		if (httpMessage.bodyStream == null) {
 			if (httpMessage.isContentLengthExpected()) {
-				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(0));
+				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(0));
 			}
 			writeBuf = ensureWriteBuffer(httpMessage.estimateSize());
 			httpMessage.writeTo(writeBuf);
