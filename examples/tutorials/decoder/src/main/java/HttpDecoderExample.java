@@ -63,7 +63,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list())))
 						.toPromise())
 				.map(POST, "/add", request -> request.loadBody()
-						.map($ -> {
+						.then($ -> {
 							//[START REGION_3]
 							Either<Contact, DecodeErrors> decodedUser = CONTACT_DECODER.decode(request);
 							//[END REGION_3]
@@ -77,7 +77,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 							}
 							return HttpResponse.Builder.ok200()
 									.withBody(applyTemplate(contactListView, scopes))
-									.build();
+									.toPromise();
 						}));
 	}
 	//[END REGION_2]

@@ -32,11 +32,11 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
 		return RoutingServlet.create(reactor)
 				.map(POST, "/hello", request -> request.loadBody()
-						.map($ -> {
+						.then($ -> {
 							String name = request.getPostParameters().get("name");
 							return HttpResponse.Builder.ok200()
 									.withHtml("<h1><center>Hello from POST, " + name + "!</center></h1>")
-									.build();
+									.toPromise();
 						}))
 				.map(GET, "/hello", request -> {
 					String name = request.getQueryParameter("name");

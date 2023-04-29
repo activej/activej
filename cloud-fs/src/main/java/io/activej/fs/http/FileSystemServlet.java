@@ -16,8 +16,9 @@
 
 package io.activej.fs.http;
 
+import io.activej.async.function.AsyncFunction;
+import io.activej.async.function.AsyncFunctionEx;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.function.FunctionEx;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.IFileSystem;
@@ -28,7 +29,6 @@ import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
-import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.fs.http.FileSystemCommand.*;
 import static io.activej.fs.util.JsonUtils.fromJson;
 import static io.activej.fs.util.JsonUtils.toJson;
@@ -69,14 +69,14 @@ public final class FileSystemServlet {
 					return (size == null ?
 							fs.upload(decodePath(request)) :
 							fs.upload(decodePath(request), size))
-							.map(uploadAcknowledgeFn(request), errorResponseFn());
+							.then(uploadAcknowledgeFn(request), errorResponseFn());
 				})
 				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(AsyncMultipartDataHandler.file(fs::upload))
-						.map(voidResponseFn(), errorResponseFn()))
+						.then(voidResponseFn(), errorResponseFn()))
 				.map(POST, "/" + APPEND + "/*", request -> {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					return fs.append(decodePath(request), offset)
-							.map(uploadAcknowledgeFn(request), errorResponseFn());
+							.then(uploadAcknowledgeFn(request), errorResponseFn());
 				})
 				.map(GET, "/" + DOWNLOAD + "/*", request -> {
 					String name = decodePath(request);
@@ -87,66 +87,66 @@ public final class FileSystemServlet {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
 					return fs.download(name, offset, limit)
-							.map(res -> HttpResponse.Builder.ok200()
+							.then(res -> HttpResponse.Builder.ok200()
 											.withHeader(ACCEPT_RANGES, "bytes")
 											.withBodyStream(res)
-											.build(),
+											.toPromise(),
 									errorResponseFn());
 				})
 				.map(GET, "/" + LIST, request -> {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
 					return fs.list(glob)
-							.map(list -> HttpResponse.Builder.ok200()
+							.then(list -> HttpResponse.Builder.ok200()
 											.withBody(toJson(list))
 											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-											.build(),
+											.toPromise(),
 									errorResponseFn());
 				})
 				.map(GET, "/" + INFO + "/*", request ->
 						fs.info(decodePath(request))
-								.map(meta -> HttpResponse.Builder.ok200()
+								.then(meta -> HttpResponse.Builder.ok200()
 												.withBody(toJson(meta))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-												.build(),
+												.toPromise(),
 										errorResponseFn()))
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::infoAll)
-						.map(map -> HttpResponse.Builder.ok200()
+						.then(map -> HttpResponse.Builder.ok200()
 										.withBody(toJson(map))
 										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-										.build(),
+										.toPromise(),
 								errorResponseFn()))
 				.map(GET, "/" + PING, request -> fs.ping()
-						.map(voidResponseFn(), errorResponseFn()))
+						.then(voidResponseFn(), errorResponseFn()))
 				.map(POST, "/" + MOVE, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.move(name, target)
-							.map(voidResponseFn(), errorResponseFn());
+							.then(voidResponseFn(), errorResponseFn());
 				})
 				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::moveAll)
-						.map(voidResponseFn(), errorResponseFn()))
+						.then(voidResponseFn(), errorResponseFn()))
 				.map(POST, "/" + COPY, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.copy(name, target)
-							.map(voidResponseFn(), errorResponseFn());
+							.then(voidResponseFn(), errorResponseFn());
 				})
 				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::copyAll)
-						.map(voidResponseFn(), errorResponseFn()))
+						.then(voidResponseFn(), errorResponseFn()))
 				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
-								.map(voidResponseFn(), errorResponseFn()))
+								.then(voidResponseFn(), errorResponseFn()))
 				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::deleteAll)
-						.map(voidResponseFn(), errorResponseFn()));
+						.then(voidResponseFn(), errorResponseFn()));
 	}
 
 	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, boolean inline, String name, String rangeHeader) {
@@ -159,7 +159,7 @@ public final class FileSystemServlet {
 						meta.getSize(),
 						rangeHeader,
 						inline))
-				.map(identity(), errorResponseFn());
+				.then(Promise::of, errorResponseFn());
 	}
 
 	private static String decodePath(HttpRequest request) throws HttpError {
@@ -194,27 +194,27 @@ public final class FileSystemServlet {
 		}
 	}
 
-	private static FunctionEx<Exception, HttpResponse> errorResponseFn() {
+	private static AsyncFunction<Exception, HttpResponse> errorResponseFn() {
 		return e -> HttpResponse.builder(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBody(toJson(FileSystemException.class, castError(e)))
-				.build();
+				.toPromise();
 	}
 
-	private static <T> FunctionEx<T, HttpResponse> voidResponseFn() {
+	private static <T> AsyncFunction<T, HttpResponse> voidResponseFn() {
 		return $ -> HttpResponse.Builder.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
-				.build();
+				.toPromise();
 	}
 
-	private static FunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
+	private static AsyncFunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
 		return consumer -> HttpResponse.Builder.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
 						.streamTo(consumer)
 						.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))))
-				.build();
+				.toPromise();
 	}
 
 }

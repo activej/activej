@@ -23,9 +23,10 @@ public class AsyncServletTest {
 
 	@Test
 	public void testEnsureRequestBody() throws Exception {
-		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE).map(body -> HttpResponse.Builder.ok200()
-				.withBody(body.slice())
-				.build());
+		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE)
+				.then(body -> HttpResponse.Builder.ok200()
+						.withBody(body.slice())
+						.toPromise());
 
 		HttpRequest testRequest = HttpRequest.Builder.post("http://example.com")
 				.withBodyStream(ChannelSuppliers.ofValues(
@@ -44,7 +45,7 @@ public class AsyncServletTest {
 	@Test
 	public void testEnsureRequestBodyWithException() throws Exception {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE)
-				.map(body -> HttpResponse.Builder.ok200().withBody(body.slice()).build());
+				.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise());
 		Exception exception = new Exception("TestException");
 
 		ByteBuf byteBuf = ByteBufPool.allocate(100);

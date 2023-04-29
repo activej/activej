@@ -25,7 +25,6 @@ import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
-import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.types.TypeT;
@@ -62,18 +61,18 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	) {
 		RoutingServlet servlet = RoutingServlet.create(reactor)
 				.map(POST, "/", request -> request.loadBody()
-						.map(body -> {
+						.then(body -> {
 							try {
 								K key = fromJson(descriptor.keyManifest(), body);
 								S state = client.get(key);
 								if (state != null) {
 									return HttpResponse.Builder.ok200()
 											.withBody(toJson(descriptor.stateManifest(), state))
-											.build();
+											.toPromise();
 								}
 								return HttpResponse.builder(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
-										.build();
+										.toPromise();
 							} catch (MalformedDataException e) {
 								throw HttpError.ofCode(400, e);
 							}
@@ -88,15 +87,15 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 							}
 						}))
 				.map(DELETE, "/", request -> request.loadBody()
-						.map(body -> {
+						.then(body -> {
 							try {
 								K key = fromJson(descriptor.keyManifest(), body);
 								if (client.remove(key)) {
-									return HttpResponse.ok200();
+									return HttpResponse.ok200().toPromise();
 								}
 								return HttpResponse.builder(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
-										.build();
+										.toPromise();
 							} catch (MalformedDataException e) {
 								throw HttpError.ofCode(400, e);
 							}
@@ -108,18 +107,20 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 		return servlet
 				.map(POST, "/backup", request -> {
 					if (backupService.backupInProgress()) {
-						return Promise.of(HttpResponse.builder(403)
+						return HttpResponse.builder(403)
 								.withBody("Backup is already in progress".getBytes(UTF_8))
-								.build());
+								.toPromise();
 					}
 					backupService.backup();
-					return Promise.of(HttpResponse.ofCode(202));
+					return HttpResponse.ofCode(202).toPromise();
 				})
 				.map(POST, "/awaitBackup", request ->
 						backupService.backupInProgress() ?
-								backupService.backup().map($ -> HttpResponse.builder(204)
-										.withBody("Finished already running backup".getBytes(UTF_8))
-										.build()) :
-								backupService.backup().map($ -> HttpResponse.ok200()));
+								backupService.backup()
+										.then($ -> HttpResponse.builder(204)
+												.withBody("Finished already running backup".getBytes(UTF_8))
+												.toPromise()) :
+								backupService.backup()
+										.then($ -> HttpResponse.ok200().toPromise()));
 	}
 }

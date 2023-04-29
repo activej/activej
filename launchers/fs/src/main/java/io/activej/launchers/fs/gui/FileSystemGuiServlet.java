@@ -29,7 +29,6 @@ import io.activej.fs.http.FileSystemServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
-import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
 import java.util.*;
@@ -70,30 +69,30 @@ public final class FileSystemGuiServlet {
 						.then(() -> {
 							String dir = request.getPostParameter("dir");
 							if (dir == null || dir.isEmpty())
-								return Promise.of(HttpResponse.builder(400)
+								return HttpResponse.builder(400)
 										.withPlainText("Dir should not be empty")
-										.build());
+										.toPromise();
 							return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
-									.map($ -> HttpResponse.ok200());
+									.then($ -> HttpResponse.ok200().toPromise());
 						}))
 				.map("/", request -> {
 					String dir = decodeDir(request);
 					return fs.list(dir + "**")
-							.map(
+							.then(
 									files -> !dir.isEmpty() && files.isEmpty() ?
-											redirect302("/") :
+											redirect302("/").toPromise() :
 											HttpResponse.Builder.ok200()
 													.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
 													.withBody(applyTemplate(mustache, Map.of(
 															"title", title,
 															"dirContents", filesToDirView(new HashMap<>(files), dir),
 															"breadcrumbs", dirToBreadcrumbs(dir))))
-													.build(),
+													.toPromise(),
 									e -> {
 										if (e instanceof FileSystemException) {
 											return HttpResponse.builder(500)
 													.withPlainText("Service unavailable")
-													.build();
+													.toPromise();
 										} else {
 											throw e;
 										}

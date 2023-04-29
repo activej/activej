@@ -222,13 +222,15 @@ public final class AbstractHttpConnectionTest {
 
 		HttpRequest request = HttpRequest.Builder.post("http://127.0.0.1:" + port)
 				.withHeader(CONTENT_LENGTH, String.valueOf(size))
-				.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
-					int length = 1_000_000;
-					byte[] temp = new byte[length];
-					RANDOM.nextBytes(temp);
-					outChecksum.update(temp, 0, length);
-					return ByteBuf.wrapForReading(temp);
-				}).limit(3_000)))
+				.withBodyStream(ChannelSuppliers.ofStream(
+						Stream.generate(() -> {
+									int length = 1_000_000;
+									byte[] temp = new byte[length];
+									RANDOM.nextBytes(temp);
+									outChecksum.update(temp, 0, length);
+									return ByteBuf.wrapForReading(temp);
+								})
+								.limit(3_000)))
 				.build();
 
 		await(client.request(request)
@@ -391,9 +393,9 @@ public final class AbstractHttpConnectionTest {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-								.map($ -> HttpResponse.Builder.ok200()
+								.then($ -> HttpResponse.Builder.ok200()
 										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))
-										.build()))
+										.toPromise()))
 				.withInspector(serverInspector)
 				.withListenPort(port)
 				.build();
@@ -524,12 +526,12 @@ public final class AbstractHttpConnectionTest {
 		ByteBuf expected = ByteBufPool.allocate(size);
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
-								.map(body -> {
+								.then(body -> {
 									HttpResponse.Builder httpResponseBuilder = HttpResponse.Builder.ok200()
 											.withBodyStream(request.takeBodyStream()
 													.transformWith(ChannelTransformers.chunkBytes(MemSize.of(1), MemSize.of(1))));
 									decorator.accept(httpResponseBuilder);
-									return httpResponseBuilder.build();
+									return httpResponseBuilder.toPromise();
 								}))
 				.withListenPort(port)
 				.withSocketSettings(socketSettings)

@@ -66,8 +66,7 @@ public final class HttpServerTest {
 	public HttpServer httpServer() {
 		return HttpServer.builder(eventloop,
 						request ->
-								Promise.ofCallback(cb -> cb.post(
-										HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).build())))
+								HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise().async())
 				.withListenPort(port)
 				.build();
 	}
@@ -410,9 +409,8 @@ public final class HttpServerTest {
 	@Test
 	public void testExpectContinue() throws Exception {
 		HttpServer server = HttpServer.builder(eventloop,
-						request -> request.loadBody().map(body -> HttpResponse.Builder.ok200()
-								.withBody(body.slice())
-								.build()))
+						request -> request.loadBody()
+								.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise()))
 				.withListenPort(port)
 				.build();
 
@@ -497,9 +495,9 @@ public final class HttpServerTest {
 												.append(";");
 									}
 
-									return Promise.of(HttpResponse.Builder.ok200()
+									return HttpResponse.Builder.ok200()
 											.withBody(encodeAscii(sb.toString()))
-											.build());
+											.toPromise();
 								}))
 				.withListenPort(port)
 				.build();

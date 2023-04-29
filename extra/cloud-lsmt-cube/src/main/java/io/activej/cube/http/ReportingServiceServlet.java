@@ -113,37 +113,37 @@ public final class ReportingServiceServlet extends ServletWithStats {
 			Stopwatch totalTimeStopwatch = Stopwatch.createStarted();
 			CubeQuery cubeQuery = parseQuery(httpRequest);
 			return cube.query(cubeQuery)
-					.map(queryResult -> {
+					.then(queryResult -> {
 						Stopwatch resultProcessingStopwatch = Stopwatch.createStarted();
 						ByteBuf jsonBuf = toJsonBuf(getQueryResultCodec(), queryResult);
-						HttpResponse httpResponse = createResponse(jsonBuf);
+						Promise<HttpResponse> httpResponse = createResponse(jsonBuf);
 						logger.info("Processed request {} ({}) [totalTime={}, jsonConstruction={}]", httpRequest,
 								cubeQuery, totalTimeStopwatch, resultProcessingStopwatch);
 						return httpResponse;
 					});
 		} catch (QueryException e) {
 			logger.warn("Query exception: " + httpRequest, e);
-			return Promise.of(createErrorResponse(e.getMessage()));
+			return createErrorResponse(e.getMessage());
 		} catch (MalformedDataException e) {
 			logger.warn("Parse exception: " + httpRequest, e);
-			return Promise.of(createErrorResponse(e.getMessage()));
+			return createErrorResponse(e.getMessage());
 		}
 	}
 
-	private static HttpResponse createResponse(ByteBuf body) {
+	private static Promise<HttpResponse> createResponse(ByteBuf body) {
 		return HttpResponse.Builder.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)))
 				.withBody(body)
 				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-				.build();
+				.toPromise();
 	}
 
-	private static HttpResponse createErrorResponse(String body) {
+	private static Promise<HttpResponse> createErrorResponse(String body) {
 		return HttpResponse.builder(400)
 				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.PLAIN_TEXT, StandardCharsets.UTF_8)))
 				.withBody(wrapUtf8(body))
 				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-				.build();
+				.toPromise();
 	}
 
 	private static final Pattern SPLITTER = Pattern.compile(",");

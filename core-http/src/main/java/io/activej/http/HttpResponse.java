@@ -230,7 +230,7 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		}
 		builder.withHeader(CONTENT_LENGTH, Long.toString(contentLength));
 		builder.withBodyStream(ChannelSuppliers.ofPromise(downloader.getFileSlice(offset, contentLength)));
-		return Promise.of(builder.build());
+		return builder.toPromise();
 	}
 
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size) {

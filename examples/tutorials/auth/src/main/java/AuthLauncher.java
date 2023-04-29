@@ -72,9 +72,9 @@ public final class AuthLauncher extends HttpServerLauncher {
 								String sessionId = UUID.randomUUID().toString();
 
 								return store.save(sessionId, "My object saved in session")
-										.map($ -> HttpResponse.Builder.redirect302("/members")
+										.then($ -> HttpResponse.Builder.redirect302("/members")
 												.withCookie(HttpCookie.of(SESSION_ID, sessionId))
-												.build());
+												.toPromise());
 							}
 							return staticServlet.serve(request);
 						}))

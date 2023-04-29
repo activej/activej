@@ -83,7 +83,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 								.toPromise())
 						.map(GET, "/tasks", request ->
 								Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
-										.map(partitionStats -> {
+										.then(partitionStats -> {
 											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
 											for (int i = 0; i < partitionStats.size(); i++) {
 												PartitionData partitionStat = partitionStats.get(i);
@@ -94,12 +94,12 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 											}
 											return ok200()
 													.withJson(objectMapper.writeValueAsString(tasks))
-													.build();
+													.toPromise();
 										}))
 						.map(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
 							return Promises.toList(partitions.stream().map(p -> getTask(p.address(), id)).collect(toList()))
-									.map(localStats -> {
+									.then(localStats -> {
 										List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
 
 										Map<Integer, List<@Nullable NodeStat>> nodeStats = new HashMap<>();
@@ -128,7 +128,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).graphViz(), reduced);
 										return ok200()
 												.withJson(objectMapper.writeValueAsString(taskData))
-												.build();
+												.toPromise();
 									});
 						})
 						.map(GET, "/tasks/:taskID/:index", request -> {
@@ -141,14 +141,14 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 								throw HttpError.ofCode(400, "Bad index");
 							}
 							return getTask(partition.address(), id)
-									.map(task -> ok200()
+									.then(task -> ok200()
 											.withJson(objectMapper.writeValueAsString(new LocalTaskData(task.status(), task.graphViz(),
 													task.nodes().entrySet().stream()
 															.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
 													task.startTime(),
 													task.finishTime(),
 													task.error())))
-											.build());
+											.toPromise());
 						}));
 	}
 

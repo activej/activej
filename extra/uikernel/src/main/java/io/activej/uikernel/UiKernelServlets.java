@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.http.*;
+import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class UiKernelServlets {
 			try {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
 				return model.read(settings)
-						.map(response ->
+						.then(response ->
 								createResponse(response.toJson(gson, model.getRecordType(), model.getIdType())));
 			} catch (MalformedDataException | MalformedHttpException e) {
 				throw HttpError.ofCode(400, e);
@@ -67,7 +68,7 @@ public class UiKernelServlets {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
 				K id = fromJson(gson, request.getPathParameter(ID_PARAMETER_NAME), model.getIdType());
 				return model.read(id, settings)
-						.map(obj ->
+						.then(obj ->
 								createResponse(gson.toJson(obj, model.getRecordType())));
 			} catch (MalformedDataException | MalformedHttpException e) {
 				throw HttpError.ofCode(400, e);
@@ -82,7 +83,7 @@ public class UiKernelServlets {
 						String json = body.getString(UTF_8);
 						R obj = fromJson(gson, json, model.getRecordType());
 						return model.create(obj)
-								.map(response ->
+								.then(response ->
 										createResponse(response.toJson(gson, model.getIdType())));
 					} catch (MalformedDataException e) {
 						throw HttpError.ofCode(400, e);
@@ -97,7 +98,7 @@ public class UiKernelServlets {
 						String json = body.getString(UTF_8);
 						List<R> list = deserializeUpdateRequest(gson, json, model.getRecordType(), model.getIdType());
 						return model.update(list)
-								.map(result ->
+								.then(result ->
 										createResponse(result.toJson(gson, model.getRecordType(), model.getIdType())));
 					} catch (MalformedDataException e) {
 						throw HttpError.ofCode(400, e);
@@ -110,25 +111,26 @@ public class UiKernelServlets {
 			try {
 				K id = fromJson(gson, request.getPathParameter("id"), model.getIdType());
 				return model.delete(id)
-						.map(response -> {
-							HttpResponse.Builder builder = HttpResponse.Builder.ok200();
-							if (response.hasErrors()) {
-								String json = gson.toJson(response.getErrors());
-								builder.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
-								builder.withBody(ByteBufStrings.wrapUtf8(json));
-							}
-							return builder.build();
-						});
+						.then(response ->
+								HttpResponse.Builder.ok200()
+										.initialize(builder -> {
+											if (response.hasErrors()) {
+												String json = gson.toJson(response.getErrors());
+												builder.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
+												builder.withBody(ByteBufStrings.wrapUtf8(json));
+											}
+										})
+										.toPromise());
 			} catch (MalformedDataException e) {
 				throw HttpError.ofCode(400, e);
 			}
 		};
 	}
 
-	private static HttpResponse createResponse(String body) {
+	private static Promise<HttpResponse> createResponse(String body) {
 		return HttpResponse.Builder.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8))
 				.withBody(ByteBufStrings.wrapUtf8(body))
-				.build();
+				.toPromise();
 	}
 }

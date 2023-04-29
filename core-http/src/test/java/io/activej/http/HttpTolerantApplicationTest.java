@@ -2,7 +2,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -46,11 +45,10 @@ public final class HttpTolerantApplicationTest {
 
 		HttpServer server = HttpServer.builder(eventloop,
 						request ->
-								Promise.ofCallback(cb ->
-										eventloop.post(() -> cb.set(
-												HttpResponse.Builder.ok200()
-														.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
-														.build()))))
+								HttpResponse.Builder.ok200()
+										.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
+										.toPromise()
+										.async())
 				.withListenPort(port)
 				.build();
 

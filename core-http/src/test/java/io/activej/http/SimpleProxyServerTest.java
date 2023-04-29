@@ -3,7 +3,6 @@ package io.activej.http;
 import io.activej.dns.CachedDnsClient;
 import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
-import io.activej.promise.Promise;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.Before;
@@ -82,9 +81,9 @@ public final class SimpleProxyServerTest {
 							String path = echoServerPort + request.getUrl().getPath();
 							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
 									.then(result -> result.loadBody()
-											.then(body -> Promise.of(HttpResponse.builder(result.getCode())
+											.then(body -> HttpResponse.builder(result.getCode())
 													.withBody(encodeAscii("FORWARDED: " + body.getString(UTF_8)))
-													.build())));
+													.toPromise()));
 						})
 				.withListenPort(proxyServerPort)
 				.build();

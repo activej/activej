@@ -165,11 +165,11 @@ public final class StaticServlet extends AbstractReactive
 		return type;
 	}
 
-	private HttpResponse createHttpResponse(ByteBuf buf, ContentType contentType) {
+	private Promise<HttpResponse> createHttpResponse(ByteBuf buf, ContentType contentType) {
 		return responseBuilderSupplier.get()
 				.withBody(buf)
 				.withHeader(CONTENT_TYPE, ofContentType(contentType))
-				.build();
+				.toPromise();
 	}
 
 	@Override
@@ -182,7 +182,7 @@ public final class StaticServlet extends AbstractReactive
 				.then(() -> (mappedPath.endsWith("/") || mappedPath.isEmpty()) ?
 						tryLoadIndexResource(mappedPath) :
 						resourceLoader.load(mappedPath)
-								.map(byteBuf -> createHttpResponse(byteBuf, contentType))
+								.then(byteBuf -> createHttpResponse(byteBuf, contentType))
 								.then((value, e) -> {
 									if (e instanceof ResourceIsADirectoryException) {
 										return tryLoadIndexResource(mappedPath);
@@ -202,14 +202,14 @@ public final class StaticServlet extends AbstractReactive
 						indexResources.stream()
 								.map(indexResource -> (AsyncSupplier<HttpResponse>) () ->
 										resourceLoader.load(dirPath + indexResource)
-												.map(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource)))))
+												.then(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource)))))
 				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 
 	private Promise<HttpResponse> tryLoadDefaultResource() {
 		return defaultResource != null ?
 				resourceLoader.load(defaultResource)
-						.map(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :
+						.then(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :
 				Promise.ofException(HttpError.notFound404());
 	}
 }

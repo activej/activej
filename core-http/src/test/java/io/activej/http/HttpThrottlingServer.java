@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBufStrings;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.EventloopInspector;
 import io.activej.eventloop.inspector.ThrottlingController;
+import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
 
 import java.util.Random;
@@ -64,14 +65,14 @@ public class HttpThrottlingServer {
 
 	private static HttpServer buildHttpServer(NioReactor reactor, int loadBusinessLogic) {
 //		final ByteBufPool byteBufferPool = new ByteBufPool(16, 65536);
-		AsyncServlet servlet = request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic).toPromise();
-		return HttpServer.builder(reactor, servlet)
+		return HttpServer.builder(reactor,
+						request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic))
 				.withListenPort(SERVER_PORT)
 				.build();
 	}
 
 	@SuppressWarnings("SameParameterValue")
-	protected static HttpResponse longBusinessLogic(String response, int loadBusinessLogic) {
+	protected static Promise<HttpResponse> longBusinessLogic(String response, int loadBusinessLogic) {
 		long result = 0;
 		for (int i = 0; i < loadBusinessLogic; ++i) {
 			for (int j = 0; j < 200; ++j) {
@@ -84,7 +85,7 @@ public class HttpThrottlingServer {
 		}
 		return HttpResponse.Builder.ok200()
 				.withBody(ByteBufStrings.encodeAscii(response))
-				.build();
+				.toPromise();
 	}
 
 	public void start() throws Exception {

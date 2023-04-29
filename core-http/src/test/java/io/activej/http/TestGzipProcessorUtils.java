@@ -106,7 +106,7 @@ public final class TestGzipProcessorUtils {
 	public void testGzippedCommunicationBetweenClientServer() throws IOException {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody(CHARACTERS_COUNT)
-								.map(body -> {
+								.then(body -> {
 									assertEquals("gzip", request.getHeader(CONTENT_ENCODING));
 									assertEquals("gzip", request.getHeader(ACCEPT_ENCODING));
 
@@ -115,7 +115,7 @@ public final class TestGzipProcessorUtils {
 									return HttpResponse.Builder.ok200()
 											.withBodyGzipCompression()
 											.withBody(ByteBufStrings.wrapAscii(receivedData))
-											.build();
+											.toPromise();
 								}))
 				.withListenPort(port)
 				.build();
