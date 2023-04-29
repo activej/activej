@@ -24,8 +24,8 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.session.SessionServlet;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
+import io.activej.promise.ToPromise;
 import io.activej.types.TypeT;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Nullable;
@@ -85,7 +85,7 @@ public abstract class HttpMessage {
 
 	@SuppressWarnings("unchecked")
 	public abstract class Builder<B extends Builder<B, T>, T extends HttpMessage>
-			implements io.activej.common.builder.Builder<T>, WithInitializer<B>, Promisable<T> {
+			implements io.activej.common.builder.Builder<T>, ToPromise<T>, WithInitializer<B> {
 		protected Builder() {}
 
 		public final B withHeader(HttpHeader header, String string) {
@@ -163,7 +163,7 @@ public abstract class HttpMessage {
 		}
 
 		@Override
-		public final Promise<T> promise() {
+		public final Promise<T> toPromise() {
 			return Promise.of(build());
 		}
 

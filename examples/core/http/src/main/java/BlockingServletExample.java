@@ -22,7 +22,7 @@ public final class BlockingServletExample extends HttpServerLauncher {
 		return RoutingServlet.create(reactor)
 				.map("/", request -> HttpResponse.Builder.ok200()
 						.withHtml("<a href='hardWork'>Do hard work</a>")
-						.build())
+						.toPromise())
 				.map("/hardWork", AsyncServlet.ofBlocking(executor, request -> {
 					Thread.sleep(2000); //Hard work
 					return HttpResponse.Builder.ok200()

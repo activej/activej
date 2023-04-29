@@ -74,13 +74,13 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					}
 					return HttpResponse.Builder.ok200()
 							.withJson(writer.toString())
-							.build();
+							.toPromise();
 				})
 				//[START REGION_4]
 				.map(GET, "/delete/:recordId", request -> {
 					int id = parseInt(request.getPathParameter("recordId"));
 					recordDAO.delete(id);
-					return HttpResponse.ok200();
+					return HttpResponse.ok200().toPromise();
 				})
 				//[END REGION_4]
 				.map(GET, "/toggle/:recordId/:planId", request -> {
@@ -90,7 +90,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					Record record = recordDAO.find(id);
 					Plan plan = record.getPlans().get(planId);
 					plan.toggle();
-					return HttpResponse.ok200();
+					return HttpResponse.ok200().toPromise();
 				});
 		//[END REGION_3]
 	}

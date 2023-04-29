@@ -35,7 +35,7 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 						"<h1>This page is served by first servlet</h1>" +
 								"<h3>Try to reload the page</h3>"
 				)
-				.build();
+				.toPromise();
 	}
 
 	@Provides
@@ -46,7 +46,7 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 						"<h1>This page is served by second servlet</h1>" +
 								"<h3>Try to reload the page</h3>"
 				)
-				.build();
+				.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

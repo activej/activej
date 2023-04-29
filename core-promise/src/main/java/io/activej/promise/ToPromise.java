@@ -16,6 +16,6 @@
 
 package io.activej.promise;
 
-public interface Promisable<T> {
-	Promise<T> promise();
+public interface ToPromise<T> {
+	Promise<T> toPromise();
 }

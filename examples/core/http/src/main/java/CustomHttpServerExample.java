@@ -22,7 +22,7 @@ public final class CustomHttpServerExample extends Launcher {
 	AsyncServlet servlet() {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("Hello from HTTP server")
-				.build();
+				.toPromise();
 	}
 
 	@Provides

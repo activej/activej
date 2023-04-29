@@ -9,7 +9,6 @@ import io.activej.common.ref.RefInt;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.IWebSocket.Message;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -157,8 +156,8 @@ public final class WebSocketClientServerTest {
 		HttpServer.builder(reactor, RoutingServlet.create(reactor)
 						.mapWebSocket("/", new WebSocketServlet(reactor) {
 							@Override
-							protected Promisable<HttpResponse> onRequest(HttpRequest request) {
-								return HttpResponse.builder(400).withBody(ByteBufPool.allocate(1000)).build().promise();
+							protected Promise<HttpResponse> onRequest(HttpRequest request) {
+								return HttpResponse.builder(400).withBody(ByteBufPool.allocate(1000)).toPromise();
 							}
 
 							@Override
@@ -181,7 +180,7 @@ public final class WebSocketClientServerTest {
 		HttpServer.builder(reactor, RoutingServlet.create(reactor)
 						.mapWebSocket("/", new WebSocketServlet(reactor) {
 							@Override
-							protected Promisable<HttpResponse> onRequest(HttpRequest request) {
+							protected Promise<HttpResponse> onRequest(HttpRequest request) {
 								return Promise.ofException(new MalformedDataException());
 							}
 
@@ -356,7 +355,7 @@ public final class WebSocketClientServerTest {
 	public void testNonWebSocketServlet() throws IOException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 		HttpServer.builder(reactor, RoutingServlet.create(reactor)
-						.map("/", $ -> HttpResponse.ok200()))
+						.map("/", $ -> HttpResponse.ok200().toPromise()))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()

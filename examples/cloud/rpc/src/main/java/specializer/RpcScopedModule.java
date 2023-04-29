@@ -4,6 +4,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.module.AbstractModule;
+import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcRequestHandler;
 import specializer.CookieBucketModule.CookieBucket;
 
@@ -31,7 +32,7 @@ public final class RpcScopedModule extends AbstractModule {
 						request -> {
 							Injector subInjector = injector.enterScope(RPC_REQUEST_SCOPE);
 							subInjector.putInstance(RpcRequest.class, request);
-							return subInjector.getInstance(RpcResponse.class);
+							return Promise.of(subInjector.getInstance(RpcResponse.class));
 						},
 				Injector.class);
 	}

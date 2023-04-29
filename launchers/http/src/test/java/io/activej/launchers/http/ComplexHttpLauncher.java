@@ -131,7 +131,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	AsyncServlet workerServlet(@WorkerId int workerId) {
 		return $ -> HttpResponse.Builder.ok200()
 				.withPlainText("Hello from worker #" + workerId)
-				.build();
+				.toPromise();
 	}
 	// endregion
 
@@ -153,7 +153,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	AsyncServlet myWorkerServlet(@WorkerId int workerId) {
 		return $ -> HttpResponse.Builder.ok200()
 				.withPlainText("Hello from my worker #" + workerId)
-				.build();
+				.toPromise();
 	}
 	// endregion
 

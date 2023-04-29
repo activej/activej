@@ -96,7 +96,7 @@ public class ObjectNameRenameTest {
 		@Provides
 		@Worker
 		HttpServer workerServer(NioReactor workerReactor) {
-			return HttpServer.builder(workerReactor, request -> HttpResponse.ok200()).build();
+			return HttpServer.builder(workerReactor, request -> HttpResponse.ok200().toPromise()).build();
 		}
 
 		@Provides

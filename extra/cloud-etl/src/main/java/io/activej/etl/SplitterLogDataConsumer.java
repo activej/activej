@@ -74,7 +74,7 @@ public abstract class SplitterLogDataConsumer<T, D> extends AbstractReactive
 					List::addAll);
 		}
 
-		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run().promise());
+		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run());
 	}
 
 	protected abstract StreamDataAcceptor<T> createSplitter(Context ctx);

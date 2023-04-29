@@ -144,7 +144,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 					AsyncServlet servlet(@WorkerId int workerId) {
 						return request -> HttpResponse.Builder.ok200()
 								.withPlainText("Hello, world! #" + workerId)
-								.build();
+								.toPromise();
 					}
 				};
 			}

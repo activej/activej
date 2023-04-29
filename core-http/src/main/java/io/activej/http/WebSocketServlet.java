@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractReactive;
@@ -55,8 +54,8 @@ public abstract class WebSocketServlet extends AbstractReactive
 		checkState(IWebSocket.ENABLED, "Web sockets are disabled by application settings");
 	}
 
-	protected Promisable<HttpResponse> onRequest(HttpRequest request) {
-		return HttpResponse.ofCode(101);
+	protected Promise<HttpResponse> onRequest(HttpRequest request) {
+		return HttpResponse.ofCode(101).toPromise();
 	}
 
 	protected abstract void onWebSocket(IWebSocket webSocket);
@@ -71,7 +70,6 @@ public abstract class WebSocketServlet extends AbstractReactive
 					assert rawStream != null;
 
 					return onRequest(request)
-							.promise()
 							.whenException(e -> recycleStream(rawStream))
 							.map(response -> {
 								if (response.getCode() != 101) {

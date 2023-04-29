@@ -83,7 +83,7 @@ public final class AbstractHttpConnectionTest {
 								.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 								.withHeader(CONTENT_TYPE, "text/\n          html")
 								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>"))
-								.build())
+								.toPromise())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
@@ -103,7 +103,7 @@ public final class AbstractHttpConnectionTest {
 						request -> HttpResponse.Builder.ok200()
 								.withBodyGzipCompression()
 								.withBody(encodeAscii("Test message"))
-								.build())
+								.toPromise())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
@@ -127,7 +127,7 @@ public final class AbstractHttpConnectionTest {
 				.withMaxKeepAliveRequests(5)
 				.build();
 
-		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
 				.withListenPort(port)
 				.build();
 		server.listen();
@@ -142,7 +142,7 @@ public final class AbstractHttpConnectionTest {
 				.withKeepAliveTimeout(Duration.ofSeconds(1))
 				.build();
 
-		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
 				.withListenPort(port)
 				.withMaxKeepAliveRequests(5)
 				.build();
@@ -158,7 +158,7 @@ public final class AbstractHttpConnectionTest {
 				.withKeepAliveTimeout(Duration.ofSeconds(30))
 				.build();
 
-		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
 				.withListenPort(port)
 				.withKeepAliveTimeout(Duration.ZERO)
 				.build();
@@ -215,7 +215,7 @@ public final class AbstractHttpConnectionTest {
 						request -> HttpResponse.Builder.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
 								.withBodyStream(request.takeBodyStream())
-								.build())
+								.toPromise())
 				.withListenPort(port)
 				.build();
 		server.listen();
@@ -255,7 +255,7 @@ public final class AbstractHttpConnectionTest {
 							return HttpResponse.Builder.ok200()
 									.withBodyGzipCompression()
 									.withBodyStream(ChannelSuppliers.ofValue(value))
-									.build();
+									.toPromise();
 						})
 				.withAcceptOnce()
 				.withListenPort(port)
@@ -313,7 +313,7 @@ public final class AbstractHttpConnectionTest {
 				.build();
 
 		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
-		HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200())
+		HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
 				.withListenPort(port)
 				.withInspector(inspector)
 				.withAcceptOnce()
@@ -342,7 +342,7 @@ public final class AbstractHttpConnectionTest {
 							ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
 							return HttpResponse.Builder.ok200()
 									.withBodyStream(ChannelSuppliers.ofValue(value))
-									.build();
+									.toPromise();
 						})
 				.withInspector(serverInspector)
 				.withListenPort(port)
@@ -491,7 +491,7 @@ public final class AbstractHttpConnectionTest {
 									$ -> {
 										HttpResponse.Builder responseBuilder = HttpResponse.Builder.ok200();
 										responseDecorator.accept(responseBuilder);
-										return responseBuilder.build();
+										return responseBuilder.toPromise();
 									})
 							.withListenPort(port)
 							.withAcceptOnce()

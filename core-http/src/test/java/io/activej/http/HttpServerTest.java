@@ -58,7 +58,7 @@ public final class HttpServerTest {
 	public HttpServer blockingHttpServer() {
 		return HttpServer.builder(eventloop,
 						request ->
-								HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).build())
+								HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise())
 				.withListenPort(port)
 				.build();
 	}
@@ -226,7 +226,7 @@ public final class HttpServerTest {
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
-		HttpServer.builder(eventloop, req -> HttpResponse.Builder.ok200().withBodyStream(supplier).build())
+		HttpServer.builder(eventloop, req -> HttpResponse.Builder.ok200().withBodyStream(supplier).toPromise())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
@@ -386,7 +386,7 @@ public final class HttpServerTest {
 		HttpServer server = HttpServer.builder(eventloop,
 						req -> HttpResponse.Builder.ok200()
 								.withBody(encodeAscii(req.getUrl().getPathAndQuery()))
-								.build())
+								.toPromise())
 				.withListenPort(port)
 				.build();
 		server.listen();
@@ -455,7 +455,7 @@ public final class HttpServerTest {
 						request -> {
 							// imitate network problems
 							shutdownAllChannels();
-							return HttpResponse.ok200();
+							return HttpResponse.ok200().toPromise();
 						})
 				.withListenPort(port)
 				.withAcceptOnce()
@@ -694,7 +694,7 @@ public final class HttpServerTest {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, $ -> HttpResponse.Builder.ok200()
 						.withPlainText("Hello, world!")
-						.build())
+						.toPromise())
 				.withListenPort(port)
 				.withInspector(inspector)
 				.build();

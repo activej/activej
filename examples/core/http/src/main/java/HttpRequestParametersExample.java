@@ -42,7 +42,7 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 					String name = request.getQueryParameter("name");
 					return HttpResponse.Builder.ok200()
 							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>")
-							.build();
+							.toPromise();
 				})
 				.map("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()

@@ -47,7 +47,7 @@ public class MultithreadedHttpServerLauncherTest {
 		MultithreadedHttpServerLauncher launcher = new MultithreadedHttpServerLauncher() {
 			@Provides
 			AsyncServlet servlet() {
-				return req -> HttpResponse.ok200();
+				return req -> HttpResponse.ok200().toPromise();
 			}
 
 			@Override
@@ -78,7 +78,7 @@ public class MultithreadedHttpServerLauncherTest {
 		MultithreadedHttpServerLauncher launcher = new MultithreadedHttpServerLauncher() {
 			@Provides
 			AsyncServlet servlet() {
-				return req -> HttpResponse.ok200();
+				return req -> HttpResponse.ok200().toPromise();
 			}
 		};
 

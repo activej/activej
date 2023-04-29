@@ -34,7 +34,7 @@ public class AsyncServletTest {
 				)
 				.build();
 
-		HttpResponse response = await(servlet.serveAsync(testRequest));
+		HttpResponse response = await(servlet.serve(testRequest));
 		testRequest.recycle();
 		ByteBuf body = await(response.loadBody(Integer.MAX_VALUE));
 
@@ -57,7 +57,7 @@ public class AsyncServletTest {
 				))
 				.build();
 
-		Exception e = awaitException(servlet.serveAsync(testRequest));
+		Exception e = awaitException(servlet.serve(testRequest));
 
 		assertSame(exception, e);
 	}

@@ -56,7 +56,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  *
  * @see CompletionStage
  */
-public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
+public interface Promise<T> extends AsyncComputation<T> {
 	/**
 	 * Creates successfully completed {@code Promise}
 	 */
@@ -310,11 +310,6 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 			runnable.run();
 			return null;
 		});
-	}
-
-	@Override
-	default Promise<T> promise() {
-		return this;
 	}
 
 	@Contract(pure = true)

@@ -58,7 +58,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 		StaticServlet staticServlet = StaticServlet.create(reactor, staticLoader, "errorPage.html");
 		return RoutingServlet.create(reactor)
 				//[START REGION_3]
-				.map("/", request -> HttpResponse.redirect302("/login"))
+				.map("/", request -> HttpResponse.redirect302("/login").toPromise())
 				//[END REGION_3]
 				.map(GET, "/signup", StaticServlet.create(reactor, staticLoader, "signup.html"))
 				.map(GET, "/login", StaticServlet.create(reactor, staticLoader, "login.html"))
@@ -99,7 +99,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	AsyncServlet privateServlet(Reactor reactor, IStaticLoader staticLoader) {
 		return RoutingServlet.create(reactor)
 				//[START REGION_6]
-				.map("/", request -> HttpResponse.redirect302("/members"))
+				.map("/", request -> HttpResponse.redirect302("/members").toPromise())
 				//[END REGION_6]
 				//[START REGION_7]
 				.map("/members/*", RoutingServlet.create(reactor)
@@ -108,7 +108,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 						.map(GET, "/cookie", request ->
 								HttpResponse.Builder.ok200()
 										.withBody(wrapUtf8(request.getAttachment(String.class)))
-										.build())
+										.toPromise())
 						//[END REGION_8]
 						.map(POST, "/logout", request ->
 								HttpResponse.Builder.redirect302("/")
@@ -116,7 +116,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 												.withPath("/")
 												.withMaxAge(Duration.ZERO)
 												.build())
-										.build()));
+										.toPromise()));
 		//[END REGION_7]
 	}
 	//[END REGION_5]

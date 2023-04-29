@@ -33,7 +33,7 @@ public final class TestClientMultilineHeaders {
 		HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> HttpResponse.Builder.ok200()
 								.withHeader(ALLOW, "GET,\r\n HEAD")
-								.build())
+								.toPromise())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()

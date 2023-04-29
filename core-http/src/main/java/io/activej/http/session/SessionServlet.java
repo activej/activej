@@ -69,16 +69,16 @@ public final class SessionServlet<T> extends AbstractReactive
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {
-			return publicServlet.serveAsync(request);
+			return publicServlet.serve(request);
 		}
 
 		return store.get(id)
 				.then(sessionObject -> {
 					if (sessionObject != null) {
 						request.attach(sessionObject);
-						return privateServlet.serveAsync(request);
+						return privateServlet.serve(request);
 					} else {
-						return publicServlet.serveAsync(request);
+						return publicServlet.serve(request);
 					}
 				});
 	}

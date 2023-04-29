@@ -100,7 +100,7 @@ public final class DoubleServersTwoPools extends Launcher {
 		HttpServer workerServerFirst(NioReactor reactor, @WorkerId int workerId) {
 			return HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
 							.withPlainText("Hello from the first server, worker #" + workerId)
-							.build())
+							.toPromise())
 					.build();
 		}
 
@@ -145,7 +145,7 @@ public final class DoubleServersTwoPools extends Launcher {
 		HttpServer workerServerSecond(NioReactor reactor, @WorkerId int workerId) {
 			return HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
 							.withPlainText("Hello from the second server, worker #" + workerId)
-							.build())
+							.toPromise())
 					.build();
 		}
 

@@ -61,7 +61,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 		return RoutingServlet.create(reactor)
 				.map("/", request -> HttpResponse.Builder.ok200()
 						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list())))
-						.build())
+						.toPromise())
 				.map(POST, "/add", request -> request.loadBody()
 						.map($ -> {
 							//[START REGION_3]

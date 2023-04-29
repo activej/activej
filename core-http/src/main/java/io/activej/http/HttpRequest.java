@@ -22,6 +22,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
+import io.activej.promise.ToPromise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,7 +52,7 @@ import static io.activej.http.Protocol.WSS;
  * {@code HttpRequest} class provides methods which can be used intuitively for
  * creating and configuring an HTTP request.
  */
-public final class HttpRequest extends HttpMessage implements WithInitializer<HttpRequest> {
+public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequest>, WithInitializer<HttpRequest> {
 	private static final boolean CHECKS = Checks.isEnabled(HttpRequest.class);
 
 	private static final int LONGEST_HTTP_METHOD_SIZE = 12;
@@ -103,6 +104,11 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 			builder.withHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
 		}
 		return builder;
+	}
+
+	@Override
+	public Promise<HttpRequest> toPromise() {
+		return Promise.of(this);
 	}
 
 	public final class Builder extends HttpMessage.Builder<Builder, HttpRequest> {

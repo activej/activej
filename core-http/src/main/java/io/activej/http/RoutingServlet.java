@@ -190,7 +190,7 @@ public final class RoutingServlet extends AbstractReactive
 		if (urlPart.isEmpty()) {
 			AsyncServlet servlet = getOrDefault(rootServlets, ordinal);
 			if (servlet != null) {
-				return servlet.serveAsync(request);
+				return servlet.serve(request);
 			}
 		} else {
 			int position = request.getPos();
@@ -217,7 +217,7 @@ public final class RoutingServlet extends AbstractReactive
 		AsyncServlet servlet = getOrDefault(fallbackServlets, ordinal);
 		if (servlet != null) {
 			request.setPos(introPosition);
-			return servlet.serveAsync(request);
+			return servlet.serve(request);
 		}
 		return null;
 	}

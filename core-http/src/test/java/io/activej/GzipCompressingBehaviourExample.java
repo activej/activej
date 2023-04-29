@@ -23,12 +23,12 @@ public final class GzipCompressingBehaviourExample {
 						request -> HttpResponse.Builder.ok200()
 								.withBodyGzipCompression()
 								.withBody(encodeAscii("Hello!"))
-								.build())
+								.toPromise())
 				// never responds in gzip
 				.map(GET, "/nogzip/",
 						request -> HttpResponse.Builder.ok200()
 								.withBody(encodeAscii("Hello!"))
-								.build());
+								.toPromise());
 
 		HttpServer.builder(eventloop, servlet)
 				.withListenPort(getFreePort())

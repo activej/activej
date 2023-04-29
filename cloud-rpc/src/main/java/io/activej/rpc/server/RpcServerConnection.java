@@ -75,7 +75,7 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 		if (requestHandler == null) {
 			return Promise.ofException(new MalformedDataException("Failed to process request " + request));
 		}
-		return requestHandler.run(request).promise();
+		return requestHandler.run(request);
 	}
 
 	@Override

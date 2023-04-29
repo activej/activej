@@ -26,7 +26,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 					if (contentType == null) {
 						return HttpResponse.builder(400)
 								.withPlainText("'Content-Type' header is missing")
-								.build();
+								.toPromise();
 					}
 					if (isImageType(contentType)) {
 						return imageServlet.serve(request);
@@ -35,7 +35,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 					} else {
 						return HttpResponse.builder(400)
 								.withPlainText("Unsupported mime type in 'Content-Type' header")
-								.build();
+								.toPromise();
 					}
 				});
 	}
@@ -45,7 +45,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 	AsyncServlet imageServlet() {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("This servlet handles images\n")
-				.build();
+				.toPromise();
 	}
 
 	@Provides
@@ -53,7 +53,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 	AsyncServlet textServlet() {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("This servlet handles text data\n")
-				.build();
+				.toPromise();
 	}
 
 	private static boolean isTextType(String mime) {

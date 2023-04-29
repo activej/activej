@@ -89,7 +89,7 @@ public final class HttpStreamTest {
 				HttpResponse.Builder.ok200()
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item)))
-						.build());
+						.toPromise());
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port))

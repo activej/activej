@@ -10,7 +10,7 @@ public final class HttpHelloWorldExample extends HttpServerLauncher {
 	AsyncServlet servlet() {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("Hello World")
-				.build();
+				.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

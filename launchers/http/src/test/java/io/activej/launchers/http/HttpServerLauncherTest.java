@@ -44,7 +44,7 @@ public class HttpServerLauncherTest {
 		HttpServerLauncher launcher = new HttpServerLauncher() {
 			@Provides
 			AsyncServlet servlet() {
-				return req -> HttpResponse.ok200();
+				return req -> HttpResponse.ok200().toPromise();
 			}
 
 			@Override
@@ -77,7 +77,7 @@ public class HttpServerLauncherTest {
 		HttpServerLauncher launcher = new HttpServerLauncher() {
 			@Provides
 			AsyncServlet servlet() {
-				return req -> HttpResponse.ok200();
+				return req -> HttpResponse.ok200().toPromise();
 			}
 		};
 

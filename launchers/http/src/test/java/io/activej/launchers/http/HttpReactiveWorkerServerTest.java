@@ -56,7 +56,7 @@ public final class HttpReactiveWorkerServerTest {
 				return request ->
 						HttpResponse.Builder.ok200()
 								.withBody(ByteBuf.wrapForReading(encodeAscii("Hello, world! #" + worker)))
-								.build();
+								.toPromise();
 			}
 
 			@Override

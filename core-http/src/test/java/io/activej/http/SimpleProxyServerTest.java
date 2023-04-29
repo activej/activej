@@ -57,7 +57,7 @@ public final class SimpleProxyServerTest {
 		HttpServer echoServer = HttpServer.builder(eventloop1,
 						request -> HttpResponse.Builder.ok200()
 								.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
-								.build())
+								.toPromise())
 				.withListenPort(echoServerPort)
 				.build();
 		echoServer.listen();

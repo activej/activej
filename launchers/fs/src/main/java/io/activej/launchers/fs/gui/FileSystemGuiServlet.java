@@ -99,7 +99,7 @@ public final class FileSystemGuiServlet {
 										}
 									});
 				})
-				.map("/*", $ -> HttpResponse.notFound404());
+				.map("/*", $ -> HttpResponse.notFound404().toPromise());
 	}
 
 	private static ByteBuf applyTemplate(Mustache mustache, Map<String, Object> scopes) {

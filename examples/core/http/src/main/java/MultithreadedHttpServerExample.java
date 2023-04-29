@@ -16,7 +16,7 @@ public final class MultithreadedHttpServerExample extends MultithreadedHttpServe
 	AsyncServlet servlet(@WorkerId int workerId) {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("Hello from worker server #" + workerId + "\n")
-				.build();
+				.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

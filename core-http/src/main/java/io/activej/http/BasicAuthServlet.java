@@ -124,7 +124,7 @@ public final class BasicAuthServlet extends AbstractReactive
 				.then(ok -> {
 					if (!ok) return Promise.of(failureResponse.apply(HttpResponse.Builder.unauthorized401(challenge)).build());
 					request.attach(new BasicAuthCredentials(authData[0], authData[1]));
-					return next.serveAsync(request);
+					return next.serve(request);
 				});
 	}
 

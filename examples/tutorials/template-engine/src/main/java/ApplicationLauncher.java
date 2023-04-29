@@ -44,21 +44,21 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 		return RoutingServlet.create(reactor)
 				.map(GET, "/", request -> HttpResponse.Builder.ok200()
 						.withBody(applyTemplate(listPolls, Map.of("polls", pollDao.findAll().entrySet())))
-						.build())
+						.toPromise())
 				//[END REGION_2]
 				//[START REGION_3]
 				.map(GET, "/poll/:id", request -> {
 					int id = Integer.parseInt(request.getPathParameter("id"));
 					return HttpResponse.Builder.ok200()
 							.withBody(applyTemplate(singlePollView, Map.of("id", id, "poll", pollDao.find(id))))
-							.build();
+							.toPromise();
 				})
 				//[END REGION_3]
 				//[START REGION_4]
 				.map(GET, "/create", request ->
 						HttpResponse.Builder.ok200()
 								.withBody(applyTemplate(singlePollCreate, Map.of()))
-								.build())
+								.toPromise())
 				.map(POST, "/vote", request -> request.loadBody()
 						.then(() -> {
 							Map<String, String> params = request.getPostParameters();

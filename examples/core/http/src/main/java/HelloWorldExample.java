@@ -12,7 +12,7 @@ public final class HelloWorldExample {
 		HttpServer server = HttpServer.builder(eventloop,
 						request -> HttpResponse.Builder.ok200()
 								.withPlainText("Hello world!")
-								.build())
+								.toPromise())
 				.withListenPort(8080)
 				.build();
 

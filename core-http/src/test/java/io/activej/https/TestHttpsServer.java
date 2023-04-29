@@ -38,7 +38,7 @@ public class TestHttpsServer {
 
 		AsyncServlet bobServlet = request -> HttpResponse.Builder.ok200()
 				.withBody(wrapAscii("Hello, I am Bob!"))
-				.build();
+				.toPromise();
 
 		KeyManager[] keyManagers = createKeyManagers(new File("./src/test/resources/keystore.jks"), "testtest", "testtest");
 		TrustManager[] trustManagers = createTrustManagers(new File("./src/test/resources/truststore.jks"), "testtest");

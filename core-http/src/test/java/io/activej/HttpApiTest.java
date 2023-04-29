@@ -64,7 +64,7 @@ public final class HttpApiTest {
 		server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> {
 							testRequest(request);
-							return createResponse();
+							return createResponse().toPromise();
 						})
 				.withListenPort(port)
 				.build();

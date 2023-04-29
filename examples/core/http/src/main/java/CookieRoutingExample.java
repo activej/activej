@@ -27,7 +27,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 					if (servletNumberCookie == null) {
 						return HttpResponse.builder(400)
 								.withPlainText("Cookie '" + COOKIE + "' is missing")
-								.build();
+								.toPromise();
 					}
 					if ("1".equals(servletNumberCookie)) {
 						return firstServlet.serve(request);
@@ -37,7 +37,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 					}
 					return HttpResponse.builder(400)
 							.withPlainText("Unknown servlet number")
-							.build();
+							.toPromise();
 				});
 	}
 
@@ -46,7 +46,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 	AsyncServlet firstServlet() {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("This is servlet #1\n")
-				.build();
+				.toPromise();
 	}
 
 	@Provides
@@ -54,7 +54,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 	AsyncServlet secondServlet() {
 		return request -> HttpResponse.Builder.ok200()
 				.withPlainText("This is servlet #2\n")
-				.build();
+				.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

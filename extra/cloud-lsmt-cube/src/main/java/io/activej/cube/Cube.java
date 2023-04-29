@@ -632,7 +632,7 @@ public final class Cube extends AbstractReactive
 			Promise<AggregationDiff> consume = output.streamTo(aggregation.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
 			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
 		}
-		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().promise().map(CubeDiff::of));
+		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().map(CubeDiff::of));
 	}
 
 	Map<String, AggregationPredicate> getCompatibleAggregationsForDataInput(Map<String, String> dimensionFields,

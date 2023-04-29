@@ -64,7 +64,7 @@ public class HttpThrottlingServer {
 
 	private static HttpServer buildHttpServer(NioReactor reactor, int loadBusinessLogic) {
 //		final ByteBufPool byteBufferPool = new ByteBufPool(16, 65536);
-		AsyncServlet servlet = request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic);
+		AsyncServlet servlet = request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic).toPromise();
 		return HttpServer.builder(reactor, servlet)
 				.withListenPort(SERVER_PORT)
 				.build();

@@ -91,7 +91,7 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 			bind(HttpServer.class)
 					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
 											.withPlainText("Hello from the first server, worker #" + workerId)
-											.build())
+											.toPromise())
 									.build(),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerFirst.class);
 			bind(WorkerPool.class, "First")
@@ -120,7 +120,7 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 			bind(HttpServer.class)
 					.to((reactor, workerId) -> HttpServer.builder(reactor, request -> HttpResponse.Builder.ok200()
 											.withPlainText("Hello from the second server, worker #" + workerId)
-											.build())
+											.toPromise())
 									.build(),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
 			bind(WorkerPool.class, "Second")

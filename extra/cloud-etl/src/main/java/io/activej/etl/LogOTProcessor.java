@@ -142,7 +142,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 		return StreamSupplierWithResult.of(
 				streamUnion.getOutput()
 						.transformWith(detailed ? streamStatsDetailed : streamStatsBasic),
-				logPositionsAccumulator.run().promise());
+				logPositionsAccumulator.run());
 	}
 
 	private String logName(String partition) {

@@ -45,7 +45,7 @@ public final class StubHttpClient extends ImplicitlyReactive
 		checkInReactorThread(this);
 		Promise<HttpResponse> servletResult;
 		try {
-			servletResult = servlet.serveAsync(request);
+			servletResult = servlet.serve(request);
 		} catch (Exception e) {
 			servletResult = Promise.ofException(e);
 		}

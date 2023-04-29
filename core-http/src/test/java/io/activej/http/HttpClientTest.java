@@ -65,7 +65,7 @@ public final class HttpClientTest {
 													buf.put(HELLO_WORLD[idx]);
 													return buf;
 												})))
-								.build())
+								.toPromise())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
@@ -179,7 +179,7 @@ public final class HttpClientTest {
 	public void testActiveRequestsCounterWithoutRefresh() throws IOException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		HttpServer.builder(reactor, request -> HttpResponse.ok200())
+		HttpServer.builder(reactor, request -> HttpResponse.ok200().toPromise())
 				.withAcceptOnce()
 				.withListenPort(port)
 				.build()

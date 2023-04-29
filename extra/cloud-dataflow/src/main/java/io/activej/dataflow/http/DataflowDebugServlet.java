@@ -40,7 +40,6 @@ import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
 import io.activej.net.socket.tcp.TcpSocket;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
@@ -81,7 +80,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 								.withJson(objectMapper.writeValueAsString(partitions.stream()
 										.map(Partition::address)
 										.collect(Collectors.toList())))
-								.build())
+								.toPromise())
 						.map(GET, "/tasks", request ->
 								Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
 										.map(partitionStats -> {
@@ -215,7 +214,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 	}
 
 	@Override
-	public Promisable<HttpResponse> serve(HttpRequest request) throws Exception {
+	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
 		checkInReactorThread(this);
 		return servlet.serve(request);
 	}

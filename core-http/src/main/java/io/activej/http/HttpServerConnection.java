@@ -359,7 +359,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		HttpRequest request = this.request;
 		Promise<HttpResponse> servletResult;
 		try {
-			servletResult = servlet.serveAsync(request);
+			servletResult = servlet.serve(request);
 		} catch (Exception e) {
 			handleError(e, this);
 			servletResult = Promise.ofException(e);

@@ -114,7 +114,7 @@ public abstract class HttpServerLauncher extends Launcher {
 						String message = config.get("message", "Hello, world!");
 						return request -> HttpResponse.Builder.ok200()
 								.withPlainText(message)
-								.build();
+								.toPromise();
 					}
 				};
 			}

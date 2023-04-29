@@ -17,15 +17,15 @@
 package io.activej.http;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
+import io.activej.promise.ToPromise;
 
 /**
  * This is a special exception, that is formatted as HTTP response with code and text from it by default.
  * It is a stackless exception.
  * Please be aware that when a cause is given, its stacktrace is printed too
  */
-public class HttpError extends HttpException implements Promisable<HttpResponse> {
+public class HttpError extends HttpException implements ToPromise<HttpResponse> {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(HttpError.class, "withStackTrace", false);
 
 	private final int code;
@@ -86,7 +86,7 @@ public class HttpError extends HttpException implements Promisable<HttpResponse>
 	}
 
 	@Override
-	public Promise<HttpResponse> promise() {
+	public Promise<HttpResponse> toPromise() {
 		return Promise.ofException(this);
 	}
 

@@ -16,7 +16,6 @@
 
 package io.activej.http;
 
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 
 import java.util.concurrent.Executor;
@@ -27,11 +26,7 @@ import java.util.concurrent.Executor;
  */
 @FunctionalInterface
 public interface AsyncServlet {
-	Promisable<HttpResponse> serve(HttpRequest request) throws Exception;
-
-	default Promise<HttpResponse> serveAsync(HttpRequest request) throws Exception {
-		return serve(request).promise();
-	}
+	Promise<HttpResponse> serve(HttpRequest request) throws Exception;
 
 	/**
 	 * Wraps given {@link BlockingServlet} into async one using given {@link Executor}.
