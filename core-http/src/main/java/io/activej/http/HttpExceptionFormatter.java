@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.promise.Promise;
 import org.intellij.lang.annotations.Language;
 
 import static io.activej.http.HttpHeaders.*;
@@ -30,27 +31,32 @@ public interface HttpExceptionFormatter {
 	String ACTIVEJ_VERSION = "6.0-SNAPSHOT";
 
 	@Language("HTML")
-	String HTTP_ERROR_HTML = "<!doctype html>" +
-			"<html lang=\"en\">" +
-			"<head>" +
-			"<meta charset=\"UTF-8\">" +
-			"<title>{title}</title>" +
-			"<style>h1, p { font-family: sans-serif; }</style>" +
-			"</head>" +
-			"<body>" +
-			"<h1 style=\"text-align: center;\">{title}</h1>" +
-			"<hr>" +
-			"<p style=\"text-align: center\">{message}</p>" +
-			"<hr>" +
-			"<p style=\"text-align: center;\">ActiveJ " + ACTIVEJ_VERSION + "</p>" +
-			"</body>" +
-			"</html>";
+	String HTTP_ERROR_HTML = """
+			<!doctype html>
+			<html lang="en">
+			<head>
+			<meta charset="UTF-8">
+			<title>{title}</title>
+			<style>h1, p { font-family: sans-serif; }</style>
+			</head>
+			<body>
+			<h1 style="text-align: center;">{title}</h1>
+			<hr>
+			<p style="text-align: center">{message}</p>
+			<hr>
+			<p style="text-align: center;">{activej_version}</p>
+			</body>
+			</html>
+			"""
+			.replace("{activej_version}", ACTIVEJ_VERSION);
 
 	String INTERNAL_SERVER_ERROR_HTML = HTTP_ERROR_HTML
 			.replace("{title}", "Internal Server Error")
-			.replace("<p style=\"text-align: center\">{message}</p><hr>", "");
+			.replace("""
+					<p style="text-align: center">{message}</p>
+					<hr>""", "");
 
-	HttpResponse formatException(Exception e);
+	Promise<HttpResponse> formatException(Exception e);
 
 	/**
 	 * Standard formatter maps all exceptions except HttpException to an empty response with 500 status code.
@@ -73,7 +79,7 @@ public interface HttpExceptionFormatter {
 				.withHeader(CACHE_CONTROL, "no-store")
 				.withHeader(PRAGMA, "no-cache")
 				.withHeader(AGE, "0")
-				.build();
+				.toPromise();
 	};
 
 	/**
@@ -84,7 +90,7 @@ public interface HttpExceptionFormatter {
 					.withHeader(CACHE_CONTROL, "no-store")
 					.withHeader(PRAGMA, "no-cache")
 					.withHeader(AGE, "0")
-					.build();
+					.toPromise();
 
 	/**
 	 * This formatter if either one of {@link #DEFAULT_FORMATTER} or {@link #DEBUG_FORMATTER},

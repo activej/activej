@@ -463,7 +463,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	private void writeException(Exception e) {
-		writeHttpResponse(server.formatHttpError(e));
+		server.formatHttpError(e).whenComplete(this::writeHttpResponse, this::closeEx);
 	}
 
 	@Override

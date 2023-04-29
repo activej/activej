@@ -376,7 +376,7 @@ public final class HttpServer extends AbstractReactiveServer {
 		return poolReadWriteExpired;
 	}
 
-	HttpResponse formatHttpError(Exception e) {
+	Promise<HttpResponse> formatHttpError(Exception e) {
 		return errorFormatter.formatException(e);
 	}
 
