@@ -157,7 +157,7 @@ public final class WebSocketClientServerTest {
 						.mapWebSocket("/", new WebSocketServlet(reactor) {
 							@Override
 							protected Promise<HttpResponse> onRequest(HttpRequest request) {
-								return HttpResponse.builder(400).withBody(ByteBufPool.allocate(1000)).toPromise();
+								return HttpResponse.ofCode(400).withBody(ByteBufPool.allocate(1000)).toPromise();
 							}
 
 							@Override

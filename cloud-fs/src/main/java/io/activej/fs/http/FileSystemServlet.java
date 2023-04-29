@@ -87,7 +87,7 @@ public final class FileSystemServlet {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
 					return fs.download(name, offset, limit)
-							.then(res -> HttpResponse.Builder.ok200()
+							.then(res -> HttpResponse.ok200()
 											.withHeader(ACCEPT_RANGES, "bytes")
 											.withBodyStream(res)
 											.toPromise(),
@@ -97,7 +97,7 @@ public final class FileSystemServlet {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
 					return fs.list(glob)
-							.then(list -> HttpResponse.Builder.ok200()
+							.then(list -> HttpResponse.ok200()
 											.withBody(toJson(list))
 											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 											.toPromise(),
@@ -105,7 +105,7 @@ public final class FileSystemServlet {
 				})
 				.map(GET, "/" + INFO + "/*", request ->
 						fs.info(decodePath(request))
-								.then(meta -> HttpResponse.Builder.ok200()
+								.then(meta -> HttpResponse.ok200()
 												.withBody(toJson(meta))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 												.toPromise(),
@@ -113,7 +113,7 @@ public final class FileSystemServlet {
 				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::infoAll)
-						.then(map -> HttpResponse.Builder.ok200()
+						.then(map -> HttpResponse.ok200()
 										.withBody(toJson(map))
 										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 										.toPromise(),
@@ -195,20 +195,20 @@ public final class FileSystemServlet {
 	}
 
 	private static AsyncFunction<Exception, HttpResponse> errorResponseFn() {
-		return e -> HttpResponse.builder(500)
+		return e -> HttpResponse.ofCode(500)
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBody(toJson(FileSystemException.class, castError(e)))
 				.toPromise();
 	}
 
 	private static <T> AsyncFunction<T, HttpResponse> voidResponseFn() {
-		return $ -> HttpResponse.Builder.ok200()
+		return $ -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
 				.toPromise();
 	}
 
 	private static AsyncFunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
-		return consumer -> HttpResponse.Builder.ok200()
+		return consumer -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
 						.streamTo(consumer)

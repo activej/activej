@@ -24,7 +24,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 				.map(HttpMethod.POST, "/*", request -> {
 					String contentType = request.getHeader(HttpHeaders.CONTENT_TYPE);
 					if (contentType == null) {
-						return HttpResponse.builder(400)
+						return HttpResponse.ofCode(400)
 								.withPlainText("'Content-Type' header is missing")
 								.toPromise();
 					}
@@ -33,7 +33,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 					} else if (isTextType(contentType)) {
 						return textServlet.serve(request);
 					} else {
-						return HttpResponse.builder(400)
+						return HttpResponse.ofCode(400)
 								.withPlainText("Unsupported mime type in 'Content-Type' header")
 								.toPromise();
 					}
@@ -43,7 +43,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("Image")
 	AsyncServlet imageServlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("This servlet handles images\n")
 				.toPromise();
 	}
@@ -51,7 +51,7 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("Text")
 	AsyncServlet textServlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("This servlet handles text data\n")
 				.toPromise();
 	}

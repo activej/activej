@@ -79,7 +79,7 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testMultiLineHeader() throws Exception {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 								.withHeader(CONTENT_TYPE, "text/\n          html")
 								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>"))
@@ -100,7 +100,7 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testGzipCompression() throws Exception {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withBodyGzipCompression()
 								.withBody(encodeAscii("Test message"))
 								.toPromise())
@@ -212,7 +212,7 @@ public final class AbstractHttpConnectionTest {
 		long size = 3_000_000_000L;
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
 								.withBodyStream(request.takeBodyStream())
 								.toPromise())
@@ -254,7 +254,7 @@ public final class AbstractHttpConnectionTest {
 							RANDOM.nextBytes(bytes);
 							expected.put(bytes);
 							ByteBuf value = expected.slice();
-							return HttpResponse.Builder.ok200()
+							return HttpResponse.ok200()
 									.withBodyGzipCompression()
 									.withBodyStream(ChannelSuppliers.ofValue(value))
 									.toPromise();
@@ -342,7 +342,7 @@ public final class AbstractHttpConnectionTest {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> {
 							ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
-							return HttpResponse.Builder.ok200()
+							return HttpResponse.ok200()
 									.withBodyStream(ChannelSuppliers.ofValue(value))
 									.toPromise();
 						})
@@ -393,7 +393,7 @@ public final class AbstractHttpConnectionTest {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-								.then($ -> HttpResponse.Builder.ok200()
+								.then($ -> HttpResponse.ok200()
 										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))
 										.toPromise()))
 				.withInspector(serverInspector)
@@ -491,7 +491,7 @@ public final class AbstractHttpConnectionTest {
 					Consumer<HttpMessage.Builder<?, ?>> responseDecorator = messageDecorators.get(j);
 					HttpServer server = HttpServer.builder(reactor,
 									$ -> {
-										HttpResponse.Builder responseBuilder = HttpResponse.Builder.ok200();
+										HttpResponse.Builder responseBuilder = HttpResponse.ok200();
 										responseDecorator.accept(responseBuilder);
 										return responseBuilder.toPromise();
 									})
@@ -527,7 +527,7 @@ public final class AbstractHttpConnectionTest {
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()
 								.then(body -> {
-									HttpResponse.Builder httpResponseBuilder = HttpResponse.Builder.ok200()
+									HttpResponse.Builder httpResponseBuilder = HttpResponse.ok200()
 											.withBodyStream(request.takeBodyStream()
 													.transformWith(ChannelTransformers.chunkBytes(MemSize.of(1), MemSize.of(1))));
 									decorator.accept(httpResponseBuilder);

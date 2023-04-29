@@ -36,42 +36,42 @@ public final class HttpMessageTest {
 				HTTP/1.1 100 Continue\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(100));
+				""", HttpResponse.ofCode(100).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 123 OK\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(123));
+				""", HttpResponse.ofCode(123).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 200 OK\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(200));
+				""", HttpResponse.ofCode(200).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 400 Bad Request\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(400));
+				""", HttpResponse.ofCode(400).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 405 Method Not Allowed\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(405));
+				""", HttpResponse.ofCode(405).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 456 Error\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(456));
+				""", HttpResponse.ofCode(456).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 500 Internal Server Error\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(500));
+				""", HttpResponse.ofCode(500).build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 502 Bad Gateway\r
 				Content-Length: 11\r
 				\r
-				Bad Gateway""", HttpResponse.builder(502)
+				Bad Gateway""", HttpResponse.ofCode(502)
 				.withBody("Bad Gateway".getBytes(StandardCharsets.UTF_8))
 				.build());
 		assertHttpMessageEquals("""
@@ -80,7 +80,7 @@ public final class HttpMessageTest {
 						Content-Length: 0\r
 						\r
 						""",
-				HttpResponse.builder(200)
+				HttpResponse.ofCode(200)
 						.withCookies(List.of(HttpCookie.of("cookie1", "value1")))
 						.build());
 		assertHttpMessageEquals("""
@@ -90,7 +90,7 @@ public final class HttpMessageTest {
 						Content-Length: 0\r
 						\r
 						""",
-				HttpResponse.builder(200)
+				HttpResponse.ofCode(200)
 						.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
 						.build());
 		assertHttpMessageEquals("""
@@ -100,7 +100,7 @@ public final class HttpMessageTest {
 						Content-Length: 0\r
 						\r
 						""",
-				HttpResponse.builder(200)
+				HttpResponse.ofCode(200)
 						.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
 						.build());
 	}
@@ -217,7 +217,7 @@ public final class HttpMessageTest {
 				HEADER1: VALUE1\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.builder(200)
+				""", HttpResponse.ofCode(200)
 				.withHeader(header1, "value1")
 				.withHeader(HEADER1, "VALUE1")
 				.build());

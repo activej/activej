@@ -59,7 +59,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 	AsyncServlet mainServlet(Reactor reactor, ContactDAO contactDAO) {
 		Mustache contactListView = new DefaultMustacheFactory().compile("static/contactList.html");
 		return RoutingServlet.create(reactor)
-				.map("/", request -> HttpResponse.Builder.ok200()
+				.map("/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list())))
 						.toPromise())
 				.map(POST, "/add", request -> request.loadBody()
@@ -75,7 +75,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 								//noinspection ConstantConditions - is 'right', hence not 'null'
 								scopes.put("errors", decodedUser.getRight().toMap(SEPARATOR));
 							}
-							return HttpResponse.Builder.ok200()
+							return HttpResponse.ok200()
 									.withBody(applyTemplate(contactListView, scopes))
 									.toPromise();
 						}));

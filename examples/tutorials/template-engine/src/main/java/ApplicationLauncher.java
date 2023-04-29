@@ -8,7 +8,6 @@ import io.activej.http.RoutingServlet;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
-import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 
 import java.util.List;
@@ -42,21 +41,21 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 		Mustache listPolls = new DefaultMustacheFactory().compile("templates/listPolls.html");
 
 		return RoutingServlet.create(reactor)
-				.map(GET, "/", request -> HttpResponse.Builder.ok200()
+				.map(GET, "/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(listPolls, Map.of("polls", pollDao.findAll().entrySet())))
 						.toPromise())
 				//[END REGION_2]
 				//[START REGION_3]
 				.map(GET, "/poll/:id", request -> {
 					int id = Integer.parseInt(request.getPathParameter("id"));
-					return HttpResponse.Builder.ok200()
+					return HttpResponse.ok200()
 							.withBody(applyTemplate(singlePollView, Map.of("id", id, "poll", pollDao.find(id))))
 							.toPromise();
 				})
 				//[END REGION_3]
 				//[START REGION_4]
 				.map(GET, "/create", request ->
-						HttpResponse.Builder.ok200()
+						HttpResponse.ok200()
 								.withBody(applyTemplate(singlePollCreate, Map.of()))
 								.toPromise())
 				.map(POST, "/vote", request -> request.loadBody()
@@ -65,7 +64,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							String option = params.get("option");
 							String stringId = params.get("id");
 							if (option == null || stringId == null) {
-								return Promise.of(HttpResponse.ofCode(401));
+								return HttpResponse.ofCode(401).toPromise();
 							}
 
 							int id = Integer.parseInt(stringId);
@@ -73,10 +72,10 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 							question.vote(option);
 
-							return Promise.of(HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/")));
+							return HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/")).toPromise();
 						}))
 				.map(POST, "/add", request -> request.loadBody()
-						.map($ -> {
+						.then($ -> {
 							Map<String, String> params = request.getPostParameters();
 							String title = params.get("title");
 							String message = params.get("message");
@@ -85,18 +84,18 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							String option2 = params.get("option2");
 
 							int id = pollDao.add(new PollDao.Poll(title, message, List.of(option1, option2)));
-							return HttpResponse.redirect302("poll/" + id);
+							return HttpResponse.redirect302("poll/" + id).toPromise();
 						}))
 				.map(POST, "/delete", request -> request.loadBody()
 						.then(() -> {
 							Map<String, String> params = request.getPostParameters();
 							String id = params.get("id");
 							if (id == null) {
-								return Promise.of(HttpResponse.ofCode(401));
+								return HttpResponse.ofCode(401).toPromise();
 							}
 							pollDao.remove(Integer.parseInt(id));
 
-							return Promise.of(HttpResponse.redirect302("/"));
+							return HttpResponse.redirect302("/").toPromise();
 						}));
 		//[END REGION_4]
 	}

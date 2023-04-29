@@ -107,7 +107,7 @@ public final class BasicAuthServlet extends AbstractReactive
 		checkInReactorThread(this);
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
-			return failureResponse.apply(HttpResponse.Builder.unauthorized401(challenge)).toPromise();
+			return failureResponse.apply(HttpResponse.unauthorized401(challenge)).toPromise();
 		}
 		byte[] raw;
 		try {
@@ -122,7 +122,7 @@ public final class BasicAuthServlet extends AbstractReactive
 		}
 		return credentialsLookup.test(authData[0], authData[1])
 				.then(ok -> {
-					if (!ok) return failureResponse.apply(HttpResponse.Builder.unauthorized401(challenge)).toPromise();
+					if (!ok) return failureResponse.apply(HttpResponse.unauthorized401(challenge)).toPromise();
 					request.attach(new BasicAuthCredentials(authData[0], authData[1]));
 					return next.serve(request);
 				});

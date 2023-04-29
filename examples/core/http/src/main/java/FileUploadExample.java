@@ -46,7 +46,7 @@ public final class FileUploadExample extends HttpServerLauncher {
 						.build())
 				.map(POST, "/test", request ->
 						request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))
-								.then($ -> HttpResponse.Builder.ok200()
+								.then($ -> HttpResponse.ok200()
 										.withPlainText("Upload successful")
 										.toPromise()));
 	}

@@ -25,7 +25,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 				.map("/*", request -> {
 					String servletNumberCookie = request.getCookie(COOKIE);
 					if (servletNumberCookie == null) {
-						return HttpResponse.builder(400)
+						return HttpResponse.ofCode(400)
 								.withPlainText("Cookie '" + COOKIE + "' is missing")
 								.toPromise();
 					}
@@ -35,7 +35,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 					if ("2".equals(servletNumberCookie)) {
 						return secondServlet.serve(request);
 					}
-					return HttpResponse.builder(400)
+					return HttpResponse.ofCode(400)
 							.withPlainText("Unknown servlet number")
 							.toPromise();
 				});
@@ -44,7 +44,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("First")
 	AsyncServlet firstServlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("This is servlet #1\n")
 				.toPromise();
 	}
@@ -52,7 +52,7 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("Second")
 	AsyncServlet secondServlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("This is servlet #2\n")
 				.toPromise();
 	}

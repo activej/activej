@@ -103,7 +103,7 @@ public final class HttpApiTest {
 	}
 
 	private HttpResponse createResponse() {
-		return HttpResponse.Builder.ok200()
+		return HttpResponse.ok200()
 				.withHeader(DATE, ofInstant(responseDate))
 				.withHeader(EXPIRES, ofInstant(expiresDate))
 				.withHeader(CONTENT_TYPE, ofContentType(responseContentType))

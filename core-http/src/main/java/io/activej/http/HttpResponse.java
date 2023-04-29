@@ -131,49 +131,9 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		this(version, code, null);
 	}
 
-	public static Builder builder(int code) {
+	public static Builder ofCode(int code) {
 		if (CHECKS) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
 		return new HttpResponse(HTTP_1_1, code).new Builder();
-	}
-
-	public static HttpResponse ofCode(int code) {
-		return builder(code).build();
-	}
-
-	public static HttpResponse ok200() {
-		return Builder.ok200().build();
-	}
-
-	public static HttpResponse ok201() {
-		return Builder.ok201().build();
-	}
-
-	public static HttpResponse ok206() {
-		return Builder.ok206().build();
-	}
-
-	public static HttpResponse redirect301(String url) {
-		return Builder.redirect301(url).build();
-	}
-
-	public static HttpResponse redirect302(String url) {
-		return Builder.redirect302(url).build();
-	}
-
-	public static HttpResponse redirect307(String url) {
-		return Builder.redirect307(url).build();
-	}
-
-	public static HttpResponse redirect308(String url) {
-		return Builder.redirect308(url).build();
-	}
-
-	public static HttpResponse unauthorized401(String challenge) {
-		return Builder.unauthorized401(challenge).build();
-	}
-
-	public static HttpResponse notFound404() {
-		return Builder.notFound404().build();
 	}
 
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
@@ -181,7 +141,7 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 	}
 
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
-		Builder builder = builder(rangeHeader == null ? 200 : 206);
+		Builder builder = ofCode(rangeHeader == null ? 200 : 206);
 
 		String localName = name.substring(name.lastIndexOf('/') + 1);
 		MediaType mediaType = MediaTypes.getByExtension(localName.substring(localName.lastIndexOf('.') + 1));
@@ -236,55 +196,55 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size) {
 		return file(downloader, name, size, null);
 	}
+
+	public static Builder ok200() {
+		return ofCode(200);
+	}
+
+	public static Builder ok201() {
+		return ofCode(201);
+	}
+
+	public static Builder ok206() {
+		return ofCode(206);
+	}
+
+	public static Builder redirect301(String url) {
+		// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
+		return ofCode(301)
+				.withHeader(LOCATION, url);
+	}
+
+	public static Builder redirect302(String url) {
+		// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
+		return ofCode(302)
+				.withHeader(LOCATION, url);
+	}
+
+	public static Builder redirect307(String url) {
+		return ofCode(307)
+				.withHeader(LOCATION, url);
+	}
+
+	public static Builder redirect308(String url) {
+		// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
+		return ofCode(308)
+				.withHeader(LOCATION, url);
+	}
+
+	public static Builder unauthorized401(String challenge) {
+		// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
+		return ofCode(401)
+				.withHeader(WWW_AUTHENTICATE, challenge);
+	}
+
+	public static Builder notFound404() {
+		return ofCode(404);
+	}
 	// endregion
 
 	public final class Builder extends HttpMessage.Builder<Builder, HttpResponse> {
 		private Builder() {}
-
-		public static Builder ok200() {
-			return builder(200);
-		}
-
-		public static Builder ok201() {
-			return builder(201);
-		}
-
-		public static Builder ok206() {
-			return builder(206);
-		}
-
-		public static Builder redirect301(String url) {
-			// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
-			return builder(301)
-					.withHeader(LOCATION, url);
-		}
-
-		public static Builder redirect302(String url) {
-			// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
-			return builder(302)
-					.withHeader(LOCATION, url);
-		}
-
-		public static Builder redirect307(String url) {
-			return builder(307)
-					.withHeader(LOCATION, url);
-		}
-
-		public static Builder redirect308(String url) {
-			// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
-			return builder(308)
-					.withHeader(LOCATION, url);
-		}
-
-		public static Builder unauthorized401(String challenge) {
-			// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
-			return builder(401)
-					.withHeader(WWW_AUTHENTICATE, challenge);
-		}
-
-		public static Builder notFound404() {
-			return builder(404);
-		}
 
 		@Override
 		public void addCookies(List<HttpCookie> cookies) {

@@ -66,12 +66,12 @@ public interface HttpExceptionFormatter {
 		HttpResponse.Builder responseBuilder;
 		if (e instanceof HttpError) {
 			int code = ((HttpError) e).getCode();
-			responseBuilder = HttpResponse.builder(code)
+			responseBuilder = HttpResponse.ofCode(code)
 					.withHtml(HTTP_ERROR_HTML
 							.replace("{title}", HttpUtils.getHttpErrorTitle(code))
 							.replace("{message}", e.toString()));
 		} else {
-			responseBuilder = HttpResponse.builder(500)
+			responseBuilder = HttpResponse.ofCode(500)
 					.withHtml(INTERNAL_SERVER_ERROR_HTML);
 		}
 		// default formatter leaks no information about unknown exceptions

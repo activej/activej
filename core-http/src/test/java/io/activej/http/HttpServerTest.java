@@ -58,7 +58,7 @@ public final class HttpServerTest {
 	public HttpServer blockingHttpServer() {
 		return HttpServer.builder(eventloop,
 						request ->
-								HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise())
+								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise())
 				.withListenPort(port)
 				.build();
 	}
@@ -66,7 +66,7 @@ public final class HttpServerTest {
 	public HttpServer httpServer() {
 		return HttpServer.builder(eventloop,
 						request ->
-								HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise().async())
+								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise().async())
 				.withListenPort(port)
 				.build();
 	}
@@ -76,7 +76,7 @@ public final class HttpServerTest {
 	public HttpServer delayedHttpServer() {
 		return HttpServer.builder(eventloop,
 						request -> Promises.delay(RANDOM.nextInt(3),
-								HttpResponse.Builder.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).build()))
+								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).build()))
 				.withListenPort(port)
 				.build();
 	}
@@ -225,7 +225,7 @@ public final class HttpServerTest {
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
-		HttpServer.builder(eventloop, req -> HttpResponse.Builder.ok200().withBodyStream(supplier).toPromise())
+		HttpServer.builder(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier).toPromise())
 				.withListenPort(port)
 				.withAcceptOnce()
 				.build()
@@ -383,7 +383,7 @@ public final class HttpServerTest {
 		buf.put(body);
 
 		HttpServer server = HttpServer.builder(eventloop,
-						req -> HttpResponse.Builder.ok200()
+						req -> HttpResponse.ok200()
 								.withBody(encodeAscii(req.getUrl().getPathAndQuery()))
 								.toPromise())
 				.withListenPort(port)
@@ -410,7 +410,7 @@ public final class HttpServerTest {
 	public void testExpectContinue() throws Exception {
 		HttpServer server = HttpServer.builder(eventloop,
 						request -> request.loadBody()
-								.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise()))
+								.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()))
 				.withListenPort(port)
 				.build();
 
@@ -495,7 +495,7 @@ public final class HttpServerTest {
 												.append(";");
 									}
 
-									return HttpResponse.Builder.ok200()
+									return HttpResponse.ok200()
 											.withBody(encodeAscii(sb.toString()))
 											.toPromise();
 								}))
@@ -545,7 +545,7 @@ public final class HttpServerTest {
 									assertTrue(request.getConnection().isClosed());
 
 									assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
-									return HttpResponse.ofCode(400);
+									return HttpResponse.ofCode(400).build();
 								}))
 				.withInspector(inspector)
 				.withListenPort(port)
@@ -690,7 +690,7 @@ public final class HttpServerTest {
 	@Test
 	public void testMalformedSecondRequestPipelined() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
-		HttpServer server = HttpServer.builder(eventloop, $ -> HttpResponse.Builder.ok200()
+		HttpServer server = HttpServer.builder(eventloop, $ -> HttpResponse.ok200()
 						.withPlainText("Hello, world!")
 						.toPromise())
 				.withListenPort(port)

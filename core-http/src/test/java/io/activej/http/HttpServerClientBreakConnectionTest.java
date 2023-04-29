@@ -42,7 +42,7 @@ public class HttpServerClientBreakConnectionTest {
 									server.close()
 											.whenComplete(() -> logger.info("Server Closed")));
 							return Promises.delay(100L,
-									HttpResponse.Builder.ok200()
+									HttpResponse.ok200()
 											.withBody("Hello World".getBytes())
 											.build()
 							);

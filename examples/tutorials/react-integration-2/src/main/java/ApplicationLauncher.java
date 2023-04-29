@@ -53,15 +53,15 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 				//[END REGION_2]
 				//[START REGION_3]
 				.map(POST, "/add", request -> request.loadBody()
-						.map($ -> {
+						.then($ -> {
 							ByteBuf body = request.getBody();
 							try {
 								byte[] bodyBytes = body.getArray();
 								Record record = dslJson.deserialize(Record.class, bodyBytes, bodyBytes.length);
 								recordDAO.add(record);
-								return HttpResponse.ok200();
+								return HttpResponse.ok200().toPromise();
 							} catch (IOException e) {
-								return HttpResponse.ofCode(400);
+								return HttpResponse.ofCode(400).toPromise();
 							}
 						}))
 				.map(GET, "/get/all", request -> {
@@ -72,7 +72,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					} catch (IOException e) {
 						throw new AssertionError(e);
 					}
-					return HttpResponse.Builder.ok200()
+					return HttpResponse.ok200()
 							.withJson(writer.toString())
 							.toPromise();
 				})

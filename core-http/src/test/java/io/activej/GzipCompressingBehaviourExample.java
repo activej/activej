@@ -20,13 +20,13 @@ public final class GzipCompressingBehaviourExample {
 		RoutingServlet servlet = RoutingServlet.create(eventloop)
 				// always responds in gzip
 				.map(GET, "/gzip/",
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withBodyGzipCompression()
 								.withBody(encodeAscii("Hello!"))
 								.toPromise())
 				// never responds in gzip
 				.map(GET, "/nogzip/",
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withBody(encodeAscii("Hello!"))
 								.toPromise());
 

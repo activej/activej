@@ -54,7 +54,7 @@ public final class SimpleProxyServerTest {
 				.build();
 
 		HttpServer echoServer = HttpServer.builder(eventloop1,
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
 								.toPromise())
 				.withListenPort(echoServerPort)
@@ -81,7 +81,7 @@ public final class SimpleProxyServerTest {
 							String path = echoServerPort + request.getUrl().getPath();
 							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
 									.then(result -> result.loadBody()
-											.then(body -> HttpResponse.builder(result.getCode())
+											.then(body -> HttpResponse.ofCode(result.getCode())
 													.withBody(encodeAscii("FORWARDED: " + body.getString(UTF_8)))
 													.toPromise()));
 						})

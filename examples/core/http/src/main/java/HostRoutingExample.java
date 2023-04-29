@@ -26,7 +26,7 @@ public final class HostRoutingExample extends HttpServerLauncher {
 				.map("/*", request -> {
 					String hostHeader = request.getHeader(HttpHeaders.HOST);
 					if (hostHeader == null) {
-						return HttpResponse.builder(400)
+						return HttpResponse.ofCode(400)
 								.withPlainText("Host header is missing")
 								.toPromise();
 					}
@@ -36,7 +36,7 @@ public final class HostRoutingExample extends HttpServerLauncher {
 					if (hostHeader.equals(EXAMPLE_HOST)) {
 						return exampleServlet.serve(request);
 					}
-					return HttpResponse.builder(400)
+					return HttpResponse.ofCode(400)
 							.withPlainText("Unknown host")
 							.toPromise();
 				});
@@ -45,7 +45,7 @@ public final class HostRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("Test")
 	AsyncServlet testServlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("This page is served on test.com\n")
 				.toPromise();
 	}
@@ -53,7 +53,7 @@ public final class HostRoutingExample extends HttpServerLauncher {
 	@Provides
 	@Named("Example")
 	AsyncServlet exampleServlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("This page is served on example.com\n")
 				.toPromise();
 	}

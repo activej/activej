@@ -40,7 +40,6 @@ import static io.activej.http.ContentTypes.HTML_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.POST;
-import static io.activej.http.HttpResponse.redirect302;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
@@ -69,7 +68,7 @@ public final class FileSystemGuiServlet {
 						.then(() -> {
 							String dir = request.getPostParameter("dir");
 							if (dir == null || dir.isEmpty())
-								return HttpResponse.builder(400)
+								return HttpResponse.ofCode(400)
 										.withPlainText("Dir should not be empty")
 										.toPromise();
 							return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
@@ -80,8 +79,8 @@ public final class FileSystemGuiServlet {
 					return fs.list(dir + "**")
 							.then(
 									files -> !dir.isEmpty() && files.isEmpty() ?
-											redirect302("/").toPromise() :
-											HttpResponse.Builder.ok200()
+											HttpResponse.redirect302("/").toPromise() :
+											HttpResponse.ok200()
 													.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
 													.withBody(applyTemplate(mustache, Map.of(
 															"title", title,
@@ -90,7 +89,7 @@ public final class FileSystemGuiServlet {
 													.toPromise(),
 									e -> {
 										if (e instanceof FileSystemException) {
-											return HttpResponse.builder(500)
+											return HttpResponse.ofCode(500)
 													.withPlainText("Service unavailable")
 													.toPromise();
 										} else {

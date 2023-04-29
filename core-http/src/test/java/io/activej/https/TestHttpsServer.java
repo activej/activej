@@ -36,7 +36,7 @@ public class TestHttpsServer {
 				.build();
 		Executor executor = newCachedThreadPool();
 
-		AsyncServlet bobServlet = request -> HttpResponse.Builder.ok200()
+		AsyncServlet bobServlet = request -> HttpResponse.ok200()
 				.withBody(wrapAscii("Hello, I am Bob!"))
 				.toPromise();
 

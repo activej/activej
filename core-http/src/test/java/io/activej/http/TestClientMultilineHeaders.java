@@ -31,7 +31,7 @@ public final class TestClientMultilineHeaders {
 	@Test
 	public void testMultilineHeaders() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withHeader(ALLOW, "GET,\r\n HEAD")
 								.toPromise())
 				.withListenPort(port)

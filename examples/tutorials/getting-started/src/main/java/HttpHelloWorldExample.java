@@ -8,7 +8,7 @@ import io.activej.launchers.http.HttpServerLauncher;
 public final class HttpHelloWorldExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet() {
-		return request -> HttpResponse.Builder.ok200()
+		return request -> HttpResponse.ok200()
 				.withPlainText("Hello World")
 				.toPromise();
 	}

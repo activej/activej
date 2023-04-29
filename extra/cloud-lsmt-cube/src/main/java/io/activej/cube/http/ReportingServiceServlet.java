@@ -131,7 +131,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 	}
 
 	private static Promise<HttpResponse> createResponse(ByteBuf body) {
-		return HttpResponse.Builder.ok200()
+		return HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)))
 				.withBody(body)
 				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
@@ -139,7 +139,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 	}
 
 	private static Promise<HttpResponse> createErrorResponse(String body) {
-		return HttpResponse.builder(400)
+		return HttpResponse.ofCode(400)
 				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.PLAIN_TEXT, StandardCharsets.UTF_8)))
 				.withBody(wrapUtf8(body))
 				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")

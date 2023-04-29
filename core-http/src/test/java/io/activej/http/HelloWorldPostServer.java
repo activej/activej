@@ -15,7 +15,7 @@ public final class HelloWorldPostServer {
 	public static HttpServer helloWorldServer(NioReactor reactor, int port) {
 		return HttpServer.builder(reactor,
 						request -> request.loadBody()
-								.then(body -> HttpResponse.Builder.ok200()
+								.then(body -> HttpResponse.ok200()
 										.withBody(encodeAscii(HELLO_WORLD + body.getString(UTF_8)))
 										.toPromise()))
 				.withListenPort(port)

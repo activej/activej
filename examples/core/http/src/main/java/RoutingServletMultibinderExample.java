@@ -67,13 +67,13 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.create(reactor)
-					.map(GET, "/a", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/a", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/a' path\n")
 							.toPromise())
-					.map(GET, "/b", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/b", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/b' path\n")
 							.toPromise())
-					.map(GET, "/", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/' path\n")
 							.toPromise());
 		}
@@ -85,13 +85,13 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.create(reactor)
-					.map(GET, "/a/b", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/a/b", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/a/b' path\n")
 							.toPromise())
-					.map(GET, "/b/a", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/b/a", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/b/a' path\n")
 							.toPromise())
-					.map(GET, "/d", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/d", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/d' path\n")
 							.toPromise());
 		}
@@ -103,13 +103,13 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.create(reactor)
-					.map(GET, "/a/c", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/a/c", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/a/c' path\n")
 							.toPromise())
-					.map(GET, "/b/c", request -> HttpResponse.Builder.ok200()
+					.map(GET, "/b/c", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/b/c' path\n")
 							.toPromise())
-					.map(POST, "/d", request -> HttpResponse.Builder.ok200()
+					.map(POST, "/d", request -> HttpResponse.ok200()
 							.withPlainText("Hello from POST '/d' path\n")
 							.toPromise());
 		}

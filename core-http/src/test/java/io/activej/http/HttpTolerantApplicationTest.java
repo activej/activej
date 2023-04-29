@@ -45,7 +45,7 @@ public final class HttpTolerantApplicationTest {
 
 		HttpServer server = HttpServer.builder(eventloop,
 						request ->
-								HttpResponse.Builder.ok200()
+								HttpResponse.ok200()
 										.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
 										.toPromise()
 										.async())

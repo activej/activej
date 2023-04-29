@@ -66,11 +66,11 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								K key = fromJson(descriptor.keyManifest(), body);
 								S state = client.get(key);
 								if (state != null) {
-									return HttpResponse.Builder.ok200()
+									return HttpResponse.ok200()
 											.withBody(toJson(descriptor.stateManifest(), state))
 											.toPromise();
 								}
-								return HttpResponse.builder(404)
+								return HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
 										.toPromise();
 							} catch (MalformedDataException e) {
@@ -78,10 +78,10 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 							}
 						}))
 				.map(PUT, "/", request -> request.loadBody()
-						.map(body -> {
+						.then(body -> {
 							try {
 								client.put(fromJson(crdtDataManifest.getType(), body));
-								return HttpResponse.ok200();
+								return HttpResponse.ok200().toPromise();
 							} catch (MalformedDataException e) {
 								throw HttpError.ofCode(400, e);
 							}
@@ -93,7 +93,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								if (client.remove(key)) {
 									return HttpResponse.ok200().toPromise();
 								}
-								return HttpResponse.builder(404)
+								return HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
 										.toPromise();
 							} catch (MalformedDataException e) {
@@ -107,7 +107,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 		return servlet
 				.map(POST, "/backup", request -> {
 					if (backupService.backupInProgress()) {
-						return HttpResponse.builder(403)
+						return HttpResponse.ofCode(403)
 								.withBody("Backup is already in progress".getBytes(UTF_8))
 								.toPromise();
 					}
@@ -117,7 +117,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 				.map(POST, "/awaitBackup", request ->
 						backupService.backupInProgress() ?
 								backupService.backup()
-										.then($ -> HttpResponse.builder(204)
+										.then($ -> HttpResponse.ofCode(204)
 												.withBody("Finished already running backup".getBytes(UTF_8))
 												.toPromise()) :
 								backupService.backup()

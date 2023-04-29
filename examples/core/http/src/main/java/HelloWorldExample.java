@@ -10,7 +10,7 @@ public final class HelloWorldExample {
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create();
 		HttpServer server = HttpServer.builder(eventloop,
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withPlainText("Hello world!")
 								.toPromise())
 				.withListenPort(8080)

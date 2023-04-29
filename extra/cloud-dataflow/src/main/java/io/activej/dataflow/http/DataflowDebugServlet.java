@@ -52,7 +52,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import static io.activej.http.HttpMethod.GET;
-import static io.activej.http.HttpResponse.Builder.ok200;
+import static io.activej.http.HttpResponse.ok200;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.types.Types.parameterizedType;

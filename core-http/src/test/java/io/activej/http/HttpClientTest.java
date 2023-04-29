@@ -57,7 +57,7 @@ public final class HttpClientTest {
 
 	public void startServer() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.Builder.ok200()
+						request -> HttpResponse.ok200()
 								.withBodyStream(ChannelSuppliers.ofStream(
 										IntStream.range(0, HELLO_WORLD.length)
 												.mapToObj(idx -> {
@@ -158,7 +158,7 @@ public final class HttpClientTest {
 						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
 				.whenComplete(() -> {
 					server.close();
-					responses.forEach(response -> response.set(HttpResponse.ok200()));
+					responses.forEach(response -> response.set(HttpResponse.ok200().build()));
 
 					inspector.getTotalRequests().refresh(reactor.currentTimeMillis());
 					inspector.getHttpTimeouts().refresh(reactor.currentTimeMillis());

@@ -70,7 +70,7 @@ public final class HttpStreamTest {
 				.async()
 				.toCollector(ByteBufs.collector())
 				.whenComplete(TestUtils.assertCompleteFn(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
-				.then(s -> Promise.of(HttpResponse.ok200())));
+				.then(s -> Promise.of(HttpResponse.ok200().build())));
 
 		Integer code = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
@@ -86,7 +86,7 @@ public final class HttpStreamTest {
 	@Test
 	public void testStreamDownload() throws IOException {
 		startTestServer(request ->
-				HttpResponse.Builder.ok200()
+				HttpResponse.ok200()
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item)))
 						.toPromise());
@@ -107,7 +107,7 @@ public final class HttpStreamTest {
 				.async()
 				.toList()
 				.map(ChannelSuppliers::ofList)
-				.then(bodyStream -> HttpResponse.Builder.ok200().withBodyStream(bodyStream.async()).toPromise()));
+				.then(bodyStream -> HttpResponse.ok200().withBodyStream(bodyStream.async()).toPromise()));
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
@@ -140,7 +140,7 @@ public final class HttpStreamTest {
 	@Test
 	public void testChunkedEncodingMessage() throws IOException {
 		startTestServer(request -> request.loadBody()
-				.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise()));
+				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -169,7 +169,7 @@ public final class HttpStreamTest {
 	@Test
 	public void testMalformedChunkedEncodingMessage() throws IOException {
 		startTestServer(request -> request.loadBody()
-				.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise()));
+				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -197,7 +197,7 @@ public final class HttpStreamTest {
 	public void testTruncatedRequest() throws IOException {
 		JmxInspector inspector = new JmxInspector();
 		startTestServer(request -> request.loadBody()
-						.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise()),
+						.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()),
 				inspector);
 
 		String chunkedRequest =
@@ -237,7 +237,7 @@ public final class HttpStreamTest {
 		Exception exception = new Exception("Test Exception");
 
 		startTestServer(request -> request.loadBody()
-				.then(body -> HttpResponse.Builder.ok200().withBody(body.slice()).toPromise()));
+				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()));
 
 		Exception e = awaitException(
 				HttpClient.create(Reactor.getCurrentReactor())

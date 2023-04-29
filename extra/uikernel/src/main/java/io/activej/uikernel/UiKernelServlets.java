@@ -112,7 +112,7 @@ public class UiKernelServlets {
 				K id = fromJson(gson, request.getPathParameter("id"), model.getIdType());
 				return model.delete(id)
 						.then(response ->
-								HttpResponse.Builder.ok200()
+								HttpResponse.ok200()
 										.initialize(builder -> {
 											if (response.hasErrors()) {
 												String json = gson.toJson(response.getErrors());
@@ -128,7 +128,7 @@ public class UiKernelServlets {
 	}
 
 	private static Promise<HttpResponse> createResponse(String body) {
-		return HttpResponse.Builder.ok200()
+		return HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8))
 				.withBody(ByteBufStrings.wrapUtf8(body))
 				.toPromise();

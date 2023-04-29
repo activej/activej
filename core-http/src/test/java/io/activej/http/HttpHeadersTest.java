@@ -35,7 +35,7 @@ public final class HttpHeadersTest {
 		assertEquals("utf-8, iso-8859-1", request.getHeader(ACCEPT_CHARSET));
 		assertEquals("key1=value1; key2; key3=value2", request.getHeader(COOKIE));
 
-		HttpResponse response = HttpResponse.builder(200)
+		HttpResponse response = HttpResponse.ofCode(200)
 				.withHeader(DATE, HttpHeaderValue.ofTimestamp(1486944000021L))
 				.build();
 

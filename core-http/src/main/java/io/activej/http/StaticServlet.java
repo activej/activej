@@ -52,7 +52,7 @@ public final class StaticServlet extends AbstractReactive
 	private final IStaticLoader resourceLoader;
 	private Function<String, ContentType> contentTypeResolver = StaticServlet::getContentType;
 	private Function<HttpRequest, @Nullable String> pathMapper = HttpRequest::getRelativePath;
-	private Supplier<HttpResponse.Builder> responseBuilderSupplier = HttpResponse.Builder::ok200;
+	private Supplier<HttpResponse.Builder> responseBuilderSupplier = HttpResponse::ok200;
 	private final Set<String> indexResources = new LinkedHashSet<>();
 
 	private @Nullable String defaultResource;

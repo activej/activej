@@ -112,7 +112,7 @@ public final class TestGzipProcessorUtils {
 
 									String receivedData = body.getString(UTF_8);
 									assertEquals(text, receivedData);
-									return HttpResponse.Builder.ok200()
+									return HttpResponse.ok200()
 											.withBodyGzipCompression()
 											.withBody(ByteBufStrings.wrapAscii(receivedData))
 											.toPromise();
