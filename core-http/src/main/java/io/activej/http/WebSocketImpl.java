@@ -21,7 +21,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
 import io.activej.csp.AbstractChannelConsumer;
@@ -49,8 +48,6 @@ import static io.activej.http.WebSocketConstants.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
-	private static final boolean CHECK = Checks.isEnabled(WebSocketImpl.class);
-
 	private final HttpRequest request;
 	private final HttpResponse response;
 	private final Consumer<WebSocketException> onProtocolError;
@@ -82,24 +79,24 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
 			return Promises.repeat(() -> frameInput.get()
-					.then(frame -> {
-						if (frame == null) {
-							if (typeRef.get() == null) {
-								return Promise.of(false);
-							}
-							// hence, all other exceptions would fail get() promise
-							return Promise.ofException(REGULAR_CLOSE);
-						}
-						if (typeRef.get() == null) {
-							typeRef.set(frameToMessageType(frame.getType()));
-						}
-						ByteBuf payload = frame.getPayload();
-						if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
-							return protocolError(MESSAGE_TOO_BIG);
-						}
-						messageBufs.add(payload);
-						return Promise.of(!frame.isLastFrame());
-					}))
+							.then(frame -> {
+								if (frame == null) {
+									if (typeRef.get() == null) {
+										return Promise.of(false);
+									}
+									// hence, all other exceptions would fail get() promise
+									return Promise.ofException(REGULAR_CLOSE);
+								}
+								if (typeRef.get() == null) {
+									typeRef.set(frameToMessageType(frame.getType()));
+								}
+								ByteBuf payload = frame.getPayload();
+								if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
+									return protocolError(MESSAGE_TOO_BIG);
+								}
+								messageBufs.add(payload);
+								return Promise.of(!frame.isLastFrame());
+							}))
 					.whenException(e -> messageBufs.recycle())
 					.then($ -> {
 						ByteBuf payload = messageBufs.takeRemaining();
@@ -177,10 +174,8 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 
 	// region sanitizers
 	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
-		if (CHECK) {
-			checkState(eventloop.inEventloopThread());
-			checkState(readPromise == null, "Concurrent reads");
-		}
+		checkState(eventloop.inEventloopThread());
+		checkState(readPromise == null, "Concurrent reads");
 
 		if (isClosed()) return Promise.ofException(getException());
 
@@ -195,10 +190,8 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
-		if (CHECK) {
-			checkState(eventloop.inEventloopThread());
-			checkState(writePromise == null, "Concurrent writes");
-		}
+		checkState(eventloop.inEventloopThread());
+		checkState(writePromise == null, "Concurrent writes");
 
 		if (isClosed()) {
 			if (recyclable != null) recyclable.recycle();
