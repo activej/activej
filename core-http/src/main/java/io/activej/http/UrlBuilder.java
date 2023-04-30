@@ -16,115 +16,96 @@
 
 package io.activej.http;
 
+import io.activej.common.builder.Builder;
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URLEncoder;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import static io.activej.common.Checks.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class UrlBuilder {
-
-	private final @Nullable String scheme;
-
-	private final List<String> path = new LinkedList<>();
-	private final Map<String, String> query = new LinkedHashMap<>();
-
-	private @Nullable String userInfo;
+public final class UrlBuilder implements Builder<String>, WithInitializer<UrlBuilder> {
+	private @Nullable String scheme;
+	private @Nullable String userinfo;
 	private @Nullable String host;
-	private @Nullable String port;
+	private int port = 0;
+
+	private final List<String> path = new ArrayList<>();
+
+	private record QueryKV(String k, Object v) {}
+
+	private final List<QueryKV> query = new ArrayList<>();
+
 	private @Nullable String fragment;
 
-	private UrlBuilder(@Nullable String scheme) {
+	private UrlBuilder() {
+	}
+
+	public static UrlBuilder create() {
+		return new UrlBuilder();
+	}
+
+	public static UrlBuilder http(String host) {
+		return create().withScheme("http").withHost(host);
+	}
+
+	public static UrlBuilder http(String host, int port) {
+		return create().withScheme("http").withHost(host, port);
+	}
+
+	public static UrlBuilder https(String host) {
+		return create().withScheme("https").withHost(host);
+	}
+
+	public static UrlBuilder https(String host, int port) {
+		return create().withScheme("https").withHost(host, port);
+	}
+
+	public UrlBuilder withScheme(String scheme) {
 		this.scheme = scheme;
+		return this;
 	}
 
-	public static UrlBuilder of(String scheme) {
-		return new UrlBuilder(scheme);
+	public UrlBuilder withAuth(String userinfo) {
+		this.userinfo = userinfo;
+		return this;
 	}
 
-	public static UrlBuilder http() {
-		return new UrlBuilder("http");
-	}
-
-	public static UrlBuilder https() {
-		return new UrlBuilder("https");
-	}
-
-	public UrlBuilder withAuthority(String userInfo, InetSocketAddress address) {
-		String host;
-		if (address.isUnresolved()) {
-			host = address.getHostName();
-		} else {
-			InetAddress inetAddress = address.getAddress();
-			host = inetAddress.getHostAddress();
-			if (inetAddress instanceof Inet6Address) {
-				host = '[' + host.replace("%", "%25") + ']'; // yay, IPv6 syntax?
-			}
-		}
-		return withAuthority(userInfo, host, address.getPort());
-	}
-
-	public UrlBuilder withAuthority(String host) {
+	public UrlBuilder withHost(String host) {
 		this.host = host;
 		return this;
 	}
 
-	public UrlBuilder withAuthority(String host, int port) {
-		checkArgument(port >= 0 && port <= 49151, "Port should in range [0, 49151]"); // exclude ephemeral ports (https://tools.ietf.org/html/rfc6335#section-6)
-		this.port = Integer.toString(port);
-		return withAuthority(host);
+	public UrlBuilder withHost(String host, int port) {
+		this.host = host;
+		this.port = port;
+		return this;
 	}
 
-	public UrlBuilder withAuthority(String userInfo, String host) {
-		this.userInfo = userInfo;
-		return withAuthority(host);
+	public UrlBuilder withPort(int port) {
+		this.port = port;
+		return this;
 	}
 
-	public UrlBuilder withAuthority(String userInfo, String host, int port) {
-		this.userInfo = userInfo;
-		return withAuthority(host, port);
-	}
-
-	public UrlBuilder withAuthority(InetSocketAddress address) {
-		return withAuthority(address.isUnresolved() ? address.getHostName() : address.getAddress().getHostAddress(), address.getPort());
-	}
-
-	public static UrlBuilder relative() {
-		return new UrlBuilder(null);
-	}
-
-	public static String mapToQuery(Map<String, ?> query) {
-		StringBuilder sb = new StringBuilder();
-		query.forEach((k, v) -> sb.append(urlEncode(k)).append('=').append(urlEncode(v.toString())).append('&'));
-		sb.setLength(sb.length() - 1); // drop last '&'
-		return sb.toString();
-	}
-
-	public UrlBuilder appendPathPart(String part) {
+	public UrlBuilder withPath(String part) {
 		path.add(part);
 		return this;
 	}
 
-	public UrlBuilder appendPathPart(HttpPathPart pathPart) {
-		path.add(pathPart.toString());
+	public UrlBuilder withPath(String... parts) {
+		return withPath(Arrays.asList(parts));
+	}
+
+	public UrlBuilder withPath(List<String> parts) {
+		path.addAll(parts);
 		return this;
 	}
 
-	public UrlBuilder appendPath(String pathTail) {
-		path.addAll(List.of(pathTail.split("/")));
-		return this;
-	}
-
-	public UrlBuilder appendQuery(String key, Object value) {
-		query.put(key, value.toString());
+	public UrlBuilder withQuery(String key, Object value) {
+		query.add(new QueryKV(key, value));
 		return this;
 	}
 
@@ -133,8 +114,9 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public static String urlEncode(String str) {
-		return URLEncoder.encode(str, UTF_8);
+	@Override
+	public String build() {
+		return toString();
 	}
 
 	@Override
@@ -145,27 +127,35 @@ public class UrlBuilder {
 		}
 		if (host != null) {
 			sb.append("//");
-			if (userInfo != null) {
-				sb.append(userInfo).append('@');
+			if (userinfo != null) {
+				sb.append(userinfo).append('@');
 			}
 			sb.append(host);
-			if (port != null) {
+			if (port > 0) {
 				sb.append(':').append(port);
 			}
 			sb.append('/');
 		}
 		if (!path.isEmpty()) {
-			path.forEach(p -> sb.append(urlEncode(p)).append('/'));
+			for (String p : path) {
+				sb.append(urlEncode(p)).append('/');
+			}
 			sb.setLength(sb.length() - 1); // drop last '/'
 		}
 		if (!query.isEmpty()) {
 			sb.append('?');
-			query.forEach((k, v) -> sb.append(urlEncode(k)).append('=').append(urlEncode(v)).append('&'));
+			for (QueryKV queryKV : query) {
+				sb.append(urlEncode(queryKV.k)).append('=').append(urlEncode(queryKV.v.toString())).append('&');
+			}
 			sb.setLength(sb.length() - 1); // drop last '&'
 		}
 		if (fragment != null) {
 			sb.append('#').append(fragment);
 		}
 		return sb.toString();
+	}
+
+	private static String urlEncode(String str) {
+		return URLEncoder.encode(str, UTF_8);
 	}
 }

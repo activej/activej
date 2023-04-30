@@ -16,9 +16,7 @@
 
 package io.activej.fs.http;
 
-import io.activej.http.HttpPathPart;
-
-public enum FileSystemCommand implements HttpPathPart {
+public enum FileSystemCommand {
 	UPLOAD("upload"),
 	APPEND("append"),
 	DOWNLOAD("download"),
@@ -33,14 +31,18 @@ public enum FileSystemCommand implements HttpPathPart {
 	MOVE("move"),
 	MOVE_ALL("moveAll");
 
-	private final String pathPart;
+	private final String path;
 
-	FileSystemCommand(String pathPart) {
-		this.pathPart = pathPart;
+	FileSystemCommand(String path) {
+		this.path = path;
+	}
+
+	public String path() {
+		return path;
 	}
 
 	@Override
 	public String toString() {
-		return pathPart;
+		return path;
 	}
 }
