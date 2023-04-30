@@ -19,8 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.csp.supplier.ChannelSupplier;
-import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
 import io.activej.promise.Promise;
 import io.activej.promise.ToPromise;
@@ -38,7 +36,6 @@ import static io.activej.http.ContentTypes.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpVersion.HTTP_1_1;
-import static io.activej.http.MediaTypes.OCTET_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -136,67 +133,6 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		return new HttpResponse(HTTP_1_1, code).new Builder();
 	}
 
-	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
-		return file(downloader, name, size, rangeHeader, false);
-	}
-
-	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
-		Builder builder = ofCode(rangeHeader == null ? 200 : 206);
-
-		String localName = name.substring(name.lastIndexOf('/') + 1);
-		MediaType mediaType = MediaTypes.getByExtension(localName.substring(localName.lastIndexOf('.') + 1));
-		if (mediaType == null) {
-			mediaType = OCTET_STREAM;
-		}
-
-		builder.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(ContentType.of(mediaType)));
-		builder.withHeader(ACCEPT_RANGES, "bytes");
-		builder.withHeader(CONTENT_DISPOSITION, inline ? "inline" : "attachment; filename=\"" + localName + "\"");
-
-		long contentLength, offset;
-		if (rangeHeader != null) {
-			if (!rangeHeader.startsWith("bytes=")) {
-				return Promise.ofException(HttpError.ofCode(416, "Invalid range header (not in bytes)"));
-			}
-			rangeHeader = rangeHeader.substring(6);
-			if (!rangeHeader.matches("(?:\\d+)?-(?:\\d+)?")) {
-				return Promise.ofException(HttpError.ofCode(416, "Only single part ranges are allowed"));
-			}
-			String[] parts = rangeHeader.split("-", 2);
-			long endOffset;
-			if (parts[0].isEmpty()) {
-				if (parts[1].isEmpty()) {
-					return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
-				}
-				offset = size - Long.parseLong(parts[1]);
-				endOffset = size;
-			} else {
-				if (parts[1].isEmpty()) {
-					offset = Long.parseLong(parts[0]);
-					endOffset = size - 1;
-				} else {
-					offset = Long.parseLong(parts[0]);
-					endOffset = Long.parseLong(parts[1]);
-				}
-			}
-			if (endOffset != -1 && offset > endOffset) {
-				return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
-			}
-			contentLength = endOffset - offset + 1;
-			builder.withHeader(CONTENT_RANGE, "bytes " + offset + "-" + endOffset + "/" + size);
-		} else {
-			contentLength = size;
-			offset = 0;
-		}
-		builder.withHeader(CONTENT_LENGTH, Long.toString(contentLength));
-		builder.withBodyStream(ChannelSuppliers.ofPromise(downloader.getFileSlice(offset, contentLength)));
-		return builder.toPromise();
-	}
-
-	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size) {
-		return file(downloader, name, size, null);
-	}
-
 	public static Builder ok200() {
 		return ofCode(200);
 	}
@@ -277,12 +213,6 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 	@Override
 	public Promise<HttpResponse> toPromise() {
 		return Promise.of(this);
-	}
-
-	@FunctionalInterface
-	public interface AsyncFileSliceSupplier {
-
-		Promise<ChannelSupplier<ByteBuf>> getFileSlice(long offset, long limit);
 	}
 
 	@Override

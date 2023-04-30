@@ -28,6 +28,7 @@ import io.activej.http.*;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
+import org.jetbrains.annotations.Nullable;
 
 import static io.activej.fs.http.FileSystemCommand.*;
 import static io.activej.fs.util.JsonUtils.fromJson;
@@ -41,6 +42,7 @@ import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
+import static io.activej.http.MediaTypes.OCTET_STREAM;
 
 /**
  * An HTTP servlet that exposes some given {@link IFileSystem}.
@@ -82,7 +84,11 @@ public final class FileSystemServlet {
 					String name = decodePath(request);
 					String rangeHeader = request.getHeader(HttpHeaders.RANGE);
 					if (rangeHeader != null) {
-						return rangeDownload(fs, inline, name, rangeHeader);
+						//noinspection ConstantConditions
+						return fs.info(name)
+								.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
+								.then(meta -> rangeDownload(fs, name, meta.getSize(), inline, rangeHeader))
+								.then(Promise::of, errorResponseFn());
 					}
 					long offset = getNumberParameterOr(request, "offset", 0);
 					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
@@ -149,17 +155,57 @@ public final class FileSystemServlet {
 						.then(voidResponseFn(), errorResponseFn()));
 	}
 
-	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, boolean inline, String name, String rangeHeader) {
-		//noinspection ConstantConditions
-		return fs.info(name)
-				.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
-				.then(meta -> HttpResponse.file(
-						(offset, limit) -> fs.download(name, offset, limit),
-						name,
-						meta.getSize(),
-						rangeHeader,
-						inline))
-				.then(Promise::of, errorResponseFn());
+	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, String name, long size, boolean inline, @Nullable String rangeHeader) {
+		HttpResponse.Builder builder = HttpResponse.ofCode(rangeHeader == null ? 200 : 206);
+
+		String localName = name.substring(name.lastIndexOf('/') + 1);
+		MediaType mediaType = MediaTypes.getByExtension(localName.substring(localName.lastIndexOf('.') + 1));
+		if (mediaType == null) {
+			mediaType = OCTET_STREAM;
+		}
+
+		builder.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(ContentType.of(mediaType)));
+		builder.withHeader(ACCEPT_RANGES, "bytes");
+		builder.withHeader(CONTENT_DISPOSITION, inline ? "inline" : "attachment; filename=\"" + localName + "\"");
+
+		long contentLength, offset;
+		if (rangeHeader != null) {
+			if (!rangeHeader.startsWith("bytes=")) {
+				return Promise.ofException(HttpError.ofCode(416, "Invalid range header (not in bytes)"));
+			}
+			rangeHeader = rangeHeader.substring(6);
+			if (!rangeHeader.matches("(?:\\d+)?-(?:\\d+)?")) {
+				return Promise.ofException(HttpError.ofCode(416, "Only single part ranges are allowed"));
+			}
+			String[] parts = rangeHeader.split("-", 2);
+			long endOffset;
+			if (parts[0].isEmpty()) {
+				if (parts[1].isEmpty()) {
+					return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
+				}
+				offset = size - Long.parseLong(parts[1]);
+				endOffset = size;
+			} else {
+				if (parts[1].isEmpty()) {
+					offset = Long.parseLong(parts[0]);
+					endOffset = size - 1;
+				} else {
+					offset = Long.parseLong(parts[0]);
+					endOffset = Long.parseLong(parts[1]);
+				}
+			}
+			if (endOffset != -1 && offset > endOffset) {
+				return Promise.ofException(HttpError.ofCode(416, "Invalid range"));
+			}
+			contentLength = endOffset - offset + 1;
+			builder.withHeader(CONTENT_RANGE, "bytes " + offset + "-" + endOffset + "/" + size);
+		} else {
+			contentLength = size;
+			offset = 0;
+		}
+		builder.withHeader(CONTENT_LENGTH, Long.toString(contentLength));
+		builder.withBodyStream(ChannelSuppliers.ofPromise(fs.download(name, offset, contentLength)));
+		return builder.toPromise();
 	}
 
 	private static String decodePath(HttpRequest request) throws HttpError {
