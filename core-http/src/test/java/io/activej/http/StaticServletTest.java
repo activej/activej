@@ -49,7 +49,7 @@ public final class StaticServletTest {
 	public void testPathLoader() {
 		Reactor reactor = getCurrentReactor();
 		StaticServlet staticServlet = StaticServlet.create(reactor, ofPath(reactor, newCachedThreadPool(), resourcesPath));
-		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/index.html")));
+		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/index.html").build()));
 		await(response.loadBody());
 		ByteBuf body = response.getBody();
 
@@ -60,7 +60,7 @@ public final class StaticServletTest {
 	public void testFileNotFoundPathLoader() {
 		Reactor reactor = getCurrentReactor();
 		StaticServlet staticServlet = StaticServlet.create(reactor, ofPath(reactor, newCachedThreadPool(), resourcesPath));
-		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
+		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt").build()));
 
 		assertEquals(404, e.getCode());
 	}
@@ -69,7 +69,7 @@ public final class StaticServletTest {
 	public void testClassPath() {
 		Reactor reactor = getCurrentReactor();
 		StaticServlet staticServlet = StaticServlet.create(reactor, ofClassPath(reactor, newCachedThreadPool(), "/"));
-		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/testFile.txt")));
+		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/testFile.txt").build()));
 		await(response.loadBody());
 		ByteBuf body = response.getBody();
 
@@ -80,7 +80,7 @@ public final class StaticServletTest {
 	public void testFileNotFoundClassPath() {
 		Reactor reactor = getCurrentReactor();
 		StaticServlet staticServlet = StaticServlet.create(reactor, ofClassPath(reactor, newCachedThreadPool(), "/"));
-		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/index.html")));
+		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/index.html").build()));
 
 		assertEquals(404, e.getCode());
 	}
@@ -89,7 +89,7 @@ public final class StaticServletTest {
 	public void testRelativeClassPath() {
 		Reactor reactor = getCurrentReactor();
 		StaticServlet staticServlet = StaticServlet.create(reactor, ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/"));
-		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/testFile.txt")));
+		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/testFile.txt").build()));
 		await(response.loadBody());
 		ByteBuf body = response.getBody();
 
@@ -101,7 +101,7 @@ public final class StaticServletTest {
 		Reactor reactor = getCurrentReactor();
 		IStaticLoader resourceLoader = ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/dir/");
 		StaticServlet staticServlet = StaticServlet.create(reactor, resourceLoader);
-		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/test.txt")));
+		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/test.txt").build()));
 		await(response.loadBody());
 		ByteBuf body = response.getBody();
 
@@ -113,7 +113,7 @@ public final class StaticServletTest {
 		Reactor reactor = getCurrentReactor();
 		IStaticLoader resourceLoader = ofClassPath(reactor, newCachedThreadPool(), getClass().getClassLoader(), "/");
 		StaticServlet staticServlet = StaticServlet.create(reactor, resourceLoader);
-		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
+		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt").build()));
 
 		assertEquals(404, e.getCode());
 	}
@@ -130,7 +130,7 @@ public final class StaticServletTest {
 
 		Reactor reactor = getCurrentReactor();
 		StaticServlet staticServlet = StaticServlet.create(reactor, ofPath(reactor, newCachedThreadPool(), resourcesPath));
-		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/" + filename)));
+		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/" + filename).build()));
 		await(response.loadBody());
 		ByteBuf body = response.getBody();
 

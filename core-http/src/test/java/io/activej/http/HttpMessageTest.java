@@ -111,24 +111,24 @@ public final class HttpMessageTest {
 				GET /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.get("http://test.com/index.html"));
+				""", HttpRequest.get("http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				POST /index.html HTTP/1.1\r
 				Host: test.com\r
 				Content-Length: 0\r
 				\r
-				""", HttpRequest.post("http://test.com/index.html"));
+				""", HttpRequest.post("http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				CONNECT /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.of(HttpMethod.CONNECT, "http://test.com/index.html"));
+				""", HttpRequest.builder(HttpMethod.CONNECT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				GET /index.html HTTP/1.1\r
 				Host: test.com\r
 				Cookie: cookie1=value1\r
 				\r
-				""", HttpRequest.Builder.get("http://test.com/index.html")
+				""", HttpRequest.get("http://test.com/index.html")
 				.withCookie(HttpCookie.of("cookie1", "value1"))
 				.build());
 		assertHttpMessageEquals("""
@@ -136,7 +136,7 @@ public final class HttpMessageTest {
 				Host: test.com\r
 				Cookie: cookie1=value1; cookie2=value2\r
 				\r
-				""", HttpRequest.Builder.get("http://test.com/index.html")
+				""", HttpRequest.get("http://test.com/index.html")
 				.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
 				.build());
 
@@ -147,7 +147,7 @@ public final class HttpMessageTest {
 				Host: test.com\r
 				Content-Length: 4\r
 				\r
-				/abc""", HttpRequest.Builder.post("http://test.com/index.html")
+				/abc""", HttpRequest.post("http://test.com/index.html")
 				.withBody(buf)
 				.build());
 	}
@@ -158,52 +158,52 @@ public final class HttpMessageTest {
 				GET /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.of(GET, "http://test.com/index.html"));
+				""", HttpRequest.builder(GET, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				HEAD /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.of(HEAD, "http://test.com/index.html"));
+				""", HttpRequest.builder(HEAD, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				CONNECT /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.of(CONNECT, "http://test.com/index.html"));
+				""", HttpRequest.builder(CONNECT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				OPTIONS /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.of(OPTIONS, "http://test.com/index.html"));
+				""", HttpRequest.builder(OPTIONS, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				TRACE /index.html HTTP/1.1\r
 				Host: test.com\r
 				\r
-				""", HttpRequest.of(TRACE, "http://test.com/index.html"));
+				""", HttpRequest.builder(TRACE, "http://test.com/index.html").build());
 
 		assertHttpMessageEquals("""
 				POST /index.html HTTP/1.1\r
 				Host: test.com\r
 				Content-Length: 0\r
 				\r
-				""", HttpRequest.of(POST, "http://test.com/index.html"));
+				""", HttpRequest.builder(POST, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				PUT /index.html HTTP/1.1\r
 				Host: test.com\r
 				Content-Length: 0\r
 				\r
-				""", HttpRequest.of(PUT, "http://test.com/index.html"));
+				""", HttpRequest.builder(PUT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				DELETE /index.html HTTP/1.1\r
 				Host: test.com\r
 				Content-Length: 0\r
 				\r
-				""", HttpRequest.of(DELETE, "http://test.com/index.html"));
+				""", HttpRequest.builder(DELETE, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 				PATCH /index.html HTTP/1.1\r
 				Host: test.com\r
 				Content-Length: 0\r
 				\r
-				""", HttpRequest.of(PATCH, "http://test.com/index.html"));
+				""", HttpRequest.builder(PATCH, "http://test.com/index.html").build());
 	}
 
 	@Test
@@ -227,7 +227,7 @@ public final class HttpMessageTest {
 	public void testFullUrlOnClient() {
 		String url = "http://example.com/a/b/c/d?param1=test1&param2=test2#fragment";
 
-		assertEquals(url, HttpRequest.get(url).getFullUrl());
+		assertEquals(url, HttpRequest.get(url).build().getFullUrl());
 	}
 
 	@Test

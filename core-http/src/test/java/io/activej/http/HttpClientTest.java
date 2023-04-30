@@ -82,7 +82,7 @@ public final class HttpClientTest {
 		startServer();
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
-		await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.then(response -> response.loadBody()
 						.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
 	}
@@ -93,7 +93,7 @@ public final class HttpClientTest {
 		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
 				.withConnectTimeout(Duration.ofMillis(1))
 				.build();
-		Exception e = awaitException(client.request(HttpRequest.get("http://google.com")));
+		Exception e = awaitException(client.request(HttpRequest.get("http://google.com").build()));
 		assertThat(e, instanceOf(HttpException.class));
 		assertThat(e.getCause(), instanceOf(AsyncTimeoutException.class));
 	}
@@ -105,7 +105,7 @@ public final class HttpClientTest {
 		int maxBodySize = HELLO_WORLD.length - 1;
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
-		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
 	}
@@ -123,7 +123,7 @@ public final class HttpClientTest {
 				.listen();
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
-		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
@@ -151,11 +151,11 @@ public final class HttpClientTest {
 				.build();
 
 		Exception e = awaitException(Promises.all(
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()))
 				.whenComplete(() -> {
 					server.close();
 					responses.forEach(response -> response.set(HttpResponse.ok200().build()));
@@ -190,7 +190,7 @@ public final class HttpClientTest {
 				.withInspector(inspector)
 				.build();
 
-		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port));
+		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build());
 		assertEquals(1, inspector.getActiveRequests());
 		await(requestPromise);
 		assertEquals(0, inspector.getActiveRequests());
@@ -279,9 +279,9 @@ public final class HttpClientTest {
 				.build();
 
 		int code = await(client
-				.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.then(response -> response.loadBody().async()
-						.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + port)))
+						.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + port).build()))
 						.then(res -> {
 							assertFalse(res.isRecycled());
 							return res.loadBody()
@@ -327,7 +327,7 @@ public final class HttpClientTest {
 				.withInspector(inspector)
 				.build();
 
-		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
@@ -369,10 +369,11 @@ public final class HttpClientTest {
 			builder.withListenAddress(new InetSocketAddress(port));
 		}
 		builder.build().listen();
+		String url = "http" + (ssl ? "s" : "") + "://127.0.0.1:" + port;
 		return HttpClient.builder(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
 				.build()
-				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + port));
+				.request(HttpRequest.get(url).build());
 	}
 
 }

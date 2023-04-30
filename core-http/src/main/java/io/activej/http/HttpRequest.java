@@ -74,22 +74,6 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 		this.connection = connection;
 	}
 
-	public static HttpRequest of(HttpMethod method, String url) {
-		return builder(method, url).build();
-	}
-
-	public static HttpRequest get(String url) {
-		return Builder.get(url).build();
-	}
-
-	public static HttpRequest post(String url) {
-		return Builder.post(url).build();
-	}
-
-	public static HttpRequest put(String url) {
-		return Builder.put(url).build();
-	}
-
 	public static Builder builder(HttpMethod method, String url) {
 		UrlParser urlParser = UrlParser.of(url);
 		Builder builder = new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null).new Builder();
@@ -106,6 +90,18 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 		return builder;
 	}
 
+	public static Builder get(String url) {
+		return builder(GET, url);
+	}
+
+	public static Builder post(String url) {
+		return builder(POST, url);
+	}
+
+	public static Builder put(String url) {
+		return builder(PUT, url);
+	}
+
 	@Override
 	public Promise<HttpRequest> toPromise() {
 		return Promise.of(this);
@@ -113,18 +109,6 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 
 	public final class Builder extends HttpMessage.Builder<Builder, HttpRequest> {
 		private Builder() {}
-
-		public static Builder get(String url) {
-			return HttpRequest.builder(GET, url);
-		}
-
-		public static Builder post(String url) {
-			return HttpRequest.builder(POST, url);
-		}
-
-		public static Builder put(String url) {
-			return HttpRequest.builder(PUT, url);
-		}
 
 		@Override
 		protected void addCookies(List<HttpCookie> cookies) {

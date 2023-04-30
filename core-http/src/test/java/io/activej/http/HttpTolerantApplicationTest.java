@@ -124,7 +124,7 @@ public final class HttpTolerantApplicationTest {
 				.start();
 
 		String header = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.then(response -> response.loadBody()
 						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))
 						.map($ -> response.getHeader(HttpHeaders.CONTENT_TYPE))

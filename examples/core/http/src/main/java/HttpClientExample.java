@@ -79,7 +79,7 @@ public final class HttpClientExample extends Launcher {
 		String url = args.length != 0 ? args[0] : "http://127.0.0.1:8080/";
 		System.out.println("\nHTTP request: " + url);
 		CompletableFuture<String> future = reactor.submit(() ->
-				httpClient.request(HttpRequest.get(url))
+				httpClient.request(HttpRequest.get(url).build())
 						.then(response -> response.loadBody())
 						.map(body -> body.getString(UTF_8))
 		);

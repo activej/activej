@@ -114,7 +114,7 @@ public final class HttpApiTest {
 	}
 
 	private HttpRequest createRequest() {
-		return HttpRequest.Builder.get("http://127.0.0.1:" + port)
+		return HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT, ofAcceptMediaTypes(requestAcceptContentTypes))
 				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(requestAcceptCharsets))
 				.withHeader(DATE, ofInstant(requestDate))

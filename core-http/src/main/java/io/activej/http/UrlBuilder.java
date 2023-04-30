@@ -137,10 +137,6 @@ public class UrlBuilder {
 		return URLEncoder.encode(str, UTF_8);
 	}
 
-	public String build() {
-		return toString();
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

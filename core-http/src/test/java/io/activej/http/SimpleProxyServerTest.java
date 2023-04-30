@@ -79,7 +79,7 @@ public final class SimpleProxyServerTest {
 		HttpServer proxyServer = HttpServer.builder(eventloop2,
 						request -> {
 							String path = echoServerPort + request.getUrl().getPath();
-							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
+							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path).build())
 									.then(result -> result.loadBody()
 											.then(body -> HttpResponse.ofCode(result.getCode())
 													.withBody(encodeAscii("FORWARDED: " + body.getString(UTF_8)))

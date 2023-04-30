@@ -26,7 +26,7 @@ public class AsyncServletTest {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE)
 				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise());
 
-		HttpRequest testRequest = HttpRequest.Builder.post("http://example.com")
+		HttpRequest testRequest = HttpRequest.post("http://example.com")
 				.withBodyStream(ChannelSuppliers.ofValues(
 						ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
 						ByteBuf.wrapForReading("Test2".getBytes(UTF_8)))
@@ -49,7 +49,7 @@ public class AsyncServletTest {
 		ByteBuf byteBuf = ByteBufPool.allocate(100);
 		byteBuf.put("Test1".getBytes(UTF_8));
 
-		HttpRequest testRequest = HttpRequest.Builder.post("http://example.com")
+		HttpRequest testRequest = HttpRequest.post("http://example.com")
 				.withBodyStream(ChannelSuppliers.concat(
 						ChannelSuppliers.ofValue(byteBuf),
 						ChannelSuppliers.ofException(exception)

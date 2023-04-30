@@ -151,6 +151,6 @@ public final class HttpClientCube implements ICube {
 		urlParams.put(REPORT_TYPE_PARAM, query.getReportType().toString().toLowerCase());
 		String url = this.url + "/" + "?" + HttpUtils.renderQueryString(urlParams);
 
-		return HttpRequest.get(url);
+		return HttpRequest.get(url).build();
 	}
 }

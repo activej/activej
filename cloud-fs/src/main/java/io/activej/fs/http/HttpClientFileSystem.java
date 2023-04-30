@@ -90,7 +90,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (offset != 0) {
 			urlBuilder.appendQuery("offset", offset);
 		}
-		return uploadData(HttpRequest.Builder.post(url + urlBuilder.build()), identity());
+		return uploadData(HttpRequest.post(url + urlBuilder), identity());
 	}
 
 	@Override
@@ -107,9 +107,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 			urlBuilder.appendQuery("limit", limit);
 		}
 		return client.request(
-						HttpRequest.get(
-								url + urlBuilder
-										.build()))
+						HttpRequest.get(url + urlBuilder).build())
 				.then(HttpClientFileSystem::checkResponse)
 				.map(HttpMessage::takeBodyStream);
 	}
@@ -118,11 +116,10 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(
-								url + UrlBuilder.relative()
+						HttpRequest.get(url + UrlBuilder.relative()
 										.appendPathPart(LIST)
-										.appendQuery("glob", glob)
-										.build()))
+										.appendQuery("glob", glob))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.then(response -> response.loadBody())
 				.map(body -> fromJson(STRING_META_MAP_TYPE, body));
@@ -132,11 +129,10 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<@Nullable FileMetadata> info(String name) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(
-								url + UrlBuilder.relative()
+						HttpRequest.get(url + UrlBuilder.relative()
 										.appendPathPart(INFO)
-										.appendPathPart(name)
-										.build()))
+										.appendPathPart(name))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.then(response -> response.loadBody())
 				.map(body -> fromJson(FileMetadata.class, body));
@@ -146,10 +142,8 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.Builder.get(
-										url + UrlBuilder.relative()
-												.appendPathPart(INFO_ALL)
-												.build())
+						HttpRequest.get(url + UrlBuilder.relative()
+										.appendPathPart(INFO_ALL))
 								.withBody(toJson(names))
 								.build())
 				.then(HttpClientFileSystem::checkResponse)
@@ -161,10 +155,9 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Void> ping() {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(
-								url + UrlBuilder.relative()
-										.appendPathPart(PING)
-										.build()))
+						HttpRequest.get(url + UrlBuilder.relative()
+										.appendPathPart(PING))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -173,12 +166,10 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Void> move(String name, String target) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.post(
-								url + UrlBuilder.relative()
-										.appendPathPart(MOVE)
-										.appendQuery("name", name)
-										.appendQuery("target", target)
-										.build()))
+						HttpRequest.post(url + UrlBuilder.relative()
+								.appendPathPart(MOVE)
+								.appendQuery("name", name)
+								.appendQuery("target", target)).build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -190,10 +181,9 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-						HttpRequest.Builder.post(
+						HttpRequest.post(
 										url + UrlBuilder.relative()
-												.appendPathPart(MOVE_ALL)
-												.build())
+												.appendPathPart(MOVE_ALL))
 								.withBody(toJson(sourceToTarget))
 								.build())
 				.then(HttpClientFileSystem::checkResponse)
@@ -204,12 +194,11 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Void> copy(String name, String target) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.post(
-								url + UrlBuilder.relative()
+						HttpRequest.post(url + UrlBuilder.relative()
 										.appendPathPart(COPY)
 										.appendQuery("name", name)
-										.appendQuery("target", target)
-										.build()))
+										.appendQuery("target", target))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -221,10 +210,9 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-						HttpRequest.Builder.post(
+						HttpRequest.post(
 										url + UrlBuilder.relative()
-												.appendPathPart(COPY_ALL)
-												.build())
+												.appendPathPart(COPY_ALL))
 								.withBody(toJson(sourceToTarget))
 								.build())
 				.then(HttpClientFileSystem::checkResponse)
@@ -235,11 +223,11 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Void> delete(String name) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.of(HttpMethod.DELETE,
-								url + UrlBuilder.relative()
-										.appendPathPart(DELETE)
-										.appendPath(name)
-										.build()))
+						HttpRequest.builder(HttpMethod.DELETE,
+										url + UrlBuilder.relative()
+												.appendPathPart(DELETE)
+												.appendPath(name))
+								.build())
 				.then(HttpClientFileSystem::checkResponse)
 				.toVoid();
 	}
@@ -248,10 +236,9 @@ public final class HttpClientFileSystem extends AbstractReactive
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.Builder.post(
+						HttpRequest.post(
 										url + UrlBuilder.relative()
-												.appendPathPart(DELETE_ALL)
-												.build())
+												.appendPathPart(DELETE_ALL))
 								.withBody(toJson(toDelete))
 								.build())
 				.then(HttpClientFileSystem::checkResponse)
@@ -274,8 +261,8 @@ public final class HttpClientFileSystem extends AbstractReactive
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String filename, @Nullable Long size) {
-		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
-		HttpRequest.Builder builder = HttpRequest.Builder.post(url + urlBuilder.build());
+		HttpRequest.Builder builder = HttpRequest.post(
+				url + UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename));
 
 		if (size != null) {
 			builder.withHeader(CONTENT_LENGTH, String.valueOf(size));

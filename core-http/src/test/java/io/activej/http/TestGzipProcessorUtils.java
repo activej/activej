@@ -122,7 +122,7 @@ public final class TestGzipProcessorUtils {
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 
-		HttpRequest request = HttpRequest.Builder.get("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")
 				.withBodyGzipCompression()
 				.withBody(wrapUtf8(text))

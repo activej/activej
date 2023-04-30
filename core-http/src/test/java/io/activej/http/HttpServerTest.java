@@ -374,7 +374,7 @@ public final class HttpServerTest {
 	@Test
 	public void testBigHttpMessage() throws Exception {
 		byte[] body = encodeAscii("Test big HTTP message body");
-		HttpRequest request = HttpRequest.Builder.post("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
 				.withBody(body)
 				.build();
 

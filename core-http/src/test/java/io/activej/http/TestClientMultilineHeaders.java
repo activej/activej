@@ -40,7 +40,7 @@ public final class TestClientMultilineHeaders {
 				.listen();
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
-		String allowHeader = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		String allowHeader = await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
 				.map(response -> response.getHeader(ALLOW)));
 
 		assertEquals("GET,   HEAD", allowHeader);

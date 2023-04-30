@@ -43,7 +43,7 @@ public final class GzipCompressingBehaviourExample {
 
 		// !sic, you should call withAcceptEncodingGzip for your request if you want to get the response gzipped
 		client.request(
-				HttpRequest.Builder.post("http://example.com")
+				HttpRequest.post("http://example.com")
 						.withBody(encodeAscii("Hello, world!"))
 						.withBodyGzipCompression()
 						.withHeader(ACCEPT_ENCODING, "gzip")

@@ -45,7 +45,7 @@ public final class TestHttpsClient {
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor())
 				.build();
-		Integer code = await(client.request(HttpRequest.Builder.get("https://en.wikipedia.org/wiki/Wikipedia")
+		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")
 						.withHeader(CACHE_CONTROL, "max-age=0")
 						.withHeader(ACCEPT_ENCODING, "gzip, deflate, sdch")
 						.withHeader(ACCEPT_LANGUAGE, "en-US,en;q=0.8")

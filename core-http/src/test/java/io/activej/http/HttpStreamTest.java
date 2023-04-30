@@ -73,7 +73,7 @@ public final class HttpStreamTest {
 				.then(s -> Promise.of(HttpResponse.ok200().build())));
 
 		Integer code = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
+				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(200L, item)))
 						.build())
@@ -92,7 +92,7 @@ public final class HttpStreamTest {
 						.toPromise());
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.post("http://127.0.0.1:" + port))
+				.request(HttpRequest.post("http://127.0.0.1:" + port).build())
 				.async()
 				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
 				.then(response -> response.takeBodyStream().async().toCollector(ByteBufs.collector())));
@@ -110,7 +110,7 @@ public final class HttpStreamTest {
 				.then(bodyStream -> HttpResponse.ok200().withBodyStream(bodyStream.async()).toPromise()));
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
+				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSuppliers.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item)))
 						.build())
@@ -129,7 +129,7 @@ public final class HttpStreamTest {
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(expectedList);
 
 		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
+				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(supplier)
 						.build())
 				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
@@ -241,7 +241,7 @@ public final class HttpStreamTest {
 
 		Exception e = awaitException(
 				HttpClient.create(Reactor.getCurrentReactor())
-						.request(HttpRequest.Builder.post("http://127.0.0.1:" + port)
+						.request(HttpRequest.post("http://127.0.0.1:" + port)
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSuppliers.ofList(expectedList),
 										ChannelSuppliers.ofException(exception)))

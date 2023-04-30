@@ -50,7 +50,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 		String url = args.length != 0 ? args[0] : "ws://127.0.0.1:8080/";
 		System.out.println("\nConnecting to WebSocket at: " + url);
 
-		IWebSocket webSocket = reactor.submit(() -> client.webSocketRequest(HttpRequest.get(url))).get();
+		IWebSocket webSocket = reactor.submit(() -> client.webSocketRequest(HttpRequest.get(url).build())).get();
 
 		Scanner scanIn = new Scanner(System.in);
 		while (true) {

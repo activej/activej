@@ -43,7 +43,7 @@ public final class WebSocketPingClientExample extends Launcher {
 		System.out.println("\nWeb Socket request: " + url);
 		CompletableFuture<?> future = reactor.submit(() -> {
 			System.out.println("Sending: Ping");
-			return webSocketClient.webSocketRequest(HttpRequest.get(url))
+			return webSocketClient.webSocketRequest(HttpRequest.get(url).build())
 					.then(webSocket -> webSocket.writeMessage(Message.text("Ping"))
 							.then(webSocket::readMessage)
 							.whenResult(message -> System.out.println("Received: " + message.getText()))

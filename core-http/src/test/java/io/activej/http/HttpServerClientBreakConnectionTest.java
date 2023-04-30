@@ -58,7 +58,7 @@ public class HttpServerClientBreakConnectionTest {
 	@Test
 	public void testBreakConnection() {
 		String result = await(client.request(
-						HttpRequest.Builder.post("http://127.0.0.1:" + freePort)
+						HttpRequest.post("http://127.0.0.1:" + freePort)
 								.withBody("Hello World".getBytes())
 								.build())
 				.then(response ->

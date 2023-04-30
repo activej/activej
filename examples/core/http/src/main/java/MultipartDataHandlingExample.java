@@ -98,7 +98,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
 		CompletableFuture<Integer> future = reactor.submit(() ->
-				client.request(HttpRequest.Builder.post("http://localhost:8080/handleMultipart")
+				client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
 								.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
 								.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST))
 								.build())

@@ -71,35 +71,35 @@ public class TestUtils {
 	@Test
 	public void testFullUriHttp() {
 		String fullUri = "http://localhost:8080/example/test?param=1&param=2#test";
-		HttpRequest httpRequest = HttpRequest.get(fullUri);
+		HttpRequest httpRequest = HttpRequest.get(fullUri).build();
 		assertEquals(getFullUri(httpRequest), fullUri);
 	}
 
 	@Test
 	public void testFullUriHttps() {
 		String fullUri = "https://localhost:8080/";
-		HttpRequest httpRequest = HttpRequest.get(fullUri);
+		HttpRequest httpRequest = HttpRequest.get(fullUri).build();
 		assertEquals(fullUri, getFullUri(httpRequest));
 	}
 
 	@Test
 	public void testFullUriWithoutSlash() {
 		String fullUri = "https://localhost:8080";
-		HttpRequest httpRequest = HttpRequest.get(fullUri);
+		HttpRequest httpRequest = HttpRequest.get(fullUri).build();
 		assertEquals(fullUri + "/", getFullUri(httpRequest));
 	}
 
 	@Test
 	public void testFullUriWithoutPath() {
 		String fullUri = "https://localhost:8080?test=test&test2=test2";
-		HttpRequest httpRequest = HttpRequest.get(fullUri);
+		HttpRequest httpRequest = HttpRequest.get(fullUri).build();
 		assertEquals("https://localhost:8080" + "/" + "?test=test&test2=test2", getFullUri(httpRequest));
 	}
 
 	@Test
 	public void testFullUriWithSlashWithoutPath() {
 		String fullUri = "https://localhost:8080/?test=test&test2=test2";
-		HttpRequest httpRequest = HttpRequest.get(fullUri);
+		HttpRequest httpRequest = HttpRequest.get(fullUri).build();
 		assertEquals(fullUri, getFullUri(httpRequest));
 	}
 
@@ -111,7 +111,7 @@ public class TestUtils {
 	@Test
 	public void test() {
 		String fullUri = "https://localhost:8080#####################";
-		HttpRequest httpRequest = HttpRequest.get(fullUri);
+		HttpRequest httpRequest = HttpRequest.get(fullUri).build();
 		assertEquals("https://localhost:8080/#####################", getFullUri(httpRequest));
 	}
 }

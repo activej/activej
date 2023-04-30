@@ -23,7 +23,7 @@ public final class HttpHeadersTest {
 
 	@Test
 	public void testValuesToStrings() {
-		HttpRequest request = HttpRequest.Builder.post("http://example.com")
+		HttpRequest request = HttpRequest.post("http://example.com")
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withHeader(ACCEPT, ofAcceptMediaTypes(AcceptMediaType.of(ANY_IMAGE, 50), AcceptMediaType.of(MediaTypes.HTML)))
 				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(AcceptCharset.of(UTF_8), AcceptCharset.of(ISO_8859_1)))
@@ -44,7 +44,7 @@ public final class HttpHeadersTest {
 
 	@Test
 	public void testHeadersSize() {
-		HttpRequest request = HttpRequest.Builder.post("http://example.com")
+		HttpRequest request = HttpRequest.post("http://example.com")
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withHeader(ACCEPT, ofAcceptMediaTypes(AcceptMediaType.of(ANY_IMAGE, 50), AcceptMediaType.of(MediaTypes.HTML)))
 				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(AcceptCharset.of(UTF_8), AcceptCharset.of(ISO_8859_1)))
