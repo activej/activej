@@ -21,7 +21,6 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
 import io.activej.csp.consumer.AbstractChannelConsumer;
@@ -50,8 +49,6 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class WebSocket extends AbstractAsyncCloseable implements IWebSocket {
-	private static final boolean CHECKS = Checks.isEnabled(WebSocket.class);
-
 	private final HttpRequest request;
 	private final HttpResponse response;
 	private final Consumer<WebSocketException> onProtocolError;
@@ -185,9 +182,7 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 
 	// region sanitizers
 	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
-		if (CHECKS) {
-			checkState(readPromise == null, "Concurrent reads");
-		}
+		checkState(readPromise == null, "Concurrent reads");
 
 		if (isClosed()) return Promise.ofException(getException());
 
@@ -203,9 +198,7 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
 		checkInReactorThread(this);
-		if (CHECKS) {
-			checkState(writePromise == null, "Concurrent writes");
-		}
+		checkState(writePromise == null, "Concurrent writes");
 
 		if (isClosed()) {
 			if (recyclable != null) recyclable.recycle();
