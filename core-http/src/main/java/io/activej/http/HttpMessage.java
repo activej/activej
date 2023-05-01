@@ -84,9 +84,8 @@ public abstract class HttpMessage {
 	}
 
 	@SuppressWarnings("unchecked")
-	public abstract class Builder<B extends Builder<B, T>, T extends HttpMessage>
+	protected abstract class Builder<B extends Builder<B, T>, T extends HttpMessage>
 			implements io.activej.common.builder.Builder<T>, ToPromise<T>, WithInitializer<B> {
-		protected Builder() {}
 
 		public final B withHeader(HttpHeader header, String string) {
 			HttpHeaderValue headerValue = HttpHeaderValue.of(string);
@@ -168,7 +167,7 @@ public abstract class HttpMessage {
 		}
 
 		@Override
-		public final T build() {
+		public T build() {
 			return (T) HttpMessage.this;
 		}
 	}

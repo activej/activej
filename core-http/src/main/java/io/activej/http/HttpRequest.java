@@ -66,7 +66,6 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 	private Map<String, String> queryParameters;
 	private Map<String, String> postParameters;
 
-	// region creators
 	HttpRequest(HttpVersion version, HttpMethod method, UrlParser url, @Nullable HttpServerConnection connection) {
 		super(version);
 		this.method = method;
@@ -120,7 +119,6 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 			addCookies(List.of(cookie));
 		}
 	}
-	// endregion
 
 	@Contract(pure = true)
 	public HttpMethod getMethod() {

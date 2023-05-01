@@ -5,12 +5,14 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
+import io.activej.common.initializer.Initializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.process.transformer.ChannelTransformers;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpClient.JmxInspector;
+import io.activej.http.HttpMessage.Builder;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
@@ -198,7 +200,7 @@ public final class AbstractHttpConnectionTest {
 		doTestHugeStreams(client, socketSettings, size, httpMessage -> {});
 
 		// gzipped + chunked
-		doTestHugeStreams(client, socketSettings, size, HttpMessage.Builder::withBodyGzipCompression);
+		doTestHugeStreams(client, socketSettings, size, Builder::withBodyGzipCompression);
 	}
 
 	@Test
@@ -271,14 +273,18 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testEmptyRequestResponse() {
-		List<Consumer<HttpMessage.Builder<?, ?>>> messageDecorators = List.of(
+		//noinspection Convert2MethodRef
+		List<Initializer<HttpMessage.Builder<?, ?>>> initializers = List.of(
 				builder -> {},
-				HttpMessage.Builder::withBodyGzipCompression,
-				builder -> builder.withHeader(CONTENT_LENGTH, "0"),
+				builder -> builder
+						.withBodyGzipCompression(),
+				builder -> builder
+						.withHeader(CONTENT_LENGTH, "0"),
 				builder -> builder
 						.withBodyGzipCompression()
 						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder.withBody(ByteBuf.empty()),
+				builder -> builder
+						.withBody(ByteBuf.empty()),
 				builder -> builder
 						.withBody(ByteBuf.empty())
 						.withBodyGzipCompression(),
@@ -289,7 +295,8 @@ public final class AbstractHttpConnectionTest {
 						.withBody(ByteBuf.empty())
 						.withBodyGzipCompression()
 						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder.withBodyStream(ChannelSuppliers.empty()),
+				builder -> builder
+						.withBodyStream(ChannelSuppliers.empty()),
 				builder -> builder
 						.withBodyStream(ChannelSuppliers.empty())
 						.withBodyGzipCompression(),
@@ -302,7 +309,7 @@ public final class AbstractHttpConnectionTest {
 						.withHeader(CONTENT_LENGTH, "0")
 		);
 
-		doTestEmptyRequestResponsePermutations(messageDecorators);
+		doTestEmptyRequestResponsePermutations(initializers);
 	}
 
 	@Test
@@ -483,18 +490,16 @@ public final class AbstractHttpConnectionTest {
 				.then(AbstractHttpConnectionTest::post);
 	}
 
-	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage.Builder<?, ?>>> messageDecorators) {
+	private void doTestEmptyRequestResponsePermutations(List<Initializer<HttpMessage.Builder<?, ?>>> initializers) {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		for (int i = 0; i < messageDecorators.size(); i++) {
-			for (int j = 0; j < messageDecorators.size(); j++) {
+		for (int i = 0; i < initializers.size(); i++) {
+			for (int j = 0; j < initializers.size(); j++) {
 				try {
-					Consumer<HttpMessage.Builder<?, ?>> responseDecorator = messageDecorators.get(j);
+					Initializer<HttpMessage.Builder<?, ?>> responseInitializer = initializers.get(j);
 					HttpServer server = HttpServer.builder(reactor,
-									$ -> {
-										HttpResponse.Builder responseBuilder = HttpResponse.ok200();
-										responseDecorator.accept(responseBuilder);
-										return responseBuilder.toPromise();
-									})
+									$ -> HttpResponse.ok200()
+											.initialize(responseInitializer)
+											.toPromise())
 							.withListenPort(port)
 							.withAcceptOnce()
 							.build();
@@ -505,10 +510,8 @@ public final class AbstractHttpConnectionTest {
 						throw new AssertionError(e);
 					}
 
-					HttpRequest.Builder requestBuilder = HttpRequest.post(url);
-					messageDecorators.get(i).accept(requestBuilder);
-
-					String responseText = await(client.request(requestBuilder.build())
+					String responseText = await(client.request(
+									HttpRequest.post(url).initialize(initializers.get(i)).build())
 							.then(response -> response.loadBody())
 							.map(buf -> buf.getString(UTF_8)));
 
@@ -522,7 +525,7 @@ public final class AbstractHttpConnectionTest {
 		}
 	}
 
-	private void doTestHugeStreams(IHttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage.Builder<?, ?>> decorator) throws IOException {
+	private void doTestHugeStreams(IHttpClient client, SocketSettings socketSettings, int size, Consumer<Builder<?, ?>> decorator) throws IOException {
 		ByteBuf expected = ByteBufPool.allocate(size);
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
 						request -> request.loadBody()

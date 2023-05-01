@@ -117,7 +117,6 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 
 	private @Nullable Map<String, HttpCookie> parsedCookies;
 
-	// region creators
 	HttpResponse(HttpVersion version, int code, @Nullable HttpClientConnection connection) {
 		super(version);
 		this.code = code;
@@ -177,22 +176,9 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 	public static Builder notFound404() {
 		return ofCode(404);
 	}
-	// endregion
 
 	public final class Builder extends HttpMessage.Builder<Builder, HttpResponse> {
 		private Builder() {}
-
-		@Override
-		public void addCookies(List<HttpCookie> cookies) {
-			for (HttpCookie cookie : cookies) {
-				addCookie(cookie);
-			}
-		}
-
-		@Override
-		public void addCookie(HttpCookie cookie) {
-			headers.add(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
-		}
 
 		public Builder withPlainText(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
@@ -207,6 +193,18 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		public Builder withJson(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 					.withBody(text.getBytes(UTF_8));
+		}
+
+		@Override
+		protected void addCookies(List<HttpCookie> cookies) {
+			for (HttpCookie cookie : cookies) {
+				addCookie(cookie);
+			}
+		}
+
+		@Override
+		protected void addCookie(HttpCookie cookie) {
+			headers.add(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
 		}
 	}
 
