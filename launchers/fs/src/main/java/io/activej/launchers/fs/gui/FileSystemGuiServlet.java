@@ -57,8 +57,8 @@ public final class FileSystemGuiServlet {
 		Mustache mustache = new DefaultMustacheFactory().compile("fs/gui/static/index.html");
 		RoutingServlet fsServlet = FileSystemServlet.create(reactor, fs);
 
-		RoutingServlet uploadServlet = fsServlet.getSubtree("/" + UPLOAD);
-		RoutingServlet downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
+		RoutingServlet uploadServlet = fsServlet.getChild("/" + UPLOAD);
+		RoutingServlet downloadServlet = fsServlet.getChild("/" + DOWNLOAD);
 		assert uploadServlet != null && downloadServlet != null;
 
 		return RoutingServlet.builder(reactor)

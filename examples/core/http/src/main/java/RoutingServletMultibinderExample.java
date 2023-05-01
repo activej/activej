@@ -40,8 +40,7 @@ import static io.activej.http.HttpMethod.POST;
 public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 
 	//[START MULTIBINDER]
-	public static final Multibinder<RoutingServlet> SERVLET_MULTIBINDER = Multibinders.ofBinaryOperator((servlet1, servlet2) ->
-			servlet1.merge(servlet2));
+	public static final Multibinder<RoutingServlet> SERVLET_MULTIBINDER = Multibinders.ofBinaryOperator(RoutingServlet::merge);
 	//[END MULTIBINDER]
 
 	//[START MAIN_MODULE]
