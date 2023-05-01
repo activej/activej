@@ -113,7 +113,7 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 
 	private final HttpClientConnection connection;
 
-	private final int code;
+	private int code;
 
 	private @Nullable Map<String, HttpCookie> parsedCookies;
 
@@ -127,9 +127,12 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		this(version, code, null);
 	}
 
+	public static Builder builder() {
+		return new HttpResponse(HTTP_1_1, 0).new Builder();
+	}
+
 	public static Builder ofCode(int code) {
-		if (CHECKS) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
-		return new HttpResponse(HTTP_1_1, code).new Builder();
+		return builder().withCode(code);
 	}
 
 	public static Builder ok200() {
@@ -180,6 +183,12 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 	public final class Builder extends HttpMessage.Builder<Builder, HttpResponse> {
 		private Builder() {}
 
+		public Builder withCode(int code) {
+			if (CHECKS) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
+			HttpResponse.this.code = code;
+			return this;
+		}
+
 		public Builder withPlainText(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody(text.getBytes(UTF_8));
@@ -205,6 +214,13 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 		@Override
 		protected void addCookie(HttpCookie cookie) {
 			headers.add(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
+		}
+
+		@Override
+		public HttpResponse build() {
+			HttpResponse httpResponse = super.build();
+			checkArgument(httpResponse.code > 0);
+			return httpResponse;
 		}
 	}
 
