@@ -101,6 +101,7 @@
                 <exclude>**/CubeBackupControllerTest.java</exclude>
                 <exclude>**/ChunkLockerMySqlTest.java</exclude>
                 <exclude>**/ChunkLockerMySqlDeadlockTest.java</exclude>
+                <exclude>**/CubeMySqlOTUplinkTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
