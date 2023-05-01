@@ -46,13 +46,13 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO, DslJson<?> dslJson) {
-		return RoutingServlet.create(reactor)
-				.map("/*", StaticServlet.builder(reactor, staticLoader)
+		return RoutingServlet.builder(reactor)
+				.with("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()
 						.build())
 				//[END REGION_2]
 				//[START REGION_3]
-				.map(POST, "/add", request -> request.loadBody()
+				.with(POST, "/add", request -> request.loadBody()
 						.then($ -> {
 							ByteBuf body = request.getBody();
 							try {
@@ -64,7 +64,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 								return HttpResponse.ofCode(400).toPromise();
 							}
 						}))
-				.map(GET, "/get/all", request -> {
+				.with(GET, "/get/all", request -> {
 					Map<Integer, Record> records = recordDAO.findAll();
 					JsonWriter writer = dslJson.newWriter();
 					try {
@@ -77,13 +77,13 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							.toPromise();
 				})
 				//[START REGION_4]
-				.map(GET, "/delete/:recordId", request -> {
+				.with(GET, "/delete/:recordId", request -> {
 					int id = parseInt(request.getPathParameter("recordId"));
 					recordDAO.delete(id);
 					return HttpResponse.ok200().toPromise();
 				})
 				//[END REGION_4]
-				.map(GET, "/toggle/:recordId/:planId", request -> {
+				.with(GET, "/toggle/:recordId/:planId", request -> {
 					int id = parseInt(request.getPathParameter("recordId"));
 					int planId = parseInt(request.getPathParameter("planId"));
 
@@ -91,7 +91,8 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					Plan plan = record.getPlans().get(planId);
 					plan.toggle();
 					return HttpResponse.ok200().toPromise();
-				});
+				})
+				.build();
 		//[END REGION_3]
 	}
 

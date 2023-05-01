@@ -64,8 +64,8 @@ public final class FileSystemServlet {
 	}
 
 	public static RoutingServlet create(Reactor reactor, IFileSystem fs, boolean inline) {
-		return RoutingServlet.create(reactor)
-				.map(POST, "/" + UPLOAD + "/*", request -> {
+		return RoutingServlet.builder(reactor)
+				.with(POST, "/" + UPLOAD + "/*", request -> {
 					String contentLength = request.getHeader(CONTENT_LENGTH);
 					Long size = contentLength == null ? null : Long.valueOf(contentLength);
 					return (size == null ?
@@ -73,14 +73,14 @@ public final class FileSystemServlet {
 							fs.upload(decodePath(request), size))
 							.then(uploadAcknowledgeFn(request), errorResponseFn());
 				})
-				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(AsyncMultipartDataHandler.file(fs::upload))
+				.with(POST, "/" + UPLOAD, request -> request.handleMultipart(AsyncMultipartDataHandler.file(fs::upload))
 						.then(voidResponseFn(), errorResponseFn()))
-				.map(POST, "/" + APPEND + "/*", request -> {
+				.with(POST, "/" + APPEND + "/*", request -> {
 					long offset = getNumberParameterOr(request, "offset", 0);
 					return fs.append(decodePath(request), offset)
 							.then(uploadAcknowledgeFn(request), errorResponseFn());
 				})
-				.map(GET, "/" + DOWNLOAD + "/*", request -> {
+				.with(GET, "/" + DOWNLOAD + "/*", request -> {
 					String name = decodePath(request);
 					String rangeHeader = request.getHeader(HttpHeaders.RANGE);
 					if (rangeHeader != null) {
@@ -99,7 +99,7 @@ public final class FileSystemServlet {
 											.toPromise(),
 									errorResponseFn());
 				})
-				.map(GET, "/" + LIST, request -> {
+				.with(GET, "/" + LIST, request -> {
 					String glob = request.getQueryParameter("glob");
 					glob = glob != null ? glob : "**";
 					return fs.list(glob)
@@ -109,14 +109,14 @@ public final class FileSystemServlet {
 											.toPromise(),
 									errorResponseFn());
 				})
-				.map(GET, "/" + INFO + "/*", request ->
+				.with(GET, "/" + INFO + "/*", request ->
 						fs.info(decodePath(request))
 								.then(meta -> HttpResponse.ok200()
 												.withBody(toJson(meta))
 												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 												.toPromise(),
 										errorResponseFn()))
-				.map(GET, "/" + INFO_ALL, request -> request.loadBody()
+				.with(GET, "/" + INFO_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::infoAll)
 						.then(map -> HttpResponse.ok200()
@@ -124,35 +124,36 @@ public final class FileSystemServlet {
 										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 										.toPromise(),
 								errorResponseFn()))
-				.map(GET, "/" + PING, request -> fs.ping()
+				.with(GET, "/" + PING, request -> fs.ping()
 						.then(voidResponseFn(), errorResponseFn()))
-				.map(POST, "/" + MOVE, request -> {
+				.with(POST, "/" + MOVE, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.move(name, target)
 							.then(voidResponseFn(), errorResponseFn());
 				})
-				.map(POST, "/" + MOVE_ALL, request -> request.loadBody()
+				.with(POST, "/" + MOVE_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::moveAll)
 						.then(voidResponseFn(), errorResponseFn()))
-				.map(POST, "/" + COPY, request -> {
+				.with(POST, "/" + COPY, request -> {
 					String name = getQueryParameter(request, "name");
 					String target = getQueryParameter(request, "target");
 					return fs.copy(name, target)
 							.then(voidResponseFn(), errorResponseFn());
 				})
-				.map(POST, "/" + COPY_ALL, request -> request.loadBody()
+				.with(POST, "/" + COPY_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
 						.then(fs::copyAll)
 						.then(voidResponseFn(), errorResponseFn()))
-				.map(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
+				.with(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 						fs.delete(decodePath(request))
 								.then(voidResponseFn(), errorResponseFn()))
-				.map(POST, "/" + DELETE_ALL, request -> request.loadBody()
+				.with(POST, "/" + DELETE_ALL, request -> request.loadBody()
 						.map(body -> fromJson(STRING_SET_TYPE, body))
 						.then(fs::deleteAll)
-						.then(voidResponseFn(), errorResponseFn()));
+						.then(voidResponseFn(), errorResponseFn()))
+				.build();
 	}
 
 	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, String name, long size, boolean inline, @Nullable String rangeHeader) {

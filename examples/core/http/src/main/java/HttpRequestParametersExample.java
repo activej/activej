@@ -30,23 +30,24 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
-		return RoutingServlet.create(reactor)
-				.map(POST, "/hello", request -> request.loadBody()
+		return RoutingServlet.builder(reactor)
+				.with(POST, "/hello", request -> request.loadBody()
 						.then($ -> {
 							String name = request.getPostParameters().get("name");
 							return HttpResponse.ok200()
 									.withHtml("<h1><center>Hello from POST, " + name + "!</center></h1>")
 									.toPromise();
 						}))
-				.map(GET, "/hello", request -> {
+				.with(GET, "/hello", request -> {
 					String name = request.getQueryParameter("name");
 					return HttpResponse.ok200()
 							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>")
 							.toPromise();
 				})
-				.map("/*", StaticServlet.builder(reactor, staticLoader)
+				.with("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()
-						.build());
+						.build())
+				.build();
 	}
 	//[END REGION_1]
 

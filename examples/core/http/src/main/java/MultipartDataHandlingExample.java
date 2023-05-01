@@ -81,8 +81,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	//[START SERVLET]
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
-		return RoutingServlet.create(reactor)
-				.map(POST, "/handleMultipart", request -> {
+		return RoutingServlet.builder(reactor)
+				.with(POST, "/handleMultipart", request -> {
 					Map<String, String> fields = new HashMap<>();
 
 					return request.handleMultipart(AsyncMultipartDataHandler.fieldsToMap(fields, this::upload))
@@ -91,7 +91,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 								logger.info("Uploaded {} files total", fileUploadsCount);
 								return HttpResponse.ok200().toPromise();
 							});
-				});
+				})
+				.build();
 	}
 	//[END SERVLET]
 

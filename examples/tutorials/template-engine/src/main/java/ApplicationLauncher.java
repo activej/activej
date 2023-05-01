@@ -40,13 +40,13 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 		Mustache singlePollCreate = new DefaultMustacheFactory().compile("templates/singlePollCreate.html");
 		Mustache listPolls = new DefaultMustacheFactory().compile("templates/listPolls.html");
 
-		return RoutingServlet.create(reactor)
-				.map(GET, "/", request -> HttpResponse.ok200()
+		return RoutingServlet.builder(reactor)
+				.with(GET, "/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(listPolls, Map.of("polls", pollDao.findAll().entrySet())))
 						.toPromise())
 				//[END REGION_2]
 				//[START REGION_3]
-				.map(GET, "/poll/:id", request -> {
+				.with(GET, "/poll/:id", request -> {
 					int id = Integer.parseInt(request.getPathParameter("id"));
 					return HttpResponse.ok200()
 							.withBody(applyTemplate(singlePollView, Map.of("id", id, "poll", pollDao.find(id))))
@@ -54,11 +54,11 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 				})
 				//[END REGION_3]
 				//[START REGION_4]
-				.map(GET, "/create", request ->
+				.with(GET, "/create", request ->
 						HttpResponse.ok200()
 								.withBody(applyTemplate(singlePollCreate, Map.of()))
 								.toPromise())
-				.map(POST, "/vote", request -> request.loadBody()
+				.with(POST, "/vote", request -> request.loadBody()
 						.then(() -> {
 							Map<String, String> params = request.getPostParameters();
 							String option = params.get("option");
@@ -74,7 +74,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 							return HttpResponse.redirect302(nonNullElse(request.getHeader(REFERER), "/")).toPromise();
 						}))
-				.map(POST, "/add", request -> request.loadBody()
+				.with(POST, "/add", request -> request.loadBody()
 						.then($ -> {
 							Map<String, String> params = request.getPostParameters();
 							String title = params.get("title");
@@ -86,7 +86,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							int id = pollDao.add(new PollDao.Poll(title, message, List.of(option1, option2)));
 							return HttpResponse.redirect302("poll/" + id).toPromise();
 						}))
-				.map(POST, "/delete", request -> request.loadBody()
+				.with(POST, "/delete", request -> request.loadBody()
 						.then(() -> {
 							Map<String, String> params = request.getPostParameters();
 							String id = params.get("id");
@@ -96,7 +96,8 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							pollDao.remove(Integer.parseInt(id));
 
 							return HttpResponse.redirect302("/").toPromise();
-						}));
+						}))
+				.build();
 		//[END REGION_4]
 	}
 

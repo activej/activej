@@ -41,12 +41,13 @@ public class UiKernelServlets {
 	private static final String ID_PARAMETER_NAME = "id";
 
 	public static <K, R extends AbstractRecord<K>> RoutingServlet apiServlet(Reactor reactor, IGridModel<K, R> model, Gson gson) {
-		return RoutingServlet.create(reactor)
-				.map(POST, "/", create(model, gson))
-				.map(GET, "/", read(model, gson))
-				.map(PUT, "/", update(model, gson))
-				.map(DELETE, "/:" + ID_PARAMETER_NAME, delete(model, gson))
-				.map(GET, "/:" + ID_PARAMETER_NAME, get(model, gson));
+		return RoutingServlet.builder(reactor)
+				.with(POST, "/", create(model, gson))
+				.with(GET, "/", read(model, gson))
+				.with(PUT, "/", update(model, gson))
+				.with(DELETE, "/:" + ID_PARAMETER_NAME, delete(model, gson))
+				.with(GET, "/:" + ID_PARAMETER_NAME, get(model, gson))
+				.build();
 	}
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet read(IGridModel<K, R> model, Gson gson) {

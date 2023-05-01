@@ -69,8 +69,9 @@ public final class ReportingServiceServlet extends ServletWithStats {
 	}
 
 	public static RoutingServlet createRootServlet(ReportingServiceServlet reportingServiceServlet) {
-		return RoutingServlet.create(reportingServiceServlet.reactor)
-				.map(GET, "/", reportingServiceServlet);
+		return RoutingServlet.builder(reportingServiceServlet.reactor)
+				.with(GET, "/", reportingServiceServlet)
+				.build();
 	}
 
 	public static Builder builder(Reactor reactor, ICube cube) {

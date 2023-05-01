@@ -22,8 +22,8 @@ public final class HostRoutingExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("Test") AsyncServlet testServlet, @Named("Example") AsyncServlet exampleServlet) {
-		return RoutingServlet.create(reactor)
-				.map("/*", request -> {
+		return RoutingServlet.builder(reactor)
+				.with("/*", request -> {
 					String hostHeader = request.getHeader(HttpHeaders.HOST);
 					if (hostHeader == null) {
 						return HttpResponse.ofCode(400)
@@ -39,7 +39,8 @@ public final class HostRoutingExample extends HttpServerLauncher {
 					return HttpResponse.ofCode(400)
 							.withPlainText("Unknown host")
 							.toPromise();
-				});
+				})
+				.build();
 	}
 
 	@Provides

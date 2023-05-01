@@ -59,8 +59,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 			MapCrdtStorage<K, S> client,
 			OptionalDependency<BackupService<K, S>> backupServiceOpt
 	) {
-		RoutingServlet servlet = RoutingServlet.create(reactor)
-				.map(POST, "/", request -> request.loadBody()
+		return RoutingServlet.builder(reactor)
+				.with(POST, "/", request -> request.loadBody()
 						.then(body -> {
 							try {
 								K key = fromJson(descriptor.keyManifest(), body);
@@ -77,7 +77,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								throw HttpError.ofCode(400, e);
 							}
 						}))
-				.map(PUT, "/", request -> request.loadBody()
+				.with(PUT, "/", request -> request.loadBody()
 						.then(body -> {
 							try {
 								client.put(fromJson(crdtDataManifest.getType(), body));
@@ -86,7 +86,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 								throw HttpError.ofCode(400, e);
 							}
 						}))
-				.map(DELETE, "/", request -> request.loadBody()
+				.with(DELETE, "/", request -> request.loadBody()
 						.then(body -> {
 							try {
 								K key = fromJson(descriptor.keyManifest(), body);
@@ -99,28 +99,30 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 							} catch (MalformedDataException e) {
 								throw HttpError.ofCode(400, e);
 							}
-						}));
-		if (!backupServiceOpt.isPresent()) {
-			return servlet;
-		}
-		BackupService<K, S> backupService = backupServiceOpt.get();
-		return servlet
-				.map(POST, "/backup", request -> {
-					if (backupService.backupInProgress()) {
-						return HttpResponse.ofCode(403)
-								.withBody("Backup is already in progress".getBytes(UTF_8))
-								.toPromise();
+						}))
+				.initialize(builder -> {
+					if (backupServiceOpt.isPresent()) {
+						BackupService<K, S> backupService = backupServiceOpt.get();
+						builder
+								.with(POST, "/backup", request -> {
+									if (backupService.backupInProgress()) {
+										return HttpResponse.ofCode(403)
+												.withBody("Backup is already in progress".getBytes(UTF_8))
+												.toPromise();
+									}
+									backupService.backup();
+									return HttpResponse.ofCode(202).toPromise();
+								})
+								.with(POST, "/awaitBackup", request ->
+										backupService.backupInProgress() ?
+												backupService.backup()
+														.then($ -> HttpResponse.ofCode(204)
+																.withBody("Finished already running backup".getBytes(UTF_8))
+																.toPromise()) :
+												backupService.backup()
+														.then($ -> HttpResponse.ok200().toPromise()));
 					}
-					backupService.backup();
-					return HttpResponse.ofCode(202).toPromise();
 				})
-				.map(POST, "/awaitBackup", request ->
-						backupService.backupInProgress() ?
-								backupService.backup()
-										.then($ -> HttpResponse.ofCode(204)
-												.withBody("Finished already running backup".getBytes(UTF_8))
-												.toPromise()) :
-								backupService.backup()
-										.then($ -> HttpResponse.ok200().toPromise()));
+				.build();
 	}
 }

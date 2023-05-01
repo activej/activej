@@ -17,18 +17,19 @@ public final class GzipCompressingBehaviourExample {
 				.withFatalErrorHandler(rethrow())
 				.withCurrentThread()
 				.build();
-		RoutingServlet servlet = RoutingServlet.create(eventloop)
+		RoutingServlet servlet = RoutingServlet.builder(eventloop)
 				// always responds in gzip
-				.map(GET, "/gzip/",
+				.with(GET, "/gzip/",
 						request -> HttpResponse.ok200()
 								.withBodyGzipCompression()
 								.withBody(encodeAscii("Hello!"))
 								.toPromise())
 				// never responds in gzip
-				.map(GET, "/nogzip/",
+				.with(GET, "/nogzip/",
 						request -> HttpResponse.ok200()
 								.withBody(encodeAscii("Hello!"))
-								.toPromise());
+								.toPromise())
+				.build();
 
 		HttpServer.builder(eventloop, servlet)
 				.withListenPort(getFreePort())

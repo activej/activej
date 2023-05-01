@@ -19,16 +19,17 @@ public final class BlockingServletExample extends HttpServerLauncher {
 	//[START EXAMPLE]
 	@Provides
 	AsyncServlet servlet(Reactor reactor, Executor executor) {
-		return RoutingServlet.create(reactor)
-				.map("/", request -> HttpResponse.ok200()
+		return RoutingServlet.builder(reactor)
+				.with("/", request -> HttpResponse.ok200()
 						.withHtml("<a href='hardWork'>Do hard work</a>")
 						.toPromise())
-				.map("/hardWork", AsyncServlet.ofBlocking(executor, request -> {
+				.with("/hardWork", AsyncServlet.ofBlocking(executor, request -> {
 					Thread.sleep(2000); //Hard work
 					return HttpResponse.ok200()
 							.withHtml("Hard work is done")
 							.build();
-				}));
+				}))
+				.build();
 	}
 	//[END EXAMPLE]
 

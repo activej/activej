@@ -71,17 +71,17 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 
 		IStaticLoader staticLoader = IStaticLoader.ofClassPath(reactor, executor, "debug");
 
-		this.servlet = RoutingServlet.create(reactor)
-				.map("/*", StaticServlet.builder(reactor, staticLoader)
+		this.servlet = RoutingServlet.builder(reactor)
+				.with("/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()
 						.build())
-				.map("/api/*", RoutingServlet.create(reactor)
-						.map(GET, "/partitions", request -> ok200()
+				.with("/api/*", RoutingServlet.builder(reactor)
+						.with(GET, "/partitions", request -> ok200()
 								.withJson(objectMapper.writeValueAsString(partitions.stream()
 										.map(Partition::address)
 										.collect(Collectors.toList())))
 								.toPromise())
-						.map(GET, "/tasks", request ->
+						.with(GET, "/tasks", request ->
 								Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
 										.then(partitionStats -> {
 											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
@@ -96,7 +96,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 													.withJson(objectMapper.writeValueAsString(tasks))
 													.toPromise();
 										}))
-						.map(GET, "/tasks/:taskID", request -> {
+						.with(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
 							return Promises.toList(partitions.stream().map(p -> getTask(p.address(), id)).collect(toList()))
 									.then(localStats -> {
@@ -131,7 +131,7 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 												.toPromise();
 									});
 						})
-						.map(GET, "/tasks/:taskID/:index", request -> {
+						.with(GET, "/tasks/:taskID/:index", request -> {
 							long id = getTaskId(request);
 							String indexParam = request.getPathParameter("index");
 							Partition partition;
@@ -149,7 +149,9 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 													task.finishTime(),
 													task.error())))
 											.toPromise());
-						}));
+						})
+						.build())
+				.build();
 	}
 
 	private static @Nullable NodeStat reduce(List<NodeStat> stats, ResourceLocator env) {

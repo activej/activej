@@ -40,15 +40,16 @@ public final class FileUploadExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Executor executor) {
-		return RoutingServlet.create(reactor)
-				.map(GET, "/*", StaticServlet.builder(reactor, staticLoader)
+		return RoutingServlet.builder(reactor)
+				.with(GET, "/*", StaticServlet.builder(reactor, staticLoader)
 						.withIndexHtml()
 						.build())
-				.map(POST, "/test", request ->
+				.with(POST, "/test", request ->
 						request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))
 								.then($ -> HttpResponse.ok200()
 										.withPlainText("Upload successful")
-										.toPromise()));
+										.toPromise()))
+				.build();
 	}
 	//[END EXAMPLE]
 

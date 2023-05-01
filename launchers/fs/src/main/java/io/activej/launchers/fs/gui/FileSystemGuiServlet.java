@@ -61,10 +61,10 @@ public final class FileSystemGuiServlet {
 		RoutingServlet downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
 		assert uploadServlet != null && downloadServlet != null;
 
-		return RoutingServlet.create(reactor)
-				.map("/api/upload", uploadServlet)
-				.map("/api/download/*", downloadServlet)
-				.map(POST, "/api/newDir", request -> request.loadBody()
+		return RoutingServlet.builder(reactor)
+				.with("/api/upload", uploadServlet)
+				.with("/api/download/*", downloadServlet)
+				.with(POST, "/api/newDir", request -> request.loadBody()
 						.then(() -> {
 							String dir = request.getPostParameter("dir");
 							if (dir == null || dir.isEmpty())
@@ -74,7 +74,7 @@ public final class FileSystemGuiServlet {
 							return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
 									.then($ -> HttpResponse.ok200().toPromise());
 						}))
-				.map("/", request -> {
+				.with("/", request -> {
 					String dir = decodeDir(request);
 					return fs.list(dir + "**")
 							.then(
@@ -97,7 +97,8 @@ public final class FileSystemGuiServlet {
 										}
 									});
 				})
-				.map("/*", $ -> HttpResponse.notFound404().toPromise());
+				.with("/*", $ -> HttpResponse.notFound404().toPromise())
+				.build();
 	}
 
 	private static ByteBuf applyTemplate(Mustache mustache, Map<String, Object> scopes) {

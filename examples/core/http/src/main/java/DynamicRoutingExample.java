@@ -17,14 +17,15 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
-		return RoutingServlet.create(reactor)
-				.map("/*", request -> {
+		return RoutingServlet.builder(reactor)
+				.with("/*", request -> {
 					if (ThreadLocalRandom.current().nextBoolean()) {
 						return firstServlet.serve(request);
 					} else {
 						return secondServlet.serve(request);
 					}
-				});
+				})
+				.build();
 	}
 
 	@Provides

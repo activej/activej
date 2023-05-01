@@ -66,16 +66,17 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	private static final class ModuleA extends AbstractModule {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
-			return RoutingServlet.create(reactor)
-					.map(GET, "/a", request -> HttpResponse.ok200()
+			return RoutingServlet.builder(reactor)
+					.with(GET, "/a", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/a' path\n")
 							.toPromise())
-					.map(GET, "/b", request -> HttpResponse.ok200()
+					.with(GET, "/b", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/b' path\n")
 							.toPromise())
-					.map(GET, "/", request -> HttpResponse.ok200()
+					.with(GET, "/", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/' path\n")
-							.toPromise());
+							.toPromise())
+					.build();
 		}
 	}
 	//[END MODULE_A]
@@ -84,16 +85,17 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	private static final class ModuleB extends AbstractModule {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
-			return RoutingServlet.create(reactor)
-					.map(GET, "/a/b", request -> HttpResponse.ok200()
+			return RoutingServlet.builder(reactor)
+					.with(GET, "/a/b", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/a/b' path\n")
 							.toPromise())
-					.map(GET, "/b/a", request -> HttpResponse.ok200()
+					.with(GET, "/b/a", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/b/a' path\n")
 							.toPromise())
-					.map(GET, "/d", request -> HttpResponse.ok200()
+					.with(GET, "/d", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/d' path\n")
-							.toPromise());
+							.toPromise())
+					.build();
 		}
 	}
 	//[END MODULE_B]
@@ -102,16 +104,17 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	private static final class ModuleC extends AbstractModule {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
-			return RoutingServlet.create(reactor)
-					.map(GET, "/a/c", request -> HttpResponse.ok200()
+			return RoutingServlet.builder(reactor)
+					.with(GET, "/a/c", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/a/c' path\n")
 							.toPromise())
-					.map(GET, "/b/c", request -> HttpResponse.ok200()
+					.with(GET, "/b/c", request -> HttpResponse.ok200()
 							.withPlainText("Hello from '/b/c' path\n")
 							.toPromise())
-					.map(POST, "/d", request -> HttpResponse.ok200()
+					.with(POST, "/d", request -> HttpResponse.ok200()
 							.withPlainText("Hello from POST '/d' path\n")
-							.toPromise());
+							.toPromise())
+					.build();
 		}
 	}
 	//[END MODULE_C]

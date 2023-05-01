@@ -12,9 +12,9 @@ public final class RoutingServletExample extends HttpServerLauncher {
 	//[START REGION_1]
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
-		return RoutingServlet.create(reactor)
+		return RoutingServlet.builder(reactor)
 				//[START REGION_2]
-				.map(GET, "/", request ->
+				.with(GET, "/", request ->
 						HttpResponse.ok200()
 								.withHtml("<h1>Go to some pages</h1>" +
 										"<a href=\"/path1\"> Path 1 </a><br>" +
@@ -24,19 +24,19 @@ public final class RoutingServletExample extends HttpServerLauncher {
 										"<a href=\"/path3\"> Non existent </a>")
 								.toPromise())
 				//[END REGION_2]
-				.map(GET, "/path1", request ->
+				.with(GET, "/path1", request ->
 						HttpResponse.ok200()
 								.withHtml("<h1>Hello from the first path!</h1>" +
 										"<a href=\"/\">Go home</a>")
 								.toPromise())
-				.map(GET, "/path2", request ->
+				.with(GET, "/path2", request ->
 						HttpResponse.ok200()
 								.withHtml("<h1>Hello from the second path!</h1>" +
 										"<a href=\"/\">Go home</a>")
 								.toPromise())
 
 				//[START REGION_3]
-				.map(GET, "/user/:user_id", request -> {
+				.with(GET, "/user/:user_id", request -> {
 					String userId = request.getPathParameter("user_id");
 					return HttpResponse.ok200()
 							.withHtml("<h1>You have requested data for user with ID: " + userId + "</h1>" +
@@ -46,11 +46,12 @@ public final class RoutingServletExample extends HttpServerLauncher {
 				//[END REGION_3]
 
 				//[START REGION_4]
-				.map("/*", request ->
+				.with("/*", request ->
 						HttpResponse.ofCode(404)
 								.withHtml("<h1>404</h1><p>Path '" + request.getRelativePath() + "' not found</p>" +
 										"<a href=\"/\">Go home</a>")
-								.toPromise());
+								.toPromise())
+				.build();
 		//[END REGION_4]
 	}
 	//[END REGION_1]

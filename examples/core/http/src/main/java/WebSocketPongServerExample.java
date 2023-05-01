@@ -10,11 +10,12 @@ public final class WebSocketPongServerExample extends HttpServerLauncher {
 	//[START EXAMPLE]
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
-		return RoutingServlet.create(reactor)
-				.mapWebSocket("/", webSocket -> webSocket.readMessage()
+		return RoutingServlet.builder(reactor)
+				.withWebSocket("/", webSocket -> webSocket.readMessage()
 						.whenResult(message -> System.out.println("Received:" + message.getText()))
 						.then(() -> webSocket.writeMessage(Message.text("Pong")))
-						.whenComplete(webSocket::close));
+						.whenComplete(webSocket::close))
+				.build();
 	}
 	//[END EXAMPLE]
 

@@ -56,14 +56,14 @@ public final class AuthLauncher extends HttpServerLauncher {
 	@Named("public")
 	AsyncServlet publicServlet(Reactor reactor, AuthService authService, ISessionStore<String> store, IStaticLoader staticLoader) {
 		StaticServlet staticServlet = StaticServlet.create(reactor, staticLoader, "errorPage.html");
-		return RoutingServlet.create(reactor)
+		return RoutingServlet.builder(reactor)
 				//[START REGION_3]
-				.map("/", request -> HttpResponse.redirect302("/login").toPromise())
+				.with("/", request -> HttpResponse.redirect302("/login").toPromise())
 				//[END REGION_3]
-				.map(GET, "/signup", StaticServlet.create(reactor, staticLoader, "signup.html"))
-				.map(GET, "/login", StaticServlet.create(reactor, staticLoader, "login.html"))
+				.with(GET, "/signup", StaticServlet.create(reactor, staticLoader, "signup.html"))
+				.with(GET, "/login", StaticServlet.create(reactor, staticLoader, "login.html"))
 				//[START REGION_4]
-				.map(POST, "/login", request -> request.loadBody()
+				.with(POST, "/login", request -> request.loadBody()
 						.then(() -> {
 							Map<String, String> params = request.getPostParameters();
 							String username = params.get("username");
@@ -79,7 +79,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 							return staticServlet.serve(request);
 						}))
 				//[END REGION_4]
-				.map(POST, "/signup", request -> request.loadBody()
+				.with(POST, "/signup", request -> request.loadBody()
 						.then($ -> {
 							Map<String, String> params = request.getPostParameters();
 							String username = params.get("username");
@@ -89,7 +89,8 @@ public final class AuthLauncher extends HttpServerLauncher {
 								authService.register(username, password);
 							}
 							return HttpResponse.redirect302("/login").toPromise();
-						}));
+						}))
+				.build();
 	}
 	//[END REGION_2]
 
@@ -97,26 +98,28 @@ public final class AuthLauncher extends HttpServerLauncher {
 	@Provides
 	@Named("private")
 	AsyncServlet privateServlet(Reactor reactor, IStaticLoader staticLoader) {
-		return RoutingServlet.create(reactor)
+		return RoutingServlet.builder(reactor)
 				//[START REGION_6]
-				.map("/", request -> HttpResponse.redirect302("/members").toPromise())
+				.with("/", request -> HttpResponse.redirect302("/members").toPromise())
 				//[END REGION_6]
 				//[START REGION_7]
-				.map("/members/*", RoutingServlet.create(reactor)
-						.map(GET, "/", StaticServlet.create(reactor, staticLoader, "index.html"))
+				.with("/members/*", RoutingServlet.builder(reactor)
+						.with(GET, "/", StaticServlet.create(reactor, staticLoader, "index.html"))
 						//[START REGION_8]
-						.map(GET, "/cookie", request ->
+						.with(GET, "/cookie", request ->
 								HttpResponse.ok200()
 										.withBody(wrapUtf8(request.getAttachment(String.class)))
 										.toPromise())
 						//[END REGION_8]
-						.map(POST, "/logout", request ->
+						.with(POST, "/logout", request ->
 								HttpResponse.redirect302("/")
 										.withCookie(HttpCookie.builder(SESSION_ID)
 												.withPath("/")
 												.withMaxAge(Duration.ZERO)
 												.build())
-										.toPromise()));
+										.toPromise())
+						.build())
+				.build();
 		//[END REGION_7]
 	}
 	//[END REGION_5]

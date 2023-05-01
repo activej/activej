@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -58,59 +59,71 @@ public final class RoutingServlet extends AbstractReactive
 		super(reactor);
 	}
 
-	public static RoutingServlet create(Reactor reactor) {
-		return new RoutingServlet(reactor);
+	public static RoutingServlet.Builder builder(Reactor reactor) {
+		return new RoutingServlet(reactor).new Builder();
 	}
 
-	public static RoutingServlet wrap(Reactor reactor, AsyncServlet servlet) {
-		RoutingServlet wrapper = new RoutingServlet(reactor);
-		wrapper.fallbackServlets[ANY_HTTP_ORDINAL] = servlet;
-		return wrapper;
-	}
-
-	/**
-	 * Maps given servlet on some path. Fails when such path already has a servlet mapped to it.
-	 */
-	public RoutingServlet map(String path, AsyncServlet servlet) {
-		return map(null, path, servlet);
-	}
-
-	/**
-	 * @see #map(HttpMethod, String, AsyncServlet)
-	 */
-	@Contract("_, _, _ -> this")
-	public RoutingServlet map(@Nullable HttpMethod method, String path, AsyncServlet servlet) {
-		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet);
-	}
-
-	/**
-	 * Maps given consumer of a web socket as a web socket servlet on some path.
-	 * Fails if there is already a web socket servlet mapped on this path.
-	 */
-	@Contract("_, _ -> this")
-	public RoutingServlet mapWebSocket(String path, Consumer<IWebSocket> webSocketConsumer) {
-		return mapWebSocket(path, new WebSocketServlet(reactor) {
-			@Override
-			protected void onWebSocket(IWebSocket webSocket) {
-				webSocketConsumer.accept(webSocket);
-			}
-		});
-	}
-
-	@Contract("_, _ -> this")
-	public RoutingServlet mapWebSocket(String path, WebSocketServlet servlet) {
-		return doMap(WS_ORDINAL, path, servlet);
-	}
-
-	@Contract("_, _, _ -> this")
-	private RoutingServlet doMap(int ordinal, String path, AsyncServlet servlet) {
-		checkArgument(path.startsWith(ROOT) && (path.endsWith(WILDCARD) || !path.contains(STAR)), "Invalid path: " + path);
-		if (path.endsWith(WILDCARD)) {
-			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet);
-		} else {
-			makeSubtree(path).map(ordinal, servlet);
+	public class Builder extends AbstractBuilder<Builder, RoutingServlet> {
+		/**
+		 * Maps given servlet on some path. Fails when such path already has a servlet mapped to it.
+		 */
+		public Builder with(String path, AsyncServlet servlet) {
+			return with(null, path, servlet);
 		}
-		return this;
+
+		/**
+		 * @see #with(HttpMethod, String, AsyncServlet)
+		 */
+		@Contract("_, _, _ -> this")
+		public Builder with(@Nullable HttpMethod method, String path, AsyncServlet servlet) {
+			return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet);
+		}
+
+		/**
+		 * Maps given consumer of a web socket as a web socket servlet on some path.
+		 * Fails if there is already a web socket servlet mapped on this path.
+		 */
+		@Contract("_, _ -> this")
+		public Builder withWebSocket(String path, Consumer<IWebSocket> webSocketConsumer) {
+			return withWebSocket(path, new WebSocketServlet(reactor) {
+				@Override
+				protected void onWebSocket(IWebSocket webSocket) {
+					webSocketConsumer.accept(webSocket);
+				}
+			});
+		}
+
+		@Contract("_, _ -> this")
+		public Builder withWebSocket(String path, WebSocketServlet servlet) {
+			return doMap(WS_ORDINAL, path, servlet);
+		}
+
+		@Contract("_, _, _ -> this")
+		private Builder doMap(int ordinal, String path, AsyncServlet servlet) {
+			checkArgument(path.startsWith(ROOT) && (path.endsWith(WILDCARD) || !path.contains(STAR)), "Invalid path: " + path);
+			if (path.endsWith(WILDCARD)) {
+				makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet);
+			} else {
+				makeSubtree(path).map(ordinal, servlet);
+			}
+			return this;
+		}
+
+		@Contract("_ -> new")
+		public Builder merge(RoutingServlet servlet) {
+			return merge(ROOT, servlet);
+		}
+
+		@Contract("_, _ -> new")
+		public Builder merge(String path, RoutingServlet servlet) {
+			mergeInto(RoutingServlet.this.makeSubtree(path), servlet);
+			return this;
+		}
+
+		@Override
+		protected RoutingServlet doBuild() {
+			return RoutingServlet.this;
+		}
 	}
 
 	public void visit(Visitor visitor) {
@@ -139,19 +152,6 @@ public final class RoutingServlet extends AbstractReactive
 				name.startsWith(":") ?
 						servlet.parameters.get(name.substring(1)) :
 						servlet.routes.get(name));
-	}
-
-	@Contract("_ -> new")
-	public RoutingServlet merge(RoutingServlet servlet) {
-		return merge(ROOT, servlet);
-	}
-
-	@Contract("_, _ -> new")
-	public RoutingServlet merge(String path, RoutingServlet servlet) {
-		RoutingServlet merged = new RoutingServlet(servlet.reactor);
-		mergeInto(merged, this);
-		mergeInto(merged.makeSubtree(path), servlet);
-		return merged;
 	}
 
 	@Override
