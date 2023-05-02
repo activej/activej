@@ -134,6 +134,8 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	/**
 	 * Creates a server, capable of specified message types processing.
+	 * <p>
+	 * <b>Order of message types matters and should match the order of message types set on {@link RpcClient}</b>
 	 *
 	 * @param messageTypes classes of messages processed by a server
 	 * @return server instance capable for handling provided message types
@@ -144,6 +146,8 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 
 	/**
 	 * Creates a server, capable of specified message types processing.
+	 * <p>
+	 * <b>Order of message types matters and should match the order of message types set on {@link RpcClient}</b>
 	 *
 	 * @param messageTypes a list of message types processed by a server
 	 * @return server instance capable for handling provided message types

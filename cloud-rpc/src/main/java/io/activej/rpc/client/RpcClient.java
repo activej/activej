@@ -169,6 +169,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	/**
 	 * Creates a client with capability of specified message types processing.
+	 * <p>
+	 * <b>Order of message types matters and should match the order of message types set on {@link RpcServer}</b>
 	 *
 	 * @param messageTypes classes of messages processed by a server
 	 * @return client instance capable for handling provided message types
@@ -179,6 +181,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	/**
 	 * Creates a client with capability of specified message types processing.
+	 * <p>
+	 * <b>Order of message types matters and should match the order of message types set on {@link RpcServer}</b>
 	 *
 	 * @param messageTypes classes of messages processed by a server
 	 * @return client instance capable for handling provided
