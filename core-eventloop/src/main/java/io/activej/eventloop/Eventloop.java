@@ -302,6 +302,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 
 		@Override
 		protected Eventloop doBuild() {
+			refreshTimestamp();
 			return Eventloop.this;
 		}
 	}
