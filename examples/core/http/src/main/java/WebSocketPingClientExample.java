@@ -1,7 +1,6 @@
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
-import io.activej.http.IHttpClient;
 import io.activej.http.IWebSocket.Message;
 import io.activej.http.IWebSocketClient;
 import io.activej.inject.annotation.Inject;
@@ -27,7 +26,7 @@ public final class WebSocketPingClientExample extends Launcher {
 	}
 
 	@Provides
-	IHttpClient client(NioReactor reactor) {
+	IWebSocketClient client(NioReactor reactor) {
 		return HttpClient.create(reactor);
 	}
 
