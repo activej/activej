@@ -19,6 +19,7 @@ package io.activej.net.socket.udp;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
@@ -27,6 +28,7 @@ import io.activej.common.tuple.Tuple2;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ValueStats;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractNioReactive;
@@ -46,6 +48,7 @@ import java.util.ArrayDeque;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, NioChannelEventHandler {
+	private static final boolean CHECKS = Checks.isEnabled(UdpSocket.class);
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 
@@ -192,7 +195,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	@Override
 	public Promise<UdpPacket> receive() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (!isOpen()) {
 			return Promise.ofException(new AsyncCloseException());
 		}
@@ -208,7 +211,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	@Override
 	public void onReadReady() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		while (isOpen()) {
 			ByteBuf buf = ByteBufPool.allocate(receiveBufferSize);
 			ByteBuffer buffer = buf.toWriteByteBuffer();
@@ -246,7 +249,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	@Override
 	public Promise<Void> send(UdpPacket packet) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (!isOpen()) {
 			return Promise.ofException(new AsyncCloseException());
 		}
@@ -258,7 +261,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	@Override
 	public void onWriteReady() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		while (true) {
 			Tuple2<UdpPacket, SettableCallback<Void>> entry = writeQueue.peek();
 			if (entry == null) {

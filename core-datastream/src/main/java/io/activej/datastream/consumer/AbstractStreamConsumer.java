@@ -16,8 +16,10 @@
 
 package io.activej.datastream.consumer;
 
+import io.activej.common.Checks;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
@@ -31,6 +33,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive implements StreamConsumer<T> {
+	private static final boolean CHECKS = Checks.isEnabled(AbstractStreamConsumer.class);
+
 	private StreamSupplier<T> supplier;
 	private final SettablePromise<Void> acknowledgement = new SettablePromise<>();
 	private boolean endOfStream;
@@ -104,7 +108,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	 * Begins receiving data into given acceptor, resumes the associated supplier to receive data from it.
 	 */
 	public final void resume(@Nullable StreamDataAcceptor<T> dataAcceptor) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (endOfStream) return;
 		if (this.dataAcceptor == dataAcceptor) return;
 		this.dataAcceptor = dataAcceptor;

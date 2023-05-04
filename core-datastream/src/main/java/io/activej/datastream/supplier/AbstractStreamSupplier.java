@@ -102,7 +102,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void updateDataAcceptor() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (!isStarted()) return;
 		if (endOfStream.isComplete()) return;
 		StreamDataAcceptor<T> dataAcceptor = this.consumer.getDataAcceptor();

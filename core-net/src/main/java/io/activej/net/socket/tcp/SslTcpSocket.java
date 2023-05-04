@@ -20,6 +20,7 @@ import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -47,6 +48,8 @@ import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
  * It allows SSL connections using Java {@link SSLEngine}.
  */
 public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocket {
+	private static final boolean CHECKS = Checks.isEnabled(SslTcpSocket.class);
+
 	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(SslTcpSocket.class, "errorOnCloseWithoutNotify", false);
 
 	private final SSLEngine engine;
@@ -63,7 +66,7 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 	private @Nullable Promise<Void> pendingUpstreamWrite;
 
 	private SslTcpSocket(NioReactor reactor, ITcpSocket socket,
-			SSLEngine engine, Executor executor) {
+						 SSLEngine engine, Executor executor) {
 		super(reactor);
 		this.engine = engine;
 		this.executor = executor;
@@ -72,35 +75,35 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 	}
 
 	public static SslTcpSocket wrapClientSocket(NioReactor reactor, ITcpSocket socket,
-			String host, int port,
-			SSLContext sslContext, Executor executor) {
+												String host, int port,
+												SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
 		sslEngine.setUseClientMode(true);
 		return create(reactor, socket, sslEngine, executor);
 	}
 
 	public static SslTcpSocket wrapClientSocket(NioReactor reactor, ITcpSocket socket,
-			SSLContext sslContext, Executor executor) {
+												SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(true);
 		return create(reactor, socket, sslEngine, executor);
 	}
 
 	public static SslTcpSocket wrapServerSocket(NioReactor reactor, ITcpSocket socket,
-			SSLContext sslContext, Executor executor) {
+												SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(false);
 		return create(reactor, socket, sslEngine, executor);
 	}
 
 	public static SslTcpSocket create(NioReactor reactor, ITcpSocket socket,
-			SSLEngine engine, Executor executor) {
+									  SSLEngine engine, Executor executor) {
 		return new SslTcpSocket(reactor, socket, engine, executor);
 	}
 
 	@Override
 	public Promise<ByteBuf> read() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		read = null;
 		if (shouldReturnEndOfStream) {
 			shouldReturnEndOfStream = false;
@@ -120,7 +123,7 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 
 	@Override
 	public Promise<Void> write(@Nullable ByteBuf buf) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (isClosed()) {
 			if (buf != null) {
 				buf.recycle();

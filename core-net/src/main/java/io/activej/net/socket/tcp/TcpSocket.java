@@ -345,7 +345,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	@Override
 	public Promise<ByteBuf> read() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
@@ -366,7 +366,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	@Override
 	public void onReadReady() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		ops = (byte) (ops | 0x80);
 		try {
 			doRead();
@@ -442,8 +442,8 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 	// write cycle
 	@Override
 	public Promise<Void> write(@Nullable ByteBuf buf) {
-		checkInReactorThread(this);
 		if (CHECKS) {
+			checkInReactorThread(this);
 			checkState(!writeEndOfStream, "End of stream has already been sent");
 		}
 		if (isClosed()) {
@@ -496,7 +496,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	@Override
 	public void onWriteReady() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		assert write != null;
 		ops = (byte) (ops | 0x80);
 		try {
