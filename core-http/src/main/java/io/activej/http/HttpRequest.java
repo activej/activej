@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
@@ -52,7 +51,7 @@ import static io.activej.http.Protocol.WSS;
  * {@code HttpRequest} class provides methods which can be used intuitively for
  * creating and configuring an HTTP request.
  */
-public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequest>, WithInitializer<HttpRequest> {
+public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequest> {
 	private static final boolean CHECKS = Checks.isEnabled(HttpRequest.class);
 
 	private static final int LONGEST_HTTP_METHOD_SIZE = 12;

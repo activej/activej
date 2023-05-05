@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
-import io.activej.common.initializer.WithInitializer;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSetCookies;
 import io.activej.promise.Promise;
 import io.activej.promise.ToPromise;
@@ -42,7 +41,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled, so you cannot
  * usi it afterwards.
  */
-public final class HttpResponse extends HttpMessage implements ToPromise<HttpResponse>, WithInitializer<HttpResponse> {
+public final class HttpResponse extends HttpMessage implements ToPromise<HttpResponse> {
 	private static final boolean CHECKS = Checks.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");
