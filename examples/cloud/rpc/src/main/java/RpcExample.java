@@ -11,12 +11,14 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.protocol.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
+import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 import io.activej.service.ServiceGraphModuleSettings;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -43,7 +45,10 @@ public class RpcExample extends Launcher {
 	@Provides
 	RpcServer rpcServer(NioReactor reactor) {
 		return RpcServer.builder(reactor)
-				.withSerializer(RpcMessageSerializer.of(String.class))
+				.withSerializer(SerializerFactory.builder()
+						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
+						.build()
+						.create(RpcMessage.class))
 				.withHandler(String.class,
 						request -> Promise.of("Hello " + request))
 				.withListenPort(SERVICE_PORT)
@@ -53,7 +58,10 @@ public class RpcExample extends Launcher {
 	@Provides
 	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
-				.withSerializer(RpcMessageSerializer.of(String.class))
+				.withSerializer(SerializerFactory.builder()
+						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
+						.build()
+						.create(RpcMessage.class))
 				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)))
 				.build();
 	}

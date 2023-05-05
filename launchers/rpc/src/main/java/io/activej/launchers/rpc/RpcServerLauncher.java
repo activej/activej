@@ -29,11 +29,13 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.protocol.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
+import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
@@ -94,7 +96,10 @@ public abstract class RpcServerLauncher extends Launcher {
 					RpcServer server(NioReactor reactor, Config config) {
 						return RpcServer.builder(reactor)
 								.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
-								.withSerializer(RpcMessageSerializer.of(String.class))
+								.withSerializer(SerializerFactory.builder()
+										.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
+										.build()
+										.create(RpcMessage.class))
 								.withHandler(String.class,
 										req -> Promise.of("Request: " + req))
 								.build();

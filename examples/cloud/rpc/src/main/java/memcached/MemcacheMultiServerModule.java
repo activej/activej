@@ -8,7 +8,7 @@ import io.activej.memcache.protocol.SliceSerializerDef;
 import io.activej.memcache.server.RingBuffer;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.protocol.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.worker.annotation.Worker;
@@ -60,10 +60,11 @@ public class MemcacheMultiServerModule extends AbstractModule {
 							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
 							return Promise.of(PutResponse.INSTANCE);
 						})
-				.withSerializer(RpcMessageSerializer.builder()
-						.withSerializerFactory(SerializerFactory.builder().with(Slice.class, ctx -> new SliceSerializerDef()).build())
-						.withMessageTypes(MESSAGE_TYPES)
-						.build())
+				.withSerializer(SerializerFactory.builder()
+						.with(Slice.class, ctx -> new SliceSerializerDef())
+						.withSubclasses(RpcMessage.SUBCLASSES_ID, MESSAGE_TYPES)
+						.build()
+						.create(RpcMessage.class))
 				.withListenAddresses(address)
 				.build();
 	}

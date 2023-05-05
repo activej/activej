@@ -3,8 +3,11 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.protocol.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
+import io.activej.serializer.SerializerFactory;
+
+import java.util.List;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 
@@ -27,7 +30,10 @@ public class ServerModule extends AbstractModule {
 	@Provides
 	RpcServer rpcServer(NioReactor reactor, KeyValueStore store) {
 		return RpcServer.builder(reactor)
-				.withSerializer(RpcMessageSerializer.of(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class))
+				.withSerializer(SerializerFactory.builder()
+						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class))
+						.build()
+						.create(RpcMessage.class))
 				.withHandler(PutRequest.class, req -> Promise.of(new PutResponse(store.put(req.key(), req.value()))))
 				.withHandler(GetRequest.class, req -> Promise.of(new GetResponse(store.get(req.key()))))
 				.withListenPort(RPC_SERVER_PORT)

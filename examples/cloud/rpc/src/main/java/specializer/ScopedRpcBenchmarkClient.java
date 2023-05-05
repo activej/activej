@@ -12,11 +12,13 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.protocol.RpcMessageSerializer;
+import io.activej.rpc.protocol.RpcMessage;
+import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.server;
@@ -49,7 +51,10 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	@Provides
 	IRpcClient client(NioReactor reactor) {
 		return RpcClient.builder(reactor)
-				.withSerializer(RpcMessageSerializer.of(RpcRequest.class, RpcResponse.class))
+				.withSerializer(SerializerFactory.builder()
+						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(RpcRequest.class, RpcResponse.class))
+						.build()
+						.create(RpcMessage.class))
 				.withStrategy(server(new InetSocketAddress(PORT)))
 				.build();
 	}
