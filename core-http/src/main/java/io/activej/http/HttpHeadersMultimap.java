@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public final class HttpHeadersMultimap<K, V> {
+final class HttpHeadersMultimap<K, V> {
 	static final int INITIAL_SIZE = ApplicationSettings.getInt(HttpHeadersMultimap.class, "initialSize", 8);
 
 	Object[] kvPairs = new Object[INITIAL_SIZE];
@@ -69,6 +69,7 @@ public final class HttpHeadersMultimap<K, V> {
 	@Contract(pure = true)
 	@SuppressWarnings("unchecked")
 	public @Nullable V get(K key) {
+		Object[] kvPairs = this.kvPairs;
 		for (int i = key.hashCode() & (kvPairs.length - 2); ; i = (i + 2) & (kvPairs.length - 2)) {
 			K k = (K) kvPairs[i];
 			if (k == null) {
@@ -127,6 +128,40 @@ public final class HttpHeadersMultimap<K, V> {
 				};
 			}
 		};
+	}
+
+	public void forEach(HttpHeaderValueBiPredicate predicate) {
+		Object[] kvPairs = this.kvPairs;
+		for (int i = 0; i < kvPairs.length - 1; i += 2) {
+			HttpHeader k = (HttpHeader) kvPairs[i];
+			if (k == null) {
+				continue;
+			}
+			try {
+				if (!predicate.test(k, (HttpHeaderValue) kvPairs[i + 1])) {
+					break;
+				}
+			} catch (MalformedHttpException ignored) {
+			}
+		}
+	}
+
+	public void forEach(HttpHeader header, HttpHeaderValuePredicate predicate) {
+		Object[] kvPairs = this.kvPairs;
+		for (int i = header.hashCode() & (kvPairs.length - 2); ; i = (i + 2) & (kvPairs.length - 2)) {
+			HttpHeader k = (HttpHeader) kvPairs[i];
+			if (k == null) {
+				break;
+			}
+			if (k.equals(header)) {
+				try {
+					if (!predicate.test((HttpHeaderValue) kvPairs[i + 1])) {
+						break;
+					}
+				} catch (MalformedHttpException ignored) {
+				}
+			}
+		}
 	}
 
 	@Override

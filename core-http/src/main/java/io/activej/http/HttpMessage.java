@@ -87,40 +87,40 @@ public abstract class HttpMessage {
 	protected abstract class Builder<B extends Builder<B, T>, T extends HttpMessage>
 			implements io.activej.common.builder.Builder<T>, ToPromise<T>, WithInitializer<B> {
 
-		public final B withHeader(HttpHeader header, String string) {
+		public B withHeader(HttpHeader header, String string) {
 			HttpHeaderValue headerValue = HttpHeaderValue.of(string);
 			headers.add(header, headerValue);
 			return (B) this;
 		}
 
-		public final B withHeader(HttpHeader header, byte[] value) {
+		public B withHeader(HttpHeader header, byte[] value) {
 			HttpHeaderValue headerValue = HttpHeaderValue.ofBytes(value, 0, value.length);
 			headers.add(header, headerValue);
 			return (B) this;
 		}
 
-		public final B withHeader(HttpHeader header, byte[] array, int off, int len) {
+		public B withHeader(HttpHeader header, byte[] array, int off, int len) {
 			HttpHeaderValue headerValue = HttpHeaderValue.ofBytes(array, off, len);
 			headers.add(header, headerValue);
 			return (B) this;
 		}
 
-		public final B withHeader(HttpHeader header, HttpHeaderValue value) {
+		public B withHeader(HttpHeader header, HttpHeaderValue value) {
 			headers.add(header, value);
 			return (B) this;
 		}
 
-		public final B withCookies(HttpCookie... cookies) {
+		public B withCookies(HttpCookie... cookies) {
 			addCookies(List.of(cookies));
 			return (B) this;
 		}
 
-		public final B withCookies(List<HttpCookie> cookies) {
+		public B withCookies(List<HttpCookie> cookies) {
 			addCookies(cookies);
 			return (B) this;
 		}
 
-		public final B withCookie(HttpCookie cookie) {
+		public B withCookie(HttpCookie cookie) {
 			addCookie(cookie);
 			return (B) this;
 		}
@@ -129,26 +129,26 @@ public abstract class HttpMessage {
 
 		protected abstract void addCookie(HttpCookie cookie);
 
-		public final B withBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
+		public B withBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
 			HttpMessage.this.bodyStream = bodySupplier;
 			return (B) this;
 		}
 
-		public final B withBody(ByteBuf body) {
+		public B withBody(ByteBuf body) {
 			HttpMessage.this.body = body;
 			return (B) this;
 		}
 
-		public final B withBody(byte[] body) {
+		public B withBody(byte[] body) {
 			return withBody(ByteBuf.wrapForReading(body));
 		}
 
-		public final B withMaxBodySize(MemSize maxBodySize) {
+		public B withMaxBodySize(MemSize maxBodySize) {
 			HttpMessage.this.maxBodySize = maxBodySize.toInt();
 			return (B) this;
 		}
 
-		public final B withMaxBodySize(int maxBodySize) {
+		public B withMaxBodySize(int maxBodySize) {
 			HttpMessage.this.maxBodySize = maxBodySize;
 			return (B) this;
 		}
@@ -156,13 +156,13 @@ public abstract class HttpMessage {
 		/**
 		 * Sets this message to use the DEFLATE compression algorithm.
 		 */
-		public final B withBodyGzipCompression() {
+		public B withBodyGzipCompression() {
 			HttpMessage.this.flags |= USE_GZIP;
 			return (B) this;
 		}
 
 		@Override
-		public final Promise<T> toPromise() {
+		public Promise<T> toPromise() {
 			return Promise.of(build());
 		}
 
@@ -172,27 +172,24 @@ public abstract class HttpMessage {
 		}
 	}
 
-	public final Collection<Map.Entry<HttpHeader, HttpHeaderValue>> getHeaders() {
+	public Collection<Map.Entry<HttpHeader, HttpHeaderValue>> getHeaders() {
 		if (CHECKS) checkState(!isRecycled());
 		return headers.getEntries();
 	}
 
-	public final <T> List<T> getHeader(HttpHeader header, HttpHeaderValue.DecoderInToListStreamConsumer<T> decoder) {
+	public <T> List<T> getHeader(HttpHeader header, HttpHeaderValue.DecoderInToListStreamConsumer<T> decoder) {
 		if (CHECKS) checkState(!isRecycled());
 		List<T> list = new ArrayList<>();
-		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {
-			HttpHeader k = (HttpHeader) headers.kvPairs[i];
-			if (k == null) {
-				break;
-			}
-			if (k.equals(header)) {
-				try {
-					decoder.decode(((HttpHeaderValue) headers.kvPairs[i + 1]).getBuf(), list);
-				} catch (MalformedHttpException ignored) {
-				}
-			}
-		}
+		headers.forEach(header, httpHeaderValue -> {
+			decoder.decode(httpHeaderValue.getBuf(), list);
+			return true;
+		});
 		return list;
+	}
+
+	public boolean hasHeader(HttpHeader header) {
+		if (CHECKS) checkState(!isRecycled());
+		return headers.get(header) != null;
 	}
 
 	public <T> @Nullable T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
@@ -208,16 +205,26 @@ public abstract class HttpMessage {
 		return null;
 	}
 
-	public final @Nullable String getHeader(HttpHeader header) {
+	public @Nullable String getHeader(HttpHeader header) {
 		if (CHECKS) checkState(!isRecycled());
 		HttpHeaderValue headerValue = headers.get(header);
 		return headerValue != null ? headerValue.toString() : null;
 	}
 
-	public final @Nullable ByteBuf getHeaderBuf(HttpHeader header) {
+	public @Nullable ByteBuf getHeaderBuf(HttpHeader header) {
 		if (CHECKS) checkState(!isRecycled());
 		HttpHeaderValue headerBuf = headers.get(header);
 		return headerBuf != null ? headerBuf.getBuf() : null;
+	}
+
+	public <T> void forEachHeader(HttpHeaderValueBiPredicate predicate) {
+		if (CHECKS) checkState(!isRecycled());
+		headers.forEach(predicate);
+	}
+
+	public <T> void forEachHeader(HttpHeader header, HttpHeaderValuePredicate predicate) {
+		if (CHECKS) checkState(!isRecycled());
+		headers.forEach(header, predicate);
 	}
 
 	/**
@@ -257,7 +264,7 @@ public abstract class HttpMessage {
 	/**
 	 * Allows you to peak at the body when it is available without taking the ownership.
 	 */
-	public final ByteBuf getBody() {
+	public ByteBuf getBody() {
 		if (CHECKS) checkState(!isRecycled());
 		if ((flags & MUST_LOAD_BODY) != 0) throw new IllegalStateException("Body is not loaded");
 		if (body != null) return body;
@@ -268,7 +275,7 @@ public abstract class HttpMessage {
 	 * Similarly to {@link #takeBodyStream()}, this method transfers ownership and can be called only once.
 	 * It returns successfully only when this message is in {@link #MUST_LOAD_BODY non-streaming mode}
 	 */
-	public final ByteBuf takeBody() {
+	public ByteBuf takeBody() {
 		if (CHECKS) checkState(!isRecycled());
 		ByteBuf body = getBody();
 		this.body = null;
@@ -279,7 +286,7 @@ public abstract class HttpMessage {
 	 * Checks if this message is working in streaming mode or not.
 	 * Returns true if not.
 	 */
-	public final boolean isBodyLoaded() {
+	public boolean hasBody() {
 		return (flags & MUST_LOAD_BODY) == 0 && body != null;
 	}
 
@@ -334,6 +341,13 @@ public abstract class HttpMessage {
 				});
 	}
 
+	public Map<Object, Object> ensureAttachments() {
+		if (attachments == null) {
+			attachments = new HashMap<>();
+		}
+		return attachments;
+	}
+
 	/**
 	 * Attaches an arbitrary object to this message by its type.
 	 * This is used for context management.
@@ -342,10 +356,7 @@ public abstract class HttpMessage {
 	 */
 	public <T> void attach(Type type, T extra) {
 		if (CHECKS) checkState(!isRecycled());
-		if (attachments == null) {
-			attachments = new HashMap<>();
-		}
-		attachments.put(type, extra);
+		ensureAttachments().put(type, extra);
 	}
 
 	/**
@@ -353,10 +364,7 @@ public abstract class HttpMessage {
 	 */
 	public <T> void attach(Class<T> type, T extra) {
 		if (CHECKS) checkState(!isRecycled());
-		if (attachments == null) {
-			attachments = new HashMap<>();
-		}
-		attachments.put(type, extra);
+		ensureAttachments().put(type, extra);
 	}
 
 	/**
@@ -364,10 +372,7 @@ public abstract class HttpMessage {
 	 */
 	public <T> void attach(TypeT<T> typeT, T extra) {
 		if (CHECKS) checkState(!isRecycled());
-		if (attachments == null) {
-			attachments = new HashMap<>();
-		}
-		attachments.put(typeT.getAnnotatedType(), extra);
+		ensureAttachments().put(typeT.getAnnotatedType(), extra);
 	}
 
 	/**
@@ -375,10 +380,7 @@ public abstract class HttpMessage {
 	 */
 	public void attach(Object extra) {
 		if (CHECKS) checkState(!isRecycled());
-		if (attachments == null) {
-			attachments = new HashMap<>();
-		}
-		attachments.put(extra.getClass(), extra);
+		ensureAttachments().put(extra.getClass(), extra);
 	}
 
 	/**
@@ -387,10 +389,7 @@ public abstract class HttpMessage {
 	 */
 	public <T> void attach(String key, T extra) {
 		if (CHECKS) checkState(!isRecycled());
-		if (attachments == null) {
-			attachments = new HashMap<>();
-		}
-		attachments.put(key, extra);
+		ensureAttachments().put(key, extra);
 	}
 
 	/**
@@ -448,7 +447,7 @@ public abstract class HttpMessage {
 		return attachments != null ? attachments.keySet() : Set.of();
 	}
 
-	boolean isRecycled() {
+	public boolean isRecycled() {
 		return (this.flags & RECYCLED) != 0;
 	}
 
@@ -457,7 +456,7 @@ public abstract class HttpMessage {
 	 */
 	abstract boolean isContentLengthExpected();
 
-	final void recycle() {
+	void recycle() {
 		if (isRecycled()) return;
 		flags |= RECYCLED;
 		if (body != null) {

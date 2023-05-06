@@ -129,6 +129,7 @@ public final class CaseInsensitiveTokenMap<T extends Token> {
 	}
 
 	private T probeNext(int hashCodeCI, byte[] array, int offset, int length) {
+		T[] tokens = this.tokens;
 		probe:
 		for (int p = 1; p < maxProbings; p++) {
 			int slot = (hashCodeCI + p) & (tokens.length - 1);
