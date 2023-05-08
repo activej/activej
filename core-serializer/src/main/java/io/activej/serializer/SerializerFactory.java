@@ -384,6 +384,8 @@ public final class SerializerFactory {
 		/**
 		 * Sets subclasses to be serialized.
 		 * Uses custom string id to identify subclasses
+		 * <p>
+		 * <b>Order of subclasses matters. To keep serializers compatible, the order of subclasses should not change</b>
 		 *
 		 * @param subclassesId an id of subclasses
 		 * @param subclasses   actual subclasses classes
@@ -399,6 +401,8 @@ public final class SerializerFactory {
 		/**
 		 * Sets subclasses to be serialized.
 		 * Uses parent class to identify subclasses
+		 * <p>
+		 * <b>Order of subclasses matters. To keep serializers compatible, the order of subclasses should not change</b>
 		 *
 		 * @param type       a parent class  of subclasses
 		 * @param subclasses actual subclasses classes

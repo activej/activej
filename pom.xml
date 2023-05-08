@@ -319,11 +319,6 @@
             <exclude>**/logback.xml</exclude>
             <exclude>**/logback-test.xml</exclude>
           </excludes>
-          <archive>
-            <manifestEntries>
-              <git-SHA-1>${buildNumber}</git-SHA-1>
-            </manifestEntries>
-          </archive>
         </configuration>
       </plugin>
       <plugin>
@@ -340,18 +335,6 @@
             <ByteBufPool.clearOnRecycle>true</ByteBufPool.clearOnRecycle>
           </systemPropertyVariables>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>create</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
     <extensions>

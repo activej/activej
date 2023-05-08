@@ -47,10 +47,18 @@ public final class Checks {
 
 	static {
 		String enabled = System.getProperty("chk");
-
-		if (enabled == null || enabled.equals("off")) ENABLED_BY_DEFAULT = false;
-		else if (enabled.equals("on")) ENABLED_BY_DEFAULT = true;
-		else throw new RuntimeException(getErrorMessage(enabled));
+		if (enabled == null) {
+			boolean asserts = false;
+			//noinspection AssertWithSideEffects,PointlessBooleanExpression,ConstantValue
+			assert (asserts = true) == true;
+			ENABLED_BY_DEFAULT = asserts;
+		} else if (enabled.equals("off")) {
+			ENABLED_BY_DEFAULT = false;
+		} else if (enabled.equals("on")) {
+			ENABLED_BY_DEFAULT = true;
+		} else {
+			throw new RuntimeException(getErrorMessage(enabled));
+		}
 	}
 
 	/**
