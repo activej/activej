@@ -121,10 +121,23 @@ public final class RpcServer extends AbstractReactiveServer {
 			});
 		}
 
+		/**
+		 * Sets serializer for {@link RpcMessage} of this RPC server.
+		 *
+		 * @param serializer serializer for RPC message
+		 * @return the builder for RPC server with specified serializer for RPC message
+		 */
 		public Builder withSerializer(BinarySerializer<RpcMessage> serializer) {
 			return withSerializer(serializer, serializer);
 		}
 
+		/**
+		 * Sets serializers for request {@link RpcMessage} and response {@link RpcMessage} of this RPC server.
+		 *
+		 * @param requestSerializer serializer for request RPC message
+		 * @param responseSerializer serializer for response RPC message
+		 * @return the builder for RPC server with specified serializers for RPC request and response {@link RpcMessage}s
+		 */
 		public Builder withSerializer(BinarySerializer<RpcMessage> requestSerializer, BinarySerializer<RpcMessage> responseSerializer) {
 			checkNotBuilt(this);
 			RpcServer.this.requestSerializer = requestSerializer;
@@ -132,12 +145,24 @@ public final class RpcServer extends AbstractReactiveServer {
 			return this;
 		}
 
+		/**
+		 * Sets serializers for request {@link RpcMessage} of this RPC server.
+		 *
+		 * @param serializer serializer for request RPC message
+		 * @return the builder for RPC server with specified serializer for RPC request {@link RpcMessage}s
+		 */
 		public Builder withRequestsSerializer(BinarySerializer<RpcMessage> serializer) {
 			checkNotBuilt(this);
 			RpcServer.this.requestSerializer = serializer;
 			return this;
 		}
 
+		/**
+		 * Sets serializers for response {@link RpcMessage} of this RPC server.
+		 *
+		 * @param serializer serializer for response RPC message
+		 * @return the builder for RPC server with specified serializer for RPC response {@link RpcMessage}s
+		 */
 		public Builder withResponsesSerializer(BinarySerializer<RpcMessage> serializer) {
 			checkNotBuilt(this);
 			RpcServer.this.responseSerializer = serializer;
