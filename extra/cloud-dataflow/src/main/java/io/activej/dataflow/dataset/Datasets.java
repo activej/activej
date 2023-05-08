@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.dataset;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.annotation.StaticFactories;
 import io.activej.dataflow.dataset.impl.*;
 import io.activej.dataflow.graph.Partition;
@@ -37,6 +38,7 @@ import static io.activej.common.Checks.checkArgument;
 
 @StaticFactories(Dataset.class)
 public class Datasets {
+	private static final int DEFAULT_MEMORY_SORT_BUFFER_SIZE = ApplicationSettings.getInt(Datasets.class, "memorySortBufferSize", 1_000_000);
 
 	public static <K, T> SortedDataset<K, T> castToSorted(Dataset<T> dataset, Class<K> keyType,
 			Function<T, K> keyFunction, Comparator<K> keyComparator) {
@@ -72,7 +74,7 @@ public class Datasets {
 
 	public static <K, I> LocallySortedDataset<K, I> localSort(Dataset<I> dataset, Class<K> keyType,
 			Function<I, K> keyFunction, Comparator<K> keyComparator) {
-		return localSort(dataset, keyType, keyFunction, keyComparator, 1_000_000);
+		return localSort(dataset, keyType, keyFunction, keyComparator, DEFAULT_MEMORY_SORT_BUFFER_SIZE);
 	}
 
 	public static <K, I, O> LocallySortedDataset<K, O> localReduce(LocallySortedDataset<K, I> stream,
@@ -134,7 +136,7 @@ public class Datasets {
 			StreamSchema<A> accumulatorStreamSchema,
 			Function<A, K> accumulatorKeyFunction,
 			StreamSchema<O> outputStreamSchema) {
-		return sortReduceRepartitionReduce(dataset, reducer, keyType, inputKeyFunction, keyComparator, accumulatorStreamSchema, accumulatorKeyFunction, outputStreamSchema, 1_000_000);
+		return sortReduceRepartitionReduce(dataset, reducer, keyType, inputKeyFunction, keyComparator, accumulatorStreamSchema, accumulatorKeyFunction, outputStreamSchema, DEFAULT_MEMORY_SORT_BUFFER_SIZE);
 	}
 
 	public static <K, I, A> Dataset<A> sortReduceRepartitionReduce(Dataset<I> dataset,
@@ -181,7 +183,7 @@ public class Datasets {
 			Function<A, K> accumulatorKeyFunction) {
 		return splitSortReduceRepartitionReduce(dataset, reducer,
 				inputKeyFunction, keyComparator,
-				accumulatorStreamSchema, accumulatorKeyFunction, accumulatorStreamSchema, 1_000_000
+				accumulatorStreamSchema, accumulatorKeyFunction, accumulatorStreamSchema, DEFAULT_MEMORY_SORT_BUFFER_SIZE
 		);
 	}
 
@@ -191,7 +193,7 @@ public class Datasets {
 			Comparator<K> keyComparator) {
 		return splitSortReduceRepartitionReduce(dataset, reducer,
 				keyFunction, keyComparator,
-				dataset.streamSchema(), keyFunction, dataset.streamSchema(), 1_000_000
+				dataset.streamSchema(), keyFunction, dataset.streamSchema(), DEFAULT_MEMORY_SORT_BUFFER_SIZE
 		);
 	}
 
