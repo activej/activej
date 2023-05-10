@@ -17,6 +17,7 @@
 package io.activej.async;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.recycle.Recyclers;
@@ -31,6 +32,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class AsyncAccumulator<A> extends ImplicitlyReactive implements AsyncCloseable {
+	private static final boolean CHECKS = Checks.isEnabled(AsyncAccumulator.class);
+
 	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 
@@ -83,7 +86,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public <T> void addPromise(Promise<T> promise, BiConsumerEx<A, T> consumer) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (resultPromise.isComplete()) {
 			promise.whenResult(Recyclers::recycle);
 			return;
@@ -115,7 +118,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public <V> SettablePromise<V> newPromise(BiConsumerEx<A, V> consumer) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		SettablePromise<V> resultPromise = new SettablePromise<>();
 		addPromise(resultPromise, consumer);
 		return resultPromise;

@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.ChannelSupplier;
@@ -48,6 +49,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public abstract class WebSocketServlet extends AbstractReactive
 		implements AsyncServlet {
+	private static final boolean CHECKS = Checks.isEnabled(WebSocketServlet.class);
 
 	protected WebSocketServlet(Reactor reactor) {
 		super(reactor);
@@ -62,7 +64,7 @@ public abstract class WebSocketServlet extends AbstractReactive
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return validateHeaders(request)
 				.<String>thenCallback(cb -> processAnswer(request, cb))
 				.then(answer -> {

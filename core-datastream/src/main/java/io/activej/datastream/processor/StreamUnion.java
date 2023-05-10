@@ -16,6 +16,7 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.Checks;
 import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.dsl.HasStreamInputs;
@@ -37,6 +38,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * @param <T> type of output data
  */
 public final class StreamUnion<T> extends ImplicitlyReactive implements HasStreamOutput<T>, HasStreamInputs {
+	private static final boolean CHECKS = Checks.isEnabled(StreamUnion.class);
+
 	private final List<Input> inputs = new ArrayList<>();
 	private final Output output;
 	private boolean started;
@@ -62,7 +65,7 @@ public final class StreamUnion<T> extends ImplicitlyReactive implements HasStrea
 	}
 
 	public StreamConsumer<T> newInput() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		checkState(!started, "Cannot add new inputs after StreamUnion has been started");
 		Input input = new Input();
 		inputs.add(input);

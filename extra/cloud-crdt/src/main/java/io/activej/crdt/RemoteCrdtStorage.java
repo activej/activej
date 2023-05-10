@@ -19,6 +19,7 @@ package io.activej.crdt;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
@@ -59,6 +60,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 @SuppressWarnings("rawtypes")
 public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends AbstractNioReactive
 		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+	private static final boolean CHECKS = Checks.isEnabled(RemoteCrdtStorage.class);
+
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
@@ -162,7 +165,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return connect()
 				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Upload())
@@ -183,7 +186,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return connect()
 				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
@@ -205,7 +208,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return connect()
 				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Take())
@@ -230,7 +233,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return connect()
 				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Remove())
@@ -253,7 +256,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return connect()
 				.then(RemoteCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Ping())

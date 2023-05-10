@@ -18,6 +18,7 @@ package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.Checks;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -31,6 +32,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class FileReaderStaticLoader extends AbstractReactive
 		implements IStaticLoader {
+	private static final boolean CHECKS = Checks.isEnabled(FileReaderStaticLoader.class);
+
 	private final Executor executor;
 	private final Path root;
 
@@ -42,7 +45,7 @@ public class FileReaderStaticLoader extends AbstractReactive
 
 	@Override
 	public Promise<ByteBuf> load(String path) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		Path file = root.resolve(path).normalize();
 
 		if (!file.startsWith(root)) {

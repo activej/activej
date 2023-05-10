@@ -19,6 +19,7 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
@@ -57,6 +58,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 public final class HttpServerConnection extends AbstractHttpConnection {
+	private static final boolean CHECKS = Checks.isEnabled(HttpServerConnection.class);
+
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
 	private static final int INITIAL_WRITE_BUFFER_SIZE = ApplicationSettings.getMemSize(HttpServerConnection.class, "initialWriteBufferSize", MemSize.ZERO).toInt();
 
@@ -272,7 +275,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 					numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
 				connectionHeader = CONNECTION_CLOSE_HEADER;
 			}
-		httpResponse.headers.add(CONNECTION, connectionHeader);
+			httpResponse.headers.add(CONNECTION, connectionHeader);
 
 			if (isWebSocket) {
 				// if web socket upgrade request was unsuccessful, it is not a web socket connection
@@ -365,7 +368,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			servletResult = Promise.ofException(e);
 		}
 		servletResult.subscribe((response, e) -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			if (isClosed()) {
 				request.recycle();
 				readBuf = nullify(readBuf, ByteBuf::recycle);

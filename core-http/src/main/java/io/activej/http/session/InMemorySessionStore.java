@@ -16,6 +16,7 @@
 
 package io.activej.http.session;
 
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.promise.Promise;
@@ -34,6 +35,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public final class InMemorySessionStore<T> extends AbstractReactive
 		implements ISessionStore<T> {
+	private static final boolean CHECKS = Checks.isEnabled(InMemorySessionStore.class);
+
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;
@@ -69,14 +72,14 @@ public final class InMemorySessionStore<T> extends AbstractReactive
 
 	@Override
 	public Promise<Void> save(String sessionId, T sessionObject) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		store.put(sessionId, new TWithTimestamp(sessionObject, now.currentTimeMillis()));
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<@Nullable T> get(String sessionId) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		long timestamp = now.currentTimeMillis();
 		TWithTimestamp tWithTimestamp = store.get(sessionId);
 		if (tWithTimestamp == null) {
@@ -92,7 +95,7 @@ public final class InMemorySessionStore<T> extends AbstractReactive
 
 	@Override
 	public Promise<Void> remove(String sessionId) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		store.remove(sessionId);
 		return Promise.complete();
 	}

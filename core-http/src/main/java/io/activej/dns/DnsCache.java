@@ -16,6 +16,7 @@
 
 package io.activej.dns;
 
+import io.activej.common.Checks;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
@@ -49,6 +50,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public final class DnsCache extends AbstractReactive {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
+	private static final boolean CHECKS = Checks.isEnabled(DnsCache.class);
 
 	public static final Duration DEFAULT_ERROR_CACHE_EXPIRATION = Duration.ofMinutes(1);
 	public static final Duration DEFAULT_TIMED_OUT_EXPIRATION = Duration.ofSeconds(1);
@@ -173,7 +175,7 @@ public final class DnsCache extends AbstractReactive {
 	 * @param response response to add
 	 */
 	public void add(DnsQuery query, DnsResponse response) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assertion?

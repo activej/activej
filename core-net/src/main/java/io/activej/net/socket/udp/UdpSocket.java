@@ -211,7 +211,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	@Override
 	public void onReadReady() {
-		if (CHECKS) checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		while (isOpen()) {
 			ByteBuf buf = ByteBufPool.allocate(receiveBufferSize);
 			ByteBuffer buffer = buf.toWriteByteBuffer();
@@ -261,7 +261,7 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 
 	@Override
 	public void onWriteReady() {
-		if (CHECKS) checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		while (true) {
 			Tuple2<UdpPacket, SettableCallback<Void>> entry = writeQueue.peek();
 			if (entry == null) {

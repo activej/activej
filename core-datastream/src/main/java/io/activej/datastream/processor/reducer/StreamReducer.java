@@ -16,6 +16,7 @@
 
 package io.activej.datastream.processor.reducer;
 
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.consumer.StreamConsumer;
@@ -43,6 +44,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements HasStreamInputs, HasStreamOutput<O> {
+	private static final boolean CHECKS = Checks.isEnabled(StreamReducer.class);
+
 	public static final int DEFAULT_BUFFER_SIZE = 2000;
 
 	private final List<Input> inputs = new ArrayList<>();
@@ -105,7 +108,7 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 	}
 
 	public <I> StreamConsumer<I> newInput(Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return addInput(new SimpleInput(keyFunction, reducer));
 	}
 

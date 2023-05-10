@@ -347,7 +347,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	@Override
 	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
 			boolean ssl, SocketSettings socketSettings) {
-		checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();

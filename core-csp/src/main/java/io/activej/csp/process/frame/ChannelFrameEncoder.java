@@ -17,6 +17,7 @@
 package io.activej.csp.process.frame;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
@@ -29,6 +30,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf> {
+	private static final boolean CHECKS = Checks.isEnabled(ChannelFrameEncoder.class);
 
 	private final BlockEncoder encoder;
 	private boolean encoderResets;
@@ -80,7 +82,7 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			this.input = sanitize(input);
 			//noinspection ConstantConditions
 			if (this.input != null && this.output != null) startProcess();
@@ -92,7 +94,7 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

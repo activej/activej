@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.async.function.AsyncBiPredicate;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -44,6 +45,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class BasicAuthServlet extends AbstractReactive
 		implements AsyncServlet {
+	private static final boolean CHECKS = Checks.isEnabled(BasicAuthServlet.class);
 
 	public static final BiPredicate<String, String> SILLY = (login, pass) -> true;
 
@@ -104,7 +106,7 @@ public final class BasicAuthServlet extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws HttpError {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return failureResponse.apply(HttpResponse.unauthorized401(challenge)).toPromise();

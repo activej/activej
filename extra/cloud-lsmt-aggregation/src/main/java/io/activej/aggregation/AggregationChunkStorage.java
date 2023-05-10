@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
@@ -77,6 +78,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public final class AggregationChunkStorage<C> extends AbstractReactive
 		implements IAggregationChunkStorage<C>, ReactiveService, ReactiveJmxBeanWithStats {
+	private static final boolean CHECKS = Checks.isEnabled(AggregationChunkStorage.class);
+
 	private static final Logger logger = getLogger(AggregationChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
@@ -197,7 +200,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.download(toPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenR.recordStats())
@@ -217,7 +220,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.upload(toTempPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenW.recordStats())
@@ -250,7 +253,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	@Override
 	public Promise<C> createId() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return idGenerator.get()
 				.mapException(e -> new AggregationException("Could not create ID", e))
 				.whenComplete(promiseAsyncSupplier.recordStats());
@@ -320,7 +323,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
 				.mapException(e -> new AggregationException("Failed to list chunks", e))
 				.map(list ->
@@ -335,7 +338,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	public Promise<Void> checkRequiredChunks(Set<C> requiredChunks) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return list(s -> true, timestamp -> true)
 				.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
 				.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?

@@ -48,7 +48,7 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	@Transient
 	@DatasetId(LOG_ITEM_TABLE_NAME)
 	Promise<StreamSupplier<LogItem>> logItemDataset(@Named("Dataflow") Reactor reactor, IMultilog<LogItem> logItemMultilog, @Named("partition") String partition) {
-		Reactor.checkInReactorThread(reactor);
+		assert reactor.inReactorThread();
 		return logItemMultilog.read(partition, new LogFile("", 0), 0L, null)
 				.map(StreamSupplierWithResult::getSupplier);
 	}

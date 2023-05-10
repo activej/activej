@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
@@ -78,6 +79,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends AbstractReactive
 		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileSystemCrdtStorage.class);
+	private static final boolean CHECKS = Checks.isEnabled(FileSystemCrdtStorage.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(FileSystemCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
@@ -175,7 +177,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtData<K, S>>uploadNonEmpty(filename, CrdtReducingData::ofData)
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
@@ -186,7 +188,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
 						() -> fileSystem.list("*")
 								.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
@@ -199,7 +201,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (taken != null) {
 			return Promise.ofException(new CrdtException("Data is already being taken"));
 		}
@@ -239,7 +241,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtTombstone<K>>uploadNonEmpty(filename, CrdtReducingData::ofTombstone)
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
@@ -250,7 +252,7 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.ping()
 				.mapException(e -> new CrdtException("Failed to PING file system", e));
 	}

@@ -19,6 +19,7 @@ package io.activej.dns;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.inspector.AbstractInspector;
@@ -56,7 +57,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public final class DnsClient extends AbstractNioReactive
 		implements IDnsClient, ReactiveJmxBeanWithStats {
-	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
+	private static final Logger logger = LoggerFactory.getLogger(DnsClient.class);
+	private static final boolean CHECKS = Checks.isEnabled(DnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
@@ -167,7 +169,7 @@ public final class DnsClient extends AbstractNioReactive
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

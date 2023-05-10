@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
@@ -45,6 +46,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class RoutingServlet extends AbstractReactive
 		implements AsyncServlet, WithInitializer<RoutingServlet> {
+	private static final boolean CHECKS = Checks.isEnabled(RoutingServlet.class);
+
 	private static final String ROOT = "/";
 	private static final String STAR = "*";
 	private static final String WILDCARD = "/" + STAR;
@@ -152,7 +155,7 @@ public final class RoutingServlet extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :

@@ -17,6 +17,7 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -29,6 +30,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class CacheStaticLoader extends AbstractReactive
 		implements IStaticLoader {
+	private static final boolean CHECKS = Checks.isEnabled(CacheStaticLoader.class);
+
 	public static final byte[] NOT_FOUND = {};
 
 	private final IStaticLoader resourceLoader;
@@ -44,7 +47,7 @@ public class CacheStaticLoader extends AbstractReactive
 
 	@Override
 	public Promise<ByteBuf> load(String path) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		byte[] bytes = get.apply(path);
 		if (bytes == NOT_FOUND) {
 			return Promise.ofException(new ResourceNotFoundException("Could not find '" + path + '\''));

@@ -89,7 +89,6 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<T> getInput() {
 		return input -> {
-			checkInReactorThread(this);
 			checkState(!isProcessStarted(), "Can't configure splitter while it is running");
 			this.input = sanitize(input);
 			tryStart();

@@ -16,6 +16,7 @@
 
 package io.activej.crdt.wal;
 
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -24,6 +25,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class NoopWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
 		implements IWriteAheadLog<K, S> {
+	private static final boolean CHECKS = Checks.isEnabled(NoopWriteAheadLog.class);
 
 	private NoopWriteAheadLog(Reactor reactor) {
 		super(reactor);
@@ -35,13 +37,13 @@ public class NoopWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 
 	@Override
 	public Promise<Void> put(K key, S value) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> flush() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return Promise.complete();
 	}
 }

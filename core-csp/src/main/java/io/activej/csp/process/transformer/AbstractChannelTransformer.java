@@ -16,6 +16,7 @@
 
 package io.activej.csp.process.transformer;
 
+import io.activej.common.Checks;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.consumer.ChannelConsumer;
@@ -31,6 +32,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 public abstract class AbstractChannelTransformer<S extends AbstractChannelTransformer<S, I, O>, I, O>
 		extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<S, I, O> {
+	private static final boolean CHECKS = Checks.isEnabled(AbstractChannelTransformer.class);
+
 	protected ChannelSupplier<I> input;
 	protected ChannelConsumer<O> output;
 
@@ -72,7 +75,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	public ChannelInput<I> getInput() {
 		return input -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
 			return getProcessCompletion();
@@ -83,7 +86,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	public ChannelOutput<O> getOutput() {
 		return output -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

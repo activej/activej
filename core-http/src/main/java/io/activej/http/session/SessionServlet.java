@@ -16,6 +16,7 @@
 
 package io.activej.http.session;
 
+import io.activej.common.Checks;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
@@ -38,6 +39,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public final class SessionServlet<T> extends AbstractReactive
 		implements AsyncServlet {
+	private static final boolean CHECKS = Checks.isEnabled(SessionServlet.class);
+
 	private final ISessionStore<T> store;
 	private final Function<HttpRequest, String> sessionIdExtractor;
 	private final AsyncServlet publicServlet;
@@ -65,7 +68,7 @@ public final class SessionServlet<T> extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {

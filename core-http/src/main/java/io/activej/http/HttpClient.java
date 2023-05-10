@@ -465,8 +465,10 @@ public final class HttpClient extends AbstractNioReactive
 
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
-		checkInReactorThread(this);
-		if (CHECKS) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
+		if (CHECKS) {
+			checkInReactorThread(this);
+			checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
+		}
 
 		//noinspection unchecked
 		return (Promise<HttpResponse>) doRequest(request, false);
@@ -485,7 +487,9 @@ public final class HttpClient extends AbstractNioReactive
 	 */
 	@Override
 	public Promise<IWebSocket> webSocketRequest(HttpRequest request) {
-		checkInReactorThread(this);
+		if (CHECKS) {
+			checkInReactorThread(this);
+		}
 		checkState(IWebSocket.ENABLED, "Web sockets are disabled by application settings");
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
@@ -495,7 +499,7 @@ public final class HttpClient extends AbstractNioReactive
 	}
 
 	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
-		checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
 

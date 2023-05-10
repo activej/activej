@@ -19,6 +19,7 @@ package io.activej.crdt.wal;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
@@ -42,6 +43,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
 		implements IWriteAheadLog<K, S>, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
+	private static final boolean CHECKS = Checks.isEnabled(InMemoryWriteAheadLog.class);
 
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
 
@@ -91,7 +93,7 @@ public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<Void> put(K key, S value) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (logger.isTraceEnabled()) {
 			logger.trace("{} value for key {}", map.containsKey(key) ? "Merging" : "Putting new", key);
 		}
@@ -101,7 +103,7 @@ public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends Abs
 
 	@Override
 	public Promise<Void> flush() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return flush.run();
 	}
 

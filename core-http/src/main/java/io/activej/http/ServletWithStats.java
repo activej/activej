@@ -16,6 +16,7 @@
 
 package io.activej.http;
 
+import io.activej.common.Checks;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -29,6 +30,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class ServletWithStats extends AbstractReactive
 		implements AsyncServlet, ReactiveJmxBeanWithStats {
+	private static final boolean CHECKS = Checks.isEnabled(ServletWithStats.class);
+
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
 
 	protected ServletWithStats(Reactor reactor) {
@@ -39,7 +42,7 @@ public abstract class ServletWithStats extends AbstractReactive
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return doServe(request)
 				.whenComplete(stats.recordStats());
 	}

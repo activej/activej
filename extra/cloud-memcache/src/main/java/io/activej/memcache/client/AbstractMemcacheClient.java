@@ -16,6 +16,7 @@
 
 package io.activej.memcache.client;
 
+import io.activej.common.Checks;
 import io.activej.memcache.protocol.MemcacheRpcMessage.GetRequest;
 import io.activej.memcache.protocol.MemcacheRpcMessage.GetResponse;
 import io.activej.memcache.protocol.MemcacheRpcMessage.PutRequest;
@@ -29,6 +30,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 		implements IMemcacheClient<K, V> {
+	private static final boolean CHECKS = Checks.isEnabled(AbstractMemcacheClient.class);
+
 	private final IRpcClient rpcClient;
 
 	protected AbstractMemcacheClient(Reactor reactor, IRpcClient rpcClient) {
@@ -44,14 +47,14 @@ public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 
 	@Override
 	public Promise<Void> put(K key, V value, int timeout) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		PutRequest request = new PutRequest(encodeKey(key), encodeValue(value));
 		return rpcClient.sendRequest(request, timeout).toVoid();
 	}
 
 	@Override
 	public Promise<V> get(K key, int timeout) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		GetRequest request = new GetRequest(encodeKey(key));
 		return rpcClient.<GetRequest, GetResponse>sendRequest(request, timeout)
 				.map(response -> decodeValue(response.getData()));
@@ -59,14 +62,14 @@ public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 
 	@Override
 	public Promise<Void> put(K key, V value) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		PutRequest request = new PutRequest(encodeKey(key), encodeValue(value));
 		return rpcClient.sendRequest(request).toVoid();
 	}
 
 	@Override
 	public Promise<V> get(K key) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		GetRequest request = new GetRequest(encodeKey(key));
 		return rpcClient.<GetRequest, GetResponse>sendRequest(request)
 				.map(response -> decodeValue(response.getData()));

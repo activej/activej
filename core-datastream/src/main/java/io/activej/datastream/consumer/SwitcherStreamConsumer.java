@@ -16,6 +16,7 @@
 
 package io.activej.datastream.consumer;
 
+import io.activej.common.Checks;
 import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.promise.Promise;
 
@@ -31,6 +32,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * It sets its acknowledgement on supplier end of stream, and acts as if suspended when current consumer stops and acknowledges.
  */
 public final class SwitcherStreamConsumer<T> extends AbstractStreamConsumer<T> {
+	private static final boolean CHECKS = Checks.isEnabled(SwitcherStreamConsumer.class);
+
 	private InternalSupplier internalSupplier = new InternalSupplier();
 	private final Set<InternalSupplier> pendingAcknowledgements = new HashSet<>();
 
@@ -45,7 +48,7 @@ public final class SwitcherStreamConsumer<T> extends AbstractStreamConsumer<T> {
 	}
 
 	public Promise<Void> switchTo(StreamConsumer<T> consumer) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		checkState(!isComplete());
 		checkState(!isEndOfStream());
 		assert this.internalSupplier != null;

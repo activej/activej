@@ -19,6 +19,7 @@ package io.activej.csp.net;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.Checks;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.codec.ByteBufsCodec;
@@ -35,6 +36,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Represents a simple binary protocol over for communication a TCP connection.
  */
 public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMessaging<I, O> {
+	private static final boolean CHECKS = Checks.isEnabled(Messaging.class);
+
 	private final ITcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
@@ -87,7 +90,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 
 	@Override
 	public Promise<I> receive() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return bufsSupplier.decode(codec::tryDecode)
 				.whenResult(this::prefetch)
 				.whenException(this::closeEx);
@@ -95,13 +98,13 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 
 	@Override
 	public Promise<Void> send(O msg) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return socket.write(codec.encode(msg));
 	}
 
 	@Override
 	public Promise<Void> sendEndOfStream() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return socket.write(null)
 				.whenResult(() -> {
 					writeDone = true;
@@ -112,7 +115,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 
 	@Override
 	public ChannelConsumer<ByteBuf> sendBinaryStream() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return ChannelConsumers.ofSocket(socket)
 				.withAcknowledgement(ack -> ack
 						.whenResult(() -> {
@@ -123,7 +126,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 
 	@Override
 	public ChannelSupplier<ByteBuf> receiveBinaryStream() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return ChannelSuppliers.concat(ChannelSuppliers.ofIterator(bufs.asIterator()), ChannelSuppliers.ofSocket(socket))
 				.withEndOfStream(eos -> eos
 						.whenResult(() -> {

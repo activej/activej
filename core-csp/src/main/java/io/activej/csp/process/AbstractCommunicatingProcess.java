@@ -19,6 +19,7 @@ package io.activej.csp.process;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.ReactiveProcess;
+import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.consumer.AbstractChannelConsumer;
@@ -43,6 +44,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Process can be cancelled or closed manually.
  */
 public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive implements ReactiveProcess {
+	private static final boolean CHECKS = Checks.isEnabled(AbstractCommunicatingProcess.class);
+
 	private boolean processStarted;
 	private boolean processComplete;
 	private final SettablePromise<Void> processCompletion = new SettablePromise<>();
@@ -67,7 +70,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	}
 
 	protected final void completeProcessEx(@Nullable Exception e) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (isProcessComplete()) return;
 		if (e == null) {
 			processComplete = true; // setting flag here only, as closeEx() method sets it on its own
@@ -93,7 +96,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 */
 	@Override
 	public final Promise<Void> startProcess() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (!processStarted) {
 			processStarted = true;
 			beforeProcess();
@@ -118,7 +121,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 */
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (isProcessComplete()) return;
 		processComplete = true;
 		doClose(e);

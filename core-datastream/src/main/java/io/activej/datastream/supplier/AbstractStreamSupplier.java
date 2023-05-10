@@ -65,7 +65,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final Promise<Void> streamTo(StreamConsumer<T> consumer) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		checkState(!isStarted());
 		ensureInitialized();
 		this.consumer = consumer;
@@ -159,7 +159,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * Only the first call causes any effect.
 	 */
 	public final Promise<Void> sendEndOfStream() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (endOfStreamRequest) return flushPromise;
 		if (flushAsync > 0) {
 			asyncEnd();
@@ -300,7 +300,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		ensureInitialized();
 		endOfStreamRequest = true;
 		dataAcceptor = null;

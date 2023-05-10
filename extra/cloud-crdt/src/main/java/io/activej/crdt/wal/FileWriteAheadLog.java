@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
@@ -49,6 +50,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -73,6 +75,7 @@ import static java.util.stream.Collectors.toList;
 public final class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
 		implements IWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(FileWriteAheadLog.class);
+	private static final boolean CHECKS = Checks.isEnabled(FileWriteAheadLog.class);
 
 	public static final String EXT_FINAL = ".wal";
 	public static final String EXT_CURRENT = ".current";
@@ -179,7 +182,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<Void> put(K key, S value) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		logger.trace("Putting value {} at key {}", value, key);
 		totalPuts.recordEvent();
 
@@ -190,7 +193,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<Void> flush() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		logger.trace("Flush called");
 		return flush.run()
 				.whenComplete(flushPromise.recordStats());

@@ -16,6 +16,7 @@
 
 package io.activej.async.file;
 
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -29,6 +30,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ExecutorFileService extends AbstractReactive
 		implements IFileService {
+	private static final boolean CHECKS = Checks.isEnabled(ExecutorFileService.class);
+
 	private final Executor executor;
 
 	public ExecutorFileService(Reactor reactor, Executor executor) {
@@ -38,7 +41,7 @@ public final class ExecutorFileService extends AbstractReactive
 
 	@Override
 	public Promise<Integer> read(FileChannel channel, long position, byte[] array, int offset, int size) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return ofBlocking(executor, () -> {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;
@@ -56,7 +59,7 @@ public final class ExecutorFileService extends AbstractReactive
 
 	@Override
 	public Promise<Integer> write(FileChannel channel, long position, byte[] array, int offset, int size) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return ofBlocking(executor, () -> {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;

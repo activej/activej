@@ -51,7 +51,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void consume(StreamSupplier<T> streamSupplier) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		checkState(!isStarted());
 		ensureInitialized();
 		if (acknowledgement.isComplete()) return;
@@ -92,7 +92,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	}
 
 	private void endOfStream() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (endOfStream) return;
 		endOfStream = true;
 		onEndOfStream();
@@ -127,7 +127,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	 * Triggers the {@link #getAcknowledgement() acknowledgement} of this consumer.
 	 */
 	public final void acknowledge() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySet(null)) {
@@ -146,7 +146,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySetException(e)) {

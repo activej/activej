@@ -16,10 +16,12 @@
 
 package io.activej.datastream.processor;
 
+import io.activej.common.Checks;
 import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutputs;
+import io.activej.datastream.processor.reducer.StreamReducer;
 import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSupplier;
@@ -43,6 +45,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 @SuppressWarnings("unchecked")
 public final class StreamSplitter<I, O> extends ImplicitlyReactive implements HasStreamInput<I>, HasStreamOutputs<O> {
+	private static final boolean CHECKS = Checks.isEnabled(StreamSplitter.class);
+
 	private final Function<StreamDataAcceptor<O>[], StreamDataAcceptor<I>> acceptorFactory;
 	private final Input input;
 	private final List<Output> outputs = new ArrayList<>();
@@ -68,7 +72,7 @@ public final class StreamSplitter<I, O> extends ImplicitlyReactive implements Ha
 	}
 
 	public StreamSupplier<O> newOutput() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return addOutput(new Output());
 	}
 

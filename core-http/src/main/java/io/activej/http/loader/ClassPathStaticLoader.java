@@ -17,6 +17,7 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -35,6 +36,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class ClassPathStaticLoader extends AbstractReactive
 		implements IStaticLoader {
+	private static final boolean CHECKS = Checks.isEnabled(ClassPathStaticLoader.class);
+
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
 	private final Executor executor;
@@ -65,7 +68,7 @@ public class ClassPathStaticLoader extends AbstractReactive
 
 	@Override
 	public Promise<ByteBuf> load(String name) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		String path = root;
 		int begin = 0;
 		if (name.startsWith(ROOT)) {

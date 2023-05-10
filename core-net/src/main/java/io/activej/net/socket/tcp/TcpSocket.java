@@ -366,7 +366,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	@Override
 	public void onReadReady() {
-		if (CHECKS) checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		ops = (byte) (ops | 0x80);
 		try {
 			doRead();
@@ -496,7 +496,7 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	@Override
 	public void onWriteReady() {
-		if (CHECKS) checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		assert write != null;
 		ops = (byte) (ops | 0x80);
 		try {

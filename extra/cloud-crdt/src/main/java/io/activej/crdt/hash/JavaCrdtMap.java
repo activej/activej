@@ -19,6 +19,7 @@ package io.activej.crdt.hash;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
+import io.activej.common.Checks;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.promise.Promise;
@@ -34,6 +35,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 		implements ICrdtMap<K, S>, ReactiveService {
+	private static final boolean CHECKS = Checks.isEnabled(JavaCrdtMap.class);
+
 	private final Map<K, S> map = new TreeMap<>();
 
 	private final BinaryOperator<S> mergeFn;
@@ -54,7 +57,7 @@ public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable S> get(K key) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return Promise.of(map.get(key));
 	}
 
@@ -66,7 +69,7 @@ public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable S> put(K key, S value) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return Promise.of(map.merge(key, value, mergeFn));
 	}
 

@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.collection.Try;
 import io.activej.crdt.CrdtData;
@@ -59,6 +60,8 @@ import static java.util.stream.Collectors.toMap;
 @SuppressWarnings("rawtypes") // JMX
 public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends AbstractReactive
 		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+	private static final boolean CHECKS = Checks.isEnabled(ClusterCrdtStorage.class);
+
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(ClusterCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final IDiscoveryService<P> discoveryService;
@@ -171,7 +174,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		return execute(partitionScheme, ICrdtStorage::upload)
 				.then(map -> {
@@ -199,7 +202,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return getData(storage -> storage.download(timestamp))
 				.map(supplier -> supplier
 						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
@@ -208,7 +211,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return getData(ICrdtStorage::take)
 				.map(supplier -> supplier
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
@@ -217,7 +220,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = currentPartitionScheme;
 		return execute(partitionScheme, ICrdtStorage::remove)
 				.map(map -> {
@@ -244,7 +247,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 	}
 
 	public Promise<Void> repartition(P sourcePartitionId) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		ICrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
 
@@ -313,7 +316,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		return execute(partitionScheme, ICrdtStorage::ping)
 				.whenResult(map -> {

@@ -18,6 +18,7 @@ package io.activej.csp.process.frame;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
@@ -35,6 +36,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
+	private static final boolean CHECKS = Checks.isEnabled(ChannelFrameDecoder.class);
 
 	private final BlockDecoder decoder;
 	private boolean decoderResets;
@@ -86,7 +88,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	public BinaryChannelInput getInput() {
 		return input -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			this.input = input;
 			this.bufs = input.getBufs();
 			if (this.input != null && this.output != null) startProcess();
@@ -98,7 +100,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

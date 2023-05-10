@@ -39,7 +39,7 @@ public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
 
 	@SuppressWarnings("unused")
 	protected Promise<Void> prepareToResolveAttributes(List<Object> results, KeyFunction keyFunction, AttributesFunction attributesFunction) {
-		checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		return Promise.complete();
 	}
 

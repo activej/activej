@@ -1,6 +1,7 @@
 package io.activej.datastream.supplier;
 
 import io.activej.common.ApplicationSettings;
+import io.activej.common.Checks;
 
 import java.util.concurrent.ExecutionException;
 
@@ -8,6 +9,8 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class BlockingStreamSupplier<T> extends AbstractStreamSupplier<T> {
+	private static final boolean CHECKS = Checks.isEnabled(BlockingStreamSupplier.class);
+
 	public static final int DEFAULT_BUFFER_SIZE = ApplicationSettings.getInt(BlockingStreamSupplier.class, "bufferSize", 8192);
 
 	private final Queue queue;
@@ -77,7 +80,7 @@ public final class BlockingStreamSupplier<T> extends AbstractStreamSupplier<T> {
 
 		@Override
 		protected void onMoreData() {
-			checkInReactorThread(this);
+			if (CHECKS) checkInReactorThread(this);
 
 			while (isReady() && !isEmpty()) {
 				send(take());

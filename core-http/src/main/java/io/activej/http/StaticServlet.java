@@ -18,6 +18,7 @@ package io.activej.http;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.http.loader.IStaticLoader;
 import io.activej.http.loader.ResourceIsADirectoryException;
@@ -47,6 +48,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  */
 public final class StaticServlet extends AbstractReactive
 		implements AsyncServlet {
+	private static final boolean CHECKS = Checks.isEnabled(StaticServlet.class);
+
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
 	private final IStaticLoader resourceLoader;
@@ -174,7 +177,7 @@ public final class StaticServlet extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		String mappedPath = pathMapper.apply(request);
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);

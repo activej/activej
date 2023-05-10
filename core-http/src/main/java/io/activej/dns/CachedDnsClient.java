@@ -16,6 +16,7 @@
 
 package io.activej.dns;
 
+import io.activej.common.Checks;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.dns.DnsCache.DnsQueryCacheResult;
 import io.activej.dns.protocol.DnsQuery;
@@ -44,7 +45,8 @@ import static io.activej.reactor.Reactor.checkInReactorThread;
  */
 public final class CachedDnsClient extends AbstractReactive
 		implements IDnsClient, ReactiveJmxBean {
-	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
+	private static final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
+	private static final boolean CHECKS = Checks.isEnabled(CachedDnsClient.class);
 
 	private final IDnsClient client;
 	private final DnsCache cache;
@@ -103,7 +105,7 @@ public final class CachedDnsClient extends AbstractReactive
 		return new IDnsClient() {
 			@Override
 			public Promise<DnsResponse> resolve(DnsQuery query) {
-				checkInReactorThread(anotherReactor);
+				if (CHECKS) checkInReactorThread(anotherReactor);
 				DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 				if (fromQuery != null) {
 					logger.trace("{} already contained an IP address within itself", query);
@@ -159,7 +161,7 @@ public final class CachedDnsClient extends AbstractReactive
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

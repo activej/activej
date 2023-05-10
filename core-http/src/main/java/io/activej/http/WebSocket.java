@@ -21,6 +21,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.ref.Ref;
 import io.activej.csp.consumer.AbstractChannelConsumer;
@@ -49,6 +50,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class WebSocket extends AbstractAsyncCloseable implements IWebSocket {
+	private static final boolean CHECKS = Checks.isEnabled(WebSocket.class);
+
 	private final HttpRequest request;
 	private final HttpResponse response;
 	private final Consumer<WebSocketException> onProtocolError;
@@ -76,7 +79,7 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 
 	@Override
 	public Promise<Message> readMessage() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return doRead(() -> {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
@@ -125,13 +128,13 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 
 	@Override
 	public Promise<Frame> readFrame() {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return doRead(frameInput::get);
 	}
 
 	@Override
 	public Promise<Void> writeMessage(@Nullable Message msg) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return doWrite(() -> {
 			if (msg == null) {
 				return frameOutput.accept(null);
@@ -146,7 +149,7 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 
 	@Override
 	public Promise<Void> writeFrame(@Nullable Frame frame) {
-		checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return doWrite(() -> frameOutput.accept(frame), frame);
 	}
 
@@ -197,7 +200,7 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 	}
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
-		checkInReactorThread(this);
+		assert reactor.inReactorThread();
 		checkState(writePromise == null, "Concurrent writes");
 
 		if (isClosed()) {
