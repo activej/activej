@@ -41,7 +41,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Represents HTTP response for {@link HttpRequest}. After handling {@code HttpResponse} will be recycled, so you cannot
  * usi it afterwards.
  */
-public final class HttpResponse extends HttpMessage implements ToPromise<HttpResponse> {
+public class HttpResponse extends HttpMessage implements ToPromise<HttpResponse> {
 	private static final boolean CHECKS = Checks.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");

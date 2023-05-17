@@ -51,7 +51,7 @@ import static io.activej.http.Protocol.WSS;
  * {@code HttpRequest} class provides methods which can be used intuitively for
  * creating and configuring an HTTP request.
  */
-public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequest> {
+public class HttpRequest extends HttpMessage implements ToPromise<HttpRequest> {
 	private static final boolean CHECKS = Checks.isEnabled(HttpRequest.class);
 
 	private static final int LONGEST_HTTP_METHOD_SIZE = 12;
