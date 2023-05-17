@@ -191,17 +191,17 @@
 	  <dependency>
         <groupId>org.apache.calcite</groupId>
         <artifactId>calcite-core</artifactId>
-        <version>1.32.0</version>
+        <version>1.34.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
         <artifactId>avatica-core</artifactId>
-        <version>1.22.0</version>
+        <version>1.23.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
         <artifactId>avatica-server</artifactId>
-        <version>1.22.0</version>
+        <version>1.23.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
