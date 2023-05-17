@@ -203,6 +203,15 @@
         <artifactId>avatica-server</artifactId>
         <version>1.23.0</version>
       </dependency>
+
+
+      <!--Fixing transitive dependency vulnerability-->
+      <dependency>
+        <groupId>net.minidev</groupId>
+        <artifactId>json-smart</artifactId>
+        <version>2.4.10</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
