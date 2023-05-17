@@ -11,22 +11,22 @@ import io.activej.serializer.annotations.Serialize;
 public final class SimpleObjectExample {
 	public static void main(String[] args) {
 		//[START REGION_2]
-		Person john = new Person(34, "Jim");
-		john.setSurname("Smith");
+		Person jim = new Person(34, "Jim");
+		jim.setSurname("Smith");
 		byte[] buffer = new byte[200];
 		BinarySerializer<Person> serializer = SerializerFactory.defaultInstance()
 				.create(Person.class);
 		//[END REGION_2]
 
 		//[START REGION_3]
-		serializer.encode(buffer, 0, john);
+		serializer.encode(buffer, 0, jim);
 		Person johnCopy = serializer.decode(buffer, 0);
 		//[END REGION_3]
 
 		//[START REGION_4]
-		System.out.println(john.age + " " + johnCopy.age);
-		System.out.println(john.name + " " + johnCopy.name);
-		System.out.println(john.getSurname() + " " + johnCopy.getSurname());
+		System.out.println(jim.age + " " + johnCopy.age);
+		System.out.println(jim.name + " " + johnCopy.name);
+		System.out.println(jim.getSurname() + " " + johnCopy.getSurname());
 		//[END REGION_4]
 	}
 
