@@ -65,7 +65,7 @@ public class HttpRequest extends HttpMessage implements ToPromise<HttpRequest> {
 	private Map<String, String> queryParameters;
 	private Map<String, String> postParameters;
 
-	HttpRequest(HttpVersion version, HttpMethod method, UrlParser url, @Nullable HttpServerConnection connection) {
+	public HttpRequest(HttpVersion version, HttpMethod method, UrlParser url, @Nullable HttpServerConnection connection) {
 		super(version);
 		this.method = method;
 		this.url = url;

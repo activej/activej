@@ -75,7 +75,7 @@ public abstract class HttpMessage {
 	protected int maxBodySize;
 	protected Map<Object, Object> attachments;
 
-	protected HttpMessage(HttpVersion version) {
+	public HttpMessage(HttpVersion version) {
 		this.version = version;
 	}
 

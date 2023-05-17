@@ -116,13 +116,13 @@ public class HttpResponse extends HttpMessage implements ToPromise<HttpResponse>
 
 	private @Nullable Map<String, HttpCookie> parsedCookies;
 
-	HttpResponse(HttpVersion version, int code, @Nullable HttpClientConnection connection) {
+	public HttpResponse(HttpVersion version, int code, @Nullable HttpClientConnection connection) {
 		super(version);
 		this.code = code;
 		this.connection = connection;
 	}
 
-	HttpResponse(HttpVersion version, int code) {
+	public HttpResponse(HttpVersion version, int code) {
 		this(version, code, null);
 	}
 
