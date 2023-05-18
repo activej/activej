@@ -16,10 +16,9 @@ import io.activej.launchers.initializers.Initializers;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import org.apache.calcite.avatica.Meta;
-import org.apache.calcite.avatica.remote.JsonService;
-import org.apache.calcite.avatica.remote.LocalJsonService;
-import org.apache.calcite.avatica.remote.LocalService;
-import org.apache.calcite.avatica.remote.Service;
+import org.apache.calcite.avatica.metrics.MetricsSystem;
+import org.apache.calcite.avatica.metrics.noop.NoopMetricsSystem;
+import org.apache.calcite.avatica.remote.*;
 
 import java.util.concurrent.Executor;
 
@@ -46,8 +45,8 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 	}
 
 	@Provides
-	AsyncServlet jdbcServlet(Executor executor, JsonService jsonService) {
-		return AvaticaJdbcServlet.create(executor, jsonService);
+	AsyncServlet jdbcServlet(Executor executor, Handler<String> handler) {
+		return AvaticaJdbcServlet.create(executor, handler);
 	}
 
 	@Provides
@@ -56,8 +55,8 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 	}
 
 	@Provides
-	JsonService jsonService(Service service) {
-		return new LocalJsonService(service);
+	Handler<String> handler(Service service, MetricsSystem metrics) {
+		return new JsonHandler(service, metrics);
 	}
 
 	@Provides
@@ -68,5 +67,10 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 	@Provides
 	Meta meta(Reactor reactor, SqlDataflow sqlDataflow) {
 		return DataflowMeta.create(reactor, sqlDataflow);
+	}
+
+	@Provides
+	MetricsSystem metrics() {
+		return NoopMetricsSystem.getInstance();
 	}
 }

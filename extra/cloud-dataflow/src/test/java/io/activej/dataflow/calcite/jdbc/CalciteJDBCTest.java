@@ -11,7 +11,8 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
-import org.apache.calcite.avatica.remote.LocalJsonService;
+import org.apache.calcite.avatica.metrics.noop.NoopMetricsSystem;
+import org.apache.calcite.avatica.remote.JsonHandler;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 										reactor,
 										AvaticaJdbcServlet.create(
 												Executors.newCachedThreadPool(),
-												new LocalJsonService(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow)))
+												new JsonHandler(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow)), NoopMetricsSystem.getInstance())
 										))
 								.withListenPort(port)
 								.build(),
