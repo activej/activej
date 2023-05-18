@@ -1,32 +1,27 @@
 package io.activej.launchers.dataflow.jdbc;
 
 import io.activej.config.Config;
+import io.activej.config.converter.ConfigConverters;
 import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
+import io.activej.dataflow.calcite.jdbc.AvaticaJdbcServlet;
 import io.activej.dataflow.calcite.jdbc.DataflowMeta;
-import io.activej.dataflow.calcite.jdbc.JdbcServerService;
+import io.activej.http.AsyncServlet;
+import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launchers.dataflow.DataflowClientModule;
+import io.activej.launchers.initializers.Initializers;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.remote.JsonService;
+import org.apache.calcite.avatica.remote.LocalJsonService;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.remote.Service;
-import org.apache.calcite.avatica.server.AvaticaHandler;
-import org.apache.calcite.avatica.server.AvaticaJsonHandler;
-import org.apache.calcite.avatica.server.HttpServer;
-import org.apache.calcite.avatica.server.HttpServer.Builder;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 
-import java.net.InetSocketAddress;
-import java.time.Duration;
-import java.util.List;
-
-import static io.activej.config.converter.ConfigConverters.ofDuration;
-import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
+import java.util.concurrent.Executor;
 
 public final class DataflowJdbcServerModule extends AbstractModule {
 	private DataflowJdbcServerModule() {
@@ -44,31 +39,25 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 
 	@Provides
 	@Eager
-	JdbcServerService jdbcServerService(HttpServer server) {
-		return JdbcServerService.create(server);
-	}
-
-	@Provides
-	HttpServer server(AvaticaHandler handler, Config config) {
-		InetSocketAddress address = config.get(ofInetSocketAddress(), "dataflow.jdbc.server.listenAddress");
-		Duration idleTimeout = config.get(ofDuration(), "dataflow.jdbc.server.idleTimeout");
-
-		return new Builder<Server>()
-				.withHandler(handler)
-				.withServerCustomizers(List.of(server -> {
-					Connector[] connectors = server.getConnectors();
-					assert connectors.length == 1;
-					ServerConnector connector = (ServerConnector) connectors[0];
-					connector.setIdleTimeout(idleTimeout.toMillis());
-					connector.setHost(address.getHostName());
-					connector.setPort(address.getPort());
-				}), Server.class)
+	HttpServer server(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return HttpServer.builder(reactor, servlet)
+				.initialize(Initializers.ofHttpServer(config.getChild("dataflow.jdbc.server")))
 				.build();
 	}
 
 	@Provides
-	AvaticaHandler handler(Service service) {
-		return new AvaticaJsonHandler(service);
+	AsyncServlet jdbcServlet(Executor executor, JsonService jsonService) {
+		return AvaticaJdbcServlet.create(executor, jsonService);
+	}
+
+	@Provides
+	Executor executor(Config config) {
+		return ConfigConverters.getExecutor(config);
+	}
+
+	@Provides
+	JsonService jsonService(Service service) {
+		return new LocalJsonService(service);
 	}
 
 	@Provides

@@ -198,11 +198,6 @@
         <artifactId>avatica-core</artifactId>
         <version>1.23.0</version>
       </dependency>
-      <dependency>
-        <groupId>org.apache.calcite.avatica</groupId>
-        <artifactId>avatica-server</artifactId>
-        <version>1.23.0</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 

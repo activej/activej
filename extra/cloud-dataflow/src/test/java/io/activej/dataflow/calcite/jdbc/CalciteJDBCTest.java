@@ -6,13 +6,13 @@ import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.jdbc.driver.Driver;
 import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.HttpServer;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
+import org.apache.calcite.avatica.remote.LocalJsonService;
 import org.apache.calcite.avatica.remote.LocalService;
-import org.apache.calcite.avatica.server.AvaticaJsonHandler;
-import org.apache.calcite.avatica.server.HttpServer;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -20,6 +20,7 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
@@ -37,9 +38,13 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 		return ModuleBuilder.create()
 				.install(CalciteClientModule.create())
 				.bind(int.class).to(TestUtils::getFreePort)
-				.bind(HttpServer.class).to((reactor, port, calciteSqlDataflow) -> new HttpServer.Builder<>()
-								.withHandler(new AvaticaJsonHandler(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow))))
-								.withPort(port)
+				.bind(HttpServer.class).to((reactor, port, calciteSqlDataflow) -> HttpServer.builder(
+										reactor,
+										AvaticaJdbcServlet.create(
+												Executors.newCachedThreadPool(),
+												new LocalJsonService(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow)))
+										))
+								.withListenPort(port)
 								.build(),
 						NioReactor.class, int.class, SqlDataflow.class)
 				.bind(Eventloop.class).to(() -> Eventloop.builder()
@@ -57,9 +62,9 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 		server1Eventloop.keepAlive(true);
 		server2Eventloop.keepAlive(true);
 
-		port = jdbcServer.getPort();
+		port = jdbcServer.getListenAddresses().get(0).getPort();
 
-		jdbcServer.start();
+		jdbcServer.listen();
 
 		new Thread(server1Eventloop).start();
 		new Thread(server2Eventloop).start();
@@ -72,7 +77,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	protected void onTearDown() {
 		server1Eventloop.keepAlive(false);
 		server2Eventloop.keepAlive(false);
-		jdbcServer.stop();
+		jdbcServer.getReactor().submit(() -> jdbcServer.close());
 	}
 
 	@Override
