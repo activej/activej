@@ -89,14 +89,14 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   public static void main(String[] args) {
       Eventloop eventloop = Eventloop.create();
   
-      HttpClient client = HttpClient.builder(eventloop).build();
+      HttpClient client = HttpClient.create(eventloop);
   
       HttpRequest request = HttpRequest.get("http://localhost:8080").build();
   
       client.request(request)
-          .then(response -> response.loadBody())
-          .map(body -> body.getString(StandardCharsets.UTF_8))
-          .whenResult(bodyString -> System.out.println(bodyString));
+              .then(response -> response.loadBody())
+              .map(body -> body.getString(StandardCharsets.UTF_8))
+              .whenResult(bodyString -> System.out.println(bodyString));
   
       eventloop.run();
   }
@@ -271,8 +271,56 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       constants. ([ActiveJ Specializer](https://activej.io/specializer))
 
       ```java
-      Specializer specializer = Specializer.create();
-      expression = specializer.specialize(expression);
+      // Operators
+      public record IdentityOperator() implements IntUnaryOperator {
+          @Override
+          public int applyAsInt(int operand) {
+              return operand;
+          }
+      }
+      
+      public record ConstOperator(int value) implements IntUnaryOperator {
+          @Override
+          public int applyAsInt(int operand) {
+              return value;
+          }
+      }
+      
+      public record SumOperator(IntUnaryOperator left, IntUnaryOperator right) implements IntUnaryOperator {
+          @Override
+          public int applyAsInt(int operand) {
+              return left.applyAsInt(operand) + right.applyAsInt(operand);
+          }
+      }
+      
+      public record ProductOperator(IntUnaryOperator left, IntUnaryOperator right) implements IntUnaryOperator {
+          @Override
+          public int applyAsInt(int operand) {
+              return left.applyAsInt(operand) * right.applyAsInt(operand);
+          }
+      }
+      ```
+
+      ```java
+      // Expression specialization
+      public static void main(String[] args) {
+          // ((x + 10) * (-5)) + 33
+          IntUnaryOperator expression = new SumOperator(
+              new ProductOperator(
+                  new ConstOperator(-5),
+                  new SumOperator(
+                      new ConstOperator(10),
+                      new IdentityOperator()
+                  )
+              ),
+              new ConstOperator(33)
+          );
+      
+          Specializer specializer = Specializer.create();
+          expression = specializer.specialize(expression);
+      
+          System.out.println(expression.applyAsInt(0));  // -17
+      }
       ```
 
 * **Cloud components**
