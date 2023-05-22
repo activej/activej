@@ -62,6 +62,46 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
 * **ActiveJ Inject** - Lightweight library for dependency injection. Optimized for fast application start-up and
   performance at runtime. Supports annotation-based component wiring as well as reflection-free
   wiring. ([ActiveJ Inject](https://activej.io/inject))
+
+  ```java
+  // Manual binding
+  public static void main(String[] args) {
+      Module module = ModuleBuilder.create()
+              .bind(int.class).toInstance(101)
+              .bind(String.class).to(number -> "Hello #" + number, int.class)
+              .build();
+  
+      Injector injector = Injector.of(module);
+  
+      String string = injector.getInstance(String.class);
+  
+      System.out.println(string); // "Hello #101"
+  }
+  ```
+  
+  ```java
+  // Binding via annotations
+  public static class MyModule extends AbstractModule {
+      @Provides
+      int number() {
+          return 101;
+      }
+  
+      @Provides
+      String string(int number) {
+          return "Hello #" + number;
+      }
+  }
+  
+  public static void main(String[] args) {
+      Injector injector = Injector.of(new MyModule());
+  
+      String string = injector.getInstance(String.class);
+  
+      System.out.println(string); // "Hello #101"
+  }
+  ```
+
 * **Boot** - Production-ready tools for running and monitoring an ActiveJ application. Concurrent control of services lifecycle 
   based on their dependencies. Various service monitoring utilities with JMX and Zabbix support. ([Launcher](https://activej.io/boot/launcher),
   [Service Graph](https://activej.io/boot/servicegraph), [JMX](https://github.com/activej/activej/tree/master/boot-jmx),
