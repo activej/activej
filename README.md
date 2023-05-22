@@ -170,6 +170,55 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
 
     * **ActiveJ Serializer** - [Fast](https://github.com/activej/jvm-serializers) and space-efficient serializers created with bytecode engineering.
       Introduces schema-free approach for best performance. ([ActiveJ Serializer](https://activej.io/serializer))
+      
+      ```java
+      // A class to be serialized
+      public class User {
+          private final int id;
+          private final String name;
+      
+          public User(@Deserialize("id") int id, @Deserialize("name") String name) {
+              this.id = id;
+              this.name = name;
+          }
+      
+          @Serialize
+          public int getId() {
+              return id;
+          }
+      
+          @Serialize
+          public String getName() {
+              return name;
+          }
+      }
+      ```
+
+      ```java
+      // Serialization and deserialization
+      public static void main(String[] args) {
+          BinarySerializer<User> userSerializer = SerializerFactory.defaultInstance()
+                  .create(User.class);
+      
+          User john = new User(1, "John");
+      
+          byte[] buffer = new byte[100];
+          userSerializer.encode(buffer, 0, john);
+      
+          User decoded = userSerializer.decode(buffer, 0);
+      
+          System.out.println(decoded.id);   // 1
+          System.out.println(decoded.name); // John
+      }
+      ```
+
+      ```java
+      // Serialization of Java records
+      @SerializeRecord
+      public record User(int id, String name) {
+      }
+      ```
+      
     * **ActiveJ Specializer** - Innovative technology to improve class performance at runtime by automatically
       converting class instances into specialized static classes and class instance fields into baked-in static
       fields. Provides a wide variety of JVM optimizations for static classes that are impossible otherwise: dead code
