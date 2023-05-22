@@ -54,7 +54,7 @@ public class RpcServiceGraphTest {
 		port = getFreePort();
 		RpcServer.builder(eventloop)
 				.withMessageTypes(String.class)
-				.withHandler(String.class, Promise::of)
+				.withHandler(String.class, string -> Promise.of("Response: " + string))
 				.withListenPort(port)
 				.build()
 				.listen();
