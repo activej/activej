@@ -19,6 +19,7 @@ package io.activej.memcache.protocol;
 import io.activej.rpc.protocol.RpcMandatoryData;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeNullable;
 
 import java.util.Arrays;
@@ -91,6 +92,7 @@ public class MemcacheRpcMessage {
 		public static final PutResponse INSTANCE = new PutResponse();
 	}
 
+	@SerializeClass(SliceSerializerDef.class)
 	public static final class Slice {
 		private final byte[] array;
 		private final int offset;

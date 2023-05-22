@@ -26,10 +26,8 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerFactory;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -67,10 +65,7 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	RpcServer server(NioReactor reactor, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
 		RpcServer.Builder builder = RpcServer.builder(reactor)
 				.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, getMessageTypes())
-						.build()
-						.create(RpcMessage.class));
+				.withMessageTypes(getMessageTypes());
 		for (Map.Entry<Class<?>, RpcRequestHandler<?, ?>> entry : handlers.entrySet()) {
 			builder.withHandler((Class<Object>) entry.getKey(), (RpcRequestHandler<Object, Object>) entry.getValue());
 		}

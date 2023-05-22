@@ -15,15 +15,12 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 import io.activej.service.ServiceGraphModuleSettings;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
@@ -70,10 +67,7 @@ public class RpcBenchmark extends Launcher {
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(Integer.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(Integer.class)
 				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
 				.build();
 	}
@@ -86,10 +80,7 @@ public class RpcBenchmark extends Launcher {
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))
 				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(Integer.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, req -> Promise.of(req * 2))
 				.build();
 

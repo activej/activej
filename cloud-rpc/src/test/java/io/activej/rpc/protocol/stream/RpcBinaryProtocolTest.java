@@ -59,18 +59,12 @@ public final class RpcBinaryProtocolTest {
 		String testMessage = "Test";
 
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
 				.build();
 
 		RpcServer server = RpcServer.builder(Reactor.getCurrentReactor())
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(String.class)
 				.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
 				.withListenPort(listenPort)
 				.build();

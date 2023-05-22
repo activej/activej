@@ -15,13 +15,10 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.protocol.RpcMessage;
-import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
@@ -61,10 +58,7 @@ public class RpcBenchmarkClient extends Launcher {
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.frameFormat", null))
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(Integer.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(Integer.class)
 				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
 				.build();
 	}

@@ -19,16 +19,12 @@ package io.activej.memcache.client;
 import io.activej.config.Config;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
-import io.activej.memcache.protocol.SliceSerializerDef;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.impl.RendezvousHashing;
-import io.activej.rpc.protocol.RpcMessage;
-import io.activej.serializer.SerializerFactory;
 
 import java.time.Duration;
 
@@ -52,11 +48,7 @@ public class MemcacheClientModule extends AbstractModule {
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
 								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
 								.build())
-				.withSerializer(SerializerFactory.builder()
-						.with(Slice.class, ctx -> new SliceSerializerDef())
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, MESSAGE_TYPES)
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))

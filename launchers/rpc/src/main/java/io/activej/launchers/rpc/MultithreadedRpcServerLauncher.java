@@ -30,9 +30,7 @@ import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;
@@ -41,7 +39,6 @@ import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
@@ -128,10 +125,7 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 					@Worker
 					RpcServer server(NioReactor reactor, Config config, @WorkerId int id) {
 						return RpcServer.builder(reactor)
-								.withSerializer(SerializerFactory.builder()
-										.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-										.build()
-										.create(RpcMessage.class))
+								.withMessageTypes(String.class)
 								.withHandler(String.class,
 										req -> Promise.of("Request served by worker #" + id + ": " + req))
 								.build();

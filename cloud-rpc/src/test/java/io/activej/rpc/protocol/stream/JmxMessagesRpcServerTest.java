@@ -5,9 +5,7 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerFactory;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -18,7 +16,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.RpcClient.DEFAULT_PACKET_SIZE;
@@ -47,10 +44,7 @@ public class JmxMessagesRpcServerTest {
 	public void setup() throws IOException {
 		listenPort = getFreePort();
 		server = RpcServer.builder(Reactor.getCurrentReactor())
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
@@ -63,10 +57,7 @@ public class JmxMessagesRpcServerTest {
 	@Test
 	public void testWithoutProtocolError() {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
 				.build();
@@ -79,10 +70,7 @@ public class JmxMessagesRpcServerTest {
 	@Test
 	public void testWithProtocolError() {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
 				.build();
 		await(client.start()
@@ -94,10 +82,7 @@ public class JmxMessagesRpcServerTest {
 	@Test
 	public void testWithProtocolError2() {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
 				.build();
 		await(client.start()

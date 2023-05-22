@@ -9,9 +9,7 @@ import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerFactory;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
@@ -62,10 +60,7 @@ public final class RpcClientTest {
 
 			int finalI = i;
 			RpcServer rpcServer = RpcServer.builder(serverEventloop)
-					.withSerializer(SerializerFactory.builder()
-							.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(Request.class, Integer.class))
-							.build()
-							.create(RpcMessage.class))
+					.withMessageTypes(Request.class, Integer.class)
 					.withHandler(Request.class, $ -> Promise.of(finalI))
 					.withListenPort(getFreePort())
 					.build();
@@ -423,10 +418,7 @@ public final class RpcClientTest {
 
 	private void initRpcClient(RpcStrategy strategy) {
 		this.rpcClient = RpcClient.builder(clientEventloop)
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(Request.class, Integer.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(Request.class, Integer.class)
 				.withStrategy(strategy)
 				.build();
 		await(rpcClient::start);

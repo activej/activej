@@ -11,12 +11,8 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
-
-import java.util.List;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
@@ -40,10 +36,7 @@ public class RpcBenchmarkServer extends Launcher {
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))
 				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
-				.withSerializer(SerializerFactory.builder()
-						.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(Integer.class))
-						.build()
-						.create(RpcMessage.class))
+				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, req -> Promise.of(req * 2))
 				.build();
 

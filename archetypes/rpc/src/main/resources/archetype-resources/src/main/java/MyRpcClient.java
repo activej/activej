@@ -11,12 +11,9 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.strategy.RpcStrategies;
-import io.activej.rpc.protocol.RpcMessage;
-import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.Scanner;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
@@ -44,10 +41,7 @@ public class MyRpcClient extends Launcher {
     @Provides
     IRpcClient rpcClient(NioReactor reactor, Config config) {
         return RpcClient.builder(reactor)
-                .withSerializer(SerializerFactory.builder()
-                        .withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-                        .build()
-                        .create(RpcMessage.class))
+                .withMessageTypes(String.class)
                 .withStrategy(RpcStrategies.server(
                         new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))))
                 .build();
