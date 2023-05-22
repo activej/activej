@@ -11,9 +11,9 @@ public class ${mainClassName} extends HttpServerLauncher {
 
     @Provides
     AsyncServlet servlet() {
-        return request -> Promise.of(
-                HttpResponse.ok200()
-                    .withPlainText("Hello, World!"));
+        return request -> HttpResponse.ok200()
+                .withPlainText("Hello, World!")
+                .toPromise();
     }
 
     public static void main(String[] args) throws Exception {
