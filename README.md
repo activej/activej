@@ -234,6 +234,39 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
     * **ActiveJ FS** - Asynchronous abstraction over the file system for building efficient, scalable local or remote file
       storages that support data redundancy, rebalancing, and resharding.
       ([ActiveJ FS](https://activej.io/fs))
+
+      ```java
+      public static void main(String[] args) throws IOException {
+          Eventloop eventloop = Eventloop.builder()
+                  .withCurrentThread()
+                  .build();
+      
+          ExecutorService executor = Executors.newCachedThreadPool();
+      
+          Path directory = Files.createTempDirectory("fs");
+      
+          FileSystem fileSystem = FileSystem.create(eventloop, executor, directory);
+      
+          String filename = "file.txt";
+      
+          fileSystem.start()
+                  // Upload
+                  .then(() -> fileSystem.upload(filename))
+                  .then(consumer -> ChannelSuppliers.ofValue(wrapUtf8("Hello, world"))
+                          .streamTo(consumer))
+      
+                  // Download
+                  .then(() -> fileSystem.download(filename))
+                  .then(supplier -> supplier.streamTo(ChannelConsumers.ofConsumer(byteBuf ->
+                          System.out.println(byteBuf.asString(StandardCharsets.UTF_8)))))      // "Hello, world" 
+                      
+                  // Cleanup
+                  .whenComplete(executor::shutdown);
+      
+          eventloop.run();
+      }
+      ```
+
     * **ActiveJ RPC** - High-performance binary client-server protocol. Allows building distributed, sharded, and
       fault-tolerant microservice applications. ([ActiveJ RPC](https://activej.io/rpc))
     * Various extra services:
