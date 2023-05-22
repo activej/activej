@@ -22,7 +22,6 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
 
   ```java
   // Server
-  
   public static void main(String[] args) throws IOException {
       Eventloop eventloop = Eventloop.create();
   
@@ -42,7 +41,6 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
 
   ```java
   // Client
-  
   public static void main(String[] args) {
       Eventloop eventloop = Eventloop.create();
   
@@ -133,6 +131,43 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
     * **ActiveJ Codegen** - Dynamic bytecode generator for classes and methods on top of [ObjectWeb ASM](https://asm.ow2.io/)
       library. Abstracts the complexity of direct bytecode manipulation and allows you to create custom classes on the fly
       using Lisp-like AST expressions. ([ActiveJ Codegen](https://activej.io/codegen))
+
+      ```java
+      // Manually implemented method
+      public class MyCounter implements Counter { 
+          @Override
+          public int countSum() {
+              int sum = 0;
+              for (int i = 0; i < 100; i++) {
+                  sum += i;
+              }
+              return sum;
+          }
+      }
+      ```
+      
+      ```java
+      // The same method generated via ActiveJ Codegen 
+      public static void main(String[] args) {
+          DefiningClassLoader classLoader = DefiningClassLoader.create();
+      
+          Counter counter = ClassGenerator.builder(Counter.class)
+                  .withMethod("countSum",
+                          let(value(0), sum ->
+                                  sequence(
+                                          iterate(
+                                                  value(0),
+                                                  value(100),
+                                                  i -> set(sum, add(sum, i))),
+                                          sum
+                                  )))
+                  .build()
+                  .generateClassAndCreateInstance(classLoader);
+      
+          System.out.println(counter.countSum()); // 4950
+      }
+      ```
+
     * **ActiveJ Serializer** - [Fast](https://github.com/activej/jvm-serializers) and space-efficient serializers created with bytecode engineering.
       Introduces schema-free approach for best performance. ([ActiveJ Serializer](https://activej.io/serializer))
     * **ActiveJ Specializer** - Innovative technology to improve class performance at runtime by automatically
