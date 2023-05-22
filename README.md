@@ -224,6 +224,12 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       fields. Provides a wide variety of JVM optimizations for static classes that are impossible otherwise: dead code
       elimination, aggressive inlining of methods and static
       constants. ([ActiveJ Specializer](https://activej.io/specializer))
+
+      ```java
+      Specializer specializer = Specializer.create();
+      expression = specializer.specialize(expression);
+      ```
+
 * **Cloud components**
     * **ActiveJ FS** - Asynchronous abstraction over the file system for building efficient, scalable local or remote file
       storages that support data redundancy, rebalancing, and resharding.
