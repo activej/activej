@@ -269,6 +269,43 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
 
     * **ActiveJ RPC** - High-performance binary client-server protocol. Allows building distributed, sharded, and
       fault-tolerant microservice applications. ([ActiveJ RPC](https://activej.io/rpc))
+
+      ```java
+      // Server
+      public static void main(String[] args) throws IOException {
+          Eventloop eventloop = Eventloop.create();
+      
+          RpcServer server = RpcServer.builder(eventloop)
+                  .withMessageTypes(String.class)
+                  .withHandler(String.class, name -> Promise.of("Hello, " + name))
+                  .withListenPort(9000)
+                  .build();
+      
+          server.listen();
+      
+          eventloop.run();
+      }
+      ```
+
+      ```java
+      // Client
+      public static void main(String[] args) {
+          Eventloop eventloop = Eventloop.create();
+      
+          RpcClient client = RpcClient.builder(eventloop)
+                  .withStrategy(RpcStrategies.server(new InetSocketAddress(9000)))
+                  .withMessageTypes(String.class)
+                  .build();
+      
+          client.start()
+                  .then(() -> client.sendRequest("John"))
+                  .whenResult(response -> System.out.println(response)) // "Hello, John"
+                  .whenComplete(client::stop);
+      
+          eventloop.run();
+      }
+      ```
+
     * Various extra services:
       [ActiveJ CRDT](https://github.com/activej/activej/tree/master/extra/cloud-crdt),
       [Redis client](https://github.com/activej/activej/tree/master/extra/cloud-redis),
