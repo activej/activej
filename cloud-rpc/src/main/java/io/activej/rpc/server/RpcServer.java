@@ -36,6 +36,7 @@ import io.activej.rpc.protocol.RpcControlMessage;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.SerializerFactory;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -122,6 +123,38 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 
 		/**
+		 * Sets a default serializer for {@link RpcMessage} capable of serializing specified
+		 * message types.
+		 * <p>
+		 * <b>
+		 * All message types should be serializable by a default {@link  SerializerFactory}.
+		 * If some additional configuration should be made to {@link  SerializerFactory}, use
+		 * {@link #withSerializer(BinarySerializer)} method and pass manually constructed
+		 * {@link BinarySerializer<RpcMessage>}. You can use implementation of this method as a reference.
+		 * </b>
+		 * <p>
+		 * <b>Order of message types matters. It should match the order of message types set on {@link RpcClient}.
+		 * To keep serializers compatible, the order of message types should not change</b>
+		 *
+		 * @param messageTypes serializer for RPC message
+		 * @return the builder for RPC server with serializer for RPC message capable of serializing
+		 * specified message types
+		 */
+		public Builder withMessageTypes(List<Class<?>> messageTypes) {
+			return withSerializer(SerializerFactory.builder()
+					.withSubclasses(RpcMessage.SUBCLASSES_ID, messageTypes)
+					.build()
+					.create(RpcMessage.class));
+		}
+
+		/**
+		 * @see #withMessageTypes(List)
+		 */
+		public Builder withMessageTypes(Class<?>... messageTypes) {
+			return withMessageTypes(List.of(messageTypes));
+		}
+
+		/**
 		 * Sets serializer for {@link RpcMessage} of this RPC server.
 		 *
 		 * @param serializer serializer for RPC message
@@ -134,7 +167,7 @@ public final class RpcServer extends AbstractReactiveServer {
 		/**
 		 * Sets serializers for request {@link RpcMessage} and response {@link RpcMessage} of this RPC server.
 		 *
-		 * @param requestSerializer serializer for request RPC message
+		 * @param requestSerializer  serializer for request RPC message
 		 * @param responseSerializer serializer for response RPC message
 		 * @return the builder for RPC server with specified serializers for RPC request and response {@link RpcMessage}s
 		 */
