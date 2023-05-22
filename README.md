@@ -334,6 +334,8 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
                   .withCurrentThread()
                   .build();
       
+          HttpClient httpClient = HttpClient.create(eventloop);
+      
           ExecutorService executor = Executors.newCachedThreadPool();
       
           Path directory = Files.createTempDirectory("fs");
@@ -345,14 +347,15 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
           fileSystem.start()
                   // Upload
                   .then(() -> fileSystem.upload(filename))
-                  .then(consumer -> ChannelSuppliers.ofValue(wrapUtf8("Hello, world"))
-                          .streamTo(consumer))
+                  .then(consumer -> httpClient.request(HttpRequest.get("http://localhost:8080").build())
+                          .then(response -> response.loadBody())
+                          .then(body -> ChannelSuppliers.ofValue(body).streamTo(consumer)))
       
                   // Download
                   .then(() -> fileSystem.download(filename))
                   .then(supplier -> supplier.streamTo(ChannelConsumers.ofConsumer(byteBuf ->
-                          System.out.println(byteBuf.asString(StandardCharsets.UTF_8)))))      // "Hello, world" 
-                      
+                          System.out.println(byteBuf.asString(StandardCharsets.UTF_8)))))
+      
                   // Cleanup
                   .whenComplete(executor::shutdown);
       
