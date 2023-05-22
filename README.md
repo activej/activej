@@ -106,6 +106,29 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   based on their dependencies. Various service monitoring utilities with JMX and Zabbix support. ([Launcher](https://activej.io/boot/launcher),
   [Service Graph](https://activej.io/boot/servicegraph), [JMX](https://github.com/activej/activej/tree/master/boot-jmx),
   [Triggers](https://github.com/activej/activej/tree/master/boot-triggers))
+
+  ```java
+  public class MyLauncher extends Launcher {
+      @Inject
+      String message;
+  
+      @Provides
+      String message() {
+          return "Hello, world!";
+      }
+  
+      @Override
+      protected void run() {
+          System.out.println(message);
+      }
+  
+      public static void main(String[] args) throws Exception {
+          Launcher launcher = new MyLauncher();
+          launcher.launch(args);
+      }
+  }
+  ```
+
 * **Bytecode manipulation**
     * **ActiveJ Codegen** - Dynamic bytecode generator for classes and methods on top of [ObjectWeb ASM](https://asm.ow2.io/)
       library. Abstracts the complexity of direct bytecode manipulation and allows you to create custom classes on the fly
