@@ -66,15 +66,17 @@ to see the "Hello World" message.
 
 ```java
 public final class HttpHelloWorldExample extends HttpServerLauncher {
-	@Provides
-	AsyncServlet servlet() {
-		return request -> HttpResponse.ok200().withPlainText("Hello, World!");
-	}
+    @Provides
+    AsyncServlet servlet() {
+        return request -> HttpResponse.ok200()
+                .withPlainText("Hello, World!")
+                .toPromise();
+    }
 
-	public static void main(String[] args) throws Exception {
-		Launcher launcher = new HttpHelloWorldExample();
-		launcher.launch(args);
-	}
+    public static void main(String[] args) throws Exception {
+        Launcher launcher = new HttpHelloWorldExample();
+        launcher.launch(args);
+    }
 }
 ```
 
