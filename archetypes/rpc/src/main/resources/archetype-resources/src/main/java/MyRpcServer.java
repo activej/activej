@@ -6,7 +6,11 @@ import io.activej.inject.annotation.Provides;
 import io.activej.launchers.rpc.RpcServerLauncher;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
+import io.activej.serializer.SerializerFactory;
+
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class MyRpcServer extends RpcServerLauncher {
@@ -14,9 +18,12 @@ public class MyRpcServer extends RpcServerLauncher {
 
     @Provides
     RpcServer provideRpcServer(NioReactor reactor, Config config) {
-        return RpcServer.create(reactor)
-                // You can define any message types by class
-                .withMessageTypes(String.class)
+        return RpcServer.builder(reactor)
+                // You should define serializer for RPC message
+                .withSerializer(SerializerFactory.builder()
+                        .withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
+                        .build()
+                        .create(RpcMessage.class))
                 // Your message handlers can be written below
                 .withHandler(String.class, request -> {
                     if (request.equalsIgnoreCase("hello") || request.equalsIgnoreCase("hi")) {
@@ -27,12 +34,8 @@ public class MyRpcServer extends RpcServerLauncher {
                     }
                     return Promise.of(request + " " + request);
                 })
-                .withListenPort(config.get(ConfigConverters.ofInteger(), "client.connectionPort", RPC_SERVER_PORT));
-    }
-
-    @Override
-    protected void run() throws Exception {
-        awaitShutdown();
+                .withListenPort(config.get(ConfigConverters.ofInteger(), "client.connectionPort", RPC_SERVER_PORT))
+                .build();
     }
 
     public static void main(String[] args) throws Exception {

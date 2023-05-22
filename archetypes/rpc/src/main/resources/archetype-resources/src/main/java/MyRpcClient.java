@@ -8,12 +8,15 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.IRpcClient;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategies;
+import io.activej.rpc.client.sender.strategy.RpcStrategies;
+import io.activej.rpc.protocol.RpcMessage;
+import io.activej.serializer.SerializerFactory;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Scanner;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
@@ -26,7 +29,7 @@ public class MyRpcClient extends Launcher {
     Reactor reactor;
 
     @Inject
-    AsyncRpcClient client;
+    IRpcClient client;
 
     @Provides
     Config config() {
@@ -34,16 +37,20 @@ public class MyRpcClient extends Launcher {
     }
 
     @Provides
-    Eventloop eventloop() {
+    NioReactor reactor() {
         return Eventloop.create();
     }
 
     @Provides
-    AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
-        return RpcClient.create(reactor)
-                .withMessageTypes(String.class)
+    IRpcClient rpcClient(NioReactor reactor, Config config) {
+        return RpcClient.builder(reactor)
+                .withSerializer(SerializerFactory.builder()
+                        .withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
+                        .build()
+                        .create(RpcMessage.class))
                 .withStrategy(RpcStrategies.server(
-                        new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))));
+                        new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))))
+                .build();
     }
 
     @Override
