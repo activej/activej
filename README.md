@@ -264,6 +264,37 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       }
       ```
       
+      ```java
+      // StreamCodec usage example
+      public static void main(String[] args) throws IOException {
+          StreamCodec<User> userStreamCodec = StreamCodec.create(User::new,
+                  User::getId, StreamCodecs.ofVarInt(),
+                  User::getName, StreamCodecs.ofString()
+          );
+      
+          List<User> users = List.of(
+                  new User(1, "John"),
+                  new User(2, "Sarah"),
+                  new User(3, "Ben")
+          );
+      
+          ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          try (StreamOutput streamOutput = StreamOutput.create(baos)) {
+              for (User user : users) {
+                  userStreamCodec.encode(streamOutput, user);
+              }
+          }
+      
+          ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+          try (StreamInput streamInput = StreamInput.create(bais)) {
+              while (!streamInput.isEndOfStream()) {
+                  User decoded = userStreamCodec.decode(streamInput);
+                  System.out.println(decoded.getId() + " " + decoded.getName());
+              }
+          }
+      }
+      ```
+      
     * **ActiveJ Specializer** - Innovative technology to improve class performance at runtime by automatically
       converting class instances into specialized static classes and class instance fields into baked-in static
       fields. Provides a wide variety of JVM optimizations for static classes that are impossible otherwise: dead code
