@@ -17,6 +17,51 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   Alternative to Netty, RxJava, Akka, and others. ([Promise](https://activej.io/async-io/promise),
   [Eventloop](https://activej.io/async-io/eventloop), [Net](https://activej.io/async-io/net),
   [CSP](https://activej.io/async-io/csp), [Datastream](https://activej.io/async-io/datastream))
+
+  ```java
+  // Basic eventloop usage
+  public static void main(String[] args) {
+      Eventloop eventloop = Eventloop.create();
+  
+      eventloop.post(() -> System.out.println("Hello, world!"));
+  
+      eventloop.run();
+  }
+  ```
+
+  ```java
+  // Promise chaining
+  public static void main(String[] args) {
+      Eventloop eventloop = Eventloop.builder()
+              .withCurrentThread()
+              .build();
+  
+      Promises.delay(Duration.ofSeconds(1), "world")
+              .map(string -> string.toUpperCase())
+              .then(string -> Promises.delay(Duration.ofSeconds(3))
+                      .map($ -> "HELLO " + string))
+              .whenResult(string -> System.out.println(string));
+  
+      eventloop.run();
+  }
+  ```
+
+  ```java
+  // CSP workflow example
+  ChannelSuppliers.ofValues(1, 2, 3, 4, 5, 6)
+          .filter(x -> x % 2 == 0)
+          .map(x -> 2 * x)
+          .streamTo(ChannelConsumers.ofConsumer(System.out::println));
+  ```
+
+  ```java
+  // Datastream workflow example
+  StreamSuppliers.ofValues(1, 2, 3, 4, 5, 6)
+          .transformWith(StreamTransformers.filter(x -> x % 2 == 0))
+          .transformWith(StreamTransformers.mapper(x -> 2 * x))
+          .streamTo(StreamConsumers.ofConsumer(System.out::println));
+  ```
+
 * **HTTP** - High-performance HTTP server and client with WebSocket support. It can be used as a simple web server or as an
   application server. Alternative to other conventional HTTP clients and servers. ([HTTP](https://activej.io/http))
 
