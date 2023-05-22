@@ -19,6 +19,46 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   [CSP](https://activej.io/async-io/csp), [Datastream](https://activej.io/async-io/datastream))
 * **HTTP** - High-performance HTTP server and client with WebSocket support. It can be used as a simple web server or as an
   application server. Alternative to other conventional HTTP clients and servers. ([HTTP](https://activej.io/http))
+
+  ```java
+  // Server
+  
+  public static void main(String[] args) throws IOException {
+      Eventloop eventloop = Eventloop.create();
+  
+      AsyncServlet servlet = request -> HttpResponse.ok200()
+              .withPlainText("Hello world")
+              .toPromise();
+  
+      HttpServer server = HttpServer.builder(eventloop, servlet)
+              .withListenPort(8080)
+              .build();
+  
+      server.listen();
+  
+      eventloop.run();
+  }
+  ```
+
+  ```java
+  // Client
+  
+  public static void main(String[] args) {
+      Eventloop eventloop = Eventloop.create();
+  
+      HttpClient client = HttpClient.builder(eventloop).build();
+  
+      HttpRequest request = HttpRequest.get("http://localhost:8080").build();
+  
+      client.request(request)
+          .then(response -> response.loadBody())
+          .map(body -> body.getString(StandardCharsets.UTF_8))
+          .whenResult(bodyString -> System.out.println(bodyString));
+  
+      eventloop.run();
+  }
+  ```
+
 * **ActiveJ Inject** - Lightweight library for dependency injection. Optimized for fast application start-up and
   performance at runtime. Supports annotation-based component wiring as well as reflection-free
   wiring. ([ActiveJ Inject](https://activej.io/inject))
