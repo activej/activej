@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:17-alpine
 WORKDIR /app
 COPY target/${artifactId}.jar ./
 EXPOSE 8080
