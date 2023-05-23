@@ -30,8 +30,8 @@ public class SwitcherStreamConsumerTest {
 	@Test
 	public void testSwitching() {
 		List<ToListStreamConsumer<Integer>> consumers = IntStream.range(0, 10)
-				.mapToObj($ -> ToListStreamConsumer.<Integer>create())
-				.toList();
+			.mapToObj($ -> ToListStreamConsumer.<Integer>create())
+			.toList();
 		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
@@ -168,7 +168,7 @@ public class SwitcherStreamConsumerTest {
 		ArrayList<Integer> list1 = new ArrayList<>();
 		ArrayList<Integer> list2 = new ArrayList<>();
 		List<StreamConsumer<Integer>> consumers = List.of(ToListStreamConsumer.create(list1),
-				StreamConsumers.ofPromise(Promises.delay(Duration.ofMillis(1), ToListStreamConsumer.create(list2))));
+			StreamConsumers.ofPromise(Promises.delay(Duration.ofMillis(1), ToListStreamConsumer.create(list2))));
 		SwitcherStreamConsumer<Integer> switcher = SwitcherStreamConsumer.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {

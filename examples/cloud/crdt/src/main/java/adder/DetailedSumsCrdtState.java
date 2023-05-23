@@ -44,8 +44,8 @@ public final class DetailedSumsCrdtState implements CrdtMergable<DetailedSumsCrd
 
 	public float getSum() {
 		return (float) sums.values().stream()
-				.mapToDouble(Float::doubleValue)
-				.sum();
+			.mapToDouble(Float::doubleValue)
+			.sum();
 	}
 
 	@Override

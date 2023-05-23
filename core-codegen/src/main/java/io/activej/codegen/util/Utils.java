@@ -69,7 +69,7 @@ public final class Utils {
 
 	public static boolean isWrapperType(Type type) {
 		return type.getSort() == OBJECT &&
-				WRAPPER_TO_PRIMITIVE.containsKey(type.getClassName());
+			WRAPPER_TO_PRIMITIVE.containsKey(type.getClassName());
 	}
 
 	public static Method unwrapToPrimitive(Type primitiveType) {
@@ -83,7 +83,7 @@ public final class Utils {
 			case LONG -> getMethod("long longValue()");
 			case DOUBLE -> getMethod("double doubleValue()");
 			default ->
-					throw new IllegalArgumentException(format("No primitive value method for %s ", primitiveType.getClassName()));
+				throw new IllegalArgumentException(format("No primitive value method for %s ", primitiveType.getClassName()));
 		};
 	}
 
@@ -144,14 +144,14 @@ public final class Utils {
 
 	public static String exceptionInGeneratedClass(Context ctx) {
 		return format("Thrown in generated class %s in method %s",
-				ctx.getSelfType().getClassName(),
-				ctx.getMethod()
+			ctx.getSelfType().getClassName(),
+			ctx.getMethod()
 		);
 	}
 
 	public static boolean isValidCast(Type from, Type to) {
 		return from.getSort() != to.getSort() &&
-				!(from.getSort() < BOOLEAN || from.getSort() > DOUBLE || to.getSort() < BOOLEAN || to.getSort() > DOUBLE);
+			!(from.getSort() < BOOLEAN || from.getSort() > DOUBLE || to.getSort() < BOOLEAN || to.getSort() > DOUBLE);
 	}
 
 	public static String getStringSetting(Class<?> cls, String key, String defaultValue) {

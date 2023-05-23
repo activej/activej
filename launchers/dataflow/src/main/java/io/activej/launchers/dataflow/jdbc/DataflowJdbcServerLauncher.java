@@ -46,38 +46,38 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	@Provides
 	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("dataflow.jdbc.server.listenAddress", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_JDBC_SERVER_HOSTNAME, DEFAULT_JDBC_SERVER_PORT)))
-				.with("dataflow.jdbc.server.idleTimeout", Config.ofValue(ofDuration(), DEFAULT_IDLE_TIMEOUT))
-				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
+			.with("dataflow.jdbc.server.listenAddress", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_JDBC_SERVER_HOSTNAME, DEFAULT_JDBC_SERVER_PORT)))
+			.with("dataflow.jdbc.server.idleTimeout", Config.ofValue(ofDuration(), DEFAULT_IDLE_TIMEOUT))
+			.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				DataflowJdbcServerModule.create(),
-				getDataflowSchemaModule()
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			DataflowJdbcServerModule.create(),
+			getDataflowSchemaModule()
 		);
 	}
 
 	@Override
 	protected final void onStart() throws Exception {
 		reactor.submit(() -> sqlDataflow.query("SELECT 1")
-						.then(supplier -> supplier.streamTo(StreamConsumers.skip())))
-				.get();
+				.then(supplier -> supplier.streamTo(StreamConsumers.skip())))
+			.get();
 
 		logger.info("Connection to partitions established");
 	}

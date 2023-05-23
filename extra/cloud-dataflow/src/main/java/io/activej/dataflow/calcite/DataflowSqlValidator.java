@@ -21,7 +21,7 @@ public final class DataflowSqlValidator extends SqlValidatorImpl {
 	public static final String SYNTHETIC_PREFIX = "$SYNTH_";
 
 	public static final SqlValidatorUtil.Suggester ALIAS_SUGGESTER = (original, attempt, size) ->
-			SYNTHETIC_PREFIX + Util.first(original, SqlUtil.GENERATED_EXPR_ALIAS_PREFIX) + attempt;
+		SYNTHETIC_PREFIX + Util.first(original, SqlUtil.GENERATED_EXPR_ALIAS_PREFIX) + attempt;
 
 	public DataflowSqlValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader, RelDataTypeFactory typeFactory, Config config) {
 		super(opTab, catalogReader, typeFactory, config);
@@ -36,8 +36,8 @@ public final class DataflowSqlValidator extends SqlValidatorImpl {
 	protected void addToSelectList(List<SqlNode> list, Set<String> aliases, List<Map.Entry<String, RelDataType>> fieldList, SqlNode exp, SelectScope scope, boolean includeSystemVars) {
 		String alias = SqlValidatorUtil.getAlias(exp, -1);
 		String uniqueAlias =
-				SqlValidatorUtil.uniquify(
-						alias, aliases, ALIAS_SUGGESTER);
+			SqlValidatorUtil.uniquify(
+				alias, aliases, ALIAS_SUGGESTER);
 		if (!Objects.equals(alias, uniqueAlias)) {
 			exp = SqlValidatorUtil.addAlias(exp, uniqueAlias);
 		}

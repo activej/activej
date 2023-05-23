@@ -70,29 +70,29 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
 		FileSystem fs = FileSystem.builder(reactor, EXECUTOR, aggregationsDir)
-				.withTempDir(Files.createTempDirectory(""))
-				.build();
+			.withTempDir(Files.createTempDirectory(""))
+			.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
 		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
-				.withDimensions("date")
-				.withMeasures("impressions", "clicks", "conversions", "revenue");
+			.withDimensions("date")
+			.withMeasures("impressions", "clicks", "conversions", "revenue");
 
 		advertiserDateAggregation = id("advertiser-date")
-				.withDimensions("advertiser", "date")
-				.withMeasures("impressions", "clicks", "conversions", "revenue");
+			.withDimensions("advertiser", "date")
+			.withMeasures("impressions", "clicks", "conversions", "revenue");
 
 		campaignBannerDateAggregation = id("campaign-banner-date")
-				.withDimensions("campaign", "banner", "date")
-				.withMeasures("impressions", "clicks", "conversions", "revenue");
+			.withDimensions("campaign", "banner", "date")
+			.withMeasures("impressions", "clicks", "conversions", "revenue");
 
 		Cube basicCube = builderOfBasicCube()
-				.withAggregation(dateAggregation)
-				.withAggregation(advertiserDateAggregation)
-				.withAggregation(campaignBannerDateAggregation)
-				.build();
+			.withAggregation(dateAggregation)
+			.withAggregation(advertiserDateAggregation)
+			.withAggregation(campaignBannerDateAggregation)
+			.build();
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
@@ -102,17 +102,17 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
-				fileSystem,
-				frameFormat,
-				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
-				NAME_PARTITION_REMAINDER_SEQ);
+			fileSystem,
+			frameFormat,
+			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
+			NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
-				multilog,
-				basicCube.logStreamConsumer(LogItem.class),
-				"testlog",
-				List.of("partitionA"),
-				cubeDiffLogOTState);
+			multilog,
+			basicCube.logStreamConsumer(LogItem.class),
+			"testlog",
+			List.of("partitionA"),
+			cubeDiffLogOTState);
 
 		// checkout first (root) revision
 		await(stateManager.checkout());
@@ -128,15 +128,15 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			}
 
 			await(StreamSuppliers.ofIterable(listOfRandomLogItems).streamTo(
-					StreamConsumers.ofPromise(multilog.write("partitionA"))));
+				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 			runProcessLogs(chunkStorage, stateManager, logOTProcessor);
 			allLogItems.addAll(listOfRandomLogItems);
 		}
 
 		List<LogItem> logItems = await(basicCube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
-						LogItem.class, CLASS_LOADER)
-				.toList());
+				LogItem.class, CLASS_LOADER)
+			.toList());
 
 		// Aggregate manually
 		Map<Integer, Long> map = new HashMap<>();
@@ -148,15 +148,15 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	@Test
 	public void test() {
 		Cube cube = builderOfBasicCube()
-				.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
-				.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
-				.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
-				.build();
+			.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
+			.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
+			.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
+			.build();
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cube));
 		await(stateManager.checkout());
 
 		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =
-				CubeConsolidationController.create(reactor, DIFF_SCHEME, cube, stateManager, chunkStorage);
+			CubeConsolidationController.create(reactor, DIFF_SCHEME, cube, stateManager, chunkStorage);
 
 		Map<String, Integer> chunksBefore = getChunksByAggregation(cube);
 		await(consolidationController.cleanupIrrelevantChunks());
@@ -174,21 +174,21 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 	private static Map<String, Integer> getChunksByAggregation(Cube cube) {
 		return cube.getAggregationIds().stream()
-				.collect(toLinkedHashMap(id -> cube.getAggregation(id).getChunks()));
+			.collect(toLinkedHashMap(id -> cube.getAggregation(id).getChunks()));
 	}
 
 	private Cube.Builder builderOfBasicCube() {
 		return Cube.builder(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
-				.withDimension("date", ofLocalDate())
-				.withDimension("advertiser", ofInt())
-				.withDimension("campaign", ofInt())
-				.withDimension("banner", ofInt())
-				.withRelation("campaign", "advertiser")
-				.withRelation("banner", "campaign")
-				.withMeasure("impressions", sum(ofLong()))
-				.withMeasure("clicks", sum(ofLong()))
-				.withMeasure("conversions", sum(ofLong()))
-				.withMeasure("revenue", sum(ofDouble()));
+			.withDimension("date", ofLocalDate())
+			.withDimension("advertiser", ofInt())
+			.withDimension("campaign", ofInt())
+			.withDimension("banner", ofInt())
+			.withRelation("campaign", "advertiser")
+			.withRelation("banner", "campaign")
+			.withMeasure("impressions", sum(ofLong()))
+			.withMeasure("clicks", sum(ofLong()))
+			.withMeasure("conversions", sum(ofLong()))
+			.withMeasure("revenue", sum(ofDouble()));
 	}
 
 	private void randomRangeLogItems(List<LogItem> logItems) {

@@ -47,7 +47,7 @@ public final class OTCommit<K, D> {
 		this.id = id;
 		this.parentsWithLevels = parents;
 		this.parents = parentsWithLevels.entrySet().stream()
-				.collect(entriesToLinkedHashMap(DiffsWithLevel::diffs));
+			.collect(entriesToLinkedHashMap(DiffsWithLevel::diffs));
 		this.level = parents.values().stream().mapToLong(DiffsWithLevel::level).max().orElse(0L) + 1L;
 	}
 
@@ -61,7 +61,7 @@ public final class OTCommit<K, D> {
 
 	public static <K, D> OTCommit<K, D> of(int epoch, K id, Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> levels) {
 		return of(epoch, id, parents.stream()
-				.collect(toLinkedHashMap(parent -> new DiffsWithLevel<>(levels.applyAsLong(parent), diffs.apply(parent)))));
+			.collect(toLinkedHashMap(parent -> new DiffsWithLevel<>(levels.applyAsLong(parent), diffs.apply(parent)))));
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, K id, K parent, DiffsWithLevel<D> diffs) {
@@ -76,7 +76,7 @@ public final class OTCommit<K, D> {
 		return new OTCommit<>(epoch, id, parents).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, OTCommit<K, D>>{
+	public final class Builder extends AbstractBuilder<Builder, OTCommit<K, D>> {
 		private Builder() {}
 
 		public Builder withTimestamp(long timestamp) {

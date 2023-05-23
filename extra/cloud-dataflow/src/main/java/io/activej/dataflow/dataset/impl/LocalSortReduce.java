@@ -36,8 +36,10 @@ public final class LocalSortReduce<K, I, O> extends LocallySortedDataset<K, O> {
 	public final LocallySortedDataset<K, I> input;
 	public final Reducer<K, I, O, ?> reducer;
 
-	public LocalSortReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
-			StreamSchema<O> resultStreamSchema, Function<O, K> resultKeyFunction) {
+	public LocalSortReduce(
+		LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer, StreamSchema<O> resultStreamSchema,
+		Function<O, K> resultKeyFunction
+	) {
 		super(resultStreamSchema, input.keyComparator(), input.keyType(), resultKeyFunction);
 		this.input = input;
 		this.reducer = reducer;
@@ -51,7 +53,7 @@ public final class LocalSortReduce<K, I, O> extends LocallySortedDataset<K, O> {
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : input.channels(context)) {
 			ReduceSimple<K, I, O, Object>.Builder nodeBuilder = ReduceSimple.builder(index, input.keyFunction(),
-					input.keyComparator(), (Reducer<K, I, O, Object>) reducer);
+				input.keyComparator(), (Reducer<K, I, O, Object>) reducer);
 			nodeBuilder.withInput(streamId);
 			ReduceSimple<K, I, O, Object> node = nodeBuilder.build();
 			graph.addNode(graph.getPartition(streamId), node);

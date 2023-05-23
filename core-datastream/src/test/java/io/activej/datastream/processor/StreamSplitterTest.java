@@ -33,18 +33,18 @@ public class StreamSplitterTest {
 	public void test() {
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(1, 2, 3);
 		StreamSplitter<Integer, Integer> streamConcat = StreamSplitter.create(
-				(item, acceptors) -> {
-					for (StreamDataAcceptor<Integer> acceptor : acceptors) {
-						acceptor.accept(item);
-					}
-				});
+			(item, acceptors) -> {
+				for (StreamDataAcceptor<Integer> acceptor : acceptors) {
+					acceptor.accept(item);
+				}
+			});
 		ToListStreamConsumer<Integer> consumerToList1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumerToList2 = ToListStreamConsumer.create();
 
 		await(
-				source.streamTo(streamConcat.getInput()),
-				streamConcat.newOutput().streamTo(consumerToList1.transformWith(oneByOne())),
-				streamConcat.newOutput().streamTo(consumerToList2.transformWith(oneByOne()))
+			source.streamTo(streamConcat.getInput()),
+			streamConcat.newOutput().streamTo(consumerToList1.transformWith(oneByOne())),
+			streamConcat.newOutput().streamTo(consumerToList2.transformWith(oneByOne()))
 		);
 
 		assertEquals(List.of(1, 2, 3), consumerToList1.getList());
@@ -58,11 +58,11 @@ public class StreamSplitterTest {
 	public void testConsumerDisconnectWithError() {
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(1, 2, 3, 4, 5);
 		StreamSplitter<Integer, Integer> streamSplitter = StreamSplitter.create(
-				(item, acceptors) -> {
-					for (StreamDataAcceptor<Integer> acceptor : acceptors) {
-						acceptor.accept(item);
-					}
-				});
+			(item, acceptors) -> {
+				for (StreamDataAcceptor<Integer> acceptor : acceptors) {
+					acceptor.accept(item);
+				}
+			});
 
 		ToListStreamConsumer<Integer> consumerToList1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumerToList2 = ToListStreamConsumer.create();
@@ -71,19 +71,19 @@ public class StreamSplitterTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
-				source.streamTo(streamSplitter.getInput()),
-				streamSplitter.newOutput()
-						.streamTo(consumerToList1
-								.transformWith(oneByOne())),
-				streamSplitter.newOutput()
-						.streamTo(badConsumer
-								.transformWith(decorate(promise ->
-										promise.then(item -> Promise.ofException(exception))))
-								.transformWith(oneByOne())
-						),
-				streamSplitter.newOutput()
-						.streamTo(consumerToList2
-								.transformWith(oneByOne()))
+			source.streamTo(streamSplitter.getInput()),
+			streamSplitter.newOutput()
+				.streamTo(consumerToList1
+					.transformWith(oneByOne())),
+			streamSplitter.newOutput()
+				.streamTo(badConsumer
+					.transformWith(decorate(promise ->
+						promise.then(item -> Promise.ofException(exception))))
+					.transformWith(oneByOne())
+				),
+			streamSplitter.newOutput()
+				.streamTo(consumerToList2
+					.transformWith(oneByOne()))
 		);
 
 		assertSame(exception, e);
@@ -100,28 +100,28 @@ public class StreamSplitterTest {
 	public void testSupplierDisconnectWithError() {
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<Integer> source = StreamSuppliers.concat(
-				StreamSuppliers.ofValue(1),
-				StreamSuppliers.ofValue(2),
-				StreamSuppliers.ofValue(3),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofValue(1),
+			StreamSuppliers.ofValue(2),
+			StreamSuppliers.ofValue(3),
+			StreamSuppliers.closingWithError(exception)
 		);
 
 		StreamSplitter<Integer, Integer> splitter = StreamSplitter.create(
-				(item, acceptors) -> {
-					for (StreamDataAcceptor<Integer> acceptor : acceptors) {
-						acceptor.accept(item);
-					}
-				});
+			(item, acceptors) -> {
+				for (StreamDataAcceptor<Integer> acceptor : acceptors) {
+					acceptor.accept(item);
+				}
+			});
 
 		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumer3 = ToListStreamConsumer.create();
 
 		Exception e = awaitException(
-				source.streamTo(splitter.getInput()),
-				splitter.newOutput().streamTo(consumer1.transformWith(oneByOne())),
-				splitter.newOutput().streamTo(consumer2.transformWith(oneByOne())),
-				splitter.newOutput().streamTo(consumer3.transformWith(oneByOne()))
+			source.streamTo(splitter.getInput()),
+			splitter.newOutput().streamTo(consumer1.transformWith(oneByOne())),
+			splitter.newOutput().streamTo(consumer2.transformWith(oneByOne())),
+			splitter.newOutput().streamTo(consumer3.transformWith(oneByOne()))
 		);
 
 		assertSame(exception, e);
@@ -136,11 +136,11 @@ public class StreamSplitterTest {
 	@Test
 	public void testNoOutputs() {
 		StreamSplitter<Integer, Integer> splitter = StreamSplitter.create(
-				(item, acceptors) -> {
-					for (StreamDataAcceptor<Integer> acceptor : acceptors) {
-						acceptor.accept(item);
-					}
-				});
+			(item, acceptors) -> {
+				for (StreamDataAcceptor<Integer> acceptor : acceptors) {
+					acceptor.accept(item);
+				}
+			});
 
 		await(StreamSuppliers.ofValues(1, 2, 3, 4).streamTo(splitter.getInput()));
 	}
@@ -149,11 +149,11 @@ public class StreamSplitterTest {
 	public void testSuspendSideEffect() {
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(1, 2, 3);
 		StreamSplitter<Integer, Integer> splitter = StreamSplitter.create(
-				(item, acceptors) -> {
-					for (StreamDataAcceptor<Integer> acceptor : acceptors) {
-						acceptor.accept(item);
-					}
-				});
+			(item, acceptors) -> {
+				for (StreamDataAcceptor<Integer> acceptor : acceptors) {
+					acceptor.accept(item);
+				}
+			});
 
 		List<Integer> list = new ArrayList<>();
 		AbstractStreamConsumer<Integer> consumer = new AbstractStreamConsumer<>() {
@@ -169,24 +169,24 @@ public class StreamSplitterTest {
 		};
 
 		await(
-				source.streamTo(splitter.getInput()),
-				splitter.newOutput().streamTo(new AbstractStreamConsumer<>() {
-					@Override
-					protected void onStarted() {
-						resume(item -> {
-							if (item == 2) {
-								consumer.suspend();
-								reactor.post(() -> consumer.resume(list::add));
-							}
-						});
-					}
+			source.streamTo(splitter.getInput()),
+			splitter.newOutput().streamTo(new AbstractStreamConsumer<>() {
+				@Override
+				protected void onStarted() {
+					resume(item -> {
+						if (item == 2) {
+							consumer.suspend();
+							reactor.post(() -> consumer.resume(list::add));
+						}
+					});
+				}
 
-					@Override
-					protected void onEndOfStream() {
-						acknowledge();
-					}
-				}),
-				splitter.newOutput().streamTo(consumer)
+				@Override
+				protected void onEndOfStream() {
+					acknowledge();
+				}
+			}),
+			splitter.newOutput().streamTo(consumer)
 		);
 
 		assertEquals(List.of(1, 2, 3), list);
@@ -195,16 +195,16 @@ public class StreamSplitterTest {
 	@Test
 	public void testSharder() {
 		StreamSplitter<Integer, Integer> streamSharder = StreamSplitter.create(
-				(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
+			(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
 
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(1, 2, 3, 4);
 		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		await(
-				source.streamTo(streamSharder.getInput()),
-				streamSharder.newOutput().streamTo(consumer1.transformWith(randomlySuspending())),
-				streamSharder.newOutput().streamTo(consumer2.transformWith(randomlySuspending()))
+			source.streamTo(streamSharder.getInput()),
+			streamSharder.newOutput().streamTo(consumer1.transformWith(randomlySuspending())),
+			streamSharder.newOutput().streamTo(consumer2.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(2, 4), consumer1.getList());
@@ -220,16 +220,16 @@ public class StreamSplitterTest {
 	@Test
 	public void test2() {
 		StreamSplitter<Integer, Integer> streamSharder = StreamSplitter.create(
-				(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
+			(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
 
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(1, 2, 3, 4);
 		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		await(
-				source.streamTo(streamSharder.getInput()),
-				streamSharder.newOutput().streamTo(consumer1.transformWith(randomlySuspending())),
-				streamSharder.newOutput().streamTo(consumer2.transformWith(randomlySuspending()))
+			source.streamTo(streamSharder.getInput()),
+			streamSharder.newOutput().streamTo(consumer1.transformWith(randomlySuspending())),
+			streamSharder.newOutput().streamTo(consumer2.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(2, 4), consumer1.getList());
@@ -246,7 +246,7 @@ public class StreamSplitterTest {
 	@Test
 	public void testWithError() {
 		StreamSplitter<Integer, Integer> streamSharder = StreamSplitter.create(
-				(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
+			(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
 
 		StreamSupplier<Integer> source = StreamSuppliers.ofValues(1, 2, 3, 4);
 
@@ -255,11 +255,11 @@ public class StreamSplitterTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
-				source.streamTo(streamSharder.getInput()),
-				streamSharder.newOutput().streamTo(consumer1),
-				streamSharder.newOutput().streamTo(
-						consumer2.transformWith(decorate(promise ->
-								promise.then(item -> item == 3 ? Promise.ofException(exception) : Promise.of(item))))));
+			source.streamTo(streamSharder.getInput()),
+			streamSharder.newOutput().streamTo(consumer1),
+			streamSharder.newOutput().streamTo(
+				consumer2.transformWith(decorate(promise ->
+					promise.then(item -> item == 3 ? Promise.ofException(exception) : Promise.of(item))))));
 
 		assertSame(exception, e);
 		assertEquals(1, consumer1.getList().size());
@@ -275,24 +275,24 @@ public class StreamSplitterTest {
 	@Test
 	public void testSupplierWithError() {
 		StreamSplitter<Integer, Integer> streamSharder = StreamSplitter.create(
-				(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
+			(item, acceptors) -> acceptors[SHARDER.applyAsInt(item)].accept(item));
 
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		StreamSupplier<Integer> source = StreamSuppliers.concat(
-				StreamSuppliers.ofValue(1),
-				StreamSuppliers.ofValue(2),
-				StreamSuppliers.ofValue(3),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofValue(1),
+			StreamSuppliers.ofValue(2),
+			StreamSuppliers.ofValue(3),
+			StreamSuppliers.closingWithError(exception)
 		);
 
 		ToListStreamConsumer<Integer> consumer1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> consumer2 = ToListStreamConsumer.create();
 
 		Exception e = awaitException(
-				source.streamTo(streamSharder.getInput()),
-				streamSharder.newOutput().streamTo(consumer1.transformWith(oneByOne())),
-				streamSharder.newOutput().streamTo(consumer2.transformWith(oneByOne()))
+			source.streamTo(streamSharder.getInput()),
+			streamSharder.newOutput().streamTo(consumer1.transformWith(oneByOne())),
+			streamSharder.newOutput().streamTo(consumer2.transformWith(oneByOne()))
 		);
 
 		assertSame(exception, e);

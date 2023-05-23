@@ -348,13 +348,13 @@ public final class TypeScannerRegistry<R> {
 	public TypeScanner<R> scanner(@Nullable Object contextValue) {
 		//noinspection unchecked
 		return type -> scan(
-				new Context<>(
-						mappingFn == null ?
-								this::scan :
-								mappingFn,
-						(Context<R>[]) new Context[0],
-						new AnnotatedType[]{type},
-						contextValue));
+			new Context<>(
+				mappingFn == null ?
+					this::scan :
+					mappingFn,
+				(Context<R>[]) new Context[0],
+				new AnnotatedType[]{type},
+				contextValue));
 	}
 
 	/**

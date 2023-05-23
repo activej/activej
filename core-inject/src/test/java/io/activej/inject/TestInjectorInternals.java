@@ -24,9 +24,9 @@ public final class TestInjectorInternals {
 	@Test
 	public void plainBindIndexes() {
 		Injector injector = Injector.of(ModuleBuilder.create()
-				.bind(SomeServiceImpl.class).to(SomeServiceImpl::new)
-				.bind(SomeService.class).to(SomeServiceImpl.class)
-				.build());
+			.bind(SomeServiceImpl.class).to(SomeServiceImpl::new)
+			.bind(SomeService.class).to(SomeServiceImpl.class)
+			.build());
 
 		assertSame(injector.getInstanceOrNull(SomeService.class), injector.getInstanceOrNull(SomeServiceImpl.class));
 		assertEquals(2, injector.scopeCaches[0].length()); // always the injector itself + only one instance
@@ -36,10 +36,10 @@ public final class TestInjectorInternals {
 	@Test
 	public void mappedPlainBind() {
 		Injector injector = Injector.of(ModuleBuilder.create()
-				.bind(SomeServiceImpl.class).to(SomeServiceImpl::new)
-				.bind(SomeService.class).to(SomeServiceImpl.class)
-				.bind(Container.class).to(Binding.to(SomeServiceImpl.class).mapInstance(Container::new))
-				.build());
+			.bind(SomeServiceImpl.class).to(SomeServiceImpl::new)
+			.bind(SomeService.class).to(SomeServiceImpl.class)
+			.bind(Container.class).to(Binding.to(SomeServiceImpl.class).mapInstance(Container::new))
+			.build());
 
 		assertSame(injector.getInstanceOrNull(SomeService.class), injector.getInstanceOrNull(SomeServiceImpl.class));
 
@@ -59,15 +59,15 @@ public final class TestInjectorInternals {
 		AtomicInteger counter2 = new AtomicInteger();
 
 		Injector injector = Injector.of(ModuleBuilder.create()
-				.bind(Integer.class).to(() -> {
-					counter1.incrementAndGet();
-					return 123;
-				})
-				.bind(String.class).to(Binding.to(Integer.class).mapInstance(i -> {
-					counter2.incrementAndGet();
-					return "str_" + i;
-				}))
-				.build());
+			.bind(Integer.class).to(() -> {
+				counter1.incrementAndGet();
+				return 123;
+			})
+			.bind(String.class).to(Binding.to(Integer.class).mapInstance(i -> {
+				counter2.incrementAndGet();
+				return "str_" + i;
+			}))
+			.build());
 
 		injector.getInstance(String.class);
 		injector.getInstance(String.class);

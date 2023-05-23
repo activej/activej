@@ -84,8 +84,10 @@ public class AnnotatedTypes {
 	 * @param annotationCombinerFn a combiner function to combine annotations of a given annotated type
 	 *                             with annotations of bound actual annotated type
 	 */
-	public static AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
-			BinaryOperator<Annotation[]> annotationCombinerFn) {
+	public static AnnotatedType bind(
+		AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
+		BinaryOperator<Annotation[]> annotationCombinerFn
+	) {
 		if (annotatedType.getType() instanceof Class) return annotatedType;
 		Annotation[] annotations = annotatedType.getAnnotations();
 		if (annotatedType instanceof AnnotatedTypeVariable annotatedTypeVariable) {
@@ -103,20 +105,20 @@ public class AnnotatedTypes {
 				typeArguments2[i] = annotatedTypeArguments2[i].getType();
 			}
 			return new AnnotatedParameterizedTypeImpl(
-					new Types.ParameterizedTypeImpl(
-							((ParameterizedType) annotatedType.getType()).getOwnerType(),
-							((ParameterizedType) annotatedType.getType()).getRawType(),
-							typeArguments2),
-					annotations,
-					annotatedTypeArguments2);
+				new Types.ParameterizedTypeImpl(
+					((ParameterizedType) annotatedType.getType()).getOwnerType(),
+					((ParameterizedType) annotatedType.getType()).getRawType(),
+					typeArguments2),
+				annotations,
+				annotatedTypeArguments2);
 		}
 		if (annotatedType instanceof AnnotatedArrayType annotatedArrayType) {
 			AnnotatedType annotatedGenericComponentType = annotatedArrayType.getAnnotatedGenericComponentType();
 			AnnotatedType annotatedGenericComponentType2 = bind(annotatedGenericComponentType, bindings);
 			return new AnnotatedArrayTypeImpl(
-					new Types.GenericArrayTypeImpl(annotatedGenericComponentType2.getType()),
-					annotations,
-					annotatedGenericComponentType2);
+				new Types.GenericArrayTypeImpl(annotatedGenericComponentType2.getType()),
+				annotations,
+				annotatedGenericComponentType2);
 		}
 		if (annotatedType instanceof AnnotatedWildcardType annotatedWildcardType) {
 			AnnotatedType[] annotatedLowerBounds = annotatedWildcardType.getAnnotatedLowerBounds();
@@ -134,9 +136,9 @@ public class AnnotatedTypes {
 				upperBounds2[i] = annotatedUpperBounds2[i].getType();
 			}
 			return new AnnotatedWildcardTypeImpl(
-					new Types.WildcardTypeImpl(upperBounds2, lowerBounds2),
-					annotations,
-					annotatedUpperBounds2, annotatedLowerBounds2);
+				new Types.WildcardTypeImpl(upperBounds2, lowerBounds2),
+				annotations,
+				annotatedUpperBounds2, annotatedLowerBounds2);
 		}
 		throw new IllegalArgumentException("Unsupported type: " + annotatedType);
 	}
@@ -282,9 +284,9 @@ public class AnnotatedTypes {
 		@Override
 		public String toString() {
 			return "" +
-					(annotations.length == 0 ? "" :
-							Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
-					type;
+				(annotations.length == 0 ? "" :
+					Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
+				type;
 		}
 	}
 
@@ -318,11 +320,11 @@ public class AnnotatedTypes {
 		@Override
 		public String toString() {
 			return "" +
-					(annotations.length == 0 ? "" :
-							Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
-					Types.getRawType(type).getCanonicalName() +
-					(typeArguments.length == 0 ? "" :
-							Arrays.stream(typeArguments).map(Objects::toString).collect(joining(", ", "<", ">")));
+				(annotations.length == 0 ? "" :
+					Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
+				Types.getRawType(type).getCanonicalName() +
+				(typeArguments.length == 0 ? "" :
+					Arrays.stream(typeArguments).map(Objects::toString).collect(joining(", ", "<", ">")));
 		}
 	}
 
@@ -363,12 +365,12 @@ public class AnnotatedTypes {
 		@Override
 		public String toString() {
 			return "" +
-					(annotations.length == 0 ? "" :
-							Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " ")) + " ") +
-					"?" +
-					" extends " + Arrays.stream(upperBounds).map(Objects::toString).collect(joining(", ")) +
-					(lowerBounds.length == 0 ? "" :
-							" super " + Arrays.stream(lowerBounds).map(Objects::toString).collect(joining(", ")));
+				(annotations.length == 0 ? "" :
+					Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " ")) + " ") +
+				"?" +
+				" extends " + Arrays.stream(upperBounds).map(Objects::toString).collect(joining(", ")) +
+				(lowerBounds.length == 0 ? "" :
+					" super " + Arrays.stream(lowerBounds).map(Objects::toString).collect(joining(", ")));
 		}
 	}
 }

@@ -77,7 +77,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public final class AggregationChunkStorage<C> extends AbstractReactive
-		implements IAggregationChunkStorage<C>, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IAggregationChunkStorage<C>, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final boolean CHECKS = Checks.isEnabled(AggregationChunkStorage.class);
 
 	private static final Logger logger = getLogger(AggregationChunkStorage.class);
@@ -113,25 +114,25 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	private boolean detailed;
 
 	private final DetailedStreamStats<ByteBuf> readFile = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 	private final DetailedStreamStats<ByteBuf> readDecompress = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 	private final BasicStreamStats<?> readDeserialize = StreamStats.basic();
 	private final DetailedStreamStats<?> readDeserializeDetailed = StreamStats.detailed();
 
 	private final BasicStreamStats<?> writeSerialize = StreamStats.basic();
 	private final DetailedStreamStats<?> writeSerializeDetailed = StreamStats.detailed();
 	private final DetailedStreamStats<ByteBuf> writeCompress = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 	private final DetailedStreamStats<ByteBuf> writeChunker = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 	private final DetailedStreamStats<ByteBuf> writeFile = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 
 	private final ExceptionStats chunkNameWarnings = ExceptionStats.create();
 	private int cleanupPreservedFiles;
@@ -150,15 +151,17 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 		this.fileSystem = fileSystem;
 	}
 
-	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
-			ChunkIdJsonCodec<C> chunkIdCodec,
-			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
+	public static <C> AggregationChunkStorage<C> create(
+		Reactor reactor, ChunkIdJsonCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat,
+		IFileSystem fileSystem
+	) {
 		return builder(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).build();
 	}
 
-	public static <C> AggregationChunkStorage<C>.Builder builder(Reactor reactor,
-			ChunkIdJsonCodec<C> chunkIdCodec,
-			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
+	public static <C> AggregationChunkStorage<C>.Builder builder(
+		Reactor reactor, ChunkIdJsonCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat,
+		IFileSystem fileSystem
+	) {
 		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).new Builder();
 	}
 
@@ -197,76 +200,78 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields,
-			Class<T> recordClass, C chunkId,
-			DefiningClassLoader classLoader) {
+	public <T> Promise<StreamSupplier<T>> read(
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		DefiningClassLoader classLoader
+	) {
 		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.download(toPath(chunkId))
-				.mapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e))
-				.whenComplete(promiseOpenR.recordStats())
-				.map(supplier -> supplier
-						.transformWith(readFile)
-						.transformWith(ChannelFrameDecoder.create(frameFormat))
-						.transformWith(readDecompress)
-						.transformWith(ChannelDeserializer.create(
-								createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader)))
-						.transformWith((StreamStats<T>) (detailed ? readDeserializeDetailed : readDeserialize))
-						.withEndOfStream(eos -> eos
-								.mapException(e -> new AggregationException("Failed to read chunk '" + chunkId + '\'', e))));
+			.mapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e))
+			.whenComplete(promiseOpenR.recordStats())
+			.map(supplier -> supplier
+				.transformWith(readFile)
+				.transformWith(ChannelFrameDecoder.create(frameFormat))
+				.transformWith(readDecompress)
+				.transformWith(ChannelDeserializer.create(
+					createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader)))
+				.transformWith((StreamStats<T>) (detailed ? readDeserializeDetailed : readDeserialize))
+				.withEndOfStream(eos -> eos
+					.mapException(e -> new AggregationException("Failed to read chunk '" + chunkId + '\'', e))));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields,
-			Class<T> recordClass, C chunkId,
-			DefiningClassLoader classLoader) {
+	public <T> Promise<StreamConsumer<T>> write(
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		DefiningClassLoader classLoader
+	) {
 		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.upload(toTempPath(chunkId))
-				.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
-				.whenComplete(promiseOpenW.recordStats())
-				.map(consumer -> StreamConsumers.<T>ofSupplier(
-								supplier -> supplier
-										.transformWith((StreamStats<T>) (detailed ? writeSerializeDetailed : writeSerialize))
-										.transformWith(ChannelSerializer.builder(
-														createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader))
-												.withInitialBufferSize(bufferSize)
-												.build())
-										.transformWith(writeCompress)
-										.transformWith(ChannelFrameEncoder.create(frameFormat))
-										.transformWith(writeChunker)
-										.transformWith(ChannelTransformers.chunkBytes(
-												bufferSize.map(bytes -> bytes / 2),
-												bufferSize.map(bytes -> bytes * 2)))
-										.transformWith(writeFile)
-										.streamTo(consumer))
-						.withAcknowledgement(ack -> ack.mapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e))));
+			.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
+			.whenComplete(promiseOpenW.recordStats())
+			.map(consumer -> StreamConsumers.<T>ofSupplier(
+					supplier -> supplier
+						.transformWith((StreamStats<T>) (detailed ? writeSerializeDetailed : writeSerialize))
+						.transformWith(ChannelSerializer.builder(
+								createBinarySerializer(aggregation, recordClass, aggregation.getKeys(), fields, classLoader))
+							.withInitialBufferSize(bufferSize)
+							.build())
+						.transformWith(writeCompress)
+						.transformWith(ChannelFrameEncoder.create(frameFormat))
+						.transformWith(writeChunker)
+						.transformWith(ChannelTransformers.chunkBytes(
+							bufferSize.map(bytes -> bytes / 2),
+							bufferSize.map(bytes -> bytes * 2)))
+						.transformWith(writeFile)
+						.streamTo(consumer))
+				.withAcknowledgement(ack -> ack.mapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e))));
 	}
 
 	@Override
 	public Promise<Void> finish(Set<C> chunkIds) {
 		checkInReactorThread(this);
 		return fileSystem.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
-				.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e))
-				.whenResult(() -> finishChunks = chunkIds.size())
-				.whenComplete(promiseFinishChunks.recordStats());
+			.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e))
+			.whenResult(() -> finishChunks = chunkIds.size())
+			.whenComplete(promiseFinishChunks.recordStats());
 	}
 
 	@Override
 	public Promise<C> createId() {
 		if (CHECKS) checkInReactorThread(this);
 		return idGenerator.get()
-				.mapException(e -> new AggregationException("Could not create ID", e))
-				.whenComplete(promiseAsyncSupplier.recordStats());
+			.mapException(e -> new AggregationException("Could not create ID", e))
+			.whenComplete(promiseAsyncSupplier.recordStats());
 	}
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
 		checkInReactorThread(this);
 		return fileSystem.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
-				.then(() -> ChannelSuppliers.<ByteBuf>empty().streamTo(
-						fileSystem.upload(toBackupPath(backupId, null), 0)))
-				.mapException(e -> new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e))
-				.whenComplete(promiseBackup.recordStats())
-				.toVoid();
+			.then(() -> ChannelSuppliers.<ByteBuf>empty().streamTo(
+				fileSystem.upload(toBackupPath(backupId, null), 0)))
+			.mapException(e -> new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e))
+			.whenComplete(promiseBackup.recordStats())
+			.toVoid();
 	}
 
 	public Promise<Void> cleanup(Set<C> saveChunks) {
@@ -281,72 +286,72 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 		RefInt skipped = new RefInt(0);
 		RefInt deleted = new RefInt(0);
 		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
-				.mapException(e -> new AggregationException("Failed to list chunks for cleanup", e))
-				.then(list -> {
-					Set<String> toDelete = list.entrySet().stream()
-							.filter(entry -> {
-								C id = fromPath(entry.getKey());
-								if (id == null || preserveChunks.contains(id)) {
-									return false;
-								}
-								long fileTimestamp = entry.getValue().getTimestamp();
-								if (timestamp == -1 || fileTimestamp <= timestamp) {
-									return true;
-								}
-								logger.trace("File {} timestamp {} > {}", entry, fileTimestamp, timestamp);
-								skipped.inc();
-								return false;
-							})
-							.map(entry -> {
-								if (logger.isTraceEnabled()) {
-									FileTime lastModifiedTime = FileTime.fromMillis(entry.getValue().getTimestamp());
-									logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", entry.getKey(),
-											lastModifiedTime, lastModifiedTime.toMillis());
-								}
-								deleted.inc();
+			.mapException(e -> new AggregationException("Failed to list chunks for cleanup", e))
+			.then(list -> {
+				Set<String> toDelete = list.entrySet().stream()
+					.filter(entry -> {
+						C id = fromPath(entry.getKey());
+						if (id == null || preserveChunks.contains(id)) {
+							return false;
+						}
+						long fileTimestamp = entry.getValue().getTimestamp();
+						if (timestamp == -1 || fileTimestamp <= timestamp) {
+							return true;
+						}
+						logger.trace("File {} timestamp {} > {}", entry, fileTimestamp, timestamp);
+						skipped.inc();
+						return false;
+					})
+					.map(entry -> {
+						if (logger.isTraceEnabled()) {
+							FileTime lastModifiedTime = FileTime.fromMillis(entry.getValue().getTimestamp());
+							logger.trace("Delete file: {} with last modifiedTime: {}({} millis)", entry.getKey(),
+								lastModifiedTime, lastModifiedTime.toMillis());
+						}
+						deleted.inc();
 
-								return entry.getKey();
-							})
-							.collect(toSet());
-					if (toDelete.isEmpty()) return Promise.complete();
-					return fileSystem.deleteAll(toDelete)
-							.mapException(e -> new AggregationException("Failed to clean up chunks", e));
-				})
-				.whenResult(() -> {
-					cleanupPreservedFiles = preserveChunks.size();
-					cleanupDeletedFiles = deleted.get();
-					cleanupDeletedFilesTotal += deleted.get();
-					cleanupSkippedFiles = skipped.get();
-					cleanupSkippedFilesTotal += skipped.get();
-				})
-				.whenComplete(promiseCleanup.recordStats());
+						return entry.getKey();
+					})
+					.collect(toSet());
+				if (toDelete.isEmpty()) return Promise.complete();
+				return fileSystem.deleteAll(toDelete)
+					.mapException(e -> new AggregationException("Failed to clean up chunks", e));
+			})
+			.whenResult(() -> {
+				cleanupPreservedFiles = preserveChunks.size();
+				cleanupDeletedFiles = deleted.get();
+				cleanupDeletedFilesTotal += deleted.get();
+				cleanupSkippedFiles = skipped.get();
+				cleanupSkippedFilesTotal += skipped.get();
+			})
+			.whenComplete(promiseCleanup.recordStats());
 	}
 
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
 		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
-				.mapException(e -> new AggregationException("Failed to list chunks", e))
-				.map(list ->
-						list.entrySet().stream()
-								.filter(entry -> lastModifiedPredicate.test(entry.getValue().getTimestamp()))
-								.map(Map.Entry::getKey)
-								.map(this::fromPath)
-								.filter(Objects::nonNull)
-								.filter(chunkIdPredicate)
-								.collect(toSet()))
-				.whenComplete(promiseList.recordStats());
+			.mapException(e -> new AggregationException("Failed to list chunks", e))
+			.map(list ->
+				list.entrySet().stream()
+					.filter(entry -> lastModifiedPredicate.test(entry.getValue().getTimestamp()))
+					.map(Map.Entry::getKey)
+					.map(this::fromPath)
+					.filter(Objects::nonNull)
+					.filter(chunkIdPredicate)
+					.collect(toSet()))
+			.whenComplete(promiseList.recordStats());
 	}
 
 	public Promise<Void> checkRequiredChunks(Set<C> requiredChunks) {
 		if (CHECKS) checkInReactorThread(this);
 		return list(s -> true, timestamp -> true)
-				.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
-				.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
-						Promise.complete() :
-						Promise.ofException(new AggregationException("Missed chunks from storage: " +
-								Utils.toString(difference(requiredChunks, actualChunks)))))
-				.whenComplete(promiseCleanupCheckRequiredChunks.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), Utils.toString(requiredChunks)));
+			.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
+			.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
+				Promise.complete() :
+				Promise.ofException(new AggregationException("Missed chunks from storage: " +
+					Utils.toString(difference(requiredChunks, actualChunks)))))
+			.whenComplete(promiseCleanupCheckRequiredChunks.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), Utils.toString(requiredChunks)));
 	}
 
 	private String toPath(C chunkId) {
@@ -359,7 +364,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private String toBackupPath(String backupId, @Nullable C chunkId) {
 		return toDir(backupPath) + backupId + IFileSystem.SEPARATOR +
-				(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
+			(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
 	}
 
 	private String toDir(String path) {
@@ -382,7 +387,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public Promise<?> start() {
 		checkInReactorThread(this);
 		return fileSystem.ping()
-				.mapException(e -> new AggregationException("Failed to start storage", e));
+			.mapException(e -> new AggregationException("Failed to start storage", e));
 	}
 
 	@Override

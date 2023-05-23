@@ -45,12 +45,12 @@ import java.util.regex.Pattern;
 
 public final class RemoteFileSystemUtils {
 	private static final StreamCodec<Version> VERSION_CODEC = StreamCodec.create(Version::new,
-			Version::major, StreamCodecs.ofVarInt(),
-			Version::minor, StreamCodecs.ofVarInt()
+		Version::major, StreamCodecs.ofVarInt(),
+		Version::minor, StreamCodecs.ofVarInt()
 	);
 	private static final StreamCodec<FileMetadata> FILE_METADATA_CODEC = StreamCodec.create(FileMetadata::of,
-			FileMetadata::getSize, StreamCodecs.ofVarLong(),
-			FileMetadata::getTimestamp, StreamCodecs.ofVarLong()
+		FileMetadata::getSize, StreamCodecs.ofVarLong(),
+		FileMetadata::getTimestamp, StreamCodecs.ofVarLong()
 	);
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
 	private static final Pattern UNESCAPED_GLOB_METACHARS = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*[*?{}\\[\\]]");
@@ -103,20 +103,20 @@ public final class RemoteFileSystemUtils {
 		return consumer -> {
 			RefLong total = new RefLong(size);
 			return consumer
-					.<ByteBuf>mapAsync(byteBuf -> {
-						long left = total.dec(byteBuf.readRemaining());
-						if (left < 0) {
-							byteBuf.recycle();
-							return Promise.ofException(new UnexpectedDataException());
+				.<ByteBuf>mapAsync(byteBuf -> {
+					long left = total.dec(byteBuf.readRemaining());
+					if (left < 0) {
+						byteBuf.recycle();
+						return Promise.ofException(new UnexpectedDataException());
+					}
+					return Promise.of(byteBuf);
+				})
+				.withAcknowledgement(ack -> ack
+					.whenResult(() -> {
+						if (total.get() > 0) {
+							throw new TruncatedDataException();
 						}
-						return Promise.of(byteBuf);
-					})
-					.withAcknowledgement(ack -> ack
-							.whenResult(() -> {
-								if (total.get() > 0) {
-									throw new TruncatedDataException();
-								}
-							}));
+					}));
 		};
 	}
 
@@ -153,50 +153,50 @@ public final class RemoteFileSystemUtils {
 		StreamCodecs.SubtypeBuilder<FileSystemRequest> builder = new StreamCodecs.SubtypeBuilder<>();
 
 		builder.add(FileSystemRequest.Append.class, StreamCodec.create(Append::new,
-				Append::name, StreamCodecs.ofString(),
-				Append::offset, StreamCodecs.ofVarLong())
+			Append::name, StreamCodecs.ofString(),
+			Append::offset, StreamCodecs.ofVarLong())
 		);
 		builder.add(FileSystemRequest.Copy.class, StreamCodec.create(Copy::new,
-				Copy::name, StreamCodecs.ofString(),
-				Copy::target, StreamCodecs.ofString())
+			Copy::name, StreamCodecs.ofString(),
+			Copy::target, StreamCodecs.ofString())
 		);
 		builder.add(FileSystemRequest.CopyAll.class, StreamCodec.create(CopyAll::new,
-				CopyAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
+			CopyAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
 		);
 		builder.add(FileSystemRequest.Delete.class, StreamCodec.create(Delete::new,
-				Delete::name, StreamCodecs.ofString())
+			Delete::name, StreamCodecs.ofString())
 		);
 		builder.add(FileSystemRequest.DeleteAll.class, StreamCodec.create(DeleteAll::new,
-				DeleteAll::toDelete, StreamCodecs.ofSet(StreamCodecs.ofString()))
+			DeleteAll::toDelete, StreamCodecs.ofSet(StreamCodecs.ofString()))
 		);
 		builder.add(FileSystemRequest.Download.class, StreamCodec.create(Download::new,
-				Download::name, StreamCodecs.ofString(),
-				Download::offset, StreamCodecs.ofVarLong(),
-				Download::limit, StreamCodecs.ofVarLong())
+			Download::name, StreamCodecs.ofString(),
+			Download::offset, StreamCodecs.ofVarLong(),
+			Download::limit, StreamCodecs.ofVarLong())
 		);
 		builder.add(FileSystemRequest.Handshake.class, StreamCodec.create(Handshake::new,
-				Handshake::version, VERSION_CODEC)
+			Handshake::version, VERSION_CODEC)
 		);
 		builder.add(FileSystemRequest.Info.class, StreamCodec.create(Info::new,
-				Info::name, StreamCodecs.ofString())
+			Info::name, StreamCodecs.ofString())
 		);
 		builder.add(FileSystemRequest.InfoAll.class, StreamCodec.create(InfoAll::new,
-				InfoAll::names, StreamCodecs.ofSet(StreamCodecs.ofString()))
+			InfoAll::names, StreamCodecs.ofSet(StreamCodecs.ofString()))
 		);
 		builder.add(FileSystemRequest.List.class, StreamCodec.create(FileSystemRequest.List::new,
-				FileSystemRequest.List::glob, StreamCodecs.ofString())
+			FileSystemRequest.List::glob, StreamCodecs.ofString())
 		);
 		builder.add(FileSystemRequest.Move.class, StreamCodec.create(Move::new,
-				Move::name, StreamCodecs.ofString(),
-				Move::target, StreamCodecs.ofString())
+			Move::name, StreamCodecs.ofString(),
+			Move::target, StreamCodecs.ofString())
 		);
 		builder.add(FileSystemRequest.MoveAll.class, StreamCodec.create(MoveAll::new,
-				MoveAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
+			MoveAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
 		);
 		builder.add(FileSystemRequest.Ping.class, StreamCodecs.singleton(new Ping()));
 		builder.add(FileSystemRequest.Upload.class, StreamCodec.create(Upload::new,
-				Upload::name, StreamCodecs.ofString(),
-				Upload::size, StreamCodecs.ofVarLong())
+			Upload::name, StreamCodecs.ofString(),
+			Upload::size, StreamCodecs.ofVarLong())
 		);
 
 		return builder.build();
@@ -212,30 +212,30 @@ public final class RemoteFileSystemUtils {
 		builder.add(FileSystemResponse.DeleteAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.DeleteAllFinished()));
 		builder.add(FileSystemResponse.DeleteFinished.class, StreamCodecs.singleton(new FileSystemResponse.DeleteFinished()));
 		builder.add(FileSystemResponse.DownloadSize.class, StreamCodec.create(FileSystemResponse.DownloadSize::new,
-				FileSystemResponse.DownloadSize::size, StreamCodecs.ofVarLong())
+			FileSystemResponse.DownloadSize::size, StreamCodecs.ofVarLong())
 		);
 		builder.add(FileSystemResponse.Handshake.class, StreamCodec.create(FileSystemResponse.Handshake::new,
-						FileSystemResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
-								StreamCodec.create(FileSystemResponse.HandshakeFailure::new,
-										FileSystemResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
-										FileSystemResponse.HandshakeFailure::message, StreamCodecs.ofString())
-						)
+				FileSystemResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
+					StreamCodec.create(FileSystemResponse.HandshakeFailure::new,
+						FileSystemResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
+						FileSystemResponse.HandshakeFailure::message, StreamCodecs.ofString())
 				)
+			)
 		);
 		builder.add(FileSystemResponse.InfoAllFinished.class, StreamCodec.create(FileSystemResponse.InfoAllFinished::new,
-				FileSystemResponse.InfoAllFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
+			FileSystemResponse.InfoAllFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
 		);
 		builder.add(FileSystemResponse.InfoFinished.class, StreamCodec.create(FileSystemResponse.InfoFinished::new,
-				FileSystemResponse.InfoFinished::fileMetadata, StreamCodecs.ofNullable(FILE_METADATA_CODEC))
+			FileSystemResponse.InfoFinished::fileMetadata, StreamCodecs.ofNullable(FILE_METADATA_CODEC))
 		);
 		builder.add(FileSystemResponse.ListFinished.class, StreamCodec.create(FileSystemResponse.ListFinished::new,
-				FileSystemResponse.ListFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
+			FileSystemResponse.ListFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
 		);
 		builder.add(FileSystemResponse.MoveAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.MoveAllFinished()));
 		builder.add(FileSystemResponse.MoveFinished.class, StreamCodecs.singleton(new FileSystemResponse.MoveFinished()));
 		builder.add(FileSystemResponse.Pong.class, StreamCodecs.singleton(new FileSystemResponse.Pong()));
 		builder.add(FileSystemResponse.ServerError.class, StreamCodec.create(FileSystemResponse.ServerError::new,
-				FileSystemResponse.ServerError::exception, FileSystemExceptionStreamCodec.createFileSystemExceptionCodec()));
+			FileSystemResponse.ServerError::exception, FileSystemExceptionStreamCodec.createFileSystemExceptionCodec()));
 		builder.add(FileSystemResponse.UploadAck.class, StreamCodecs.singleton(new FileSystemResponse.UploadAck()));
 		builder.add(FileSystemResponse.UploadFinished.class, StreamCodecs.singleton(new FileSystemResponse.UploadFinished()));
 

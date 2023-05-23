@@ -32,7 +32,7 @@ public final class JooqSqlLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.ofClassPathProperties(DATASOURCE_PROPERTIES, true)
-				.overrideWith(Config.ofSystemProperties("config"));
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Provides
@@ -53,8 +53,8 @@ public final class JooqSqlLauncher extends Launcher {
 		logger.info("Copying data from table {} to table {}...", USER, NEW_USER);
 
 		context.insertInto(NEW_USER)
-				.select(context.select().from(USER))
-				.execute();
+			.select(context.select().from(USER))
+			.execute();
 	}
 
 	@Override
@@ -66,8 +66,8 @@ public final class JooqSqlLauncher extends Launcher {
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				ConfigModule.create(),
-				DataSourceModule.create()
+			ConfigModule.create(),
+			DataSourceModule.create()
 		);
 	}
 

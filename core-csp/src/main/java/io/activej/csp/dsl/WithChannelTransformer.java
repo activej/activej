@@ -21,7 +21,7 @@ import io.activej.csp.process.transformer.ChannelTransformer;
 import io.activej.csp.supplier.ChannelSupplier;
 
 public interface WithChannelTransformer<B, I, O> extends WithChannelInput<B, I>, WithChannelOutput<B, O>,
-		ChannelTransformer<I, O> {
+	ChannelTransformer<I, O> {
 
 	@Override
 	default ChannelSupplier<O> transform(ChannelSupplier<I> supplier) {

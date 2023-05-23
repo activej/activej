@@ -791,17 +791,17 @@ public class Expressions {
 
 	public static Expression iterateArray(Variable array, UnaryOperator<Expression> action) {
 		return iterate(value(0), length(array),
-				i -> action.apply(arrayGet(array, i)));
+			i -> action.apply(arrayGet(array, i)));
 	}
 
 	public static Expression iterateList(Variable list, UnaryOperator<Expression> action) {
 		return iterate(value(0), length(list),
-				i -> action.apply(call(list, "get", i)));
+			i -> action.apply(call(list, "get", i)));
 	}
 
 	public static Expression iterateIterable(Expression iterable, UnaryOperator<Expression> action) {
 		return let(call(iterable, "iterator"),
-				it -> iterateIterator(it, action));
+			it -> iterateIterator(it, action));
 	}
 
 	public static Expression iterateIterator(Variable iterator, UnaryOperator<Expression> action) {
@@ -814,9 +814,9 @@ public class Expressions {
 
 	public static Expression iterateMap(Expression map, BinaryOperator<Expression> action) {
 		return iterateIterable(call(map, "entrySet"),
-				it -> action.apply(
-						call(cast(it, Map.Entry.class), "getKey"),
-						call(cast(it, Map.Entry.class), "getValue")));
+			it -> action.apply(
+				call(cast(it, Map.Entry.class), "getKey"),
+				call(cast(it, Map.Entry.class), "getValue")));
 	}
 
 	public static Expression iterateMapKeys(Expression map, UnaryOperator<Expression> action) {
@@ -855,29 +855,29 @@ public class Expressions {
 
 	public static Expression hashCodeImpl(List<String> fields) {
 		return HashCode.builder()
-				.withFields(fields)
-				.build();
+			.withFields(fields)
+			.build();
 	}
 
 	public static Expression hashCodeImpl(String... fields) {
 		return HashCode.builder()
-				.withFields(fields)
-				.build();
+			.withFields(fields)
+			.build();
 	}
 
 	public static Expression equalsImpl(List<String> fields) {
 		return ifNull(arg(0),
-				value(false),
-				let(castIntoSelf(arg(0)), that -> and(fields.stream()
-						.map(field -> let(
-								new Expression[]{
-										property(self(), field),
-										property(that, field)
-								},
-								vars ->
-										ifNull(vars[0],
-												isNull(vars[1]),
-												ifNull(vars[1], value(false), isEq(vars[0], vars[1]))))))));
+			value(false),
+			let(castIntoSelf(arg(0)), that -> and(fields.stream()
+				.map(field -> let(
+					new Expression[]{
+						property(self(), field),
+						property(that, field)
+					},
+					vars ->
+						ifNull(vars[0],
+							isNull(vars[1]),
+							ifNull(vars[1], value(false), isEq(vars[0], vars[1]))))))));
 	}
 
 	public static Expression equalsImpl(String... fields) {

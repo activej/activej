@@ -118,10 +118,10 @@ public final class FilterableSupplierNode<T> extends AbstractNode {
 	@Override
 	public String toString() {
 		return "FilterableSupplierNode{id='" + id +
-				"', predicate=" + predicate +
-				", partitionIndex=" + partitionIndex +
-				", maxPartitions=" + maxPartitions +
-				", output=" + output +
-				'}';
+			"', predicate=" + predicate +
+			", partitionIndex=" + partitionIndex +
+			", maxPartitions=" + maxPartitions +
+			", output=" + output +
+			'}';
 	}
 }

@@ -63,10 +63,10 @@ public final class Buffer<T> extends ImplicitlyReactive implements StreamTransfo
 			}
 		};
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		output.getAcknowledgement()
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 	}
 
 	public boolean isSaturated() {

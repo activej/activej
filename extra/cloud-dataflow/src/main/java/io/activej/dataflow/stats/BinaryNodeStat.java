@@ -9,15 +9,15 @@ import java.util.Objects;
 
 public class BinaryNodeStat extends NodeStat implements ChannelTransformer<ByteBuf, ByteBuf> {
 	public static final StatReducer<BinaryNodeStat> REDUCER =
-			stats -> {
-				long sum = stats.stream()
-						.filter(Objects::nonNull)
-						.mapToLong(BinaryNodeStat::getBytes)
-						.reduce(0, Long::sum);
-				BinaryNodeStat stat = new BinaryNodeStat();
-				stat.record(sum);
-				return stat;
-			};
+		stats -> {
+			long sum = stats.stream()
+				.filter(Objects::nonNull)
+				.mapToLong(BinaryNodeStat::getBytes)
+				.reduce(0, Long::sum);
+			BinaryNodeStat stat = new BinaryNodeStat();
+			stat.record(sum);
+			return stat;
+		};
 
 	private long bytes = 0;
 

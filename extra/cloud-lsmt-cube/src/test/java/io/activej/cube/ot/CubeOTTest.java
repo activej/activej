@@ -47,7 +47,7 @@ public class CubeOTTest {
 
 	private static CubeDiff cubeDiff(List<AggregationChunk> added, List<AggregationChunk> removed) {
 		return CubeDiff.of(Map.of(
-				"key", AggregationDiff.of(new HashSet<>(added), new HashSet<>(removed))));
+			"key", AggregationDiff.of(new HashSet<>(added), new HashSet<>(removed))));
 	}
 
 	private static AggregationChunk chunk(List<String> fields, PrimaryKey minKey, PrimaryKey maxKey, int count) {
@@ -56,10 +56,10 @@ public class CubeOTTest {
 
 	private static List<AggregationChunk> addedChunks(Collection<CubeDiff> cubeDiffs) {
 		return cubeDiffs.stream()
-				.flatMap(cubeDiff -> cubeDiff.keySet().stream().map(cubeDiff::get))
-				.map(AggregationDiff::getAddedChunks)
-				.flatMap(Collection::stream)
-				.collect(toList());
+			.flatMap(cubeDiff -> cubeDiff.keySet().stream().map(cubeDiff::get))
+			.map(AggregationDiff::getAddedChunks)
+			.flatMap(Collection::stream)
+			.collect(toList());
 	}
 
 	@Test
@@ -67,12 +67,12 @@ public class CubeOTTest {
 		LogFile logFile = new LogFile("file", 1);
 		List<String> fields = List.of("field1", "field2");
 		LogDiff<CubeDiff> changesLeft = LogDiff.of(Map.of(
-						"clicks", positionDiff(logFile, 0, 10)),
-				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 20), 15)));
+				"clicks", positionDiff(logFile, 0, 10)),
+			cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 20), 15)));
 
 		LogDiff<CubeDiff> changesRight = LogDiff.of(Map.of(
-						"clicks", positionDiff(logFile, 0, 20)),
-				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 25), 30)));
+				"clicks", positionDiff(logFile, 0, 20)),
+			cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 25), 30)));
 		TransformResult<LogDiff<CubeDiff>> transform = logSystem.transform(changesLeft, changesRight);
 
 		assertTrue(transform.hasConflict());
@@ -80,8 +80,8 @@ public class CubeOTTest {
 		assertThat(transform.right, IsEmptyCollection.empty());
 
 		LogDiff<CubeDiff> result = LogDiff.of(Map.of(
-						"clicks", positionDiff(logFile, 10, 20)),
-				cubeDiff(addedChunks(changesRight.getDiffs()), addedChunks(changesLeft.getDiffs())));
+				"clicks", positionDiff(logFile, 10, 20)),
+			cubeDiff(addedChunks(changesRight.getDiffs()), addedChunks(changesLeft.getDiffs())));
 
 		assertEquals(1, transform.left.size());
 		assertEquals(result, transform.left.get(0));
@@ -99,14 +99,14 @@ public class CubeOTTest {
 		LogPosition toPosition = LogPosition.create(toLogfile, 500);
 
 		LogDiff<CubeDiff> logDiff = LogDiff.of(Map.of(
-						"test", new LogPositionDiff(fromPosition, toPosition)),
-				CubeDiff.empty());
+				"test", new LogPositionDiff(fromPosition, toPosition)),
+			CubeDiff.empty());
 
 		state.apply(logDiff);
 		Map<String, LogPosition> positions = state.getPositions();
 		assertEquals(Map.of(
-						"test", toPosition),
-				positions);
+				"test", toPosition),
+			positions);
 
 		List<LogDiff<CubeDiff>> inverted = logSystem.invert(List.of(logDiff));
 		for (LogDiff<CubeDiff> invertedDiff : inverted) {

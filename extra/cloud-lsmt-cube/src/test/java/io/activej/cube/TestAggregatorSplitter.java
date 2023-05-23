@@ -60,18 +60,18 @@ public class TestAggregatorSplitter extends SplitterLogDataConsumer<TestPubReque
 			private final AggregationItem outputItem = new AggregationItem();
 
 			private final StreamDataAcceptor<AggregationItem> pubAggregator = ctx.addOutput(
-					cube.logStreamConsumer(AggregationItem.class,
-							PUB_DIMENSIONS.stream()
-									.collect(toLinkedHashMap(identity())),
-							PUB_METRICS.stream()
-									.collect(toLinkedHashMap(identity()))));
+				cube.logStreamConsumer(AggregationItem.class,
+					PUB_DIMENSIONS.stream()
+						.collect(toLinkedHashMap(identity())),
+					PUB_METRICS.stream()
+						.collect(toLinkedHashMap(identity()))));
 
 			private final StreamDataAcceptor<AggregationItem> advAggregator = ctx.addOutput(
-					cube.logStreamConsumer(AggregationItem.class,
-							ADV_DIMENSIONS.stream()
-									.collect(toLinkedHashMap(identity())),
-							ADV_METRICS.stream()
-									.collect(toLinkedHashMap(identity()))));
+				cube.logStreamConsumer(AggregationItem.class,
+					ADV_DIMENSIONS.stream()
+						.collect(toLinkedHashMap(identity())),
+					ADV_METRICS.stream()
+						.collect(toLinkedHashMap(identity()))));
 
 			@SuppressWarnings("ConstantConditions")
 			@Override

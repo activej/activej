@@ -57,28 +57,28 @@ public final class HttpServerTest {
 
 	public HttpServer blockingHttpServer() {
 		return HttpServer.builder(eventloop,
-						request ->
-								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise())
-				.withListenPort(port)
-				.build();
+				request ->
+					HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise())
+			.withListenPort(port)
+			.build();
 	}
 
 	public HttpServer httpServer() {
 		return HttpServer.builder(eventloop,
-						request ->
-								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise().async())
-				.withListenPort(port)
-				.build();
+				request ->
+					HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise().async())
+			.withListenPort(port)
+			.build();
 	}
 
 	static final Random RANDOM = new Random();
 
 	public HttpServer delayedHttpServer() {
 		return HttpServer.builder(eventloop,
-						request -> Promises.delay(RANDOM.nextInt(3),
-								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).build()))
-				.withListenPort(port)
-				.build();
+				request -> Promises.delay(RANDOM.nextInt(3),
+					HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).build()))
+			.withListenPort(port)
+			.build();
 	}
 
 	public static void writeByRandomParts(Socket socket, String string) throws IOException {
@@ -116,30 +116,30 @@ public final class HttpServerTest {
 
 			for (int i = 0; i < 200; i++) {
 				writeByRandomParts(socket, """
-						GET /abc HTTP/1.0\r
-						Host: localhost\r
-						Connection: keep-alive\r
-						\r
-						""");
+					GET /abc HTTP/1.0\r
+					Host: localhost\r
+					Connection: keep-alive\r
+					\r
+					""");
 				readAndAssert(socket.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 4\r
-						\r
-						/abc""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 4\r
+					\r
+					/abc""");
 			}
 
 			writeByRandomParts(socket, """
-					GET /abc HTTP/1.0\r
-					Host: localhost\r
-					\r
-					""");
+				GET /abc HTTP/1.0\r
+				Host: localhost\r
+				\r
+				""");
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 200 OK\r
-					Connection: close\r
-					Content-Length: 4\r
-					\r
-					/abc"""); // ?
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 4\r
+				\r
+				/abc"""); // ?
 
 			assertEmpty(socket.getInputStream());
 			assertTrue(socket.isClosed());
@@ -168,30 +168,30 @@ public final class HttpServerTest {
 
 			for (int i = 0; i < 200; i++) {
 				writeByRandomParts(socket, """
-						GET /abc HTTP/1.1\r
-						Host: localhost\r
-						\r
-						""");
+					GET /abc HTTP/1.1\r
+					Host: localhost\r
+					\r
+					""");
 				readAndAssert(socket.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 4\r
-						\r
-						/abc""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 4\r
+					\r
+					/abc""");
 			}
 
 			writeByRandomParts(socket, """
-					GET /abc HTTP/1.1\r
-					Host: localhost\r
-					Connection: close\r
-					\r
-					""");
+				GET /abc HTTP/1.1\r
+				Host: localhost\r
+				Connection: close\r
+				\r
+				""");
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 200 OK\r
-					Connection: close\r
-					Content-Length: 4\r
-					\r
-					/abc"""); // ?
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 4\r
+				\r
+				/abc"""); // ?
 
 			assertEmpty(socket.getInputStream());
 			assertTrue(socket.isClosed());
@@ -212,9 +212,9 @@ public final class HttpServerTest {
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
 			writeByRandomParts(socket, """
-					GET /abc HTTP1.1\r
-					Host: localhost\r
-					""");
+				GET /abc HTTP1.1\r
+				Host: localhost\r
+				""");
 		}
 
 		server.closeFuture().get();
@@ -226,18 +226,18 @@ public final class HttpServerTest {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
 		HttpServer.builder(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier).toPromise())
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 		new Thread(() -> {
 			try (Socket socket = new Socket()) {
 				socket.connect(new InetSocketAddress("localhost", port));
 				writeByRandomParts(socket, """
-						GET /abc HTTP/1.1\r
-						Host: localhost\r
-						\r
-						""");
+					GET /abc HTTP/1.1\r
+					Host: localhost\r
+					\r
+					""");
 			} catch (IOException e) {
 				throw new AssertionError(e);
 			}
@@ -256,16 +256,16 @@ public final class HttpServerTest {
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
 			writeByRandomParts(socket, """
-					GET /abc HTTP/1.0\r
-					Host: localhost\r
-					\r
-					""");
+				GET /abc HTTP/1.0\r
+				Host: localhost\r
+				\r
+				""");
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 200 OK\r
-					Connection: close\r
-					Content-Length: 4\r
-					\r
-					/abc""");
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 4\r
+				\r
+				/abc""");
 			assertEmpty(socket.getInputStream());
 		}
 
@@ -283,17 +283,17 @@ public final class HttpServerTest {
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
 			writeByRandomParts(socket, """
-					GET /abc HTTP/1.1\r
-					Connection: close\r
-					Host: localhost\r
-					\r
-					""");
+				GET /abc HTTP/1.1\r
+				Connection: close\r
+				Host: localhost\r
+				\r
+				""");
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 200 OK\r
-					Connection: close\r
-					Content-Length: 4\r
-					\r
-					/abc""");
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 4\r
+				\r
+				/abc""");
 			assertEmpty(socket.getInputStream());
 		}
 
@@ -318,51 +318,51 @@ public final class HttpServerTest {
 
 			for (int i = 0; i < 100; i++) {
 				writeByRandomParts(socket, """
-						GET /abc HTTP/1.1\r
-						Connection: Keep-Alive\r
-						Host: localhost\r
-						\r
-						GET /123456 HTTP/1.1\r
-						Host: localhost\r
-						\r
-						POST /post1 HTTP/1.1\r
-						Host: localhost\r
-						Content-Length: 8\r
-						Content-Type: application/json\r
-						\r
-						{"at":2}POST /post2 HTTP/1.1\r
-						Host: localhost\r
-						Content-Length: 8\r
-						Content-Type: application/json\r
-						\r
-						{"at":2}""");
+					GET /abc HTTP/1.1\r
+					Connection: Keep-Alive\r
+					Host: localhost\r
+					\r
+					GET /123456 HTTP/1.1\r
+					Host: localhost\r
+					\r
+					POST /post1 HTTP/1.1\r
+					Host: localhost\r
+					Content-Length: 8\r
+					Content-Type: application/json\r
+					\r
+					{"at":2}POST /post2 HTTP/1.1\r
+					Host: localhost\r
+					Content-Length: 8\r
+					Content-Type: application/json\r
+					\r
+					{"at":2}""");
 			}
 
 			for (int i = 0; i < 100; i++) {
 				readAndAssert(socket.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 4\r
-						\r
-						/abc""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 4\r
+					\r
+					/abc""");
 				readAndAssert(socket.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 7\r
-						\r
-						/123456""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 7\r
+					\r
+					/123456""");
 				readAndAssert(socket.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 6\r
-						\r
-						/post1""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 6\r
+					\r
+					/post1""");
 				readAndAssert(socket.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 6\r
-						\r
-						/post2""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 6\r
+					\r
+					/post2""");
 			}
 		}
 
@@ -375,19 +375,19 @@ public final class HttpServerTest {
 	public void testBigHttpMessage() throws Exception {
 		byte[] body = encodeAscii("Test big HTTP message body");
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
-				.withBody(body)
-				.build();
+			.withBody(body)
+			.build();
 
 		ByteBuf buf = ByteBufPool.allocate(request.estimateSize() + body.length);
 		request.writeTo(buf);
 		buf.put(body);
 
 		HttpServer server = HttpServer.builder(eventloop,
-						req -> HttpResponse.ok200()
-								.withBody(encodeAscii(req.getUrl().getPathAndQuery()))
-								.toPromise())
-				.withListenPort(port)
-				.build();
+				req -> HttpResponse.ok200()
+					.withBody(encodeAscii(req.getUrl().getPathAndQuery()))
+					.toPromise())
+			.withListenPort(port)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -409,10 +409,10 @@ public final class HttpServerTest {
 	@Test
 	public void testExpectContinue() throws Exception {
 		HttpServer server = HttpServer.builder(eventloop,
-						request -> request.loadBody()
-								.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()))
-				.withListenPort(port)
-				.build();
+				request -> request.loadBody()
+					.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()))
+			.withListenPort(port)
+			.build();
 
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -423,21 +423,21 @@ public final class HttpServerTest {
 			socket.connect(new InetSocketAddress("localhost", port));
 
 			writeByRandomParts(socket, """
-					POST /abc HTTP/1.0\r
-					Host: localhost\r
-					Content-Length: 5\r
-					Expect: 100-continue\r
-					\r
-					""");
+				POST /abc HTTP/1.0\r
+				Host: localhost\r
+				Content-Length: 5\r
+				Expect: 100-continue\r
+				\r
+				""");
 			readAndAssert(socket.getInputStream(), "HTTP/1.1 100 Continue\r\n\r\n");
 
 			writeByRandomParts(socket, "abcde");
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 200 OK\r
-					Connection: close\r
-					Content-Length: 5\r
-					\r
-					abcde""");
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 5\r
+				\r
+				abcde""");
 
 			assertEmpty(socket.getInputStream());
 			assertTrue(socket.isClosed());
@@ -450,26 +450,26 @@ public final class HttpServerTest {
 	@Test
 	public void testBodyRecycledOnce() throws IOException, InterruptedException {
 		HttpServer.builder(eventloop,
-						request -> {
-							// imitate network problems
-							shutdownAllChannels();
-							return HttpResponse.ok200().toPromise();
-						})
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				request -> {
+					// imitate network problems
+					shutdownAllChannels();
+					return HttpResponse.ok200().toPromise();
+				})
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		Thread thread = new Thread(() -> {
 			try (Socket socket = new Socket()) {
 				socket.connect(new InetSocketAddress("localhost", port));
 				ByteBuf buf = ByteBuf.wrapForReading(encodeAscii("""
-						GET /  HTTP/1.1\r
-						Host: localhost\r
-						Connection: close\r
-						Content-Length: 10\r
-						\r
-						test"""));
+					GET /  HTTP/1.1\r
+					Host: localhost\r
+					Connection: close\r
+					Content-Length: 10\r
+					\r
+					test"""));
 				socket.getOutputStream().write(buf.array(), buf.head(), buf.readRemaining());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -484,23 +484,23 @@ public final class HttpServerTest {
 	@Test
 	public void testPostParameters() throws IOException, ExecutionException, InterruptedException {
 		HttpServer server = HttpServer.builder(eventloop, request ->
-						request.loadBody()
-								.then(() -> {
-									Map<String, String> postParameters = request.getPostParameters();
-									StringBuilder sb = new StringBuilder();
-									for (Map.Entry<String, String> entry : postParameters.entrySet()) {
-										sb.append(entry.getKey())
-												.append("=")
-												.append(entry.getValue())
-												.append(";");
-									}
+				request.loadBody()
+					.then(() -> {
+						Map<String, String> postParameters = request.getPostParameters();
+						StringBuilder sb = new StringBuilder();
+						for (Map.Entry<String, String> entry : postParameters.entrySet()) {
+							sb.append(entry.getKey())
+								.append("=")
+								.append(entry.getValue())
+								.append(";");
+						}
 
-									return HttpResponse.ok200()
-											.withBody(encodeAscii(sb.toString()))
-											.toPromise();
-								}))
-				.withListenPort(port)
-				.build();
+						return HttpResponse.ok200()
+							.withBody(encodeAscii(sb.toString()))
+							.toPromise();
+					}))
+			.withListenPort(port)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -508,20 +508,20 @@ public final class HttpServerTest {
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
 			writeByRandomParts(socket, """
-					POST / HTTP/1.1\r
-					Host: localhost\r
-					Connection: close\r
-					Content-Type: application/x-www-form-urlencoded\r
-					Content-Length: 27\r
-					\r
-					field1=value1&field2=value2""");
+				POST / HTTP/1.1\r
+				Host: localhost\r
+				Connection: close\r
+				Content-Type: application/x-www-form-urlencoded\r
+				Content-Length: 27\r
+				\r
+				field1=value1&field2=value2""");
 
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 200 OK\r
-					Connection: close\r
-					Content-Length: 28\r
-					\r
-					field1=value1;field2=value2;""");
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 28\r
+				\r
+				field1=value1;field2=value2;""");
 			assertEmpty(socket.getInputStream());
 		}
 
@@ -533,23 +533,23 @@ public final class HttpServerTest {
 	public void testIncompleteRequest() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, request ->
-						request.loadBody()
-								.map(($, e) -> {
-									assertTrue(e instanceof MalformedHttpException);
-									assertEquals("Incomplete HTTP message", e.getMessage());
-									assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
-									assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
-									assertEquals(0, inspector.getHttpErrors().getTotal());
+				request.loadBody()
+					.map(($, e) -> {
+						assertTrue(e instanceof MalformedHttpException);
+						assertEquals("Incomplete HTTP message", e.getMessage());
+						assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());
+						assertEquals("Incomplete HTTP message", inspector.getMalformedHttpExceptions().getLastMessage());
+						assertEquals(0, inspector.getHttpErrors().getTotal());
 
-									assertFalse(request.isRecycled());
-									assertTrue(request.getConnection().isClosed());
+						assertFalse(request.isRecycled());
+						assertTrue(request.getConnection().isClosed());
 
-									assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
-									return HttpResponse.ofCode(400).build();
-								}))
-				.withInspector(inspector)
-				.withListenPort(port)
-				.build();
+						assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
+						return HttpResponse.ofCode(400).build();
+					}))
+			.withInspector(inspector)
+			.withListenPort(port)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
@@ -557,22 +557,22 @@ public final class HttpServerTest {
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
 			writeByRandomParts(socket, """
-					POST / HTTP/1.1\r
-					Host: localhost\r
-					Connection: close\r
-					Content-Type: application/x-www-form-urlencoded\r
-					Content-Length: 100\r
-					\r
-					field1=value1&field2=value2""");
+				POST / HTTP/1.1\r
+				Host: localhost\r
+				Connection: close\r
+				Content-Type: application/x-www-form-urlencoded\r
+				Content-Length: 100\r
+				\r
+				field1=value1&field2=value2""");
 			socket.shutdownOutput();
 
 			readAndAssert(socket.getInputStream(),
-					"""
-							HTTP/1.1 400 Bad Request\r
-							Connection: close\r
-							Content-Length: 0\r
-							\r
-							""");
+				"""
+					HTTP/1.1 400 Bad Request\r
+					Connection: close\r
+					Content-Length: 0\r
+					\r
+					""");
 
 			assertEmpty(socket.getInputStream());
 		}
@@ -585,21 +585,21 @@ public final class HttpServerTest {
 	public void testMalformedUri() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, $ -> {
-					throw new IllegalArgumentException("Should not be called");
-				})
-				.withListenPort(port)
-				.withInspector(inspector)
-				.build();
+				throw new IllegalArgumentException("Should not be called");
+			})
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		String malformedUriRequest = """
-				GET /malformed uri HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive\r
-				\r
-				""";
+			GET /malformed uri HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive\r
+			\r
+			""";
 		doTestMalformedRequest(malformedUriRequest);
 
 		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
@@ -618,23 +618,23 @@ public final class HttpServerTest {
 	public void testMalformedHeaders() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, $ -> {
-					throw new IllegalArgumentException("Should not be called");
-				})
-				.withListenPort(port)
-				.withInspector(inspector)
-				.build();
+				throw new IllegalArgumentException("Should not be called");
+			})
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		// malformed header
 		String malformedHeaderRequest = """
-				GET / HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive\r
-				Content-Length: error\r
-				\r
-				""";
+			GET / HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive\r
+			Content-Length: error\r
+			\r
+			""";
 		doTestMalformedRequest(malformedHeaderRequest);
 
 		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
@@ -653,26 +653,26 @@ public final class HttpServerTest {
 	public void testMalformedFirstRequestPipelined() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, $ -> {
-					throw new IllegalArgumentException("Should not be called");
-				})
-				.withListenPort(port)
-				.withInspector(inspector)
-				.build();
+				throw new IllegalArgumentException("Should not be called");
+			})
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		// pipeline malformed first request
 		String malformedPipelinedRequest = """
-				GET /malformed uri HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive\r
-				\r
-				GET / HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive\r
-				\r
-				""";
+			GET /malformed uri HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive\r
+			\r
+			GET / HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive\r
+			\r
+			""";
 		doTestMalformedRequest(malformedPipelinedRequest);
 
 		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
@@ -691,27 +691,27 @@ public final class HttpServerTest {
 	public void testMalformedSecondRequestPipelined() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, $ -> HttpResponse.ok200()
-						.withPlainText("Hello, world!")
-						.toPromise())
-				.withListenPort(port)
-				.withInspector(inspector)
-				.build();
+				.withPlainText("Hello, world!")
+				.toPromise())
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		String normalPipelinedrequest = """
-				GET / HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive\r
-				\r
-				""";
+			GET / HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive\r
+			\r
+			""";
 		String malformedPipelinedRequest = """
-				GET /malformed uri HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive\r
-				\r
-				""";
+			GET /malformed uri HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive\r
+			\r
+			""";
 
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
@@ -719,17 +719,17 @@ public final class HttpServerTest {
 			socket.shutdownOutput();
 
 			readAndAssert(socket.getInputStream(),
-					"""
-							HTTP/1.1 200 OK\r
-							Connection: keep-alive\r
-							Content-Type: text/plain; charset=utf-8\r
-							Content-Length: 13\r
-							\r
-							Hello, world!HTTP/1.1 400 Bad Request\r
-							Connection: close\r
-							Content-Length: 0\r
-							\r
-							""");
+				"""
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Type: text/plain; charset=utf-8\r
+					Content-Length: 13\r
+					\r
+					Hello, world!HTTP/1.1 400 Bad Request\r
+					Connection: close\r
+					Content-Length: 0\r
+					\r
+					""");
 
 			assertEmpty(socket.getInputStream());
 		}
@@ -753,11 +753,11 @@ public final class HttpServerTest {
 			socket.shutdownOutput();
 
 			readAndAssert(socket.getInputStream(), """
-					HTTP/1.1 400 Bad Request\r
-					Connection: close\r
-					Content-Length: 0\r
-					\r
-					""");
+				HTTP/1.1 400 Bad Request\r
+				Connection: close\r
+				Content-Length: 0\r
+				\r
+				""");
 		}
 	}
 

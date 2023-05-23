@@ -29,22 +29,22 @@ public final class TcpServerExample {
 		InetSocketAddress address = new InetSocketAddress("localhost", TcpClientExample.PORT);
 		ServerSocketSettings socketSettings = ServerSocketSettings.defaultInstance();
 		eventloop.listen(address, socketSettings,
-				channel -> {
-					ITcpSocket socket;
+			channel -> {
+				ITcpSocket socket;
 
-					try {
-						socket = TcpSocket.wrapChannel(eventloop, channel, null);
-						System.out.println("Client connected: " + channel.getRemoteAddress());
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+				try {
+					socket = TcpSocket.wrapChannel(eventloop, channel, null);
+					System.out.println("Client connected: " + channel.getRemoteAddress());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
 
-					ChannelSuppliers.ofSocket(socket)
-							.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-							.transformWith(StreamTransformers.mapper(x -> x + " times 10 = " + x * 10))
-							.transformWith(ChannelSerializer.create(UTF8_SERIALIZER))
-							.streamTo(ChannelConsumers.ofSocket(socket));
-				});
+				ChannelSuppliers.ofSocket(socket)
+					.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
+					.transformWith(StreamTransformers.mapper(x -> x + " times 10 = " + x * 10))
+					.transformWith(ChannelSerializer.create(UTF8_SERIALIZER))
+					.streamTo(ChannelConsumers.ofSocket(socket));
+			});
 
 		System.out.println("Connect to the server by running datastream.TcpClientExample");
 

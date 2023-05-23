@@ -219,8 +219,8 @@ public class EventStatsTest {
 	public void itShouldProperlyBuildStringWithRateUnits() {
 		Duration smoothingWindow = Duration.ofSeconds(1);
 		EventStats eventStats = EventStats.builder(smoothingWindow)
-				.withRateUnit("records")
-				.build();
+			.withRateUnit("records")
+			.build();
 		long currentTimestamp = 0;
 		int events = 1000;
 		double rate = 6;

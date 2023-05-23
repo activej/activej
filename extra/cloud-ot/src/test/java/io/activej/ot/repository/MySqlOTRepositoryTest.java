@@ -56,8 +56,8 @@ public class MySqlOTRepositoryTest {
 	@Before
 	public void before() throws IOException, SQLException {
 		repository = MySqlOTRepository.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
-				AsyncSupplier.of(id::inc),
-				createTestOp(), TestOp.class);
+			AsyncSupplier.of(id::inc),
+			createTestOp(), TestOp.class);
 		repository.initialize();
 		repository.truncateTables();
 	}
@@ -139,11 +139,11 @@ public class MySqlOTRepositoryTest {
 		 */
 
 		await(repository
-				.pushAndUpdateHeads(commits(asLong(g -> {
-					g.add(1, 2, add(1));
-					g.add(1, 3, add(1));
-					g.add(1, 4, add(1));
-				}))));
+			.pushAndUpdateHeads(commits(asLong(g -> {
+				g.add(1, 2, add(1));
+				g.add(1, 3, add(1));
+				g.add(1, 4, add(1));
+			}))));
 		id.set(4);
 
 		Set<Long> heads = await(repository.getHeads());
@@ -224,15 +224,15 @@ public class MySqlOTRepositoryTest {
 	@Test
 	public void testForkMerge() {
 		await(repository
-				.pushAndUpdateHeads(commits(asLong(g -> {
-					g.add(1, 2, add(1));
-					g.add(2, 3, add(1));
-					g.add(3, 4, add(1));
-					g.add(4, 5, add(1));
-					g.add(4, 6, add(1));
-					g.add(5, 7, add(1));
-					g.add(6, 8, add(1));
-				}))));
+			.pushAndUpdateHeads(commits(asLong(g -> {
+				g.add(1, 2, add(1));
+				g.add(2, 3, add(1));
+				g.add(3, 4, add(1));
+				g.add(4, 5, add(1));
+				g.add(4, 6, add(1));
+				g.add(5, 7, add(1));
+				g.add(6, 8, add(1));
+			}))));
 		id.set(8);
 
 		await(mergeAndUpdateHeads(repository, SYSTEM));
@@ -242,16 +242,16 @@ public class MySqlOTRepositoryTest {
 	@Test
 	public void testFindRootNodes() {
 		await(repository
-				.pushAndUpdateHeads(commits(asLong(g -> {
-					g.add(1, 2, add(1));
-					g.add(1, 3, add(1));
-					g.add(2, 4, add(1));
-					g.add(3, 4, add(1));
-					g.add(2, 5, add(1));
-					g.add(3, 5, add(1));
-					g.add(4, 6, add(1));
-					g.add(5, 7, add(1));
-				}))));
+			.pushAndUpdateHeads(commits(asLong(g -> {
+				g.add(1, 2, add(1));
+				g.add(1, 3, add(1));
+				g.add(2, 4, add(1));
+				g.add(3, 4, add(1));
+				g.add(2, 5, add(1));
+				g.add(3, 5, add(1));
+				g.add(4, 6, add(1));
+				g.add(5, 7, add(1));
+			}))));
 
 		assertEquals(set(2L, 3L), await(findAllCommonParents(repository, SYSTEM, set(6L, 7L))));
 		assertEquals(set(6L), await(findAllCommonParents(repository, SYSTEM, set(6L))));
@@ -260,13 +260,13 @@ public class MySqlOTRepositoryTest {
 	@Test
 	public void testFindRootNodes2() {
 		await(repository
-				.pushAndUpdateHeads(commits(asLong(g -> {
-					g.add(1, 2, add(1));
-					g.add(2, 3, add(1));
-					g.add(3, 4, add(1));
-					g.add(4, 5, add(1));
-					g.add(4, 6, add(1));
-				}))));
+			.pushAndUpdateHeads(commits(asLong(g -> {
+				g.add(1, 2, add(1));
+				g.add(2, 3, add(1));
+				g.add(3, 4, add(1));
+				g.add(4, 5, add(1));
+				g.add(4, 6, add(1));
+			}))));
 
 		assertEquals(set(4L), await(findAllCommonParents(repository, SYSTEM, set(4L, 5L, 6L))));
 	}
@@ -274,21 +274,21 @@ public class MySqlOTRepositoryTest {
 	@Test
 	public void testFindParentCandidatesSurface() {
 		await(repository
-				.pushAndUpdateHeads(commits(asLong(g -> {
-					g.add(1, 2, add(1));
-					g.add(1, 3, add(1));
-					g.add(2, 4, add(1));
-					g.add(3, 4, add(1));
-					g.add(2, 5, add(1));
-					g.add(3, 5, add(1));
-					g.add(4, 6, add(1));
-					g.add(5, 7, add(1));
-				}))));
+			.pushAndUpdateHeads(commits(asLong(g -> {
+				g.add(1, 2, add(1));
+				g.add(1, 3, add(1));
+				g.add(2, 4, add(1));
+				g.add(3, 4, add(1));
+				g.add(2, 5, add(1));
+				g.add(3, 5, add(1));
+				g.add(4, 6, add(1));
+				g.add(5, 7, add(1));
+			}))));
 
 		Set<Long> searchSurface = set(2L, 3L);
 
 		Set<Long> rootNodes = await(findCut(repository, SYSTEM, set(6L, 7L),
-				commits -> searchSurface.equals(commits.stream().map(OTCommit::getId).collect(toSet()))));
+			commits -> searchSurface.equals(commits.stream().map(OTCommit::getId).collect(toSet()))));
 
 		assertEquals(searchSurface, rootNodes);
 	}
@@ -296,14 +296,14 @@ public class MySqlOTRepositoryTest {
 	@Test
 	public void testSingleCacheCheckpointNode() {
 		await(repository
-				.pushAndUpdateHeads(commits(asLong(g -> {
-					g.add(1, 2, add(1));
-					g.add(2, 3, add(1));
-					g.add(3, 4, add(1));
-					g.add(4, 5, add(1));
-					g.add(5, 6, add(1));
-					g.add(5, 7, add(1));
-				}))));
+			.pushAndUpdateHeads(commits(asLong(g -> {
+				g.add(1, 2, add(1));
+				g.add(2, 3, add(1));
+				g.add(3, 4, add(1));
+				g.add(4, 5, add(1));
+				g.add(5, 6, add(1));
+				g.add(5, 7, add(1));
+			}))));
 		await(repository.saveSnapshot(1L, List.of()));
 
 		List<TestOp> diffs = await(checkout(repository, SYSTEM, 5L));

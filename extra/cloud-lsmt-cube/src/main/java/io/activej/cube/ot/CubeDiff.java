@@ -75,8 +75,8 @@ public class CubeDiff {
 	@SuppressWarnings("unchecked")
 	public <C> Stream<C> addedChunks() {
 		return diffs.values().stream()
-				.flatMap(aggregationDiff -> aggregationDiff.getAddedChunks().stream())
-				.map(aggregationChunk -> (C) aggregationChunk.getChunkId());
+			.flatMap(aggregationDiff -> aggregationDiff.getAddedChunks().stream())
+			.map(aggregationChunk -> (C) aggregationChunk.getChunkId());
 	}
 
 	@Override

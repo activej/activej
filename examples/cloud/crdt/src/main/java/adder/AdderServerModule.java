@@ -42,37 +42,37 @@ public final class AdderServerModule extends AbstractModule {
 
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
-			PartitionId partitionId,
-			ICrdtMap<Long, SimpleSumsCrdtState> map,
-			IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
-			IdSequentialExecutor<Long> seqExecutor
+		PartitionId partitionId,
+		ICrdtMap<Long, SimpleSumsCrdtState> map,
+		IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
+		IdSequentialExecutor<Long> seqExecutor
 	) {
 		return Map.of(
-				AddRequest.class, (RpcRequestHandler<AddRequest, AddResponse>) request -> {
-					long userId = request.userId();
-					logger.info("Received 'Add' request for user {}", userId);
+			AddRequest.class, (RpcRequestHandler<AddRequest, AddResponse>) request -> {
+				long userId = request.userId();
+				logger.info("Received 'Add' request for user {}", userId);
 
-					return seqExecutor.execute(userId, () -> map.get(userId)
-							.then(state -> {
-								float newSum = request.delta() +
-										(state == null ?
-												0 :
-												state.localSum());
+				return seqExecutor.execute(userId, () -> map.get(userId)
+					.then(state -> {
+						float newSum = request.delta() +
+							(state == null ?
+								0 :
+								state.localSum());
 
-								return writeAheadLog.put(userId, DetailedSumsCrdtState.of(partitionId.toString(), newSum))
-										.then(() -> map.put(userId, SimpleSumsCrdtState.of(newSum)))
-										.map($ -> AddResponse.INSTANCE);
-							}));
-				},
-				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request -> {
-					long userId = request.userId();
-					logger.info("Received 'Get' request for user {}", userId);
+						return writeAheadLog.put(userId, DetailedSumsCrdtState.of(partitionId.toString(), newSum))
+							.then(() -> map.put(userId, SimpleSumsCrdtState.of(newSum)))
+							.map($ -> AddResponse.INSTANCE);
+					}));
+			},
+			GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request -> {
+				long userId = request.userId();
+				logger.info("Received 'Get' request for user {}", userId);
 
-					return map.get(userId)
-							.map(t -> t != null ? t.value() : null)
-							.map(t -> t == null ? 0f : t)
-							.map(GetResponse::new);
-				}
+				return map.get(userId)
+					.map(t -> t != null ? t.value() : null)
+					.map(t -> t == null ? 0f : t)
+					.map(GetResponse::new);
+			}
 		);
 	}
 
@@ -107,7 +107,7 @@ public final class AdderServerModule extends AbstractModule {
 	@Named("Map refresh")
 	TaskScheduler mapRefresh(Reactor reactor, ICrdtMap<Long, SimpleSumsCrdtState> map) {
 		return TaskScheduler.builder(reactor, map::refresh)
-				.withInterval(Duration.ofSeconds(10))
-				.build();
+			.withInterval(Duration.ofSeconds(10))
+			.build();
 	}
 }

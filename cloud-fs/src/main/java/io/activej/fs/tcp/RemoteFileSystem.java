@@ -71,14 +71,15 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Inherits all the limitations of {@link IFileSystem} implementation located on {@link FileSystemServer}.
  */
 public final class RemoteFileSystem extends AbstractNioReactive
-		implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(RemoteFileSystem.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteFileSystem.class, "connectTimeout", Duration.ZERO);
 
 	private static final ByteBufsCodec<FileSystemResponse, FileSystemRequest> SERIALIZER = ByteBufsCodecs.ofStreamCodecs(
-			RemoteFileSystemUtils.FS_RESPONSE_CODEC,
-			RemoteFileSystemUtils.FS_REQUEST_CODEC
+		RemoteFileSystemUtils.FS_RESPONSE_CODEC,
+		RemoteFileSystemUtils.FS_REQUEST_CODEC
 	);
 
 	private final InetSocketAddress address;
@@ -147,66 +148,66 @@ public final class RemoteFileSystem extends AbstractNioReactive
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		checkInReactorThread(this);
 		return connectForStreaming(address)
-				.then(this::performHandshake)
-				.then(messaging -> doUpload(messaging, name, null))
-				.whenComplete(uploadStartPromise.recordStats())
-				.whenComplete(toLogger(logger, "upload", name, this));
+			.then(this::performHandshake)
+			.then(messaging -> doUpload(messaging, name, null))
+			.whenComplete(uploadStartPromise.recordStats())
+			.whenComplete(toLogger(logger, "upload", name, this));
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		checkInReactorThread(this);
 		return connect(address)
-				.then(this::performHandshake)
-				.then(messaging -> doUpload(messaging, name, size))
-				.whenComplete(uploadStartPromise.recordStats())
-				.whenComplete(toLogger(logger, "upload", name, size, this));
+			.then(this::performHandshake)
+			.then(messaging -> doUpload(messaging, name, size))
+			.whenComplete(uploadStartPromise.recordStats())
+			.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(IMessaging<FileSystemResponse, FileSystemRequest> messaging, String name, @Nullable Long size) {
 		return messaging.send(new FileSystemRequest.Upload(name, size == null ? -1 : size))
-				.then(messaging::receive)
-				.whenResult(validateFn(FileSystemResponse.UploadAck.class))
-				.then(() -> Promise.of(messaging.sendBinaryStream()
-						.transformWith(size == null ? identity() : ofFixedSize(size))
-						.withAcknowledgement(ack -> ack
-								.then(messaging::receive)
-								.whenResult(messaging::close)
-								.whenResult(validateFn(FileSystemResponse.UploadFinished.class))
-								.toVoid()
-								.whenException(e -> {
-									messaging.closeEx(e);
-									logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
-								})
-								.whenComplete(uploadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "onUploadComplete", messaging, name, size, this)))))
-				.whenException(e -> {
-					messaging.closeEx(e);
-					logger.warn("Error while trying to upload file {}: {}", name, this, e);
-				});
+			.then(messaging::receive)
+			.whenResult(validateFn(FileSystemResponse.UploadAck.class))
+			.then(() -> Promise.of(messaging.sendBinaryStream()
+				.transformWith(size == null ? identity() : ofFixedSize(size))
+				.withAcknowledgement(ack -> ack
+					.then(messaging::receive)
+					.whenResult(messaging::close)
+					.whenResult(validateFn(FileSystemResponse.UploadFinished.class))
+					.toVoid()
+					.whenException(e -> {
+						messaging.closeEx(e);
+						logger.warn("Cancelled while trying to upload file {}: {}", name, this, e);
+					})
+					.whenComplete(uploadFinishPromise.recordStats())
+					.whenComplete(toLogger(logger, TRACE, "onUploadComplete", messaging, name, size, this)))))
+			.whenException(e -> {
+				messaging.closeEx(e);
+				logger.warn("Error while trying to upload file {}: {}", name, this, e);
+			});
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		checkInReactorThread(this);
 		return connect(address)
-				.then(this::performHandshake)
-				.then(messaging ->
-						messaging.send(new FileSystemRequest.Append(name, offset))
-								.then(messaging::receive)
-								.whenResult(validateFn(FileSystemResponse.AppendAck.class))
-								.then(() -> Promise.of(messaging.sendBinaryStream()
-										.withAcknowledgement(ack -> ack
-												.then(messaging::receive)
-												.whenResult(messaging::close)
-												.whenResult(validateFn(FileSystemResponse.AppendFinished.class))
-												.toVoid()
-												.whenException(messaging::closeEx)
-												.whenComplete(appendFinishPromise.recordStats())
-												.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)))))
-								.whenException(messaging::closeEx))
-				.whenComplete(appendStartPromise.recordStats())
-				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
+			.then(this::performHandshake)
+			.then(messaging ->
+				messaging.send(new FileSystemRequest.Append(name, offset))
+					.then(messaging::receive)
+					.whenResult(validateFn(FileSystemResponse.AppendAck.class))
+					.then(() -> Promise.of(messaging.sendBinaryStream()
+						.withAcknowledgement(ack -> ack
+							.then(messaging::receive)
+							.whenResult(messaging::close)
+							.whenResult(validateFn(FileSystemResponse.AppendFinished.class))
+							.toVoid()
+							.whenException(messaging::closeEx)
+							.whenComplete(appendFinishPromise.recordStats())
+							.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)))))
+					.whenException(messaging::closeEx))
+			.whenComplete(appendStartPromise.recordStats())
+			.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
 	@Override
@@ -216,52 +217,52 @@ public final class RemoteFileSystem extends AbstractNioReactive
 		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
 
 		return connect(address)
-				.then(this::performHandshake)
-				.then(messaging ->
-						messaging.send(new FileSystemRequest.Download(name, offset, limit))
-								.then(messaging::receive)
-								.map(castFn(FileSystemResponse.DownloadSize.class))
-								.then(msg -> {
-									long receivingSize = msg.size();
-									if (receivingSize > limit) {
-										throw new UnexpectedDataException();
+			.then(this::performHandshake)
+			.then(messaging ->
+				messaging.send(new FileSystemRequest.Download(name, offset, limit))
+					.then(messaging::receive)
+					.map(castFn(FileSystemResponse.DownloadSize.class))
+					.then(msg -> {
+						long receivingSize = msg.size();
+						if (receivingSize > limit) {
+							throw new UnexpectedDataException();
+						}
+
+						logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
+
+						RefLong size = new RefLong(0);
+						return Promise.of(messaging.receiveBinaryStream()
+							.peek(buf -> size.inc(buf.readRemaining()))
+							.withEndOfStream(eos -> eos
+								.then(messaging::sendEndOfStream)
+								.whenResult(() -> {
+									if (size.get() == receivingSize) {
+										return;
 									}
-
-									logger.trace("download size for file {} is {}: {}", name, receivingSize, this);
-
-									RefLong size = new RefLong(0);
-									return Promise.of(messaging.receiveBinaryStream()
-											.peek(buf -> size.inc(buf.readRemaining()))
-											.withEndOfStream(eos -> eos
-													.then(messaging::sendEndOfStream)
-													.whenResult(() -> {
-														if (size.get() == receivingSize) {
-															return;
-														}
-														logger.error("invalid stream size for file {} (offset {}, limit {}), expected: {} actual: {}",
-																name, offset, limit, receivingSize, size.get());
-														throw size.get() < receivingSize ?
-																new TruncatedDataException() :
-																new UnexpectedDataException();
-													})
-													.whenComplete(downloadFinishPromise.recordStats())
-													.whenComplete(toLogger(logger, "onDownloadComplete", name, offset, limit, this))
-													.whenResult(messaging::close)));
+									logger.error("invalid stream size for file {} (offset {}, limit {}), expected: {} actual: {}",
+										name, offset, limit, receivingSize, size.get());
+									throw size.get() < receivingSize ?
+										new TruncatedDataException() :
+										new UnexpectedDataException();
 								})
-								.whenException(e -> {
-									messaging.closeEx(e);
-									logger.warn("error trying to download file {} (offset={}, limit={}) : {}", name, offset, limit, this, e);
-								}))
-				.whenComplete(toLogger(logger, "download", name, offset, limit, this))
-				.whenComplete(downloadStartPromise.recordStats());
+								.whenComplete(downloadFinishPromise.recordStats())
+								.whenComplete(toLogger(logger, "onDownloadComplete", name, offset, limit, this))
+								.whenResult(messaging::close)));
+					})
+					.whenException(e -> {
+						messaging.closeEx(e);
+						logger.warn("error trying to download file {} (offset={}, limit={}) : {}", name, offset, limit, this, e);
+					}))
+			.whenComplete(toLogger(logger, "download", name, offset, limit, this))
+			.whenComplete(downloadStartPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
 		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Copy(name, target), FileSystemResponse.CopyFinished.class)
-				.whenComplete(toLogger(logger, "copy", name, target, this))
-				.whenComplete(copyPromise.recordStats());
+			.whenComplete(toLogger(logger, "copy", name, target, this))
+			.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
@@ -271,16 +272,16 @@ public final class RemoteFileSystem extends AbstractNioReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new FileSystemRequest.CopyAll(sourceToTarget), FileSystemResponse.CopyAllFinished.class)
-				.whenComplete(toLogger(logger, "copyAll", sourceToTarget, this))
-				.whenComplete(copyAllPromise.recordStats());
+			.whenComplete(toLogger(logger, "copyAll", sourceToTarget, this))
+			.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(String name, String target) {
 		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Move(name, target), FileSystemResponse.MoveFinished.class)
-				.whenComplete(toLogger(logger, "move", name, target, this))
-				.whenComplete(movePromise.recordStats());
+			.whenComplete(toLogger(logger, "move", name, target, this))
+			.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
@@ -290,16 +291,16 @@ public final class RemoteFileSystem extends AbstractNioReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new FileSystemRequest.MoveAll(sourceToTarget), FileSystemResponse.MoveAllFinished.class)
-				.whenComplete(toLogger(logger, "moveAll", sourceToTarget, this))
-				.whenComplete(moveAllPromise.recordStats());
+			.whenComplete(toLogger(logger, "moveAll", sourceToTarget, this))
+			.whenComplete(moveAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(String name) {
 		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Delete(name), FileSystemResponse.DeleteFinished.class)
-				.whenComplete(toLogger(logger, "delete", name, this))
-				.whenComplete(deletePromise.recordStats());
+			.whenComplete(toLogger(logger, "delete", name, this))
+			.whenComplete(deletePromise.recordStats());
 	}
 
 	@Override
@@ -308,24 +309,24 @@ public final class RemoteFileSystem extends AbstractNioReactive
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new FileSystemRequest.DeleteAll(toDelete), FileSystemResponse.DeleteAllFinished.class)
-				.whenComplete(toLogger(logger, "deleteAll", toDelete, this))
-				.whenComplete(deleteAllPromise.recordStats());
+			.whenComplete(toLogger(logger, "deleteAll", toDelete, this))
+			.whenComplete(deleteAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.List(glob), FileSystemResponse.ListFinished.class, FileSystemResponse.ListFinished::files)
-				.whenComplete(toLogger(logger, "list", glob, this))
-				.whenComplete(listPromise.recordStats());
+			.whenComplete(toLogger(logger, "list", glob, this))
+			.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
 		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Info(name), FileSystemResponse.InfoFinished.class, FileSystemResponse.InfoFinished::fileMetadata)
-				.whenComplete(toLogger(logger, "info", name, this))
-				.whenComplete(infoPromise.recordStats());
+			.whenComplete(toLogger(logger, "info", name, this))
+			.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
@@ -334,16 +335,16 @@ public final class RemoteFileSystem extends AbstractNioReactive
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(new FileSystemRequest.InfoAll(names), FileSystemResponse.InfoAllFinished.class, FileSystemResponse.InfoAllFinished::files)
-				.whenComplete(toLogger(logger, "infoAll", names, this))
-				.whenComplete(infoAllPromise.recordStats());
+			.whenComplete(toLogger(logger, "infoAll", names, this))
+			.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Ping(), FileSystemResponse.Pong.class)
-				.whenComplete(toLogger(logger, "ping", this))
-				.whenComplete(pingPromise.recordStats());
+			.whenComplete(toLogger(logger, "ping", this))
+			.whenComplete(pingPromise.recordStats());
 	}
 
 	private Promise<Messaging<FileSystemResponse, FileSystemRequest>> connect(InetSocketAddress address) {
@@ -356,26 +357,26 @@ public final class RemoteFileSystem extends AbstractNioReactive
 
 	private Promise<Messaging<FileSystemResponse, FileSystemRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
 		return TcpSocket.connect(reactor, address, connectionTimeout, socketSettings)
-				.map(socket -> Messaging.create(socket, SERIALIZER))
-				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
-				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))
-				.whenComplete(connectPromise.recordStats());
+			.map(socket -> Messaging.create(socket, SERIALIZER))
+			.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
+			.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))
+			.whenComplete(connectPromise.recordStats());
 	}
 
 	private Promise<IMessaging<FileSystemResponse, FileSystemRequest>> performHandshake(IMessaging<FileSystemResponse, FileSystemRequest> messaging) {
 		return messaging.send(new FileSystemRequest.Handshake(FileSystemServer.VERSION))
-				.then(messaging::receive)
-				.map(castFn(FileSystemResponse.Handshake.class))
-				.map(handshakeResponse -> {
-					FileSystemResponse.HandshakeFailure handshakeFailure = handshakeResponse.handshakeFailure();
-					if (handshakeFailure != null) {
-						throw new FileSystemException(String.format("Handshake failed: %s. Minimal allowed version: %s",
-								handshakeFailure.message(), handshakeFailure.minimalVersion()));
-					}
-					return messaging;
-				})
-				.whenComplete(toLogger(logger, "handshake", this))
-				.whenComplete(handshakePromise.recordStats());
+			.then(messaging::receive)
+			.map(castFn(FileSystemResponse.Handshake.class))
+			.map(handshakeResponse -> {
+				FileSystemResponse.HandshakeFailure handshakeFailure = handshakeResponse.handshakeFailure();
+				if (handshakeFailure != null) {
+					throw new FileSystemException(String.format("Handshake failed: %s. Minimal allowed version: %s",
+						handshakeFailure.message(), handshakeFailure.minimalVersion()));
+				}
+				return messaging;
+			})
+			.whenComplete(toLogger(logger, "handshake", this))
+			.whenComplete(handshakePromise.recordStats());
 	}
 
 	private static <T extends FileSystemResponse> ConsumerEx<FileSystemResponse> validateFn(Class<T> responseClass) {
@@ -401,17 +402,17 @@ public final class RemoteFileSystem extends AbstractNioReactive
 
 	private <T extends FileSystemResponse, U> Promise<U> simpleCommand(FileSystemRequest command, Class<T> responseCls, FunctionEx<T, U> answerExtractor) {
 		return connect(address)
-				.then(this::performHandshake)
-				.then(messaging ->
-						messaging.send(command)
-								.then(messaging::receive)
-								.whenResult(messaging::close)
-								.map(castFn(responseCls))
-								.map(answerExtractor)
-								.whenException(e -> {
-									messaging.closeEx(e);
-									logger.warn("Error while processing command {} : {}", command, this, e);
-								}));
+			.then(this::performHandshake)
+			.then(messaging ->
+				messaging.send(command)
+					.then(messaging::receive)
+					.whenResult(messaging::close)
+					.map(castFn(responseCls))
+					.map(answerExtractor)
+					.whenException(e -> {
+						messaging.closeEx(e);
+						logger.warn("Error while processing command {} : {}", command, this, e);
+					}));
 	}
 
 	@Override
@@ -428,16 +429,16 @@ public final class RemoteFileSystem extends AbstractNioReactive
 
 	private static SocketSettings createSocketSettingsForStreaming(SocketSettings socketSettings) {
 		return SocketSettings.builder()
-				.withLingerTimeout(Duration.ZERO)
-				.withKeepAlive(socketSettings.getKeepAlive())
-				.withReuseAddress(socketSettings.getReuseAddress())
-				.withTcpNoDelay(socketSettings.getTcpNoDelay())
-				.withSendBufferSize(socketSettings.getSendBufferSize())
-				.withReceiveBufferSize(socketSettings.getReceiveBufferSize())
-				.withImplReadTimeout(socketSettings.getImplReadTimeout())
-				.withImplWriteTimeout(socketSettings.getImplWriteTimeout())
-				.withImplReadBufferSize(socketSettings.getImplReadBufferSize())
-				.build();
+			.withLingerTimeout(Duration.ZERO)
+			.withKeepAlive(socketSettings.getKeepAlive())
+			.withReuseAddress(socketSettings.getReuseAddress())
+			.withTcpNoDelay(socketSettings.getTcpNoDelay())
+			.withSendBufferSize(socketSettings.getSendBufferSize())
+			.withReceiveBufferSize(socketSettings.getReceiveBufferSize())
+			.withImplReadTimeout(socketSettings.getImplReadTimeout())
+			.withImplWriteTimeout(socketSettings.getImplWriteTimeout())
+			.withImplReadBufferSize(socketSettings.getImplReadBufferSize())
+			.build();
 	}
 
 	@Override

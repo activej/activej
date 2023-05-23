@@ -23,40 +23,40 @@ public final class HostRoutingExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("Test") AsyncServlet testServlet, @Named("Example") AsyncServlet exampleServlet) {
 		return RoutingServlet.builder(reactor)
-				.with("/*", request -> {
-					String hostHeader = request.getHeader(HttpHeaders.HOST);
-					if (hostHeader == null) {
-						return HttpResponse.ofCode(400)
-								.withPlainText("Host header is missing")
-								.toPromise();
-					}
-					if (hostHeader.equals(TEST_HOST)) {
-						return testServlet.serve(request);
-					}
-					if (hostHeader.equals(EXAMPLE_HOST)) {
-						return exampleServlet.serve(request);
-					}
+			.with("/*", request -> {
+				String hostHeader = request.getHeader(HttpHeaders.HOST);
+				if (hostHeader == null) {
 					return HttpResponse.ofCode(400)
-							.withPlainText("Unknown host")
-							.toPromise();
-				})
-				.build();
+						.withPlainText("Host header is missing")
+						.toPromise();
+				}
+				if (hostHeader.equals(TEST_HOST)) {
+					return testServlet.serve(request);
+				}
+				if (hostHeader.equals(EXAMPLE_HOST)) {
+					return exampleServlet.serve(request);
+				}
+				return HttpResponse.ofCode(400)
+					.withPlainText("Unknown host")
+					.toPromise();
+			})
+			.build();
 	}
 
 	@Provides
 	@Named("Test")
 	AsyncServlet testServlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("This page is served on test.com\n")
-				.toPromise();
+			.withPlainText("This page is served on test.com\n")
+			.toPromise();
 	}
 
 	@Provides
 	@Named("Example")
 	AsyncServlet exampleServlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("This page is served on example.com\n")
-				.toPromise();
+			.withPlainText("This page is served on example.com\n")
+			.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

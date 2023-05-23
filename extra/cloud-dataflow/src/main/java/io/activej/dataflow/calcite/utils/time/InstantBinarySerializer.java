@@ -26,8 +26,8 @@ public final class InstantBinarySerializer implements BinarySerializer<Instant> 
 	@Override
 	public Instant decode(BinaryInput in) throws CorruptedDataException {
 		return Instant.ofEpochSecond(
-				in.readVarLong(),
-				in.readVarInt()
+			in.readVarLong(),
+			in.readVarInt()
 		);
 	}
 }

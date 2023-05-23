@@ -70,14 +70,14 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			@Override
 			public Promise<Void> needMoreData() {
 				return input.get()
-						.map(buf -> {
-							if (buf != null) {
-								bufs.add(buf);
-								return null;
-							} else {
-								throw new TruncatedDataException("Unexpected end-of-stream");
-							}
-						});
+					.map(buf -> {
+						if (buf != null) {
+							bufs.add(buf);
+							return null;
+						} else {
+							throw new TruncatedDataException("Unexpected end-of-stream");
+						}
+					});
 			}
 
 			@Override
@@ -89,14 +89,14 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 					return Promise.ofException(exception);
 				}
 				return input.get()
-						.whenResult(buf -> {
-							if (buf == null) return;
-							buf.recycle();
-							Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
-							input.closeEx(exception);
-							throw exception;
-						})
-						.toVoid();
+					.whenResult(buf -> {
+						if (buf == null) return;
+						buf.recycle();
+						Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+						input.closeEx(exception);
+						throw exception;
+					})
+					.toVoid();
 			}
 
 			@Override
@@ -106,8 +106,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 		};
 	}
 
-	public static BinaryChannelSupplier ofProvidedBufs(ByteBufs bufs,
-			AsyncRunnable get, AsyncRunnable complete, AsyncCloseable closeable) {
+	public static BinaryChannelSupplier ofProvidedBufs(
+		ByteBufs bufs, AsyncRunnable get, AsyncRunnable complete, AsyncCloseable closeable
+	) {
 		return new BinaryChannelSupplier(bufs) {
 			@Override
 			public Promise<Void> needMoreData() {
@@ -148,38 +149,38 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 			Promise<Void> moreDataPromise = needMoreData();
 			if (moreDataPromise.isResult()) continue;
 			return moreDataPromise
-					.whenException(closeable::closeEx)
-					.then(() -> doDecode(decoder, closeable));
+				.whenException(closeable::closeEx)
+				.then(() -> doDecode(decoder, closeable));
 		}
 	}
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
 		if (CHECKS) checkInReactorThread(this);
 		return decode(decoder)
-				.then(result -> {
-					if (!bufs.isEmpty()) {
-						Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
-						closeEx(exception);
-						throw exception;
-					}
-					return endOfStream().map($ -> result);
-				});
+			.then(result -> {
+				if (!bufs.isEmpty()) {
+					Exception exception = new UnexpectedDataException("Unexpected data after end-of-stream");
+					closeEx(exception);
+					throw exception;
+				}
+				return endOfStream().map($ -> result);
+			});
 	}
 
 	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
 		if (CHECKS) checkInReactorThread(this);
 		return ChannelSuppliers.ofAsyncSupplier(
-				() -> doDecode(decoder,
-						AsyncCloseable.of(e -> {
-							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
-							closeEx(e);
-						}))
-						.map(identity(),
-								e -> {
-									if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;
-									throw e;
-								}),
-				this);
+			() -> doDecode(decoder,
+				AsyncCloseable.of(e -> {
+					if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
+					closeEx(e);
+				}))
+				.map(identity(),
+					e -> {
+						if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;
+						throw e;
+					}),
+			this);
 	}
 
 	@SuppressWarnings("UnusedReturnValue")

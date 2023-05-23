@@ -37,18 +37,18 @@ public final class In implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new In(
-				value.materialize(params),
-				options.stream()
-						.map(option -> option.materialize(params))
-						.collect(Collectors.toList())
+			value.materialize(params),
+			options.stream()
+				.map(option -> option.materialize(params))
+				.collect(Collectors.toList())
 		);
 	}
 
 	@Override
 	public String toString() {
 		return "In[" +
-				"value=" + value + ", " +
-				"options=" + options + ']';
+			"value=" + value + ", " +
+			"options=" + options + ']';
 	}
 
 }

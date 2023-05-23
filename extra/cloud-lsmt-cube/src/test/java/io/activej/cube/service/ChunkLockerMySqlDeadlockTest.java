@@ -44,11 +44,11 @@ public class ChunkLockerMySqlDeadlockTest {
 
 		Reactor reactor = Reactor.getCurrentReactor();
 		lockerA = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
-				.withLockedTtl(Duration.ofSeconds(1))
-				.build();
+			.withLockedTtl(Duration.ofSeconds(1))
+			.build();
 		lockerB = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
-				.withLockedTtl(Duration.ofSeconds(1))
-				.build();
+			.withLockedTtl(Duration.ofSeconds(1))
+			.build();
 
 		lockerA.initialize();
 		lockerA.truncateTables();
@@ -56,9 +56,9 @@ public class ChunkLockerMySqlDeadlockTest {
 		try (Connection connection = dataSource.getConnection()) {
 			Set<Long> chunkIds = LongStream.range(0, MAX_CHUNK_ID).boxed().collect(toSet());
 			try (PreparedStatement ps = connection.prepareStatement("" +
-					"INSERT INTO " + CHUNK_TABLE +
-					" (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
-					"VALUES (?,?,?,?,?,?,?)")) {
+				"INSERT INTO " + CHUNK_TABLE +
+				" (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
+				"VALUES (?,?,?,?,?,?,?)")) {
 				for (Long chunkId : chunkIds) {
 					ps.setLong(1, chunkId);
 					ps.setString(2, AGGREGATION_ID);
@@ -89,9 +89,9 @@ public class ChunkLockerMySqlDeadlockTest {
 	private static Runnable run(IChunkLocker<Long> locker) {
 		return () -> {
 			Eventloop eventloop = Eventloop.builder()
-					.withCurrentThread()
-					.withFatalErrorHandler(haltOnError())
-					.build();
+				.withCurrentThread()
+				.withFatalErrorHandler(haltOnError())
+				.build();
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 
 			action(random, locker);
@@ -105,16 +105,16 @@ public class ChunkLockerMySqlDeadlockTest {
 			chunkIds.add(random.nextLong(MAX_CHUNK_ID));
 		}
 		locker.getLockedChunks()
-				.then(chunks -> {
-					chunkIds.removeAll(chunks);
-					return locker.lockChunks(chunkIds);
-				})
-				.then(() -> locker.releaseChunks(chunkIds))
-				.then((v, e) -> {
-					if (e == null || e instanceof ChunksAlreadyLockedException) return Promise.complete();
-					e.printStackTrace();
-					throw new RuntimeException(e);
-				})
-				.whenResult(() -> action(random, locker));
+			.then(chunks -> {
+				chunkIds.removeAll(chunks);
+				return locker.lockChunks(chunkIds);
+			})
+			.then(() -> locker.releaseChunks(chunkIds))
+			.then((v, e) -> {
+				if (e == null || e instanceof ChunksAlreadyLockedException) return Promise.complete();
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			})
+			.whenResult(() -> action(random, locker));
 	}
 }

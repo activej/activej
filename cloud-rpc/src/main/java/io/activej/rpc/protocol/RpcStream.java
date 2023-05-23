@@ -76,19 +76,19 @@ public final class RpcStream {
 	private final boolean server;
 	private final ITcpSocket socket;
 
-	public RpcStream(ITcpSocket socket,
-			BinarySerializer<RpcMessage> inputSerializer,
-			BinarySerializer<RpcMessage> outputSerializer,
-			MemSize initialBufferSize,
-			Duration autoFlushInterval, @Nullable FrameFormat frameFormat, boolean server) {
+	public RpcStream(
+		ITcpSocket socket,
+		BinarySerializer<RpcMessage> inputSerializer, BinarySerializer<RpcMessage> outputSerializer,
+		MemSize initialBufferSize, Duration autoFlushInterval, @Nullable FrameFormat frameFormat, boolean server
+	) {
 		this.server = server;
 		this.socket = socket;
 
 		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.builder(outputSerializer)
-				.withInitialBufferSize(initialBufferSize)
-				.withAutoFlushInterval(autoFlushInterval)
-				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e))
-				.build();
+			.withInitialBufferSize(initialBufferSize)
+			.withAutoFlushInterval(autoFlushInterval)
+			.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e))
+			.build();
 		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(inputSerializer);
 
 		if (frameFormat != null) {
@@ -114,10 +114,10 @@ public final class RpcStream {
 	public void setListener(Listener listener) {
 		this.listener = listener;
 		deserializer.getEndOfStream()
-				.whenResult(listener::onReceiverEndOfStream)
-				.whenException(listener::onReceiverError);
+			.whenResult(listener::onReceiverEndOfStream)
+			.whenException(listener::onReceiverError);
 		serializer.getAcknowledgement()
-				.whenException(listener::onSenderError);
+			.whenException(listener::onSenderError);
 		internalSupplier.streamTo(serializer);
 		internalConsumer.resume(this.listener);
 	}

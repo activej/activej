@@ -52,10 +52,10 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 			@Provides
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
-						CrdtFunction.ignoringTimestamp(Integer::max),
-						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-						String.class,
-						Integer.class);
+					CrdtFunction.ignoringTimestamp(Integer::max),
+					new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+					String.class,
+					Integer.class);
 			}
 
 			@Provides
@@ -76,13 +76,13 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 			@Provides
 			Config config() {
 				return Config.create()
-						.with("crdt.http.listenAddresses", "localhost:8080")
-						.with("crdt.server.listenAddresses", "localhost:9090")
-						.with("crdt.cluster.localPartitionId", "local|localhost:9090")
-						.with("crdt.cluster.partitions.noop", "localhost:9091")
-						.with("crdt.cluster.server.listenAddresses", "localhost:9000")
-						.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-						.overrideWith(Config.ofSystemProperties("config"));
+					.with("crdt.http.listenAddresses", "localhost:8080")
+					.with("crdt.server.listenAddresses", "localhost:9090")
+					.with("crdt.cluster.localPartitionId", "local|localhost:9090")
+					.with("crdt.cluster.partitions.noop", "localhost:9091")
+					.with("crdt.cluster.server.listenAddresses", "localhost:9000")
+					.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+					.overrideWith(Config.ofSystemProperties("config"));
 			}
 		};
 	}

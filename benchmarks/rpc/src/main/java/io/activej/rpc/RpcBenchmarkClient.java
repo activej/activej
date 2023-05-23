@@ -55,28 +55,28 @@ public class RpcBenchmarkClient extends Launcher {
 	@Provides
 	IRpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
 		return RpcClient.builder(reactor)
-				.withStreamProtocol(
-						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofFrameFormat(), "rpc.frameFormat", null))
-				.withMessageTypes(Integer.class)
-				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
-				.build();
+			.withStreamProtocol(
+				config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
+				config.get(ofFrameFormat(), "rpc.frameFormat", null))
+			.withMessageTypes(Integer.class)
+			.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("rpc.server.port", "" + SERVICE_PORT)
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("rpc.server.port", "" + SERVICE_PORT)
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	private int warmupRounds;
@@ -136,7 +136,7 @@ public class RpcBenchmarkClient extends Launcher {
 		double avgTime = (double) time / benchmarkRounds;
 		long requestsPerSecond = (long) (totalRequests / avgTime * 1000);
 		System.out.printf("Time: %dms; Average time: %sms; Best time: %dms; Worst time: %dms; Requests per second: %d%n",
-				time, avgTime, bestTime, worstTime, requestsPerSecond);
+			time, avgTime, bestTime, worstTime, requestsPerSecond);
 	}
 
 	private long round() throws Exception {

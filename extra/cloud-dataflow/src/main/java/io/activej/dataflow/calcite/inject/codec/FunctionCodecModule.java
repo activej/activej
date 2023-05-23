@@ -29,12 +29,12 @@ public final class FunctionCodecModule extends AbstractModule {
 	@Subtype(2)
 	StreamCodec<RecordProjectionFn> recordProjectionFn(StreamCodec<Operand<?>> operandStreamCodec) {
 		return StreamCodec.create(RecordProjectionFn::create,
-				RecordProjectionFn::getFieldProjections, StreamCodecs.ofList(
-						StreamCodec.create(FieldProjection::new,
-								FieldProjection::operand, operandStreamCodec,
-								FieldProjection::fieldName, StreamCodecs.ofNullable(StreamCodecs.ofString())
-						)
+			RecordProjectionFn::getFieldProjections, StreamCodecs.ofList(
+				StreamCodec.create(FieldProjection::new,
+					FieldProjection::operand, operandStreamCodec,
+					FieldProjection::fieldName, StreamCodecs.ofNullable(StreamCodecs.ofString())
 				)
+			)
 		);
 	}
 }

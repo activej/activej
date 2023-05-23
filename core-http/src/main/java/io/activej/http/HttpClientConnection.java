@@ -252,16 +252,16 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		}
 		onHeadersReceived(null, supplier);
 		ChannelSuppliers.ofAsyncSupplier(socket::read, socket)
-				.streamTo(buffer.getConsumer())
-				.both(inflaterFinished)
-				.subscribe(($, e) -> {
-					if (isClosed()) return;
-					if (e == null) {
-						onBodyReceived();
-					} else {
-						closeEx(translateToHttpException(e));
-					}
-				});
+			.streamTo(buffer.getConsumer())
+			.both(inflaterFinished)
+			.subscribe(($, e) -> {
+				if (isClosed()) return;
+				if (e == null) {
+					onBodyReceived();
+				} else {
+					closeEx(translateToHttpException(e));
+				}
+			});
 	}
 
 	Promise<IWebSocket> sendWebSocketRequest(HttpRequest request) {
@@ -284,51 +284,51 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 			readHttpResponse();
 		}
 		return promise
-				.<IWebSocket>thenCallback((res, cb) -> {
-					assert res.getCode() == 101;
-					if (isAnswerInvalid(res, encodedKey)) {
-						closeEx(HANDSHAKE_FAILED);
-						cb.setException(HANDSHAKE_FAILED);
-						return;
-					}
-					int maxWebSocketMessageSize = client.maxWebSocketMessageSize;
+			.<IWebSocket>thenCallback((res, cb) -> {
+				assert res.getCode() == 101;
+				if (isAnswerInvalid(res, encodedKey)) {
+					closeEx(HANDSHAKE_FAILED);
+					cb.setException(HANDSHAKE_FAILED);
+					return;
+				}
+				int maxWebSocketMessageSize = client.maxWebSocketMessageSize;
 
-					WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(true);
-					WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(
-							maxWebSocketMessageSize,
-							encoder::sendPong,
-							ByteBuf::recycle,
-							false);
+				WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(true);
+				WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(
+					maxWebSocketMessageSize,
+					encoder::sendPong,
+					ByteBuf::recycle,
+					false);
 
-					bindWebSocketTransformers(encoder, decoder);
+				bindWebSocketTransformers(encoder, decoder);
 
-					cb.set(new WebSocket(
-							request,
-							res,
-							res.takeBodyStream().transformWith(decoder),
-							buffer.getConsumer().transformWith(encoder),
-							decoder::onProtocolError,
-							maxWebSocketMessageSize
-					));
-				})
-				.whenException(e -> closeEx(translateToHttpException(e)));
+				cb.set(new WebSocket(
+					request,
+					res,
+					res.takeBodyStream().transformWith(decoder),
+					buffer.getConsumer().transformWith(encoder),
+					decoder::onProtocolError,
+					maxWebSocketMessageSize
+				));
+			})
+			.whenException(e -> closeEx(translateToHttpException(e)));
 	}
 
 	private void bindWebSocketTransformers(WebSocketFramesToBufs encoder, WebSocketBufsToFrames decoder) {
 		encoder.getCloseSentPromise()
-				.then(decoder::getCloseReceivedPromise)
-				.whenException(this::closeWebSocketConnection)
-				.whenResult(this::closeWebSocketConnection);
+			.then(decoder::getCloseReceivedPromise)
+			.whenException(this::closeWebSocketConnection)
+			.whenResult(this::closeWebSocketConnection);
 
 		decoder.getProcessCompletion()
-				.subscribe(($, e) -> {
-					if (isClosed()) return;
-					if (e == null) {
-						encoder.sendCloseFrame(REGULAR_CLOSE);
-					} else {
-						encoder.closeEx(e);
-					}
-				});
+			.subscribe(($, e) -> {
+				if (isClosed()) return;
+				if (e == null) {
+					encoder.sendCloseFrame(REGULAR_CLOSE);
+				} else {
+					encoder.closeEx(e);
+				}
+			});
 	}
 
 	private void readHttpResponse() {
@@ -363,22 +363,22 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		}
 
 		if ((flags & KEEP_ALIVE) != 0 &&
-				client.keepAliveTimeoutMillis != 0 &&
-				((flags & CHUNKED) != 0 || contentLength != UNSET_CONTENT_LENGTH)) {
+			client.keepAliveTimeoutMillis != 0 &&
+			((flags & CHUNKED) != 0 || contentLength != UNSET_CONTENT_LENGTH)) {
 			flags = 0;
 			socket.read()
-					.subscribe((buf, e) -> {
-						if (e == null) {
-							if (buf != null) {
-								buf.recycle();
-								closeEx(new HttpException("Unexpected read data"));
-							} else {
-								close();
-							}
+				.subscribe((buf, e) -> {
+					if (e == null) {
+						if (buf != null) {
+							buf.recycle();
+							closeEx(new HttpException("Unexpected read data"));
 						} else {
-							closeEx(translateToHttpException(e));
+							close();
 						}
-					});
+					} else {
+						closeEx(translateToHttpException(e));
+					}
+				});
 			if (isClosed()) return;
 			client.returnToKeepAlivePool(this);
 		} else {
@@ -399,7 +399,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		poolTimestamp = reactor.currentTimeMillis();
 		HttpHeaderValue connectionHeader = CONNECTION_KEEP_ALIVE_HEADER;
 		if (++numberOfRequests >= client.maxKeepAliveRequests && client.maxKeepAliveRequests != 0
-				|| client.keepAliveTimeoutMillis == 0) {
+			|| client.keepAliveTimeoutMillis == 0) {
 			connectionHeader = CONNECTION_CLOSE_HEADER;
 		}
 		request.headers.add(CONNECTION, connectionHeader);
@@ -449,13 +449,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	public String toString() {
 		return "HttpClientConnection{" +
-				"pool=" + getCurrentPool() +
-				", promise=" + promise +
-				", response=" + response +
-				", httpClient=" + client +
-				//				", lastRequestUrl='" + (request.getFullUrl() == null ? "" : request.getFullUrl()) + '\'' +
-				", remoteAddress=" + remoteAddress +
-				',' + super.toString() +
-				'}';
+			"pool=" + getCurrentPool() +
+			", promise=" + promise +
+			", response=" + response +
+			", httpClient=" + client +
+			//				", lastRequestUrl='" + (request.getFullUrl() == null ? "" : request.getFullUrl()) + '\'' +
+			", remoteAddress=" + remoteAddress +
+			',' + super.toString() +
+			'}';
 	}
 }

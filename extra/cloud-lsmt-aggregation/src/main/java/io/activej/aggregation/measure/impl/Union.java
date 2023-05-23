@@ -46,19 +46,17 @@ public final class Union extends Measure {
 	@Override
 	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
 		return sequence(
-				getInitializeExpression(accumulator),
-				call(accumulator, "addAll", cast(firstAccumulator, Collection.class)));
+			getInitializeExpression(accumulator),
+			call(accumulator, "addAll", cast(firstAccumulator, Collection.class)));
 	}
 
 	@Override
-	public Expression reduce(Variable accumulator,
-			Variable nextAccumulator) {
+	public Expression reduce(Variable accumulator, Variable nextAccumulator) {
 		return call(accumulator, "addAll", cast(nextAccumulator, Collection.class));
 	}
 
 	@Override
-	public Expression initAccumulatorWithValue(Variable accumulator,
-			Variable firstValue) {
+	public Expression initAccumulatorWithValue(Variable accumulator, Variable firstValue) {
 		List<Expression> expressions = new ArrayList<>();
 		expressions.add(getInitializeExpression(accumulator));
 		expressions.add(call(accumulator, "add", cast(firstValue, Object.class)));
@@ -66,8 +64,7 @@ public final class Union extends Measure {
 	}
 
 	@Override
-	public Expression accumulate(Variable accumulator,
-			Variable nextValue) {
+	public Expression accumulate(Variable accumulator, Variable nextValue) {
 		return call(accumulator, "add", cast(nextValue, Object.class));
 	}
 

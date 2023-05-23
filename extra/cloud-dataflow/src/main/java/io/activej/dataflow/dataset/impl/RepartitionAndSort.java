@@ -44,8 +44,8 @@ public final class RepartitionAndSort<K, T> extends SortedDataset<K, T> {
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		List<Partition> ps = partitions != null && !partitions.isEmpty() ?
-				partitions :
-				context.getGraph().getAvailablePartitions();
+			partitions :
+			context.getGraph().getAvailablePartitions();
 		return repartitionAndSort(context, input, ps);
 	}
 

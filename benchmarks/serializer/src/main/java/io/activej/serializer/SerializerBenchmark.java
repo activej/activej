@@ -27,9 +27,9 @@ import static io.activej.serializer.StringFormat.*;
 public class SerializerBenchmark {
 	private static final DefiningClassLoader definingClassLoader = DefiningClassLoader.create();
 	private static final BinarySerializer<TestData> serializer = SerializerFactory.builder()
-			.withCompatibilityLevel(LEVEL_4_LE)
-			.build()
-			.create(definingClassLoader, TestData.class);
+		.withCompatibilityLevel(LEVEL_4_LE)
+		.build()
+		.create(definingClassLoader, TestData.class);
 	private static final byte[] array = new byte[10000];
 
 	public static class TestData {
@@ -186,15 +186,15 @@ public class SerializerBenchmark {
 
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
-				.include(SerializerBenchmark.class.getSimpleName())
-				.forks(2)
-				.warmupIterations(5)
-				.warmupTime(TimeValue.seconds(1L))
-				.measurementIterations(10)
-				.measurementTime(TimeValue.seconds(2L))
-				.mode(Mode.AverageTime)
-				.timeUnit(TimeUnit.NANOSECONDS)
-				.build();
+			.include(SerializerBenchmark.class.getSimpleName())
+			.forks(2)
+			.warmupIterations(5)
+			.warmupTime(TimeValue.seconds(1L))
+			.measurementIterations(10)
+			.measurementTime(TimeValue.seconds(2L))
+			.mode(Mode.AverageTime)
+			.timeUnit(TimeUnit.NANOSECONDS)
+			.build();
 
 		new Runner(opt).run();
 	}

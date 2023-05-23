@@ -29,7 +29,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Used for testing.
  */
 public final class StubHttpClient extends ImplicitlyReactive
-		implements IHttpClient {
+	implements IHttpClient {
 	private final AsyncServlet servlet;
 
 	private StubHttpClient(AsyncServlet servlet) {
@@ -50,19 +50,19 @@ public final class StubHttpClient extends ImplicitlyReactive
 			servletResult = Promise.ofException(e);
 		}
 		return servletResult
-				.whenComplete(request::recycleBody)
-				.then(res -> {
-					ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
-					Reactor reactor = Reactor.getCurrentReactor();
-					if (bodyStream != null) {
-						res.bodyStream = bodyStream
-								.withEndOfStream(eos -> eos
-										.whenComplete(() -> reactor.post(res::recycle)));
-					} else {
-						reactor.post(res::recycle);
-					}
-					return Promise.of(res);
-				});
+			.whenComplete(request::recycleBody)
+			.then(res -> {
+				ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
+				Reactor reactor = Reactor.getCurrentReactor();
+				if (bodyStream != null) {
+					res.bodyStream = bodyStream
+						.withEndOfStream(eos -> eos
+							.whenComplete(() -> reactor.post(res::recycle)));
+				} else {
+					reactor.post(res::recycle);
+				}
+				return Promise.of(res);
+			});
 	}
 
 }

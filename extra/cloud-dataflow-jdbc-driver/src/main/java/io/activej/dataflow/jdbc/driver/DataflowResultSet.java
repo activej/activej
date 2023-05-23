@@ -26,9 +26,10 @@ public class DataflowResultSet extends AvaticaResultSet {
 	private static final Map<String, JavaType> JAVA_TYPE_CACHE = new ConcurrentHashMap<>();
 
 	DataflowResultSet(AvaticaStatement statement,
-			Meta.Signature signature,
-			ResultSetMetaData resultSetMetaData, TimeZone timeZone,
-			Meta.Frame firstFrame) throws SQLException {
+		Meta.Signature signature,
+		ResultSetMetaData resultSetMetaData, TimeZone timeZone,
+		Meta.Frame firstFrame) throws SQLException {
+
 		super(statement, null, signature, resultSetMetaData, timeZone, firstFrame);
 	}
 
@@ -68,13 +69,13 @@ public class DataflowResultSet extends AvaticaResultSet {
 		ColumnMetaData.AvaticaType type = columnMetaData.type;
 
 		JavaType javaType = expectedClass == null ?
-				getJavaType(type) :
-				TYPE_FACTORY.constructSimpleType(expectedClass, new JavaType[0]);
+			getJavaType(type) :
+			TYPE_FACTORY.constructSimpleType(expectedClass, new JavaType[0]);
 
 		if (result == null ||
-				javaType == TypeFactory.unknownType() ||
-				result instanceof Array ||
-				javaType.getRawClass().isAssignableFrom(result.getClass())
+			javaType == TypeFactory.unknownType() ||
+			result instanceof Array ||
+			javaType.getRawClass().isAssignableFrom(result.getClass())
 		) {
 			return result;
 		}
@@ -125,8 +126,8 @@ public class DataflowResultSet extends AvaticaResultSet {
 		if (components.length != 2) return null;
 
 		return new MapTypes(
-				resolveSimple(components[0]),
-				resolveSimple(components[1])
+			resolveSimple(components[0]),
+			resolveSimple(components[1])
 		);
 	}
 

@@ -57,12 +57,11 @@ public final class ReadSettings<K> {
 	private final Map<String, SortOrder> sort;
 	private final Set<K> extra;
 
-	private ReadSettings(List<String> fields,
-			int offset,
-			int limit,
-			Map<String, String> filters,
-			Map<String, SortOrder> sort,
-			Set<K> extra) {
+	private ReadSettings(
+		List<String> fields,
+		int offset, int limit,
+		Map<String, String> filters, Map<String, SortOrder> sort, Set<K> extra
+	) {
 		this.fields = fields;
 		this.offset = offset;
 		this.limit = limit;
@@ -131,12 +130,13 @@ public final class ReadSettings<K> {
 		return new ReadSettings<>(fields, offset, limit, filters, sort, extra);
 	}
 
-	public static <K> ReadSettings<K> of(List<String> fields,
-			int offset,
-			int limit,
-			Map<String, String> filters,
-			Map<String, SortOrder> sort,
-			Set<K> extra) {
+	public static <K> ReadSettings<K> of(
+		List<String> fields,
+		int offset, int limit,
+		Map<String, String> filters,
+		Map<String, SortOrder> sort,
+		Set<K> extra
+	) {
 		return new ReadSettings<>(fields, offset, limit, filters, sort, extra);
 	}
 
@@ -167,12 +167,12 @@ public final class ReadSettings<K> {
 	@Override
 	public String toString() {
 		return "ReadSettings{" +
-				"fields=" + fields +
-				", offset=" + offset +
-				", limit=" + limit +
-				", filters=" + filters +
-				", sort=" + sort +
-				", extra=" + extra +
-				'}';
+			"fields=" + fields +
+			", offset=" + offset +
+			", limit=" + limit +
+			", filters=" + filters +
+			", sort=" + sort +
+			", extra=" + extra +
+			'}';
 	}
 }

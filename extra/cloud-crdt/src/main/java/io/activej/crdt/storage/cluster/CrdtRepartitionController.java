@@ -30,21 +30,22 @@ import java.time.Duration;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CrdtRepartitionController<K extends Comparable<K>, S, P> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats {
+	implements ReactiveJmxBeanWithStats {
+
 	private final P localPartitionId;
 	private final ClusterCrdtStorage<K, S, P> cluster;
 
 	private final AsyncRunnable repartition = AsyncRunnables.reuse(this::doRepartition);
 
-	private CrdtRepartitionController(Reactor reactor,
-			ClusterCrdtStorage<K, S, P> cluster, P localPartitionId) {
+	private CrdtRepartitionController(Reactor reactor, ClusterCrdtStorage<K, S, P> cluster, P localPartitionId) {
 		super(reactor);
 		this.cluster = cluster;
 		this.localPartitionId = localPartitionId;
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtRepartitionController<K, S, P> create(Reactor reactor,
-			ClusterCrdtStorage<K, S, P> cluster, P localPartitionId) {
+	public static <K extends Comparable<K>, S, P> CrdtRepartitionController<K, S, P> create(
+		Reactor reactor, ClusterCrdtStorage<K, S, P> cluster, P localPartitionId
+	) {
 		return new CrdtRepartitionController<>(reactor, cluster, localPartitionId);
 	}
 
@@ -57,7 +58,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> exte
 
 	private Promise<Void> doRepartition() {
 		return cluster.repartition(localPartitionId)
-				.whenComplete(repartitionPromise.recordStats());
+			.whenComplete(repartitionPromise.recordStats());
 	}
 
 	@JmxAttribute

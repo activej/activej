@@ -44,7 +44,7 @@ public interface IMultilog<T> {
 	 * @return StreamSupplier, which will stream read items to its wired consumer.
 	 */
 	Promise<StreamSupplierWithResult<T, LogPosition>> read(String logPartition,
-			LogFile startLogFile, long startPosition,
-			@Nullable LogFile endLogFile);
+		LogFile startLogFile, long startPosition,
+		@Nullable LogFile endLogFile);
 
 }

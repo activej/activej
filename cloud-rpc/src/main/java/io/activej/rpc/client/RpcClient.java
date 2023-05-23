@@ -86,7 +86,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcServer
  */
 public final class RpcClient extends AbstractNioReactive
-		implements IRpcClient, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IRpcClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final boolean CHECKS = Checks.isEnabled(RpcClient.class);
 
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
@@ -173,9 +173,9 @@ public final class RpcClient extends AbstractNioReactive
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			return withSerializer(SerializerFactory.builder()
-					.withSubclasses(RpcMessage.SUBCLASSES_ID, messageTypes)
-					.build()
-					.create(RpcMessage.class));
+				.withSubclasses(RpcMessage.SUBCLASSES_ID, messageTypes)
+				.build()
+				.create(RpcMessage.class));
 		}
 
 		/**
@@ -434,50 +434,50 @@ public final class RpcClient extends AbstractNioReactive
 
 	private void connect(InetSocketAddress address) {
 		TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.whenResult(tcpSocket -> {
-					newConnections.remove(address);
+			.whenResult(tcpSocket -> {
+				newConnections.remove(address);
+				if (!pendingConnections.contains(address) || stopPromise != null) {
+					tcpSocket.close();
+					return;
+				}
+				statsSocket.onConnect(tcpSocket);
+				tcpSocket.setInspector(statsSocket);
+				ITcpSocket socket = sslContext == null ?
+					tcpSocket :
+					wrapClientSocket(reactor, tcpSocket, sslContext, sslExecutor);
+				RpcStream stream = new RpcStream(socket, responseSerializer, requestSerializer, defaultPacketSize,
+					autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
+				RpcClientConnection connection = new RpcClientConnection(reactor, this, address, stream, keepAliveInterval.toMillis());
+				stream.setListener(connection);
+
+				// jmx
+				if (isMonitoring()) {
+					connection.startMonitoring();
+				}
+
+				// jmx
+				connectsStatsPerAddress.computeIfAbsent(address, $ -> new RpcConnectStats(reactor)).recordSuccessfulConnect();
+				logger.info("Connection to {} established", address);
+
+				pendingConnections.remove(address);
+				connections.put(address, connection);
+				updateStrategy();
+			})
+			.whenException(e -> {
+				newConnections.remove(address);
+				logger.warn("Connection {} failed: {}", address, e);
+				if (!pendingConnections.contains(address) || stopPromise != null) {
+					return;
+				}
+				reactor.delayBackground(reconnectIntervalMillis, () -> {
 					if (!pendingConnections.contains(address) || stopPromise != null) {
-						tcpSocket.close();
 						return;
 					}
-					statsSocket.onConnect(tcpSocket);
-					tcpSocket.setInspector(statsSocket);
-					ITcpSocket socket = sslContext == null ?
-							tcpSocket :
-							wrapClientSocket(reactor, tcpSocket, sslContext, sslExecutor);
-					RpcStream stream = new RpcStream(socket, responseSerializer, requestSerializer, defaultPacketSize,
-							autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
-					RpcClientConnection connection = new RpcClientConnection(reactor, this, address, stream, keepAliveInterval.toMillis());
-					stream.setListener(connection);
-
-					// jmx
-					if (isMonitoring()) {
-						connection.startMonitoring();
-					}
-
-					// jmx
-					connectsStatsPerAddress.computeIfAbsent(address, $ -> new RpcConnectStats(reactor)).recordSuccessfulConnect();
-					logger.info("Connection to {} established", address);
-
-					pendingConnections.remove(address);
-					connections.put(address, connection);
-					updateStrategy();
-				})
-				.whenException(e -> {
-					newConnections.remove(address);
-					logger.warn("Connection {} failed: {}", address, e);
-					if (!pendingConnections.contains(address) || stopPromise != null) {
-						return;
-					}
-					reactor.delayBackground(reconnectIntervalMillis, () -> {
-						if (!pendingConnections.contains(address) || stopPromise != null) {
-							return;
-						}
-						logger.info("Reconnecting: {}", address);
-						connect(address);
-					});
-					updateStrategy();
+					logger.info("Reconnecting: {}", address);
+					connect(address);
 				});
+				updateStrategy();
+			});
 	}
 
 	void onClosedConnection(InetSocketAddress address) {
@@ -539,9 +539,9 @@ public final class RpcClient extends AbstractNioReactive
 			Set<InetSocketAddress> strategyAddresses = this.strategy.getAddresses();
 			pendingConnections.retainAll(strategyAddresses);
 			new ArrayList<>(connections.keySet()).stream()
-					.filter(not(strategyAddresses::contains))
-					.map(connections::remove).toList()
-					.forEach(RpcClientConnection::shutdown);
+				.filter(not(strategyAddresses::contains))
+				.map(connections::remove).toList()
+				.forEach(RpcClientConnection::shutdown);
 
 			if (newRequestSender != null) {
 				newStrategyPromise.set(null);
@@ -595,10 +595,10 @@ public final class RpcClient extends AbstractNioReactive
 				if (timeout > 0) {
 					anotherReactor.startExternalTask();
 					reactor.execute(() ->
-							requestSender.sendRequest(request, timeout, (Callback<O>) (result, e) -> {
-								anotherReactor.execute(() -> cb.accept(result, e));
-								anotherReactor.completeExternalTask();
-							}));
+						requestSender.sendRequest(request, timeout, (Callback<O>) (result, e) -> {
+							anotherReactor.execute(() -> cb.accept(result, e));
+							anotherReactor.completeExternalTask();
+						}));
 				} else {
 					cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 				}
@@ -648,8 +648,8 @@ public final class RpcClient extends AbstractNioReactive
 
 	// jmx
 	@JmxOperation(description = "enable monitoring " +
-			"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-			"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
 	public void startMonitoring() {
 		monitoring = true;
 		for (RpcClientConnection connection : connections.values()) {
@@ -658,8 +658,8 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@JmxOperation(description = "disable monitoring " +
-			"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-			"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
 	public void stopMonitoring() {
 		monitoring = false;
 		for (RpcClientConnection connection : connections.values()) {
@@ -668,7 +668,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@JmxAttribute(description = "when monitoring is enabled more stats are collected, but it causes more overhead " +
-			"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled)")
+		"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled)")
 	public boolean isMonitoring() {
 		return monitoring;
 	}
@@ -681,15 +681,15 @@ public final class RpcClient extends AbstractNioReactive
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public long getTotalSuccessfulConnects() {
 		return connectsStatsPerAddress.values().stream()
-				.mapToLong(RpcConnectStats::getSuccessfulConnects)
-				.sum();
+			.mapToLong(RpcConnectStats::getSuccessfulConnects)
+			.sum();
 	}
 
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public long getTotalFailedConnects() {
 		return connectsStatsPerAddress.values().stream()
-				.mapToLong(RpcConnectStats::getFailedConnects)
-				.sum();
+			.mapToLong(RpcConnectStats::getFailedConnects)
+			.sum();
 	}
 
 	@JmxAttribute(description = "request stats distributed by request class")
@@ -722,7 +722,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@JmxAttribute(description = "exception that occurred because of protocol error " +
-			"(serialization, deserialization, compression, decompression, etc)")
+		"(serialization, deserialization, compression, decompression, etc)")
 	public ExceptionStats getLastProtocolError() {
 		return lastProtocolError;
 	}
@@ -737,9 +737,9 @@ public final class RpcClient extends AbstractNioReactive
 		if (stopPromise != null) return List.of();
 
 		return connectsStatsPerAddress.entrySet().stream()
-				.filter(entry -> !entry.getValue().isConnected())
-				.map(entry -> entry.getKey().toString())
-				.collect(toList());
+			.filter(entry -> !entry.getValue().isConnected())
+			.map(entry -> entry.getKey().toString())
+			.collect(toList());
 	}
 
 	RpcRequestStats ensureRequestStatsPerClass(Class<?> requestClass) {

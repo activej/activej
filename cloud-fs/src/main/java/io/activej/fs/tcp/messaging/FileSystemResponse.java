@@ -7,23 +7,23 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 
 public sealed interface FileSystemResponse permits
-		FileSystemResponse.AppendAck,
-		FileSystemResponse.AppendFinished,
-		FileSystemResponse.CopyAllFinished,
-		FileSystemResponse.CopyFinished,
-		FileSystemResponse.DeleteAllFinished,
-		FileSystemResponse.DeleteFinished,
-		FileSystemResponse.DownloadSize,
-		FileSystemResponse.Handshake,
-		FileSystemResponse.InfoAllFinished,
-		FileSystemResponse.InfoFinished,
-		FileSystemResponse.ListFinished,
-		FileSystemResponse.MoveAllFinished,
-		FileSystemResponse.MoveFinished,
-		FileSystemResponse.Pong,
-		FileSystemResponse.ServerError,
-		FileSystemResponse.UploadAck,
-		FileSystemResponse.UploadFinished {
+	FileSystemResponse.AppendAck,
+	FileSystemResponse.AppendFinished,
+	FileSystemResponse.CopyAllFinished,
+	FileSystemResponse.CopyFinished,
+	FileSystemResponse.DeleteAllFinished,
+	FileSystemResponse.DeleteFinished,
+	FileSystemResponse.DownloadSize,
+	FileSystemResponse.Handshake,
+	FileSystemResponse.InfoAllFinished,
+	FileSystemResponse.InfoFinished,
+	FileSystemResponse.ListFinished,
+	FileSystemResponse.MoveAllFinished,
+	FileSystemResponse.MoveFinished,
+	FileSystemResponse.Pong,
+	FileSystemResponse.ServerError,
+	FileSystemResponse.UploadAck,
+	FileSystemResponse.UploadFinished {
 
 	record UploadAck() implements FileSystemResponse {
 	}

@@ -33,16 +33,16 @@ public final class Eq implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new Eq(
-				left.materialize(params),
-				right.materialize(params)
+			left.materialize(params),
+			right.materialize(params)
 		);
 	}
 
 	@Override
 	public String toString() {
 		return "Eq[" +
-				"left=" + left + ", " +
-				"right=" + right + ']';
+			"left=" + left + ", " +
+			"right=" + right + ']';
 	}
 
 }

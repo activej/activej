@@ -39,8 +39,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<String[]> codec = StreamCodecs.ofArray(StreamCodecs.ofString(), String[]::new);
@@ -54,8 +57,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize > 100) && writeBufferSize > 100);
 
 		StreamCodec<String[]> codec = StreamCodecs.ofArray(StreamCodecs.ofString(), String[]::new);
@@ -83,8 +89,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int listSize) {
+	public void ofList(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int listSize
+	) {
 		assumeTrue((listSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<List<String>> codec = StreamCodecs.ofList(StreamCodecs.ofString());
@@ -115,10 +124,10 @@ public class StreamCodecsTest {
 	public void ofSubtypeBuilder(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
 		SubtypeBuilder<Number> subtypeBuilder = new SubtypeBuilder<>();
 		subtypeBuilder
-				.add(Integer.class, StreamCodecs.ofInt())
-				.add(Long.class, StreamCodecs.ofLong())
-				.add(Float.class, StreamCodecs.ofFloat())
-				.add(Byte.class, StreamCodecs.ofByte());
+			.add(Integer.class, StreamCodecs.ofInt())
+			.add(Long.class, StreamCodecs.ofLong())
+			.add(Float.class, StreamCodecs.ofFloat())
+			.add(Byte.class, StreamCodecs.ofByte());
 
 		StreamCodec<Number> codec = subtypeBuilder.build();
 
@@ -170,10 +179,10 @@ public class StreamCodecsTest {
 	public void ofVarIntArrayList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
 		StreamCodec<List<int[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarIntArray());
 		List<int[]> expected = List.of(
-				new int[]{-1, -2, -3},
-				new int[]{1, 2, 3},
-				new int[]{-1, 0, 1},
-				new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE}
+			new int[]{-1, -2, -3},
+			new int[]{1, 2, 3},
+			new int[]{-1, 0, 1},
+			new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE}
 		);
 		List<int[]> result = doTest(codec, expected, readBufferSize, writeBufferSize);
 
@@ -188,10 +197,10 @@ public class StreamCodecsTest {
 	public void ofVarLongArrayList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
 		StreamCodec<List<long[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarLongArray());
 		List<long[]> expected = List.of(
-				new long[]{-1, -2, -3},
-				new long[]{1, 2, 3},
-				new long[]{-1, 0, 1},
-				new long[]{Long.MIN_VALUE, Long.MAX_VALUE}
+			new long[]{-1, -2, -3},
+			new long[]{1, 2, 3},
+			new long[]{-1, 0, 1},
+			new long[]{Long.MIN_VALUE, Long.MAX_VALUE}
 		);
 		List<long[]> result = doTest(codec, expected, readBufferSize, writeBufferSize);
 
@@ -203,8 +212,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofIntArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofIntArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<int[]> codec = StreamCodecs.ofIntArray();
@@ -220,8 +232,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofIntArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofIntArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize > 100) && writeBufferSize > 100);
 
 		StreamCodec<int[]> codec = StreamCodecs.ofIntArray();
@@ -237,8 +252,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofByteArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofByteArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<byte[]> codec = StreamCodecs.ofByteArray();
@@ -252,8 +270,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofByteArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofByteArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<byte[]> codec = StreamCodecs.ofByteArray();
@@ -267,8 +288,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofVarIntArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofVarIntArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<int[]> codec = StreamCodecs.ofVarIntArray();
@@ -284,8 +308,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofVarIntArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofVarIntArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<int[]> codec = StreamCodecs.ofVarIntArray();
@@ -301,8 +328,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofVarLongArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofVarLongArray(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<long[]> codec = StreamCodecs.ofVarLongArray();
@@ -318,8 +348,11 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
-	public void ofVarLongArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
-			@FromDataPoints("containerSizes") int arraySize) {
+	public void ofVarLongArrayWithAdditionalData(
+		@FromDataPoints("bufferSizes") int readBufferSize,
+		@FromDataPoints("bufferSizes") int writeBufferSize,
+		@FromDataPoints("containerSizes") int arraySize
+	) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
 
 		StreamCodec<long[]> codec = StreamCodecs.ofVarLongArray();
@@ -350,8 +383,10 @@ public class StreamCodecsTest {
 		}
 	}
 
-	private <T> T doTestWithAdditionalData(StreamCodec<T> codec, T value, int readBufferSize, int writeBufferSize,
-			int additionalDataBefore, int additionalDataAfter) {
+	private <T> T doTestWithAdditionalData(
+		StreamCodec<T> codec, T value, int readBufferSize, int writeBufferSize, int additionalDataBefore,
+		int additionalDataAfter
+	) {
 		StreamCodec<T> codecWithAdditionalData = new StreamCodecWithAdditionalData<>(codec, additionalDataBefore, additionalDataAfter);
 		return doTest(codecWithAdditionalData, value, readBufferSize, writeBufferSize);
 	}

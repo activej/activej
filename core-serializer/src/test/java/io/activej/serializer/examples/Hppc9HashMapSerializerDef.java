@@ -32,9 +32,9 @@ public final class Hppc9HashMapSerializerDef extends RegularMapSerializerDef {
 			String prefix = capitalize(keyType.getSimpleName()) + capitalize(valueType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");
 			return iterateIterable(collection,
-					it -> action.apply(
-							property(cast(it, iteratorType), "key"),
-							property(cast(it, iteratorType), "value")));
+				it -> action.apply(
+					property(cast(it, iteratorType), "key"),
+					property(cast(it, iteratorType), "value")));
 		} catch (ClassNotFoundException e) {
 			throw UncheckedException.of(e);
 		}

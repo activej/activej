@@ -21,14 +21,14 @@ public final class OfPromise<T> extends AbstractChannelConsumer<T> {
 	protected Promise<Void> doAccept(T value) {
 		if (consumer != null) return consumer.accept(value);
 		return promise.then(
-				consumer -> {
-					this.consumer = consumer;
-					return consumer.accept(value);
-				},
-				e -> {
-					Recyclers.recycle(value);
-					return Promise.ofException(e);
-				});
+			consumer -> {
+				this.consumer = consumer;
+				return consumer.accept(value);
+			},
+			e -> {
+				Recyclers.recycle(value);
+				return Promise.ofException(e);
+			});
 	}
 
 	@Override

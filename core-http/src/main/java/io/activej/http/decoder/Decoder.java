@@ -74,9 +74,9 @@ public interface Decoder<T> {
 			@Override
 			public Either<V, DecodeErrors> decode(HttpRequest request) {
 				return Decoder.this.decode(request)
-						.flatMapLeft(value ->
-								fn.map(value)
-										.mapRight(DecodeErrors::of));
+					.flatMapLeft(value ->
+						fn.map(value)
+							.mapRight(DecodeErrors::of));
 			}
 		};
 	}
@@ -128,7 +128,7 @@ public interface Decoder<T> {
 					return Either.right(errors);
 				}
 				return fn.map(args)
-						.mapRight(DecodeErrors::of);
+					.mapRight(DecodeErrors::of);
 			}
 		};
 	}
@@ -136,72 +136,68 @@ public interface Decoder<T> {
 	@SuppressWarnings("unchecked")
 	static <R, T1> Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> decoder1) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0])),
-				decoder1);
+			decoder1);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2> Decoder<R> of(TupleConstructor2<T1, T2, R> constructor,
-			Decoder<T1> decoder1,
-			Decoder<T2> decoder2) {
+	static <R, T1, T2> Decoder<R> of(
+		TupleConstructor2<T1, T2, R> constructor,
+		Decoder<T1> decoder1, Decoder<T2> decoder2
+	) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1])),
-				decoder1,
-				decoder2);
+			decoder1,
+			decoder2);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3> Decoder<R> of(TupleConstructor3<T1, T2, T3, R> constructor,
-			Decoder<T1> decoder1,
-			Decoder<T2> decoder2,
-			Decoder<T3> decoder3) {
+	static <R, T1, T2, T3> Decoder<R> of(
+		TupleConstructor3<T1, T2, T3, R> constructor,
+		Decoder<T1> decoder1, Decoder<T2> decoder2, Decoder<T3> decoder3
+	) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2])),
-				decoder1,
-				decoder2,
-				decoder3);
+			decoder1,
+			decoder2,
+			decoder3);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3, T4> Decoder<R> of(TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			Decoder<T1> decoder1,
-			Decoder<T2> decoder2,
-			Decoder<T3> decoder3,
-			Decoder<T4> decoder4) {
+	static <R, T1, T2, T3, T4> Decoder<R> of(
+		TupleConstructor4<T1, T2, T3, T4, R> constructor,
+		Decoder<T1> decoder1, Decoder<T2> decoder2, Decoder<T3> decoder3, Decoder<T4> decoder4
+	) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3])),
-				decoder1,
-				decoder2,
-				decoder3,
-				decoder4);
+			decoder1,
+			decoder2,
+			decoder3,
+			decoder4);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3, T4, T5> Decoder<R> of(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			Decoder<T1> decoder1,
-			Decoder<T2> decoder2,
-			Decoder<T3> decoder3,
-			Decoder<T4> decoder4,
-			Decoder<T5> decoder5) {
+	static <R, T1, T2, T3, T4, T5> Decoder<R> of(
+		TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+		Decoder<T1> decoder1, Decoder<T2> decoder2, Decoder<T3> decoder3, Decoder<T4> decoder4, Decoder<T5> decoder5
+	) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3], (T5) params[4])),
-				decoder1,
-				decoder2,
-				decoder3,
-				decoder4,
-				decoder5);
+			decoder1,
+			decoder2,
+			decoder3,
+			decoder4,
+			decoder5);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3, T4, T5, T6> Decoder<R> of(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			Decoder<T1> decoder1,
-			Decoder<T2> decoder2,
-			Decoder<T3> decoder3,
-			Decoder<T4> decoder4,
-			Decoder<T5> decoder5,
-			Decoder<T6> decoder6) {
+	static <R, T1, T2, T3, T4, T5, T6> Decoder<R> of(
+		TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+		Decoder<T1> decoder1, Decoder<T2> decoder2, Decoder<T3> decoder3, Decoder<T4> decoder4, Decoder<T5> decoder5,
+		Decoder<T6> decoder6
+	) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1], (T3) params[2], (T4) params[3], (T5) params[5], (T6) params[6])),
-				decoder1,
-				decoder2,
-				decoder3,
-				decoder4,
-				decoder5,
-				decoder6);
+			decoder1,
+			decoder2,
+			decoder3,
+			decoder4,
+			decoder5,
+			decoder6);
 	}
 }
 

@@ -68,15 +68,15 @@ public final class RpcHelloWorldTest {
 
 	private static RpcServer createServer(NioReactor reactor) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
-					if (name.equals("--")) {
-						throw new Exception("Illegal name");
-					}
-					return "Hello, " + name + "!";
-				}))
-				.withListenPort(port)
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
+				if (name.equals("--")) {
+					throw new Exception("Illegal name");
+				}
+				return "Hello, " + name + "!";
+			}))
+			.withListenPort(port)
+			.build();
 	}
 
 	private static class BlockingHelloClient extends AbstractNioReactive implements HelloService, AutoCloseable {
@@ -85,9 +85,9 @@ public final class RpcHelloWorldTest {
 		public BlockingHelloClient(NioReactor reactor) throws Exception {
 			super(reactor);
 			this.rpcClient = RpcClient.builder(reactor)
-					.withMessageTypes(HelloRequest.class, HelloResponse.class)
-					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
-					.build();
+				.withMessageTypes(HelloRequest.class, HelloResponse.class)
+				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
+				.build();
 
 			rpcClient.startFuture().get();
 		}
@@ -96,10 +96,10 @@ public final class RpcHelloWorldTest {
 		public String hello(String name) throws Exception {
 			try {
 				return rpcClient.getReactor().submit(
-								() -> rpcClient
-										.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
-						.get()
-						.message;
+						() -> rpcClient
+							.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
+					.get()
+					.message;
 			} catch (ExecutionException e) {
 				//noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException - cause is rethrown
 				throw (Exception) e.getCause();
@@ -145,8 +145,8 @@ public final class RpcHelloWorldTest {
 			for (int i = 0; i < requestCount; i++) {
 				String name = "World" + i;
 				client.getReactor().execute(() -> client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
-						.whenComplete(latch::countDown)
-						.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
+					.whenComplete(latch::countDown)
+					.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 			}
 			latch.await();
 		} finally {
@@ -188,13 +188,13 @@ public final class RpcHelloWorldTest {
 			for (int i = 0; i < requestCount; i++) {
 				String name = "world" + i;
 				client1.getReactor().execute(() ->
-						client1.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
-								.whenComplete(latch::countDown)
-								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
+					client1.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
+						.whenComplete(latch::countDown)
+						.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 				client2.getReactor().execute(() ->
-						client2.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
-								.whenComplete(latch::countDown)
-								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
+					client2.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
+						.whenComplete(latch::countDown)
+						.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 			}
 			latch.await();
 		} finally {
@@ -215,15 +215,15 @@ public final class RpcHelloWorldTest {
 				Stopwatch stopwatch = Stopwatch.createStarted();
 				for (int i = 0; i < count; i++) {
 					client.getReactor().execute(() ->
-							client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest("benchmark"), TIMEOUT)
-									.whenComplete(($, e) -> {
-										latch.countDown();
-										(e == null ? success : error).incrementAndGet();
-									}));
+						client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest("benchmark"), TIMEOUT)
+							.whenComplete(($, e) -> {
+								latch.countDown();
+								(e == null ? success : error).incrementAndGet();
+							}));
 				}
 				latch.await();
 				System.out.printf("%2d: Elapsed %8s rps: %18s (%d/%d [%d])%n",
-						t + 1, stopwatch.stop(), count * 1000000.0 / stopwatch.elapsed(MICROSECONDS), success.get(), count, error.get());
+					t + 1, stopwatch.stop(), count * 1000000.0 / stopwatch.elapsed(MICROSECONDS), success.get(), count, error.get());
 			}
 		} finally {
 			server.closeFuture().get();

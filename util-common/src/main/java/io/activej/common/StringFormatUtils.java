@@ -246,13 +246,13 @@ public final class StringFormatUtils {
 		}
 
 		return Duration.ofDays(days)
-				.plusHours(hours)
-				.plusMinutes(minutes)
-				.plusSeconds(seconds)
-				.plusMillis(millis)
-				.plusNanos(nanos)
-				.plusSeconds(round(doubleSeconds))
-				.plusNanos(round((doubleSeconds - round(doubleSeconds)) * (NANOS_IN_MILLI * MILLIS_IN_SECOND)));
+			.plusHours(hours)
+			.plusMinutes(minutes)
+			.plusSeconds(seconds)
+			.plusMillis(millis)
+			.plusNanos(nanos)
+			.plusSeconds(round(doubleSeconds))
+			.plusNanos(round((doubleSeconds - round(doubleSeconds)) * (NANOS_IN_MILLI * MILLIS_IN_SECOND)));
 	}
 
 	public static String formatPeriod(Period value) {
@@ -260,8 +260,7 @@ public final class StringFormatUtils {
 			return "0 days";
 		}
 		String result = "";
-		int years = value.getYears(), months = value.getMonths(),
-				days = value.getDays();
+		int years = value.getYears(), months = value.getMonths(), days = value.getDays();
 		if (years != 0) {
 			result += years + " years ";
 		}
@@ -318,11 +317,11 @@ public final class StringFormatUtils {
 	}
 
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
-			.parseCaseInsensitive()
-			.append(ISO_LOCAL_DATE)
-			.appendLiteral(' ')
-			.append(ISO_LOCAL_TIME)
-			.toFormatter();
+		.parseCaseInsensitive()
+		.append(ISO_LOCAL_DATE)
+		.appendLiteral(' ')
+		.append(ISO_LOCAL_TIME)
+		.toFormatter();
 
 	public static String formatLocalDateTime(LocalDateTime value) {
 		return value.format(DATE_TIME_FORMATTER);
@@ -366,7 +365,7 @@ public final class StringFormatUtils {
 		}
 	}
 
-	public static InetSocketAddress parseInetSocketAddress(String addressString) throws MalformedDataException{
+	public static InetSocketAddress parseInetSocketAddress(String addressString) throws MalformedDataException {
 		int portPos = addressString.lastIndexOf(':');
 		if (portPos == -1) {
 			try {

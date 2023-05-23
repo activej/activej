@@ -16,10 +16,10 @@ public class OptionalDependencyTest {
 	public void optionalDependency() {
 		String expected = "string";
 		Injector injector = Injector.of(
-				ModuleBuilder.create()
-						.bind(String.class).to(() -> expected)
-						.bindOptionalDependency(String.class)
-						.build());
+			ModuleBuilder.create()
+				.bind(String.class).to(() -> expected)
+				.bindOptionalDependency(String.class)
+				.build());
 
 		OptionalDependency<String> optional = injector.getOptionalDependency(String.class);
 
@@ -33,9 +33,9 @@ public class OptionalDependencyTest {
 	@Test
 	public void optionalDependencyEmpty() {
 		Injector injector = Injector.of(
-				ModuleBuilder.create()
-						.bindOptionalDependency(String.class)
-						.build());
+			ModuleBuilder.create()
+				.bindOptionalDependency(String.class)
+				.build());
 
 		OptionalDependency<String> optional = injector.getOptionalDependency(String.class);
 
@@ -45,11 +45,11 @@ public class OptionalDependencyTest {
 	@Test
 	public void optionalDependencyTransitive() {
 		Injector injector = Injector.of(
-				ModuleBuilder.create()
-						.bind(Integer.class).to(() -> 123)
-						.bind(String.class).to(Object::toString, Integer.class)
-						.bindOptionalDependency(String.class)
-						.build());
+			ModuleBuilder.create()
+				.bind(Integer.class).to(() -> 123)
+				.bind(String.class).to(Object::toString, Integer.class)
+				.bindOptionalDependency(String.class)
+				.build());
 
 		OptionalDependency<String> optional = injector.getOptionalDependency(String.class);
 
@@ -60,9 +60,9 @@ public class OptionalDependencyTest {
 	@Test
 	public void optionalDependencyTransitiveMissing() {
 		Module module = ModuleBuilder.create()
-				.bind(String.class).to(Object::toString, Integer.class)
-				.bindOptionalDependency(String.class)
-				.build();
+			.bind(String.class).to(Object::toString, Integer.class)
+			.bindOptionalDependency(String.class)
+			.build();
 		try {
 			Injector.of(module);
 			fail();
@@ -77,10 +77,10 @@ public class OptionalDependencyTest {
 		AtomicInteger mut = new AtomicInteger();
 
 		Injector injector = Injector.of(
-				ModuleBuilder.create()
-						.bind(String.class).to(() -> "str_" + mut.incrementAndGet())
-						.bindOptionalDependency(new Key<InstanceProvider<String>>() {})
-						.build());
+			ModuleBuilder.create()
+				.bind(String.class).to(() -> "str_" + mut.incrementAndGet())
+				.bindOptionalDependency(new Key<InstanceProvider<String>>() {})
+				.build());
 
 		OptionalDependency<InstanceProvider<String>> optional = injector.getOptionalDependency(new Key<>() {});
 
@@ -97,10 +97,10 @@ public class OptionalDependencyTest {
 		AtomicInteger created = new AtomicInteger();
 
 		Injector injector = Injector.of(
-				ModuleBuilder.create()
-						.bind(String.class).to(() -> "str_" + created.incrementAndGet())
-						.bindOptionalDependency(String.class)
-						.build());
+			ModuleBuilder.create()
+				.bind(String.class).to(() -> "str_" + created.incrementAndGet())
+				.bindOptionalDependency(String.class)
+				.build());
 
 		String string = injector.getInstance(String.class);
 		OptionalDependency<String> stringOpt = injector.getOptionalDependency(String.class);

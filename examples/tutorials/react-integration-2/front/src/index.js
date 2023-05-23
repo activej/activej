@@ -3,6 +3,6 @@ import ReactDOM from 'react-dom';
 import TodoApp from "./TodoApp.js";
 
 ReactDOM.render(
-  <TodoApp/>,
-  document.getElementById('todos-example')
+    <TodoApp/>,
+    document.getElementById('todos-example')
 );

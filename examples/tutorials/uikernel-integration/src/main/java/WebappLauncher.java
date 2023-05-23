@@ -58,30 +58,30 @@ public class WebappLauncher extends Launcher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Gson gson, PersonGridModel model, Config config) {
 		StaticServlet staticServlet = StaticServlet.builder(reactor, staticLoader)
-				.withIndexHtml()
-				.build();
+			.withIndexHtml()
+			.build();
 		AsyncServlet usersApiServlet = UiKernelServlets.apiServlet(reactor, model, gson);
 
 		return RoutingServlet.builder(reactor)
-				.with("/*", staticServlet)              // serves request if no other servlet matches
-				.with("/api/users/*", usersApiServlet)  // our rest crud servlet that would serve the grid
-				.build();
+			.with("/*", staticServlet)              // serves request if no other servlet matches
+			.with("/api/users/*", usersApiServlet)  // our rest crud servlet that would serve the grid
+			.build();
 	}
 
 	@Provides
 	HttpServer server(NioReactor reactor, Config config, AsyncServlet servlet) {
 		return HttpServer.builder(reactor, servlet)
-				.withListenPort(config.get(ofInteger(), "port", DEFAULT_PORT))
-				.build();
+			.withListenPort(config.get(ofInteger(), "port", DEFAULT_PORT))
+			.build();
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	@Override

@@ -64,15 +64,15 @@ public class CalculatorBenchmark {
 
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
-				.include(CalculatorBenchmark.class.getSimpleName())
-				.forks(2)
-				.warmupIterations(3)
-				.warmupTime(TimeValue.seconds(1L))
-				.measurementIterations(5)
-				.measurementTime(TimeValue.seconds(2L))
-				.mode(Mode.AverageTime)
-				.timeUnit(TimeUnit.NANOSECONDS)
-				.build();
+			.include(CalculatorBenchmark.class.getSimpleName())
+			.forks(2)
+			.warmupIterations(3)
+			.warmupTime(TimeValue.seconds(1L))
+			.measurementIterations(5)
+			.measurementTime(TimeValue.seconds(2L))
+			.mode(Mode.AverageTime)
+			.timeUnit(TimeUnit.NANOSECONDS)
+			.build();
 
 		new Runner(opt).run();
 	}

@@ -37,7 +37,7 @@ public class DynamicMBeanRegistrationTest {
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(with(service),
-					with(objectname(domain + ":type=CustomKeyClass,CustomAnnotation=Global"))
+				with(objectname(domain + ":type=CustomKeyClass,CustomAnnotation=Global"))
 			);
 		}});
 
@@ -49,7 +49,7 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldRegisterDynamicMBeansWithOverriddenAttributes() throws Exception {
 		PublicMBeanSubclass instance = new PublicMBeanSubclass();
 		DynamicMBean mBean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(instance), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(instance), JmxBeanSettings.create(), false);
 
 		assertEquals(instance.getValue(), mBean.getAttribute("value"));
 	}
@@ -66,7 +66,7 @@ public class DynamicMBeanRegistrationTest {
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString("A class '" + NonPublicMBean.class.getName() +
-					"' containing methods annotated with @JmxAttribute should be declared public"));
+				"' containing methods annotated with @JmxAttribute should be declared public"));
 		}
 	}
 
@@ -74,7 +74,7 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldNotThrowExceptionForNonPublicMBeansWithNoJmxFields() throws Exception {
 		NonPublicMBeanSubclass instance = new NonPublicMBeanSubclass();
 		DynamicMBean mBean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(instance), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(instance), JmxBeanSettings.create(), false);
 
 		assertEquals(instance.getValue(), mBean.getAttribute("value"));
 	}

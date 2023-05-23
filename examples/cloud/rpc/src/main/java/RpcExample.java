@@ -42,19 +42,19 @@ public class RpcExample extends Launcher {
 	@Provides
 	RpcServer rpcServer(NioReactor reactor) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(String.class)
-				.withHandler(String.class,
-						request -> Promise.of("Hello " + request))
-				.withListenPort(SERVICE_PORT)
-				.build();
+			.withMessageTypes(String.class)
+			.withHandler(String.class,
+				request -> Promise.of("Hello " + request))
+			.withListenPort(SERVICE_PORT)
+			.build();
 	}
 
 	@Provides
 	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
-				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)))
-				.build();
+			.withMessageTypes(String.class)
+			.withStrategy(server(new InetSocketAddress(SERVICE_PORT)))
+			.build();
 	}
 
 	@ProvidesIntoSet
@@ -71,7 +71,7 @@ public class RpcExample extends Launcher {
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
 		CompletableFuture<Object> future = reactor.submit(() ->
-				client.sendRequest("World", 1000)
+			client.sendRequest("World", 1000)
 		);
 		System.out.printf("%nRPC result: %s %n%n", future.get());
 	}

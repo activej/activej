@@ -201,9 +201,9 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			@Override
 			protected Promise<Void> doAccept(V value) {
 				return value != null ?
-						fn.apply(value)
-								.then(ChannelConsumer.this::accept) :
-						ChannelConsumer.this.acceptEndOfStream();
+					fn.apply(value)
+						.then(ChannelConsumer.this::accept) :
+					ChannelConsumer.this.acceptEndOfStream();
 			}
 		};
 	}
@@ -248,11 +248,11 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 			protected Promise<Void> doAccept(@Nullable T value) {
 				if (value != null) {
 					return ChannelConsumer.this.accept(value)
-							.then(Promise::of,
-									e -> {
-										acknowledgement.trySetException(e);
-										return newAcknowledgement;
-									});
+						.then(Promise::of,
+							e -> {
+								acknowledgement.trySetException(e);
+								return newAcknowledgement;
+							});
 				} else {
 					ChannelConsumer.this.accept(null).subscribe(acknowledgement::trySet);
 					return newAcknowledgement;

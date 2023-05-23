@@ -40,7 +40,7 @@ public class TestClass1 extends AbstractTestClass1 {
 	@Override
 	public int apply(int arg) {
 		String str = new String();
-		((Object)str).toString().length();
+		((Object) str).toString().length();
 		try {
 			synchronized (this) {
 				int sum = 0;
@@ -67,8 +67,8 @@ public class TestClass1 extends AbstractTestClass1 {
 			setMutableField(getMutableField() + 1);
 			int y = 10;
 			return y + finalX + super.apply(100) +
-					delegate.apply(arg) +
-					testClass1.finalX + testStatic() + test() + mutableField;
+				delegate.apply(arg) +
+				testClass1.finalX + testStatic() + test() + mutableField;
 		}
 	}
 }

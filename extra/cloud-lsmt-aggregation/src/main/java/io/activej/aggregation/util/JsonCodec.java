@@ -43,13 +43,13 @@ public interface JsonCodec<T> extends ReadObject<T>, WriteObject<T> {
 
 	default JsonCodec<@Nullable T> nullable() {
 		return JsonCodec.of(
-				reader -> {
-					if (reader.wasNull()) return null;
-					return JsonCodec.this.read(reader);
-				},
-				(writer, value) -> {
-					if (value == null) writer.writeNull();
-					else JsonCodec.this.write(writer, value);
-				});
+			reader -> {
+				if (reader.wasNull()) return null;
+				return JsonCodec.this.read(reader);
+			},
+			(writer, value) -> {
+				if (value == null) writer.writeNull();
+				else JsonCodec.this.write(writer, value);
+			});
 	}
 }

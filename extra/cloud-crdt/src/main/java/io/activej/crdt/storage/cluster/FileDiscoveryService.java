@@ -89,9 +89,9 @@ public final class FileDiscoveryService extends AbstractDiscoveryService impleme
 		checkInReactorThread(this);
 		try {
 			pathToFile.getParent().register(
-					watchService,
-					new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE},
-					SensitivityWatchEventModifier.HIGH
+				watchService,
+				new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE},
+				SensitivityWatchEventModifier.HIGH
 			);
 		} catch (IOException e) {
 			CrdtException exception = new CrdtException("Could not register a path to the watch service", e);

@@ -40,25 +40,25 @@ public class MemcacheMultiServerModule extends AbstractModule {
 	@Worker
 	RingBuffer ringBuffer(Config config) {
 		return RingBuffer.create(
-				config.get(ofInteger(), "memcache.buffers"),
-				config.get(ofMemSize(), "memcache.bufferCapacity").toInt());
+			config.get(ofInteger(), "memcache.buffers"),
+			config.get(ofMemSize(), "memcache.bufferCapacity").toInt());
 	}
 
 	@Provides
 	@Worker
 	RpcServer server(NioReactor reactor, RingBuffer storage, InetSocketAddress address) {
 		return RpcServer.builder(reactor)
-				.withHandler(GetRequest.class,
-						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
-				.withHandler(PutRequest.class,
-						request -> {
-							Slice slice = request.getData();
-							System.out.println("Server on port #" + address.getPort() + " accepted message!");
-							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
-							return Promise.of(PutResponse.INSTANCE);
-						})
-				.withMessageTypes(MESSAGE_TYPES)
-				.withListenAddresses(address)
-				.build();
+			.withHandler(GetRequest.class,
+				request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
+			.withHandler(PutRequest.class,
+				request -> {
+					Slice slice = request.getData();
+					System.out.println("Server on port #" + address.getPort() + " accepted message!");
+					storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
+					return Promise.of(PutResponse.INSTANCE);
+				})
+			.withMessageTypes(MESSAGE_TYPES)
+			.withListenAddresses(address)
+			.build();
 	}
 }

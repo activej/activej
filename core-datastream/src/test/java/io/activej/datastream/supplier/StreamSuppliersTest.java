@@ -21,13 +21,13 @@ public class StreamSuppliersTest {
 	public void streamSupplierOfSupplier() {
 		RefInt count = new RefInt(-1);
 		List<Integer> actual = await(StreamSuppliers.ofSupplier(
-						() -> {
-							if (count.get() == 10) {
-								return null;
-							}
-							return count.inc();
-						})
-				.toList());
+				() -> {
+					if (count.get() == 10) {
+						return null;
+					}
+					return count.inc();
+				})
+			.toList());
 
 		assertEquals(List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), actual);
 	}
@@ -35,8 +35,8 @@ public class StreamSuppliersTest {
 	@Test
 	public void withEndOfStream() {
 		StreamSupplier<Integer> failingSupplier = StreamSuppliers.ofValues(1, 2, 3)
-				.withEndOfStream(eos -> eos
-						.then(($, e) -> Promise.ofException(new Exception("Test"))));
+			.withEndOfStream(eos -> eos
+				.then(($, e) -> Promise.ofException(new Exception("Test"))));
 
 		Exception exception = awaitException(failingSupplier.toList());
 		assertEquals("Test", exception.getMessage());

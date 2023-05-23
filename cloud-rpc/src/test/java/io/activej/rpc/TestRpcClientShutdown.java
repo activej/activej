@@ -53,37 +53,37 @@ public final class TestRpcClientShutdown {
 		List<Class<?>> messageTypes = List.of(Request.class, Response.class);
 
 		RpcServer rpcServer = RpcServer.builder(reactor)
-				.withMessageTypes(messageTypes)
-				.withHandler(Request.class,
-						request -> Promise.ofBlocking(executor, () -> {
-							Thread.sleep(100);
-							return new Response();
-						}))
-				.withListenPort(port)
-				.build();
+			.withMessageTypes(messageTypes)
+			.withHandler(Request.class,
+				request -> Promise.ofBlocking(executor, () -> {
+					Thread.sleep(100);
+					return new Response();
+				}))
+			.withListenPort(port)
+			.build();
 
 		RpcClient rpcClient = RpcClient.builder(reactor)
-				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(port)))
-				.build();
+			.withMessageTypes(messageTypes)
+			.withStrategy(server(new InetSocketAddress(port)))
+			.build();
 
 		rpcServer.listen();
 
 		Exception exception = awaitException(rpcClient.start()
-				.then(() -> Promises.all(
-						rpcClient.sendRequest(new Request())
-								.whenComplete(() -> {
-									for (RpcClientConnection conn : rpcClient.getRequestStatsPerConnection().values()) {
-										conn.onSenderError(new ExpectedException());
-									}
-								}),
-						rpcClient.sendRequest(new Request()),
-						rpcClient.sendRequest(new Request()),
-						rpcClient.sendRequest(new Request()),
-						rpcClient.sendRequest(new Request())
-				))
-				.whenComplete(rpcClient::stop)
-				.whenComplete(rpcServer::close)
+			.then(() -> Promises.all(
+				rpcClient.sendRequest(new Request())
+					.whenComplete(() -> {
+						for (RpcClientConnection conn : rpcClient.getRequestStatsPerConnection().values()) {
+							conn.onSenderError(new ExpectedException());
+						}
+					}),
+				rpcClient.sendRequest(new Request()),
+				rpcClient.sendRequest(new Request()),
+				rpcClient.sendRequest(new Request()),
+				rpcClient.sendRequest(new Request())
+			))
+			.whenComplete(rpcClient::stop)
+			.whenComplete(rpcServer::close)
 		);
 
 		assertThat(exception, instanceOf(AsyncCloseException.class));

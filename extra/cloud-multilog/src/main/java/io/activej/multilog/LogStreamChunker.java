@@ -61,34 +61,34 @@ public final class LogStreamChunker extends AbstractCommunicatingProcess impleme
 	@Override
 	protected void doProcess() {
 		input.get()
-				.whenResult(buf -> {
-					if (buf != null) {
-						//noinspection ConstantConditions
-						ensureConsumer()
-								.then(() -> currentConsumer.accept(buf))
-								.whenResult(this::doProcess);
-					} else {
-						flush().whenResult(this::completeProcess);
-					}
-				});
+			.whenResult(buf -> {
+				if (buf != null) {
+					//noinspection ConstantConditions
+					ensureConsumer()
+						.then(() -> currentConsumer.accept(buf))
+						.whenResult(this::doProcess);
+				} else {
+					flush().whenResult(this::completeProcess);
+				}
+			});
 	}
 
 	private Promise<Void> ensureConsumer() {
 		LogFile newChunkName = namingScheme.format(currentTimeProvider.currentTimeMillis());
 		return currentChunk != null && currentChunk.getName().compareTo(newChunkName.getName()) >= 0 ?
-				Promise.complete() :
-				startNewChunk(newChunkName);
+			Promise.complete() :
+			startNewChunk(newChunkName);
 	}
 
 	private Promise<Void> startNewChunk(LogFile newChunkName) {
 		return flush()
-				.then(() -> {
-					this.currentChunk = (currentChunk == null) ? newChunkName : new LogFile(newChunkName.getName(), 0);
-					return fileSystem.append(namingScheme.path(logPartition, currentChunk), 0)
-							.then(this::doSanitize)
-							.whenResult(newConsumer -> this.currentConsumer = consumerTransformer.apply(sanitize(newConsumer)))
-							.toVoid();
-				});
+			.then(() -> {
+				this.currentChunk = (currentChunk == null) ? newChunkName : new LogFile(newChunkName.getName(), 0);
+				return fileSystem.append(namingScheme.path(logPartition, currentChunk), 0)
+					.then(this::doSanitize)
+					.whenResult(newConsumer -> this.currentConsumer = consumerTransformer.apply(sanitize(newConsumer)))
+					.toVoid();
+			});
 	}
 
 	private Promise<Void> flush() {
@@ -96,7 +96,7 @@ public final class LogStreamChunker extends AbstractCommunicatingProcess impleme
 			return Promise.complete();
 		}
 		return currentConsumer.acceptEndOfStream()
-				.whenResult(() -> currentConsumer = null);
+			.whenResult(() -> currentConsumer = null);
 	}
 
 	@Override

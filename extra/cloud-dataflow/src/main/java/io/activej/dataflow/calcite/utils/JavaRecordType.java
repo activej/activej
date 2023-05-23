@@ -23,9 +23,9 @@ public final class JavaRecordType extends RelRecordType {
 	@Override
 	public boolean equals(@Nullable Object obj) {
 		return this == obj
-				|| obj instanceof JavaRecordType
-				&& Objects.equals(fieldList, ((JavaRecordType) obj).fieldList)
-				&& clazz == ((JavaRecordType) obj).clazz;
+			|| obj instanceof JavaRecordType
+			&& Objects.equals(fieldList, ((JavaRecordType) obj).fieldList)
+			&& clazz == ((JavaRecordType) obj).clazz;
 	}
 
 	@Override

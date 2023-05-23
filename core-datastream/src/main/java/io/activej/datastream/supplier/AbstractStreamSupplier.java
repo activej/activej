@@ -70,8 +70,8 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 		ensureInitialized();
 		this.consumer = consumer;
 		consumer.getAcknowledgement()
-				.whenResult(this::acknowledge)
-				.whenException(this::closeEx);
+			.whenResult(this::acknowledge)
+			.whenException(this::closeEx);
 		if (!isEndOfStream()) {
 			onStarted();
 		}

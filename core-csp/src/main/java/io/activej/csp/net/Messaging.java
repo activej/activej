@@ -52,22 +52,21 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 		this.socket = socket;
 		this.codec = codec;
 		this.bufsSupplier = BinaryChannelSupplier.ofProvidedBufs(bufs,
-				() -> this.socket.read()
-						.whenResult(buf -> {
-							if (buf != null) {
-								bufs.add(buf);
-							} else {
-								throw new TruncatedDataException();
-							}
-						})
-						.toVoid()
-						.whenException(this::closeEx),
-				Promise::complete,
-				this);
+			() -> this.socket.read()
+				.whenResult(buf -> {
+					if (buf != null) {
+						bufs.add(buf);
+					} else {
+						throw new TruncatedDataException();
+					}
+				})
+				.toVoid()
+				.whenException(this::closeEx),
+			Promise::complete,
+			this);
 	}
 
-	public static <I, O> Messaging<I, O> create(ITcpSocket socket,
-			ByteBufsCodec<I, O> serializer) {
+	public static <I, O> Messaging<I, O> create(ITcpSocket socket, ByteBufsCodec<I, O> serializer) {
 		Messaging<I, O> messaging = new Messaging<>(socket, serializer);
 		messaging.prefetch();
 		return messaging;
@@ -76,15 +75,15 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	private void prefetch() {
 		if (bufs.isEmpty()) {
 			socket.read()
-					.whenResult(buf -> {
-						if (buf != null) {
-							bufs.add(buf);
-						} else {
-							readDone = true;
-							closeIfDone();
-						}
-					})
-					.whenException(this::closeEx);
+				.whenResult(buf -> {
+					if (buf != null) {
+						bufs.add(buf);
+					} else {
+						readDone = true;
+						closeIfDone();
+					}
+				})
+				.whenException(this::closeEx);
 		}
 	}
 
@@ -92,8 +91,8 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	public Promise<I> receive() {
 		if (CHECKS) checkInReactorThread(this);
 		return bufsSupplier.decode(codec::tryDecode)
-				.whenResult(this::prefetch)
-				.whenException(this::closeEx);
+			.whenResult(this::prefetch)
+			.whenException(this::closeEx);
 	}
 
 	@Override
@@ -106,33 +105,33 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	public Promise<Void> sendEndOfStream() {
 		if (CHECKS) checkInReactorThread(this);
 		return socket.write(null)
-				.whenResult(() -> {
-					writeDone = true;
-					closeIfDone();
-				})
-				.whenException(this::closeEx);
+			.whenResult(() -> {
+				writeDone = true;
+				closeIfDone();
+			})
+			.whenException(this::closeEx);
 	}
 
 	@Override
 	public ChannelConsumer<ByteBuf> sendBinaryStream() {
 		if (CHECKS) checkInReactorThread(this);
 		return ChannelConsumers.ofSocket(socket)
-				.withAcknowledgement(ack -> ack
-						.whenResult(() -> {
-							writeDone = true;
-							closeIfDone();
-						}));
+			.withAcknowledgement(ack -> ack
+				.whenResult(() -> {
+					writeDone = true;
+					closeIfDone();
+				}));
 	}
 
 	@Override
 	public ChannelSupplier<ByteBuf> receiveBinaryStream() {
 		if (CHECKS) checkInReactorThread(this);
 		return ChannelSuppliers.concat(ChannelSuppliers.ofIterator(bufs.asIterator()), ChannelSuppliers.ofSocket(socket))
-				.withEndOfStream(eos -> eos
-						.whenResult(() -> {
-							readDone = true;
-							closeIfDone();
-						}));
+			.withEndOfStream(eos -> eos
+				.whenResult(() -> {
+					readDone = true;
+					closeIfDone();
+				}));
 	}
 
 	@Override

@@ -68,42 +68,42 @@ public final class ReportingTest extends CubeTestBase {
 	private int serverPort;
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = Stream.of(
-					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-					Map.entry("advertiser", ofInt()),
-					Map.entry("campaign", ofInt()),
-					Map.entry("banner", ofInt()),
-					Map.entry("affiliate", ofInt()),
-					Map.entry("site", ofString()))
-			.collect(entriesToLinkedHashMap());
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt()),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString()))
+		.collect(entriesToLinkedHashMap());
 
 	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION = Stream.of(
-					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))))
-			.collect(entriesToLinkedHashMap());
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))))
+		.collect(entriesToLinkedHashMap());
 
 	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = Stream.of(
-					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-					Map.entry("advertiser", ofInt()),
-					Map.entry("campaign", ofInt()),
-					Map.entry("banner", ofInt()))
-			.collect(entriesToLinkedHashMap());
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt()))
+		.collect(entriesToLinkedHashMap());
 
 	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = Stream.of(
-					Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-					Map.entry("affiliate", ofInt()),
-					Map.entry("site", ofString()))
-			.collect(entriesToLinkedHashMap());
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString()))
+		.collect(entriesToLinkedHashMap());
 
 	private static final Map<String, Measure> MEASURES = Stream.of(
-					Map.entry("impressions", sum(ofLong())),
-					Map.entry("clicks", sum(ofLong())),
-					Map.entry("conversions", sum(ofLong())),
-					Map.entry("revenue", sum(ofDouble())),
-					Map.entry("eventCount", count(ofInt())),
-					Map.entry("minRevenue", min(ofDouble())),
-					Map.entry("maxRevenue", max(ofDouble())),
-					Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
-					Map.entry("errors", sum(ofLong())))
-			.collect(entriesToLinkedHashMap());
+			Map.entry("impressions", sum(ofLong())),
+			Map.entry("clicks", sum(ofLong())),
+			Map.entry("conversions", sum(ofLong())),
+			Map.entry("revenue", sum(ofDouble())),
+			Map.entry("eventCount", count(ofInt())),
+			Map.entry("minRevenue", min(ofDouble())),
+			Map.entry("maxRevenue", max(ofDouble())),
+			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
+			Map.entry("errors", sum(ofLong())))
+		.collect(entriesToLinkedHashMap());
 
 	private static class AdvertiserAttributeResolver extends AbstractAttributeResolver<Integer, String> {
 		public AdvertiserAttributeResolver(Reactor reactor) {
@@ -201,8 +201,10 @@ public final class ReportingTest extends CubeTestBase {
 		public LogItem() {
 		}
 
-		public LogItem(int date, int advertiser, int campaign, int banner, long impressions, long clicks,
-				long conversions, double revenue, int userId, int errors, int affiliate, String site) {
+		public LogItem(
+			int date, int advertiser, int campaign, int banner, long impressions, long clicks, long conversions,
+			double revenue, int userId, int errors, int affiliate, String site
+		) {
 			this.date = date;
 			this.advertiser = advertiser;
 			this.campaign = campaign;
@@ -230,13 +232,13 @@ public final class ReportingTest extends CubeTestBase {
 		protected StreamDataAcceptor<LogItem> createSplitter(Context ctx) {
 			return new StreamDataAcceptor<>() {
 				private final StreamDataAcceptor<LogItem> dateAggregator = ctx.addOutput(
-						cube.logStreamConsumer(
-								LogItem.class,
-								and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))));
+					cube.logStreamConsumer(
+						LogItem.class,
+						and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))));
 				private final StreamDataAcceptor<LogItem> dateAggregator2 = ctx.addOutput(
-						cube.logStreamConsumer(
-								LogItem.class,
-								and(notEq("affiliate", EXCLUDE_AFFILIATE), notEq("site", EXCLUDE_SITE))));
+					cube.logStreamConsumer(
+						LogItem.class,
+						and(notEq("affiliate", EXCLUDE_AFFILIATE), notEq("site", EXCLUDE_SITE))));
 
 				@Override
 				public void accept(LogItem item) {
@@ -261,33 +263,33 @@ public final class ReportingTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-				ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
+			ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
 		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
-				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
-				.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
-				.initialize(cube -> MEASURES.forEach(cube::withMeasure))
-				.withRelation("campaign", "advertiser")
-				.withRelation("banner", "campaign")
-				.withRelation("site", "affiliate")
-				.withAttribute("advertiser.name", new AdvertiserAttributeResolver(reactor))
-				.withComputedMeasure("ctr", percent(measure("clicks"), measure("impressions")))
-				.withComputedMeasure("uniqueUserPercent", percent(div(measure("uniqueUserIdsCount"), measure("eventCount"))))
-				.withComputedMeasure("errorsPercent", percent(div(measure("errors"), measure("impressions"))))
+			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
+			.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
+			.initialize(cube -> MEASURES.forEach(cube::withMeasure))
+			.withRelation("campaign", "advertiser")
+			.withRelation("banner", "campaign")
+			.withRelation("site", "affiliate")
+			.withAttribute("advertiser.name", new AdvertiserAttributeResolver(reactor))
+			.withComputedMeasure("ctr", percent(measure("clicks"), measure("impressions")))
+			.withComputedMeasure("uniqueUserPercent", percent(div(measure("uniqueUserIdsCount"), measure("eventCount"))))
+			.withComputedMeasure("errorsPercent", percent(div(measure("errors"), measure("impressions"))))
 
-				.withAggregation(id("advertisers")
-						.withDimensions(DIMENSIONS_ADVERTISERS_AGGREGATION.keySet())
-						.withMeasures(MEASURES.keySet())
-						.withPredicate(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))))
+			.withAggregation(id("advertisers")
+				.withDimensions(DIMENSIONS_ADVERTISERS_AGGREGATION.keySet())
+				.withMeasures(MEASURES.keySet())
+				.withPredicate(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))))
 
-				.withAggregation(id("affiliates")
-						.withDimensions(DIMENSIONS_AFFILIATES_AGGREGATION.keySet())
-						.withMeasures(MEASURES.keySet())
-						.withPredicate(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE))))
+			.withAggregation(id("affiliates")
+				.withDimensions(DIMENSIONS_AFFILIATES_AGGREGATION.keySet())
+				.withMeasures(MEASURES.keySet())
+				.withPredicate(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE))))
 
-				.withAggregation(id("daily")
-						.withDimensions(DIMENSIONS_DATE_AGGREGATION.keySet())
-						.withMeasures(MEASURES.keySet()))
-				.build();
+			.withAggregation(id("daily")
+				.withDimensions(DIMENSIONS_DATE_AGGREGATION.keySet())
+				.withMeasures(MEASURES.keySet()))
+			.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
@@ -297,80 +299,80 @@ public final class ReportingTest extends CubeTestBase {
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
-				fileSystem,
-				FrameFormats.lz4(),
-				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
-				NAME_PARTITION_REMAINDER_SEQ);
+			fileSystem,
+			FrameFormats.lz4(),
+			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
+			NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
-				multilog,
-				new LogItemSplitter(cube),
-				"testlog",
-				List.of("partitionA"),
-				cubeDiffLogOTState);
+			multilog,
+			new LogItemSplitter(cube),
+			"testlog",
+			List.of("partitionA"),
+			cubeDiffLogOTState);
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
 
 		List<LogItem> logItemsForAdvertisersAggregations = List.of(
-				new LogItem(1, 1, 1, 1, 20, 3, 1, 0.12, 2, 2, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
-				new LogItem(1, 2, 2, 2, 100, 5, 0, 0.36, 10, 0, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
-				new LogItem(1, 3, 3, 3, 80, 5, 0, 0.60, 1, 8, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
-				new LogItem(2, 1, 1, 1, 15, 2, 0, 0.22, 1, 3, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
-				new LogItem(3, 1, 1, 1, 30, 5, 2, 0.30, 3, 4, EXCLUDE_AFFILIATE, EXCLUDE_SITE));
+			new LogItem(1, 1, 1, 1, 20, 3, 1, 0.12, 2, 2, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
+			new LogItem(1, 2, 2, 2, 100, 5, 0, 0.36, 10, 0, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
+			new LogItem(1, 3, 3, 3, 80, 5, 0, 0.60, 1, 8, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
+			new LogItem(2, 1, 1, 1, 15, 2, 0, 0.22, 1, 3, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
+			new LogItem(3, 1, 1, 1, 30, 5, 2, 0.30, 3, 4, EXCLUDE_AFFILIATE, EXCLUDE_SITE));
 
 		List<LogItem> logItemsForAffiliatesAggregation = List.of(
-				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 10, 3, 1, 0.12, 0, 2, 1, "site3.com"),
-				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 15, 2, 0, 0.22, 0, 3, 2, "site3.com"),
-				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 5, 2, 0.30, 0, 4, 2, "site3.com"),
-				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 100, 5, 0, 0.36, 0, 0, 3, "site2.com"),
-				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 80, 5, 0, 0.60, 0, 8, 4, "site1.com"),
-				new LogItem(2, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 20, 1, 12, 0.8, 0, 3, 4, "site1.com"),
-				new LogItem(2, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 2, 13, 0.9, 0, 2, 4, "site1.com"),
-				new LogItem(3, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 40, 3, 2, 1.0, 0, 1, 4, "site1.com"));
+			new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 10, 3, 1, 0.12, 0, 2, 1, "site3.com"),
+			new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 15, 2, 0, 0.22, 0, 3, 2, "site3.com"),
+			new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 5, 2, 0.30, 0, 4, 2, "site3.com"),
+			new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 100, 5, 0, 0.36, 0, 0, 3, "site2.com"),
+			new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 80, 5, 0, 0.60, 0, 8, 4, "site1.com"),
+			new LogItem(2, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 20, 1, 12, 0.8, 0, 3, 4, "site1.com"),
+			new LogItem(2, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 2, 13, 0.9, 0, 2, 4, "site1.com"),
+			new LogItem(3, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 40, 3, 2, 1.0, 0, 1, 4, "site1.com"));
 
 		await(StreamSuppliers.ofIterable(concat(logItemsForAdvertisersAggregations, logItemsForAffiliatesAggregation))
-				.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
+			.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		LogDiff<CubeDiff> logDiff = await(logOTProcessor.processLog());
 		await(aggregationChunkStorage
-				.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
+			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
 		logCubeStateManager.add(logDiff);
 		await(logCubeStateManager.sync());
 
 		cubeHttpServer = startHttpServer();
 
 		IHttpClient httpClient = HttpClient.builder(reactor)
-				.withNoKeepAlive()
-				.build();
+			.withNoKeepAlive()
+			.build();
 		cubeHttp = HttpClientCube.builder(httpClient, "http://127.0.0.1:" + serverPort)
-				.withAttribute("date", LocalDate.class)
-				.withAttribute("advertiser", int.class)
-				.withAttribute("campaign", int.class)
-				.withAttribute("banner", int.class)
-				.withAttribute("affiliate", int.class)
-				.withAttribute("site", String.class)
-				.withAttribute("advertiser.name", String.class)
-				.withMeasure("impressions", long.class)
-				.withMeasure("clicks", long.class)
-				.withMeasure("conversions", long.class)
-				.withMeasure("revenue", double.class)
-				.withMeasure("errors", long.class)
-				.withMeasure("eventCount", int.class)
-				.withMeasure("minRevenue", double.class)
-				.withMeasure("maxRevenue", double.class)
-				.withMeasure("ctr", double.class)
-				.withMeasure("uniqueUserIdsCount", int.class)
-				.withMeasure("uniqueUserPercent", double.class)
-				.withMeasure("errorsPercent", double.class)
-				.build();
+			.withAttribute("date", LocalDate.class)
+			.withAttribute("advertiser", int.class)
+			.withAttribute("campaign", int.class)
+			.withAttribute("banner", int.class)
+			.withAttribute("affiliate", int.class)
+			.withAttribute("site", String.class)
+			.withAttribute("advertiser.name", String.class)
+			.withMeasure("impressions", long.class)
+			.withMeasure("clicks", long.class)
+			.withMeasure("conversions", long.class)
+			.withMeasure("revenue", double.class)
+			.withMeasure("errors", long.class)
+			.withMeasure("eventCount", int.class)
+			.withMeasure("minRevenue", double.class)
+			.withMeasure("maxRevenue", double.class)
+			.withMeasure("ctr", double.class)
+			.withMeasure("uniqueUserIdsCount", int.class)
+			.withMeasure("uniqueUserPercent", double.class)
+			.withMeasure("errorsPercent", double.class)
+			.build();
 	}
 
 	private HttpServer startHttpServer() {
 		HttpServer server = HttpServer.builder(reactor, ReportingServiceServlet.createRootServlet(reactor, cube))
-				.withListenPort(serverPort)
-				.withAcceptOnce()
-				.build();
+			.withListenPort(serverPort)
+			.withAcceptOnce()
+			.build();
 		try {
 			server.listen();
 		} catch (IOException e) {
@@ -388,12 +390,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQuery() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures("impressions", "clicks", "ctr", "revenue")
-				.withOrderingDesc("date")
-				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures("impressions", "clicks", "ctr", "revenue")
+			.withOrderingDesc("date")
+			.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -420,12 +422,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testDuplicateQuery() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures("impressions", "clicks", "ctr", "revenue")
-				.withOrderingDesc("date")
-				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures("impressions", "clicks", "ctr", "revenue")
+			.withOrderingDesc("date")
+			.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult queryResult1 = await(cubeHttp.query(query));
 
@@ -473,12 +475,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryWithPredicateLe() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures("impressions", "clicks", "ctr", "revenue")
-				.withOrderingDesc("date")
-				.withWhere(and(le("date", LocalDate.parse("2000-01-03"))))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures("impressions", "clicks", "ctr", "revenue")
+			.withOrderingDesc("date")
+			.withWhere(and(le("date", LocalDate.parse("2000-01-03"))))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -505,15 +507,15 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryAffectingAdvertisersAggregation() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures("impressions", "clicks", "ctr", "revenue")
-				.withWhere(and(
-						eq("banner", 1),
-						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03")),
-						and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("banner", EXCLUDE_BANNER), notEq("campaign", EXCLUDE_CAMPAIGN))))
-				.withOrderings(asc("ctr"))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures("impressions", "clicks", "ctr", "revenue")
+			.withWhere(and(
+				eq("banner", 1),
+				between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03")),
+				and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("banner", EXCLUDE_BANNER), notEq("campaign", EXCLUDE_CAMPAIGN))))
+			.withOrderings(asc("ctr"))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -540,10 +542,10 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testImpressionsByDate() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures("impressions")
-				.withReportType(DATA)
-				.build();
+			.withAttributes("date")
+			.withMeasures("impressions")
+			.withReportType(DATA)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -566,17 +568,17 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryWithNullAttributes() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date", "advertiser.name", "advertiser")
-				.withMeasures("impressions")
-				.withOrderings(asc("date"), asc("advertiser.name"))
-				.withWhere(and(
-						between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-04")),
-						and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))))
-				.withHaving(and(
-						or(eq("advertiser.name", null), eq("advertiser.name", "first")),
-						between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-03"))))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date", "advertiser.name", "advertiser")
+			.withMeasures("impressions")
+			.withOrderings(asc("date"), asc("advertiser.name"))
+			.withWhere(and(
+				between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-04")),
+				and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))))
+			.withHaving(and(
+				or(eq("advertiser.name", null), eq("advertiser.name", "first")),
+				between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-03"))))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -609,12 +611,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryWithNullAttributeAndBetweenPredicate() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("advertiser.name")
-				.withMeasures("impressions")
-				.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
-				.withHaving(or(between("advertiser.name", "a", "z"), eq("advertiser.name", null)))
-				.withReportType(DATA)
-				.build();
+			.withAttributes("advertiser.name")
+			.withMeasures("impressions")
+			.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withHaving(or(between("advertiser.name", "a", "z"), eq("advertiser.name", null)))
+			.withReportType(DATA)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -628,12 +630,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testFilterAttributes() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date", "advertiser.name")
-				.withMeasures("impressions")
-				.withWhere(and(eq("advertiser", 2), notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
-				.withOrderings(asc("advertiser.name"))
-				.withHaving(eq("advertiser.name", null))
-				.build();
+			.withAttributes("date", "advertiser.name")
+			.withMeasures("impressions")
+			.withWhere(and(eq("advertiser", 2), notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withOrderings(asc("advertiser.name"))
+			.withHaving(eq("advertiser.name", null))
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -646,10 +648,10 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testRecordsWithFullySpecifiedAttributes() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date", "advertiser.name")
-				.withMeasures("impressions")
-				.withWhere(and(eq("advertiser", 1), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
-				.build();
+			.withAttributes("date", "advertiser.name")
+			.withMeasures("impressions")
+			.withWhere(and(eq("advertiser", 1), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -662,12 +664,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testSearchAndFieldsParameter() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("advertiser.name")
-				.withMeasures("clicks")
-				.withWhere(and(not(eq("advertiser", EXCLUDE_ADVERTISER)), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
-				.withHaving(or(regexp("advertiser.name", ".*s.*"), eq("advertiser.name", null)))
-				.withReportType(DATA)
-				.build();
+			.withAttributes("advertiser.name")
+			.withMeasures("clicks")
+			.withWhere(and(not(eq("advertiser", EXCLUDE_ADVERTISER)), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withHaving(or(regexp("advertiser.name", ".*s.*"), eq("advertiser.name", null)))
+			.withReportType(DATA)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
@@ -683,17 +685,17 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testCustomMeasures() {
 		CubeQuery query = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks")
-				.withOrderings(asc("date"), asc("uniqueUserIdsCount"))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks")
+			.withOrderings(asc("date"), asc("uniqueUserIdsCount"))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(Set.of("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
-				new HashSet<>(queryResult.getMeasures()));
+			new HashSet<>(queryResult.getMeasures()));
 		assertEquals(3, records.size());
 
 		Record r1 = records.get(0);
@@ -733,16 +735,16 @@ public final class ReportingTest extends CubeTestBase {
 	public void testMetadataOnlyQuery() {
 		String[] attributes = {"date", "advertiser", "advertiser.name"};
 		CubeQuery onlyMetaQuery = CubeQuery.builder()
-				.withAttributes(attributes)
-				.withWhere(and(
-						notEq("advertiser", EXCLUDE_ADVERTISER),
-						notEq("banner", EXCLUDE_BANNER),
-						notEq("campaign", EXCLUDE_CAMPAIGN)))
-				.withMeasures("clicks", "ctr", "conversions")
-				.withOrderingDesc("date")
-				.withOrderingAsc("advertiser.name")
-				.withReportType(ReportType.METADATA)
-				.build();
+			.withAttributes(attributes)
+			.withWhere(and(
+				notEq("advertiser", EXCLUDE_ADVERTISER),
+				notEq("banner", EXCLUDE_BANNER),
+				notEq("campaign", EXCLUDE_CAMPAIGN)))
+			.withMeasures("clicks", "ctr", "conversions")
+			.withOrderingDesc("date")
+			.withOrderingAsc("advertiser.name")
+			.withReportType(ReportType.METADATA)
+			.build();
 
 		QueryResult metadata = await(cubeHttp.query(onlyMetaQuery));
 
@@ -755,16 +757,16 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryWithInPredicate() {
 		CubeQuery queryWithPredicateIn = CubeQuery.builder()
-				.withAttributes("advertiser")
-				.withWhere(and(
-						in("advertiser", List.of(1, 2)),
-						notEq("advertiser", EXCLUDE_ADVERTISER),
-						notEq("banner", EXCLUDE_BANNER),
-						notEq("campaign", EXCLUDE_CAMPAIGN)))
-				.withMeasures("clicks", "ctr", "conversions")
-				.withReportType(DATA_WITH_TOTALS)
-				.withHaving(in("advertiser", List.of(1, 2)))
-				.build();
+			.withAttributes("advertiser")
+			.withWhere(and(
+				in("advertiser", List.of(1, 2)),
+				notEq("advertiser", EXCLUDE_ADVERTISER),
+				notEq("banner", EXCLUDE_BANNER),
+				notEq("campaign", EXCLUDE_CAMPAIGN)))
+			.withMeasures("clicks", "ctr", "conversions")
+			.withReportType(DATA_WITH_TOTALS)
+			.withHaving(in("advertiser", List.of(1, 2)))
+			.build();
 
 		QueryResult in = await(cubeHttp.query(queryWithPredicateIn));
 
@@ -779,10 +781,10 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testMetaOnlyQueryHasEmptyMeasuresWhenNoAggregationsFound() {
 		CubeQuery queryAffectingNonCompatibleAggregations = CubeQuery.builder()
-				.withAttributes("date", "advertiser", "affiliate")
-				.withMeasures("errors", "errorsPercent")
-				.withReportType(ReportType.METADATA)
-				.build();
+			.withAttributes("date", "advertiser", "affiliate")
+			.withMeasures("errors", "errorsPercent")
+			.withReportType(ReportType.METADATA)
+			.build();
 
 		QueryResult metadata = await(cubeHttp.query(queryAffectingNonCompatibleAggregations));
 		assertEquals(0, metadata.getMeasures().size());
@@ -791,14 +793,14 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testMetaOnlyQueryResultHasCorrectMeasuresWhenSomeAggregationsAreIncompatible() {
 		CubeQuery queryAffectingNonCompatibleAggregations = CubeQuery.builder()
-				.withAttributes("date", "advertiser")
-				.withMeasures("impressions", "incompatible_measure", "clicks")
-				.withWhere(and(
-						notEq("advertiser", EXCLUDE_ADVERTISER),
-						notEq("campaign", EXCLUDE_CAMPAIGN),
-						notEq("banner", EXCLUDE_BANNER)))
-				.withReportType(ReportType.METADATA)
-				.build();
+			.withAttributes("date", "advertiser")
+			.withMeasures("impressions", "incompatible_measure", "clicks")
+			.withWhere(and(
+				notEq("advertiser", EXCLUDE_ADVERTISER),
+				notEq("campaign", EXCLUDE_CAMPAIGN),
+				notEq("banner", EXCLUDE_BANNER)))
+			.withReportType(ReportType.METADATA)
+			.build();
 
 		QueryResult metadata = await(cubeHttp.query(queryAffectingNonCompatibleAggregations));
 		List<String> expectedMeasures = List.of("impressions", "clicks");
@@ -826,12 +828,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testAdvertisersAggregationTotals() {
 		CubeQuery queryAdvertisers = CubeQuery.builder()
-				.withAttributes("date", "advertiser")
-				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
-				.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER),
-						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date", "advertiser")
+			.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
+			.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER),
+				between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult resultByAdvertisers = await(cubeHttp.query(queryAdvertisers));
 
@@ -849,12 +851,12 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testAffiliatesAggregationTotals() {
 		CubeQuery queryAffiliates = CubeQuery.builder()
-				.withAttributes("date", "affiliate")
-				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
-				.withWhere(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE),
-						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date", "affiliate")
+			.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
+			.withWhere(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE),
+				between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult resultByAffiliates = await(cubeHttp.query(queryAffiliates));
 
@@ -872,11 +874,11 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testDailyAggregationTotals() {
 		CubeQuery queryDate = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
-				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
+			.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult resultByDate = await(cubeHttp.query(queryDate));
 
@@ -898,11 +900,11 @@ public final class ReportingTest extends CubeTestBase {
 		requestMeasures.add(3, "nonexistentMeasure");
 		List<String> dateDimension = List.of("date");
 		CubeQuery queryDate = CubeQuery.builder()
-				.withAttributes(dateDimension)
-				.withMeasures(requestMeasures)
-				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes(dateDimension)
+			.withMeasures(requestMeasures)
+			.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult resultByDate = await(cubeHttp.query(queryDate));
 
@@ -926,11 +928,11 @@ public final class ReportingTest extends CubeTestBase {
 		List<String> requestMeasures = new ArrayList<>(measures);
 		requestMeasures.add("unexpected");
 		CubeQuery queryDate = CubeQuery.builder()
-				.withAttributes("date")
-				.withMeasures(requestMeasures)
-				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
-				.withReportType(DATA_WITH_TOTALS)
-				.build();
+			.withAttributes("date")
+			.withMeasures(requestMeasures)
+			.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
+			.withReportType(DATA_WITH_TOTALS)
+			.build();
 
 		QueryResult resultByDate = await(cubeHttp.query(queryDate));
 

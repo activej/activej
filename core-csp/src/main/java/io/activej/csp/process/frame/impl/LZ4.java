@@ -107,10 +107,10 @@ public final class LZ4 implements FrameFormat {
 	@Override
 	public BlockEncoder createEncoder() {
 		LZ4Compressor compressor = compressionLevel == 0 ?
-				factory.fastCompressor() :
-				compressionLevel == -1 ?
-						factory.highCompressor() :
-						factory.highCompressor(compressionLevel);
+			factory.fastCompressor() :
+			compressionLevel == -1 ?
+				factory.highCompressor() :
+				factory.highCompressor(compressionLevel);
 		return new Encoder(compressor);
 	}
 
@@ -241,7 +241,7 @@ public final class LZ4 implements FrameFormat {
 			int originalSize = intScanner.getValue();
 			if (originalSize < 0 || originalSize > MAX_BLOCK_SIZE.toInt()) {
 				throw new InvalidSizeException("Size (" + originalSize +
-						") of block is either negative or exceeds max block size (" + MAX_BLOCK_SIZE + ')');
+					") of block is either negative or exceeds max block size (" + MAX_BLOCK_SIZE + ')');
 			}
 
 			ByteBuf firstBuf = bufs.peekBuf();

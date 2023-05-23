@@ -34,15 +34,19 @@ public final class MergeCollector<K, T> extends AbstractCollector<T, StreamReduc
 	private final Comparator<K> keyComparator;
 	private boolean deduplicate;
 
-	private MergeCollector(Reactor reactor, Dataset<T> input, DataflowClient client,
-			Function<T, K> keyFunction, Comparator<K> keyComparator) {
+	private MergeCollector(
+		Reactor reactor, Dataset<T> input, DataflowClient client, Function<T, K> keyFunction,
+		Comparator<K> keyComparator
+	) {
 		super(reactor, input, client);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
 	}
 
-	public static <K, T> MergeCollector<K, T> create(Reactor reactor, Dataset<T> input, DataflowClient client,
-			Function<T, K> keyFunction, Comparator<K> keyComparator) {
+	public static <K, T> MergeCollector<K, T> create(
+		Reactor reactor, Dataset<T> input, DataflowClient client, Function<T, K> keyFunction,
+		Comparator<K> keyComparator
+	) {
 		return builder(reactor, input, client, keyFunction, keyComparator).build();
 	}
 
@@ -50,8 +54,10 @@ public final class MergeCollector<K, T> extends AbstractCollector<T, StreamReduc
 		return builder(reactor, input, client).build();
 	}
 
-	public static <K, T> MergeCollector<K, T>.Builder builder(Reactor reactor, Dataset<T> input, DataflowClient client,
-			Function<T, K> keyFunction, Comparator<K> keyComparator) {
+	public static <K, T> MergeCollector<K, T>.Builder builder(
+		Reactor reactor, Dataset<T> input, DataflowClient client, Function<T, K> keyFunction,
+		Comparator<K> keyComparator
+	) {
 		return new MergeCollector<>(reactor, input, client, keyFunction, keyComparator).new Builder();
 	}
 

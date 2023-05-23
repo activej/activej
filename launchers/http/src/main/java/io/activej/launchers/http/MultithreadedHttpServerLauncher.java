@@ -64,17 +64,17 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	NioReactor primaryReactor(Config config) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop.primary")))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop.primary")))
+			.build();
 	}
 
 	@Provides
 	@Worker
 	NioReactor workerReactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop.worker")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop.worker")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Provides
@@ -85,36 +85,36 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<HttpServer> workerServers, Config config) {
 		return PrimaryServer.builder(primaryReactor, workerServers.getList())
-				.initialize(ofPrimaryServer(config.getChild("http")))
-				.build();
+			.initialize(ofPrimaryServer(config.getChild("http")))
+			.build();
 	}
 
 	@Provides
 	@Worker
 	HttpServer workerServer(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.initialize(ofHttpWorker(config.getChild("http")))
-				.build();
+			.initialize(ofHttpWorker(config.getChild("http")))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HOSTNAME, PORT)))
-				.with("workers", "" + WORKERS)
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HOSTNAME, PORT)))
+			.with("workers", "" + WORKERS)
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				WorkerPoolModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule()
+			ServiceGraphModule.create(),
+			WorkerPoolModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule()
 		);
 	}
 
@@ -126,9 +126,9 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	protected void run() throws Exception {
 		if (logger.isInfoEnabled()) {
 			logger.info("HTTP Server is listening on {}", Stream.concat(
-							primaryServer.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
-							primaryServer.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true)))
-					.collect(joining(" ")));
+					primaryServer.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+					primaryServer.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true)))
+				.collect(joining(" ")));
 		}
 		awaitShutdown();
 	}
@@ -143,8 +143,8 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 					@Worker
 					AsyncServlet servlet(@WorkerId int workerId) {
 						return request -> HttpResponse.ok200()
-								.withPlainText("Hello, world! #" + workerId)
-								.toPromise();
+							.withPlainText("Hello, world! #" + workerId)
+							.toPromise();
 					}
 				};
 			}

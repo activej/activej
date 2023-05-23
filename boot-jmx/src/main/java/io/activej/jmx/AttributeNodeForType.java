@@ -48,9 +48,11 @@ public final class AttributeNodeForType<T> extends AbstractAttributeNodeForLeaf 
 	private final @Nullable Function<T, String> to;
 	private final @Nullable Function<String, T> from;
 
-	public AttributeNodeForType(String name, @Nullable String description, ValueFetcher fetcher,
-			boolean visible, @Nullable Method setter, Class<?> attributeType, JmxReducer<T> reducer,
-			@Nullable Function<T, String> to, @Nullable Function<String, T> from) {
+	public AttributeNodeForType(
+		String name, @Nullable String description, ValueFetcher fetcher, boolean visible, @Nullable Method setter,
+		Class<?> attributeType, JmxReducer<T> reducer, @Nullable Function<T, String> to,
+		@Nullable Function<String, T> from
+	) {
 		super(name, description, fetcher, visible);
 		this.setter = setter;
 		this.reducer = reducer;
@@ -60,21 +62,19 @@ public final class AttributeNodeForType<T> extends AbstractAttributeNodeForLeaf 
 	}
 
 	public static <T> AttributeNodeForType<T> createCustom(
-			String name, @Nullable String description, ValueFetcher fetcher,
-			boolean visible, @Nullable Method setter,
-			Function<T, String> to, @Nullable Function<String, T> from, JmxReducer<T> reducer
+		String name, @Nullable String description, ValueFetcher fetcher, boolean visible, @Nullable Method setter,
+		Function<T, String> to, @Nullable Function<String, T> from, JmxReducer<T> reducer
 	) {
 		return new AttributeNodeForType<>(name, description, fetcher, visible, setter, String.class, reducer,
-				to, from == null ? (Function<String, T>) NOT_CONVERTABLE : from);
+			to, from == null ? (Function<String, T>) NOT_CONVERTABLE : from);
 	}
 
 	public static <T> AttributeNodeForType<T> createSimple(
-			String name, @Nullable String description, ValueFetcher fetcher,
-			boolean visible, @Nullable Method setter,
-			Class<?> attributeType, JmxReducer reducer
+		String name, @Nullable String description, ValueFetcher fetcher, boolean visible, @Nullable Method setter,
+		Class<?> attributeType, JmxReducer reducer
 	) {
 		return new AttributeNodeForType<>(name, description, fetcher, visible, setter, attributeType, reducer,
-				null, null);
+			null, null);
 	}
 
 	@Override
@@ -117,8 +117,8 @@ public final class AttributeNodeForType<T> extends AbstractAttributeNodeForLeaf 
 			throw new SetterException(new IllegalAccessException("Cannot set non writable attribute " + name));
 		}
 		Object result = from != null ?
-				from.apply((String) value)
-				: value;
+			from.apply((String) value)
+			: value;
 
 		assert setter != null; // above settable check
 		for (Object target : targets.stream().filter(Objects::nonNull).toList()) {

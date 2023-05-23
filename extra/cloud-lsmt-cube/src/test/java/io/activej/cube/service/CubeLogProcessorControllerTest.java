@@ -62,28 +62,28 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		FileSystem aggregationFS = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFS.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				FrameFormats.lz4(), aggregationFS);
+			FrameFormats.lz4(), aggregationFS);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
-				.withDimension("date", ofLocalDate())
-				.withDimension("advertiser", ofInt())
-				.withDimension("campaign", ofInt())
-				.withDimension("banner", ofInt())
-				.withRelation("campaign", "advertiser")
-				.withRelation("banner", "campaign")
-				.withMeasure("impressions", sum(ofLong()))
-				.withMeasure("clicks", sum(ofLong()))
-				.withMeasure("conversions", sum(ofLong()))
-				.withMeasure("revenue", sum(ofDouble()))
-				.withAggregation(id("detailed")
-						.withDimensions("date", "advertiser", "campaign", "banner")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"))
-				.withAggregation(id("date")
-						.withDimensions("date")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"))
-				.withAggregation(id("advertiser")
-						.withDimensions("advertiser")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"))
-				.build();
+			.withDimension("date", ofLocalDate())
+			.withDimension("advertiser", ofInt())
+			.withDimension("campaign", ofInt())
+			.withDimension("banner", ofInt())
+			.withRelation("campaign", "advertiser")
+			.withRelation("banner", "campaign")
+			.withMeasure("impressions", sum(ofLong()))
+			.withMeasure("clicks", sum(ofLong()))
+			.withMeasure("conversions", sum(ofLong()))
+			.withMeasure("revenue", sum(ofDouble()))
+			.withAggregation(id("detailed")
+				.withDimensions("date", "advertiser", "campaign", "banner")
+				.withMeasures("impressions", "clicks", "conversions", "revenue"))
+			.withAggregation(id("date")
+				.withDimensions("date")
+				.withMeasures("impressions", "clicks", "conversions", "revenue"))
+			.withAggregation(id("advertiser")
+				.withDimensions("advertiser")
+				.withMeasures("impressions", "clicks", "conversions", "revenue"))
+			.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
@@ -93,23 +93,23 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
 		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance()
-				.create(CLASS_LOADER, LogItem.class);
+			.create(CLASS_LOADER, LogItem.class);
 		multilog = Multilog.create(reactor, logsFileSystem, FrameFormats.lz4(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
-				reactor,
-				multilog,
-				cube.logStreamConsumer(LogItem.class),
-				"test",
-				List.of("partitionA"),
-				logState);
+			reactor,
+			multilog,
+			cube.logStreamConsumer(LogItem.class),
+			"test",
+			List.of("partitionA"),
+			logState);
 
 		controller = CubeLogProcessorController.create(
-				reactor,
-				logState,
-				stateManager,
-				aggregationChunkStorage,
-				List.of(logProcessor));
+			reactor,
+			logState,
+			stateManager,
+			aggregationChunkStorage,
+			List.of(logProcessor));
 
 		await(stateManager.checkout());
 	}
@@ -117,17 +117,17 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 	@Test
 	public void testMalformedLogs() {
 		await(StreamSuppliers.ofValue(new LogItem("test")).streamTo(
-				StreamConsumers.ofPromise(multilog.write("partitionA"))));
+			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		Map<String, FileMetadata> files = await(logsFileSystem.list("**"));
 		assertEquals(1, files.size());
 
 		String logFile = first(files.keySet());
 		ByteBuf serializedData = await(logsFileSystem.download(logFile).then(supplier -> supplier
-				.transformWith(ChannelFrameDecoder.builder(FrameFormats.lz4())
-						.withDecoderResets()
-						.build())
-				.toCollector(ByteBufs.collector())));
+			.transformWith(ChannelFrameDecoder.builder(FrameFormats.lz4())
+				.withDecoderResets()
+				.build())
+			.toCollector(ByteBufs.collector())));
 
 		// offset right before string
 		int bufSize = serializedData.readRemaining();
@@ -136,10 +136,10 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		byte[] malformed = new byte[bufSize - 49];
 		malformed[0] = 127; // exceeds message size
 		await(ChannelSuppliers.ofValues(serializedData, ByteBuf.wrapForReading(malformed))
-				.transformWith(ChannelFrameEncoder.builder(FrameFormats.lz4())
-						.withEncoderResets()
-						.build())
-				.streamTo(logsFileSystem.upload(logFile)));
+			.transformWith(ChannelFrameEncoder.builder(FrameFormats.lz4())
+				.withEncoderResets()
+				.build())
+			.streamTo(logsFileSystem.upload(logFile)));
 
 		CubeException exception = awaitException(controller.process());
 		Throwable firstCause = exception.getCause();

@@ -18,18 +18,18 @@ public class ClientModule extends AbstractModule {
 	@Provides
 	NioReactor reactor() {
 		return Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.withCurrentThread()
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.withCurrentThread()
+			.build();
 	}
 
 	@Provides
 	IRpcClient rpcClient(NioReactor reactor) {
 		return RpcClient.builder(reactor)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
-				.withStrategy(server(new InetSocketAddress("localhost", RPC_SERVER_PORT)))
-				.build();
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
+			.withStrategy(server(new InetSocketAddress("localhost", RPC_SERVER_PORT)))
+			.build();
 	}
 }
 // [END EXAMPLE]

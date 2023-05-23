@@ -39,7 +39,7 @@ import static java.lang.Math.min;
 public final class RendezvousHashing implements RpcStrategy {
 	public static final int DEFAULT_BUCKET_CAPACITY = 2048;
 	public static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->
-			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
+		(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
 	public static final int DEFAULT_MIN_ACTIVE_SHARDS = 1;
 	public static final int DEFAULT_MAX_RESHARDINGS = Integer.MAX_VALUE;
 
@@ -51,12 +51,12 @@ public final class RendezvousHashing implements RpcStrategy {
 	public int reshardings;
 
 	public RendezvousHashing(
-			ToIntFunction<?> hashFn,
-			Map<Object, RpcStrategy> shards,
-			ToLongBiFunction<Object, Integer> hashBucketFn,
-			int buckets,
-			int minActiveShards,
-			int reshardings
+		ToIntFunction<?> hashFn,
+		Map<Object, RpcStrategy> shards,
+		ToLongBiFunction<Object, Integer> hashBucketFn,
+		int buckets,
+		int minActiveShards,
+		int reshardings
 	) {
 		this.hashFn = hashFn;
 		this.shards = shards;
@@ -68,8 +68,8 @@ public final class RendezvousHashing implements RpcStrategy {
 
 	public static <T> Builder builder(ToIntFunction<T> hashFn) {
 		return new RendezvousHashing(
-				hashFn, new HashMap<>(), DEFAULT_HASH_BUCKET_FN,
-				DEFAULT_BUCKET_CAPACITY, DEFAULT_MIN_ACTIVE_SHARDS, DEFAULT_MAX_RESHARDINGS).new Builder();
+			hashFn, new HashMap<>(), DEFAULT_HASH_BUCKET_FN,
+			DEFAULT_BUCKET_CAPACITY, DEFAULT_MIN_ACTIVE_SHARDS, DEFAULT_MAX_RESHARDINGS).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, RendezvousHashing> {

@@ -14,9 +14,9 @@ public class SerializerCompatibilityLevel2Test {
 
 	public static <T> T doTest(Class<T> type, T testData) {
 		BinarySerializer<T> serializer = SerializerFactory.builder()
-				.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
-				.build()
-				.create(DEFINING_CLASS_LOADER, type);
+			.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
+			.build()
+			.create(DEFINING_CLASS_LOADER, type);
 		return doTest(testData, serializer, serializer);
 	}
 

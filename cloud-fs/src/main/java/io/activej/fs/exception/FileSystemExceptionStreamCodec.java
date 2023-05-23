@@ -13,7 +13,7 @@ public final class FileSystemExceptionStreamCodec {
 		StreamCodec<FileSystemScalarException> scalarExceptionCodec = simpleCodec(FileSystemScalarException::new);
 
 		builder.add(FileSystemBatchException.class, StreamCodec.create(exceptions -> new FileSystemBatchException(exceptions, false),
-				FileSystemBatchException::getExceptions, StreamCodecs.ofMap(StreamCodecs.ofString(), scalarExceptionCodec))
+			FileSystemBatchException::getExceptions, StreamCodecs.ofMap(StreamCodecs.ofString(), scalarExceptionCodec))
 		);
 		builder.add(FileSystemException.class, simpleCodec(FileSystemException::new));
 		builder.add(FileSystemStateException.class, simpleCodec(FileSystemStateException::new));
@@ -31,7 +31,7 @@ public final class FileSystemExceptionStreamCodec {
 
 	private static <E extends FileSystemException> StreamCodec<E> simpleCodec(BiFunction<String, Boolean, E> constructor) {
 		return StreamCodec.create(message -> constructor.apply(message, false),
-				E::getMessage, StreamCodecs.ofString()
+			E::getMessage, StreamCodecs.ofString()
 		);
 	}
 }

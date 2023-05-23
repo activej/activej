@@ -34,7 +34,8 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A>
-		implements ReactiveService, ReactiveJmxBean {
+	implements ReactiveService, ReactiveJmxBean {
+
 	private long timestamp;
 	private long reloadPeriod;
 	private long retryPeriod = 1000L;
@@ -45,9 +46,9 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	private int resolveErrors;
 	private K lastResolveErrorKey;
 	private final ValueStats reloadTime = ValueStats.builder(Duration.ofHours(1))
-			.withRate("reloads")
-			.withUnit("milliseconds")
-			.build();
+		.withRate("reloads")
+		.withUnit("milliseconds")
+		.build();
 
 	protected ReloadingAttributeResolver(Reactor reactor) {
 		super(reactor);
@@ -71,13 +72,13 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		long reloadTimestamp = reactor.currentTimeMillis();
 		reload(timestamp)
-				.whenResult(result -> {
-					reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
-					cache.putAll(result);
-					timestamp = reloadTimestamp;
-				})
-				.whenException(e -> reloadErrors++)
-				.whenComplete(() -> scheduleReload(retryPeriod));
+			.whenResult(result -> {
+				reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
+				cache.putAll(result);
+				timestamp = reloadTimestamp;
+			})
+			.whenException(e -> reloadErrors++)
+			.whenComplete(() -> scheduleReload(retryPeriod));
 	}
 
 	private void scheduleReload(long period) {
@@ -90,13 +91,13 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		if (reloadPeriod == 0) return Promise.complete();
 		long reloadTimestamp = reactor.currentTimeMillis();
 		return reload(timestamp)
-				.whenResult(result -> {
-					reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
-					cache.putAll(result);
-					timestamp = reloadTimestamp;
-					scheduleReload(reloadPeriod);
-				})
-				.toVoid();
+			.whenResult(result -> {
+				reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
+				cache.putAll(result);
+				timestamp = reloadTimestamp;
+				scheduleReload(reloadPeriod);
+			})
+			.toVoid();
 	}
 
 	@Override

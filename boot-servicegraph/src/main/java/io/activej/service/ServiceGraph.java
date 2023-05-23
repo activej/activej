@@ -305,15 +305,15 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		logger.trace("Root nodes: {}", rootNodes);
 		startBegin = currentTimeMillis();
 		return doStartStop(true, rootNodes)
-				.whenComplete(($, e) -> {
-					startEnd = currentTimeMillis();
-					if (e == null) {
-						slowestChain = findSlowestChain(rootNodes);
-					} else {
-						startException = e;
-					}
-				})
-				.toCompletableFuture();
+			.whenComplete(($, e) -> {
+				startEnd = currentTimeMillis();
+				if (e == null) {
+					slowestChain = findSlowestChain(rootNodes);
+				} else {
+					startException = e;
+				}
+			})
+			.toCompletableFuture();
 	}
 
 	/**
@@ -325,21 +325,21 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		logger.trace("Leaf nodes: {}", leafNodes);
 		stopBegin = currentTimeMillis();
 		return doStartStop(false, leafNodes)
-				.whenComplete(($, e) -> {
-					stopEnd = currentTimeMillis();
-					if (e != null) {
-						stopException = e;
-					}
-				})
-				.toCompletableFuture();
+			.whenComplete(($, e) -> {
+				stopEnd = currentTimeMillis();
+				if (e != null) {
+					stopException = e;
+				}
+			})
+			.toCompletableFuture();
 	}
 
 	private CompletionStage<?> doStartStop(boolean start, Collection<Key> rootNodes) {
 		Map<Key, CompletionStage<?>> cache = new HashMap<>();
 		return combineAll(
-				rootNodes.stream()
-						.map(rootNode -> processNode(rootNode, start, cache))
-						.collect(toList()));
+			rootNodes.stream()
+				.map(rootNode -> processNode(rootNode, start, cache))
+				.collect(toList()));
 	}
 
 	private synchronized CompletionStage<?> processNode(Key node, boolean start, Map<Key, CompletionStage<?>> cache) {
@@ -359,48 +359,48 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		}
 
 		CompletableFuture<?> future = combineAll(
-				dependencies.stream()
-						.map(dependency -> processNode(dependency, start, cache))
-						.collect(toList()))
-				.thenCompose($ -> {
-					Service service = services.get(node);
-					if (service == null) {
-						logger.trace("...skipping no-service node: {}", keyToString(node));
-						return CompletableFuture.completedFuture(null);
-					}
+			dependencies.stream()
+				.map(dependency -> processNode(dependency, start, cache))
+				.collect(toList()))
+			.thenCompose($ -> {
+				Service service = services.get(node);
+				if (service == null) {
+					logger.trace("...skipping no-service node: {}", keyToString(node));
+					return CompletableFuture.completedFuture(null);
+				}
 
-					if (!start && !nodeStatuses.getOrDefault(node, NodeStatus.DEFAULT).isStartedSuccessfully()) {
-						logger.trace("...skipping not running node: {}", keyToString(node));
-						return CompletableFuture.completedFuture(null);
-					}
+				if (!start && !nodeStatuses.getOrDefault(node, NodeStatus.DEFAULT).isStartedSuccessfully()) {
+					logger.trace("...skipping not running node: {}", keyToString(node));
+					return CompletableFuture.completedFuture(null);
+				}
 
-					Stopwatch sw = Stopwatch.createStarted();
-					logger.trace("{} {} ...", start ? "Starting" : "Stopping", keyToString(node));
-					NodeStatus nodeStatus = nodeStatuses.computeIfAbsent(node, $1 -> new NodeStatus());
-					if (start) {
-						nodeStatus.startBegin = currentTimeMillis();
-					} else {
-						nodeStatus.stopBegin = currentTimeMillis();
-					}
-					return (start ? service.start() : service.stop())
-							.whenComplete(($2, e) -> {
-								if (start) {
-									nodeStatus.startEnd = currentTimeMillis();
-									nodeStatus.startException = e;
-								} else {
-									nodeStatus.stopEnd = currentTimeMillis();
-									nodeStatus.stopException = e;
-								}
+				Stopwatch sw = Stopwatch.createStarted();
+				logger.trace("{} {} ...", start ? "Starting" : "Stopping", keyToString(node));
+				NodeStatus nodeStatus = nodeStatuses.computeIfAbsent(node, $1 -> new NodeStatus());
+				if (start) {
+					nodeStatus.startBegin = currentTimeMillis();
+				} else {
+					nodeStatus.stopBegin = currentTimeMillis();
+				}
+				return (start ? service.start() : service.stop())
+					.whenComplete(($2, e) -> {
+						if (start) {
+							nodeStatus.startEnd = currentTimeMillis();
+							nodeStatus.startException = e;
+						} else {
+							nodeStatus.stopEnd = currentTimeMillis();
+							nodeStatus.stopException = e;
+						}
 
-								long elapsed = sw.elapsed(MILLISECONDS);
-								if (e == null) {
-									logger.info((start ? "Started " : "Stopped ") + keyToString(node) + (elapsed >= 1L ? (" in " + sw) : ""));
-								} else {
-									logger.error((start ? "Start error " : "Stop error ") + keyToString(node),
-											(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
-								}
-							});
-				});
+						long elapsed = sw.elapsed(MILLISECONDS);
+						if (e == null) {
+							logger.info((start ? "Started " : "Stopped ") + keyToString(node) + (elapsed >= 1L ? (" in " + sw) : ""));
+						} else {
+							logger.error((start ? "Start error " : "Stop error ") + keyToString(node),
+								(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
+						}
+					});
+			});
 
 		cache.put(node, future);
 
@@ -459,8 +459,8 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 				if (loopIndex != -1) {
 					if (logger.isWarnEnabled()) {
 						logger.warn("Circular dependencies found: {}", path.subList(loopIndex, path.size()).stream()
-								.map(this::keyToString)
-								.collect(joining(", ", "[", "]")));
+							.map(this::keyToString)
+							.collect(joining(", ", "[", "]")));
 					}
 					return path.subList(loopIndex, path.size());
 				}
@@ -492,15 +492,15 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 
 	private SlowestChain findSlowestChain(Collection<Key> nodes) {
 		return nodes.stream()
-				.map(node -> {
-					Set<Key> children = forwards.get(node);
-					if (children != null && !children.isEmpty()) {
-						return findSlowestChain(children).concat(node, nodeStatuses.get(node).getStartTime());
-					}
-					return SlowestChain.of(node, nodeStatuses.get(node).getStartTime());
-				})
-				.max(comparingLong(longestPath -> longestPath.sum))
-				.orElse(SlowestChain.EMPTY);
+			.map(node -> {
+				Set<Key> children = forwards.get(node);
+				if (children != null && !children.isEmpty()) {
+					return findSlowestChain(children).concat(node, nodeStatuses.get(node).getStartTime());
+				}
+				return SlowestChain.of(node, nodeStatuses.get(node).getStartTime());
+			})
+			.max(comparingLong(longestPath -> longestPath.sum))
+			.orElse(SlowestChain.EMPTY);
 	}
 
 	private String keyToString(Key key) {
@@ -508,17 +508,17 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		String keySuffix = key.getSuffix();
 		String keyIndex = key.getIndex();
 		return (qualifier != null ? qualifier + " " : "") +
-				key.getType().getTypeName() +
-				(keySuffix == null ? "" :
-						"[" + keySuffix + "]") +
-				(keyIndex == null ? "" :
-						keyIndex.isEmpty() ? "" : " #" + keyIndex);
+			key.getType().getTypeName() +
+			(keySuffix == null ? "" :
+				"[" + keySuffix + "]") +
+			(keyIndex == null ? "" :
+				keyIndex.isEmpty() ? "" : " #" + keyIndex);
 	}
 
 	private String keyToNode(Key key) {
 		String str = keyToString(key)
-				.replace("\n", "\\n")
-				.replace("\"", "\\\"");
+			.replace("\n", "\\n")
+			.replace("\"", "\\\"");
 		return "\"" + str + "\"";
 	}
 
@@ -528,20 +528,20 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		String keyIndex = key.getIndex();
 		NodeStatus status = nodeStatuses.get(key);
 		String label = (qualifier != null ? getDisplayString(qualifier) + "\\n" : "") +
-				getDisplayName(key.getType()) +
-				(keySuffix == null ? "" :
-						"[" + keySuffix + "]") +
-				(keyIndex == null ? "" :
-						keyIndex.isEmpty() ? "" : "#" + keyIndex) +
-				(status != null && status.isStarted() ?
-						"\\n" +
-								formatDuration(Duration.ofMillis(status.getStartTime())) +
-								(status.isStopped() ?
-										" / " + formatDuration(Duration.ofMillis(status.getStopTime())) :
-										"") :
-						"") +
-				(status != null && status.startException != null ? "\\n" + status.startException : "") +
-				(status != null && status.stopException != null ? "\\n" + status.stopException : "");
+			getDisplayName(key.getType()) +
+			(keySuffix == null ? "" :
+				"[" + keySuffix + "]") +
+			(keyIndex == null ? "" :
+				keyIndex.isEmpty() ? "" : "#" + keyIndex) +
+			(status != null && status.isStarted() ?
+				"\\n" +
+					formatDuration(Duration.ofMillis(status.getStartTime())) +
+					(status.isStopped() ?
+						" / " + formatDuration(Duration.ofMillis(status.getStopTime())) :
+						"") :
+				"") +
+			(status != null && status.startException != null ? "\\n" + status.startException : "") +
+			(status != null && status.stopException != null ? "\\n" + status.stopException : "");
 		return label.replace("\"", "\\\"");
 	}
 
@@ -561,12 +561,12 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 			Key node = entry.getKey();
 			for (Key dependency : entry.getValue()) {
 				sb.append("\t" + keyToNode(node) + " -> " + keyToNode(dependency))
-						.append(slowestChain != null &&
-								slowestChain.path.contains(node) && slowestChain.path.contains(dependency) &&
-								slowestChain.path.indexOf(node) == slowestChain.path.indexOf(dependency) + 1 ?
-								" [" + graphvizSlowestEdge + "]" :
-								(!graphvizEdge.isEmpty() ? " [" + graphvizEdge + "]" : ""))
-						.append("\n");
+					.append(slowestChain != null &&
+						slowestChain.path.contains(node) && slowestChain.path.contains(dependency) &&
+						slowestChain.path.indexOf(node) == slowestChain.path.indexOf(dependency) + 1 ?
+						" [" + graphvizSlowestEdge + "]" :
+						(!graphvizEdge.isEmpty() ? " [" + graphvizEdge + "]" : ""))
+					.append("\n");
 			}
 		}
 
@@ -582,18 +582,18 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 			NodeStatus status = nodeStatuses.get(key);
 			String nodeColor = status != null ? nodeColors.getOrDefault(status.getOperation(), "") : "";
 			sb.append("\t" + keyToNode(key) + " [ label=\"" + keyToLabel(key))
-					.append("\"" + (!nodeColor.isEmpty() ? " " + nodeColor : ""))
-					.append(key.getSuffix() != null ? " " + graphvizNodeWithSuffix : "")
-					.append(slowestChain != null && slowestChain.path.contains(key) ? " " + graphvizSlowestNode : "")
-					.append(" ]\n");
+				.append("\"" + (!nodeColor.isEmpty() ? " " + nodeColor : ""))
+				.append(key.getSuffix() != null ? " " + graphvizNodeWithSuffix : "")
+				.append(slowestChain != null && slowestChain.path.contains(key) ? " " + graphvizSlowestNode : "")
+				.append(" ]\n");
 		}
 
 		sb.append("\n\t{ rank=same; " +
-						difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
-								.stream()
-								.map(this::keyToNode)
-								.collect(joining(" ")))
-				.append(" }\n");
+				difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
+					.stream()
+					.map(this::keyToNode)
+					.collect(joining(" ")))
+			.append(" }\n");
 
 		sb.append("}\n");
 		return sb.toString();
@@ -602,37 +602,37 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 	@JmxAttribute
 	public String getStartingNodes() {
 		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
-				.filter(node -> {
-					NodeStatus status = nodeStatuses.get(node);
-					return status != null && status.isStarting();
-				})
-				.map(this::keyToString)
-				.collect(joining(", "));
+			.filter(node -> {
+				NodeStatus status = nodeStatuses.get(node);
+				return status != null && status.isStarting();
+			})
+			.map(this::keyToString)
+			.collect(joining(", "));
 	}
 
 	@JmxAttribute
 	public String getStoppingNodes() {
 		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
-				.filter(node -> {
-					NodeStatus status = nodeStatuses.get(node);
-					return status != null && status.isStopping();
-				})
-				.map(this::keyToString)
-				.collect(joining(", "));
+			.filter(node -> {
+				NodeStatus status = nodeStatuses.get(node);
+				return status != null && status.isStopping();
+			})
+			.map(this::keyToString)
+			.collect(joining(", "));
 	}
 
 	@JmxAttribute
 	public @Nullable String getSlowestNode() {
 		return union(services.keySet(), union(backwards.keySet(), forwards.keySet())).stream()
-				.filter(key -> {
-					NodeStatus nodeStatus = nodeStatuses.get(key);
-					return nodeStatus != null && nodeStatus.isStarted();
-				})
-				.max(comparingLong(node -> nodeStatuses.get(node).getStartTime()))
-				.map(node -> keyToString(node) +
-						" : " +
-						formatDuration(Duration.ofMillis(nodeStatuses.get(node).getStartTime())))
-				.orElse(null);
+			.filter(key -> {
+				NodeStatus nodeStatus = nodeStatuses.get(key);
+				return nodeStatus != null && nodeStatus.isStarted();
+			})
+			.max(comparingLong(node -> nodeStatuses.get(node).getStartTime()))
+			.map(node -> keyToString(node) +
+				" : " +
+				formatDuration(Duration.ofMillis(nodeStatuses.get(node).getStartTime())))
+			.orElse(null);
 	}
 
 	@JmxAttribute
@@ -641,10 +641,10 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 			return null;
 		}
 		return slowestChain.path.stream()
-				.map(this::keyToString)
-				.collect(joining(", ", "[", "]")) +
-				" : " +
-				formatDuration(Duration.ofMillis(slowestChain.sum));
+			.map(this::keyToString)
+			.collect(joining(", ", "[", "]")) +
+			" : " +
+			formatDuration(Duration.ofMillis(slowestChain.sum));
 	}
 
 	@JmxAttribute

@@ -23,7 +23,7 @@ public final class Hppc9SerializerDefExample {
 	private static <T> BinarySerializer<T> getBufferSerializer(Class<T> collectionType) {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		return SerializerFactoryUtils.createWithHppc7Support(classLoader)
-				.create(classLoader, collectionType);
+			.create(classLoader, collectionType);
 	}
 
 	@Test

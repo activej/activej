@@ -120,12 +120,12 @@ public class DataflowServerTest {
 		result.sort(StringCount.COMPARATOR);
 
 		List<StringCount> expected = Stream.concat(words1.stream(), words2.stream())
-				.collect(groupingBy(Function.identity()))
-				.entrySet()
-				.stream()
-				.map(e -> new StringCount(e.getKey(), e.getValue().size()))
-				.sorted(StringCount.COMPARATOR)
-				.collect(toList());
+			.collect(groupingBy(Function.identity()))
+			.entrySet()
+			.stream()
+			.map(e -> new StringCount(e.getKey(), e.getValue().size()))
+			.sorted(StringCount.COMPARATOR)
+			.collect(toList());
 
 		assertEquals(expected, result);
 	}
@@ -201,7 +201,7 @@ public class DataflowServerTest {
 		StreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create(result);
 
 		return graph.execute().both(resultSupplier.streamTo(resultConsumer))
-				.whenException(resultConsumer::closeEx);
+			.whenException(resultConsumer::closeEx);
 	}
 
 	private Promise<Void> repartitionAndSort() throws IOException {
@@ -340,28 +340,28 @@ public class DataflowServerTest {
 	@SuppressWarnings("rawtypes")
 	public static Module createModule(List<Partition> partitions) {
 		return ModuleBuilder.create()
-				.install(DataflowModule.create())
-				.install(DatasetIdModule.create())
+			.install(DataflowModule.create())
+			.install(DatasetIdModule.create())
 
-				.bind(new Key<StreamCodec<TestKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
-				.bind(new Key<StreamCodec<TestMapFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new TestMapFunction()))
-				.bind(new Key<StreamCodec<StringFunction>>(subtype(2)) {}).toInstance(StreamCodecs.singleton(new StringFunction()))
+			.bind(new Key<StreamCodec<TestKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
+			.bind(new Key<StreamCodec<TestMapFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new TestMapFunction()))
+			.bind(new Key<StreamCodec<StringFunction>>(subtype(2)) {}).toInstance(StreamCodecs.singleton(new StringFunction()))
 
-				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
-				.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new TestReducer()))
-				.bind(NioReactor.class).to(Reactor::getCurrentReactor)
-				.scan(new Object() {
-					@Provides
-					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
-						return DataflowClient.create(reactor, codec, serializers);
-					}
+			.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
+			.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new TestReducer()))
+			.bind(NioReactor.class).to(Reactor::getCurrentReactor)
+			.scan(new Object() {
+				@Provides
+				DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
+					return DataflowClient.create(reactor, codec, serializers);
+				}
 
-					@Provides
-					DataflowGraph graph(NioReactor reactor, DataflowClient client) {
-						return new DataflowGraph(reactor, client, partitions);
-					}
-				})
-				.build();
+				@Provides
+				DataflowGraph graph(NioReactor reactor, DataflowClient client) {
+					return new DataflowGraph(reactor, client, partitions);
+				}
+			})
+			.build();
 	}
 
 	private static final class TestServerLauncher extends DataflowServerLauncher {
@@ -382,16 +382,16 @@ public class DataflowServerTest {
 		@Override
 		protected Module getOverrideModule() {
 			return createModule(List.of())
-					.overrideWith(ModuleBuilder.create()
-							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
-							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
-							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
-							.bind(datasetId("result")).to(reactor ->
-											Reactor.executeWithReactor(reactor, () ->
-													ToListStreamConsumer.create(result)),
-									NioReactor.class)
-							.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-							.build());
+				.overrideWith(ModuleBuilder.create()
+					.bind(datasetId(malformed ? "" : "items")).toInstance(words)
+					.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
+					.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
+					.bind(datasetId("result")).to(reactor ->
+							Reactor.executeWithReactor(reactor, () ->
+								ToListStreamConsumer.create(result)),
+						NioReactor.class)
+					.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+					.build());
 		}
 
 		@Override

@@ -47,12 +47,13 @@ public class MXBeansRegistrationTest {
 	// region transitive implementations of MXBean interface through another interface
 	@Test
 	public void itShouldRegisterClassWhichImplementsMXBeanInterfaceTransivelyThroughAnotherInterface()
-			throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+		throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+
 		ServiceTransitiveInterface service = new ServiceTransitiveInterface();
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(
-					with(service), with(objectname(domain + ":type=ServiceTransitiveInterface"))
+				with(service), with(objectname(domain + ":type=ServiceTransitiveInterface"))
 			);
 		}});
 
@@ -80,12 +81,13 @@ public class MXBeansRegistrationTest {
 	// region transitive implementation of MXBean interface through abstract class
 	@Test
 	public void itShouldRegisterClassWhichImplementsMXBeanInterfaceTransitivelyThroughAbstractClass()
-			throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+		throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+
 		ServiceTransitiveClass service = new ServiceTransitiveClass();
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(
-					with(service), with(objectname(domain + ":type=ServiceTransitiveClass"))
+				with(service), with(objectname(domain + ":type=ServiceTransitiveClass"))
 			);
 		}});
 
@@ -109,12 +111,13 @@ public class MXBeansRegistrationTest {
 	// region registration of class that implements interface with @MXBean annotation
 	@Test
 	public void itShouldRegisterClassWhichImplementsInterfaceAnnotatedWithMXBean()
-			throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+		throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+
 		ServiceWithMXBeanInterfaceAnnotation service = new ServiceWithMXBeanInterfaceAnnotation();
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(
-					with(service), with(objectname(domain + ":type=ServiceWithMXBeanInterfaceAnnotation"))
+				with(service), with(objectname(domain + ":type=ServiceWithMXBeanInterfaceAnnotation"))
 			);
 		}});
 

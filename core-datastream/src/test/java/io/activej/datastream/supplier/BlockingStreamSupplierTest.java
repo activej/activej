@@ -23,14 +23,14 @@ public class BlockingStreamSupplierTest {
 		Eventloop reactor = Eventloop.create();
 
 		BlockingStreamSupplier<Integer> supplier = Reactor.executeWithReactor(reactor,
-				() -> BlockingStreamSupplier.create());
+			() -> BlockingStreamSupplier.create());
 
 		List<Integer> original = IntStream.range(0, 1000).boxed().toList();
 
 		CompletableFuture<List<Integer>> listFuture = reactor.submit(() -> {
 			ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 			return supplier.streamTo(consumer.transformWith(TestStreamTransformers.randomlySuspending()))
-					.map($ -> consumer.getList());
+				.map($ -> consumer.getList());
 		});
 
 		reactor.startExternalTask();
@@ -54,23 +54,23 @@ public class BlockingStreamSupplierTest {
 		Eventloop reactor = Eventloop.create();
 
 		BlockingStreamSupplier<Integer> supplier = Reactor.executeWithReactor(reactor,
-				() -> BlockingStreamSupplier.create());
+			() -> BlockingStreamSupplier.create());
 
 		List<Integer> original = IntStream.range(0, 1000).boxed().toList();
 		List<Integer> result = new ArrayList<>();
 
 		CompletableFuture<Void> future = reactor.submit(() ->
-				supplier.streamTo(new AbstractStreamConsumer<>() {
-					@Override
-					protected void onInit() {
-						resume(integer -> {
-							result.add(integer);
-							if (result.size() == 500) {
-								acknowledge();
-							}
-						});
-					}
-				})
+			supplier.streamTo(new AbstractStreamConsumer<>() {
+				@Override
+				protected void onInit() {
+					resume(integer -> {
+						result.add(integer);
+						if (result.size() == 500) {
+							acknowledge();
+						}
+					});
+				}
+			})
 		);
 
 		reactor.startExternalTask();
@@ -94,7 +94,7 @@ public class BlockingStreamSupplierTest {
 		Eventloop reactor = Eventloop.create();
 
 		BlockingStreamSupplier<Integer> supplier = Reactor.executeWithReactor(reactor,
-				() -> BlockingStreamSupplier.create());
+			() -> BlockingStreamSupplier.create());
 
 		List<Integer> original = IntStream.range(0, 1000).boxed().toList();
 		List<Integer> result = new ArrayList<>();
@@ -102,18 +102,18 @@ public class BlockingStreamSupplierTest {
 		int errorLimit = 500;
 		CountDownLatch errorLatch = new CountDownLatch(1);
 		reactor.submit(() ->
-				supplier.streamTo(new AbstractStreamConsumer<>() {
-					@Override
-					protected void onInit() {
-						resume(integer -> {
-							result.add(integer);
-							if (result.size() == errorLimit) {
-								closeEx(testException);
-								errorLatch.countDown();
-							}
-						});
-					}
-				}));
+			supplier.streamTo(new AbstractStreamConsumer<>() {
+				@Override
+				protected void onInit() {
+					resume(integer -> {
+						result.add(integer);
+						if (result.size() == errorLimit) {
+							closeEx(testException);
+							errorLatch.countDown();
+						}
+					});
+				}
+			}));
 
 		reactor.startExternalTask();
 		Thread thread = new Thread(reactor);

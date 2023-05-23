@@ -22,7 +22,7 @@ public final class OfChannelConsumer<T> extends AbstractStreamConsumer<T> {
 	private void flush() {
 		resume(item -> {
 			Promise<Void> promise = consumer.accept(item)
-					.whenException(this::closeEx);
+				.whenException(this::closeEx);
 			if (promise.isComplete()) return;
 			suspend();
 			working = true;
@@ -48,8 +48,8 @@ public final class OfChannelConsumer<T> extends AbstractStreamConsumer<T> {
 
 	private void sendEndOfStream() {
 		consumer.acceptEndOfStream()
-				.whenResult(this::acknowledge)
-				.whenException(this::closeEx);
+			.whenResult(this::acknowledge)
+			.whenException(this::closeEx);
 	}
 
 	@Override

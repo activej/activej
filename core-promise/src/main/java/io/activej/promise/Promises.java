@@ -78,7 +78,7 @@ public class Promises {
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
 		SettablePromise<T> settablePromise = new SettablePromise<>();
 		ScheduledRunnable schedule = getCurrentReactor().delay(delay,
-				() -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout")));
+			() -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout")));
 		promise.subscribe((result, e) -> {
 			schedule.cancel();
 			if (!settablePromise.trySet(result, e)) {
@@ -131,7 +131,7 @@ public class Promises {
 	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().delay(delayMillis, () -> promise.subscribe(cb)));
+			getCurrentReactor().delay(delayMillis, () -> promise.subscribe(cb)));
 	}
 
 	@Contract(pure = true)
@@ -142,8 +142,8 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> interval(long intervalMillis, Promise<T> promise) {
 		return intervalMillis <= 0 ?
-				promise :
-				promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, () -> cb.set(value))));
+			promise :
+			promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, () -> cb.set(value))));
 	}
 
 	/**
@@ -196,7 +196,7 @@ public class Promises {
 	@Contract(pure = true)
 	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentReactor().schedule(timestamp, () -> promise.subscribe(cb)));
+			getCurrentReactor().schedule(timestamp, () -> promise.subscribe(cb)));
 	}
 
 	/**
@@ -380,8 +380,10 @@ public class Promises {
 		return anyIterator(predicate, promises, false);
 	}
 
-	private static <T> Promise<T> anyIterator(BiPredicate<? super T, Exception> predicate,
-			Iterator<? extends Promise<? extends T>> promises, boolean ownership) {
+	private static <T> Promise<T> anyIterator(
+		BiPredicate<? super T, Exception> predicate, Iterator<? extends Promise<? extends T>> promises,
+		boolean ownership
+	) {
 		if (!promises.hasNext()) return any();
 		PromiseAny<T> resultPromise = new PromiseAny<>(predicate);
 		while (promises.hasNext()) {
@@ -584,53 +586,51 @@ public class Promises {
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, R> Promise<R> toTuple(TupleConstructor2<T1, T2, R> constructor,
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2) {
+	public static <T1, T2, R> Promise<R> toTuple(
+		TupleConstructor2<T1, T2, R> constructor,
+		Promise<? extends T1> promise1, Promise<? extends T2> promise2
+	) {
 		return promise1.combine(promise2, constructor::create);
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, R> Promise<R> toTuple(TupleConstructor3<T1, T2, T3, R> constructor,
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3) {
+	public static <T1, T2, T3, R> Promise<R> toTuple(
+		TupleConstructor3<T1, T2, T3, R> constructor,
+		Promise<? extends T1> promise1, Promise<? extends T2> promise2, Promise<? extends T3> promise3
+	) {
 		return toList(promise1, promise2, promise3)
-				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
+			.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, R> Promise<R> toTuple(TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3,
-			Promise<? extends T4> promise4) {
+	public static <T1, T2, T3, T4, R> Promise<R> toTuple(
+		TupleConstructor4<T1, T2, T3, T4, R> constructor,
+		Promise<? extends T1> promise1, Promise<? extends T2> promise2, Promise<? extends T3> promise3,
+		Promise<? extends T4> promise4
+	) {
 		return toList(promise1, promise2, promise3, promise4)
-				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
+			.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, T5, R> Promise<R> toTuple(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3,
-			Promise<? extends T4> promise4,
-			Promise<? extends T5> promise5) {
+	public static <T1, T2, T3, T4, T5, R> Promise<R> toTuple(
+		TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+		Promise<? extends T1> promise1, Promise<? extends T2> promise2, Promise<? extends T3> promise3,
+		Promise<? extends T4> promise4, Promise<? extends T5> promise5
+	) {
 		return toList(promise1, promise2, promise3, promise4, promise5)
-				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
+			.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, T5, T6, R> Promise<R> toTuple(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3,
-			Promise<? extends T4> promise4,
-			Promise<? extends T5> promise5,
-			Promise<? extends T6> promise6) {
+	public static <T1, T2, T3, T4, T5, T6, R> Promise<R> toTuple(
+		TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+		Promise<? extends T1> promise1, Promise<? extends T2> promise2, Promise<? extends T3> promise3,
+		Promise<? extends T4> promise4, Promise<? extends T5> promise5, Promise<? extends T6> promise6
+	) {
 		return toList(promise1, promise2, promise3, promise4, promise5, promise6)
-				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4),
-						(T6) list.get(5)));
+			.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4),
+				(T6) list.get(5)));
 	}
 
 	@Contract(pure = true)
@@ -645,116 +645,132 @@ public class Promises {
 
 	@Contract(pure = true)
 	public static <T1, T2, T3> Promise<Tuple3<T1, T2, T3>> toTuple(
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3) {
+		Promise<? extends T1> promise1,
+		Promise<? extends T2> promise2,
+		Promise<? extends T3> promise3
+	) {
 		return toList(promise1, promise2, promise3)
-				.map(list -> new Tuple3<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
+			.map(list -> new Tuple3<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
 	}
 
 	@Contract(pure = true)
 	public static <T1, T2, T3, T4> Promise<Tuple4<T1, T2, T3, T4>> toTuple(
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3,
-			Promise<? extends T4> promise4) {
+		Promise<? extends T1> promise1,
+		Promise<? extends T2> promise2,
+		Promise<? extends T3> promise3,
+		Promise<? extends T4> promise4
+	) {
 		return toList(promise1, promise2, promise3, promise4)
-				.map(list -> new Tuple4<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
+			.map(list -> new Tuple4<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
 	}
 
 	@Contract(pure = true)
 	public static <T1, T2, T3, T4, T5> Promise<Tuple5<T1, T2, T3, T4, T5>> toTuple(
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3,
-			Promise<? extends T4> promise4,
-			Promise<? extends T5> promise5) {
+		Promise<? extends T1> promise1,
+		Promise<? extends T2> promise2,
+		Promise<? extends T3> promise3,
+		Promise<? extends T4> promise4,
+		Promise<? extends T5> promise5
+	) {
 		return toList(promise1, promise2, promise3, promise4, promise5)
-				.map(list -> new Tuple5<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
+			.map(list -> new Tuple5<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
 	}
 
 	@Contract(pure = true)
 	public static <T1, T2, T3, T4, T5, T6> Promise<Tuple6<T1, T2, T3, T4, T5, T6>> toTuple(
-			Promise<? extends T1> promise1,
-			Promise<? extends T2> promise2,
-			Promise<? extends T3> promise3,
-			Promise<? extends T4> promise4,
-			Promise<? extends T5> promise5,
-			Promise<? extends T6> promise6) {
+		Promise<? extends T1> promise1,
+		Promise<? extends T2> promise2,
+		Promise<? extends T3> promise3,
+		Promise<? extends T4> promise4,
+		Promise<? extends T5> promise5,
+		Promise<? extends T6> promise6
+	) {
 		return toList(promise1, promise2, promise3, promise4, promise5, promise6)
-				.map(list -> new Tuple6<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4), (T6) list.get(5)));
+			.map(list -> new Tuple6<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4), (T6) list.get(5)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, R, R1> AsyncFunction<T, R> mapTuple(TupleConstructor1<R1, R> constructor,
-			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1) {
+	public static <T, T1, R, R1> AsyncFunction<T, R> mapTuple(
+		TupleConstructor1<R1, R> constructor,
+		Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1
+	) {
 		return t -> toTuple(constructor,
-				fn1.apply(getter1.apply(t)));
+			fn1.apply(getter1.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, R, R1, R2> AsyncFunction<T, R> mapTuple(TupleConstructor2<R1, R2, R> constructor,
-			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2) {
+	public static <T, T1, T2, R, R1, R2> AsyncFunction<T, R> mapTuple(
+		TupleConstructor2<R1, R2, R> constructor,
+		Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+		Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2
+	) {
 		return t -> toTuple(constructor,
-				fn1.apply(getter1.apply(t)),
-				fn2.apply(getter2.apply(t)));
+			fn1.apply(getter1.apply(t)),
+			fn2.apply(getter2.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, R, R1, R2, R3> AsyncFunction<T, R> mapTuple(TupleConstructor3<R1, R2, R3, R> constructor,
-			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3) {
+	public static <T, T1, T2, T3, R, R1, R2, R3> AsyncFunction<T, R> mapTuple(
+		TupleConstructor3<R1, R2, R3, R> constructor,
+		Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+		Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+		Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3
+	) {
 		return t -> toTuple(constructor,
-				fn1.apply(getter1.apply(t)),
-				fn2.apply(getter2.apply(t)),
-				fn3.apply(getter3.apply(t)));
+			fn1.apply(getter1.apply(t)),
+			fn2.apply(getter2.apply(t)),
+			fn3.apply(getter3.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, T4, R, R1, R2, R3, R4> AsyncFunction<T, R> mapTuple(TupleConstructor4<R1, R2, R3, R4, R> constructor,
-			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
-			Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4) {
+	public static <T, T1, T2, T3, T4, R, R1, R2, R3, R4> AsyncFunction<T, R> mapTuple(
+		TupleConstructor4<R1, R2, R3, R4, R> constructor,
+		Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+		Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+		Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+		Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4
+	) {
 		return t -> toTuple(constructor,
-				fn1.apply(getter1.apply(t)),
-				fn2.apply(getter2.apply(t)),
-				fn3.apply(getter3.apply(t)),
-				fn4.apply(getter4.apply(t)));
+			fn1.apply(getter1.apply(t)),
+			fn2.apply(getter2.apply(t)),
+			fn3.apply(getter3.apply(t)),
+			fn4.apply(getter4.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> AsyncFunction<T, R> mapTuple(TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
-			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
-			Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
-			Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5) {
+	public static <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> AsyncFunction<T, R> mapTuple(
+		TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
+		Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+		Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+		Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+		Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
+		Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5
+	) {
 		return t -> toTuple(constructor,
-				fn1.apply(getter1.apply(t)),
-				fn2.apply(getter2.apply(t)),
-				fn3.apply(getter3.apply(t)),
-				fn4.apply(getter4.apply(t)),
-				fn5.apply(getter5.apply(t)));
+			fn1.apply(getter1.apply(t)),
+			fn2.apply(getter2.apply(t)),
+			fn3.apply(getter3.apply(t)),
+			fn4.apply(getter4.apply(t)),
+			fn5.apply(getter5.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> AsyncFunction<T, R> mapTuple(TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
-			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
-			Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
-			Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5,
-			Function<? super T, T6> getter6, Function<T6, Promise<R6>> fn6) {
+	public static <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> AsyncFunction<T, R> mapTuple(
+		TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
+		Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+		Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+		Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+		Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
+		Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5,
+		Function<? super T, T6> getter6, Function<T6, Promise<R6>> fn6
+	) {
 		return t -> toTuple(constructor,
-				fn1.apply(getter1.apply(t)),
-				fn2.apply(getter2.apply(t)),
-				fn3.apply(getter3.apply(t)),
-				fn4.apply(getter4.apply(t)),
-				fn5.apply(getter5.apply(t)),
-				fn6.apply(getter6.apply(t)));
+			fn1.apply(getter1.apply(t)),
+			fn2.apply(getter2.apply(t)),
+			fn3.apply(getter3.apply(t)),
+			fn4.apply(getter4.apply(t)),
+			fn5.apply(getter5.apply(t)),
+			fn6.apply(getter6.apply(t)));
 	}
 
 	/**
@@ -810,7 +826,7 @@ public class Promises {
 	 */
 	public static Promise<Void> sequence(Iterator<? extends Promise<Void>> promises) {
 		return Promise.ofCallback(cb ->
-				sequenceImpl(promises, cb));
+			sequenceImpl(promises, cb));
 	}
 
 	private static void sequenceImpl(Iterator<? extends Promise<Void>> promises, SettableCallback<Void> cb) {
@@ -867,24 +883,28 @@ public class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@SafeVarargs
-	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
-			AsyncSupplier<? extends T>... promises) {
+	public static <T> Promise<T> first(
+		BiPredicate<? super T, ? super Exception> predicate, AsyncSupplier<? extends T>... promises
+	) {
 		return first(predicate, List.of(promises));
 	}
 
 	/**
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
-			Iterable<? extends AsyncSupplier<? extends T>> promises) {
+	public static <T> Promise<T> first(
+		BiPredicate<? super T, ? super Exception> predicate, Iterable<? extends AsyncSupplier<? extends T>> promises
+	) {
 		return first(predicate, asPromises(promises));
 	}
 
 	/**
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
-			Stream<? extends AsyncSupplier<? extends T>> promises) {
+	public static <T> Promise<T> first(
+		BiPredicate<? super T, ? super Exception> predicate,
+		Stream<? extends AsyncSupplier<? extends T>> promises
+	) {
 		return first(predicate, asPromises(promises));
 	}
 
@@ -892,15 +912,18 @@ public class Promises {
 	 * @param predicate filters results, consumes result of {@code Promise}
 	 * @return first completed result of {@code Promise} that satisfies predicate
 	 */
-	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
-			Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> first(
+		BiPredicate<? super T, ? super Exception> predicate,
+		Iterator<? extends Promise<? extends T>> promises
+	) {
 		return Promise.ofCallback(cb ->
-				firstImpl(promises, predicate, cb));
+			firstImpl(promises, predicate, cb));
 	}
 
-	private static <T> void firstImpl(Iterator<? extends Promise<? extends T>> promises,
-			BiPredicate<? super T, ? super Exception> predicate,
-			SettableCallback<T> cb) {
+	private static <T> void firstImpl(
+		Iterator<? extends Promise<? extends T>> promises, BiPredicate<? super T, ? super Exception> predicate,
+		SettableCallback<T> cb
+	) {
 		while (promises.hasNext()) {
 			Promise<? extends T> nextPromise = promises.next();
 			if (nextPromise.isComplete()) {
@@ -978,7 +1001,7 @@ public class Promises {
 
 	public static <T> Promise<T> until(@Nullable T seed, FunctionEx<T, Promise<T>> next, Predicate<T> breakCondition) {
 		return Promise.ofCallback(cb ->
-				untilImpl(seed, next, breakCondition, cb));
+			untilImpl(seed, next, breakCondition, cb));
 	}
 
 	private static <T> void untilImpl(@Nullable T value, FunctionEx<T, Promise<T>> next, Predicate<T> breakCondition, SettableCallback<T> cb) throws Exception {
@@ -1026,29 +1049,30 @@ public class Promises {
 
 	public static <T> Promise<T> retry(AsyncSupplier<T> supplier, BiPredicate<T, Exception> breakCondition, RetryPolicy<?> retryPolicy) {
 		return Promise.ofCallback(cb ->
-				retryImpl(supplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
+			retryImpl(supplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
 	}
 
-	private static <T> void retryImpl(AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition,
-			RetryPolicy<Object> retryPolicy, Object retryState,
-			SettableCallback<T> cb) {
+	private static <T> void retryImpl(
+		AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition, RetryPolicy<Object> retryPolicy,
+		Object retryState, SettableCallback<T> cb
+	) {
 		next.get()
-				.subscribe((v, e) -> {
-					if (breakCondition.test(v, e)) {
-						cb.set(v, e);
+			.subscribe((v, e) -> {
+				if (breakCondition.test(v, e)) {
+					cb.set(v, e);
+				} else {
+					Reactor reactor = getCurrentReactor();
+					long now = reactor.currentTimeMillis();
+					Object retryStateFinal = retryState != null ? retryState : retryPolicy.createRetryState();
+					long nextRetryTimestamp = retryPolicy.nextRetryTimestamp(now, e, retryStateFinal);
+					if (nextRetryTimestamp == 0) {
+						cb.setException(e != null ? e : new Exception("RetryPolicy: giving up " + retryState));
 					} else {
-						Reactor reactor = getCurrentReactor();
-						long now = reactor.currentTimeMillis();
-						Object retryStateFinal = retryState != null ? retryState : retryPolicy.createRetryState();
-						long nextRetryTimestamp = retryPolicy.nextRetryTimestamp(now, e, retryStateFinal);
-						if (nextRetryTimestamp == 0) {
-							cb.setException(e != null ? e : new Exception("RetryPolicy: giving up " + retryState));
-						} else {
-							reactor.schedule(nextRetryTimestamp,
-									() -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb));
-						}
+						reactor.schedule(nextRetryTimestamp,
+							() -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb));
 					}
-				});
+				}
+			});
 	}
 
 	/**
@@ -1144,10 +1168,11 @@ public class Promises {
 	 * @param <R>       the result type of the reduction
 	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
-	public static <T, A, R> Promise<R> reduce(Collector<T, A, R> collector, int maxCalls,
-			Iterator<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(
+		Collector<T, A, R> collector, int maxCalls, Iterator<Promise<T>> promises
+	) {
 		return reduce(collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()),
-				maxCalls, promises);
+			maxCalls, promises);
 	}
 
 	/**
@@ -1187,16 +1212,17 @@ public class Promises {
 				accumulator.addPromise(promise, combiner);
 			} else {
 				accumulator.addPromise(
-						promise.whenResult(() -> reduceImpl(accumulator, combiner, promises)),
-						combiner);
+					promise.whenResult(() -> reduceImpl(accumulator, combiner, promises)),
+					combiner);
 				break;
 			}
 		}
 	}
 
 	@Contract(pure = true)
-	public static <T, A, R> AsyncFunction<T, R> coalesce(Supplier<A> argumentAccumulatorSupplier, BiConsumer<A, T> argumentAccumulatorFn,
-			AsyncFunction<A, R> fn) {
+	public static <T, A, R> AsyncFunction<T, R> coalesce(
+		Supplier<A> argumentAccumulatorSupplier, BiConsumer<A, T> argumentAccumulatorFn, AsyncFunction<A, R> fn
+	) {
 		AsyncBuffer<A, R> buffer = new AsyncBuffer<>(fn, argumentAccumulatorSupplier);
 		return v -> {
 			Promise<R> promise = buffer.add(argumentAccumulatorFn, v);

@@ -45,8 +45,8 @@ public final class IfNull extends FunctionOperand<IfNull> {
 	@Override
 	public IfNull materialize(List<Object> params) {
 		return new IfNull(
-				checkedOperand.materialize(params),
-				defaultValueOperand.materialize(params)
+			checkedOperand.materialize(params),
+			defaultValueOperand.materialize(params)
 		);
 	}
 
@@ -63,8 +63,8 @@ public final class IfNull extends FunctionOperand<IfNull> {
 	@Override
 	public String toString() {
 		return "IfNull[" +
-				"checkedOperand=" + checkedOperand + ", " +
-				"defaultValueOperand=" + defaultValueOperand + ']';
+			"checkedOperand=" + checkedOperand + ", " +
+			"defaultValueOperand=" + defaultValueOperand + ']';
 	}
 
 }

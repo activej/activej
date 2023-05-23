@@ -21,15 +21,15 @@ public final class OfPromise<T> extends AbstractStreamSupplier<T> {
 	@Override
 	protected void onInit() {
 		promise
-				.whenResult(supplier -> {
-					this.getEndOfStream()
-							.whenException(supplier::closeEx);
-					supplier.getEndOfStream()
-							.whenResult(this::sendEndOfStream)
-							.whenException(this::closeEx);
-					supplier.streamTo(internalConsumer);
-				})
-				.whenException(this::closeEx);
+			.whenResult(supplier -> {
+				this.getEndOfStream()
+					.whenException(supplier::closeEx);
+				supplier.getEndOfStream()
+					.whenResult(this::sendEndOfStream)
+					.whenException(this::closeEx);
+				supplier.streamTo(internalConsumer);
+			})
+			.whenException(this::closeEx);
 	}
 
 	@Override

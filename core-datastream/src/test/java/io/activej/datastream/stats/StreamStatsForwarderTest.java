@@ -21,12 +21,12 @@ public class StreamStatsForwarderTest {
 	@Test
 	public void testDetailedStats() {
 		DetailedStreamStats<Integer> stats = StreamStats.<Integer>detailedBuilder()
-				.withSizeCounter(number -> number)
-				.build();
+			.withSizeCounter(number -> number)
+			.build();
 
 		await(StreamSuppliers.ofValues(1, 2, 3, 4, 5)
-				.transformWith(stats)
-				.streamTo(StreamConsumers.skip()));
+			.transformWith(stats)
+			.streamTo(StreamConsumers.skip()));
 
 		assertEquals(5, stats.getCount());
 		//noinspection DataFlowIssue
@@ -39,13 +39,13 @@ public class StreamStatsForwarderTest {
 		Exception exception = new Exception("Test");
 
 		Exception e = awaitException(StreamSuppliers.ofValues(1, 2, 3, 4, 5)
-				.transformWith(stats)
-				.streamTo(StreamConsumers.<Integer>skip()
-						.transformWith(decorate(promise ->
-								promise.then(item ->
-										item == 4 ?
-												Promise.ofException(exception) :
-												Promise.of(item)))))
+			.transformWith(stats)
+			.streamTo(StreamConsumers.<Integer>skip()
+				.transformWith(decorate(promise ->
+					promise.then(item ->
+						item == 4 ?
+							Promise.ofException(exception) :
+							Promise.of(item)))))
 		);
 
 		assertSame(exception, e);

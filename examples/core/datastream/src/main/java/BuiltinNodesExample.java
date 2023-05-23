@@ -36,7 +36,7 @@ public final class BuiltinNodesExample {
 		ToIntFunction<Object> hashSharder = item -> (item.hashCode() & Integer.MAX_VALUE) % 3;
 		//creating a sharder of three parts for three consumers
 		StreamSplitter<Integer, Integer> sharder = StreamSplitter.create(
-				(item, acceptors) -> acceptors[hashSharder.applyAsInt(item)].accept(item));
+			(item, acceptors) -> acceptors[hashSharder.applyAsInt(item)].accept(item));
 
 		ToListStreamConsumer<Integer> first = ToListStreamConsumer.create();
 		ToListStreamConsumer<Integer> second = ToListStreamConsumer.create();
@@ -101,9 +101,9 @@ public final class BuiltinNodesExample {
 
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		filter();
 		splitter();

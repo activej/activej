@@ -52,14 +52,16 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	private final InetAddress remoteAddress;
 	private final ExceptionStats lastRequestHandlingException = ExceptionStats.create();
 	private final ValueStats requestHandlingTime = ValueStats.builder(RpcServer.SMOOTHING_WINDOW)
-			.withUnit("milliseconds")
-			.build();
+		.withUnit("milliseconds")
+		.build();
 	private final EventStats successfulRequests = EventStats.create(RpcServer.SMOOTHING_WINDOW);
 	private final EventStats failedRequests = EventStats.create(RpcServer.SMOOTHING_WINDOW);
 	private boolean monitoring = false;
 
-	RpcServerConnection(Reactor reactor, RpcServer rpcServer, InetAddress remoteAddress,
-			Map<Class<?>, RpcRequestHandler<?, ?>> handlers, RpcStream stream) {
+	RpcServerConnection(
+		Reactor reactor, RpcServer rpcServer, InetAddress remoteAddress,
+		Map<Class<?>, RpcRequestHandler<?, ?>> handlers, RpcStream stream
+	) {
 		super(reactor);
 		this.rpcServer = rpcServer;
 		this.stream = stream;
@@ -87,28 +89,28 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 
 		Object messageData = message.getMessage();
 		serve(messageData)
-				.subscribe((result, e) -> {
-					if (startTime != 0) {
-						int value = (int) (System.currentTimeMillis() - startTime);
-						requestHandlingTime.recordValue(value);
-						rpcServer.getRequestHandlingTime().recordValue(value);
-					}
-					if (e == null) {
-						downstreamDataAcceptor.accept(new RpcMessage(index, result));
+			.subscribe((result, e) -> {
+				if (startTime != 0) {
+					int value = (int) (System.currentTimeMillis() - startTime);
+					requestHandlingTime.recordValue(value);
+					rpcServer.getRequestHandlingTime().recordValue(value);
+				}
+				if (e == null) {
+					downstreamDataAcceptor.accept(new RpcMessage(index, result));
 
-						successfulRequests.recordEvent();
-						rpcServer.getSuccessfulRequests().recordEvent();
-					} else {
-						logger.warn("Exception while processing request ID {}", index, e);
-						Object data = new RpcRemoteException(e);
-						RpcMessage errorMessage = new RpcMessage(index, data);
-						sendError(errorMessage, messageData, e);
-					}
-					if (--activeRequests == 0) {
-						doClose();
-						stream.sendEndOfStream();
-					}
-				});
+					successfulRequests.recordEvent();
+					rpcServer.getSuccessfulRequests().recordEvent();
+				} else {
+					logger.warn("Exception while processing request ID {}", index, e);
+					Object data = new RpcRemoteException(e);
+					RpcMessage errorMessage = new RpcMessage(index, data);
+					sendError(errorMessage, messageData, e);
+				}
+				if (--activeRequests == 0) {
+					doClose();
+					stream.sendEndOfStream();
+				}
+			});
 	}
 
 	@Override
@@ -218,10 +220,10 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	@Override
 	public String toString() {
 		return "RpcServerConnection{" +
-				"address=" + remoteAddress +
-				", active=" + activeRequests +
-				", successes=" + successfulRequests.getTotalCount() +
-				", failures=" + failedRequests.getTotalCount() +
-				'}';
+			"address=" + remoteAddress +
+			", active=" + activeRequests +
+			", successes=" + successfulRequests.getTotalCount() +
+			", failures=" + failedRequests.getTotalCount() +
+			'}';
 	}
 }

@@ -84,10 +84,12 @@ public interface Module {
 	/**
 	 * Creates a {@link Module module} out of given binding graph trie, transformers, generators and multibinders
 	 */
-	static Module of(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
-			Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers,
-			Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators,
-			Map<Key<?>, Multibinder<?>> multibinders) {
+	static Module of(
+		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
+		Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers,
+		Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators,
+		Map<Key<?>, Multibinder<?>> multibinders
+	) {
 		return new SimpleModule(bindings, transformers, generators, multibinders);
 	}
 }

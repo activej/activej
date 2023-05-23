@@ -63,7 +63,7 @@ public final class TypeUtils {
 		try {
 			if (pattern instanceof WildcardType wildcard) {
 				return Arrays.stream(wildcard.getUpperBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu))
-						&& Arrays.stream(wildcard.getLowerBounds()).allMatch(bound -> isInheritedFrom(bound, strict, dejaVu));
+					&& Arrays.stream(wildcard.getLowerBounds()).allMatch(bound -> isInheritedFrom(bound, strict, dejaVu));
 			}
 			if (pattern instanceof TypeVariable<?> typevar) {
 				return Arrays.stream(typevar.getBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu));
@@ -120,7 +120,7 @@ public final class TypeUtils {
 			return true;
 		}
 		return Arrays.stream(parameterized.getActualTypeArguments())
-				.anyMatch(argument -> contains(argument, sub));
+			.anyMatch(argument -> contains(argument, sub));
 	}
 
 	// pattern = Map<K, List<V>>
@@ -192,9 +192,9 @@ public final class TypeUtils {
 
 			if (typeArguments != repackedTypeArguments) {
 				return Types.parameterizedType(
-						parameterizedType.getOwnerType(),
-						parameterizedType.getRawType(),
-						repackedTypeArguments
+					parameterizedType.getOwnerType(),
+					parameterizedType.getRawType(),
+					repackedTypeArguments
 				);
 			}
 			return original;

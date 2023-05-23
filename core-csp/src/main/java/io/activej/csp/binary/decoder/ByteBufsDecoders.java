@@ -14,7 +14,7 @@ public class ByteBufsDecoders {
 		return bufs -> bufs.consumeBytes((index, b) -> {
 			if (b != data[index]) {
 				throw new MalformedDataException("Array of bytes differs at index " + index +
-						"[Expected: " + data[index] + ", actual: " + b + ']');
+					"[Expected: " + data[index] + ", actual: " + b + ']');
 			}
 			return index == data.length - 1;
 		}) != 0 ? data : null;

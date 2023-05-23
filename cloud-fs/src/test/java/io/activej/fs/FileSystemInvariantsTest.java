@@ -94,24 +94,24 @@ public final class FileSystemInvariantsTest {
 		second = new DefaultFileSystem(secondFileSystem);
 
 		initializeDirs(List.of(
-				"file",
-				"file2",
-				"directory/subdir/file3.txt",
-				"directory/file.txt",
-				"directory2/file2.txt"
+			"file",
+			"file2",
+			"directory/subdir/file3.txt",
+			"directory/file.txt",
+			"directory2/file2.txt"
 		));
 	}
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{
-						"Regular",
-						(UnaryOperator<FileSystem.Builder>) builder -> builder},
-				new Object[]{
-						"With Hard Link On Copy",
-						(UnaryOperator<FileSystem.Builder>) builder -> builder.withHardLinkOnCopy(true)
-				}
+			new Object[]{
+				"Regular",
+				(UnaryOperator<FileSystem.Builder>) builder -> builder},
+			new Object[]{
+				"With Hard Link On Copy",
+				(UnaryOperator<FileSystem.Builder>) builder -> builder.withHardLinkOnCopy(true)
+			}
 		);
 	}
 
@@ -529,7 +529,7 @@ public final class FileSystemInvariantsTest {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("directory", "newDirectory", "directory2", "newDirectory2")));
+				client.copyAll(Map.of("directory", "newDirectory", "directory2", "newDirectory2")));
 
 			assertBatchException(exception, 1, 2, (name, e) -> {
 				assertTrue(name.startsWith("directory"));
@@ -545,7 +545,7 @@ public final class FileSystemInvariantsTest {
 	public void copyAllFilesAndDirectories() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("file", "newFile", "directory", "newDirectory")));
+				client.copyAll(Map.of("file", "newFile", "directory", "newDirectory")));
 			assertBatchException(exception, Map.of("directory", IsADirectoryException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath, Set.of("newFile"));
@@ -555,7 +555,7 @@ public final class FileSystemInvariantsTest {
 	public void copyAllWithFromNonExisting() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("file", "newFile", "nonexistent", "newFile2")));
+				client.copyAll(Map.of("file", "newFile", "nonexistent", "newFile2")));
 			assertBatchException(exception, Map.of("nonexistent", FileNotFoundException.class));
 		});
 
@@ -566,7 +566,7 @@ public final class FileSystemInvariantsTest {
 	public void copyAllFromRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("file", "newFile", "", "newRoot")));
+				client.copyAll(Map.of("file", "newFile", "", "newRoot")));
 			assertBatchException(exception, Map.of("", IsADirectoryException.class));
 		});
 
@@ -577,7 +577,7 @@ public final class FileSystemInvariantsTest {
 	public void copyAllToRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("file", "newFile", "file2", "")));
+				client.copyAll(Map.of("file", "newFile", "file2", "")));
 			assertBatchException(exception, Map.of("file2", IsADirectoryException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath, Set.of("newFile"));
@@ -587,7 +587,7 @@ public final class FileSystemInvariantsTest {
 	public void copyAllToFileOutsideRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("file", "newFile", "file2", "../new")));
+				client.copyAll(Map.of("file", "newFile", "file2", "../new")));
 			assertBatchException(exception, Map.of("file2", ForbiddenPathException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath, Set.of("newFile"));
@@ -597,7 +597,7 @@ public final class FileSystemInvariantsTest {
 	public void copyAllFromFileOutsideRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.copyAll(Map.of("file", "newFile", "../new", "newFile2")));
+				client.copyAll(Map.of("file", "newFile", "../new", "newFile2")));
 			assertBatchException(exception, Map.of("../new", ForbiddenPathException.class));
 		});
 		assertFilesAreSame(firstPath, secondPath, Set.of("newFile"));
@@ -708,7 +708,7 @@ public final class FileSystemInvariantsTest {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("directory", "newDirectory", "directory2", "newDirectory2")));
+				client.moveAll(Map.of("directory", "newDirectory", "directory2", "newDirectory2")));
 
 			assertBatchException(exception, 1, 2, (name, e) -> {
 				assertTrue(name.startsWith("directory"));
@@ -724,7 +724,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllFilesAndDirectories() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "directory", "newDirectory")));
+				client.moveAll(Map.of("file", "newFile", "directory", "newDirectory")));
 			assertBatchException(exception, Map.of("directory", IsADirectoryException.class));
 		});
 	}
@@ -733,7 +733,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllWithFromNonExisting() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "nonexistent", "newFile2")));
+				client.moveAll(Map.of("file", "newFile", "nonexistent", "newFile2")));
 			assertBatchException(exception, Map.of("nonexistent", FileNotFoundException.class));
 		});
 	}
@@ -742,7 +742,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllFromRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "", "newRoot")));
+				client.moveAll(Map.of("file", "newFile", "", "newRoot")));
 			assertBatchException(exception, Map.of("", IsADirectoryException.class));
 		});
 	}
@@ -751,7 +751,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllToRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "file2", "")));
+				client.moveAll(Map.of("file", "newFile", "file2", "")));
 			assertBatchException(exception, Map.of("file2", IsADirectoryException.class));
 		});
 	}
@@ -760,7 +760,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllToFileOutsideRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "file2", "../new")));
+				client.moveAll(Map.of("file", "newFile", "file2", "../new")));
 			assertBatchException(exception, Map.of("file2", ForbiddenPathException.class));
 		});
 	}
@@ -769,7 +769,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllFromFileOutsideRoot() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "../new", "newFile2")));
+				client.moveAll(Map.of("file", "newFile", "../new", "newFile2")));
 			assertBatchException(exception, Map.of("../new", ForbiddenPathException.class));
 		});
 	}
@@ -779,7 +779,7 @@ public final class FileSystemInvariantsTest {
 		both(client -> {
 			await(client.moveAll(Map.of("file", "newFile", "file2", "newFile2")));
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "file2", "newFile2")));
+				client.moveAll(Map.of("file", "newFile", "file2", "newFile2")));
 
 			assertBatchException(exception, 1, 2, (name, e) -> {
 				assertTrue(name.startsWith("file"));
@@ -830,7 +830,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllWithSelfNonExistent() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "nonexistent", "nonexistent")));
+				client.moveAll(Map.of("file", "newFile", "nonexistent", "nonexistent")));
 			assertBatchException(exception, Map.of("nonexistent", FileNotFoundException.class));
 		});
 	}
@@ -839,7 +839,7 @@ public final class FileSystemInvariantsTest {
 	public void moveAllWithSelfDirectory() {
 		both(client -> {
 			Exception exception = awaitException(
-					client.moveAll(Map.of("file", "newFile", "directory", "directory")));
+				client.moveAll(Map.of("file", "newFile", "directory", "directory")));
 			assertBatchException(exception, Map.of("directory", IsADirectoryException.class));
 		});
 	}
@@ -892,7 +892,8 @@ public final class FileSystemInvariantsTest {
 
 	// Default methods are not overridden
 	private static class DefaultFileSystem extends ImplicitlyReactive
-			implements IFileSystem {
+		implements IFileSystem {
+
 		private final IFileSystem peer;
 
 		private DefaultFileSystem(IFileSystem peer) {

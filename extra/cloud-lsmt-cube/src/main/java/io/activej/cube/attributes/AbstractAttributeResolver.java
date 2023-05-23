@@ -25,7 +25,7 @@ import java.util.List;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
-		implements IAttributeResolver {
+	implements IAttributeResolver {
 
 	public AbstractAttributeResolver(Reactor reactor) {
 		super(reactor);
@@ -58,6 +58,6 @@ public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
 	public final Promise<Void> resolveAttributes(List<Object> results, KeyFunction keyFunction, AttributesFunction attributesFunction) {
 		checkInReactorThread(this);
 		return prepareToResolveAttributes(results, keyFunction, attributesFunction)
-				.then(() -> doResolveAttributes(results, keyFunction, attributesFunction));
+			.then(() -> doResolveAttributes(results, keyFunction, attributesFunction));
 	}
 }

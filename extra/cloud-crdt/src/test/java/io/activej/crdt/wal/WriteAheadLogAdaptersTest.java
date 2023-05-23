@@ -34,7 +34,8 @@ public class WriteAheadLogAdaptersTest {
 	}
 
 	private static final class StubWriteAheadLog extends ImplicitlyReactive
-			implements IWriteAheadLog<Integer, Integer> {
+		implements IWriteAheadLog<Integer, Integer> {
+
 		private int updatesCount;
 
 		@Override

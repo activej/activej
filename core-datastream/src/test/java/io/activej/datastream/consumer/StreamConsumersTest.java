@@ -19,8 +19,8 @@ public class StreamConsumersTest {
 	public void withAcknowledge() {
 		StreamSupplier<Integer> supplier = StreamSuppliers.ofValues(1, 2, 3);
 		StreamConsumer<Integer> failingConsumer = ToListStreamConsumer.<Integer>create()
-				.withAcknowledgement(ack -> ack
-						.then(($, e) -> Promise.ofException(new Exception("Test"))));
+			.withAcknowledgement(ack -> ack
+				.then(($, e) -> Promise.ofException(new Exception("Test"))));
 
 		Exception exception = awaitException(supplier.streamTo(failingConsumer));
 		assertEquals("Test", exception.getMessage());

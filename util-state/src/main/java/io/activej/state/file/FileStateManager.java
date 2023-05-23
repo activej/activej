@@ -219,14 +219,14 @@ public final class FileStateManager<T> implements IStateManager<T, Long> {
 		if (maxSaveDiffs != 0) {
 			Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.snapshotGlob());
 			long[] revisionsFrom = list.keySet().stream()
-					.map(fileNamingScheme::decodeSnapshot)
-					.filter(Objects::nonNull)
-					.mapToLong(v -> v)
-					.map(v -> -v)
-					.sorted()
-					.limit(maxSaveDiffs)
-					.map(v -> -v)
-					.toArray();
+				.map(fileNamingScheme::decodeSnapshot)
+				.filter(Objects::nonNull)
+				.mapToLong(v -> v)
+				.map(v -> -v)
+				.sorted()
+				.limit(maxSaveDiffs)
+				.map(v -> -v)
+				.toArray();
 
 			for (long revisionFrom : revisionsFrom) {
 				String filenameFrom = fileNamingScheme.encodeSnapshot(revisionFrom);

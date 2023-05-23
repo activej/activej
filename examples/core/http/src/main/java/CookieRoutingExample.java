@@ -22,40 +22,40 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
 		return RoutingServlet.builder(reactor)
-				.with("/*", request -> {
-					String servletNumberCookie = request.getCookie(COOKIE);
-					if (servletNumberCookie == null) {
-						return HttpResponse.ofCode(400)
-								.withPlainText("Cookie '" + COOKIE + "' is missing")
-								.toPromise();
-					}
-					if ("1".equals(servletNumberCookie)) {
-						return firstServlet.serve(request);
-					}
-					if ("2".equals(servletNumberCookie)) {
-						return secondServlet.serve(request);
-					}
+			.with("/*", request -> {
+				String servletNumberCookie = request.getCookie(COOKIE);
+				if (servletNumberCookie == null) {
 					return HttpResponse.ofCode(400)
-							.withPlainText("Unknown servlet number")
-							.toPromise();
-				})
-				.build();
+						.withPlainText("Cookie '" + COOKIE + "' is missing")
+						.toPromise();
+				}
+				if ("1".equals(servletNumberCookie)) {
+					return firstServlet.serve(request);
+				}
+				if ("2".equals(servletNumberCookie)) {
+					return secondServlet.serve(request);
+				}
+				return HttpResponse.ofCode(400)
+					.withPlainText("Unknown servlet number")
+					.toPromise();
+			})
+			.build();
 	}
 
 	@Provides
 	@Named("First")
 	AsyncServlet firstServlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("This is servlet #1\n")
-				.toPromise();
+			.withPlainText("This is servlet #1\n")
+			.toPromise();
 	}
 
 	@Provides
 	@Named("Second")
 	AsyncServlet secondServlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("This is servlet #2\n")
-				.toPromise();
+			.withPlainText("This is servlet #2\n")
+			.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

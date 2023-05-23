@@ -30,14 +30,14 @@ public class TestStreamTransformers {
 
 	public static <T> StreamConsumerTransformer<T, StreamConsumer<T>> decorate(Function<Promise<T>, Promise<T>> fn) {
 		return consumer ->
-				StreamConsumers.ofChannelConsumer(
-						asStreamConsumer(consumer)
-								.transformWith(channelConsumer -> new AbstractChannelConsumer<T>(channelConsumer) {
-									@Override
-									protected Promise<Void> doAccept(@Nullable T value) {
-										return fn.apply(channelConsumer.accept(value).map($ -> value)).toVoid();
-									}
-								}));
+			StreamConsumers.ofChannelConsumer(
+				asStreamConsumer(consumer)
+					.transformWith(channelConsumer -> new AbstractChannelConsumer<T>(channelConsumer) {
+						@Override
+						protected Promise<Void> doAccept(@Nullable T value) {
+							return fn.apply(channelConsumer.accept(value).map($ -> value)).toVoid();
+						}
+					}));
 	}
 
 	static <T> ChannelConsumer<T> asStreamConsumer(StreamConsumer<T> consumer) {
@@ -51,8 +51,8 @@ public class TestStreamTransformers {
 			this.internalSupplier.streamTo(consumer);
 
 			consumer.getAcknowledgement()
-					.whenResult(this::close)
-					.whenException(this::closeEx);
+				.whenResult(this::close)
+				.whenException(this::closeEx);
 		}
 
 		@Override

@@ -31,7 +31,7 @@ import java.util.concurrent.Executor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class FileReaderStaticLoader extends AbstractReactive
-		implements IStaticLoader {
+	implements IStaticLoader {
 	private static final boolean CHECKS = Checks.isEnabled(FileReaderStaticLoader.class);
 
 	private final Executor executor;
@@ -53,17 +53,17 @@ public class FileReaderStaticLoader extends AbstractReactive
 		}
 
 		return Promise.ofBlocking(executor,
-						() -> {
-							if (Files.isRegularFile(file)) {
-								return;
-							}
-							if (Files.isDirectory(file)) {
-								throw new ResourceIsADirectoryException("Resource '" + path + "' is a directory");
-							} else {
-								throw new ResourceNotFoundException("Could not find '" + path + '\'');
-							}
-						})
-				.then(() -> ChannelFileReader.open(executor, file))
-				.then(cfr -> cfr.toCollector(ByteBufs.collector()));
+				() -> {
+					if (Files.isRegularFile(file)) {
+						return;
+					}
+					if (Files.isDirectory(file)) {
+						throw new ResourceIsADirectoryException("Resource '" + path + "' is a directory");
+					} else {
+						throw new ResourceNotFoundException("Could not find '" + path + '\'');
+					}
+				})
+			.then(() -> ChannelFileReader.open(executor, file))
+			.then(cfr -> cfr.toCollector(ByteBufs.collector()));
 	}
 }

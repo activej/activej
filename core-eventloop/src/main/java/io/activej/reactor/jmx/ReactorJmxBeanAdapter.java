@@ -64,15 +64,15 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		Reactor reactor = ensureReactor(bean);
 		if (!reactorToJmxRefreshables.containsKey(reactor)) {
 			Duration smoothingWindows = reactor instanceof ReactiveJmxBeanWithStats reactorJmxBeanWithStats ?
-					reactorJmxBeanWithStats.getSmoothingWindow() :
-					null;
+				reactorJmxBeanWithStats.getSmoothingWindow() :
+				null;
 			if (smoothingWindows == null) {
 				smoothingWindows = DEFAULT_SMOOTHING_WINDOW;
 			}
 			ValueStats refreshStats = ValueStats.builder(smoothingWindows)
-					.withRate()
-					.withUnit("ns")
-					.build();
+				.withRate()
+				.withUnit("ns")
+				.build();
 			List<JmxRefreshable> list = new ArrayList<>();
 			list.add(refreshStats);
 			reactorToJmxRefreshables.put(reactor, list);
@@ -112,9 +112,9 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		if (reactorToJmxRefreshables.size() > 1) {
 			int count = 0;
 			ValueStats total = ValueStats.accumulatorBuilder()
-					.withRate()
-					.withUnit("ms")
-					.build();
+				.withRate()
+				.withUnit("ms")
+				.build();
 			for (List<JmxRefreshable> refreshables : reactorToJmxRefreshables.values()) {
 				total.add((ValueStats) refreshables.get(0));
 				count += refreshables.size();
@@ -148,8 +148,8 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 
 	private long computeEffectiveRefreshPeriod(int totalCount) {
 		return maxRefreshesPerCycle >= totalCount ?
-				refreshPeriod.toMillis() :
-				refreshPeriod.toMillis() * maxRefreshesPerCycle / totalCount;
+			refreshPeriod.toMillis() :
+			refreshPeriod.toMillis() * maxRefreshesPerCycle / totalCount;
 	}
 
 	private static String getStatsString(int numberOfRefreshables, ValueStats stats) {

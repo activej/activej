@@ -282,17 +282,17 @@ public final class BlockingFileSystem implements IBlockingFileSystem, BlockingSe
 		String subglob = glob.substring(subdir.length());
 
 		return findMatching(tempDir, subglob, subdirectory).stream()
-				.collect(Collector.of(
-						(Supplier<Map<String, FileMetadata>>) HashMap::new,
-						uncheckedOf((map, path) -> {
-							FileMetadata metadata = toFileMetadata(path);
-							if (metadata != null) {
-								String filename = TO_REMOTE_NAME.apply(storage.relativize(path).toString());
-								map.put(filename, metadata);
-							}
-						}),
-						noMergeFunction())
-				);
+			.collect(Collector.of(
+				(Supplier<Map<String, FileMetadata>>) HashMap::new,
+				uncheckedOf((map, path) -> {
+					FileMetadata metadata = toFileMetadata(path);
+					if (metadata != null) {
+						String filename = TO_REMOTE_NAME.apply(storage.relativize(path).toString());
+						map.put(filename, metadata);
+					}
+				}),
+				noMergeFunction())
+			);
 	}
 
 	@Override

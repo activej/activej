@@ -19,11 +19,11 @@ public class SerializePathsTest {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private static final BinarySerializer<TestData<String>> serializer = SerializerFactory.defaultInstance()
-			.create(DEFINING_CLASS_LOADER, new TypeT<TestData<String>>() {}.getType());
+		.create(DEFINING_CLASS_LOADER, new TypeT<TestData<String>>() {}.getType());
 	private static final BinarySerializer<TestDataWithPaths<String>> serializerPaths = SerializerFactory.builder()
-			.withAnnotationCompatibilityMode()
-			.build()
-			.create(DEFINING_CLASS_LOADER, new TypeT<TestDataWithPaths<String>>() {}.getType());
+		.withAnnotationCompatibilityMode()
+		.build()
+		.create(DEFINING_CLASS_LOADER, new TypeT<TestDataWithPaths<String>>() {}.getType());
 
 	@Test
 	public void testAllNull() {
@@ -164,40 +164,41 @@ public class SerializePathsTest {
 
 	private static void assertTestData(TestData<String> testData1, TestData<String> testData2) {
 		assertTestData(
-				testData1.string, testData2.string,
-				testData1.map, testData2.map,
-				testData1.arrayOfStrings, testData2.arrayOfStrings,
-				testData1.listOfMaps, testData2.listOfMaps,
-				testData1.listOfSets, testData2.listOfSets
+			testData1.string, testData2.string,
+			testData1.map, testData2.map,
+			testData1.arrayOfStrings, testData2.arrayOfStrings,
+			testData1.listOfMaps, testData2.listOfMaps,
+			testData1.listOfSets, testData2.listOfSets
 		);
 	}
 
 	private static void assertTestData(TestDataWithPaths<String> testData1, TestDataWithPaths<String> testData2) {
 		assertTestData(
-				testData1.string, testData2.string,
-				testData1.map, testData2.map,
-				testData1.arrayOfStrings, testData2.arrayOfStrings,
-				testData1.listOfMaps, testData2.listOfMaps,
-				testData1.listOfSets, testData2.listOfSets
+			testData1.string, testData2.string,
+			testData1.map, testData2.map,
+			testData1.arrayOfStrings, testData2.arrayOfStrings,
+			testData1.listOfMaps, testData2.listOfMaps,
+			testData1.listOfSets, testData2.listOfSets
 		);
 	}
 
 	private static void assertTestData(TestData<String> testData1, TestDataWithPaths<String> testData2) {
 		assertTestData(
-				testData1.string, testData2.string,
-				testData1.map, testData2.map,
-				testData1.arrayOfStrings, testData2.arrayOfStrings,
-				testData1.listOfMaps, testData2.listOfMaps,
-				testData1.listOfSets, testData2.listOfSets
+			testData1.string, testData2.string,
+			testData1.map, testData2.map,
+			testData1.arrayOfStrings, testData2.arrayOfStrings,
+			testData1.listOfMaps, testData2.listOfMaps,
+			testData1.listOfSets, testData2.listOfSets
 		);
 	}
 
 	private static void assertTestData(
-			String string1, String string2,
-			Map<String, Integer> map1, Map<String, Integer> map2,
-			String[] arrayOfStrings1, String[] arrayOfStrings2,
-			List<Map<Integer, String>> listOfMaps1, List<Map<Integer, String>> listOfMaps2,
-			List<Set<? extends String>> listOfSets1, List<Set<? extends String>> listOfSets2) {
+		String string1, String string2,
+		Map<String, Integer> map1, Map<String, Integer> map2,
+		String[] arrayOfStrings1, String[] arrayOfStrings2,
+		List<Map<Integer, String>> listOfMaps1, List<Map<Integer, String>> listOfMaps2,
+		List<Set<? extends String>> listOfSets1, List<Set<? extends String>> listOfSets2) {
+
 		assertEquals(string1, string2);
 		assertEquals(map1, map2);
 		assertArrayEquals(arrayOfStrings1, arrayOfStrings2);

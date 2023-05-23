@@ -14,7 +14,7 @@ import static java.lang.String.format;
 
 public class SerializerFactoryUtils {
 	public static final List<Class<?>> TYPES = List.of(
-			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
+		byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
 
 	private static final Map<String, String> COLLECTION_IMPL_SUFFIX = new HashMap<>() {{
@@ -25,7 +25,7 @@ public class SerializerFactoryUtils {
 	// region creators
 	public static SerializerFactory createWithHppc7Support(String profile, DefiningClassLoader definingClassLoader) {
 		SerializerFactory.Builder builder = SerializerFactory.builder()
-				.withProfile(profile);
+			.withProfile(profile);
 		return register(builder, definingClassLoader);
 	}
 
@@ -71,7 +71,7 @@ public class SerializerFactoryUtils {
 			for (Class<?> valueType : TYPES) {
 				String collectionImplKey = collectionImpl.getKey();
 				if (collectionImplKey.equals("Set") &&
-						(valueType == byte.class || valueType == float.class || valueType == double.class)) {
+					(valueType == byte.class || valueType == float.class || valueType == double.class)) {
 					continue;
 				}
 				String valueTypeName = valueType.getSimpleName();

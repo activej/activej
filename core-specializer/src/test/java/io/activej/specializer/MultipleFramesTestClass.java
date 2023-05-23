@@ -24,5 +24,6 @@ public class MultipleFramesTestClass implements TestInterface {
 			System.out.println(o);
 		}
 
-		return 0;	}
+		return 0;
+	}
 }

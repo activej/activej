@@ -23,9 +23,9 @@ public final class JavaTypeCodecModule extends AbstractModule {
 	@Subtype(1)
 	StreamCodec<ParameterizedType> parameterizedType(StreamCodec<Type> typeStreamCodec) {
 		return StreamCodec.create(Types::parameterizedType,
-				ParameterizedType::getOwnerType, StreamCodecs.ofNullable(typeStreamCodec),
-				ParameterizedType::getRawType, typeStreamCodec,
-				ParameterizedType::getActualTypeArguments, StreamCodecs.ofArray(typeStreamCodec, Type[]::new)
+			ParameterizedType::getOwnerType, StreamCodecs.ofNullable(typeStreamCodec),
+			ParameterizedType::getRawType, typeStreamCodec,
+			ParameterizedType::getActualTypeArguments, StreamCodecs.ofArray(typeStreamCodec, Type[]::new)
 		);
 	}
 
@@ -33,7 +33,7 @@ public final class JavaTypeCodecModule extends AbstractModule {
 	@Subtype(2)
 	StreamCodec<GenericArrayType> genericArrayType(StreamCodec<Type> typeStreamCodec) {
 		return StreamCodec.create(Types::genericArrayType,
-				GenericArrayType::getGenericComponentType, typeStreamCodec
+			GenericArrayType::getGenericComponentType, typeStreamCodec
 		);
 	}
 }

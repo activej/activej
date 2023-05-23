@@ -32,8 +32,8 @@ import static io.activej.common.Checks.checkArgument;
  */
 public final class FileMetadata {
 	public static final Comparator<FileMetadata> COMPARATOR =
-			Comparator.comparingLong(FileMetadata::getSize)
-					.thenComparing(FileMetadata::getTimestamp);
+		Comparator.comparingLong(FileMetadata::getSize)
+			.thenComparing(FileMetadata::getTimestamp);
 
 	private final long size;
 	private final long timestamp;
@@ -97,8 +97,8 @@ public final class FileMetadata {
 	public static Map<String, FileMetadata> flatten(Stream<Map<String, FileMetadata>> streamOfMaps) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		streamOfMaps
-				.flatMap(map -> map.entrySet().stream())
-				.forEach(entry -> result.compute(entry.getKey(), ($, existing) -> getMoreCompleteFile(existing, entry.getValue())));
+			.flatMap(map -> map.entrySet().stream())
+			.forEach(entry -> result.compute(entry.getKey(), ($, existing) -> getMoreCompleteFile(existing, entry.getValue())));
 		return result;
 	}
 }

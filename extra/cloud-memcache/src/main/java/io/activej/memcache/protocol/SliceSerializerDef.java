@@ -50,16 +50,16 @@ public class SliceSerializerDef extends AbstractSerializerDef implements Seriali
 	@Override
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos,
-				staticCall(SliceSerializerDef.class,
-						"write" + (nullable ? "Nullable" : ""),
-						buf, pos, cast(value, Slice.class)));
+			staticCall(SliceSerializerDef.class,
+				"write" + (nullable ? "Nullable" : ""),
+				buf, pos, cast(value, Slice.class)));
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return staticCall(SliceSerializerDef.class,
-				"read" + (nullable ? "Nullable" : ""),
-				in);
+			"read" + (nullable ? "Nullable" : ""),
+			in);
 	}
 
 	public static int write(byte[] output, int offset, Slice slice) {

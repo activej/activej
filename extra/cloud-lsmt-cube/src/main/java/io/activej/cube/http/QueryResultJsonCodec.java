@@ -56,8 +56,11 @@ public final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
 
 	private final DefiningClassLoader classLoader;
 
-	private QueryResultJsonCodec(DefiningClassLoader classLoader,
-			Map<String, JsonCodec<Object>> attributeCodecs, Map<String, JsonCodec<Object>> measureCodecs, Map<String, Class<?>> attributeTypes, Map<String, Class<?>> measureTypes) {
+	private QueryResultJsonCodec(
+		DefiningClassLoader classLoader, Map<String, JsonCodec<Object>> attributeCodecs,
+		Map<String, JsonCodec<Object>> measureCodecs, Map<String, Class<?>> attributeTypes,
+		Map<String, Class<?>> measureTypes
+	) {
 		this.classLoader = classLoader;
 		this.attributeCodecs = attributeCodecs;
 		this.measureCodecs = measureCodecs;
@@ -65,8 +68,9 @@ public final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
 		this.measureTypes = measureTypes;
 	}
 
-	public static QueryResultJsonCodec create(DefiningClassLoader classLoader,
-			Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
+	public static QueryResultJsonCodec create(
+		DefiningClassLoader classLoader, Map<String, Type> attributeTypes, Map<String, Type> measureTypes
+	) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		Map<String, JsonCodec<Object>> measureCodecs = new LinkedHashMap<>();
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
@@ -147,16 +151,16 @@ public final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
 		}
 
 		return QueryResult.create(recordScheme, attributes, measures,
-				nonNullElseEmpty(sortedBy),
-				nonNullElseEmpty(records),
-				nonNullElse(totals, recordScheme.record()),
-				totalCount,
-				nonNullElseEmpty(filterAttributes),
-				totals != null ?
-						DATA_WITH_TOTALS :
-						records != null ?
-								DATA :
-								METADATA);
+			nonNullElseEmpty(sortedBy),
+			nonNullElseEmpty(records),
+			nonNullElse(totals, recordScheme.record()),
+			totalCount,
+			nonNullElseEmpty(filterAttributes),
+			totals != null ?
+				DATA_WITH_TOTALS :
+				records != null ?
+					DATA :
+					METADATA);
 
 	}
 

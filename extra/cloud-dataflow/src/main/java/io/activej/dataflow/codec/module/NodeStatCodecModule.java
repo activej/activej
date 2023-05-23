@@ -13,7 +13,7 @@ public final class NodeStatCodecModule extends AbstractModule {
 	@Subtype(0)
 	StreamCodec<BinaryNodeStat> binaryNodeStat() {
 		return StreamCodec.create(BinaryNodeStat::new,
-				BinaryNodeStat::getBytes, StreamCodecs.ofVarLong()
+			BinaryNodeStat::getBytes, StreamCodecs.ofVarLong()
 		);
 	}
 
@@ -21,7 +21,7 @@ public final class NodeStatCodecModule extends AbstractModule {
 	@Subtype(1)
 	StreamCodec<TestNodeStat> testNodeStat() {
 		return StreamCodec.create(TestNodeStat::new,
-				TestNodeStat::getNodeIndex, StreamCodecs.ofVarInt()
+			TestNodeStat::getNodeIndex, StreamCodecs.ofVarInt()
 		);
 	}
 }

@@ -30,12 +30,12 @@ import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 
 public final class CrdtClusterExample {
 	private static final CrdtDataBinarySerializer<String, LWWSet<String>> SERIALIZER =
-			new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
+		new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
 
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]
@@ -59,14 +59,14 @@ public final class CrdtClusterExample {
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
 		ClusterCrdtStorage<String, LWWSet<String>, String> cluster = ClusterCrdtStorage.<String, LWWSet<String>, String>create(
-				eventloop,
-				IDiscoveryService.of(RendezvousPartitionScheme.<String>builder()
-						.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
-								.withReplicas(5)
-								.build())
-						.withCrdtProvider(clients::get)
-						.build()),
-				CrdtFunction.ofCrdtType());
+			eventloop,
+			IDiscoveryService.of(RendezvousPartitionScheme.<String>builder()
+				.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+					.withReplicas(5)
+					.build())
+				.withCrdtProvider(clients::get)
+				.build()),
+			CrdtFunction.ofCrdtType());
 
 		//[END REGION_1]
 		// Here we will prepopulate two partitions with some sets of items
@@ -108,24 +108,24 @@ public final class CrdtClusterExample {
 		//[START REGION_3]
 		// wait for LocalActiveFs instances to start
 		Promises.all(fsStartPromises)
-				.then(() -> {
-					// then upload these sets to both partition3 and partition6
-					Promise<Void> uploadTo3 = StreamSuppliers.ofValues(firstOn3, secondOn3)
-							.streamTo(StreamConsumers.ofPromise(partition3.upload()));
-					Promise<Void> uploadTo6 = StreamSuppliers.ofValues(firstOn6, secondOn6)
-							.streamTo(StreamConsumers.ofPromise(partition6.upload()));
+			.then(() -> {
+				// then upload these sets to both partition3 and partition6
+				Promise<Void> uploadTo3 = StreamSuppliers.ofValues(firstOn3, secondOn3)
+					.streamTo(StreamConsumers.ofPromise(partition3.upload()));
+				Promise<Void> uploadTo6 = StreamSuppliers.ofValues(firstOn6, secondOn6)
+					.streamTo(StreamConsumers.ofPromise(partition6.upload()));
 
-					// wait for both of uploads to finish
-					return Promises.all(uploadTo3, uploadTo6);
-				})
-				// and then download items from the cluster, and wait for result
-				.then(cluster::start)
-				.then(() -> cluster.download())
-				// also collecting it to list
-				.then(StreamSupplier::toList)
-				// and then print the resulting list of items, it should match the expectation from above
-				// (remember that sets are unordered, so you may not see it exactly as above)
-				.whenComplete((list, $) -> System.out.println(list + "\n"));
+				// wait for both of uploads to finish
+				return Promises.all(uploadTo3, uploadTo6);
+			})
+			// and then download items from the cluster, and wait for result
+			.then(cluster::start)
+			.then(() -> cluster.download())
+			// also collecting it to list
+			.then(StreamSupplier::toList)
+			// and then print the resulting list of items, it should match the expectation from above
+			// (remember that sets are unordered, so you may not see it exactly as above)
+			.whenComplete((list, $) -> System.out.println(list + "\n"));
 
 		// actually run the eventloop and then shutdown the executor allowing the program to finish
 		eventloop.run();

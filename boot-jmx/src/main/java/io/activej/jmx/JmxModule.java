@@ -91,21 +91,21 @@ public final class JmxModule extends AbstractModule {
 
 	public static Builder builder() {
 		return new JmxModule().new Builder()
-				.withCustomType(Duration.class, StringFormatUtils::formatDuration, StringFormatUtils::parseDuration)
-				.withCustomType(Period.class, StringFormatUtils::formatPeriod, StringFormatUtils::parsePeriod)
-				.withCustomType(Instant.class, StringFormatUtils::formatInstant, StringFormatUtils::parseInstant)
-				.withCustomType(LocalDateTime.class, StringFormatUtils::formatLocalDateTime, StringFormatUtils::parseLocalDateTime)
-				.withCustomType(MemSize.class, StringFormatUtils::formatMemSize, StringFormatUtils::parseMemSize)
-				.withCustomType(TriggerWithResult.class, TriggerWithResult::toString)
-				.withCustomType(Severity.class, Severity::toString)
-				.withCustomType(InetSocketAddress.class, StringFormatUtils::formatInetSocketAddress, addressString -> {
-					try {
-						return StringFormatUtils.parseInetSocketAddress(addressString);
-					} catch (MalformedDataException e) {
-						throw new IllegalArgumentException(e);
-					}
-				})
-				.withGlobalSingletons(ByteBufPool.getStats());
+			.withCustomType(Duration.class, StringFormatUtils::formatDuration, StringFormatUtils::parseDuration)
+			.withCustomType(Period.class, StringFormatUtils::formatPeriod, StringFormatUtils::parsePeriod)
+			.withCustomType(Instant.class, StringFormatUtils::formatInstant, StringFormatUtils::parseInstant)
+			.withCustomType(LocalDateTime.class, StringFormatUtils::formatLocalDateTime, StringFormatUtils::parseLocalDateTime)
+			.withCustomType(MemSize.class, StringFormatUtils::formatMemSize, StringFormatUtils::parseMemSize)
+			.withCustomType(TriggerWithResult.class, TriggerWithResult::toString)
+			.withCustomType(Severity.class, Severity::toString)
+			.withCustomType(InetSocketAddress.class, StringFormatUtils::formatInetSocketAddress, addressString -> {
+				try {
+					return StringFormatUtils.parseInetSocketAddress(addressString);
+				} catch (MalformedDataException e) {
+					throw new IllegalArgumentException(e);
+				}
+			})
+			.withGlobalSingletons(ByteBufPool.getStats());
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, JmxModule> {
@@ -131,28 +131,28 @@ public final class JmxModule extends AbstractModule {
 		public <T> Builder withModifier(Key<?> key, String attrName, AttributeModifier<T> modifier) {
 			checkNotBuilt(this);
 			keyToSettingsBuilder.computeIfAbsent(key, $ -> JmxBeanSettings.builder())
-					.withModifier(attrName, modifier);
+				.withModifier(attrName, modifier);
 			return this;
 		}
 
 		public <T> Builder withModifier(Type type, String attrName, AttributeModifier<T> modifier) {
 			checkNotBuilt(this);
 			typeToSettingsBuilder.computeIfAbsent(type, $ -> JmxBeanSettings.builder())
-					.withModifier(attrName, modifier);
+				.withModifier(attrName, modifier);
 			return this;
 		}
 
 		public Builder withOptional(Key<?> key, String attrName) {
 			checkNotBuilt(this);
 			keyToSettingsBuilder.computeIfAbsent(key, $ -> JmxBeanSettings.builder())
-					.withIncludedOptional(attrName);
+				.withIncludedOptional(attrName);
 			return this;
 		}
 
 		public Builder withOptional(Type type, String attrName) {
 			checkNotBuilt(this);
 			typeToSettingsBuilder.computeIfAbsent(type, $ -> JmxBeanSettings.builder())
-					.withIncludedOptional(attrName);
+				.withIncludedOptional(attrName);
 			return this;
 		}
 
@@ -174,8 +174,8 @@ public final class JmxModule extends AbstractModule {
 		public Builder withHistogram(Key<?> key, String attrName, Supplier<JmxHistogram> histogram) {
 			checkNotBuilt(this);
 			return withOptional(key, attrName + "_histogram")
-					.withModifier(key, attrName, (ValueStats attribute) ->
-							attribute.setHistogram(histogram.get()));
+				.withModifier(key, attrName, (ValueStats attribute) ->
+					attribute.setHistogram(histogram.get()));
 		}
 
 		public Builder withGlobalMBean(Type type, String named) {
@@ -218,7 +218,7 @@ public final class JmxModule extends AbstractModule {
 		public Builder withGlobalSingletons(Object... instances) {
 			checkNotBuilt(this);
 			checkArgument(Arrays.stream(instances).map(Object::getClass).noneMatch(Class::isAnonymousClass),
-					"Instances of anonymous classes will not be registered in JMX");
+				"Instances of anonymous classes will not be registered in JMX");
 			JmxModule.this.globalSingletons.addAll(List.of(instances));
 			return this;
 		}
@@ -232,9 +232,9 @@ public final class JmxModule extends AbstractModule {
 		@Override
 		protected JmxModule doBuild() {
 			keyToSettings.putAll(keyToSettingsBuilder.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
 			typeToSettings.putAll(typeToSettingsBuilder.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
 			return JmxModule.this;
 		}
 	}
@@ -242,11 +242,11 @@ public final class JmxModule extends AbstractModule {
 	@Provides
 	JmxRegistry jmxRegistry(DynamicMBeanFactory mbeanFactory) {
 		return JmxRegistry.builder(ManagementFactory.getPlatformMBeanServer(), mbeanFactory)
-				.withCustomTypes(customTypes)
-				.withObjectNameMapping(objectNameMapper)
-				.withScopes(withScopes)
-				.withWorkerPredicate(workerPredicate)
-				.build();
+			.withCustomTypes(customTypes)
+			.withObjectNameMapping(objectNameMapper)
+			.withScopes(withScopes)
+			.withWorkerPredicate(workerPredicate)
+			.build();
 	}
 
 	@Provides
@@ -281,9 +281,9 @@ public final class JmxModule extends AbstractModule {
 		for (Object globalSingleton : globalSingletons) {
 			Key<?> globalKey = Key.of(globalSingleton.getClass());
 			registerSingleton(jmxRegistry, globalSingleton, globalKey, injector,
-					JmxBeanSettings.builder()
-							.withCustomTypes(customTypes)
-							.build());
+				JmxBeanSettings.builder()
+					.withCustomTypes(customTypes)
+					.build());
 		}
 
 		// register singletons
@@ -304,8 +304,8 @@ public final class JmxModule extends AbstractModule {
 		if (workerPools != null) {
 			// populating workerPoolKeys map
 			injector.peekInstances().entrySet().stream()
-					.filter(entry -> entry.getKey().getRawType().equals(WorkerPool.class))
-					.forEach(entry -> jmxRegistry.addWorkerPoolKey((WorkerPool) entry.getValue(), entry.getKey()));
+				.filter(entry -> entry.getKey().getRawType().equals(WorkerPool.class))
+				.forEach(entry -> jmxRegistry.addWorkerPoolKey((WorkerPool) entry.getValue(), entry.getKey()));
 
 			for (WorkerPool workerPool : workerPools.getWorkerPools()) {
 				Injector[] scopeInjectors = workerPool.getScopeInjectors();
@@ -330,7 +330,7 @@ public final class JmxModule extends AbstractModule {
 		for (Map.Entry<Type, Set<Object>> entry : globalMBeanObjects.entrySet()) {
 			Key<?> key = globalMBeans.get(entry.getKey());
 			DynamicMBean globalMBean =
-					mbeanFactory.createDynamicMBean(new ArrayList<>(entry.getValue()), ensureSettingsFor(key), false);
+				mbeanFactory.createDynamicMBean(new ArrayList<>(entry.getValue()), ensureSettingsFor(key), false);
 			registerSingleton(jmxRegistry, globalMBean, key, injector, JmxBeanSettings.create());
 		}
 	}
@@ -364,7 +364,7 @@ public final class JmxModule extends AbstractModule {
 				OptionalDependency<?> optional = (OptionalDependency<?>) workerInstance;
 				if (!optional.isPresent()) {
 					JmxRegistry.logger.info("Pool of instances with key {} was not registered to jmx, " +
-							"because some instances were not present", key);
+						"because some instances were not present", key);
 					return;
 				}
 
@@ -379,8 +379,8 @@ public final class JmxModule extends AbstractModule {
 
 	private JmxBeanSettings ensureSettingsFor(Key<?> key) {
 		JmxBeanSettings settings = JmxBeanSettings.builder()
-				.withCustomTypes(customTypes)
-				.build();
+			.withCustomTypes(customTypes)
+			.build();
 		if (keyToSettings.containsKey(key)) {
 			settings.merge(keyToSettings.get(key));
 		}

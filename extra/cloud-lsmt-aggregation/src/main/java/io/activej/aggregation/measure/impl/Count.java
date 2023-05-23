@@ -47,20 +47,17 @@ public final class Count extends Measure {
 	}
 
 	@Override
-	public Expression reduce(Variable accumulator,
-			Variable nextAccumulator) {
+	public Expression reduce(Variable accumulator, Variable nextAccumulator) {
 		return set(accumulator, add(accumulator, nextAccumulator));
 	}
 
 	@Override
-	public Expression initAccumulatorWithValue(Variable accumulator,
-			Variable firstValue) {
+	public Expression initAccumulatorWithValue(Variable accumulator, Variable firstValue) {
 		return set(accumulator, value(1));
 	}
 
 	@Override
-	public Expression accumulate(Variable accumulator,
-			Variable nextValue) {
+	public Expression accumulate(Variable accumulator, Variable nextValue) {
 		return set(accumulator, inc(accumulator));
 	}
 }

@@ -306,10 +306,10 @@ public final class HttpUtils {
 		String query = request.getQuery();
 		String fragment = request.getFragment();
 		StringBuilder fullUriBuilder = new StringBuilder(builderCapacity)
-				.append(request.getProtocol().lowercase())
-				.append("://")
-				.append(host)
-				.append(request.getPath());
+			.append(request.getProtocol().lowercase())
+			.append("://")
+			.append(host)
+			.append(request.getPath());
 		if (!query.isEmpty()) {
 			fullUriBuilder.append("?").append(query);
 		}
@@ -360,17 +360,17 @@ public final class HttpUtils {
 	 */
 	public static String formatUrl(InetSocketAddress address, boolean ssl) {
 		return (ssl ? "https://" : "http://")
-				+ formatHost(address.getAddress())
-				+ (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
-				+ "/";
+			+ formatHost(address.getAddress())
+			+ (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
+			+ "/";
 	}
 
 	public static List<String> getHttpAddresses(AbstractReactiveServer server) {
 		return Stream.concat(
-						server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
-						server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
-				)
-				.collect(toList());
+				server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+				server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
+			)
+			.collect(toList());
 	}
 
 	private static String formatHost(InetAddress address) {
@@ -388,7 +388,7 @@ public final class HttpUtils {
 		String answer;
 		try {
 			answer = Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-1")
-					.digest((key + MAGIC_STRING).getBytes(UTF_8)));
+				.digest((key + MAGIC_STRING).getBytes(UTF_8)));
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
@@ -408,8 +408,8 @@ public final class HttpUtils {
 
 	static boolean isReservedCloseCode(int closeCode) {
 		return closeCode < 1000 ||
-				(closeCode >= 1004 && closeCode < 1007) ||
-				(closeCode >= 1015 && closeCode < 3000);
+			(closeCode >= 1004 && closeCode < 1007) ||
+			(closeCode >= 1015 && closeCode < 3000);
 	}
 
 	static String getUTF8(ByteBuf buf) throws CharacterCodingException {

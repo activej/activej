@@ -41,15 +41,15 @@ public final class FileUploadExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, Executor executor) {
 		return RoutingServlet.builder(reactor)
-				.with(GET, "/*", StaticServlet.builder(reactor, staticLoader)
-						.withIndexHtml()
-						.build())
-				.with(POST, "/test", request ->
-						request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))
-								.then($ -> HttpResponse.ok200()
-										.withPlainText("Upload successful")
-										.toPromise()))
-				.build();
+			.with(GET, "/*", StaticServlet.builder(reactor, staticLoader)
+				.withIndexHtml()
+				.build())
+			.with(POST, "/test", request ->
+				request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))
+					.then($ -> HttpResponse.ok200()
+						.withPlainText("Upload successful")
+						.toPromise()))
+			.build();
 	}
 	//[END EXAMPLE]
 

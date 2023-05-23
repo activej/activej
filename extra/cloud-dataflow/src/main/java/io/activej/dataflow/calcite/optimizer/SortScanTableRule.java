@@ -35,11 +35,11 @@ public class SortScanTableRule extends RelOptRule {
 
 	public static SortScanTableRule create() {
 		return new SortScanTableRule(
-				operand(LogicalSort.class,
-						operand(LogicalProject.class,
-								operand(DataflowTableScan.class, none())
-						)
+			operand(LogicalSort.class,
+				operand(LogicalProject.class,
+					operand(DataflowTableScan.class, none())
 				)
+			)
 		);
 	}
 

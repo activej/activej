@@ -98,14 +98,14 @@ public abstract class AbstractMapSerializerDef extends AbstractSerializerDef imp
 	public final Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		if (!nullable) {
 			return sequence(
-					writeVarInt(buf, pos, length(value)),
-					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel));
+				writeVarInt(buf, pos, length(value)),
+				doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel));
 		} else {
 			return ifNull(value,
-					writeByte(buf, pos, value((byte) 0)),
-					sequence(
-							writeVarInt(buf, pos, inc(length(value))),
-							doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel)));
+				writeByte(buf, pos, value((byte) 0)),
+				sequence(
+					writeVarInt(buf, pos, inc(length(value))),
+					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel)));
 		}
 	}
 
@@ -113,30 +113,30 @@ public abstract class AbstractMapSerializerDef extends AbstractSerializerDef imp
 		Encoder keyEncoder = keySerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 		Encoder valueEncoder = valueSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 		return doIterateMap(value,
-				(k, v) -> sequence(
-						keyEncoder.encode(buf, pos, cast(k, keySerializer.getEncodeType())),
-						valueEncoder.encode(buf, pos, cast(v, valueSerializer.getEncodeType()))));
+			(k, v) -> sequence(
+				keyEncoder.encode(buf, pos, cast(k, keySerializer.getEncodeType())),
+				valueEncoder.encode(buf, pos, cast(v, valueSerializer.getEncodeType()))));
 	}
 
 	@Override
 	public final Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(readVarInt(in), length ->
-				!nullable ?
-						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
-						ifEq(length, value(0),
-								nullRef(decodeType),
-								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
+			!nullable ?
+				doDecode(staticDecoders, in, version, compatibilityLevel, length) :
+				ifEq(length, value(0),
+					nullRef(decodeType),
+					let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
 	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		Decoder keyDecoder = keySerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		Decoder valueDecoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(createBuilder(length), builder -> sequence(
-				iterate(value(0), length,
-						i -> putToBuilder(builder, i,
-								cast(keyDecoder.decode(in), keyType),
-								cast(valueDecoder.decode(in), valueType))),
-				build(builder)));
+			iterate(value(0), length,
+				i -> putToBuilder(builder, i,
+					cast(keyDecoder.decode(in), keyType),
+					cast(valueDecoder.decode(in), valueType))),
+			build(builder)));
 	}
 
 	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);

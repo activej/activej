@@ -76,29 +76,29 @@ public final class RESPv2Test {
 		test(new Object[]{new Object[0], new Object[0]}, RedisResponse.ARRAY);
 		test(new Object[]{null, new Object[0], null}, RedisResponse.ARRAY);
 		test(new Object[]{
-						new Object[]{"test1"},
-						new Object[]{"test2"},
-						new Object[]{"test3"}
-				},
-				RedisResponse.ARRAY);
+				new Object[]{"test1"},
+				new Object[]{"test2"},
+				new Object[]{"test3"}
+			},
+			RedisResponse.ARRAY);
 		test(new Object[]{
-						"Hello",
-						new Object[]{
-								null,
-								new Object[]{"inner"},
-								"test",
-								100L,
-								new byte[]{1, 2, 3}
-						},
-						null,
-						new Object[]{
-								1L,
-								"",
-								"test",
-								new Object[0]
-						}
+				"Hello",
+				new Object[]{
+					null,
+					new Object[]{"inner"},
+					"test",
+					100L,
+					new byte[]{1, 2, 3}
 				},
-				RedisResponse.ARRAY);
+				null,
+				new Object[]{
+					1L,
+					"",
+					"test",
+					new Object[0]
+				}
+			},
+			RedisResponse.ARRAY);
 		test(new Object[]{new Object[]{new Object[]{new Object[]{new Object[]{new Object[]{"test"}}}}}}, RedisResponse.ARRAY);
 	}
 

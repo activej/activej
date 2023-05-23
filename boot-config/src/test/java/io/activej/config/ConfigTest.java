@@ -27,8 +27,8 @@ public class ConfigTest {
 	@Test
 	public void testOfConverter1() {
 		ServerSocketSettings serverSocketSettings = ServerSocketSettings.builder()
-				.withBacklog(16384)
-				.build();
+			.withBacklog(16384)
+			.build();
 		Config config = Config.ofValue(ConfigConverters.ofServerSocketSettings(), serverSocketSettings);
 		assertEquals("16384", config.get("backlog"));
 		assertTrue(config.hasChild("receiveBufferSize"));
@@ -44,11 +44,11 @@ public class ConfigTest {
 	@Test
 	public void testCombine() {
 		Config config1 = Config.create()
-				.with("a", "a")
-				.with("a.a", "aa");
+			.with("a", "a")
+			.with("a.a", "aa");
 		Config config2 = Config.create()
-				.with("b", "b")
-				.with("a.b", "ab");
+			.with("b", "b")
+			.with("a.b", "ab");
 		Config config = config1.combineWith(config2);
 		assertEquals(Set.of("a", "b"), config.getChildren().keySet());
 		assertEquals(Set.of("a", "b"), config.getChildren().get("a").getChildren().keySet());

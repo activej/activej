@@ -119,8 +119,8 @@ public final class RecordReducer extends ReducerToResult<Record, Record, Record,
 		}
 
 		return accumulatorSchemeBuilder
-				.withComparatorFields(fields)
-				.build();
+			.withComparatorFields(fields)
+			.build();
 	}
 
 	private static RecordScheme createOutputScheme(RecordScheme accumulatorScheme, List<FieldReducer<?, ?, ?>> fieldReducers) {
@@ -140,8 +140,8 @@ public final class RecordReducer extends ReducerToResult<Record, Record, Record,
 		}
 
 		return outputSchemeBuilder
-				.withComparatorFields(fields)
-				.build();
+			.withComparatorFields(fields)
+			.build();
 	}
 
 	public InputToAccumulator<Record, Record, Record, Record> getInputToAccumulator() {

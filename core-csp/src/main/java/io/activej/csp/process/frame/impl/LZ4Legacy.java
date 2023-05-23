@@ -66,11 +66,11 @@ public final class LZ4Legacy implements FrameFormat {
 	}
 
 	static final int HEADER_LENGTH =
-			MAGIC.length    // magic bytes
-					+ 1     // token
-					+ 4     // compressed length
-					+ 4     // decompressed length
-					+ 4;    // checksum
+		MAGIC.length    // magic bytes
+			+ 1     // token
+			+ 4     // compressed length
+			+ 4     // decompressed length
+			+ 4;    // checksum
 
 	static final int DEFAULT_SEED = 0x9747b28c;
 
@@ -82,8 +82,10 @@ public final class LZ4Legacy implements FrameFormat {
 
 	public boolean ignoreMissingEndOfStreamBlock;
 
-	public LZ4Legacy(LZ4Factory factory, XXHashFactory hashFactory, boolean legacyChecksum, int compressionLevel,
-			boolean ignoreMissingEndOfStreamBlock) {
+	public LZ4Legacy(
+		LZ4Factory factory, XXHashFactory hashFactory, boolean legacyChecksum, int compressionLevel,
+		boolean ignoreMissingEndOfStreamBlock
+	) {
 		this.lz4Factory = factory;
 		this.hashFactory = hashFactory;
 		this.legacyChecksum = legacyChecksum;
@@ -102,13 +104,13 @@ public final class LZ4Legacy implements FrameFormat {
 	public final class Builder extends AbstractBuilder<Builder, LZ4Legacy> {
 		private Builder() {}
 
-		public Builder withLZ4Factory(LZ4Factory factory){
+		public Builder withLZ4Factory(LZ4Factory factory) {
 			checkNotBuilt(this);
 			LZ4Legacy.this.lz4Factory = factory;
 			return this;
 		}
 
-		public Builder withHashFactory(XXHashFactory factory){
+		public Builder withHashFactory(XXHashFactory factory) {
 			checkNotBuilt(this);
 			LZ4Legacy.this.hashFactory = factory;
 			return this;
@@ -154,10 +156,10 @@ public final class LZ4Legacy implements FrameFormat {
 	@Override
 	public BlockEncoder createEncoder() {
 		LZ4Compressor compressor = compressionLevel == 0 ?
-				lz4Factory.fastCompressor() :
-				compressionLevel == -1 ?
-						lz4Factory.highCompressor() :
-						lz4Factory.highCompressor(compressionLevel);
+			lz4Factory.fastCompressor() :
+			compressionLevel == -1 ?
+				lz4Factory.highCompressor() :
+				lz4Factory.highCompressor(compressionLevel);
 		StreamingXXHash32 hash = hashFactory.newStreamingHash32(DEFAULT_SEED);
 		Checksum checksum = legacyChecksum ? hash.asChecksum() : toSimpleChecksum(hash);
 		return new Encoder(compressor, checksum);
@@ -330,7 +332,7 @@ public final class LZ4Legacy implements FrameFormat {
 			bufs.scanBytes((index, value) -> {
 				if (value != MAGIC[index]) {
 					throw new UnknownFormatException(
-							"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
+						"Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 				}
 				return index == MAGIC_LENGTH - 1;
 			});
@@ -349,10 +351,10 @@ public final class LZ4Legacy implements FrameFormat {
 			originalLen = readInt(bufs);
 			check = readInt(bufs);
 			if (originalLen > 1 << compressionLevel
-					|| (originalLen < 0 || compressedLen < 0)
-					|| (originalLen == 0 && compressedLen != 0)
-					|| (originalLen != 0 && compressedLen == 0)
-					|| (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)) {
+				|| (originalLen < 0 || compressedLen < 0)
+				|| (originalLen == 0 && compressedLen != 0)
+				|| (originalLen != 0 && compressedLen == 0)
+				|| (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)) {
 				throw new MalformedDataException("Malformed header");
 			}
 			if (originalLen == 0) {

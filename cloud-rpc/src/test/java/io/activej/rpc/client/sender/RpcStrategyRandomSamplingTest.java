@@ -34,10 +34,10 @@ public class RpcStrategyRandomSamplingTest {
 
 		// init RandomSamplingStrategy
 		RpcStrategy randomSamplingStrategy = RandomSampling.builder()
-				.with(strategy_1_weight, strategy_1)
-				.with(strategy_2_weight, strategy_2)
-				.with(strategy_3_weight, strategy_3)
-				.build();
+			.with(strategy_1_weight, strategy_1)
+			.with(strategy_2_weight, strategy_2)
+			.with(strategy_3_weight, strategy_3)
+			.build();
 
 		// make requests
 		RpcSender sender = randomSamplingStrategy.createSender(POOL);
@@ -80,10 +80,10 @@ public class RpcStrategyRandomSamplingTest {
 
 		// init RandomSamplingStrategy
 		RpcStrategy randomSamplingStrategy = RandomSampling.builder()
-				.with(strategy_1_weight, strategy_1)
-				.with(zero_weight, strategy_2)
-				.with(strategy_3_weight, strategy_3)
-				.build();
+			.with(strategy_1_weight, strategy_1)
+			.with(zero_weight, strategy_2)
+			.with(strategy_3_weight, strategy_3)
+			.build();
 
 		// make requests
 		RpcSender sender = randomSamplingStrategy.createSender(POOL);

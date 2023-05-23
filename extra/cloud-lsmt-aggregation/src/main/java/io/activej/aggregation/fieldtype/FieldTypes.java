@@ -90,11 +90,11 @@ public class FieldTypes {
 	private static SerializerDef serializerDefHyperLogLog() {
 		try {
 			return ClassSerializerDef.builder(HyperLogLog.class)
-					.withGetter(HyperLogLog.class.getMethod("getRegisters"),
-							SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1)
-					.withConstructor(HyperLogLog.class.getConstructor(byte[].class),
-							List.of("registers"))
-					.build();
+				.withGetter(HyperLogLog.class.getMethod("getRegisters"),
+					SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1)
+				.withConstructor(HyperLogLog.class.getConstructor(byte[].class),
+					List.of("registers"))
+				.build();
 		} catch (NoSuchMethodException e) {
 			throw new AssertionError(e);
 		}
@@ -107,8 +107,8 @@ public class FieldTypes {
 		}
 		SerializerDef serializer = SerializerDefs.ofSet(itemSerializer);
 		Type wrappedNestedType = fieldType.getDataType() instanceof Class ?
-				Primitives.wrap((Class<?>) fieldType.getDataType()) :
-				fieldType.getDataType();
+			Primitives.wrap((Class<?>) fieldType.getDataType()) :
+			fieldType.getDataType();
 		Type dataType = Types.parameterizedType(Set.class, wrappedNestedType);
 		JsonCodec<Set<T>> codec = JsonCodecs.ofSet(fieldType.getCodec());
 		return new FieldType<>(Set.class, dataType, serializer, codec, codec);

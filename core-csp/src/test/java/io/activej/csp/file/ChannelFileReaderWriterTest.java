@@ -41,7 +41,7 @@ public final class ChannelFileReaderWriterTest {
 	@Test
 	public void streamFileReader() throws IOException {
 		ByteBuf byteBuf = await(ChannelFileReader.open(newCachedThreadPool(), Paths.get("test_data/in.dat"))
-				.then(cfr -> cfr.toCollector(ByteBufs.collector())));
+			.then(cfr -> cfr.toCollector(ByteBufs.collector())));
 
 		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
 	}
@@ -49,10 +49,10 @@ public final class ChannelFileReaderWriterTest {
 	@Test
 	public void streamFileReaderWithDelay() throws IOException {
 		ByteBuf byteBuf = await(ChannelFileReader.builderOpen(newCachedThreadPool(), Paths.get("test_data/in.dat"))
-				.then(builder -> builder.withBufferSize(MemSize.of(1))
-						.build()
-						.mapAsync(buf -> Promises.delay(10L, buf))
-						.toCollector(ByteBufs.collector())));
+			.then(builder -> builder.withBufferSize(MemSize.of(1))
+				.build()
+				.mapAsync(buf -> Promises.delay(10L, buf))
+				.toCollector(ByteBufs.collector())));
 
 		assertArrayEquals(Files.readAllBytes(Paths.get("test_data/in.dat")), byteBuf.asArray());
 	}
@@ -63,7 +63,7 @@ public final class ChannelFileReaderWriterTest {
 		byte[] bytes = {'T', 'e', 's', 't', '1', ' ', 'T', 'e', 's', 't', '2', ' ', 'T', 'e', 's', 't', '3', '\n', 'T', 'e', 's', 't', '\n'};
 
 		await(ChannelSuppliers.ofValue(ByteBuf.wrapForReading(bytes))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), tempPath)));
+			.streamTo(ChannelFileWriter.open(newCachedThreadPool(), tempPath)));
 
 		assertArrayEquals(bytes, Files.readAllBytes(tempPath));
 	}
@@ -79,8 +79,8 @@ public final class ChannelFileReaderWriterTest {
 
 		writer.closeEx(exception);
 		Exception e = awaitException(ChannelSuppliers.ofValue(ByteBuf.wrapForReading(bytes))
-				.streamTo(writer)
-				.then(() -> writer.accept(ByteBuf.wrapForReading("abc".getBytes()))));
+			.streamTo(writer)
+			.then(() -> writer.accept(ByteBuf.wrapForReading("abc".getBytes()))));
 		assertSame(exception, e);
 	}
 
@@ -95,11 +95,11 @@ public final class ChannelFileReaderWriterTest {
 		Files.write(file, data);
 
 		await(ChannelFileReader.open(newCachedThreadPool(), file)
-				.then(cfr -> cfr.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> {
-					assertTrue("Received byte buffer is empty", buf.canRead());
-					buf.recycle();
-					return Promise.complete();
-				}))));
+			.then(cfr -> cfr.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> {
+				assertTrue("Received byte buffer is empty", buf.canRead());
+				buf.recycle();
+				return Promise.complete();
+			}))));
 	}
 
 	@Test
@@ -123,9 +123,9 @@ public final class ChannelFileReaderWriterTest {
 		ChannelFileReader.Builder builder = await(ChannelFileReader.builderOpen(newCachedThreadPool(), Paths.get("test_data/in.dat")));
 
 		ByteBuf byteBuf = await(builder.withOffset(Files.size(Paths.get("test_data/in.dat")) + 100)
-				.withBufferSize(MemSize.of(1))
-				.build()
-				.toCollector(ByteBufs.collector()));
+			.withBufferSize(MemSize.of(1))
+			.build()
+			.toCollector(ByteBufs.collector()));
 
 		assertEquals("", byteBuf.asString(UTF_8));
 	}

@@ -44,10 +44,10 @@ public final class TransformerExample extends ImplicitlyReactive implements Stre
 
 	{
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		output.getAcknowledgement()
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 	}
 
 	@Override
@@ -63,16 +63,16 @@ public final class TransformerExample extends ImplicitlyReactive implements Stre
 	//[START REGION_2]
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		StreamSupplier<String> source = StreamSuppliers.ofValues("testdata", "testdata1", "testdata1000");
 		TransformerExample transformer = new TransformerExample();
 
 		source.transformWith(transformer)
-				.toList()
-				.whenResult(v -> System.out.println(v));
+			.toList()
+			.whenResult(v -> System.out.println(v));
 
 		eventloop.run();
 	}

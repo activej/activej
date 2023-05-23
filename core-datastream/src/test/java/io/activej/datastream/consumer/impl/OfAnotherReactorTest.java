@@ -38,8 +38,8 @@ public class OfAnotherReactorTest {
 	@Before
 	public void setUp() throws InterruptedException {
 		anotherEventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		anotherEventloop.keepAlive(true);
 		CountDownLatch latch = new CountDownLatch(1);
 		new Thread(() -> {
@@ -87,9 +87,9 @@ public class OfAnotherReactorTest {
 		StreamSupplier<Integer> supplier = StreamSuppliers.ofValues(1, 2, 3, 4, 5);
 		ToListStreamConsumer<Integer> listConsumer = fromAnotherEventloop(ToListStreamConsumer::create);
 		StreamConsumer<Integer> consumer = StreamConsumers.ofAnotherReactor(anotherEventloop, listConsumer)
-				.transformWith(decorate(promise -> promise
-						.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))
-				.transformWith(randomlySuspending());
+			.transformWith(decorate(promise -> promise
+				.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))
+			.transformWith(randomlySuspending());
 
 		Exception exception = awaitException(supplier.streamTo(consumer));
 

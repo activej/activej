@@ -41,8 +41,8 @@ public interface IStaticLoader {
 
 	default IStaticLoader filter(Predicate<String> predicate) {
 		return path -> predicate.test(path) ?
-				load(path) :
-				Promise.ofException(new ResourceNotFoundException("Resource '" + path + "' has been filtered out"));
+			load(path) :
+			Promise.ofException(new ResourceNotFoundException("Resource '" + path + "' has been filtered out"));
 	}
 
 	default IStaticLoader map(UnaryOperator<String> fn) {

@@ -20,8 +20,8 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 public final class ChannelFileExample {
 	private static final ExecutorService executor = newSingleThreadExecutor();
 	private static final Eventloop eventloop = Eventloop.builder()
-			.withCurrentThread()
-			.build();
+		.withCurrentThread()
+		.build();
 	private static final Path PATH;
 
 	static {
@@ -35,22 +35,22 @@ public final class ChannelFileExample {
 	//[START REGION_1]
 	private static Promise<Void> writeToFile() {
 		return ChannelSuppliers.ofValues(
-						ByteBufStrings.wrapAscii("Hello, this is example file\n"),
-						ByteBufStrings.wrapAscii("This is the second line of file\n"))
-				.streamTo(ChannelFileWriter.open(executor, PATH, WRITE));
+				ByteBufStrings.wrapAscii("Hello, this is example file\n"),
+				ByteBufStrings.wrapAscii("This is the second line of file\n"))
+			.streamTo(ChannelFileWriter.open(executor, PATH, WRITE));
 	}
 
 	private static Promise<Void> readFile() {
 		return ChannelFileReader.open(executor, PATH)
-				.then(cfr -> cfr.streamTo(ChannelConsumers.ofConsumer(buf -> System.out.print(buf.asString(UTF_8)))));
+			.then(cfr -> cfr.streamTo(ChannelConsumers.ofConsumer(buf -> System.out.print(buf.asString(UTF_8)))));
 
 	}
 	//[END REGION_1]
 
 	public static void main(String[] args) {
 		Promises.sequence(
-				ChannelFileExample::writeToFile,
-				ChannelFileExample::readFile);
+			ChannelFileExample::writeToFile,
+			ChannelFileExample::readFile);
 
 		eventloop.run();
 		executor.shutdown();

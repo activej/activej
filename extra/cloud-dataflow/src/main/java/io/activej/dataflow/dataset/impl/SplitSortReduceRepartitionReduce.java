@@ -45,14 +45,11 @@ public final class SplitSortReduceRepartitionReduce<K, I, O, A> extends Dataset<
 	public final StreamSchema<A> accumulatorStreamSchema;
 	public final int sortBufferSize;
 
-	public SplitSortReduceRepartitionReduce(Dataset<I> input,
-			Function<I, K> inputKeyFunction,
-			Function<A, K> accumulatorKeyFunction,
-			Comparator<K> keyComparator,
-			ReducerToResult<K, I, O, A> reducer,
-			StreamSchema<O> resultStreamSchema,
-			StreamSchema<A> accumulatorStreamSchema,
-			int sortBufferSize) {
+	public SplitSortReduceRepartitionReduce(
+		Dataset<I> input, Function<I, K> inputKeyFunction, Function<A, K> accumulatorKeyFunction,
+		Comparator<K> keyComparator, ReducerToResult<K, I, O, A> reducer, StreamSchema<O> resultStreamSchema,
+		StreamSchema<A> accumulatorStreamSchema, int sortBufferSize
+	) {
 		super(resultStreamSchema);
 		this.input = input;
 		this.inputKeyFunction = inputKeyFunction;

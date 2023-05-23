@@ -15,13 +15,13 @@ public final class ComparatorCodecModule extends AbstractModule {
 	@Subtype(0)
 	StreamCodec<RecordSortComparator> recordSortComparator() {
 		return StreamCodec.create(RecordSortComparator::new,
-				RecordSortComparator::getSorts, StreamCodecs.ofList(
-						StreamCodec.create(FieldSort::new,
-								FieldSort::index, StreamCodecs.ofVarInt(),
-								FieldSort::asc, StreamCodecs.ofBoolean(),
-								FieldSort::nullDirection, StreamCodecs.ofEnum(NullDirection.class)
-						)
+			RecordSortComparator::getSorts, StreamCodecs.ofList(
+				StreamCodec.create(FieldSort::new,
+					FieldSort::index, StreamCodecs.ofVarInt(),
+					FieldSort::asc, StreamCodecs.ofBoolean(),
+					FieldSort::nullDirection, StreamCodecs.ofEnum(NullDirection.class)
 				)
+			)
 		);
 	}
 

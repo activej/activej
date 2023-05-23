@@ -47,17 +47,17 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	private EventloopStats() {
 		loops = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 		selectorSelectTimeout = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-				.withHistogram(new int[]{-256, -128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32})
-				.withUnit("milliseconds")
-				.build();
+			.withHistogram(new int[]{-256, -128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32})
+			.withUnit("milliseconds")
+			.build();
 		selectorSelectTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-				.withHistogram(POWERS_OF_TWO)
-				.withUnit("milliseconds")
-				.build();
+			.withHistogram(POWERS_OF_TWO)
+			.withUnit("milliseconds")
+			.build();
 		businessLogicTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-				.withHistogram(POWERS_OF_TWO)
-				.withUnit("milliseconds")
-				.build();
+			.withHistogram(POWERS_OF_TWO)
+			.withUnit("milliseconds")
+			.build();
 		tasks = new Tasks();
 		keys = new Keys();
 		fatalErrors = ExceptionStats.create();
@@ -103,8 +103,10 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onUpdateSelectedKeysStats(int lastSelectedKeys, int invalidKeys, int acceptKeys,
-			int connectKeys, int readKeys, int writeKeys, long loopTime) {
+	public void onUpdateSelectedKeysStats(
+		int lastSelectedKeys, int invalidKeys, int acceptKeys, int connectKeys, int readKeys, int writeKeys,
+		long loopTime
+	) {
 		keys.all.recordEvents(lastSelectedKeys);
 		keys.invalid.recordEvents(invalidKeys);
 		keys.acceptPerLoop.recordValue(acceptKeys);
@@ -286,16 +288,16 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 		TaskStats() {
 			this.tasksPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.build();
 			this.loopTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.withUnit("milliseconds")
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.withUnit("milliseconds")
+				.build();
 			this.oneTaskTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.withUnit("microseconds")
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.withUnit("microseconds")
+				.build();
 			this.longestTask = new DurationRunnable();
 		}
 
@@ -330,10 +332,10 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 		ScheduledTaskStats() {
 			overdues = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.withRate()
-					.withUnit("milliseconds")
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.withRate()
+				.withUnit("milliseconds")
+				.build();
 		}
 
 		@JmxAttribute(extraSubAttributes = "histogram")
@@ -354,31 +356,31 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 		public Keys() {
 			all = EventStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withRateUnit("keys")
-					.build();
+				.withRateUnit("keys")
+				.build();
 			invalid = EventStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withRateUnit("keys")
-					.build();
+				.withRateUnit("keys")
+				.build();
 			acceptPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.build();
 			connectPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.build();
 			readPerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.build();
 			writePerLoop = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.build();
 			loopTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.withUnit("milliseconds")
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.withUnit("milliseconds")
+				.build();
 			oneKeyTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-					.withHistogram(POWERS_OF_TWO)
-					.withUnit("microseconds")
-					.build();
+				.withHistogram(POWERS_OF_TWO)
+				.withUnit("microseconds")
+				.build();
 		}
 
 		@JmxAttribute

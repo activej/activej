@@ -33,7 +33,7 @@ public final class FullPathConfig implements Config {
 		this.config = config;
 		this.children = new LinkedHashMap<>();
 		config.getChildren().forEach((key, value) ->
-				this.children.put(key, new FullPathConfig(concatPath(this.path, key), value)));
+			this.children.put(key, new FullPathConfig(concatPath(this.path, key), value)));
 	}
 
 	public static FullPathConfig wrap(Config config) {

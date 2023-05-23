@@ -93,13 +93,11 @@ public final class DataflowServer extends AbstractReactiveServer {
 
 	private int succeededTasks = 0, canceledTasks = 0, failedTasks = 0;
 	private Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler = $ ->
-			new DataflowResponse.Handshake(null);
+		new DataflowResponse.Handshake(null);
 
 	private DataflowServer(
-			NioReactor reactor,
-			ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
-			BinarySerializerLocator serializers,
-			ResourceLocator environment
+		NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers,
+		ResourceLocator environment
 	) {
 		super(reactor);
 		this.codec = codec;
@@ -108,10 +106,8 @@ public final class DataflowServer extends AbstractReactiveServer {
 	}
 
 	public static Builder builder(
-			NioReactor reactor,
-			ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
-			BinarySerializerLocator serializers,
-			ResourceLocator environment
+		NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers,
+		ResourceLocator environment
 	) {
 		return new DataflowServer(reactor, codec, serializers, environment).new Builder();
 	}
@@ -132,15 +128,15 @@ public final class DataflowServer extends AbstractReactiveServer {
 			error = exception.getClass().getSimpleName() + ": " + exception.getMessage();
 		}
 		messaging.send(new Result(error))
-				.whenComplete(messaging::close);
+			.whenComplete(messaging::close);
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		ChannelSerializer<T> streamSerializer = ChannelSerializer.builder(streamSchema.createSerializer(serializers))
-				.withInitialBufferSize(MemSize.kilobytes(256))
-				.withAutoFlushInterval(Duration.ZERO)
-				.withExplicitEndOfStream()
-				.build();
+			.withInitialBufferSize(MemSize.kilobytes(256))
+			.withAutoFlushInterval(Duration.ZERO)
+			.withExplicitEndOfStream()
+			.build();
 
 		ChannelQueue<ByteBuf> forwarder = pendingStreams.remove(streamId);
 		if (forwarder == null) {
@@ -153,15 +149,15 @@ public final class DataflowServer extends AbstractReactiveServer {
 
 		streamSerializer.getOutput().set(forwarder.getConsumer().transformWith(transformer));
 		streamSerializer.getAcknowledgement()
-				.whenException(() -> {
-					ChannelQueue<ByteBuf> removed = pendingStreams.remove(streamId);
-					if (removed != null) {
-						logger.info("onUpload: removing {}, pending downloads: {}", streamId, pendingStreams.size());
-						removed.close();
-					}
-				});
+			.whenException(() -> {
+				ChannelQueue<ByteBuf> removed = pendingStreams.remove(streamId);
+				if (removed != null) {
+					logger.info("onUpload: removing {}, pending downloads: {}", streamId, pendingStreams.size());
+					removed.close();
+				}
+			});
 		return streamSerializer
-				.withAcknowledgement(ack -> ack.mapException(IOException.class, DataflowStacklessException::new));
+			.withAcknowledgement(ack -> ack.mapException(IOException.class, DataflowStacklessException::new));
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema) {
@@ -172,20 +168,20 @@ public final class DataflowServer extends AbstractReactiveServer {
 	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		IMessaging<DataflowRequest, DataflowResponse> messaging = Messaging.create(socket, codec);
 		messaging.receive()
-				.then(request -> {
-					if (!(request instanceof DataflowRequest.Handshake handshake)) {
-						return Promise.ofException(new DataflowException("Handshake expected, got: " + request));
-					}
-					return messaging.send(handshakeHandler.apply(handshake));
-				})
-				.then(messaging::receive)
-				.mapException(IOException.class, DataflowStacklessException::new)
-				.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
-				.whenResult(msg -> dispatch(messaging, msg))
-				.whenException(e -> {
-					logger.error("received error while trying to read", e);
-					messaging.close();
-				});
+			.then(request -> {
+				if (!(request instanceof DataflowRequest.Handshake handshake)) {
+					return Promise.ofException(new DataflowException("Handshake expected, got: " + request));
+				}
+				return messaging.send(handshakeHandler.apply(handshake));
+			})
+			.then(messaging::receive)
+			.mapException(IOException.class, DataflowStacklessException::new)
+			.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
+			.whenResult(msg -> dispatch(messaging, msg))
+			.whenException(e -> {
+				logger.error("received error while trying to read", e);
+				messaging.close();
+			});
 	}
 
 	private void dispatch(IMessaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
@@ -209,21 +205,21 @@ public final class DataflowServer extends AbstractReactiveServer {
 			pendingStreams.put(streamId, forwarder);
 			logger.info("onDownload: waiting {}, pending downloads: {}", streamId, pendingStreams.size());
 			messaging.receive()
-					.whenException(() -> {
-						ChannelQueue<ByteBuf> removed = pendingStreams.remove(streamId);
-						if (removed != null) {
-							logger.info("onDownload: removing {}, pending downloads: {}", streamId, pendingStreams.size());
-						}
-					});
+				.whenException(() -> {
+					ChannelQueue<ByteBuf> removed = pendingStreams.remove(streamId);
+					if (removed != null) {
+						logger.info("onDownload: removing {}, pending downloads: {}", streamId, pendingStreams.size());
+					}
+				});
 		}
 		ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
-				.withAcknowledgement(ack -> ack
-						.mapException(IOException.class, DataflowStacklessException::new));
+			.withAcknowledgement(ack -> ack
+				.mapException(IOException.class, DataflowStacklessException::new));
 		forwarder.getSupplier()
-				.streamTo(consumer);
+			.streamTo(consumer);
 		consumer.withAcknowledgement(ack -> ack
-				.whenComplete(messaging::close)
-				.whenException(e -> logger.warn("Exception occurred while trying to send data", e))
+			.whenComplete(messaging::close)
+			.whenException(e -> logger.warn("Exception occurred while trying to send data", e))
 		);
 	}
 
@@ -240,38 +236,38 @@ public final class DataflowServer extends AbstractReactiveServer {
 		lastTasks.put(taskId, task);
 		runningTasks.put(taskId, task);
 		task.execute()
-				.mapException(IOException.class, DataflowStacklessException::new)
-				.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
-				.whenComplete(($, exception) -> {
-					runningTasks.remove(taskId);
-					if (exception == null) {
-						succeededTasks++;
-						logger.info("Task executed successfully: {}", execute);
-					} else if (exception instanceof AsyncCloseException) {
-						canceledTasks++;
-						logger.warn("Canceled task: {}", execute, exception);
-					} else {
-						failedTasks++;
-						logger.error("Failed to execute task: {}", execute, exception);
-					}
-					sendResponse(messaging, exception);
-				});
+			.mapException(IOException.class, DataflowStacklessException::new)
+			.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
+			.whenComplete(($, exception) -> {
+				runningTasks.remove(taskId);
+				if (exception == null) {
+					succeededTasks++;
+					logger.info("Task executed successfully: {}", execute);
+				} else if (exception instanceof AsyncCloseException) {
+					canceledTasks++;
+					logger.warn("Canceled task: {}", execute, exception);
+				} else {
+					failedTasks++;
+					logger.error("Failed to execute task: {}", execute, exception);
+				}
+				sendResponse(messaging, exception);
+			});
 
 		messaging.receive()
-				.whenException(() -> {
-					if (!task.isExecuted()) {
-						logger.warn("Client disconnected. Canceling task: {}", execute);
-						task.cancel();
-					}
-				});
+			.whenException(() -> {
+				if (!task.isExecuted()) {
+					logger.warn("Client disconnected. Canceling task: {}", execute);
+					task.cancel();
+				}
+			});
 	}
 
 	private void handleGetTasks(IMessaging<DataflowRequest, DataflowResponse> messaging, GetTasks getTasks) {
 		Long taskId = getTasks.taskId();
 		if (taskId == null) {
 			messaging.send(partitionDataResponse())
-					.mapException(IOException.class, DataflowStacklessException::new)
-					.whenException(e -> logger.error("Failed to send answer for the partition data request", e));
+				.mapException(IOException.class, DataflowStacklessException::new)
+				.whenException(e -> logger.error("Failed to send answer for the partition data request", e));
 			return;
 		}
 		Task task = lastTasks.get(taskId);
@@ -288,8 +284,8 @@ public final class DataflowServer extends AbstractReactiveServer {
 			err = null;
 		}
 		messaging.send(taskDataResponse(task, err))
-				.mapException(IOException.class, DataflowStacklessException::new)
-				.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
+			.mapException(IOException.class, DataflowStacklessException::new)
+			.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
 	}
 
 	@Override
@@ -306,26 +302,26 @@ public final class DataflowServer extends AbstractReactiveServer {
 
 	private DataflowResponse partitionDataResponse() {
 		return new DataflowResponse.PartitionData(
-				getRunningTasks(),
-				getSucceededTasks(),
-				getFailedTasks(),
-				getCanceledTasks(),
-				lastTasks.entrySet().stream()
-						.map(e -> new TaskDescription(e.getKey(), e.getValue().getStatus()))
-						.collect(toList())
+			getRunningTasks(),
+			getSucceededTasks(),
+			getFailedTasks(),
+			getCanceledTasks(),
+			lastTasks.entrySet().stream()
+				.map(e -> new TaskDescription(e.getKey(), e.getValue().getStatus()))
+				.collect(toList())
 		);
 	}
 
 	private DataflowResponse taskDataResponse(Task task, @Nullable String error) {
 		return new TaskData(
-				task.getStatus(),
-				task.getStartTime(),
-				task.getFinishTime(),
-				error,
-				task.getNodes().stream()
-						.filter(n -> n.getStats() != null)
-						.collect(toMap(Node::getIndex, Node::getStats)),
-				task.getGraphViz()
+			task.getStatus(),
+			task.getStartTime(),
+			task.getFinishTime(),
+			error,
+			task.getNodes().stream()
+				.filter(n -> n.getStats() != null)
+				.collect(toMap(Node::getIndex, Node::getStats)),
+			task.getGraphViz()
 		);
 	}
 

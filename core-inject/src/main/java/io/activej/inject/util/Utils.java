@@ -44,16 +44,16 @@ import static java.util.stream.Collectors.toMap;
 public final class Utils {
 
 	private static final BiConsumer<Map<Key<?>, Set<Binding<?>>>, Map<Key<?>, Set<Binding<?>>>> BINDING_MULTIMAP_MERGER =
-			(into, from) -> from.forEach((key, v) -> into.merge(key, v, (set1, set2) -> {
-				Set<Binding<?>> set = new HashSet<>(set1.size() + set2.size());
-				set.addAll(set1);
-				set.addAll(set2);
-				BindingType type = set.isEmpty() ? null : set.iterator().next().getType();
-				if (set.stream().anyMatch(b -> b.getType() != type)) {
-					throw new DIException("Two binding sets bound with different types for key " + key.getDisplayString());
-				}
-				return set;
-			}));
+		(into, from) -> from.forEach((key, v) -> into.merge(key, v, (set1, set2) -> {
+			Set<Binding<?>> set = new HashSet<>(set1.size() + set2.size());
+			set.addAll(set1);
+			set.addAll(set2);
+			BindingType type = set.isEmpty() ? null : set.iterator().next().getType();
+			if (set.stream().anyMatch(b -> b.getType() != type)) {
+				throw new DIException("Two binding sets bound with different types for key " + key.getDisplayString());
+			}
+			return set;
+		}));
 
 	public static BiConsumer<Map<Key<?>, Set<Binding<?>>>, Map<Key<?>, Set<Binding<?>>>> bindingMultimapMerger() {
 		return BINDING_MULTIMAP_MERGER;
@@ -89,14 +89,16 @@ public final class Utils {
 		return result;
 	}
 
-	public static <T, K, V> Collector<T, ?, Map<K, Set<V>>> toMultimap(Function<? super T, ? extends K> keyMapper,
-			Function<? super T, ? extends V> valueMapper) {
+	public static <T, K, V> Collector<T, ?, Map<K, Set<V>>> toMultimap(
+		Function<? super T, ? extends K> keyMapper,
+		Function<? super T, ? extends V> valueMapper
+	) {
 		return toMap(keyMapper, t -> Set.of(valueMapper.apply(t)), io.activej.common.Utils::union);
 	}
 
 	public static <K, V> Map<K, V> squash(Map<K, Set<V>> multimap, BiFunction<K, Set<V>, V> squasher) {
 		return multimap.entrySet().stream()
-				.collect(toMap(Entry::getKey, e -> squasher.apply(e.getKey(), e.getValue())));
+			.collect(toMap(Entry::getKey, e -> squasher.apply(e.getKey(), e.getValue())));
 	}
 
 	public static String getLocation(@Nullable Binding<?> binding) {
@@ -129,8 +131,8 @@ public final class Utils {
 	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedKey> known, String indent, int[] scopeCount, StringBuilder sb) {
 		if (scope != UNSCOPED) {
 			sb.append("\n" + indent)
-					.append("subgraph cluster_" + (scopeCount[0]++) + " {\n")
-					.append(indent + "\tlabel=\"" + scope[scope.length - 1].getDisplayString().replace("\"", "\\\"") + "\"\n");
+				.append("subgraph cluster_" + (scopeCount[0]++) + " {\n")
+				.append(indent + "\tlabel=\"" + scope[scope.length - 1].getDisplayString().replace("\"", "\\\"") + "\"\n");
 		}
 
 		for (Entry<Scope, Trie<Scope, Map<Key<?>, Binding<?>>>> entry : trie.getChildren().entrySet()) {
@@ -148,25 +150,25 @@ public final class Utils {
 			}
 			known.add(ScopedKey.of(scope, key));
 			sb.append(indent)
-					.append('\t')
-					.append('"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
-					.append(" [label=" +
-							'"' + key.getDisplayString().replace("\"", "\\\"") + '"')
-					.append(
-							bindingInfo.getType() == TRANSIENT ? " style=dotted" :
-									bindingInfo.getType() == EAGER ? " style=bold" :
-											bindingInfo.getType() == SYNTHETIC ? " style=dashed" :
-													"")
-					.append("];")
-					.append('\n');
+				.append('\t')
+				.append('"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
+				.append(" [label=" +
+					'"' + key.getDisplayString().replace("\"", "\\\"") + '"')
+				.append(
+					bindingInfo.getType() == TRANSIENT ? " style=dotted" :
+						bindingInfo.getType() == EAGER ? " style=bold" :
+							bindingInfo.getType() == SYNTHETIC ? " style=dashed" :
+								"")
+				.append("];")
+				.append('\n');
 		}
 
 		if (!leafs.isEmpty()) {
 			sb.append(leafs.stream()
-					.map(key -> '"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
-					.collect(joining(" ",
-							'\n' + indent + '\t' + "{ rank=same; ",
-							" }\n")));
+				.map(key -> '"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
+				.collect(joining(" ",
+					'\n' + indent + '\t' + "{ rank=same; ",
+					" }\n")));
 			if (scope == UNSCOPED) {
 				sb.append('\n');
 			}
@@ -193,11 +195,11 @@ public final class Utils {
 				if (depScope.length == 0) {
 					if (known.add(ScopedKey.of(depScope, dependency))) {
 						sb.append('\t')
-								.append(dep)
-								.append(" [label=" +
-										'"' + dependency.getDisplayString().replace("\"", "\\\"") + '"')
-								.append(" style=dashed, color=red];")
-								.append('\n');
+							.append(dep)
+							.append(" [label=" +
+								'"' + dependency.getDisplayString().replace("\"", "\\\"") + '"')
+							.append(" style=dashed, color=red];")
+							.append('\n');
 					}
 				}
 				sb.append('\t' + key + " -> " + dep);
@@ -257,21 +259,21 @@ public final class Utils {
 
 	public static <T> LinkedHashMap<KeyPattern<?>, Set<T>> sortPatternsMap(Map<KeyPattern<?>, Set<T>> map) {
 		return map.entrySet().stream()
-				.sorted((entry1, entry2) -> {
-					KeyPattern<?> pattern1 = entry1.getKey();
-					KeyPattern<?> pattern2 = entry2.getKey();
-					Type type1 = pattern1.getType();
-					Type type2 = pattern2.getType();
-					if (type1.equals(type2)) {
-						if (!pattern1.hasQualifier() && pattern2.hasQualifier()) return 1;
-						if (pattern1.hasQualifier() && !pattern2.hasQualifier()) return -1;
-						return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
-					}
-					if (isAssignable(type1, type2)) return 1;
-					if (isAssignable(type2, type1)) return -1;
+			.sorted((entry1, entry2) -> {
+				KeyPattern<?> pattern1 = entry1.getKey();
+				KeyPattern<?> pattern2 = entry2.getKey();
+				Type type1 = pattern1.getType();
+				Type type2 = pattern2.getType();
+				if (type1.equals(type2)) {
+					if (!pattern1.hasQualifier() && pattern2.hasQualifier()) return 1;
+					if (pattern1.hasQualifier() && !pattern2.hasQualifier()) return -1;
 					return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
-				})
-				.collect(toMap(Entry::getKey, Entry::getValue,
-						(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
+				}
+				if (isAssignable(type1, type2)) return 1;
+				if (isAssignable(type2, type1)) return -1;
+				return Integer.compare(System.identityHashCode(type1), System.identityHashCode(type2));
+			})
+			.collect(toMap(Entry::getKey, Entry::getValue,
+				(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
 	}
 }

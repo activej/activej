@@ -56,9 +56,9 @@ public class ChannelSuppliersIOTest {
 	@Test
 	public void inputStreamAsChannelSupplierTest() throws IOException {
 		Eventloop.builder()
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 		ChannelSupplier<ByteBuf> supplier;
 		try (InputStream is = inputStream()) {
 			supplier = ofInputStream(executor, is);
@@ -75,9 +75,9 @@ public class ChannelSuppliersIOTest {
 	@Test
 	public void inputStreamAsChannelSupplierCloseTest() throws IOException {
 		Eventloop.builder()
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 		try (InputStream is = inputStream()) {
 			is.close();
 			ChannelSupplier<ByteBuf> supplier = ofInputStream(executor, is);
@@ -98,8 +98,8 @@ public class ChannelSuppliersIOTest {
 		ByteBuf byteBuf = wrapForReading(DATA);
 
 		Eventloop eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
@@ -135,9 +135,9 @@ public class ChannelSuppliersIOTest {
 		ByteBuf byteBuf = wrapForReading(DATA);
 
 		Eventloop eventloop = Eventloop
-				.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.builder()
+			.withFatalErrorHandler(rethrow())
+			.build();
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();

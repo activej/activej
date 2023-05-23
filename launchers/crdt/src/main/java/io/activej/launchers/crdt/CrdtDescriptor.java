@@ -21,8 +21,10 @@ import io.activej.crdt.util.CrdtDataBinarySerializer;
 
 import java.lang.reflect.Type;
 
-public record CrdtDescriptor<K extends Comparable<K>, S>(CrdtFunction<S> crdtFunction,
-														 CrdtDataBinarySerializer<K, S> serializer,
-														 Type keyManifest,
-														 Type stateManifest) {
+public record CrdtDescriptor<K extends Comparable<K>, S>(
+	CrdtFunction<S> crdtFunction,
+	CrdtDataBinarySerializer<K, S> serializer,
+	Type keyManifest,
+	Type stateManifest
+) {
 }

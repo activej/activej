@@ -40,8 +40,8 @@ public final class FileSystemBatchException extends FileSystemStateException {
 	@Override
 	public String getMessage() {
 		return super.getMessage() + " : exceptions=" + exceptions.entrySet().stream()
-				.limit(10)
-				.map(element -> element.getKey() + '=' + element.getValue().getMessage())
-				.collect(joining(",", "{", exceptions.size() <= 10 ? "}" : ", ..and " + (exceptions.size() - 10) + " more}"));
+			.limit(10)
+			.map(element -> element.getKey() + '=' + element.getValue().getMessage())
+			.collect(joining(",", "{", exceptions.size() <= 10 ? "}" : ", ..and " + (exceptions.size() - 10) + " more}"));
 	}
 }

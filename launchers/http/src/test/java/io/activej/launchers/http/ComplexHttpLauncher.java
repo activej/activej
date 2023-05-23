@@ -90,8 +90,8 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Named("First")
 	PrimaryServer server1(NioReactor reactor, @Named("First") WorkerPool.Instances<HttpServer> serverInstances) {
 		return PrimaryServer.builder(reactor, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT))
-				.build();
+			.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT))
+			.build();
 	}
 
 	@Provides
@@ -99,8 +99,8 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Named("Second")
 	PrimaryServer server2(@Named("Second") NioReactor reactor, @Named("Second") WorkerPool.Instances<HttpServer> serverInstances) {
 		return PrimaryServer.builder(reactor, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT))
-				.build();
+			.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT))
+			.build();
 	}
 
 	@Provides
@@ -108,8 +108,8 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Named("Third")
 	PrimaryServer server3(@Named("Third") NioReactor reactor, @Named("Third") WorkerPool.Instances<HttpServer> serverInstances) {
 		return PrimaryServer.builder(reactor, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT))
-				.build();
+			.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT))
+			.build();
 	}
 	// endregion
 
@@ -130,8 +130,8 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Worker
 	AsyncServlet workerServlet(@WorkerId int workerId) {
 		return $ -> HttpResponse.ok200()
-				.withPlainText("Hello from worker #" + workerId)
-				.toPromise();
+			.withPlainText("Hello from worker #" + workerId)
+			.toPromise();
 	}
 	// endregion
 
@@ -152,25 +152,25 @@ public final class ComplexHttpLauncher extends Launcher {
 	@MyWorker
 	AsyncServlet myWorkerServlet(@WorkerId int workerId) {
 		return $ -> HttpResponse.ok200()
-				.withPlainText("Hello from my worker #" + workerId)
-				.toPromise();
+			.withPlainText("Hello from my worker #" + workerId)
+			.toPromise();
 	}
 	// endregion
 
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				ServiceGraphModule.create(),
-				WorkerPoolModule.create(Worker.class, MyWorker.class),
-				JmxModule.builder()
-						.withScopes(false)
-						.build(),
-				TriggersModule.builder()
-						.with(Key.of(PrimaryServer.class, "First"), Severity.HIGH, "server1", TriggerResult::ofValue)
-						.with(Key.of(PrimaryServer.class, "Second"), Severity.HIGH, "server2", TriggerResult::ofValue)
-						.with(Key.of(PrimaryServer.class, "Third"), Severity.HIGH, "server3", TriggerResult::ofValue)
-						.with(Key.of(Eventloop.class), Severity.HIGH, "eventloop", TriggerResult::ofValue)
-						.build()
+			ServiceGraphModule.create(),
+			WorkerPoolModule.create(Worker.class, MyWorker.class),
+			JmxModule.builder()
+				.withScopes(false)
+				.build(),
+			TriggersModule.builder()
+				.with(Key.of(PrimaryServer.class, "First"), Severity.HIGH, "server1", TriggerResult::ofValue)
+				.with(Key.of(PrimaryServer.class, "Second"), Severity.HIGH, "server2", TriggerResult::ofValue)
+				.with(Key.of(PrimaryServer.class, "Third"), Severity.HIGH, "server3", TriggerResult::ofValue)
+				.with(Key.of(Eventloop.class), Severity.HIGH, "eventloop", TriggerResult::ofValue)
+				.build()
 		);
 	}
 

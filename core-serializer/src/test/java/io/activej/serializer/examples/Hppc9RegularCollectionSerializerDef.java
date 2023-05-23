@@ -31,8 +31,8 @@ public class Hppc9RegularCollectionSerializerDef extends RegularCollectionSerial
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");
 			return iterateIterable(collection,
-					it -> action.apply(
-							property(cast(it, iteratorType), "value")));
+				it -> action.apply(
+					property(cast(it, iteratorType), "value")));
 		} catch (ClassNotFoundException e) {
 			throw UncheckedException.of(e);
 		}

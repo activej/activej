@@ -45,23 +45,24 @@ import static java.util.stream.Collectors.toSet;
 
 public final class Utils {
 
-	public static <R> Class<R> createResultClass(Collection<String> attributes, Collection<String> measures,
-			Cube cube, DefiningClassLoader classLoader) {
+	public static <R> Class<R> createResultClass(
+		Collection<String> attributes, Collection<String> measures, Cube cube, DefiningClassLoader classLoader
+	) {
 		return classLoader.ensureClass(
-				ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
-				() -> {
-					//noinspection unchecked
-					return ClassGenerator.builder((Class<R>) Object.class)
-							.initialize(b -> {
-								for (String attribute : attributes) {
-									b.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
-								}
-								for (String measure : measures) {
-									b.withField(measure, cube.getMeasureInternalType(measure));
-								}
-							})
-							.build();
-				}
+			ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
+			() -> {
+				//noinspection unchecked
+				return ClassGenerator.builder((Class<R>) Object.class)
+					.initialize(b -> {
+						for (String attribute : attributes) {
+							b.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
+						}
+						for (String measure : measures) {
+							b.withField(measure, cube.getMeasureInternalType(measure));
+						}
+					})
+					.build();
+			}
 		);
 	}
 
@@ -78,10 +79,11 @@ public final class Utils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <R> Promise<Void> resolveAttributes(List<R> results, IAttributeResolver attributeResolver,
-			List<String> recordDimensions, List<String> recordAttributes,
-			Map<String, Object> fullySpecifiedDimensions,
-			Class<R> recordClass, DefiningClassLoader classLoader) {
+	public static <R> Promise<Void> resolveAttributes(
+		List<R> results, IAttributeResolver attributeResolver, List<String> recordDimensions,
+		List<String> recordAttributes, Map<String, Object> fullySpecifiedDimensions, Class<R> recordClass,
+		DefiningClassLoader classLoader
+	) {
 		Object[] fullySpecifiedDimensionsArray = new Object[recordDimensions.size()];
 		for (int i = 0; i < recordDimensions.size(); i++) {
 			String dimension = recordDimensions.get(i);
@@ -91,52 +93,51 @@ public final class Utils {
 		}
 
 		KeyFunction keyFunction = classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(KeyFunction.class, recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray)),
-				() -> ClassGenerator.builder(KeyFunction.class)
-						.withMethod("extractKey",
-								let(
-										arrayNew(Object[].class, value(recordDimensions.size())),
-										key -> sequence(seq -> {
-											for (int i = 0; i < recordDimensions.size(); i++) {
-												String dimension = recordDimensions.get(i);
-												seq.add(arraySet(key, value(i),
-														fullySpecifiedDimensions.containsKey(dimension) ?
-																arrayGet(value(fullySpecifiedDimensionsArray), value(i)) :
-																cast(property(cast(arg(0), recordClass), dimension), Object.class)));
-											}
-											return key;
-										})))
-						.build()
+			ClassKey.of(KeyFunction.class, recordClass, recordDimensions, Arrays.asList(fullySpecifiedDimensionsArray)),
+			() -> ClassGenerator.builder(KeyFunction.class)
+				.withMethod("extractKey",
+					let(
+						arrayNew(Object[].class, value(recordDimensions.size())),
+						key -> sequence(seq -> {
+							for (int i = 0; i < recordDimensions.size(); i++) {
+								String dimension = recordDimensions.get(i);
+								seq.add(arraySet(key, value(i),
+									fullySpecifiedDimensions.containsKey(dimension) ?
+										arrayGet(value(fullySpecifiedDimensionsArray), value(i)) :
+										cast(property(cast(arg(0), recordClass), dimension), Object.class)));
+							}
+							return key;
+						})))
+				.build()
 		);
 
 		AttributesFunction attributesFunction = classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(AttributesFunction.class, recordClass, new HashSet<>(recordAttributes)),
-				() -> ClassGenerator.builder(AttributesFunction.class)
-						.withMethod("applyAttributes",
-								sequence(seq -> {
-									List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
-									for (String attribute : recordAttributes) {
-										String attributeName = attribute.substring(attribute.indexOf('.') + 1);
-										int resolverAttributeIndex = resolverAttributes.indexOf(attributeName);
-										seq.add(set(
-												property(cast(arg(0), recordClass), attribute.replace('.', '$')),
-												arrayGet(arg(1), value(resolverAttributeIndex))));
-									}
-								}))
-						.build()
+			ClassKey.of(AttributesFunction.class, recordClass, new HashSet<>(recordAttributes)),
+			() -> ClassGenerator.builder(AttributesFunction.class)
+				.withMethod("applyAttributes",
+					sequence(seq -> {
+						List<String> resolverAttributes = new ArrayList<>(attributeResolver.getAttributeTypes().keySet());
+						for (String attribute : recordAttributes) {
+							String attributeName = attribute.substring(attribute.indexOf('.') + 1);
+							int resolverAttributeIndex = resolverAttributes.indexOf(attributeName);
+							seq.add(set(
+								property(cast(arg(0), recordClass), attribute.replace('.', '$')),
+								arrayGet(arg(1), value(resolverAttributeIndex))));
+						}
+					}))
+				.build()
 		);
 
 		return attributeResolver.resolveAttributes((List<Object>) results, keyFunction, attributesFunction);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <D, C> Set<C> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor,
-			List<? extends D> diffs) {
+	public static <D, C> Set<C> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor, List<? extends D> diffs) {
 		return diffs.stream()
-				.flatMap(cubeDiffsExtractor::unwrapToStream)
-				.flatMap(CubeDiff::addedChunks)
-				.map(id -> (C) id)
-				.collect(toSet());
+			.flatMap(cubeDiffsExtractor::unwrapToStream)
+			.flatMap(CubeDiff::addedChunks)
+			.map(id -> (C) id)
+			.collect(toSet());
 	}
 
 	public static final DslJson<?> CUBE_DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());

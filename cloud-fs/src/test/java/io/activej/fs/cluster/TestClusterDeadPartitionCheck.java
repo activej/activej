@@ -84,68 +84,68 @@ public final class TestClusterDeadPartitionCheck {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				// tcp
-				new Object[]{
-						new ClientServerFactory() {
-							@Override
-							public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-								return RemoteFileSystem.create(reactor, address);
-							}
+			// tcp
+			new Object[]{
+				new ClientServerFactory() {
+					@Override
+					public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
+						return RemoteFileSystem.create(reactor, address);
+					}
 
-							@Override
-							public AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
-								return FileSystemServer.builder(reactor, fileSystem)
-										.withListenAddress(address)
-										.build();
-							}
+					@Override
+					public AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
+						return FileSystemServer.builder(reactor, fileSystem)
+							.withListenAddress(address)
+							.build();
+					}
 
-							@Override
-							public void closeServer(AbstractReactiveServer server) {
-								server.close();
-								Selector selector = server.getReactor().getSelector();
-								if (selector == null) return;
-								for (SelectionKey key : selector.keys()) {
-									Object attachment = key.attachment();
-									if (attachment instanceof TcpSocket) {
-										((TcpSocket) attachment).close();
-									}
-								}
-							}
-
-							@Override
-							public String toString() {
-								return "TCP";
+					@Override
+					public void closeServer(AbstractReactiveServer server) {
+						server.close();
+						Selector selector = server.getReactor().getSelector();
+						if (selector == null) return;
+						for (SelectionKey key : selector.keys()) {
+							Object attachment = key.attachment();
+							if (attachment instanceof TcpSocket) {
+								((TcpSocket) attachment).close();
 							}
 						}
-				},
+					}
 
-				// http
-				new Object[]{
-						new ClientServerFactory() {
-							@Override
-							public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
-								return HttpClientFileSystem.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
-							}
-
-							@Override
-							public AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
-								return HttpServer.builder(reactor, FileSystemServlet.create(reactor, fileSystem))
-										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
-										.withListenAddress(address)
-										.build();
-							}
-
-							@Override
-							public void closeServer(AbstractReactiveServer server) {
-								server.close();
-							}
-
-							@Override
-							public String toString() {
-								return "HTTP";
-							}
-						}
+					@Override
+					public String toString() {
+						return "TCP";
+					}
 				}
+			},
+
+			// http
+			new Object[]{
+				new ClientServerFactory() {
+					@Override
+					public IFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
+						return HttpClientFileSystem.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
+					}
+
+					@Override
+					public AbstractReactiveServer createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
+						return HttpServer.builder(reactor, FileSystemServlet.create(reactor, fileSystem))
+							.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
+							.withListenAddress(address)
+							.build();
+					}
+
+					@Override
+					public void closeServer(AbstractReactiveServer server) {
+						server.close();
+					}
+
+					@Override
+					public String toString() {
+						return "HTTP";
+					}
+				}
+			}
 		);
 	}
 
@@ -172,8 +172,8 @@ public final class TestClusterDeadPartitionCheck {
 			Files.createDirectories(serverStorages[i]);
 
 			Eventloop serverEventloop = Eventloop.builder()
-					.withFatalErrorHandler(rethrow())
-					.build();
+				.withFatalErrorHandler(rethrow())
+				.build();
 			serverEventloop.keepAlive(true);
 
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, serverStorages[i]);
@@ -192,12 +192,12 @@ public final class TestClusterDeadPartitionCheck {
 		}
 
 		this.partitions = FileSystemPartitions.builder(reactor, IDiscoveryService.constant(partitions))
-				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()))
-				.build();
+			.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()))
+			.build();
 		await(this.partitions.start());
 		this.fileSystemCluster = ClusterFileSystem.builder(reactor, this.partitions)
-				.withReplicationCount(CLIENT_SERVER_PAIRS / 2)
-				.build();
+			.withReplicationCount(CLIENT_SERVER_PAIRS / 2)
+			.build();
 	}
 
 	@After
@@ -221,31 +221,31 @@ public final class TestClusterDeadPartitionCheck {
 		Set<Integer> toBeAlive = Set.of(1, 3);
 		String filename = "test";
 		Exception exception = awaitException(fileSystemCluster.upload(filename)
-				.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
-				.then(consumer -> {
-					RefInt dataBeforeShutdown = new RefInt(100);
-					return ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapUtf8("data")))
-							.peek($ -> {
-								if (dataBeforeShutdown.dec() == 0) {
-									List<Path> allFiles = Arrays.stream(serverStorages)
-											.flatMap(path -> {
-												Set<Path> files = listAllFiles(path);
-												assertTrue(files.size() <= 1);
-												return files.stream();
-											})
-											.toList();
+			.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
+			.then(consumer -> {
+				RefInt dataBeforeShutdown = new RefInt(100);
+				return ChannelSuppliers.ofAsyncSupplier(() -> Promise.of(wrapUtf8("data")))
+					.peek($ -> {
+						if (dataBeforeShutdown.dec() == 0) {
+							List<Path> allFiles = Arrays.stream(serverStorages)
+								.flatMap(path -> {
+									Set<Path> files = listAllFiles(path);
+									assertTrue(files.size() <= 1);
+									return files.stream();
+								})
+								.toList();
 
-									// temporary files are created
-									assertEquals(fileSystemCluster.getMaxUploadTargets(), allFiles.size());
+							// temporary files are created
+							assertEquals(fileSystemCluster.getMaxUploadTargets(), allFiles.size());
 
-									// no real files are created yet
-									assertTrue(allFiles.stream().allMatch(path -> path.toString().contains(DEFAULT_TEMP_DIR)));
+							// no real files are created yet
+							assertTrue(allFiles.stream().allMatch(path -> path.toString().contains(DEFAULT_TEMP_DIR)));
 
-									setAliveNodes(toBeAlive.toArray(new Integer[0]));
-								}
-							})
-							.streamTo(consumer);
-				}));
+							setAliveNodes(toBeAlive.toArray(new Integer[0]));
+						}
+					})
+					.streamTo(consumer);
+			}));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
 		assertThat(exception.getMessage(), containsString("Not enough successes"));

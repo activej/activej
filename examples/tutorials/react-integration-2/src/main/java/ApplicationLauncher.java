@@ -47,52 +47,52 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO, DslJson<?> dslJson) {
 		return RoutingServlet.builder(reactor)
-				.with("/*", StaticServlet.builder(reactor, staticLoader)
-						.withIndexHtml()
-						.build())
-				//[END REGION_2]
-				//[START REGION_3]
-				.with(POST, "/add", request -> request.loadBody()
-						.then($ -> {
-							ByteBuf body = request.getBody();
-							try {
-								byte[] bodyBytes = body.getArray();
-								Record record = dslJson.deserialize(Record.class, bodyBytes, bodyBytes.length);
-								recordDAO.add(record);
-								return HttpResponse.ok200().toPromise();
-							} catch (IOException e) {
-								return HttpResponse.ofCode(400).toPromise();
-							}
-						}))
-				.with(GET, "/get/all", request -> {
-					Map<Integer, Record> records = recordDAO.findAll();
-					JsonWriter writer = dslJson.newWriter();
+			.with("/*", StaticServlet.builder(reactor, staticLoader)
+				.withIndexHtml()
+				.build())
+			//[END REGION_2]
+			//[START REGION_3]
+			.with(POST, "/add", request -> request.loadBody()
+				.then($ -> {
+					ByteBuf body = request.getBody();
 					try {
-						dslJson.serialize(writer, records);
+						byte[] bodyBytes = body.getArray();
+						Record record = dslJson.deserialize(Record.class, bodyBytes, bodyBytes.length);
+						recordDAO.add(record);
+						return HttpResponse.ok200().toPromise();
 					} catch (IOException e) {
-						throw new AssertionError(e);
+						return HttpResponse.ofCode(400).toPromise();
 					}
-					return HttpResponse.ok200()
-							.withJson(writer.toString())
-							.toPromise();
-				})
-				//[START REGION_4]
-				.with(GET, "/delete/:recordId", request -> {
-					int id = parseInt(request.getPathParameter("recordId"));
-					recordDAO.delete(id);
-					return HttpResponse.ok200().toPromise();
-				})
-				//[END REGION_4]
-				.with(GET, "/toggle/:recordId/:planId", request -> {
-					int id = parseInt(request.getPathParameter("recordId"));
-					int planId = parseInt(request.getPathParameter("planId"));
+				}))
+			.with(GET, "/get/all", request -> {
+				Map<Integer, Record> records = recordDAO.findAll();
+				JsonWriter writer = dslJson.newWriter();
+				try {
+					dslJson.serialize(writer, records);
+				} catch (IOException e) {
+					throw new AssertionError(e);
+				}
+				return HttpResponse.ok200()
+					.withJson(writer.toString())
+					.toPromise();
+			})
+			//[START REGION_4]
+			.with(GET, "/delete/:recordId", request -> {
+				int id = parseInt(request.getPathParameter("recordId"));
+				recordDAO.delete(id);
+				return HttpResponse.ok200().toPromise();
+			})
+			//[END REGION_4]
+			.with(GET, "/toggle/:recordId/:planId", request -> {
+				int id = parseInt(request.getPathParameter("recordId"));
+				int planId = parseInt(request.getPathParameter("planId"));
 
-					Record record = recordDAO.find(id);
-					Plan plan = record.getPlans().get(planId);
-					plan.toggle();
-					return HttpResponse.ok200().toPromise();
-				})
-				.build();
+				Record record = recordDAO.find(id);
+				Plan plan = record.getPlans().get(planId);
+				plan.toggle();
+				return HttpResponse.ok200().toPromise();
+			})
+			.build();
 		//[END REGION_3]
 	}
 

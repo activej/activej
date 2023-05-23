@@ -29,7 +29,7 @@ public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(2)
 	StreamCodec<InputToAccumulator<?, ?, ?, ?>> inputToAccumulator(
-			OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
+		OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
 	) {
 		StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new StreamCodec<>() {
@@ -48,7 +48,7 @@ public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(3)
 	StreamCodec<InputToOutput<?, ?, ?, ?>> inputToOutput(
-			OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
+		OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
 	) {
 		StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new StreamCodec<>() {
@@ -67,7 +67,7 @@ public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(4)
 	StreamCodec<AccumulatorToAccumulator<?, ?, ?, ?>> accumulatorToAccumulator(
-			OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
+		OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
 	) {
 		StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new StreamCodec<>() {
@@ -86,7 +86,7 @@ public final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(5)
 	StreamCodec<AccumulatorToOutput<?, ?, ?, ?>> accumulatorToOutput(
-			OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
+		OptionalDependency<StreamCodec<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer
 	) {
 		StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new StreamCodec<>() {

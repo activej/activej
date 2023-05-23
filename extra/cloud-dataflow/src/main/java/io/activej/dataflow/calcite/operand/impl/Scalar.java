@@ -51,14 +51,13 @@ public final class Scalar implements Operand<Scalar> {
 	@Override
 	public List<RexDynamicParam> getParams() {
 		return value.isMaterialized() ?
-				Collections.emptyList() :
-				Collections.singletonList(value.getDynamicParam());
+			Collections.emptyList() :
+			Collections.singletonList(value.getDynamicParam());
 	}
 
 	@Override
 	public String toString() {
-		return "Scalar[" +
-				"value=" + value + ']';
+		return "Scalar[value=" + value + ']';
 	}
 
 }

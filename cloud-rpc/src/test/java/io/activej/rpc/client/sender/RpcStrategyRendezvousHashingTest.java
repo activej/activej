@@ -43,10 +43,10 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy rendezvousHashing = RendezvousHashing.builder(RpcMessageDataStubWithKey::key)
-				.withShard(shardId1, server1)
-				.withShard(shardId2, server2)
-				.withShard(shardId3, server3)
-				.build();
+			.withShard(shardId1, server1)
+			.withShard(shardId2, server2)
+			.withShard(shardId3, server3)
+			.build();
 		RpcSender sender;
 		int callsPerLoop = 10000;
 		int timeout = 50;
@@ -89,10 +89,10 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy rendezvousHashing = RendezvousHashing.builder(RpcMessageDataStubWithKey::key)
-				.withShard(shardId1, server1)
-				.withShard(shardId2, server2)
-				.withShard(shardId3, server3)
-				.build();
+			.withShard(shardId1, server1)
+			.withShard(shardId2, server2)
+			.withShard(shardId3, server3)
+			.build();
 
 		// server3 is active
 		pool.put(address3, connection3);
@@ -110,10 +110,10 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy rendezvousHashing = RendezvousHashing.builder(RpcMessageDataStubWithKey::key)
-				.withShard(shardId1, server1)
-				.withShard(shardId2, server2)
-				.withShard(shardId3, server3)
-				.build();
+			.withShard(shardId1, server1)
+			.withShard(shardId2, server2)
+			.withShard(shardId3, server3)
+			.build();
 
 		// no connections were added to pool, so there are no active servers
 
@@ -141,11 +141,11 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy rendezvousHashing = RendezvousHashing.builder(RpcMessageDataStubWithKey::key)
-				.withMinActiveShards(4)
-				.withShard(shardId1, server1)
-				.withShard(shardId2, server2)
-				.withShard(shardId3, server3)
-				.build();
+			.withMinActiveShards(4)
+			.withShard(shardId1, server1)
+			.withShard(shardId2, server2)
+			.withShard(shardId3, server3)
+			.build();
 
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);
@@ -169,11 +169,11 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy rendezvousHashing = RendezvousHashing.builder(RpcMessageDataStubWithKey::key)
-				.withMinActiveShards(4)
-				.withShard(shardId1, server1)
-				.withShard(shardId2, server2)
-				.withShard(shardId3, server3)
-				.build();
+			.withMinActiveShards(4)
+			.withShard(shardId1, server1)
+			.withShard(shardId2, server2)
+			.withShard(shardId3, server3)
+			.build();
 
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);

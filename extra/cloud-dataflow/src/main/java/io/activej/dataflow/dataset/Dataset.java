@@ -69,10 +69,10 @@ public abstract class Dataset<T> {
 				continue;
 			}
 			sb.append("  ")
-					.append(ids.computeIfAbsent(base, $ -> "d" + lastId.value++))
-					.append(" -> ")
-					.append(ids.computeIfAbsent(dataset, $ -> "d" + lastId.value++))
-					.append('\n');
+				.append(ids.computeIfAbsent(base, $ -> "d" + lastId.value++))
+				.append(" -> ")
+				.append(ids.computeIfAbsent(dataset, $ -> "d" + lastId.value++))
+				.append('\n');
 			writeDatasets(sb, ids, visited, lastId, base);
 		}
 	}
@@ -84,7 +84,7 @@ public abstract class Dataset<T> {
 		writeDatasets(sb, ids, new HashSet<>(), new RefInt(0), this);
 		sb.append('\n');
 		ids.forEach((dataset, id) -> sb.append("  " + id +
-				" [label=" + '"' + dataset + '"' + "]\n"));
+			" [label=" + '"' + dataset + '"' + "]\n"));
 		return sb.append('}').toString();
 	}
 }

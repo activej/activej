@@ -46,9 +46,9 @@ import static org.objectweb.asm.Type.*;
  */
 public final class Context {
 	private static final Set<Method> OBJECT_INSTANCE_METHODS = Arrays.stream(Object.class.getMethods())
-			.filter(m -> !isStatic(m.getModifiers()))
-			.map(Method::getMethod)
-			.collect(toSet());
+		.filter(m -> !isStatic(m.getModifiers()))
+		.map(Method::getMethod)
+		.collect(toSet());
 
 	private final ClassLoader classLoader;
 	private final ClassGenerator<?> classGenerator;
@@ -60,11 +60,10 @@ public final class Context {
 	private final Map<Object, LocalVariable> varLocals = new HashMap<>();
 	private final Map<String, Constant> constantMap;
 
-	public Context(ClassLoader classLoader, ClassGenerator<?> classGenerator,
-			GeneratorAdapter g,
-			Type selfType,
-			Method method,
-			Map<String, Constant> constantMap) {
+	public Context(
+		ClassLoader classLoader, ClassGenerator<?> classGenerator, GeneratorAdapter g, Type selfType, Method method,
+		Map<String, Constant> constantMap
+	) {
 		this.classLoader = classLoader;
 		this.classGenerator = classGenerator;
 		this.g = g;
@@ -184,8 +183,8 @@ public final class Context {
 
 	private SelfOrClass toSelfOrClass(Type type) {
 		return type.equals(getSelfType()) ?
-				new SelfOrClass(classGenerator.superclass, classGenerator.interfaces) :
-				new SelfOrClass(toJavaType(type), Collections.emptyList());
+			new SelfOrClass(classGenerator.superclass, classGenerator.interfaces) :
+			new SelfOrClass(toJavaType(type), Collections.emptyList());
 	}
 
 	public Class<?> toJavaType(Type type) {
@@ -244,8 +243,8 @@ public final class Context {
 
 		if (typeFrom == VOID_TYPE) {
 			throw new RuntimeException(format("Can't cast VOID_TYPE type to %s. %s",
-					typeTo.getClassName(),
-					exceptionInGeneratedClass(this)));
+				typeTo.getClassName(),
+				exceptionInGeneratedClass(this)));
 		}
 
 		if (typeFrom.equals(getSelfType())) {
@@ -255,13 +254,13 @@ public final class Context {
 				return;
 			}
 			throw new RuntimeException(format("Can't cast self %s type to %s, %s",
-					typeFrom.getClassName(),
-					typeTo.getClassName(),
-					exceptionInGeneratedClass(this)));
+				typeFrom.getClassName(),
+				typeTo.getClassName(),
+				exceptionInGeneratedClass(this)));
 		}
 
 		if (!typeFrom.equals(getSelfType()) && !typeTo.equals(getSelfType()) &&
-				toJavaType(typeTo).isAssignableFrom(toJavaType(typeFrom))) {
+			toJavaType(typeTo).isAssignableFrom(toJavaType(typeFrom))) {
 			return;
 		}
 
@@ -278,7 +277,7 @@ public final class Context {
 		}
 
 		if ((isPrimitiveType(typeFrom) || isWrapperType(typeFrom)) &&
-				(isPrimitiveType(typeTo) || isWrapperType(typeTo))) {
+			(isPrimitiveType(typeTo) || isWrapperType(typeTo))) {
 
 			Type targetTypePrimitive = isPrimitiveType(typeTo) ? typeTo : unwrap(typeTo);
 
@@ -320,25 +319,25 @@ public final class Context {
 		Method foundMethod;
 		if (ownerType.equals(getSelfType())) {
 			foundMethod = findMethod(
-					getAccessibleMethods().stream(),
-					methodName,
-					arguments);
+				getAccessibleMethods().stream(),
+				methodName,
+				arguments);
 			if (foundMethod == null) {
 				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
-						Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+					Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 			}
 			g.invokeVirtual(ownerType, foundMethod);
 		} else {
 			Class<?> javaOwnerType = toJavaType(ownerType);
 			foundMethod = findMethod(
-					Arrays.stream(javaOwnerType.getMethods())
-							.filter(m -> !isStatic(m.getModifiers()))
-							.map(Method::getMethod),
-					methodName,
-					arguments);
+				Arrays.stream(javaOwnerType.getMethods())
+					.filter(m -> !isStatic(m.getModifiers()))
+					.map(Method::getMethod),
+				methodName,
+				arguments);
 			if (foundMethod == null) {
 				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
-						Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+					Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 			}
 			invokeVirtualOrInterface(this, ownerType, foundMethod);
 		}
@@ -359,20 +358,20 @@ public final class Context {
 		Method foundMethod;
 		if (ownerType.equals(getSelfType())) {
 			foundMethod = findMethod(
-					getStaticMethods().keySet().stream(),
-					methodName,
-					arguments);
+				getStaticMethods().keySet().stream(),
+				methodName,
+				arguments);
 		} else {
 			foundMethod = findMethod(
-					Arrays.stream(toJavaType(ownerType).getMethods())
-							.filter(m -> isStatic(m.getModifiers()))
-							.map(Method::getMethod),
-					methodName,
-					arguments);
+				Arrays.stream(toJavaType(ownerType).getMethods())
+					.filter(m -> isStatic(m.getModifiers()))
+					.map(Method::getMethod),
+				methodName,
+				arguments);
 		}
 		if (foundMethod == null) {
 			throw new IllegalArgumentException("Static method not found: " + ownerType.getClassName() + '.' + methodName +
-					Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+				Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
 		g.invokeStatic(ownerType, foundMethod);
 		return foundMethod.getReturnType();
@@ -395,12 +394,12 @@ public final class Context {
 			throw new IllegalArgumentException();
 		SelfOrClass[] arguments = Stream.of(argumentTypes).map(this::toSelfOrClass).toArray(SelfOrClass[]::new);
 		Method foundMethod = findMethod(
-				Arrays.stream(toJavaType(ownerType).getConstructors()).map(Method::getMethod),
-				"<init>",
-				arguments);
+			Arrays.stream(toJavaType(ownerType).getConstructors()).map(Method::getMethod),
+			"<init>",
+			arguments);
 		if (foundMethod == null) {
 			throw new IllegalArgumentException("Constructor not found:" + ownerType.getClassName() +
-					Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+				Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
 		g.invokeConstructor(ownerType, foundMethod);
 		return ownerType;
@@ -411,12 +410,12 @@ public final class Context {
 		Type[] argumentTypes = getArgumentTypes(arguments);
 		SelfOrClass[] argumentClasses = Stream.of(argumentTypes).map(this::toSelfOrClass).toArray(SelfOrClass[]::new);
 		Method foundMethod = findMethod(
-				Arrays.stream(classGenerator.superclass.getDeclaredConstructors()).map(Method::getMethod),
-				"<init>",
-				argumentClasses);
+			Arrays.stream(classGenerator.superclass.getDeclaredConstructors()).map(Method::getMethod),
+			"<init>",
+			argumentClasses);
 		if (foundMethod == null) {
 			throw new IllegalArgumentException("Parent constructor not found: " + classGenerator.superclass.getSimpleName() +
-					" with arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+				" with arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
 		g.invokeConstructor(getType(classGenerator.superclass), foundMethod);
 
@@ -438,14 +437,14 @@ public final class Context {
 		Type[] argumentTypes = getArgumentTypes(arguments);
 		SelfOrClass[] argumentClasses = Stream.of(argumentTypes).map(this::toSelfOrClass).toArray(SelfOrClass[]::new);
 		Method foundMethod = findMethod(
-				getAccessibleMethods().stream(),
-				methodName,
-				argumentClasses);
+			getAccessibleMethods().stream(),
+			methodName,
+			argumentClasses);
 		if (foundMethod == null) {
 			throw new IllegalArgumentException("Parent method of " + classGenerator.superclass.getSimpleName() +
-					" with name'" + methodName +
-					"' and arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")) +
-					" not found");
+				" with name'" + methodName +
+				"' and arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")) +
+				" not found");
 		}
 		String typeName = getType(classGenerator.superclass).getInternalName();
 		g.visitMethodInsn(Opcodes.INVOKESPECIAL, typeName, methodName, method.getDescriptor(), false);
@@ -488,7 +487,7 @@ public final class Context {
 	private static boolean isAssignable(SelfOrClass[] to, SelfOrClass[] from) {
 		if (to.length != from.length) return false;
 		return IntStream.range(0, from.length)
-				.allMatch(i -> to[i].isAssignableFrom(from[i]));
+			.allMatch(i -> to[i].isAssignableFrom(from[i]));
 	}
 
 	public static final class SelfOrClass {

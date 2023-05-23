@@ -17,11 +17,11 @@ public class ConfigConverterTest {
 	@Test
 	public void ofSimplePartitionIdTest() {
 		Map<String, String> properties = Map.of(
-				"partition1", "testA",
-				"partition2", "testB|255.255.255.255:9000",
-				"partition3", "testC||255.255.255.255:9001",
-				"partition4", "testD|127.0.0.1:9000|127.0.0.1:9001",
-				"localPartition", "testD|localhost:9000|localhost:9001"
+			"partition1", "testA",
+			"partition2", "testB|255.255.255.255:9000",
+			"partition3", "testC||255.255.255.255:9001",
+			"partition4", "testD|127.0.0.1:9000|127.0.0.1:9001",
+			"localPartition", "testD|localhost:9000|localhost:9001"
 		);
 		Config config = Config.ofMap(properties);
 		ConfigConverter<PartitionId> converter = ofPartitionId();
@@ -32,29 +32,29 @@ public class ConfigConverterTest {
 
 		PartitionId partitionId2 = config.get(converter, "partition2");
 		PartitionId expected2 = PartitionId.of("testB",
-				new InetSocketAddress("255.255.255.255", 9000),
-				null
+			new InetSocketAddress("255.255.255.255", 9000),
+			null
 		);
 		assertPartitionsFullyEquals(expected2, partitionId2);
 
 		PartitionId partitionId3 = config.get(converter, "partition3");
 		PartitionId expected3 = PartitionId.of("testC",
-				null,
-				new InetSocketAddress("255.255.255.255", 9001)
+			null,
+			new InetSocketAddress("255.255.255.255", 9001)
 		);
 		assertPartitionsFullyEquals(expected3, partitionId3);
 
 		PartitionId partitionId4 = config.get(converter, "partition4");
 		PartitionId expected4 = PartitionId.of("testD",
-				new InetSocketAddress("127.0.0.1", 9000),
-				new InetSocketAddress("127.0.0.1", 9001)
+			new InetSocketAddress("127.0.0.1", 9000),
+			new InetSocketAddress("127.0.0.1", 9001)
 		);
 		assertPartitionsFullyEquals(expected4, partitionId4);
 
 		PartitionId localPartitionId = config.get(converter, "localPartition");
 		PartitionId localExpected = PartitionId.of("testD",
-				new InetSocketAddress("localhost", 9000),
-				new InetSocketAddress("localhost", 9001)
+			new InetSocketAddress("localhost", 9000),
+			new InetSocketAddress("localhost", 9001)
 		);
 		assertPartitionsFullyEquals(localExpected, localPartitionId);
 		assertEquals(partitionId4, localPartitionId);
@@ -63,13 +63,13 @@ public class ConfigConverterTest {
 	@Test
 	public void ofSimplePartitionGroupTest() {
 		Map<String, String> properties = Map.of(
-				"ids", "testA|101.101.101.101:9000|101.101.101.101:9001," +
-						"testB|102.102.102.102:9000|102.102.102.102:9001," +
-						"testC|103.103.103.103:9000|103.103.103.103:9001," +
-						"testD|104.104.104.104:9000|104.104.104.104:9001",
-				"replicas", "2",
-				"repartition", "true",
-				"active", "true"
+			"ids", "testA|101.101.101.101:9000|101.101.101.101:9001," +
+				"testB|102.102.102.102:9000|102.102.102.102:9001," +
+				"testC|103.103.103.103:9000|103.103.103.103:9001," +
+				"testD|104.104.104.104:9000|104.104.104.104:9001",
+			"replicas", "2",
+			"repartition", "true",
+			"active", "true"
 		);
 		Config config = Config.ofMap(properties);
 		ConfigConverter<RendezvousPartitionGroup<PartitionId>> converter = ofPartitionGroup(ofPartitionId());
@@ -77,22 +77,22 @@ public class ConfigConverterTest {
 		RendezvousPartitionGroup<PartitionId> partitionGroup = converter.get(config);
 
 		Set<PartitionId> expectedPartitionIds = Set.of(
-				PartitionId.of("testA",
-						new InetSocketAddress("101.101.101.101", 9000),
-						new InetSocketAddress("101.101.101.101", 9001)
-				),
-				PartitionId.of("testB",
-						new InetSocketAddress("102.102.102.102", 9000),
-						new InetSocketAddress("102.102.102.102", 9001)
-				),
-				PartitionId.of("testC",
-						new InetSocketAddress("103.103.103.103", 9000),
-						new InetSocketAddress("103.103.103.103", 9001)
-				),
-				PartitionId.of("testD",
-						new InetSocketAddress("104.104.104.104", 9000),
-						new InetSocketAddress("104.104.104.104", 9001)
-				)
+			PartitionId.of("testA",
+				new InetSocketAddress("101.101.101.101", 9000),
+				new InetSocketAddress("101.101.101.101", 9001)
+			),
+			PartitionId.of("testB",
+				new InetSocketAddress("102.102.102.102", 9000),
+				new InetSocketAddress("102.102.102.102", 9001)
+			),
+			PartitionId.of("testC",
+				new InetSocketAddress("103.103.103.103", 9000),
+				new InetSocketAddress("103.103.103.103", 9001)
+			),
+			PartitionId.of("testD",
+				new InetSocketAddress("104.104.104.104", 9000),
+				new InetSocketAddress("104.104.104.104", 9001)
+			)
 		);
 
 		assertSetsFullyEquals(expectedPartitionIds, partitionGroup.getPartitionIds());
@@ -106,18 +106,18 @@ public class ConfigConverterTest {
 		Map<String, String> properties = new HashMap<>();
 
 		properties.put("partitionGroup.1.ids", "" +
-				"testA|101.101.101.101:9000|101.101.101.101:9001," +
-				"testB|102.102.102.102:9000|102.102.102.102:9001," +
-				"testC|103.103.103.103:9000|103.103.103.103:9001," +
-				"testD|104.104.104.104:9000|104.104.104.104:9001");
+			"testA|101.101.101.101:9000|101.101.101.101:9001," +
+			"testB|102.102.102.102:9000|102.102.102.102:9001," +
+			"testC|103.103.103.103:9000|103.103.103.103:9001," +
+			"testD|104.104.104.104:9000|104.104.104.104:9001");
 		properties.put("partitionGroup.1.replicas", "3");
 		properties.put("partitionGroup.1.repartition", "true");
 		properties.put("partitionGroup.1.active", "true");
 
 		properties.put("partitionGroup.2.ids", "" +
-				"testE|105.105.105.105:9000|105.105.105.105:9001," +
-				"testF|106.106.106.106:9000|106.106.106.106:9001," +
-				"testG|107.107.107.107:9000|107.107.107.107:9001");
+			"testE|105.105.105.105:9000|105.105.105.105:9001," +
+			"testF|106.106.106.106:9000|106.106.106.106:9001," +
+			"testG|107.107.107.107:9000|107.107.107.107:9001");
 		properties.put("partitionGroup.2.replicas", "2");
 		properties.put("partitionGroup.2.repartition", "false");
 		properties.put("partitionGroup.2.active", "false");
@@ -129,34 +129,34 @@ public class ConfigConverterTest {
 		Set<PartitionId> partitions = partitionScheme.getPartitions();
 
 		Set<PartitionId> expectedPartitionIds = Set.of(
-				PartitionId.of("testA",
-						new InetSocketAddress("101.101.101.101", 9000),
-						new InetSocketAddress("101.101.101.101", 9001)
-				),
-				PartitionId.of("testB",
-						new InetSocketAddress("102.102.102.102", 9000),
-						new InetSocketAddress("102.102.102.102", 9001)
-				),
-				PartitionId.of("testC",
-						new InetSocketAddress("103.103.103.103", 9000),
-						new InetSocketAddress("103.103.103.103", 9001)
-				),
-				PartitionId.of("testD",
-						new InetSocketAddress("104.104.104.104", 9000),
-						new InetSocketAddress("104.104.104.104", 9001)
-				),
-				PartitionId.of("testE",
-						new InetSocketAddress("105.105.105.105", 9000),
-						new InetSocketAddress("105.105.105.105", 9001)
-				),
-				PartitionId.of("testF",
-						new InetSocketAddress("106.106.106.106", 9000),
-						new InetSocketAddress("106.106.106.106", 9001)
-				),
-				PartitionId.of("testG",
-						new InetSocketAddress("107.107.107.107", 9000),
-						new InetSocketAddress("107.107.107.107", 9001)
-				)
+			PartitionId.of("testA",
+				new InetSocketAddress("101.101.101.101", 9000),
+				new InetSocketAddress("101.101.101.101", 9001)
+			),
+			PartitionId.of("testB",
+				new InetSocketAddress("102.102.102.102", 9000),
+				new InetSocketAddress("102.102.102.102", 9001)
+			),
+			PartitionId.of("testC",
+				new InetSocketAddress("103.103.103.103", 9000),
+				new InetSocketAddress("103.103.103.103", 9001)
+			),
+			PartitionId.of("testD",
+				new InetSocketAddress("104.104.104.104", 9000),
+				new InetSocketAddress("104.104.104.104", 9001)
+			),
+			PartitionId.of("testE",
+				new InetSocketAddress("105.105.105.105", 9000),
+				new InetSocketAddress("105.105.105.105", 9001)
+			),
+			PartitionId.of("testF",
+				new InetSocketAddress("106.106.106.106", 9000),
+				new InetSocketAddress("106.106.106.106", 9001)
+			),
+			PartitionId.of("testG",
+				new InetSocketAddress("107.107.107.107", 9000),
+				new InetSocketAddress("107.107.107.107", 9001)
+			)
 		);
 
 		assertSetsFullyEquals(expectedPartitionIds, partitions);

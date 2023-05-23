@@ -16,9 +16,9 @@ public class ConsolidationChunkSelectionTest {
 	@Test
 	public void testRangeExpansion() {
 		AggregationOTState state = new AggregationOTState(
-				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-						.withKey("key", ofInt())
-						.build());
+			AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+				.withKey("key", ofInt())
+				.build());
 
 		Set<AggregationChunk> chunks = new HashSet<>();
 		chunks.add(createTestChunk(1, 1, 2));
@@ -51,9 +51,9 @@ public class ConsolidationChunkSelectionTest {
 	@Test
 	public void testMinKeyStrategy() {
 		AggregationOTState state = new AggregationOTState(
-				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-						.withKey("key", ofInt())
-						.build());
+			AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+				.withKey("key", ofInt())
+				.build());
 
 		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(1, 1, 2));
@@ -77,9 +77,9 @@ public class ConsolidationChunkSelectionTest {
 	@Test
 	public void testSizeFixStrategy() {
 		AggregationOTState state = new AggregationOTState(
-				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-						.withKey("key", ofInt())
-						.build());
+			AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+				.withKey("key", ofInt())
+				.build());
 
 		int optimalChunkSize = 5;
 		int maxChunks = 5;
@@ -108,9 +108,9 @@ public class ConsolidationChunkSelectionTest {
 	@Test
 	public void testGroupingByPartition() {
 		AggregationOTState state = new AggregationOTState(
-				AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-						.withKey("key", ofInt())
-						.build());
+			AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+				.withKey("key", ofInt())
+				.build());
 
 		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(2, 1, 1, 1, 1, 1, 5));
@@ -144,7 +144,7 @@ public class ConsolidationChunkSelectionTest {
 
 	private static AggregationChunk createTestChunk(int id, int d1Min, int d1Max, int d2Min, int d2Max, int d3Min, int d3Max) {
 		return AggregationChunk.create(id, new ArrayList<>(), PrimaryKey.ofArray(d1Min, d2Min, d3Min),
-				PrimaryKey.ofArray(d1Max, d2Max, d3Max), 10);
+			PrimaryKey.ofArray(d1Max, d2Max, d3Max), 10);
 	}
 
 	private static AggregationChunk createTestChunk(int id, int min, int max, int count) {

@@ -14,9 +14,9 @@ public final class InMemoryStorageModule extends AbstractModule {
 
 	@Provides
 	IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
-			Reactor reactor,
-			CrdtFunction<DetailedSumsCrdtState> function,
-			ICrdtStorage<Long, DetailedSumsCrdtState> storage
+		Reactor reactor,
+		CrdtFunction<DetailedSumsCrdtState> function,
+		ICrdtStorage<Long, DetailedSumsCrdtState> storage
 	) {
 		return InMemoryWriteAheadLog.create(reactor, function, storage);
 	}

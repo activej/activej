@@ -95,14 +95,14 @@ public final class ClassGenerator<T> {
 			throw new IllegalArgumentException();
 		if (implementation.isInterface()) {
 			return new ClassGenerator<T>(
-					Object.class,
-					Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()),
-					implementation.getName()).new Builder();
+				Object.class,
+				Stream.concat(Stream.of(implementation), interfaces.stream()).collect(toList()),
+				implementation.getName()).new Builder();
 		} else {
 			return new ClassGenerator<T>(
-					implementation,
-					interfaces,
-					implementation.getName()).new Builder();
+				implementation,
+				interfaces,
+				implementation.getName()).new Builder();
 		}
 	}
 
@@ -412,10 +412,10 @@ public final class ClassGenerator<T> {
 		Type classType = getType('L' + className.replace('.', '/') + ';');
 
 		cw.visit(V1_6, ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-				classType.getInternalName(),
-				null,
-				getInternalName(superclass),
-				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
+			classType.getInternalName(),
+			null,
+			getInternalName(superclass),
+			interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
 
 		Map<String, Constant> constantMap = new LinkedHashMap<>();
 
@@ -440,7 +440,7 @@ public final class ClassGenerator<T> {
 
 		for (String field : this.fields.keySet()) {
 			cw.visitField(ACC_PUBLIC + (fieldsStatic.contains(field) ? ACC_STATIC : 0) + (fieldsFinal.contains(field) ? ACC_FINAL : 0),
-					field, getType(this.fields.get(field)).getDescriptor(), null, null);
+				field, getType(this.fields.get(field)).getDescriptor(), null, null);
 		}
 
 		for (Method m : this.methods.keySet()) {
@@ -486,9 +486,9 @@ public final class ClassGenerator<T> {
 				if (!isJvmPrimitive(expression.value)) {
 					STATIC_CONSTANTS.put(expression.id, expression.value);
 					Expressions.set(staticField(field), cast(
-									staticCall(ClassGenerator.class, "getStaticConstant", value(expression.id)),
-									this.fields.get(field)))
-							.load(ctx);
+							staticCall(ClassGenerator.class, "getStaticConstant", value(expression.id)),
+							this.fields.get(field)))
+						.load(ctx);
 				} else {
 					Expressions.set(staticField(field), expression).load(ctx);
 				}
@@ -499,7 +499,7 @@ public final class ClassGenerator<T> {
 				Constant expression = entry.getValue();
 
 				cw.visitField(ACC_PUBLIC + ACC_STATIC + ACC_FINAL,
-						field, getType(expression.getValueClass()).getDescriptor(), null, null);
+					field, getType(expression.getValueClass()).getDescriptor(), null, null);
 
 				checkState(!isJvmPrimitive(expression.value));
 				STATIC_CONSTANTS.put(expression.id, expression.value);

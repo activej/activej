@@ -40,18 +40,18 @@ public class ObjectNameRenameTest {
 	@Test
 	public void testRenaming() throws ExecutionException, InterruptedException, MalformedObjectNameException {
 		Injector injector = Injector.of(
-				new TestModule(),
-				JmxModule.builder()
-						.initialize(Initializers.renamedClassNames(
-								Map.of(
-										HttpServer.class, "AsyncHttpServer",
-										IHttpClient.class, "AsyncHttpClient",
-										TaskScheduler.class, "EventloopTaskScheduler",
-										Reactor.class, Eventloop.class.getName(),
-										NioReactor.class, Eventloop.class.getName()
-								)))
-						.build(),
-				WorkerPoolModule.create()
+			new TestModule(),
+			JmxModule.builder()
+				.initialize(Initializers.renamedClassNames(
+					Map.of(
+						HttpServer.class, "AsyncHttpServer",
+						IHttpClient.class, "AsyncHttpClient",
+						TaskScheduler.class, "EventloopTaskScheduler",
+						Reactor.class, Eventloop.class.getName(),
+						NioReactor.class, Eventloop.class.getName()
+					)))
+				.build(),
+			WorkerPoolModule.create()
 		);
 
 		injector.createEagerInstances();
@@ -110,8 +110,8 @@ public class ObjectNameRenameTest {
 		@Eager
 		TaskScheduler scheduler(NioReactor reactor) {
 			return TaskScheduler.builder(reactor, Promise::complete)
-					.withSchedule(TaskScheduler.Schedule.immediate())
-					.build();
+				.withSchedule(TaskScheduler.Schedule.immediate())
+				.build();
 		}
 	}
 }

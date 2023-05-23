@@ -133,8 +133,8 @@ public final class BlockingSocketServer {
 				}
 			};
 			Thread acceptThread = acceptThreadFactory == null ?
-					new Thread(runnable) :
-					acceptThreadFactory.newThread(runnable);
+				new Thread(runnable) :
+				acceptThreadFactory.newThread(runnable);
 			acceptThread.setDaemon(true);
 			acceptThreads.put(serverSocket, acceptThread);
 			acceptThread.start();

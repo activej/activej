@@ -36,9 +36,10 @@ public final class QueryResult {
 	private final Map<String, Object> filterAttributes;
 	private final ReportType reportType;
 
-	private QueryResult(RecordScheme recordScheme, List<Record> records, Record totals, int totalCount,
-			List<String> attributes, List<String> measures, List<String> sortedBy,
-			Map<String, Object> filterAttributes, ReportType reportType) {
+	private QueryResult(
+		RecordScheme recordScheme, List<Record> records, Record totals, int totalCount, List<String> attributes,
+		List<String> measures, List<String> sortedBy, Map<String, Object> filterAttributes, ReportType reportType
+	) {
 		this.recordScheme = recordScheme;
 		this.records = records;
 		this.totals = totals;
@@ -50,30 +51,36 @@ public final class QueryResult {
 		this.reportType = reportType;
 	}
 
-	public static QueryResult create(RecordScheme recordScheme, List<String> attributes, List<String> measures, List<String> sortedBy, List<Record> records, Record totals, int totalCount,
-			Map<String, Object> filterAttributes, ReportType reportType) {
+	public static QueryResult create(
+		RecordScheme recordScheme, List<String> attributes, List<String> measures, List<String> sortedBy,
+		List<Record> records, Record totals, int totalCount, Map<String, Object> filterAttributes,
+		ReportType reportType
+	) {
 		return new QueryResult(recordScheme, records, totals, totalCount, attributes, measures, sortedBy,
-				filterAttributes, reportType);
+			filterAttributes, reportType);
 	}
 
-	public static QueryResult createForMetadata(RecordScheme recordScheme, List<String> attributes,
-			List<String> measures) {
+	public static QueryResult createForMetadata(
+		RecordScheme recordScheme, List<String> attributes, List<String> measures
+	) {
 		return create(recordScheme, attributes, measures, List.of(), List.of(), recordScheme.record(), 0,
-				Map.of(), ReportType.METADATA);
+			Map.of(), ReportType.METADATA);
 	}
 
-	public static QueryResult createForData(RecordScheme recordScheme, List<Record> records, List<String> attributes,
-			List<String> measures, List<String> sortedBy,
-			Map<String, Object> filterAttributes) {
+	public static QueryResult createForData(
+		RecordScheme recordScheme, List<Record> records, List<String> attributes, List<String> measures,
+		List<String> sortedBy, Map<String, Object> filterAttributes
+	) {
 		return create(recordScheme, attributes, measures, sortedBy, records, recordScheme.record(), 0,
-				filterAttributes, ReportType.DATA);
+			filterAttributes, ReportType.DATA);
 	}
 
-	public static QueryResult createForDataWithTotals(RecordScheme recordScheme, List<Record> records, Record totals,
-			int totalCount, List<String> attributes, List<String> measures,
-			List<String> sortedBy, Map<String, Object> filterAttributes) {
+	public static QueryResult createForDataWithTotals(
+		RecordScheme recordScheme, List<Record> records, Record totals, int totalCount, List<String> attributes,
+		List<String> measures, List<String> sortedBy, Map<String, Object> filterAttributes
+	) {
 		return create(recordScheme, attributes, measures, sortedBy, records, totals, totalCount, filterAttributes,
-				ReportType.DATA_WITH_TOTALS);
+			ReportType.DATA_WITH_TOTALS);
 	}
 
 	public RecordScheme getRecordScheme() {
@@ -115,12 +122,12 @@ public final class QueryResult {
 	@Override
 	public String toString() {
 		return "QueryResult{" +
-				"attributes=" + attributes +
-				", measures=" + measures +
-				", records=" + Utils.toString(records) +
-				", totals=" + totals +
-				", count=" + totalCount +
-				", sortedBy=" + sortedBy +
-				'}';
+			"attributes=" + attributes +
+			", measures=" + measures +
+			", records=" + Utils.toString(records) +
+			", totals=" + totals +
+			", count=" + totalCount +
+			", sortedBy=" + sortedBy +
+			'}';
 	}
 }

@@ -60,8 +60,8 @@ public final class Gt implements AggregationPredicate {
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
 		return and(
-				isNotNull(property, fields.get(key)),
-				isGt(property, value(toInternalValue(fields, key, value)))
+			isNotNull(property, fields.get(key)),
+			isGt(property, value(toInternalValue(fields, key, value)))
 		);
 	}
 

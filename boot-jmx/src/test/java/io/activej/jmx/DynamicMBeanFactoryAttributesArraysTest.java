@@ -64,7 +64,7 @@ public class DynamicMBeanFactoryAttributesArraysTest {
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(Object... objects) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(objects), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(objects), JmxBeanSettings.create(), false);
 	}
 	// endregion
 }

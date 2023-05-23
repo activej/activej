@@ -51,25 +51,26 @@ public final class StreamSupplierWithResult<T, X> {
 
 	public Promise<X> streamTo(StreamConsumer<T> consumer) {
 		return supplier.streamTo(consumer)
-				.then($ -> result);
+			.then($ -> result);
 	}
 
 	public <Y> Promise<Tuple2<X, Y>> streamTo(StreamConsumerWithResult<T, Y> consumer) {
 		return supplier.streamTo(consumer.getConsumer())
-				.then(() -> Promises.toTuple(result, consumer.getResult()));
+			.then(() -> Promises.toTuple(result, consumer.getResult()));
 	}
 
 	public StreamSupplierWithResult<T, X> sanitize() {
 		return new StreamSupplierWithResult<>(supplier,
-				supplier.getEndOfStream().combine(result.whenException(supplier::closeEx), ($, v) -> v).async());
+			supplier.getEndOfStream().combine(result.whenException(supplier::closeEx), ($, v) -> v).async());
 	}
 
 	public <T1, X1> StreamSupplierWithResult<T1, X1> transform(
-			Function<StreamSupplier<T>, StreamSupplier<T1>> consumerTransformer,
-			Function<Promise<X>, Promise<X1>> resultTransformer) {
+		Function<StreamSupplier<T>, StreamSupplier<T1>> consumerTransformer,
+		Function<Promise<X>, Promise<X1>> resultTransformer
+	) {
 		return new StreamSupplierWithResult<>(
-				consumerTransformer.apply(supplier),
-				resultTransformer.apply(result));
+			consumerTransformer.apply(supplier),
+			resultTransformer.apply(result));
 	}
 
 	public <T1> StreamSupplierWithResult<T1, X> transformSupplier(Function<StreamSupplier<T>, StreamSupplier<T1>> consumerTransformer) {
@@ -83,8 +84,8 @@ public final class StreamSupplierWithResult<T, X> {
 	public static <T, X> StreamSupplierWithResult<T, X> ofPromise(Promise<StreamSupplierWithResult<T, X>> promise) {
 		if (promise.isResult()) return promise.getResult();
 		return of(
-				StreamSuppliers.ofPromise(promise.map(StreamSupplierWithResult::getSupplier)),
-				promise.then(StreamSupplierWithResult::getResult));
+			StreamSuppliers.ofPromise(promise.map(StreamSupplierWithResult::getSupplier)),
+			promise.then(StreamSupplierWithResult::getResult));
 	}
 
 	public StreamSupplier<T> getSupplier() {

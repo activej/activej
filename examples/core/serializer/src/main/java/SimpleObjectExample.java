@@ -1,4 +1,3 @@
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
@@ -15,7 +14,7 @@ public final class SimpleObjectExample {
 		jim.setSurname("Smith");
 		byte[] buffer = new byte[200];
 		BinarySerializer<Person> serializer = SerializerFactory.defaultInstance()
-				.create(Person.class);
+			.create(Person.class);
 		//[END REGION_2]
 
 		//[START REGION_3]
@@ -32,8 +31,7 @@ public final class SimpleObjectExample {
 
 	//[START REGION_1]
 	public static class Person {
-		public Person(@Deserialize("age") int age,
-				@Deserialize("name") String name) {
+		public Person(@Deserialize("age") int age, @Deserialize("name") String name) {
 			this.age = age;
 			this.name = name;
 		}

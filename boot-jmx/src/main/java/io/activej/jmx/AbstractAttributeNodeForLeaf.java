@@ -104,7 +104,7 @@ public abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 	public final void applyModifier(String attrName, AttributeModifier<?> modifier, List<?> target) {
 		checkArgument(name.equals(attrName));
 		throw new UnsupportedOperationException(String.format(
-				"AttributeModifier can be applied only to POJO. Attribute \"%s\" is not a POJO.", attrName
+			"AttributeModifier can be applied only to POJO. Attribute \"%s\" is not a POJO.", attrName
 		));
 	}
 }

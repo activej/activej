@@ -41,10 +41,10 @@ public class MyRpcClient extends Launcher {
     @Provides
     IRpcClient rpcClient(NioReactor reactor, Config config) {
         return RpcClient.builder(reactor)
-                .withMessageTypes(String.class)
-                .withStrategy(RpcStrategies.server(
-                        new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))))
-                .build();
+            .withMessageTypes(String.class)
+            .withStrategy(RpcStrategies.server(
+                new InetSocketAddress(config.get(ofInteger(), "port", RPC_LISTENER_PORT))))
+            .build();
     }
 
     @Override
@@ -62,8 +62,8 @@ public class MyRpcClient extends Launcher {
                 return;
             }
             reactor.submit(() -> client.sendRequest(line))
-                    .thenAccept(string -> System.out.println("Response: " + string + "\n"))
-                    .get();
+                .thenAccept(string -> System.out.println("Response: " + string + "\n"))
+                .get();
         }
     }
 

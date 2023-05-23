@@ -79,15 +79,15 @@ public class DataflowSerializationTest {
 	@Test
 	public void test() throws IOException {
 		Module serialization = ModuleBuilder.create()
-				.install(DataflowStreamCodecsModule.create())
-				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestReducer()))
-				.bind(new Key<StreamCodec<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestJoiner()))
-				.bind(new Key<StreamCodec<Predicate<?>>>() {}).toInstance(StreamCodecs.singleton(new TestPredicate()))
+			.install(DataflowStreamCodecsModule.create())
+			.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
+			.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestReducer()))
+			.bind(new Key<StreamCodec<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestJoiner()))
+			.bind(new Key<StreamCodec<Predicate<?>>>() {}).toInstance(StreamCodecs.singleton(new TestPredicate()))
 
-				.bind(new Key<StreamCodec<TestFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new TestFunction()))
-				.bind(new Key<StreamCodec<TestIdentityFunction<?>>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new TestIdentityFunction<>()))
-				.build();
+			.bind(new Key<StreamCodec<TestFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new TestFunction()))
+			.bind(new Key<StreamCodec<TestIdentityFunction<?>>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new TestIdentityFunction<>()))
+			.build();
 
 		StreamCodec<Comparator<?>> comparatorCodec = Injector.of(serialization).getInstance(new Key<>() {});
 		StreamCodec<Function<?, ?>> functionCodec = Injector.of(serialization).getInstance(new Key<>() {});

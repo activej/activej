@@ -30,11 +30,11 @@ public final class ChannelSerializerDeserializerTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(StreamSuppliers.ofIterable(ints)
-				.transformWith(ChannelSerializer.builder(BinarySerializers.INT_SERIALIZER)
-						.withInitialBufferSize(MemSize.bytes(1))
-						.build())
-				.transformWith(ChannelDeserializer.create(BinarySerializers.INT_SERIALIZER))
-				.streamTo(consumer));
+			.transformWith(ChannelSerializer.builder(BinarySerializers.INT_SERIALIZER)
+				.withInitialBufferSize(MemSize.bytes(1))
+				.build())
+			.transformWith(ChannelDeserializer.create(BinarySerializers.INT_SERIALIZER))
+			.streamTo(consumer));
 
 		assertEquals(ints, consumer.getList());
 	}
@@ -42,8 +42,8 @@ public final class ChannelSerializerDeserializerTest {
 	@Test
 	public void largeMessageSize() {
 		int nearMaxSize = (1 << 28) // ChannelSerializer.MAX_SIZE
-				- 4 // encoded size of an array
-				- 1;
+			- 4 // encoded size of an array
+			- 1;
 		List<byte[]> byteArrays = List.of(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize]);
 		for (byte[] byteArray : byteArrays) {
 			ThreadLocalRandom.current().nextBytes(byteArray);
@@ -52,11 +52,11 @@ public final class ChannelSerializerDeserializerTest {
 		ToListStreamConsumer<byte[]> consumer = ToListStreamConsumer.create();
 
 		await(StreamSuppliers.ofIterable(byteArrays)
-				.transformWith(ChannelSerializer.builder(BinarySerializers.BYTES_SERIALIZER)
-						.withInitialBufferSize(MemSize.bytes(1))
-						.build())
-				.transformWith(ChannelDeserializer.create(BinarySerializers.BYTES_SERIALIZER))
-				.streamTo(consumer));
+			.transformWith(ChannelSerializer.builder(BinarySerializers.BYTES_SERIALIZER)
+				.withInitialBufferSize(MemSize.bytes(1))
+				.build())
+			.transformWith(ChannelDeserializer.create(BinarySerializers.BYTES_SERIALIZER))
+			.streamTo(consumer));
 
 		List<byte[]> deserialized = consumer.getList();
 		for (int i = 0; i < deserialized.size(); i++) {

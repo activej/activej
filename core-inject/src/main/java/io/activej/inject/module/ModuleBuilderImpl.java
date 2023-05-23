@@ -51,8 +51,8 @@ public final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 		// builder module is (and should be) never instantiated directly,
 		// only by Module.create() and AbstractModule actually
 		location = StackWalker.getInstance().walk(frames -> frames.skip(2)
-				.findFirst()
-				.orElse(null));
+			.findFirst()
+			.orElse(null));
 		name = getClass().getName();
 	}
 
@@ -70,9 +70,9 @@ public final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 
 	private void addBinding(BindingDesc desc) {
 		Set<Binding<?>> bindingSet = bindings
-				.computeIfAbsent(desc.scope, $ -> new HashMap<>())
-				.get()
-				.computeIfAbsent(desc.key, $ -> new HashSet<>());
+			.computeIfAbsent(desc.scope, $ -> new HashMap<>())
+			.get()
+			.computeIfAbsent(desc.key, $ -> new HashSet<>());
 
 		if (desc.binding != null) {
 			bindingSet.add(desc.type == null ? desc.binding : desc.binding.as(desc.type));
@@ -167,13 +167,13 @@ public final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	public <E> ModuleBuilder generate(KeyPattern<E> pattern, BindingGenerator<E> bindingGenerator) {
 		completePreviousStep();
 		bindingGenerators.computeIfAbsent(pattern, $ -> new HashSet<>())
-				.add((bindings, scope, key) -> {
-					Binding<Object> generated = (Binding<Object>) bindingGenerator.generate(bindings, scope, (Key<E>) key);
-					if (generated != null && generated.getLocation() == null) {
-						generated.at(LocationInfo.from(this));
-					}
-					return generated;
-				});
+			.add((bindings, scope, key) -> {
+				Binding<Object> generated = (Binding<Object>) bindingGenerator.generate(bindings, scope, (Key<E>) key);
+				if (generated != null && generated.getLocation() == null) {
+					generated.at(LocationInfo.from(this));
+				}
+				return generated;
+			});
 		return this;
 	}
 
@@ -182,13 +182,13 @@ public final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	public <E> ModuleBuilder transform(KeyPattern<E> pattern, BindingTransformer<E> bindingTransformer) {
 		completePreviousStep();
 		bindingTransformers.computeIfAbsent(pattern, $ -> new HashSet<>())
-				.add((bindings, scope, key, binding) -> {
-					Binding<Object> transformed = (Binding<Object>) bindingTransformer.transform(bindings, scope, (Key<E>) key, (Binding<E>) binding);
-					if (!binding.equals(transformed) && transformed.getLocation() == null) {
-						transformed.at(LocationInfo.from(this));
-					}
-					return transformed;
-				});
+			.add((bindings, scope, key, binding) -> {
+				Binding<Object> transformed = (Binding<Object>) bindingTransformer.transform(bindings, scope, (Key<E>) key, (Binding<E>) binding);
+				if (!binding.equals(transformed) && transformed.getLocation() == null) {
+					transformed.at(LocationInfo.from(this));
+				}
+				return transformed;
+			});
 		return this;
 	}
 

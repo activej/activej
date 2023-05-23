@@ -32,8 +32,8 @@ public final class CrdtFileSystemConsolidationExample {
 
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]
@@ -48,64 +48,64 @@ public final class CrdtFileSystemConsolidationExample {
 
 		// same with serializer for the timestamp container of the set of integers
 		CrdtDataBinarySerializer<String, Set<Integer>> serializer =
-				new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
+			new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 		// create an FS-based CRDT client
 		FileSystemCrdtStorage<String, Set<Integer>> client =
-				FileSystemCrdtStorage.create(eventloop, fsClient, serializer, crdtFunction);
+			FileSystemCrdtStorage.create(eventloop, fsClient, serializer, crdtFunction);
 		//[END REGION_1]
 
 		// wait for LocalActiveFs instance to start
 		fsClient.start()
-				.then(() -> {
-					//[START REGION_2]
-					// then upload two streams of items to it in parallel
-					long timestamp = Reactor.getCurrentReactor().currentTimeMillis();
-					Promise<Void> firstUpload =
-							StreamSuppliers.ofStream(Stream.of(
-											new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
-											new CrdtData<>("1_test_2", timestamp, Set.of(2, 3, 7)),
-											new CrdtData<>("1_test_3", timestamp, Set.of(78, 2, 3)),
-											new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125)),
-											new CrdtData<>("12_test_2", timestamp, Set.of(12))).sorted())
-									.streamTo(StreamConsumers.ofPromise(client.upload()));
+			.then(() -> {
+				//[START REGION_2]
+				// then upload two streams of items to it in parallel
+				long timestamp = Reactor.getCurrentReactor().currentTimeMillis();
+				Promise<Void> firstUpload =
+					StreamSuppliers.ofStream(Stream.of(
+							new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
+							new CrdtData<>("1_test_2", timestamp, Set.of(2, 3, 7)),
+							new CrdtData<>("1_test_3", timestamp, Set.of(78, 2, 3)),
+							new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125)),
+							new CrdtData<>("12_test_2", timestamp, Set.of(12))).sorted())
+						.streamTo(StreamConsumers.ofPromise(client.upload()));
 
-					timestamp += 100;
-					Promise<Void> secondUpload =
-							StreamSuppliers.ofStream(Stream.of(
-											new CrdtData<>("2_test_1", timestamp, Set.of(1, 2, 3)),
-											new CrdtData<>("2_test_2", timestamp, Set.of(2, 3, 4)),
-											new CrdtData<>("2_test_3", timestamp, Set.of(0, 1, 2)),
-											new CrdtData<>("12_test_1", timestamp, Set.of(123, 542, 125, 2)),
-											new CrdtData<>("12_test_2", timestamp, Set.of(12, 13))).sorted())
-									.streamTo(StreamConsumers.ofPromise(client.upload()));
-					//[END REGION_2]
+				timestamp += 100;
+				Promise<Void> secondUpload =
+					StreamSuppliers.ofStream(Stream.of(
+							new CrdtData<>("2_test_1", timestamp, Set.of(1, 2, 3)),
+							new CrdtData<>("2_test_2", timestamp, Set.of(2, 3, 4)),
+							new CrdtData<>("2_test_3", timestamp, Set.of(0, 1, 2)),
+							new CrdtData<>("12_test_1", timestamp, Set.of(123, 542, 125, 2)),
+							new CrdtData<>("12_test_2", timestamp, Set.of(12, 13))).sorted())
+						.streamTo(StreamConsumers.ofPromise(client.upload()));
+				//[END REGION_2]
 
-					//[START REGION_3]
-					// and wait for both of uploads to finish
-					return Promises.all(firstUpload, secondUpload);
-				})
-				.whenComplete(() -> {
+				//[START REGION_3]
+				// and wait for both of uploads to finish
+				return Promises.all(firstUpload, secondUpload);
+			})
+			.whenComplete(() -> {
 
-					// all the operations are async, but we run them sequentially
-					// because we need to see the file list exactly before and after
-					// consolidation process
-					Promises.sequence(
-							// here we can see that two files were created, one for each upload
-							() -> fsClient.list("**")
-									.whenResult(res -> System.out.println("\n" + res + "\n"))
-									.toVoid(),
+				// all the operations are async, but we run them sequentially
+				// because we need to see the file list exactly before and after
+				// consolidation process
+				Promises.sequence(
+					// here we can see that two files were created, one for each upload
+					() -> fsClient.list("**")
+						.whenResult(res -> System.out.println("\n" + res + "\n"))
+						.toVoid(),
 
-							// run the consolidation process
-							client::consolidate,
+					// run the consolidation process
+					client::consolidate,
 
-							// now we can see that there is only one file left, and its size is
-							// less than the sum of the sizes of the two files from above
-							() -> fsClient.list("**")
-									.whenResult(res -> System.out.println("\n" + res + "\n"))
-									.toVoid()
-					);
-				});
+					// now we can see that there is only one file left, and its size is
+					// less than the sum of the sizes of the two files from above
+					() -> fsClient.list("**")
+						.whenResult(res -> System.out.println("\n" + res + "\n"))
+						.toVoid()
+				);
+			});
 
 		// all the above will not run until we actually start the eventloop
 		eventloop.run();

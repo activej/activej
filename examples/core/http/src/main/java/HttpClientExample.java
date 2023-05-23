@@ -41,16 +41,16 @@ public final class HttpClientExample extends Launcher {
 	@Provides
 	IHttpClient client(NioReactor reactor, IDnsClient dnsClient) {
 		return HttpClient.builder(reactor)
-				.withDnsClient(dnsClient)
-				.build();
+			.withDnsClient(dnsClient)
+			.build();
 	}
 
 	@Provides
 	IDnsClient dnsClient(NioReactor reactor, Config config) {
 		return DnsClient.builder(reactor)
-				.withDnsServerAddress(config.get(ofInetAddress(), "dns.address"))
-				.withTimeout(config.get(ofDuration(), "dns.timeout"))
-				.build();
+			.withDnsServerAddress(config.get(ofInetAddress(), "dns.address"))
+			.withTimeout(config.get(ofDuration(), "dns.timeout"))
+			.build();
 	}
 	//[END REGION_1]
 
@@ -58,18 +58,18 @@ public final class HttpClientExample extends Launcher {
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("dns.address", "8.8.8.8")
-				.with("dns.timeout", "5 seconds")
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("dns.address", "8.8.8.8")
+			.with("dns.timeout", "5 seconds")
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 	//[END REGION_2]
 
@@ -79,9 +79,9 @@ public final class HttpClientExample extends Launcher {
 		String url = args.length != 0 ? args[0] : "http://127.0.0.1:8080/";
 		System.out.println("\nHTTP request: " + url);
 		CompletableFuture<String> future = reactor.submit(() ->
-				httpClient.request(HttpRequest.get(url).build())
-						.then(response -> response.loadBody())
-						.map(body -> body.getString(UTF_8))
+			httpClient.request(HttpRequest.get(url).build())
+				.then(response -> response.loadBody())
+				.map(body -> body.getString(UTF_8))
 		);
 		System.out.println("HTTP response: " + future.get());
 		System.out.println();

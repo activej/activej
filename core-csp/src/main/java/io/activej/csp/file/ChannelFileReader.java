@@ -77,7 +77,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 
 	public static Promise<ChannelFileReader> open(Executor executor, Path path, OpenOption... openOptions) {
 		return builderOpen(executor, path, openOptions)
-				.map(AbstractBuilder::build);
+			.map(AbstractBuilder::build);
 	}
 
 	public static ChannelFileReader openBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
@@ -103,11 +103,11 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	public static Promise<Builder> builderOpen(Executor executor, Path path, OpenOption... openOptions) {
 		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
 		return Promise.ofBlocking(executor,
-						() -> {
-							if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
-							return FileChannel.open(path, openOptions);
-						})
-				.map(channel -> builder(Reactor.getCurrentReactor(), executor, channel));
+				() -> {
+					if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
+					return FileChannel.open(path, openOptions);
+				})
+			.map(channel -> builder(Reactor.getCurrentReactor(), executor, channel));
 	}
 
 	public static Builder builderBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
@@ -168,26 +168,26 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 		}
 		ByteBuf buf = ByteBufPool.allocateExact((int) Math.min(bufferSize, limit));
 		return fileService.read(channel, position, buf.array(), buf.head(), buf.writeRemaining())
-				.then(
-						bytesRead -> {
-							if (bytesRead == 0) { // no data read, assuming end of file
-								buf.recycle();
-								close();
-								return Promise.of(null);
-							}
+			.then(
+				bytesRead -> {
+					if (bytesRead == 0) { // no data read, assuming end of file
+						buf.recycle();
+						close();
+						return Promise.of(null);
+					}
 
-							buf.moveTail(Math.toIntExact(bytesRead));
-							position += bytesRead;
-							if (limit != Long.MAX_VALUE) {
-								limit -= bytesRead; // bytesRead is always <= the limit (^ see the min call)
-							}
-							return Promise.of(buf);
-						},
-						e -> {
-							buf.recycle();
-							closeEx(e);
-							return Promise.ofException(getException());
-						});
+					buf.moveTail(Math.toIntExact(bytesRead));
+					position += bytesRead;
+					if (limit != Long.MAX_VALUE) {
+						limit -= bytesRead; // bytesRead is always <= the limit (^ see the min call)
+					}
+					return Promise.of(buf);
+				},
+				e -> {
+					buf.recycle();
+					closeEx(e);
+					return Promise.ofException(getException());
+				});
 	}
 
 	@Override
@@ -207,8 +207,8 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	@Override
 	public String toString() {
 		return "ChannelFileReader{" +
-				"pos=" + position +
-				(limit == Long.MAX_VALUE ? "" : ", limit=" + limit) +
-				'}';
+			"pos=" + position +
+			(limit == Long.MAX_VALUE ? "" : ", limit=" + limit) +
+			'}';
 	}
 }

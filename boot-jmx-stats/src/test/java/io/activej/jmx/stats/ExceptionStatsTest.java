@@ -17,19 +17,19 @@ public class ExceptionStatsTest {
 	@Before
 	public void before() throws OpenDataException {
 		exceptionDetailsItemNames = new String[]{
-				"lastException",
-				"lastExceptionCausedObject",
-				"lastExceptionStackTrace",
-				"lastExceptionTimestamp",
-				"totalExceptions"
+			"lastException",
+			"lastExceptionCausedObject",
+			"lastExceptionStackTrace",
+			"lastExceptionTimestamp",
+			"totalExceptions"
 		};
 
 		exceptionDetailsItemTypes = new OpenType<?>[]{
-				SimpleType.STRING,
-				SimpleType.STRING,
-				new ArrayType<>(1, SimpleType.STRING),
-				SimpleType.LONG,
-				SimpleType.INTEGER
+			SimpleType.STRING,
+			SimpleType.STRING,
+			new ArrayType<>(1, SimpleType.STRING),
+			SimpleType.LONG,
+			SimpleType.INTEGER
 		};
 	}
 

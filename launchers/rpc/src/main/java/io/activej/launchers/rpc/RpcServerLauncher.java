@@ -47,31 +47,30 @@ public abstract class RpcServerLauncher extends Launcher {
 	RpcServer rpcServer;
 
 	@Provides
-	public NioReactor reactor(Config config,
-			OptionalDependency<ThrottlingController> throttlingController) {
+	public NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule());
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule());
 	}
 
 	// By design, user should provide rpcServer here.
@@ -92,11 +91,11 @@ public abstract class RpcServerLauncher extends Launcher {
 					@Provides
 					RpcServer server(NioReactor reactor, Config config) {
 						return RpcServer.builder(reactor)
-								.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
-								.withMessageTypes(String.class)
-								.withHandler(String.class,
-										req -> Promise.of("Request: " + req))
-								.build();
+							.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
+							.withMessageTypes(String.class)
+							.withHandler(String.class,
+								req -> Promise.of("Request: " + req))
+							.build();
 					}
 				};
 			}

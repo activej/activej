@@ -40,8 +40,9 @@ public final class FirstValidResult implements RpcStrategy {
 	public Predicate<?> resultValidator;
 	public @Nullable Exception noValidResultException;
 
-	public FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
-			@Nullable Exception noValidResultException) {
+	public FirstValidResult(
+		List<? extends RpcStrategy> list, Predicate<?> resultValidator, @Nullable Exception noValidResultException
+	) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
@@ -98,8 +99,7 @@ public final class FirstValidResult implements RpcStrategy {
 		private final Predicate<?> resultValidator;
 		private final @Nullable Exception noValidResultException;
 
-		Sender(List<RpcSender> senders, Predicate<?> resultValidator,
-				@Nullable Exception noValidResultException) {
+		Sender(List<RpcSender> senders, Predicate<?> resultValidator, @Nullable Exception noValidResultException) {
 			assert !senders.isEmpty();
 			this.subSenders = senders.toArray(new RpcSender[0]);
 			this.resultValidator = resultValidator;
@@ -123,8 +123,9 @@ public final class FirstValidResult implements RpcStrategy {
 		private Exception lastException;
 		private final @Nullable Exception noValidResultException;
 
-		FirstResultCallback(int expectedCalls, Predicate<T> resultValidator, Callback<T> cb,
-				@Nullable Exception noValidResultException) {
+		FirstResultCallback(
+			int expectedCalls, Predicate<T> resultValidator, Callback<T> cb, @Nullable Exception noValidResultException
+		) {
 			assert expectedCalls > 0;
 			this.expectedCalls = expectedCalls;
 			this.cb = cb;

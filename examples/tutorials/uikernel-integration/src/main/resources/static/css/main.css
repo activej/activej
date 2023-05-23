@@ -1,36 +1,36 @@
 .action {
-  padding: 4px 6px;
+    padding: 4px 6px;
 }
 
 .padding0 {
-  padding: 0;
+    padding: 0;
 }
 
 .modal {
-  display: block;
-  text-align: center;
-  background-color: rgba(125, 125, 125, 0.3);
+    display: block;
+    text-align: center;
+    background-color: rgba(125, 125, 125, 0.3);
 }
 
 .modal-dialog {
-  display: inline-block;
-  text-align: left;
-  vertical-align: middle;
+    display: inline-block;
+    text-align: left;
+    vertical-align: middle;
 }
 
 .modal:before {
-  display: inline-block;
-  vertical-align: middle;
-  content: " ";
-  height: 100%;
+    display: inline-block;
+    vertical-align: middle;
+    content: " ";
+    height: 100%;
 }
 
 .modal-backdrop.in {
-  opacity: 0;
+    opacity: 0;
 }
 
 @media screen and (max-width: 768px) {
-  .modal-dialog {
-    width: 90%;
-  }
+    .modal-dialog {
+        width: 90%;
+    }
 }

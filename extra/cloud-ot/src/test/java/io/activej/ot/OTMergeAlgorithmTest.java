@@ -39,7 +39,7 @@ public class OTMergeAlgorithmTest {
 		Map<String, Long> levels = new HashMap<>();
 		for (String commitId : graph.getTips()) {
 			Utils.calcLevels(commitId, levels,
-					parentId -> nonNullElse(graph.getParents(parentId), Map.<String, List<TestOp>>of()).keySet());
+				parentId -> nonNullElse(graph.getParents(parentId), Map.<String, List<TestOp>>of()).keySet());
 		}
 		levels.forEach(graph::setLevel);
 

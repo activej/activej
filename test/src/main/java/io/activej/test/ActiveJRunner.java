@@ -59,8 +59,8 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 		surroundings.addAll(getTestClass().getAnnotatedMethods(After.class));
 
 		staticDependencies = surroundings.stream()
-				.flatMap(m -> Arrays.stream(ReflectionUtils.toDependencies(cls, m.getMethod())))
-				.collect(toSet());
+			.flatMap(m -> Arrays.stream(ReflectionUtils.toDependencies(cls, m.getMethod())))
+			.collect(toSet());
 	}
 
 	// runChild is always called before createTest
@@ -84,8 +84,8 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 			currentModule = Modules.combine(modules);
 
 			currentDependencies =
-					Arrays.stream(ReflectionUtils.toDependencies(cls, method.getMethod()))
-							.collect(toSet());
+				Arrays.stream(ReflectionUtils.toDependencies(cls, method.getMethod()))
+					.collect(toSet());
 
 		} catch (ExceptionInInitializerError e) {
 			Throwable cause = e.getCause();
@@ -133,20 +133,20 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 		Key<InstanceInjector<Object>> instanceInjectorKey = Key.ofType(parameterizedType(InstanceInjector.class, getTestClass().getJavaClass()));
 
 		currentInjector = Injector.of(currentModule, ModuleBuilder.create()
-				// scan the test class for @Provide's
-				.scan(instance)
+			// scan the test class for @Provide's
+			.scan(instance)
 
-				// bind unusable private type with all the extra dependencies so that injector knows about them
-				.bind(DependencyToken.class).to(Binding.<DependencyToken>to(() -> {
-					throw new AssertionError("should never be instantiated");
-				}).addDependencies(union(currentDependencies, staticDependencies)))
+			// bind unusable private type with all the extra dependencies so that injector knows about them
+			.bind(DependencyToken.class).to(Binding.<DependencyToken>to(() -> {
+				throw new AssertionError("should never be instantiated");
+			}).addDependencies(union(currentDependencies, staticDependencies)))
 
-				// bind test class to existing instance if whoever needs it (e.g. for implicit parameter of non-static inner classes)
-				.bind(self).toInstance(instance)
+			// bind test class to existing instance if whoever needs it (e.g. for implicit parameter of non-static inner classes)
+			.bind(self).toInstance(instance)
 
-				// and generate one of those to handle @Inject's
-				.bind(instanceInjectorKey)
-				.build());
+			// and generate one of those to handle @Inject's
+			.bind(instanceInjectorKey)
+			.build());
 
 		// creating eager stuff right away
 		currentInjector.createEagerInstances();
@@ -173,8 +173,8 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 
 	protected Object[] getArgs(FrameworkMethod method) {
 		return Arrays.stream(ReflectionUtils.toDependencies(getTestClass().getJavaClass(), method.getMethod()))
-				.map(dependency -> currentInjector.getInstance(dependency))
-				.toArray(Object[]::new);
+			.map(dependency -> currentInjector.getInstance(dependency))
+			.toArray(Object[]::new);
 	}
 
 	// same as original except that methods are called like in methodInvoker method

@@ -85,7 +85,7 @@ public abstract class HttpMessage {
 
 	@SuppressWarnings("unchecked")
 	protected abstract class Builder<B extends Builder<B, T>, T extends HttpMessage>
-			implements io.activej.common.builder.Builder<T>, ToPromise<T>, WithInitializer<B> {
+		implements io.activej.common.builder.Builder<T>, ToPromise<T>, WithInitializer<B> {
 
 		public B withHeader(HttpHeader header, String string) {
 			HttpHeaderValue headerValue = HttpHeaderValue.of(string);
@@ -322,23 +322,23 @@ public abstract class HttpMessage {
 		if (bodyStream == null) throw new IllegalStateException("Body stream is missing or already consumed");
 		this.bodyStream = null;
 		return ChannelSupplier.collect(bodyStream,
-						new ByteBufs(),
-						(bufs, buf) -> {
-							if (maxBodySize != 0 && bufs.hasRemainingBytes(maxBodySize)) {
-								bufs.recycle();
-								buf.recycle();
-								throw new MalformedHttpException(
-										"HTTP body size exceeds load limit " + maxBodySize);
-							}
-							bufs.add(buf);
-						},
-						ByteBufs::takeRemaining)
-				.whenResult(body -> {
-					assert !isRecycled();
+				new ByteBufs(),
+				(bufs, buf) -> {
+					if (maxBodySize != 0 && bufs.hasRemainingBytes(maxBodySize)) {
+						bufs.recycle();
+						buf.recycle();
+						throw new MalformedHttpException(
+							"HTTP body size exceeds load limit " + maxBodySize);
+					}
+					bufs.add(buf);
+				},
+				ByteBufs::takeRemaining)
+			.whenResult(body -> {
+				assert !isRecycled();
 
-					this.flags &= ~MUST_LOAD_BODY;
-					this.body = body;
-				});
+				this.flags &= ~MUST_LOAD_BODY;
+				this.body = body;
+			});
 	}
 
 	public Map<Object, Object> ensureAttachments() {

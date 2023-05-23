@@ -52,7 +52,7 @@ public final class UnionAll<T> extends Dataset<T> {
 		List<StreamId> rightStreamIds = right.channels(context);
 
 		Map<Partition, List<StreamId>> partitioned = Stream.concat(leftStreamIds.stream(), rightStreamIds.stream())
-				.collect(Collectors.groupingBy(graph::getPartition));
+			.collect(Collectors.groupingBy(graph::getPartition));
 
 		int index = context.generateNodeIndex();
 

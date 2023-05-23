@@ -34,16 +34,16 @@ public class SplitterLogDataConsumerTest {
 	@Test
 	public void testConsumes() {
 		List<ToListStreamConsumer<Integer>> consumers = List.of(
-				ToListStreamConsumer.create(),
-				ToListStreamConsumer.create());
+			ToListStreamConsumer.create(),
+			ToListStreamConsumer.create());
 
 		Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
 		Reactor reactor = Reactor.getCurrentReactor();
 		SplitterLogDataConsumer<Integer, Integer> splitter =
-				new StubSplitter<>(reactor, () -> {
-					ToListStreamConsumer<Integer> next = iterator.next();
-					return StreamConsumerWithResult.of(next, next.getResult());
-				});
+			new StubSplitter<>(reactor, () -> {
+				ToListStreamConsumer<Integer> next = iterator.next();
+				return StreamConsumerWithResult.of(next, next.getResult());
+			});
 
 		assertStreamResult(VALUES_1, splitter.consume(), consumers.get(0).getResult());
 		assertStreamResult(VALUES_2, splitter.consume(), consumers.get(1).getResult());
@@ -52,16 +52,16 @@ public class SplitterLogDataConsumerTest {
 	@Test
 	public void testConsumersWithSuspend() {
 		List<ToListStreamConsumer<Integer>> consumers = List.of(
-				ToListStreamConsumer.create(),
-				ToListStreamConsumer.create());
+			ToListStreamConsumer.create(),
+			ToListStreamConsumer.create());
 
 		Iterator<ToListStreamConsumer<Integer>> iterator = consumers.iterator();
 		Reactor reactor = Reactor.getCurrentReactor();
 		SplitterLogDataConsumer<Integer, Integer> splitter =
-				new StubSplitter<>(reactor, () -> {
-					ToListStreamConsumer<Integer> next = iterator.next();
-					return StreamConsumerWithResult.of(next, next.getResult());
-				});
+			new StubSplitter<>(reactor, () -> {
+				ToListStreamConsumer<Integer> next = iterator.next();
+				return StreamConsumerWithResult.of(next, next.getResult());
+			});
 
 		assertStreamResult(VALUES_1, splitter.consume(), consumers.get(0).getResult());
 		assertStreamResult(VALUES_2, splitter.consume(), consumers.get(1).getResult());

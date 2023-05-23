@@ -64,36 +64,36 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	@Provides
 	HttpServer server() {
 		return HttpServer.builder(serverReactor,
-						request -> HttpResponse.ok200()
-								.withPlainText("Response!!")
-								.toPromise())
-				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"))
-				.build();
+				request -> HttpResponse.ok200()
+					.withPlainText("Response!!")
+					.toPromise())
+			.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"))
+			.build();
 	}
 
 	@Provides
 	IHttpClient client() {
 		return HttpClient.builder(clientReactor)
-				.withKeepAliveTimeout(Duration.ofSeconds(config.get(ofInteger(),
-						"client.keepAlive", KEEP_ALIVE)))
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(config.get(ofInteger(),
+				"client.keepAlive", KEEP_ALIVE)))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("address", "0.0.0.0:9001")
-				.with("client.address", "http://127.0.0.1:9001/")
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("address", "0.0.0.0:9001")
+			.with("client.address", "http://127.0.0.1:9001/")
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	@Override
@@ -139,7 +139,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 		double avgTime = (double) timeAllRounds / measureRounds;
 		long requestsPerSecond = (long) (totalRequests / avgTime * 1000);
 		System.out.println("Time: " + timeAllRounds + "ms; Average time: " + avgTime + " ms; Best time: " +
-				bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
+			bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
 	}
 
 	private long round() throws Exception {

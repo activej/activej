@@ -46,7 +46,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 
 public final class FileSystemPartitions extends AbstractReactive
-		implements ReactiveService {
+	implements ReactiveService {
+
 	private static final Logger logger = LoggerFactory.getLogger(FileSystemPartitions.class);
 
 	static final FileSystemException LOCAL_EXCEPTION = new FileSystemException("Local exception");
@@ -137,7 +138,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	public Promise<Void> checkAllPartitions() {
 		checkInReactorThread(this);
 		return checkAllPartitions.run()
-				.whenComplete(toLogger(logger, "checkAllPartitions"));
+			.whenComplete(toLogger(logger, "checkAllPartitions"));
 	}
 
 	/**
@@ -150,7 +151,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	public Promise<Void> checkDeadPartitions() {
 		checkInReactorThread(this);
 		return checkDeadPartitions.run()
-				.whenComplete(toLogger(logger, "checkDeadPartitions"));
+			.whenComplete(toLogger(logger, "checkDeadPartitions"));
 	}
 
 	/**
@@ -220,12 +221,12 @@ public final class FileSystemPartitions extends AbstractReactive
 		checkInReactorThread(this);
 		AsyncSupplier<Map<Object, IFileSystem>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
-				.whenResult(result -> {
-					this.partitions.putAll(result);
-					this.alivePartitions.putAll(result);
-					checkAllPartitions()
-							.whenComplete(() -> rediscover(discoverySupplier));
-				});
+			.whenResult(result -> {
+				this.partitions.putAll(result);
+				this.alivePartitions.putAll(result);
+				checkAllPartitions()
+					.whenComplete(() -> rediscover(discoverySupplier));
+			});
 	}
 
 	@Override
@@ -241,15 +242,15 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	private void rediscover(AsyncSupplier<Map<Object, IFileSystem>> discoverySupplier) {
 		discoverySupplier.get()
-				.whenResult(result -> {
-					updatePartitions(result);
-					checkAllPartitions()
-							.whenComplete(() -> rediscover(discoverySupplier));
-				})
-				.whenException(e -> {
-					logger.warn("Could not discover partitions", e);
-					reactor.delayBackground(Duration.ofSeconds(1), () -> rediscover(discoverySupplier));
-				});
+			.whenResult(result -> {
+				updatePartitions(result);
+				checkAllPartitions()
+					.whenComplete(() -> rediscover(discoverySupplier));
+			})
+			.whenException(e -> {
+				logger.warn("Could not discover partitions", e);
+				reactor.delayBackground(Duration.ofSeconds(1), () -> rediscover(discoverySupplier));
+			});
 	}
 
 	private void updatePartitions(Map<Object, IFileSystem> newPartitions) {
@@ -278,40 +279,40 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	private Promise<Void> doCheckAllPartitions() {
 		return Promises.all(
-				partitions.entrySet().stream()
-						.map(entry -> {
-							Object id = entry.getKey();
-							return entry.getValue()
-									.ping()
-									.map(($, e) -> {
-										if (e == null) {
-											markAlive(id);
-										} else {
-											markDead(id, e);
-										}
-										return null;
-									});
-						}));
+			partitions.entrySet().stream()
+				.map(entry -> {
+					Object id = entry.getKey();
+					return entry.getValue()
+						.ping()
+						.map(($, e) -> {
+							if (e == null) {
+								markAlive(id);
+							} else {
+								markDead(id, e);
+							}
+							return null;
+						});
+				}));
 	}
 
 	private Promise<Void> doCheckDeadPartitions() {
 		return Promises.all(
-				deadPartitions.entrySet().stream()
-						.map(entry -> entry.getValue()
-								.ping()
-								.map(($, e) -> {
-									if (e == null) {
-										markAlive(entry.getKey());
-									}
-									return null;
-								})
-						));
+			deadPartitions.entrySet().stream()
+				.map(entry -> entry.getValue()
+					.ping()
+					.map(($, e) -> {
+						if (e == null) {
+							markAlive(entry.getKey());
+						}
+						return null;
+					})
+				));
 	}
 
 	@JmxAttribute
 	public List<String> getAllPartitions() {
 		return partitions.keySet().stream()
-				.map(Object::toString)
-				.collect(toList());
+			.map(Object::toString)
+			.collect(toList());
 	}
 }

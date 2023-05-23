@@ -21,7 +21,6 @@ import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutputs;
-import io.activej.datastream.processor.reducer.StreamReducer;
 import io.activej.datastream.supplier.AbstractStreamSupplier;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSupplier;

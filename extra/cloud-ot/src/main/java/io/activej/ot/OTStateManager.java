@@ -49,7 +49,7 @@ import static io.activej.promise.Promises.sequence;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class OTStateManager<K, D> extends AbstractReactive
-		implements ReactiveService {
+	implements ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final OTSystem<D> otSystem;
@@ -85,13 +85,15 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		this.state = state;
 	}
 
-	public static <K, D> OTStateManager<K, D> create(Reactor reactor, OTSystem<D> otSystem,
-			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
+	public static <K, D> OTStateManager<K, D> create(
+		Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> repository, OTState<D> state
+	) {
 		return builder(reactor, otSystem, repository, state).build();
 	}
 
-	public static <K, D> OTStateManager<K, D>.Builder builder(Reactor reactor, OTSystem<D> otSystem,
-			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
+	public static <K, D> OTStateManager<K, D>.Builder builder(
+		Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> repository, OTState<D> state
+	) {
 		return new OTStateManager<>(reactor, otSystem, repository, state).new Builder();
 	}
 
@@ -124,7 +126,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	public Promise<?> start() {
 		checkInReactorThread(this);
 		return checkout()
-				.whenResult(this::poll);
+			.whenResult(this::poll);
 	}
 
 	@Override
@@ -132,23 +134,23 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		checkInReactorThread(this);
 		poll = null;
 		return isValid() ?
-				sync().whenComplete(this::invalidateInternalState) :
-				Promise.complete();
+			sync().whenComplete(this::invalidateInternalState) :
+			Promise.complete();
 	}
 
 	public Promise<Void> checkout() {
 		checkInReactorThread(this);
 		checkState(commitId == null);
 		return uplink.checkout()
-				.whenResult(checkoutData -> {
-					state.init();
-					apply(checkoutData.diffs());
+			.whenResult(checkoutData -> {
+				state.init();
+				apply(checkoutData.diffs());
 
-					commitId = originCommitId = checkoutData.commitId();
-					level = originLevel = checkoutData.level();
-				})
-				.toVoid()
-				.whenComplete(toLogger(logger, thisMethod(), this));
+				commitId = originCommitId = checkoutData.commitId();
+				level = originLevel = checkoutData.level();
+			})
+			.toVoid()
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -188,50 +190,50 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		checkState(isValid());
 		isSyncing = true;
 		return sequence(
-				this::push,
-				poll == null ? this::pull : Promise::complete,
-				this::commit,
-				this::push)
-				.whenComplete(() -> isSyncing = false)
-				.whenComplete(this::poll)
-				.whenComplete(toLogger(logger, thisMethod(), this));
+			this::push,
+			poll == null ? this::pull : Promise::complete,
+			this::commit,
+			this::push)
+			.whenComplete(() -> isSyncing = false)
+			.whenComplete(this::poll)
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	private void poll() {
 		if (poll != null && !isPolling() && pendingProtoCommit == null) {
 			isPolling = true;
 			poll.run()
-					.async()
-					.whenComplete(() -> isPolling = false)
-					.whenComplete(() -> {
-						if (!isSyncing()) {
-							poll();
-						}
-					});
+				.async()
+				.whenComplete(() -> isPolling = false)
+				.whenComplete(() -> {
+					if (!isSyncing()) {
+						poll();
+					}
+				});
 		}
 	}
 
 	private Promise<Void> pull() {
 		return fetch()
-				.whenResult(this::rebase)
-				.toVoid()
-				.whenComplete(toLogger(logger, thisMethod(), this));
+			.whenResult(this::rebase)
+			.toVoid()
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	private Promise<Void> doPoll() {
 		if (!isValid()) return Promise.complete();
 		K pollCommitId = this.originCommitId;
 		return uplink.poll(pollCommitId)
-				.whenResult(fetchData -> {
-					if (!isSyncing() && pollCommitId == this.originCommitId) {
-						updateOrigin(fetchData);
-						if (pendingProtoCommit == null) {
-							rebase();
-						}
+			.whenResult(fetchData -> {
+				if (!isSyncing() && pollCommitId == this.originCommitId) {
+					updateOrigin(fetchData);
+					if (pendingProtoCommit == null) {
+						rebase();
 					}
-				})
-				.toVoid()
-				.whenComplete(toLogger(logger, thisMethod(), this));
+				}
+			})
+			.toVoid()
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	private Promise<Boolean> doFetch() {
@@ -239,17 +241,17 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 		K fetchCommitId = this.originCommitId;
 		return uplink.fetch(fetchCommitId)
-				.map(fetchData -> {
-					if (fetchCommitId == this.originCommitId && pendingProtoCommit == null) {
-						if (fetchData.commitId() != fetchCommitId) {
-							updateOrigin(fetchData);
-							return true;
-						}
-						return false;
+			.map(fetchData -> {
+				if (fetchCommitId == this.originCommitId && pendingProtoCommit == null) {
+					if (fetchData.commitId() != fetchCommitId) {
+						updateOrigin(fetchData);
+						return true;
 					}
 					return false;
-				})
-				.whenComplete(toLogger(logger, thisMethod(), this));
+				}
+				return false;
+			})
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	private void rebase() throws TransformException {
@@ -260,8 +262,8 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		TransformResult<D> transformed;
 		try {
 			transformed = otSystem.transform(
-					otSystem.squash(workingDiffs),
-					otSystem.squash(originDiffs));
+				otSystem.squash(workingDiffs),
+				otSystem.squash(originDiffs));
 		} catch (TransformException e) {
 			invalidateInternalState();
 			throw e;
@@ -281,37 +283,37 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		int originalSize = workingDiffs.size();
 		List<D> diffs = new ArrayList<>(otSystem.squash(workingDiffs));
 		return uplink.createProtoCommit(commitId, diffs, level)
-				.whenResult(protoCommit -> {
-					assert pendingProtoCommit == null;
-					pendingProtoCommit = protoCommit;
-					pendingProtoCommitDiffs = diffs;
-					workingDiffs = new ArrayList<>(workingDiffs.subList(originalSize, workingDiffs.size()));
-					resetOrigin();
-				})
-				.toVoid()
-				.whenComplete(toLogger(logger, thisMethod(), this));
+			.whenResult(protoCommit -> {
+				assert pendingProtoCommit == null;
+				pendingProtoCommit = protoCommit;
+				pendingProtoCommitDiffs = diffs;
+				workingDiffs = new ArrayList<>(workingDiffs.subList(originalSize, workingDiffs.size()));
+				resetOrigin();
+			})
+			.toVoid()
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	private Promise<Void> push() {
 		if (pendingProtoCommit == null) return Promise.complete();
 		return uplink.push(pendingProtoCommit)
-				.whenResult(fetchData -> {
-					pendingProtoCommit = null;
-					pendingProtoCommitDiffs = null;
+			.whenResult(fetchData -> {
+				pendingProtoCommit = null;
+				pendingProtoCommitDiffs = null;
 
-					assert commitId == originCommitId;
-					updateOrigin(fetchData);
-					rebase();
-				})
-				.toVoid()
-				.whenComplete(toLogger(logger, thisMethod(), this));
+				assert commitId == originCommitId;
+				updateOrigin(fetchData);
+				rebase();
+			})
+			.toVoid()
+			.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
 	public void reset() {
 		checkInReactorThread(this);
 		checkState(!isSyncing());
 		apply(otSystem.invert(
-				concat(nonNullElseEmpty(pendingProtoCommitDiffs), workingDiffs)));
+			concat(nonNullElseEmpty(pendingProtoCommitDiffs), workingDiffs)));
 		workingDiffs.clear();
 		pendingProtoCommit = null;
 		pendingProtoCommitDiffs = null;
@@ -402,10 +404,10 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	@Override
 	public String toString() {
 		return "{" +
-				"revision=" + commitId +
-				(originCommitId != commitId ? " origin revision=" + originCommitId : "") +
-				" workingDiffs:" + (workingDiffs != null ? workingDiffs.size() : null) +
-				" pendingCommits:" + (pendingProtoCommit != null) +
-				"}";
+			"revision=" + commitId +
+			(originCommitId != commitId ? " origin revision=" + originCommitId : "") +
+			" workingDiffs:" + (workingDiffs != null ? workingDiffs.size() : null) +
+			" pendingCommits:" + (pendingProtoCommit != null) +
+			"}";
 	}
 }

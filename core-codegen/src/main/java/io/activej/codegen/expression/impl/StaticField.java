@@ -69,16 +69,16 @@ public final class StaticField implements Variable {
 				javaField = ownerJavaType.getField(name);
 			} catch (NoSuchFieldException ignored) {
 				throw new RuntimeException(format("No static field %s.%s %s",
-						owner.getName(),
-						name,
-						exceptionInGeneratedClass(ctx)));
+					owner.getName(),
+					name,
+					exceptionInGeneratedClass(ctx)));
 			}
 
 			if (!(Modifier.isPublic(javaField.getModifiers()) && Modifier.isStatic(javaField.getModifiers()))) {
 				throw new RuntimeException(format("No static field or setter for class %s for field \"%s\". %s ",
-						owner.getName(),
-						name,
-						exceptionInGeneratedClass(ctx))
+					owner.getName(),
+					name,
+					exceptionInGeneratedClass(ctx))
 				);
 			}
 

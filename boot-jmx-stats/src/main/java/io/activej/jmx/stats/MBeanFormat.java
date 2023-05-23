@@ -42,22 +42,22 @@ public final class MBeanFormat {
 		Instant instant = Instant.ofEpochMilli(timestamp);
 		Duration ago = Duration.between(instant, Instant.ofEpochMilli(currentTimeMillis())).withNanos(0);
 		return StringFormatUtils.formatInstant(instant) +
-				" (" + StringFormatUtils.formatDuration(ago) + " ago)";
+			" (" + StringFormatUtils.formatDuration(ago) + " ago)";
 	}
 
 	public static String formatListAsMultilineString(@Nullable List<?> list) {
 		if (list == null || list.isEmpty()) return "";
 		List<String> strings = list.stream().map(Object::toString).toList();
 		return (strings.stream().anyMatch(s -> s.contains("\n")) ?
-				strings.stream().map(s -> s + "\n") :
-				strings.stream())
-				.collect(joining("\n")).trim();
+			strings.stream().map(s -> s + "\n") :
+			strings.stream())
+			.collect(joining("\n")).trim();
 	}
 
 	public static @Nullable List<String> formatMultilineStringAsList(@Nullable String multiline) {
 		if (multiline == null) return null;
 		return multiline.isEmpty() ?
-				null :
-				List.of(multiline.split("\n"));
+			null :
+			List.of(multiline.split("\n"));
 	}
 }

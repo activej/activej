@@ -15,7 +15,8 @@ import java.util.function.Function;
 import static io.activej.fs.util.JsonUtils.fromJson;
 
 public abstract class AbstractDiscoveryService extends AbstractReactive
-		implements IDiscoveryService<PartitionId> {
+	implements IDiscoveryService<PartitionId> {
+
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;
@@ -27,7 +28,7 @@ public abstract class AbstractDiscoveryService extends AbstractReactive
 
 	@SuppressWarnings("unchecked")
 	public abstract class Builder<Self extends Builder<Self, D>, D extends AbstractDiscoveryService>
-			extends AbstractBuilder<Self, D> {
+		extends AbstractBuilder<Self, D> {
 
 		public final Self withCrdtProvider(Function<PartitionId, ICrdtStorage<?, ?>> crdtProvider) {
 			AbstractDiscoveryService.this.crdtProvider = crdtProvider;
@@ -48,7 +49,7 @@ public abstract class AbstractDiscoveryService extends AbstractReactive
 	protected final RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
 		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
 		RendezvousPartitionScheme<PartitionId>.Builder schemeBuilder = RendezvousPartitionScheme.builder(partitionGroups)
-				.withPartitionIdGetter(PartitionId::getId);
+			.withPartitionIdGetter(PartitionId::getId);
 
 		if (rpcProvider != null) schemeBuilder.withRpcProvider(rpcProvider);
 		if (crdtProvider != null) schemeBuilder.withCrdtProvider(crdtProvider);

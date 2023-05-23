@@ -30,9 +30,9 @@ import io.activej.reactor.Reactive;
  * @param <O> output elements type.
  */
 public interface StreamTransformer<I, O> extends Reactive,
-		HasStreamInput<I>, HasStreamOutput<O>,
-		StreamSupplierTransformer<I, StreamSupplier<O>>,
-		StreamConsumerTransformer<O, StreamConsumer<I>> {
+	HasStreamInput<I>, HasStreamOutput<O>,
+	StreamSupplierTransformer<I, StreamSupplier<O>>,
+	StreamConsumerTransformer<O, StreamConsumer<I>> {
 
 	@Override
 	default StreamConsumer<I> transform(StreamConsumer<O> consumer) {

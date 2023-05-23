@@ -7,7 +7,7 @@ public final class Utils {
 
 	public static <T> T doTest(Class<T> type, T testData) {
 		BinarySerializer<T> serializer = SerializerFactory.defaultInstance()
-				.create(DEFINING_CLASS_LOADER, type);
+			.create(DEFINING_CLASS_LOADER, type);
 		return doTest(testData, serializer);
 	}
 

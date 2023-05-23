@@ -58,11 +58,11 @@ public final class AsyncBuffer<A, R> {
 		this.bufferedPromise = null;
 		this.activeCalls++;
 		return executor.apply(buffer)
-				.whenComplete((v, e) -> {
-					activeCalls--;
-					bufferedPromise.trySet(v, e);
-				})
-				.toVoid();
+			.whenComplete((v, e) -> {
+				activeCalls--;
+				bufferedPromise.trySet(v, e);
+			})
+			.toVoid();
 	}
 
 	public boolean isActive() {

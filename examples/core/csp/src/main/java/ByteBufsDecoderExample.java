@@ -13,9 +13,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class ByteBufsDecoderExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop
-				.builder()
-				.withCurrentThread()
-				.build();
+			.builder()
+			.withCurrentThread()
+			.build();
 
 		List<ByteBuf> letters = List.of(wrapAscii("H"), wrapAscii("e"), wrapAscii("l"), wrapAscii("l"), wrapAscii("o"));
 		ByteBufsDecoder<String> decoder = bufs -> {
@@ -27,7 +27,7 @@ public final class ByteBufsDecoderExample {
 		};
 
 		BinaryChannelSupplier.of(ChannelSuppliers.ofList(letters)).decode(decoder)
-				.whenResult(x -> System.out.println(x));
+			.whenResult(x -> System.out.println(x));
 
 		eventloop.run();
 	}

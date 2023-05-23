@@ -104,7 +104,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.whenResult(v -> {if (v != null) fn.accept(v);});
+					.whenResult(v -> {if (v != null) fn.accept(v);});
 			}
 		};
 	}
@@ -119,16 +119,16 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
-						.map(t -> {
-							if (t == null) return null;
-							try {
-								return fn.apply(t);
-							} catch (Exception ex) {
-								handleError(ex, fn);
-								ChannelSupplier.this.closeEx(ex);
-								throw ex;
-							}
-						});
+					.map(t -> {
+						if (t == null) return null;
+						try {
+							return fn.apply(t);
+						} catch (Exception ex) {
+							handleError(ex, fn);
+							ChannelSupplier.this.closeEx(ex);
+							throw ex;
+						}
+					});
 			}
 		};
 	}
@@ -143,7 +143,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
-						.then(value -> value != null ? fn.apply(value) : Promise.of(null));
+					.then(value -> value != null ? fn.apply(value) : Promise.of(null));
 			}
 		};
 	}
@@ -166,11 +166,11 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 						continue;
 					}
 					return promise
-							.then(value -> {
-								if (value == null || predicate.test(value)) return Promise.of(value);
-								Recyclers.recycle(value);
-								return get();
-							});
+						.then(value -> {
+							if (value == null || predicate.test(value)) return Promise.of(value);
+							Recyclers.recycle(value);
+							return get();
+						});
 				}
 			}
 		};
@@ -192,13 +192,13 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 					return Promise.of(null);
 				}
 				return ChannelSupplier.this.get()
-						.map(value -> {
-							if (value == null) return null;
-							if (predicate.test(value)) {
-								stop = true;
-							}
-							return value;
-						});
+					.map(value -> {
+						if (value == null) return null;
+						if (predicate.test(value)) {
+							stop = true;
+						}
+						return value;
+					});
 			}
 		};
 	}
@@ -214,7 +214,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.map((value, e) -> value);
+					.map((value, e) -> value);
 			}
 		};
 	}
@@ -251,7 +251,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	default <A, R> Promise<R> toCollector(Collector<T, A, R> collector) {
 		return collect(this,
-				collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()));
+			collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()));
 	}
 
 	/**
@@ -269,15 +269,15 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
-						.then((item, e) -> {
-							if (e == null) {
-								if (item != null) return Promise.of(item);
-								endOfStream.trySet(null);
-							} else {
-								endOfStream.trySetException(e);
-							}
-							return (Promise<T>) newEndOfStream;
-						});
+					.then((item, e) -> {
+						if (e == null) {
+							if (item != null) return Promise.of(item);
+							endOfStream.trySet(null);
+						} else {
+							endOfStream.trySetException(e);
+						}
+						return (Promise<T>) newEndOfStream;
+					});
 			}
 
 			@Override
@@ -308,15 +308,16 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * @param <R>          a data type of final result of {@code finisher}
 	 * @return a promise of accumulated result, transformed by the {@code finisher}
 	 */
-	static <T, A, R> Promise<R> collect(ChannelSupplier<T> supplier,
-			A initialValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher) {
+	static <T, A, R> Promise<R> collect(
+		ChannelSupplier<T> supplier, A initialValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher
+	) {
 		return Promise.ofCallback(cb ->
-				toCollectorImpl(supplier, initialValue, accumulator, finisher, cb));
+			toCollectorImpl(supplier, initialValue, accumulator, finisher, cb));
 	}
 
 	static <T> Promise<Void> streamTo(Promise<ChannelSupplier<T>> supplier, Promise<ChannelConsumer<T>> consumer) {
 		return Promises.toTuple(supplier.toTry(), consumer.toTry())
-				.then(t -> streamTo(t.value1(), t.value2()));
+			.then(t -> streamTo(t.value1(), t.value2()));
 	}
 
 	static <T> Promise<Void> streamTo(Try<ChannelSupplier<T>> supplier, Try<ChannelConsumer<T>> consumer) {
@@ -349,31 +350,32 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 			return;
 		}
 		supplierPromise
-				.subscribe((item, e1) -> {
-					if (e1 == null) {
-						consumer.accept(item)
-								.subscribe(($, e2) -> {
-									if (e2 == null) {
-										if (item != null) {
-											streamToImpl(supplier, consumer, cb);
-										} else {
-											cb.trySet(null);
-										}
-									} else {
-										supplier.closeEx(e2);
-										cb.trySetException(e2);
-									}
-								});
-					} else {
-						consumer.closeEx(e1);
-						cb.trySetException(e1);
-					}
-				});
+			.subscribe((item, e1) -> {
+				if (e1 == null) {
+					consumer.accept(item)
+						.subscribe(($, e2) -> {
+							if (e2 == null) {
+								if (item != null) {
+									streamToImpl(supplier, consumer, cb);
+								} else {
+									cb.trySet(null);
+								}
+							} else {
+								supplier.closeEx(e2);
+								cb.trySetException(e2);
+							}
+						});
+				} else {
+					consumer.closeEx(e1);
+					cb.trySetException(e1);
+				}
+			});
 	}
 
-	private static <T, A, R> void toCollectorImpl(ChannelSupplier<T> supplier,
-			A accumulatedValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher,
-			SettableCallback<R> cb) {
+	private static <T, A, R> void toCollectorImpl(
+		ChannelSupplier<T> supplier, A accumulatedValue, BiConsumerEx<A, T> accumulator, FunctionEx<A, R> finisher,
+		SettableCallback<R> cb
+	) {
 		Promise<T> promise;
 		while (true) {
 			promise = supplier.get();

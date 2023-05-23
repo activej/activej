@@ -47,7 +47,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * This servlet allows return HTTP responses by HTTP paths from some predefined storage, mainly the filesystem.
  */
 public final class StaticServlet extends AbstractReactive
-		implements AsyncServlet {
+	implements AsyncServlet {
 	private static final boolean CHECKS = Checks.isEnabled(StaticServlet.class);
 
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
@@ -85,7 +85,7 @@ public final class StaticServlet extends AbstractReactive
 		return new StaticServlet(reactor, resourceLoader).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, StaticServlet>{
+	public final class Builder extends AbstractBuilder<Builder, StaticServlet> {
 		private Builder() {}
 
 		@SuppressWarnings("UnusedReturnValue")
@@ -170,9 +170,9 @@ public final class StaticServlet extends AbstractReactive
 
 	private Promise<HttpResponse> createHttpResponse(ByteBuf buf, ContentType contentType) {
 		return responseBuilderSupplier.get()
-				.withBody(buf)
-				.withHeader(CONTENT_TYPE, ofContentType(contentType))
-				.toPromise();
+			.withBody(buf)
+			.withHeader(CONTENT_TYPE, ofContentType(contentType))
+			.toPromise();
 	}
 
 	@Override
@@ -182,37 +182,37 @@ public final class StaticServlet extends AbstractReactive
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);
 		return Promise.complete()
-				.then(() -> (mappedPath.endsWith("/") || mappedPath.isEmpty()) ?
-						tryLoadIndexResource(mappedPath) :
-						resourceLoader.load(mappedPath)
-								.then(byteBuf -> createHttpResponse(byteBuf, contentType))
-								.then((value, e) -> {
-									if (e instanceof ResourceIsADirectoryException) {
-										return tryLoadIndexResource(mappedPath);
-									} else {
-										return Promise.of(value, e);
-									}
-								}))
-				.then(Promise::of,
-						e -> e instanceof ResourceNotFoundException ?
-								tryLoadDefaultResource() :
-								Promise.ofException(HttpError.ofCode(400, e)));
+			.then(() -> (mappedPath.endsWith("/") || mappedPath.isEmpty()) ?
+				tryLoadIndexResource(mappedPath) :
+				resourceLoader.load(mappedPath)
+					.then(byteBuf -> createHttpResponse(byteBuf, contentType))
+					.then((value, e) -> {
+						if (e instanceof ResourceIsADirectoryException) {
+							return tryLoadIndexResource(mappedPath);
+						} else {
+							return Promise.of(value, e);
+						}
+					}))
+			.then(Promise::of,
+				e -> e instanceof ResourceNotFoundException ?
+					tryLoadDefaultResource() :
+					Promise.ofException(HttpError.ofCode(400, e)));
 	}
 
 	private Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
 		String dirPath = mappedPath.endsWith("/") || mappedPath.isEmpty() ? mappedPath : (mappedPath + '/');
 		return Promises.first(
-						indexResources.stream()
-								.map(indexResource -> (AsyncSupplier<HttpResponse>) () ->
-										resourceLoader.load(dirPath + indexResource)
-												.then(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource)))))
-				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
+				indexResources.stream()
+					.map(indexResource -> (AsyncSupplier<HttpResponse>) () ->
+						resourceLoader.load(dirPath + indexResource)
+							.then(byteBuf -> createHttpResponse(byteBuf, contentTypeResolver.apply(indexResource)))))
+			.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 
 	private Promise<HttpResponse> tryLoadDefaultResource() {
 		return defaultResource != null ?
-				resourceLoader.load(defaultResource)
-						.then(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :
-				Promise.ofException(HttpError.notFound404());
+			resourceLoader.load(defaultResource)
+				.then(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :
+			Promise.ofException(HttpError.notFound404());
 	}
 }

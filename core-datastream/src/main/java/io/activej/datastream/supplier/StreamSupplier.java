@@ -80,7 +80,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 */
 	default <X> Promise<X> streamTo(StreamConsumerWithResult<T, X> consumerWithResult) {
 		return streamTo(consumerWithResult.getConsumer())
-				.then(consumerWithResult::getResult);
+			.then(consumerWithResult::getResult);
 	}
 
 	/**

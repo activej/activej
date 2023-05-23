@@ -25,21 +25,21 @@ public final class TcpServerExample {
 	//[START REGION_1]
 	public static void main(String[] args) throws Exception {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 
 		SimpleServer server = SimpleServer.builder(eventloop, socket ->
-						BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
-								.decodeStream(ByteBufsDecoders.ofCrlfTerminatedBytes())
-								.peek(buf -> System.out.println("client:" + buf.getString(UTF_8)))
-								.map(buf -> {
-									ByteBuf serverBuf = ByteBufStrings.wrapUtf8("Server> ");
-									return ByteBufPool.append(serverBuf, buf);
-								})
-								.map(buf -> ByteBufPool.append(buf, CRLF))
-								.streamTo(ChannelConsumers.ofSocket(socket)))
-				.withListenPort(PORT)
-				.build();
+				BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
+					.decodeStream(ByteBufsDecoders.ofCrlfTerminatedBytes())
+					.peek(buf -> System.out.println("client:" + buf.getString(UTF_8)))
+					.map(buf -> {
+						ByteBuf serverBuf = ByteBufStrings.wrapUtf8("Server> ");
+						return ByteBufPool.append(serverBuf, buf);
+					})
+					.map(buf -> ByteBufPool.append(buf, CRLF))
+					.streamTo(ChannelConsumers.ofSocket(socket)))
+			.withListenPort(PORT)
+			.build();
 
 		server.listen();
 

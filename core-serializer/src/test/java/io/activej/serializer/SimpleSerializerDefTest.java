@@ -14,39 +14,39 @@ public class SimpleSerializerDefTest {
 	@Test
 	public void test() {
 		BinarySerializer<ExternalClass> serializer = SerializerFactory.builder()
-				.with(ExternalComponent.class, ctx -> new SimpleSerializerDef<ExternalComponent>() {
-					@Override
-					protected BinarySerializer<ExternalComponent> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
-						return new BinarySerializer<>() {
-							@Override
-							public void encode(BinaryOutput out, ExternalComponent item) {
-								out.writeVarInt(item.getX());
-								out.writeUTF8(item.getY());
-							}
+			.with(ExternalComponent.class, ctx -> new SimpleSerializerDef<ExternalComponent>() {
+				@Override
+				protected BinarySerializer<ExternalComponent> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
+					return new BinarySerializer<>() {
+						@Override
+						public void encode(BinaryOutput out, ExternalComponent item) {
+							out.writeVarInt(item.getX());
+							out.writeUTF8(item.getY());
+						}
 
-							@Override
-							public ExternalComponent decode(BinaryInput in) throws CorruptedDataException {
-								int x = in.readVarInt();
-								String y = in.readUTF8();
+						@Override
+						public ExternalComponent decode(BinaryInput in) throws CorruptedDataException {
+							int x = in.readVarInt();
+							String y = in.readUTF8();
 
-								return new ExternalComponent(x, y);
-							}
-						};
-					}
-				})
-				.build()
-				.create(DEFINING_CLASS_LOADER, ExternalClass.class);
+							return new ExternalComponent(x, y);
+						}
+					};
+				}
+			})
+			.build()
+			.create(DEFINING_CLASS_LOADER, ExternalClass.class);
 
 		ExternalClass original = new ExternalClass(
-				"test",
-				new ExternalComponent(
-						123,
-						"inner test 1"
-				),
-				new ExternalComponent(
-						456,
-						"inner test 2"
-				)
+			"test",
+			new ExternalComponent(
+				123,
+				"inner test 1"
+			),
+			new ExternalComponent(
+				456,
+				"inner test 2"
+			)
 		);
 
 		ExternalClass copy = doTest(original, serializer);

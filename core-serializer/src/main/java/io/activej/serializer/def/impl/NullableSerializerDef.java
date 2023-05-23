@@ -54,10 +54,10 @@ public final class NullableSerializerDef extends AbstractSerializerDef implement
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		Encoder encoder = serializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 		return ifNonNull(value,
-				sequence(
-						writeByte(buf, pos, value((byte) 1)),
-						encoder.encode(buf, pos, value)),
-				writeByte(buf, pos, value((byte) 0))
+			sequence(
+				writeByte(buf, pos, value((byte) 1)),
+				encoder.encode(buf, pos, value)),
+			writeByte(buf, pos, value((byte) 0))
 		);
 	}
 
@@ -65,8 +65,8 @@ public final class NullableSerializerDef extends AbstractSerializerDef implement
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		Decoder decoder = serializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(readByte(in),
-				b -> ifNe(b, value((byte) 0),
-						decoder.decode(in),
-						nullRef(serializer.getDecodeType())));
+			b -> ifNe(b, value((byte) 0),
+				decoder.decode(in),
+				nullRef(serializer.getDecodeType())));
 	}
 }

@@ -63,7 +63,7 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
 public final class MySqlOTRepository<D> extends AbstractReactive
-		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats {
+	implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
@@ -97,8 +97,10 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 	private final PromiseStats promiseLoadSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	private MySqlOTRepository(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+	private MySqlOTRepository(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder
+	) {
 		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
@@ -108,49 +110,67 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
 	}
 
-	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+	public static <D> MySqlOTRepository<D> create(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).build();
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, F format) {
+	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D> create(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, F format
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format).build();
 	}
 
-	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
+	public static <D> MySqlOTRepository<D> create(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, TypeT<? extends D> typeT
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT).build();
 	}
 
-	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, Class<? extends D> diffClass) {
+	public static <D> MySqlOTRepository<D> create(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, Class<? extends D> diffClass
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, diffClass).build();
 	}
 
-	public static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
+	public static <D> MySqlOTRepository<D>.Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder
+	) {
 		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, F format) {
+	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D>.Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, F format
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format);
 	}
 
-	public static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
+	public static <D> MySqlOTRepository<D>.Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, TypeT<? extends D> typeT
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
 	}
 
-	public static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, Class<? extends D> diffClass) {
+	public static <D> MySqlOTRepository<D>.Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, Class<? extends D> diffClass
+	) {
 		return builder(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <D> MySqlOTRepository<D>.Builder builder(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-			OTSystem<D> otSystem, Type diffType) {
+	private static <D> MySqlOTRepository<D>.Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+		OTSystem<D> otSystem, Type diffType
+	) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
 		if (decoder == null || encoder == null) {
@@ -188,15 +208,15 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private String sql(String sql) {
 		return sql
-				.replace("{revisions}", tableRevision)
-				.replace("{diffs}", tableDiffs)
-				.replace("{backup}", Objects.toString(tableBackup, ""));
+			.replace("{revisions}", tableRevision)
+			.replace("{diffs}", tableDiffs)
+			.replace("{backup}", Objects.toString(tableBackup, ""));
 	}
 
 	private static <T> Promise<T> retryRollbacks(AsyncSupplier<T> id) {
 		//noinspection ConditionCoveredByFurtherCondition
 		return retry(id, ($, e) -> e == null || !(e instanceof SQLTransactionRollbackException),
-				RetryPolicy.exponentialBackoff(Duration.ofMillis(1), Duration.ofSeconds(1)));
+			RetryPolicy.exponentialBackoff(Duration.ofMillis(1), Duration.ofSeconds(1)));
 	}
 
 	public void initialize() throws IOException, SQLException {
@@ -244,7 +264,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 	public Promise<OTCommit<Long, D>> createCommit(Map<Long, DiffsWithLevel<D>> parentDiffs) {
 		checkInReactorThread(this);
 		return createCommitId()
-				.map(newId -> OTCommit.of(0, newId, parentDiffs));
+			.map(newId -> OTCommit.of(0, newId, parentDiffs));
 	}
 
 	private static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
@@ -291,40 +311,40 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private Promise<Void> doPush(Collection<OTCommit<Long, D>> commits) {
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setAutoCommit(false);
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								for (OTCommit<Long, D> commit : commits) {
-									try (PreparedStatement statement = connection.prepareStatement(sql(
-											"INSERT INTO {revisions}(`id`, `epoch`, `type`, `created_by`, `level`) VALUES (?, ?, 'INNER', ?, ?)")
-									)) {
-										statement.setLong(1, commit.getId());
-										statement.setInt(2, commit.getEpoch());
-										statement.setString(3, createdBy);
-										statement.setLong(4, commit.getLevel());
-										statement.executeUpdate();
-									}
-
-									for (Long parentId : commit.getParents().keySet()) {
-										List<D> diff = commit.getParents().get(parentId);
-										try (PreparedStatement ps = connection.prepareStatement(sql(
-												"INSERT INTO {diffs}(`revision_id`, `parent_id`, `diff`) VALUES (?, ?, ?)"
-										))) {
-											ps.setLong(1, commit.getId());
-											ps.setLong(2, parentId);
-											ps.setString(3, toJson(diff));
-											ps.executeUpdate();
-										}
-									}
-								}
-
-								connection.commit();
+						for (OTCommit<Long, D> commit : commits) {
+							try (PreparedStatement statement = connection.prepareStatement(sql(
+								"INSERT INTO {revisions}(`id`, `epoch`, `type`, `created_by`, `level`) VALUES (?, ?, 'INNER', ?, ?)")
+							)) {
+								statement.setLong(1, commit.getId());
+								statement.setInt(2, commit.getEpoch());
+								statement.setString(3, createdBy);
+								statement.setLong(4, commit.getLevel());
+								statement.executeUpdate();
 							}
-						})
-				.whenComplete(promisePush.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), commits));
+
+							for (Long parentId : commit.getParents().keySet()) {
+								List<D> diff = commit.getParents().get(parentId);
+								try (PreparedStatement ps = connection.prepareStatement(sql(
+									"INSERT INTO {diffs}(`revision_id`, `parent_id`, `diff`) VALUES (?, ?, ?)"
+								))) {
+									ps.setLong(1, commit.getId());
+									ps.setLong(2, parentId);
+									ps.setString(3, toJson(diff));
+									ps.executeUpdate();
+								}
+							}
+						}
+
+						connection.commit();
+					}
+				})
+			.whenComplete(promisePush.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), commits));
 	}
 
 	@Override
@@ -335,183 +355,183 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private Promise<Void> doUpdateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setAutoCommit(false);
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								updateRevisions(newHeads, connection, "HEAD");
-								updateRevisions(excludedHeads, connection, "INNER");
+						updateRevisions(newHeads, connection, "HEAD");
+						updateRevisions(excludedHeads, connection, "INNER");
 
-								connection.commit();
-							}
-						})
-				.whenComplete(promiseUpdateHeads.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), newHeads, excludedHeads));
+						connection.commit();
+					}
+				})
+			.whenComplete(promiseUpdateHeads.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), newHeads, excludedHeads));
 	}
 
 	@Override
 	public Promise<Set<Long>> getAllHeads() {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								try (PreparedStatement ps = connection.prepareStatement(sql(
-										"SELECT `id` FROM {revisions} WHERE `type`='HEAD'"
-								))) {
-									ResultSet resultSet = ps.executeQuery();
-									Set<Long> result = new HashSet<>();
-									while (resultSet.next()) {
-										long id = resultSet.getLong(1);
-										result.add(id);
-									}
-									return result;
-								}
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						try (PreparedStatement ps = connection.prepareStatement(sql(
+							"SELECT `id` FROM {revisions} WHERE `type`='HEAD'"
+						))) {
+							ResultSet resultSet = ps.executeQuery();
+							Set<Long> result = new HashSet<>();
+							while (resultSet.next()) {
+								long id = resultSet.getLong(1);
+								result.add(id);
 							}
-						})
-				.whenComplete(promiseGetHeads.recordStats())
-				.whenComplete(toLogger(logger, thisMethod()));
+							return result;
+						}
+					}
+				})
+			.whenComplete(promiseGetHeads.recordStats())
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	@Override
 	public Promise<Boolean> hasCommit(Long revisionId) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								try (PreparedStatement ps = connection.prepareStatement(sql("" +
-										"SELECT 1 " +
-										"FROM {revisions} " +
-										"WHERE {revisions}.`id`=? AND {revisions}.`type` IN ('HEAD', 'INNER')"
-								))) {
-									ps.setLong(1, revisionId);
-									ResultSet resultSet = ps.executeQuery();
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+							"SELECT 1 " +
+							"FROM {revisions} " +
+							"WHERE {revisions}.`id`=? AND {revisions}.`type` IN ('HEAD', 'INNER')"
+						))) {
+							ps.setLong(1, revisionId);
+							ResultSet resultSet = ps.executeQuery();
 
-									return resultSet.next();
-								}
-							}
-						})
-				.whenComplete(promiseHasCommit.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), revisionId));
+							return resultSet.next();
+						}
+					}
+				})
+			.whenComplete(promiseHasCommit.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
 	@Override
 	public Promise<OTCommit<Long, D>> loadCommit(Long revisionId) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								Map<Long, DiffsWithLevel<D>> parentDiffs = new HashMap<>();
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						Map<Long, DiffsWithLevel<D>> parentDiffs = new HashMap<>();
 
-								int epoch = 0;
-								long timestamp = 0;
+						int epoch = 0;
+						long timestamp = 0;
 
-								try (PreparedStatement ps = connection.prepareStatement(sql("" +
-										"SELECT " +
-										" {revisions}.`epoch`," +
-										" {revisions}.`level`," +
-										" UNIX_TIMESTAMP({revisions}.`timestamp`) AS `timestamp`, " +
-										" {diffs}.`parent_id`, " +
-										" {diffs}.`diff` " +
-										"FROM {revisions} " +
-										"LEFT JOIN {diffs} ON {diffs}.`revision_id`={revisions}.`id` " +
-										"WHERE {revisions}.`id`=? AND {revisions}.`type` IN ('HEAD', 'INNER')"
-								))) {
-									ps.setLong(1, revisionId);
-									ResultSet resultSet = ps.executeQuery();
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+							"SELECT " +
+							" {revisions}.`epoch`," +
+							" {revisions}.`level`," +
+							" UNIX_TIMESTAMP({revisions}.`timestamp`) AS `timestamp`, " +
+							" {diffs}.`parent_id`, " +
+							" {diffs}.`diff` " +
+							"FROM {revisions} " +
+							"LEFT JOIN {diffs} ON {diffs}.`revision_id`={revisions}.`id` " +
+							"WHERE {revisions}.`id`=? AND {revisions}.`type` IN ('HEAD', 'INNER')"
+						))) {
+							ps.setLong(1, revisionId);
+							ResultSet resultSet = ps.executeQuery();
 
-									while (resultSet.next()) {
-										epoch = resultSet.getInt(1);
-										long level = resultSet.getLong(2);
-										timestamp = resultSet.getLong(3) * 1000L;
-										long parentId = resultSet.getLong(4);
-										String diffString = resultSet.getString(5);
-										if (diffString != null) {
-											List<D> diff = fromJson(diffString);
-											parentDiffs.put(parentId, new DiffsWithLevel<>(level - 1, diff));
-										}
-									}
+							while (resultSet.next()) {
+								epoch = resultSet.getInt(1);
+								long level = resultSet.getLong(2);
+								timestamp = resultSet.getLong(3) * 1000L;
+								long parentId = resultSet.getLong(4);
+								String diffString = resultSet.getString(5);
+								if (diffString != null) {
+									List<D> diff = fromJson(diffString);
+									parentDiffs.put(parentId, new DiffsWithLevel<>(level - 1, diff));
 								}
-
-								if (timestamp == 0) {
-									throw new NoCommitException(revisionId);
-								}
-
-								return OTCommit.builder(epoch, revisionId, parentDiffs)
-										.withTimestamp(timestamp)
-										.build();
 							}
-						})
-				.whenComplete(promiseLoadCommit.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), revisionId));
+						}
+
+						if (timestamp == 0) {
+							throw new NoCommitException(revisionId);
+						}
+
+						return OTCommit.builder(epoch, revisionId, parentDiffs)
+							.withTimestamp(timestamp)
+							.build();
+					}
+				})
+			.whenComplete(promiseLoadCommit.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
 	@Override
 	public Promise<Boolean> hasSnapshot(Long revisionId) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								try (PreparedStatement ps = connection.prepareStatement(sql(
-										"SELECT `snapshot` IS NOT NULL FROM {revisions} WHERE `id`=?"
-								))) {
-									ps.setLong(1, revisionId);
-									ResultSet resultSet = ps.executeQuery();
-									if (!resultSet.next()) return false;
-									return resultSet.getBoolean(1);
-								}
-							}
-						})
-				.whenComplete(promiseHasSnapshot.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), revisionId));
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						try (PreparedStatement ps = connection.prepareStatement(sql(
+							"SELECT `snapshot` IS NOT NULL FROM {revisions} WHERE `id`=?"
+						))) {
+							ps.setLong(1, revisionId);
+							ResultSet resultSet = ps.executeQuery();
+							if (!resultSet.next()) return false;
+							return resultSet.getBoolean(1);
+						}
+					}
+				})
+			.whenComplete(promiseHasSnapshot.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
 	@Override
 	public Promise<Optional<List<D>>> loadSnapshot(Long revisionId) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								try (PreparedStatement ps = connection.prepareStatement(sql(
-										"SELECT `snapshot` FROM {revisions} WHERE `id`=?"
-								))) {
-									ps.setLong(1, revisionId);
-									ResultSet resultSet = ps.executeQuery();
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						try (PreparedStatement ps = connection.prepareStatement(sql(
+							"SELECT `snapshot` FROM {revisions} WHERE `id`=?"
+						))) {
+							ps.setLong(1, revisionId);
+							ResultSet resultSet = ps.executeQuery();
 
-									if (!resultSet.next()) return Optional.<List<D>>empty();
+							if (!resultSet.next()) return Optional.<List<D>>empty();
 
-									String str = resultSet.getString(1);
-									if (str == null) return Optional.<List<D>>empty();
-									List<? extends D> snapshot = fromJson(str);
-									return Optional.of(otSystem.squash(snapshot));
-								}
-							}
-						})
-				.whenComplete(promiseLoadSnapshot.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), revisionId));
+							String str = resultSet.getString(1);
+							if (str == null) return Optional.<List<D>>empty();
+							List<? extends D> snapshot = fromJson(str);
+							return Optional.of(otSystem.squash(snapshot));
+						}
+					}
+				})
+			.whenComplete(promiseLoadSnapshot.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), revisionId));
 	}
 
 	@Override
 	public Promise<Void> saveSnapshot(Long revisionId, List<D> diffs) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setAutoCommit(true);
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(true);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								String snapshot = toJson(otSystem.squash(diffs));
-								try (PreparedStatement ps = connection.prepareStatement(sql("" +
-										"UPDATE {revisions} SET `snapshot`=? WHERE `id`=?"
-								))) {
-									ps.setString(1, snapshot);
-									ps.setLong(2, revisionId);
-									ps.executeUpdate();
-								}
-							}
-						})
-				.whenComplete(promiseSaveSnapshot.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), revisionId, diffs));
+						String snapshot = toJson(otSystem.squash(diffs));
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+							"UPDATE {revisions} SET `snapshot`=? WHERE `id`=?"
+						))) {
+							ps.setString(1, snapshot);
+							ps.setLong(2, revisionId);
+							ps.executeUpdate();
+						}
+					}
+				})
+			.whenComplete(promiseSaveSnapshot.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), revisionId, diffs));
 	}
 
 	@Override
@@ -522,31 +542,31 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private Promise<Void> doCleanup(Long minId) {
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setAutoCommit(false);
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								try (PreparedStatement ps = connection.prepareStatement(sql("" +
-										"DELETE FROM {revisions} " +
-										"WHERE `type` in ('HEAD', 'INNER') AND `level` < " +
-										"  (SELECT t2.`level` FROM (SELECT t.`level` FROM {revisions} t WHERE t.`id`=?) AS t2)-1"
-								))) {
-									ps.setLong(1, minId);
-									ps.executeUpdate();
-								}
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+							"DELETE FROM {revisions} " +
+							"WHERE `type` in ('HEAD', 'INNER') AND `level` < " +
+							"  (SELECT t2.`level` FROM (SELECT t.`level` FROM {revisions} t WHERE t.`id`=?) AS t2)-1"
+						))) {
+							ps.setLong(1, minId);
+							ps.executeUpdate();
+						}
 
-								try (PreparedStatement ps = connection.prepareStatement(sql("" +
-										"DELETE FROM {diffs} " +
-										"WHERE NOT EXISTS (SELECT * FROM {revisions} WHERE {revisions}.`id`={diffs}.`revision_id`)"
-								))) {
-									ps.executeUpdate();
-								}
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+							"DELETE FROM {diffs} " +
+							"WHERE NOT EXISTS (SELECT * FROM {revisions} WHERE {revisions}.`id`={diffs}.`revision_id`)"
+						))) {
+							ps.executeUpdate();
+						}
 
-								connection.commit();
-							}
-						})
-				.whenComplete(toLogger(logger, thisMethod(), minId));
+						connection.commit();
+					}
+				})
+			.whenComplete(toLogger(logger, thisMethod(), minId));
 	}
 
 	@Override
@@ -554,28 +574,28 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		checkInReactorThread(this);
 		checkNotNull(tableBackup, "Cannot backup when backup table is null");
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								try (PreparedStatement statement = connection.prepareStatement(sql(
-										"INSERT INTO {backup}(`id`, `epoch`, `level`, `snapshot`) VALUES (?, ?, ?, ?)"
-								))) {
-									statement.setLong(1, commit.getId());
-									statement.setInt(2, commit.getEpoch());
-									statement.setLong(3, commit.getLevel());
-									statement.setString(4, toJson(snapshot));
-									statement.executeUpdate();
-								}
-							}
-						})
-				.whenComplete(toLogger(logger, thisMethod(), commit.getId(), snapshot));
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						try (PreparedStatement statement = connection.prepareStatement(sql(
+							"INSERT INTO {backup}(`id`, `epoch`, `level`, `snapshot`) VALUES (?, ?, ?, ?)"
+						))) {
+							statement.setLong(1, commit.getId());
+							statement.setInt(2, commit.getEpoch());
+							statement.setLong(3, commit.getLevel());
+							statement.setString(4, toJson(snapshot));
+							statement.executeUpdate();
+						}
+					}
+				})
+			.whenComplete(toLogger(logger, thisMethod(), commit.getId(), snapshot));
 	}
 
 	private void updateRevisions(Collection<Long> heads, Connection connection, String type) throws SQLException {
 		if (heads.isEmpty()) return;
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"UPDATE {revisions} " +
-				"SET `type`='" + type + "' " +
-				"WHERE `id` IN " + Stream.generate(() -> "?").limit(heads.size()).collect(joining(", ", "(", ")"))
+			"UPDATE {revisions} " +
+			"SET `type`='" + type + "' " +
+			"WHERE `id` IN " + Stream.generate(() -> "?").limit(heads.size()).collect(joining(", ", "(", ")"))
 		))) {
 			int pos = 1;
 			for (Long id : heads) {

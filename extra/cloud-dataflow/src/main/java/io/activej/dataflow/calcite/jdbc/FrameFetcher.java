@@ -27,8 +27,8 @@ public final class FrameFetcher implements AsyncCloseable {
 		}
 
 		int fetchSize = fetchMaxRowCount == -1 ?
-				blockingConsumer.getBufferCapacity() :
-				Math.min(fetchMaxRowCount, blockingConsumer.getBufferCapacity());
+			blockingConsumer.getBufferCapacity() :
+			Math.min(fetchMaxRowCount, blockingConsumer.getBufferCapacity());
 
 		List<Object> rows = new ArrayList<>(fetchSize);
 

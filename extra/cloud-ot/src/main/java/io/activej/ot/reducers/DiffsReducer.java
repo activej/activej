@@ -62,12 +62,12 @@ public interface DiffsReducer<A, D> {
 
 	static <D> DiffsReducer<List<D>, D> toList() {
 		return of(new ArrayList<>(), (accumulatedDiffs, diffs) ->
-				concat(diffs, accumulatedDiffs));
+			concat(diffs, accumulatedDiffs));
 	}
 
 	static <D> DiffsReducer<List<D>, D> toSquashedList(OTSystem<D> system) {
 		return of(new ArrayList<>(), (accumulatedDiffs, diffs) ->
-				system.squash(concat(diffs, accumulatedDiffs)));
+			system.squash(concat(diffs, accumulatedDiffs)));
 	}
 
 }

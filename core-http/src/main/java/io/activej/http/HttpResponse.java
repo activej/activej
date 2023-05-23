@@ -149,30 +149,30 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 	public static Builder redirect301(String url) {
 		// RFC-7231, section 6.4.2 (https://tools.ietf.org/html/rfc7231#section-6.4.2)
 		return ofCode(301)
-				.withHeader(LOCATION, url);
+			.withHeader(LOCATION, url);
 	}
 
 	public static Builder redirect302(String url) {
 		// RFC-7231, section 6.4.3 (https://tools.ietf.org/html/rfc7231#section-6.4.3)
 		return ofCode(302)
-				.withHeader(LOCATION, url);
+			.withHeader(LOCATION, url);
 	}
 
 	public static Builder redirect307(String url) {
 		return ofCode(307)
-				.withHeader(LOCATION, url);
+			.withHeader(LOCATION, url);
 	}
 
 	public static Builder redirect308(String url) {
 		// RFC-7238, section 3 (https://tools.ietf.org/html/rfc7238#section-3)
 		return ofCode(308)
-				.withHeader(LOCATION, url);
+			.withHeader(LOCATION, url);
 	}
 
 	public static Builder unauthorized401(String challenge) {
 		// RFC-7235, section 3.1 (https://tools.ietf.org/html/rfc7235#section-3.1)
 		return ofCode(401)
-				.withHeader(WWW_AUTHENTICATE, challenge);
+			.withHeader(WWW_AUTHENTICATE, challenge);
 	}
 
 	public static Builder notFound404() {
@@ -190,17 +190,17 @@ public final class HttpResponse extends HttpMessage implements ToPromise<HttpRes
 
 		public Builder withPlainText(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
-					.withBody(text.getBytes(UTF_8));
+				.withBody(text.getBytes(UTF_8));
 		}
 
 		public Builder withHtml(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
-					.withBody(text.getBytes(UTF_8));
+				.withBody(text.getBytes(UTF_8));
 		}
 
 		public Builder withJson(String text) {
 			return withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-					.withBody(text.getBytes(UTF_8));
+				.withBody(text.getBytes(UTF_8));
 		}
 
 		@Override

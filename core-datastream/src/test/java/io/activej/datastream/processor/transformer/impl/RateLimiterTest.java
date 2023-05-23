@@ -28,20 +28,20 @@ public class RateLimiterTest {
 	public void testEmpty() {
 		TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
-				.withTimeProvider(timeSequence)
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withTimeProvider(timeSequence)
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		RateLimiter<Integer> limiter = RateLimiter.create(100, ChronoUnit.SECONDS);
 
 		List<Integer> expected = IntStream.range(0, 200)
-				.boxed().collect(toList());
+			.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
 		await(StreamSuppliers.ofIterable(expected)
-				.transformWith(limiter)
-				.streamTo(StreamConsumers.ofConsumer(actual::add)));
+			.transformWith(limiter)
+			.streamTo(StreamConsumers.ofConsumer(actual::add)));
 
 		assertEquals(expected, actual);
 		assertTrue(timeSequence.getTime() > 2_000);
@@ -51,22 +51,22 @@ public class RateLimiterTest {
 	public void testHalfFull() {
 		TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
-				.withTimeProvider(timeSequence)
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withTimeProvider(timeSequence)
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		RateLimiter<Integer> limiter = RateLimiter.<Integer>builder(0.1, ChronoUnit.MILLIS)
-				.withInitialTokens(100L)
-				.build();
+			.withInitialTokens(100L)
+			.build();
 
 		List<Integer> expected = IntStream.range(0, 200)
-				.boxed().collect(toList());
+			.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
 		await(StreamSuppliers.ofIterable(expected)
-				.transformWith(limiter)
-				.streamTo(StreamConsumers.ofConsumer(actual::add)));
+			.transformWith(limiter)
+			.streamTo(StreamConsumers.ofConsumer(actual::add)));
 
 		assertEquals(expected, actual);
 		assertTrue(timeSequence.getTime() > 1_000 && timeSequence.getTime() < 2_000);
@@ -76,22 +76,22 @@ public class RateLimiterTest {
 	public void testFull() {
 		TestCurrentTimeProvider.TimeSequenceCurrentTimeProvider timeSequence = TestCurrentTimeProvider.ofTimeSequence(0, 10);
 		Eventloop.builder()
-				.withTimeProvider(timeSequence)
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withTimeProvider(timeSequence)
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		RateLimiter<Integer> limiter = RateLimiter.<Integer>builder(0.0001, ChronoUnit.MICROS)
-				.withInitialTokens(200L)
-				.build();
+			.withInitialTokens(200L)
+			.build();
 
 		List<Integer> expected = IntStream.range(0, 200)
-				.boxed().collect(toList());
+			.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
 		await(StreamSuppliers.ofIterable(expected)
-				.transformWith(limiter)
-				.streamTo(StreamConsumers.ofConsumer(actual::add)));
+			.transformWith(limiter)
+			.streamTo(StreamConsumers.ofConsumer(actual::add)));
 
 		assertEquals(expected, actual);
 		assertTrue(timeSequence.getTime() < 1_000);

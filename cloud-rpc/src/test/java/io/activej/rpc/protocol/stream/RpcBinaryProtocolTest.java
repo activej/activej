@@ -59,27 +59,27 @@ public final class RpcBinaryProtocolTest {
 		String testMessage = "Test";
 
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
-				.build();
+			.withMessageTypes(String.class)
+			.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+			.build();
 
 		RpcServer server = RpcServer.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(String.class)
-				.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
-				.withListenPort(listenPort)
-				.build();
+			.withMessageTypes(String.class)
+			.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
+			.withListenPort(listenPort)
+			.build();
 		server.listen();
 
 		int countRequests = 10;
 
 		List<String> list = await(client.start()
-				.then(() ->
-						Promises.toList(IntStream.range(0, countRequests)
-								.mapToObj(i -> client.<String, String>sendRequest(testMessage, 1000))))
-				.whenComplete(() -> {
-					client.stop();
-					server.close();
-				}));
+			.then(() ->
+				Promises.toList(IntStream.range(0, countRequests)
+					.mapToObj(i -> client.<String, String>sendRequest(testMessage, 1000))))
+			.whenComplete(() -> {
+				client.stop();
+				server.close();
+			}));
 
 		assertTrue(list.stream().allMatch(response -> response.equals("Hello, " + testMessage + "!")));
 	}
@@ -87,9 +87,9 @@ public final class RpcBinaryProtocolTest {
 	@Test
 	public void testCompression() {
 		BinarySerializer<RpcMessage> binarySerializer = SerializerFactory.builder()
-				.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
-				.build()
-				.create(DefiningClassLoader.create(), RpcMessage.class);
+			.withSubclasses(RpcMessage.SUBCLASSES_ID, List.of(String.class))
+			.build()
+			.create(DefiningClassLoader.create(), RpcMessage.class);
 
 		int countRequests = 10;
 
@@ -98,12 +98,12 @@ public final class RpcBinaryProtocolTest {
 
 		FrameFormat frameFormat = FrameFormats.lz4();
 		StreamSupplier<RpcMessage> supplier = StreamSuppliers.ofIterable(sourceList)
-				.transformWith(ChannelSerializer.builder(binarySerializer)
-						.withInitialBufferSize(MemSize.of(1))
-						.build())
-				.transformWith(ChannelFrameEncoder.create(frameFormat))
-				.transformWith(ChannelFrameDecoder.create(frameFormat))
-				.transformWith(ChannelDeserializer.create(binarySerializer));
+			.transformWith(ChannelSerializer.builder(binarySerializer)
+				.withInitialBufferSize(MemSize.of(1))
+				.build())
+			.transformWith(ChannelFrameEncoder.create(frameFormat))
+			.transformWith(ChannelFrameDecoder.create(frameFormat))
+			.transformWith(ChannelDeserializer.create(binarySerializer));
 
 		List<RpcMessage> list = await(supplier.toList());
 		assertEquals(countRequests, list.size());

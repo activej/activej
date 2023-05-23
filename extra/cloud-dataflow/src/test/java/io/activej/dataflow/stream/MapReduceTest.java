@@ -106,30 +106,30 @@ public class MapReduceTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						"dog",
-						"cat",
-						"horse",
-						"cat"))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				"dog",
+				"cat",
+				"horse",
+				"cat"))
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						"dog",
-						"cat"))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				"dog",
+				"cat"))
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -144,7 +144,7 @@ public class MapReduceTest {
 		Dataset<String> items = datasetOfId("items", simple(String.class));
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
-				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
+			new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
 		ICollector<StringCount> collector = MergeCollector.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder());
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		ToListStreamConsumer<StringCount> resultConsumer = ToListStreamConsumer.create();
@@ -152,17 +152,17 @@ public class MapReduceTest {
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		System.out.println(resultConsumer.getList());
 
 		assertEquals(Set.of(
-				new StringCount("cat", 3),
-				new StringCount("dog", 2),
-				new StringCount("horse", 1)), new HashSet<>(resultConsumer.getList()));
+			new StringCount("cat", 3),
+			new StringCount("dog", 2),
+			new StringCount("horse", 1)), new HashSet<>(resultConsumer.getList()));
 	}
 
 	public static class StringReducer extends ReducerToAccumulator<String, StringCount, StringCount> {
@@ -201,10 +201,10 @@ public class MapReduceTest {
 	@SuppressWarnings("rawtypes")
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
-				.bind(new Key<StreamCodec<StringKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new StringKeyFunction()))
-				.bind(new Key<StreamCodec<StringMapFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new StringMapFunction()))
-				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(Comparator.naturalOrder()))
-				.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new StringReducer()))
-				.build();
+			.bind(new Key<StreamCodec<StringKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new StringKeyFunction()))
+			.bind(new Key<StreamCodec<StringMapFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new StringMapFunction()))
+			.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(Comparator.naturalOrder()))
+			.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new StringReducer()))
+			.build();
 	}
 }

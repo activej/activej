@@ -21,40 +21,40 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("Image") AsyncServlet imageServlet, @Named("Text") AsyncServlet textServlet) {
 		return RoutingServlet.builder(reactor)
-				.with(HttpMethod.POST, "/*", request -> {
-					String contentType = request.getHeader(HttpHeaders.CONTENT_TYPE);
-					if (contentType == null) {
-						return HttpResponse.ofCode(400)
-								.withPlainText("'Content-Type' header is missing")
-								.toPromise();
-					}
-					if (isImageType(contentType)) {
-						return imageServlet.serve(request);
-					} else if (isTextType(contentType)) {
-						return textServlet.serve(request);
-					} else {
-						return HttpResponse.ofCode(400)
-								.withPlainText("Unsupported mime type in 'Content-Type' header")
-								.toPromise();
-					}
-				})
-				.build();
+			.with(HttpMethod.POST, "/*", request -> {
+				String contentType = request.getHeader(HttpHeaders.CONTENT_TYPE);
+				if (contentType == null) {
+					return HttpResponse.ofCode(400)
+						.withPlainText("'Content-Type' header is missing")
+						.toPromise();
+				}
+				if (isImageType(contentType)) {
+					return imageServlet.serve(request);
+				} else if (isTextType(contentType)) {
+					return textServlet.serve(request);
+				} else {
+					return HttpResponse.ofCode(400)
+						.withPlainText("Unsupported mime type in 'Content-Type' header")
+						.toPromise();
+				}
+			})
+			.build();
 	}
 
 	@Provides
 	@Named("Image")
 	AsyncServlet imageServlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("This servlet handles images\n")
-				.toPromise();
+			.withPlainText("This servlet handles images\n")
+			.toPromise();
 	}
 
 	@Provides
 	@Named("Text")
 	AsyncServlet textServlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("This servlet handles text data\n")
-				.toPromise();
+			.withPlainText("This servlet handles text data\n")
+			.toPromise();
 	}
 
 	private static boolean isTextType(String mime) {

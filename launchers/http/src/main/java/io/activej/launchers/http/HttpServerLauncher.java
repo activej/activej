@@ -57,34 +57,34 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Provides
 	HttpServer server(NioReactor reactor, AsyncServlet rootServlet, Config config) {
 		return HttpServer.builder(reactor, rootServlet)
-				.initialize(ofHttpServer(config.getChild("http")))
-				.build();
+			.initialize(ofHttpServer(config.getChild("http")))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HOSTNAME, PORT)))
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HOSTNAME, PORT)))
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule()
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule()
 		);
 	}
 
@@ -113,8 +113,8 @@ public abstract class HttpServerLauncher extends Launcher {
 					public AsyncServlet servlet(Config config) {
 						String message = config.get("message", "Hello, world!");
 						return request -> HttpResponse.ok200()
-								.withPlainText(message)
-								.toPromise();
+							.withPlainText(message)
+							.toPromise();
 					}
 				};
 			}

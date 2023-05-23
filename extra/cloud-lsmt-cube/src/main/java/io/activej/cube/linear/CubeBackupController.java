@@ -113,8 +113,10 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 			return this;
 		}
 
-		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk,
-				String tableBackup, String tablePositionBackup, String tableChunkBackup) {
+		public Builder withCustomTableNames(
+			String tableRevision, String tablePosition, String tableChunk, String tableBackup,
+			String tablePositionBackup, String tableChunkBackup
+		) {
 			checkNotBuilt(this);
 			CubeBackupController.this.tableRevision = tableRevision;
 			CubeBackupController.this.tablePosition = tablePosition;
@@ -196,12 +198,12 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 			try (Statement statement = connection.createStatement()) {
 				String backupScript = sql(new String(loadResource(SQL_BACKUP_SCRIPT), UTF_8))
-						.replace("{backup_revision}", String.valueOf(revisionId))
-						.replace("{backup_chunk_ids}", chunkIds.isEmpty() ?
-								"null" :
-								chunkIds.stream()
-										.map(Object::toString)
-										.collect(joining(",")));
+					.replace("{backup_revision}", String.valueOf(revisionId))
+					.replace("{backup_chunk_ids}", chunkIds.isEmpty() ?
+						"null" :
+						chunkIds.stream()
+							.map(Object::toString)
+							.collect(joining(",")));
 				statement.execute(backupScript);
 				connection.commit();
 			}
@@ -224,9 +226,9 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 		Set<Long> chunkIds = new HashSet<>();
 		try (PreparedStatement stmt = connection.prepareStatement(sql("" +
-				"SELECT `id` " +
-				"FROM {chunk} " +
-				"WHERE `added_revision`<=? AND (`removed_revision` IS NULL OR `removed_revision`>?);"))) {
+			"SELECT `id` " +
+			"FROM {chunk} " +
+			"WHERE `added_revision`<=? AND (`removed_revision` IS NULL OR `removed_revision`>?);"))) {
 			stmt.setLong(1, revisionId);
 			stmt.setLong(2, revisionId);
 
@@ -272,13 +274,13 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	private String sql(String sql) {
 		return sql
-				.replace("{revision}", tableRevision)
-				.replace("{position}", tablePosition)
-				.replace("{chunk}", tableChunk)
-				.replace("{backup}", tableBackup)
-				.replace("{backup_position}", tablePositionBackup)
-				.replace("{backup_chunk}", tableChunkBackup)
-				.replace("{backup_by}", backupBy);
+			.replace("{revision}", tableRevision)
+			.replace("{position}", tablePosition)
+			.replace("{chunk}", tableChunk)
+			.replace("{backup}", tableBackup)
+			.replace("{backup_position}", tablePositionBackup)
+			.replace("{backup_chunk}", tableChunkBackup)
+			.replace("{backup_by}", backupBy);
 	}
 
 	public void initialize() throws IOException, SQLException {
@@ -318,8 +320,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Duration getBackupCurrentDuration() {
 		return backupLastStartTimestamp - backupLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(System.currentTimeMillis() - backupLastStartTimestamp) :
-				null;
+			Duration.ofMillis(System.currentTimeMillis() - backupLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -345,8 +347,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Duration getBackupDbCurrentDuration() {
 		return backupDbLastStartTimestamp - backupDbLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(System.currentTimeMillis() - backupDbLastStartTimestamp) :
-				null;
+			Duration.ofMillis(System.currentTimeMillis() - backupDbLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -372,8 +374,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Duration getGetChunksToBackupCurrentDuration() {
 		return getChunksToBackupLastStartTimestamp - getChunksToBackupLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(System.currentTimeMillis() - getChunksToBackupLastStartTimestamp) :
-				null;
+			Duration.ofMillis(System.currentTimeMillis() - getChunksToBackupLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -399,8 +401,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Duration getBackupChunksCurrentDuration() {
 		return backupChunksLastStartTimestamp - backupChunksLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(System.currentTimeMillis() - backupChunksLastStartTimestamp) :
-				null;
+			Duration.ofMillis(System.currentTimeMillis() - backupChunksLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute

@@ -19,11 +19,11 @@ public class RendezvousHashSharderTest {
 	public void testSharder() {
 		RefInt index = new RefInt(0);
 		Map<String, Integer> partitionsWithIndexes = Stream.of("one", "two", "three", "four", "five")
-				.collect(toLinkedHashMap(s -> index.value++));
+			.collect(toLinkedHashMap(s -> index.value++));
 		Set<String> alive = new HashSet<>(partitionsWithIndexes.keySet());
 		RendezvousHashSharder<Integer> sharder1 = RendezvousHashSharder.create(
-				Object::hashCode, Object::hashCode,
-				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
+			Object::hashCode, Object::hashCode,
+			partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
 		Map<Integer, Set<Integer>> sharded1 = new HashMap<>();
 		for (int i = 0; i < 10; i++) {
@@ -32,8 +32,8 @@ public class RendezvousHashSharderTest {
 			}
 		}
 		Set<Integer> allSharded = sharded1.values().stream()
-				.flatMap(Collection::stream)
-				.collect(toSet());
+			.flatMap(Collection::stream)
+			.collect(toSet());
 
 		assertEquals(Set.copyOf(partitionsWithIndexes.values()), allSharded);
 
@@ -41,8 +41,8 @@ public class RendezvousHashSharderTest {
 		int fiveId = partitionsWithIndexes.remove("five");
 
 		RendezvousHashSharder<Integer> sharder2 = RendezvousHashSharder.create(
-				Object::hashCode, Object::hashCode,
-				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
+			Object::hashCode, Object::hashCode,
+			partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
 		Map<Integer, Set<Integer>> sharded2 = new HashMap<>();
 		for (int i = 0; i < 10; i++) {
@@ -61,19 +61,19 @@ public class RendezvousHashSharderTest {
 		}
 
 		allSharded = sharded2.values().stream()
-				.flatMap(Collection::stream)
-				.collect(toSet());
+			.flatMap(Collection::stream)
+			.collect(toSet());
 
 		assertEquals(Set.copyOf(partitionsWithIndexes.values()), allSharded);
 
 		alive.remove("four");
 
 		RendezvousHashSharder<Integer> sharder3 = RendezvousHashSharder.create(
-				Object::hashCode, Object::hashCode,
-				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, true);
+			Object::hashCode, Object::hashCode,
+			partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, true);
 
 		List<int[]> shards3 = IntStream.range(0, 100)
-				.mapToObj(sharder3::shard).toList();
+			.mapToObj(sharder3::shard).toList();
 		int[] first = shards3.get(0);
 		assertTrue(shards3.stream().allMatch(ints -> Arrays.equals(first, ints)));
 	}

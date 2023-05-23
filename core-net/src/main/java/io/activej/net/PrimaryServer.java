@@ -77,11 +77,11 @@ public final class PrimaryServer extends AbstractReactiveServer {
 	@Override
 	public String toString() {
 		return "PrimaryServer{" +
-				"numOfWorkerServers=" + workerServers.length +
-				(listenAddresses.isEmpty() ? "" : ", listenAddresses=" + listenAddresses) +
-				(sslListenAddresses.isEmpty() ? "" : ", sslListenAddresses=" + sslListenAddresses) +
-				(acceptOnce ? ", acceptOnce" : "") +
-				", workerServers=" + Arrays.toString(workerServers) +
-				'}';
+			"numOfWorkerServers=" + workerServers.length +
+			(listenAddresses.isEmpty() ? "" : ", listenAddresses=" + listenAddresses) +
+			(sslListenAddresses.isEmpty() ? "" : ", sslListenAddresses=" + sslListenAddresses) +
+			(acceptOnce ? ", acceptOnce" : "") +
+			", workerServers=" + Arrays.toString(workerServers) +
+			'}';
 	}
 }

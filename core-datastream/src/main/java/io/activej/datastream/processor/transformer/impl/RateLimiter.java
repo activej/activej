@@ -60,10 +60,10 @@ public final class RateLimiter<T> extends ImplicitlyReactive implements StreamTr
 		this.output = new Output();
 
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		output.getAcknowledgement()
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 	}
 
 	public static <T> RateLimiter<T> create(double refillRate, ChronoUnit perUnit) {
@@ -151,8 +151,8 @@ public final class RateLimiter<T> extends ImplicitlyReactive implements StreamTr
 			}
 
 			scheduledRunnable = RateLimiter.this.reactor.delay(
-					calculateDelay(itemTokens),
-					() -> output.proceed(itemTokens)
+				calculateDelay(itemTokens),
+				() -> output.proceed(itemTokens)
 			);
 		}
 	}

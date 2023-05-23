@@ -645,8 +645,9 @@ public class StreamCodecs {
 		return ofMap(keyCodec, $ -> valueCodec);
 	}
 
-	public static <K, V> StreamCodec<Map<K, V>> ofMap(StreamCodec<K> keyCodec,
-			Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn) {
+	public static <K, V> StreamCodec<Map<K, V>> ofMap(
+		StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn
+	) {
 		return ofMap(keyCodec, valueCodecFn, length -> new HashMap<>(hashInitialSize(length)));
 	}
 
@@ -847,8 +848,9 @@ public class StreamCodecs {
 			ensureHeaderSize(output, positionBegin, positionData, dataSize, headerSize);
 		}
 
-		private void ensureHeaderSize(StreamOutput output, int positionBegin, int positionData,
-				int dataSize, int headerSize) {
+		private void ensureHeaderSize(
+			StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize
+		) {
 			int previousHeaderSize = positionData - positionBegin;
 			if (previousHeaderSize == headerSize) return; // offset is enough for header
 

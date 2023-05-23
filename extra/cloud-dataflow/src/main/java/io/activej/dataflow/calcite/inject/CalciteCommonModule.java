@@ -36,20 +36,20 @@ public final class CalciteCommonModule extends AbstractModule {
 		});
 
 		bind(DataflowSchema.class).to((optionalAbstractTables, optionalTables, optionalPartitionalTables) -> {
-					Set<AbstractDataflowTable<?>> tables = new HashSet<>();
+				Set<AbstractDataflowTable<?>> tables = new HashSet<>();
 
-					if (optionalAbstractTables.isPresent()) tables.addAll(optionalAbstractTables.get());
-					if (optionalTables.isPresent()) tables.addAll(optionalTables.get());
-					if (optionalPartitionalTables.isPresent()) tables.addAll(optionalPartitionalTables.get());
+				if (optionalAbstractTables.isPresent()) tables.addAll(optionalAbstractTables.get());
+				if (optionalTables.isPresent()) tables.addAll(optionalTables.get());
+				if (optionalPartitionalTables.isPresent()) tables.addAll(optionalPartitionalTables.get());
 
-					checkState(!tables.isEmpty(),
-							"Cannot create schema with no tables, provide tables into set (@ProvidesIntoSet)");
+				checkState(!tables.isEmpty(),
+					"Cannot create schema with no tables, provide tables into set (@ProvidesIntoSet)");
 
-					return DataflowSchema.builder().withTables(tables).build();
-				},
-				new Key<OptionalDependency<Set<AbstractDataflowTable<?>>>>() {},
-				new Key<OptionalDependency<Set<DataflowTable<?>>>>() {},
-				new Key<OptionalDependency<Set<DataflowPartitionedTable<?>>>>() {}
+				return DataflowSchema.builder().withTables(tables).build();
+			},
+			new Key<OptionalDependency<Set<AbstractDataflowTable<?>>>>() {},
+			new Key<OptionalDependency<Set<DataflowTable<?>>>>() {},
+			new Key<OptionalDependency<Set<DataflowPartitionedTable<?>>>>() {}
 		);
 	}
 }

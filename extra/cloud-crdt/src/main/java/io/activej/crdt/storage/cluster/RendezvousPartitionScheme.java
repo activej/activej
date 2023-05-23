@@ -113,11 +113,11 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P> {
 
 			//noinspection unchecked
 			RendezvousHashSharder<K> sharder = RendezvousHashSharder.create(
-					((ToIntFunction<K>) keyHashFn),
-					p -> partitionIdGetter.apply(p).hashCode(),
-					partitionGroup.getPartitionIds(),
-					alive,
-					partitionGroup.getReplicaCount(), partitionGroup.isRepartition());
+				((ToIntFunction<K>) keyHashFn),
+				p -> partitionIdGetter.apply(p).hashCode(),
+				partitionGroup.getPartitionIds(),
+				alive,
+				partitionGroup.getReplicaCount(), partitionGroup.isRepartition());
 			sharders.add(sharder);
 		}
 		return RendezvousHashSharder.unionOf(sharders);
@@ -130,19 +130,19 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P> {
 			if (!partitionGroup.isActive()) continue;
 			//noinspection unchecked
 			rendezvousHashings.add(
-					RendezvousHashing.builder(req ->
-									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
-							.withBuckets(NUMBER_OF_BUCKETS)
-							.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
-							.initialize(rendezvousHashing -> {
-								for (P partitionId : partitionGroup.getPartitionIds()) {
-									rendezvousHashing.withShard(partitionId, provideRpcConnection(partitionId));
-								}
-								if (!partitionGroup.isRepartition()) {
-									rendezvousHashing.withReshardings(partitionGroup.getReplicaCount());
-								}
-							})
-							.build());
+				RendezvousHashing.builder(req ->
+						((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
+					.withBuckets(NUMBER_OF_BUCKETS)
+					.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
+					.initialize(rendezvousHashing -> {
+						for (P partitionId : partitionGroup.getPartitionIds()) {
+							rendezvousHashing.withShard(partitionId, provideRpcConnection(partitionId));
+						}
+						if (!partitionGroup.isRepartition()) {
+							rendezvousHashing.withReshardings(partitionGroup.getReplicaCount());
+						}
+					})
+					.build());
 		}
 		final int count = rendezvousHashings.size();
 		return RpcStrategies.sharding(item -> keyGetter.apply(item).hashCode() % count, rendezvousHashings);

@@ -38,8 +38,8 @@ public class AggregationDiffJsonCodec implements JsonCodec<AggregationDiff> {
 
 	private AggregationDiffJsonCodec(AggregationChunkJsonCodec aggregationChunkCodec) {
 		this.aggregationChunksCodec = JsonCodec.of(
-				reader -> ((JsonReader<?>) reader).readSet(aggregationChunkCodec),
-				(writer, value) -> writer.serialize(value, oneline(aggregationChunkCodec))
+			reader -> ((JsonReader<?>) reader).readSet(aggregationChunkCodec),
+			(writer, value) -> writer.serialize(value, oneline(aggregationChunkCodec))
 		);
 	}
 

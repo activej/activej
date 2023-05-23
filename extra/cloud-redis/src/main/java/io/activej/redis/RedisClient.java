@@ -45,7 +45,7 @@ public final class RedisClient extends AbstractNioReactive {
 	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
 	public static final InetSocketAddress DEFAULT_ADDRESS = ApplicationSettings.getInetSocketAddress(
-			RedisClient.class, "address", new InetSocketAddress("localhost", 6379)
+		RedisClient.class, "address", new InetSocketAddress("localhost", 6379)
 	);
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RedisClient.class, "connectTimeout", Duration.ZERO);
 
@@ -135,22 +135,22 @@ public final class RedisClient extends AbstractNioReactive {
 	public Promise<RedisConnection> connect() {
 		checkInReactorThread(this);
 		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.map(
-						socket -> {
-							RedisConnection connection = new RedisConnection(this,
-									sslContext != null ?
-											wrapClientSocket(reactor, socket,
-													address.getHostName(), address.getPort(),
-													sslContext, sslExecutor) :
-											socket,
-									autoFlushInterval);
-							connection.start();
-							return connection;
-						},
-						e -> {
-							throw new RedisException("Failed to connect to Redis server: " + address, e);
-						})
-				.whenComplete(toLogger(logger, TRACE, "connect", this));
+			.map(
+				socket -> {
+					RedisConnection connection = new RedisConnection(this,
+						sslContext != null ?
+							wrapClientSocket(reactor, socket,
+								address.getHostName(), address.getPort(),
+								sslContext, sslExecutor) :
+							socket,
+						autoFlushInterval);
+					connection.start();
+					return connection;
+				},
+				e -> {
+					throw new RedisException("Failed to connect to Redis server: " + address, e);
+				})
+			.whenComplete(toLogger(logger, TRACE, "connect", this));
 	}
 
 	/**
@@ -198,18 +198,18 @@ public final class RedisClient extends AbstractNioReactive {
 	private Promise<RedisConnection> connectAndAuth(Object... args) {
 		checkInReactorThread(this);
 		return connect()
-				.then(connection ->
-						connection.cmd(RedisRequest.of(args), RedisResponse.OK)
-								.map($ -> connection)
-								.whenException(connection::close));
+			.then(connection ->
+				connection.cmd(RedisRequest.of(args), RedisResponse.OK)
+					.map($ -> connection)
+					.whenException(connection::close));
 	}
 
 	@Override
 	public String toString() {
 		return "RedisClient{" +
-				"address=" + address +
-				", secure=" + (sslContext != null) +
-				'}';
+			"address=" + address +
+			", secure=" + (sslContext != null) +
+			'}';
 	}
 
 }

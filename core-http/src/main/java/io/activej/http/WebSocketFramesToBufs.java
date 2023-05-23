@@ -45,7 +45,7 @@ import static io.activej.http.WebSocketConstants.OpCode.OP_PONG;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf> {
+	implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf> {
 	private static final boolean CHECKS = Checks.isEnabled(WebSocketFramesToBufs.class);
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
@@ -100,13 +100,13 @@ public final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	@Override
 	protected void doProcess() {
 		input.streamTo(ChannelConsumers.ofAsyncConsumer(
-						frame -> {
-							if (CHECKS) checkFrameOrder(frame);
+				frame -> {
+					if (CHECKS) checkFrameOrder(frame);
 
-							return doAccept(encodeData(frame));
-						}))
-				.then(() -> sendCloseFrame(REGULAR_CLOSE))
-				.whenResult(this::completeProcess);
+					return doAccept(encodeData(frame));
+				}))
+			.then(() -> sendCloseFrame(REGULAR_CLOSE))
+			.whenResult(this::completeProcess);
 	}
 
 	private ByteBuf doEncode(ByteBuf payload, OpCode opCode, boolean isLastFrame) {
@@ -190,8 +190,8 @@ public final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		if (closing) return Promise.complete();
 		closing = true;
 		return doAccept(encodeClose(e == STATUS_CODE_MISSING ? EMPTY_CLOSE : e))
-				.then(() -> doAccept(null))
-				.whenComplete(() -> closeSentPromise.trySet(null));
+			.then(() -> doAccept(null))
+			.whenComplete(() -> closeSentPromise.trySet(null));
 	}
 
 	private void checkFrameOrder(Frame frame) {
@@ -217,8 +217,8 @@ public final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 				Integer code = wsEx.getCode();
 				assert code != null;
 				exception = code == 1005 ?
-						EMPTY_CLOSE :
-						masked ? GOING_AWAY : SERVER_ERROR;
+					EMPTY_CLOSE :
+					masked ? GOING_AWAY : SERVER_ERROR;
 			}
 		} else {
 			exception = masked ? GOING_AWAY : SERVER_ERROR;

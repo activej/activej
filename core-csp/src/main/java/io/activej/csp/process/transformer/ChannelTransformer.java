@@ -20,6 +20,6 @@ import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSupplier;
 
 public interface ChannelTransformer<I, O> extends
-		ChannelSupplierTransformer<I, ChannelSupplier<O>>,
-		ChannelConsumerTransformer<O, ChannelConsumer<I>> {
+	ChannelSupplierTransformer<I, ChannelSupplier<O>>,
+	ChannelConsumerTransformer<O, ChannelConsumer<I>> {
 }

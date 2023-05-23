@@ -95,7 +95,7 @@ public interface IWebSocket extends AsyncCloseable {
 	 * @see Message
 	 */
 	default ChannelSupplier<Message> messageReadChannel() {
-		return ChannelSuppliers.ofAsyncSupplier	(this::readMessage, this);
+		return ChannelSuppliers.ofAsyncSupplier(this::readMessage, this);
 	}
 
 	/**
@@ -135,7 +135,7 @@ public interface IWebSocket extends AsyncCloseable {
 	 */
 	default ChannelConsumer<Frame> frameWriteChannel() {
 		return ChannelConsumers.ofAsyncConsumer(this::writeFrame, this)
-				.withAcknowledgement(ack -> ack.then(() -> writeFrame(null)));
+			.withAcknowledgement(ack -> ack.then(() -> writeFrame(null)));
 	}
 
 	/**
@@ -147,8 +147,8 @@ public interface IWebSocket extends AsyncCloseable {
 	 */
 	default ChannelConsumer<Message> messageWriteChannel() {
 		return ChannelConsumers.ofAsyncConsumer(this::writeMessage, this)
-				.withAcknowledgement(ack -> ack
-						.then(() -> writeMessage(null)));
+			.withAcknowledgement(ack -> ack
+				.then(() -> writeMessage(null)));
 	}
 
 	/**
@@ -215,7 +215,6 @@ public interface IWebSocket extends AsyncCloseable {
 			TEXT, BINARY
 		}
 	}
-
 
 	/**
 	 * Representation of a web socket data frame. It may be one of text, binary or continuation types.

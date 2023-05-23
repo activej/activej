@@ -45,16 +45,16 @@ public final class DetailedStreamStats<T> extends BasicStreamStats<T> implements
 	@Override
 	public StreamDataAcceptor<T> createDataAcceptor(StreamDataAcceptor<T> actualDataAcceptor) {
 		return sizeCounter == null ?
-				item -> {
-					count++;
-					actualDataAcceptor.accept(item);
-				} :
-				item -> {
-					count++;
-					int size = sizeCounter.size(item);
-					totalSize += size;
-					actualDataAcceptor.accept(item);
-				};
+			item -> {
+				count++;
+				actualDataAcceptor.accept(item);
+			} :
+			item -> {
+				count++;
+				int size = sizeCounter.size(item);
+				totalSize += size;
+				actualDataAcceptor.accept(item);
+			};
 	}
 
 	@JmxAttribute(reducer = JmxReducerSum.class)
@@ -70,8 +70,8 @@ public final class DetailedStreamStats<T> extends BasicStreamStats<T> implements
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public @Nullable Long getTotalSizeAvg() {
 		return sizeCounter != null && getStarted().getTotalCount() != 0 ?
-				totalSize / getStarted().getTotalCount() :
-				null;
+			totalSize / getStarted().getTotalCount() :
+			null;
 	}
 
 	@Override

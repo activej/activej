@@ -29,5 +29,5 @@ import java.nio.channels.SocketChannel;
  */
 public interface WorkerServer extends NioReactive {
 	void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
-			boolean ssl, SocketSettings socketSettings);
+		boolean ssl, SocketSettings socketSettings);
 }

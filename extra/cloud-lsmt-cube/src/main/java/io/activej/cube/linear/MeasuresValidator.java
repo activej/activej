@@ -39,8 +39,8 @@ public interface MeasuresValidator {
 			}
 			Set<String> allowedMeasures = aggregation.getMeasureTypes().keySet();
 			List<String> unknownMeasures = measures.stream()
-					.filter(not(allowedMeasures::contains))
-					.toList();
+				.filter(not(allowedMeasures::contains))
+				.toList();
 			if (!unknownMeasures.isEmpty()) {
 				throw new MalformedDataException(String.format("Unknown measures %s in aggregation '%s'", unknownMeasures, aggregationId));
 			}

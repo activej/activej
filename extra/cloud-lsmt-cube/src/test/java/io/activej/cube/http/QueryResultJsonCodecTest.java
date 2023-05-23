@@ -20,19 +20,19 @@ public class QueryResultJsonCodecTest {
 	@Test
 	public void test() throws MalformedDataException {
 		QueryResultJsonCodec codec = QueryResultJsonCodec.create(DefiningClassLoader.create(),
-				Map.of(
-						"campaign", int.class,
-						"site", String.class),
-				Map.of(
-						"impressions", long.class,
-						"clicks", long.class));
+			Map.of(
+				"campaign", int.class,
+				"site", String.class),
+			Map.of(
+				"impressions", long.class,
+				"clicks", long.class));
 
 		RecordScheme recordScheme = RecordScheme.builder()
-				.withField("campaign", int.class)
-				.withField("site", String.class)
-				.withField("clicks", long.class)
-				.withField("impressions", long.class)
-				.build();
+			.withField("campaign", int.class)
+			.withField("site", String.class)
+			.withField("clicks", long.class)
+			.withField("impressions", long.class)
+			.build();
 
 		Record record1 = recordScheme.record();
 		record1.set("campaign", 123);
@@ -51,16 +51,16 @@ public class QueryResultJsonCodecTest {
 		totals.set("impressions", 66756L);
 
 		QueryResult queryResult = QueryResult.create(recordScheme,
-				List.of("campaign", "site"),
-				List.of("clicks", "impressions"),
-				List.of("campaign", "clicks"),
-				List.of(record1, record2),
-				totals,
-				123,
-				Map.of(
-						"campaign", 555,
-						"site", "filtered"),
-				DATA_WITH_TOTALS
+			List.of("campaign", "site"),
+			List.of("clicks", "impressions"),
+			List.of("campaign", "clicks"),
+			List.of(record1, record2),
+			totals,
+			123,
+			Map.of(
+				"campaign", 555,
+				"site", "filtered"),
+			DATA_WITH_TOTALS
 		);
 
 		String json = toJson(codec, queryResult);

@@ -55,7 +55,7 @@ public final class TriggersModule extends AbstractModule {
 			if (o == null || getClass() != o.getClass()) return false;
 			TriggerConfig<?> that = (TriggerConfig<?>) o;
 			return severity == that.severity &&
-					Objects.equals(name, that.name);
+				Objects.equals(name, that.name);
 		}
 
 		@Override
@@ -250,8 +250,8 @@ public final class TriggersModule extends AbstractModule {
 			for (TriggerConfig<?> config : entry.getValue()) {
 				if (entry.getKey().isAssignableFrom(instance.getClass())) {
 					triggers.computeIfAbsent(internalKey, $ -> new ArrayList<>())
-							.add(new TriggerRegistryRecord(config.severity, config.name, () ->
-									((TriggerConfig<Object>) config).triggerFunction.apply(instance)));
+						.add(new TriggerRegistryRecord(config.severity, config.name, () ->
+							((TriggerConfig<Object>) config).triggerFunction.apply(instance)));
 				}
 			}
 		}
@@ -262,8 +262,8 @@ public final class TriggersModule extends AbstractModule {
 		Key<Object> key = (Key<Object>) internalKey.getKey();
 		for (TriggerConfig<?> config : keySettings.getOrDefault(key, Set.of())) {
 			triggers.computeIfAbsent(internalKey, $ -> new ArrayList<>())
-					.add(new TriggerRegistryRecord(config.severity, config.name, () ->
-							((TriggerConfig<Object>) config).triggerFunction.apply(instance)));
+				.add(new TriggerRegistryRecord(config.severity, config.name, () ->
+					((TriggerConfig<Object>) config).triggerFunction.apply(instance)));
 		}
 	}
 

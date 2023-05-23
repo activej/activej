@@ -36,7 +36,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * converting some raw data into its <a href="https://tools.ietf.org/html/rfc2616#section-3.6.1">chunked transfer encoding<a> form.
  */
 public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerChunkedEncoder, ByteBuf, ByteBuf> {
+	implements WithChannelTransformer<BufsConsumerChunkedEncoder, ByteBuf, ByteBuf> {
 	private static final byte[] LAST_CHUNK_BYTES = new byte[]{48, 13, 10, 13, 10};
 
 	private ChannelSupplier<ByteBuf> input;
@@ -80,10 +80,10 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	@Override
 	protected void doProcess() {
 		input.filter(ByteBuf::canRead)
-				.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> output.accept(encodeBuf(buf))))
-				.then(() -> output.accept(ByteBuf.wrapForReading(LAST_CHUNK_BYTES)))
-				.then(() -> output.acceptEndOfStream())
-				.whenResult(this::completeProcess);
+			.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> output.accept(encodeBuf(buf))))
+			.then(() -> output.accept(ByteBuf.wrapForReading(LAST_CHUNK_BYTES)))
+			.then(() -> output.acceptEndOfStream())
+			.whenResult(this::completeProcess);
 	}
 
 	private static ByteBuf encodeBuf(ByteBuf buf) {

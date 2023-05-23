@@ -59,10 +59,10 @@ public final class RegExp implements AggregationPredicate {
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable value = property(record, key.replace('.', '$'));
 		return and(
-				isNotNull(value, fields.get(key)),
-				isNe(
-						value(false),
-						call(call(value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
+			isNotNull(value, fields.get(key)),
+			isNe(
+				value(false),
+				call(call(value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
 	}
 
 	@SuppressWarnings("rawtypes")

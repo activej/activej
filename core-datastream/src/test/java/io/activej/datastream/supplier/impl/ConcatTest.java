@@ -30,9 +30,9 @@ public class ConcatTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(StreamSuppliers.concat(
-						StreamSuppliers.ofValues(1, 2, 3),
-						StreamSuppliers.ofValues(4, 5, 6))
-				.streamTo(consumer.transformWith(randomlySuspending())));
+				StreamSuppliers.ofValues(1, 2, 3),
+				StreamSuppliers.ofValues(4, 5, 6))
+			.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertEquals(List.of(1, 2, 3, 4, 5, 6), consumer.getList());
 		assertEndOfStream(consumer);
@@ -46,11 +46,11 @@ public class ConcatTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSuppliers.concat(
-						StreamSuppliers.ofValues(1, 2, 3),
-						StreamSuppliers.ofValues(4, 5, 6),
-						StreamSuppliers.closingWithError(exception),
-						StreamSuppliers.ofValues(1, 2, 3))
-				.streamTo(consumer));
+				StreamSuppliers.ofValues(1, 2, 3),
+				StreamSuppliers.ofValues(4, 5, 6),
+				StreamSuppliers.closingWithError(exception),
+				StreamSuppliers.ofValues(1, 2, 3))
+			.streamTo(consumer));
 
 		assertSame(exception, e);
 		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
@@ -60,10 +60,10 @@ public class ConcatTest {
 	@Test
 	public void testConcat() {
 		List<Integer> list = await(StreamSuppliers.concat(
-						StreamSuppliers.ofValues(1, 2, 3),
-						StreamSuppliers.ofValues(4, 5, 6),
-						StreamSuppliers.empty())
-				.toList());
+				StreamSuppliers.ofValues(1, 2, 3),
+				StreamSuppliers.ofValues(4, 5, 6),
+				StreamSuppliers.empty())
+			.toList());
 
 		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
 	}
@@ -76,10 +76,10 @@ public class ConcatTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSuppliers.concat(
-						StreamSuppliers.ofValues(1, 2, 3),
-						StreamSuppliers.ofValues(4, 5, 6),
-						StreamSuppliers.closingWithError(exception))
-				.streamTo(consumer));
+				StreamSuppliers.ofValues(1, 2, 3),
+				StreamSuppliers.ofValues(4, 5, 6),
+				StreamSuppliers.closingWithError(exception))
+			.streamTo(consumer));
 
 		assertSame(exception, e);
 		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
@@ -90,20 +90,20 @@ public class ConcatTest {
 	public void testConcatPreemptiveAcknowledge() {
 		List<Integer> result = new ArrayList<>();
 		await(StreamSuppliers.concat(
-						StreamSuppliers.ofValues(1, 2, 3),
-						StreamSuppliers.ofValues(4, 5, 6)
-				)
-				.streamTo(new AbstractStreamConsumer<>() {
-					@Override
-					protected void onInit() {
-						resume(integer -> {
-							result.add(integer);
-							if (result.size() == 2) {
-								acknowledge();
-							}
-						});
-					}
-				}));
+				StreamSuppliers.ofValues(1, 2, 3),
+				StreamSuppliers.ofValues(4, 5, 6)
+			)
+			.streamTo(new AbstractStreamConsumer<>() {
+				@Override
+				protected void onInit() {
+					resume(integer -> {
+						result.add(integer);
+						if (result.size() == 2) {
+							acknowledge();
+						}
+					});
+				}
+			}));
 
 		assertEquals(List.of(1, 2), result);
 	}

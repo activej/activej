@@ -62,7 +62,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @SuppressWarnings("WeakerAccess, unused")
 public abstract class AbstractReactiveServer extends AbstractNioReactive
-		implements ReactiveServer, WorkerServer, ReactiveJmxBeanWithStats {
+	implements ReactiveServer, WorkerServer, ReactiveJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
 
 	protected ServerSocketSettings serverSocketSettings = ServerSocketSettings.defaultInstance();
@@ -105,7 +105,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 
 	@SuppressWarnings("unchecked")
 	public abstract class Builder<Self extends Builder<Self, S>, S extends AbstractReactiveServer>
-			extends AbstractBuilder<Self, S> {
+		extends AbstractBuilder<Self, S> {
 
 		public final Self withAcceptFilter(AcceptFilter acceptFilter) {
 			checkNotBuilt(this);
@@ -268,8 +268,8 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 		running = false;
 		closeServerSockets();
 		return Promise.ofCallback(this::onClose)
-				.whenResult($ -> logger.info("Server closed: {}", this))
-				.whenException(e -> logger.error("Server closed exceptionally: " + this, e));
+			.whenResult($ -> logger.info("Server closed: {}", this))
+			.whenException(e -> logger.error("Server closed exceptionally: " + this, e));
 	}
 
 	public final Future<?> closeFuture() {
@@ -345,8 +345,10 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	}
 
 	@Override
-	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
-			boolean ssl, SocketSettings socketSettings) {
+	public final void doAccept(
+		SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress, boolean ssl,
+		SocketSettings socketSettings
+	) {
 		assert reactor.inReactorThread();
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
@@ -410,14 +412,14 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 			return List.of();
 		}
 		return channels.stream()
-				.map(ch -> {
-					try {
-						return (InetSocketAddress) ch.getLocalAddress();
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
-					}
-				})
-				.collect(toList());
+			.map(ch -> {
+				try {
+					return (InetSocketAddress) ch.getLocalAddress();
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			})
+			.collect(toList());
 	}
 
 	public SocketSettings getSocketSettings() {
@@ -442,13 +444,13 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	@JmxAttribute
 	public final @Nullable TcpSocket.JmxInspector getSocketStats() {
 		return this instanceof PrimaryServer || acceptServer.listenAddresses.isEmpty() ? null :
-				BaseInspector.lookup(socketInspector, TcpSocket.JmxInspector.class);
+			BaseInspector.lookup(socketInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute
 	public final @Nullable TcpSocket.JmxInspector getSocketStatsSsl() {
 		return this instanceof PrimaryServer || acceptServer.sslListenAddresses.isEmpty() ? null :
-				BaseInspector.lookup(socketSslInspector, TcpSocket.JmxInspector.class);
+			BaseInspector.lookup(socketSslInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@Override

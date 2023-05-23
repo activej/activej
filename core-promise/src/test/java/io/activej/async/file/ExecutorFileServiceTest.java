@@ -39,19 +39,19 @@ public final class ExecutorFileServiceTest {
 
 		byte[] result = new byte[20];
 		await(Promises.all(IntStream.range(0, 100)
-				.mapToObj(i -> service.read(channel, 0, result, 0, result.length)
-						.whenComplete((res, e) -> {
-							if (e != null) {
-								e.printStackTrace();
-								fail();
-							}
+			.mapToObj(i -> service.read(channel, 0, result, 0, result.length)
+				.whenComplete((res, e) -> {
+					if (e != null) {
+						e.printStackTrace();
+						fail();
+					}
 
-							try {
-								assertEquals(Files.readAllBytes(srcPath).length, res.intValue());
-							} catch (IOException e1) {
-								e1.printStackTrace();
-							}
-						})).collect(Collectors.toList())));
+					try {
+						assertEquals(Files.readAllBytes(srcPath).length, res.intValue());
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				})).collect(Collectors.toList())));
 	}
 
 	@Test
@@ -61,13 +61,13 @@ public final class ExecutorFileServiceTest {
 		byte[] array = "Hello world!!!!!".getBytes();
 
 		await(Promises.all(IntStream.range(0, 1000)
-				.mapToObj($ -> service.write(channel, 0, array, 0, array.length)
-						.whenComplete((res, e) -> {
-							if (e != null) {
-								e.printStackTrace();
-								fail();
-							}
-							assertEquals(res.intValue(), array.length);
-						}))));
+			.mapToObj($ -> service.write(channel, 0, array, 0, array.length)
+				.whenComplete((res, e) -> {
+					if (e != null) {
+						e.printStackTrace();
+						fail();
+					}
+					assertEquals(res.intValue(), array.length);
+				}))));
 	}
 }

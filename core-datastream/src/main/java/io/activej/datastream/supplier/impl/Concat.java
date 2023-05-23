@@ -27,17 +27,17 @@ public final class Concat<T> extends AbstractStreamSupplier<T> {
 		internalConsumer = new InternalConsumer();
 		resume();
 		iterator.get()
-				.whenResult(supplier -> {
-					if (supplier != null) {
-						supplier.getEndOfStream()
-								.whenResult(this::next)
-								.whenException(this::closeEx);
-						supplier.streamTo(internalConsumer);
-					} else {
-						sendEndOfStream();
-					}
-				})
-				.whenException(this::closeEx);
+			.whenResult(supplier -> {
+				if (supplier != null) {
+					supplier.getEndOfStream()
+						.whenResult(this::next)
+						.whenException(this::closeEx);
+					supplier.streamTo(internalConsumer);
+				} else {
+					sendEndOfStream();
+				}
+			})
+			.whenException(this::closeEx);
 	}
 
 	@Override

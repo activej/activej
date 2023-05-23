@@ -213,7 +213,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 		Set<Long> requiredChunks = new HashSet<>();
 
 		try (PreparedStatement ps = connection.prepareStatement((sql("" +
-				"SELECT `id` FROM {chunk}"
+			"SELECT `id` FROM {chunk}"
 		)))) {
 			ResultSet resultSet = ps.executeQuery();
 
@@ -270,11 +270,11 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 	private String sql(String sql) {
 		return sql
-				.replace("{revision}", tableRevision)
-				.replace("{position}", tablePosition)
-				.replace("{chunk}", tableChunk)
-				.replace("{min_revisions}", String.valueOf(minimalNumberOfRevisions))
-				.replace("{cleanup_from}", String.valueOf(cleanupOlderThan.getSeconds()));
+			.replace("{revision}", tableRevision)
+			.replace("{position}", tablePosition)
+			.replace("{chunk}", tableChunk)
+			.replace("{min_revisions}", String.valueOf(minimalNumberOfRevisions))
+			.replace("{cleanup_from}", String.valueOf(cleanupOlderThan.getSeconds()));
 	}
 
 	// region JMX getters
@@ -291,8 +291,8 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Duration getCleanupCurrentDuration() {
 		return cleanupLastStartTimestamp - cleanupLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(now.currentTimeMillis() - cleanupLastStartTimestamp) :
-				null;
+			Duration.ofMillis(now.currentTimeMillis() - cleanupLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -313,15 +313,15 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Instant getCleanupConsolidatedChunksLastCompleteTime() {
 		return cleanupConsolidatedChunksLastCompleteTimestamp != 0L ?
-				Instant.ofEpochMilli(cleanupConsolidatedChunksLastCompleteTimestamp) :
-				null;
+			Instant.ofEpochMilli(cleanupConsolidatedChunksLastCompleteTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
 	public @Nullable Duration getCleanupConsolidatedChunksCurrentDuration() {
 		return cleanupConsolidatedChunksLastStartTimestamp - cleanupConsolidatedChunksLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(now.currentTimeMillis() - cleanupConsolidatedChunksLastStartTimestamp) :
-				null;
+			Duration.ofMillis(now.currentTimeMillis() - cleanupConsolidatedChunksLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -342,15 +342,15 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Instant getGetRequiredChunksLastCompleteTime() {
 		return getRequiredChunksLastCompleteTimestamp != 0L ?
-				Instant.ofEpochMilli(getRequiredChunksLastCompleteTimestamp) :
-				null;
+			Instant.ofEpochMilli(getRequiredChunksLastCompleteTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
 	public @Nullable Duration getGetRequiredChunksCurrentDuration() {
 		return getRequiredChunksLastStartTimestamp - getRequiredChunksLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(now.currentTimeMillis() - getRequiredChunksLastStartTimestamp) :
-				null;
+			Duration.ofMillis(now.currentTimeMillis() - getRequiredChunksLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -371,15 +371,15 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Instant getCheckRequiredChunksLastCompleteTime() {
 		return checkRequiredChunksLastCompleteTimestamp != 0L ?
-				Instant.ofEpochMilli(checkRequiredChunksLastCompleteTimestamp) :
-				null;
+			Instant.ofEpochMilli(checkRequiredChunksLastCompleteTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
 	public @Nullable Duration getCheckRequiredChunksCurrentDuration() {
 		return checkRequiredChunksLastStartTimestamp - checkRequiredChunksLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(now.currentTimeMillis() - checkRequiredChunksLastStartTimestamp) :
-				null;
+			Duration.ofMillis(now.currentTimeMillis() - checkRequiredChunksLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
@@ -400,15 +400,15 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	@JmxAttribute
 	public @Nullable Instant getCleanupChunksLastCompleteTime() {
 		return cleanupChunksLastCompleteTimestamp != 0L ?
-				Instant.ofEpochMilli(cleanupChunksLastCompleteTimestamp) :
-				null;
+			Instant.ofEpochMilli(cleanupChunksLastCompleteTimestamp) :
+			null;
 	}
 
 	@JmxAttribute
 	public @Nullable Duration getCleanupChunksCurrentDuration() {
 		return cleanupChunksLastStartTimestamp - cleanupChunksLastCompleteTimestamp > 0 ?
-				Duration.ofMillis(now.currentTimeMillis() - cleanupChunksLastStartTimestamp) :
-				null;
+			Duration.ofMillis(now.currentTimeMillis() - cleanupChunksLastStartTimestamp) :
+			null;
 	}
 
 	@JmxAttribute

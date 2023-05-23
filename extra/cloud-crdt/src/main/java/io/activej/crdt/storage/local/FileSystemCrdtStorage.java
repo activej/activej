@@ -77,7 +77,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends AbstractReactive
-		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+	implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(FileSystemCrdtStorage.class);
 	private static final boolean CHECKS = Checks.isEnabled(FileSystemCrdtStorage.class);
 
@@ -125,31 +126,25 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 	}
 
 	public static <K extends Comparable<K>, S> FileSystemCrdtStorage<K, S> create(
-			Reactor reactor, IFileSystem fileSystem,
-			CrdtDataBinarySerializer<K, S> serializer,
-			CrdtFunction<S> function
+		Reactor reactor, IFileSystem fileSystem, CrdtDataBinarySerializer<K, S> serializer, CrdtFunction<S> function
 	) {
 		return builder(reactor, fileSystem, serializer, function).build();
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> FileSystemCrdtStorage<K, S> create(
-			Reactor reactor, IFileSystem fileSystem,
-			CrdtDataBinarySerializer<K, S> serializer
+		Reactor reactor, IFileSystem fileSystem, CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return builder(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).build();
 	}
 
 	public static <K extends Comparable<K>, S> FileSystemCrdtStorage<K, S>.Builder builder(
-			Reactor reactor, IFileSystem fileSystem,
-			CrdtDataBinarySerializer<K, S> serializer,
-			CrdtFunction<S> function
+		Reactor reactor, IFileSystem fileSystem, CrdtDataBinarySerializer<K, S> serializer, CrdtFunction<S> function
 	) {
 		return new FileSystemCrdtStorage<>(reactor, fileSystem, serializer, function).new Builder();
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> FileSystemCrdtStorage<K, S>.Builder builder(
-			Reactor reactor, IFileSystem fileSystem,
-			CrdtDataBinarySerializer<K, S> serializer
+		Reactor reactor, IFileSystem fileSystem, CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return new FileSystemCrdtStorage<>(reactor, fileSystem, serializer, CrdtFunction.ofCrdtType()).new Builder();
 	}
@@ -180,23 +175,23 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		if (CHECKS) checkInReactorThread(this);
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtData<K, S>>uploadNonEmpty(filename, CrdtReducingData::ofData)
-				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-				.transformWith(onItem(uploadedItems::recordEvent))
-				.withAcknowledgement(ack -> ack
-						.mapException(e -> new CrdtException("Error while uploading CRDT data to file", e))));
+			.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+			.transformWith(onItem(uploadedItems::recordEvent))
+			.withAcknowledgement(ack -> ack
+				.mapException(e -> new CrdtException("Error while uploading CRDT data to file", e))));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		if (CHECKS) checkInReactorThread(this);
 		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
-						() -> fileSystem.list("*")
-								.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
-								.map(supplier -> supplier
-										.transformWith(StreamTransformers.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
-										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
-										.transformWith(onItem(downloadedItems::recordEvent))))
-				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
+				() -> fileSystem.list("*")
+					.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
+					.map(supplier -> supplier
+						.transformWith(StreamTransformers.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
+						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+						.transformWith(onItem(downloadedItems::recordEvent))))
+			.mapException(e -> new CrdtException("Failed to download CRDT data", e));
 	}
 
 	@Override
@@ -207,36 +202,36 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		}
 		taken = new HashSet<>();
 		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
-						() -> fileSystem.list("*")
-								.whenResult(fileMap -> taken.addAll(fileMap.keySet()))
-								.then(fileMap -> doDownload(fileMap.keySet(), 0, false)
-										.whenException(e -> taken = null)
-										.map(supplier -> supplier
-												.transformWith(StreamTransformers.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
-												.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-												.transformWith(onItem(takenItems::recordEvent)))
-										.whenResult(supplier -> supplier.getAcknowledgement()
-												.then(() -> fileSystem.deleteAll(fileMap.keySet()))
-												.whenComplete(() -> taken = null))))
-				.mapException(e -> new CrdtException("Failed to take CRDT data", e));
+				() -> fileSystem.list("*")
+					.whenResult(fileMap -> taken.addAll(fileMap.keySet()))
+					.then(fileMap -> doDownload(fileMap.keySet(), 0, false)
+						.whenException(e -> taken = null)
+						.map(supplier -> supplier
+							.transformWith(StreamTransformers.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
+							.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+							.transformWith(onItem(takenItems::recordEvent)))
+						.whenResult(supplier -> supplier.getAcknowledgement()
+							.then(() -> fileSystem.deleteAll(fileMap.keySet()))
+							.whenComplete(() -> taken = null))))
+			.mapException(e -> new CrdtException("Failed to take CRDT data", e));
 	}
 
 	private Promise<StreamSupplier<CrdtReducingData<K, S>>> doDownload(Set<String> files, long timestamp, boolean includeTombstones) {
 		return Promises.toList(files.stream()
-						.map(fileName -> fileSystem.download(fileName)
-								.map(supplier -> supplier
-										.transformWith(ChannelDeserializer.create(serializer))
-										.transformWith(StreamTransformers.filter(data -> data.timestamp >= timestamp))
-								)))
-				.map(suppliers -> {
-					StreamReducer<K, CrdtReducingData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
+				.map(fileName -> fileSystem.download(fileName)
+					.map(supplier -> supplier
+						.transformWith(ChannelDeserializer.create(serializer))
+						.transformWith(StreamTransformers.filter(data -> data.timestamp >= timestamp))
+					)))
+			.map(suppliers -> {
+				StreamReducer<K, CrdtReducingData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
 
-					suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new CrdtReducer(includeTombstones))));
+				suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new CrdtReducer(includeTombstones))));
 
-					return reducer.getOutput()
-							.withEndOfStream(eos -> eos
-									.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
-				});
+				return reducer.getOutput()
+					.withEndOfStream(eos -> eos
+						.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
+			});
 	}
 
 	@Override
@@ -244,17 +239,17 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 		if (CHECKS) checkInReactorThread(this);
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtTombstone<K>>uploadNonEmpty(filename, CrdtReducingData::ofTombstone)
-				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-				.transformWith(onItem(removedItems::recordEvent))
-				.withAcknowledgement(ack -> ack
-						.mapException(e -> new CrdtException("Error while removing CRDT data", e))));
+			.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+			.transformWith(onItem(removedItems::recordEvent))
+			.withAcknowledgement(ack -> ack
+				.mapException(e -> new CrdtException("Error while removing CRDT data", e))));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.ping()
-				.mapException(e -> new CrdtException("Failed to PING file system", e));
+			.mapException(e -> new CrdtException("Failed to PING file system", e));
 	}
 
 	@Override
@@ -272,32 +267,32 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 	public Promise<Void> consolidate() {
 		checkInReactorThread(this);
 		return consolidate.run()
-				.whenComplete(consolidationStats.recordStats());
+			.whenComplete(consolidationStats.recordStats());
 	}
 
 	private Promise<Void> doConsolidate() {
 		return fileSystem.list("*")
-				.map(fileMap -> taken == null ?
-						fileMap :
-						fileMap.entrySet().stream()
-								.filter(entry -> !taken.contains(entry.getKey()))
-								.collect(entriesToLinkedHashMap()))
-				.map(FileSystemCrdtStorage::pickFilesForConsolidation)
-				.then(filesToConsolidate -> {
-					if (filesToConsolidate.isEmpty()) {
-						logger.info("No files to consolidate");
-						return Promise.complete();
-					}
+			.map(fileMap -> taken == null ?
+				fileMap :
+				fileMap.entrySet().stream()
+					.filter(entry -> !taken.contains(entry.getKey()))
+					.collect(entriesToLinkedHashMap()))
+			.map(FileSystemCrdtStorage::pickFilesForConsolidation)
+			.then(filesToConsolidate -> {
+				if (filesToConsolidate.isEmpty()) {
+					logger.info("No files to consolidate");
+					return Promise.complete();
+				}
 
-					String name = namingStrategy.get() + FILE_EXTENSION;
+				String name = namingStrategy.get() + FILE_EXTENSION;
 
-					logger.info("Started consolidating files into {} from {}", name, filesToConsolidate);
+				logger.info("Started consolidating files into {} from {}", name, filesToConsolidate);
 
-					return doDownload(filesToConsolidate, 0, true)
-							.then(crdtSupplier -> crdtSupplier.streamTo(uploadNonEmpty(name, Function.identity())))
-							.then(() -> fileSystem.deleteAll(filesToConsolidate));
-				})
-				.mapException(e -> new CrdtException("Files consolidation failed", e));
+				return doDownload(filesToConsolidate, 0, true)
+					.then(crdtSupplier -> crdtSupplier.streamTo(uploadNonEmpty(name, Function.identity())))
+					.then(() -> fileSystem.deleteAll(filesToConsolidate));
+			})
+			.mapException(e -> new CrdtException("Files consolidation failed", e));
 	}
 
 	@VisibleForTesting
@@ -325,20 +320,20 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 	private <T> StreamConsumer<T> uploadNonEmpty(String filename, Function<T, CrdtReducingData<K, S>> mapping) {
 		SettablePromise<ChannelConsumer<ByteBuf>> consumerPromise = new SettablePromise<>();
 		NonEmptyFilter<T> nonEmptyFilter = new NonEmptyFilter<>(() -> fileSystem.upload(filename)
-				.subscribe(consumerPromise));
+			.subscribe(consumerPromise));
 
 		return StreamConsumers.ofSupplier(supplier ->
-				supplier
-						.transformWith(nonEmptyFilter)
-						.transformWith(StreamTransformers.mapper(mapping))
-						.transformWith(ChannelSerializer.create(serializer))
-						.withEndOfStream(eos -> eos
-								.whenComplete(() -> {
-									if (nonEmptyFilter.isEmpty()) {
-										consumerPromise.set(ChannelConsumers.recycling());
-									}
-								}))
-						.streamTo(consumerPromise));
+			supplier
+				.transformWith(nonEmptyFilter)
+				.transformWith(StreamTransformers.mapper(mapping))
+				.transformWith(ChannelSerializer.create(serializer))
+				.withEndOfStream(eos -> eos
+					.whenComplete(() -> {
+						if (nonEmptyFilter.isEmpty()) {
+							consumerPromise.set(ChannelConsumers.recycling());
+						}
+					}))
+				.streamTo(consumerPromise));
 	}
 
 	private static <K extends Comparable<K>, S> BinarySerializer<CrdtReducingData<K, S>> createSerializer(CrdtDataBinarySerializer<K, S> serializer) {
@@ -355,9 +350,9 @@ public final class FileSystemCrdtStorage<K extends Comparable<K>, S> extends Abs
 			@Override
 			public CrdtReducingData<K, S> decode(BinaryInput in) throws CorruptedDataException {
 				return new CrdtReducingData<>(
-						keySerializer.decode(in),
-						stateSerializer.decode(in),
-						TIMESTAMP_SERIALIZER.decode(in)
+					keySerializer.decode(in),
+					stateSerializer.decode(in),
+					TIMESTAMP_SERIALIZER.decode(in)
 				);
 			}
 		};

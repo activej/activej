@@ -29,7 +29,7 @@ import java.time.Duration;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class ServletWithStats extends AbstractReactive
-		implements AsyncServlet, ReactiveJmxBeanWithStats {
+	implements AsyncServlet, ReactiveJmxBeanWithStats {
 	private static final boolean CHECKS = Checks.isEnabled(ServletWithStats.class);
 
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
@@ -44,7 +44,7 @@ public abstract class ServletWithStats extends AbstractReactive
 	public final Promise<HttpResponse> serve(HttpRequest request) {
 		if (CHECKS) checkInReactorThread(this);
 		return doServe(request)
-				.whenComplete(stats.recordStats());
+			.whenComplete(stats.recordStats());
 	}
 
 	@JmxAttribute

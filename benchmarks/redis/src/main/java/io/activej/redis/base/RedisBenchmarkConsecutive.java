@@ -12,7 +12,7 @@ public abstract class RedisBenchmarkConsecutive extends AbstractRedisBenchmark {
 	@Override
 	protected Config configOverride() {
 		return Config.create()
-				.with("benchmark.totalRequests", Config.ofValue(ofInteger(), TOTAL_REQUESTS));
+			.with("benchmark.totalRequests", Config.ofValue(ofInteger(), TOTAL_REQUESTS));
 	}
 
 	@Override

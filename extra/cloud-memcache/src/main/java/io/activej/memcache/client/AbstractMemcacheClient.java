@@ -29,7 +29,7 @@ import io.activej.rpc.client.IRpcClient;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
-		implements IMemcacheClient<K, V> {
+	implements IMemcacheClient<K, V> {
 	private static final boolean CHECKS = Checks.isEnabled(AbstractMemcacheClient.class);
 
 	private final IRpcClient rpcClient;
@@ -57,7 +57,7 @@ public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 		if (CHECKS) checkInReactorThread(this);
 		GetRequest request = new GetRequest(encodeKey(key));
 		return rpcClient.<GetRequest, GetResponse>sendRequest(request, timeout)
-				.map(response -> decodeValue(response.getData()));
+			.map(response -> decodeValue(response.getData()));
 	}
 
 	@Override
@@ -72,6 +72,6 @@ public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 		if (CHECKS) checkInReactorThread(this);
 		GetRequest request = new GetRequest(encodeKey(key));
 		return rpcClient.<GetRequest, GetResponse>sendRequest(request)
-				.map(response -> decodeValue(response.getData()));
+			.map(response -> decodeValue(response.getData()));
 	}
 }

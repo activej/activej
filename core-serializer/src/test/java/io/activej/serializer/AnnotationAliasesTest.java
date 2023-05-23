@@ -23,9 +23,9 @@ public class AnnotationAliasesTest {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({
-			ElementType.FIELD,
-			ElementType.METHOD,
-			ElementType.TYPE_USE})
+		ElementType.FIELD,
+		ElementType.METHOD,
+		ElementType.TYPE_USE})
 	public @interface N {
 	}
 
@@ -57,17 +57,17 @@ public class AnnotationAliasesTest {
 		testData1.nullableString2 = "abc";
 		testData1.listOfNullableStrings = asList("a", null, "b");
 		testData1.nullableArrayOfNullableArrayOfNullableStrings = new String[][]{
-				new String[]{"a", null},
-				null};
+			new String[]{"a", null},
+			null};
 		testData1.mapOfNullableInt2NullableString = new LinkedHashMap<>();
 		testData1.mapOfNullableInt2NullableString.put(1, "abc");
 		testData1.mapOfNullableInt2NullableString.put(2, null);
 		testData1.mapOfNullableInt2NullableString.put(null, "xyz");
 
 		BinarySerializer<TestDataNullables> serializer = SerializerFactory.builder()
-				.withAnnotationAlias(SerializeNullable.class, N.class, n -> CustomAnnotations.serializeNullable())
-				.build()
-				.create(DEFINING_CLASS_LOADER, TestDataNullables.class);
+			.withAnnotationAlias(SerializeNullable.class, N.class, n -> CustomAnnotations.serializeNullable())
+			.build()
+			.create(DEFINING_CLASS_LOADER, TestDataNullables.class);
 		TestDataNullables testData2 = doTest(testData1, serializer);
 
 		assertEquals(testData1.nullableString1, testData2.nullableString1);
@@ -76,12 +76,12 @@ public class AnnotationAliasesTest {
 		assertEquals(testData1.listOfNullableStrings, testData2.listOfNullableStrings);
 
 		assertEquals(
-				testData1.nullableArrayOfNullableArrayOfNullableStrings.length,
-				testData2.nullableArrayOfNullableArrayOfNullableStrings.length);
+			testData1.nullableArrayOfNullableArrayOfNullableStrings.length,
+			testData2.nullableArrayOfNullableArrayOfNullableStrings.length);
 		for (int i = 0; i < testData1.nullableArrayOfNullableArrayOfNullableStrings.length; i++) {
 			assertArrayEquals(
-					testData1.nullableArrayOfNullableArrayOfNullableStrings[i],
-					testData2.nullableArrayOfNullableArrayOfNullableStrings[i]);
+				testData1.nullableArrayOfNullableArrayOfNullableStrings[i],
+				testData2.nullableArrayOfNullableArrayOfNullableStrings[i]);
 		}
 
 		assertEquals(testData1.mapOfNullableInt2NullableString, testData2.mapOfNullableInt2NullableString);

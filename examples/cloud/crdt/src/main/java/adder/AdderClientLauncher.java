@@ -49,8 +49,8 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 			@Provides
 			IRpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
 				RpcClient rpcClient = RpcClient.builder(reactor)
-						.withMessageTypes(messageTypes)
-						.build();
+					.withMessageTypes(messageTypes)
+					.build();
 				strategyService.setRpcClient(rpcClient);
 				return rpcClient;
 			}
@@ -61,14 +61,14 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	IDiscoveryService<PartitionId> discoveryServiceDiscoveryService(Reactor reactor, Config config) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return FileDiscoveryService.builder(reactor, pathToFile)
-				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())))
-				.build();
+			.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())))
+			.build();
 	}
 
 	@Provides
 	CrdtRpcStrategyService<Long> rpcStrategyService(
-			Reactor reactor,
-			IDiscoveryService<PartitionId> discoveryService
+		Reactor reactor,
+		IDiscoveryService<PartitionId> discoveryService
 	) {
 		return CrdtRpcStrategyService.create(reactor, discoveryService, AdderClientLauncher::extractKey);
 	}
@@ -103,7 +103,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 					}
 					long id = Long.parseLong(parts[1]);
 					GetResponse getResponse = reactor.submit(() -> client.
-							<GetRequest, GetResponse>sendRequest(new GetRequest(id))).get();
+						<GetRequest, GetResponse>sendRequest(new GetRequest(id))).get();
 					System.out.println("---> " + getResponse.sum());
 				} else {
 					throw new MalformedDataException("Unknown command: " + parts[0]);

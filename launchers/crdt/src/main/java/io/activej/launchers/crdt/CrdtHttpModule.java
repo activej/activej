@@ -43,8 +43,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	@Provides
 	HttpServer server(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.initialize(ofHttpServer(config.getChild("crdt.http")))
-				.build();
+			.initialize(ofHttpServer(config.getChild("crdt.http")))
+			.build();
 	}
 
 	@Provides
@@ -54,75 +54,75 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 
 	@Provides
 	AsyncServlet servlet(
-			Reactor reactor,
-			CrdtDescriptor<K, S> descriptor,
-			MapCrdtStorage<K, S> client,
-			OptionalDependency<BackupService<K, S>> backupServiceOpt
+		Reactor reactor,
+		CrdtDescriptor<K, S> descriptor,
+		MapCrdtStorage<K, S> client,
+		OptionalDependency<BackupService<K, S>> backupServiceOpt
 	) {
 		return RoutingServlet.builder(reactor)
-				.with(POST, "/", request -> request.loadBody()
-						.then(body -> {
-							try {
-								K key = fromJson(descriptor.keyManifest(), body);
-								S state = client.get(key);
-								if (state != null) {
-									return HttpResponse.ok200()
-											.withBody(toJson(descriptor.stateManifest(), state))
-											.toPromise();
-								}
-								return HttpResponse.ofCode(404)
-										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
-										.toPromise();
-							} catch (MalformedDataException e) {
-								throw HttpError.ofCode(400, e);
-							}
-						}))
-				.with(PUT, "/", request -> request.loadBody()
-						.then(body -> {
-							try {
-								client.put(fromJson(crdtDataManifest.getType(), body));
-								return HttpResponse.ok200().toPromise();
-							} catch (MalformedDataException e) {
-								throw HttpError.ofCode(400, e);
-							}
-						}))
-				.with(DELETE, "/", request -> request.loadBody()
-						.then(body -> {
-							try {
-								K key = fromJson(descriptor.keyManifest(), body);
-								if (client.remove(key)) {
-									return HttpResponse.ok200().toPromise();
-								}
-								return HttpResponse.ofCode(404)
-										.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
-										.toPromise();
-							} catch (MalformedDataException e) {
-								throw HttpError.ofCode(400, e);
-							}
-						}))
-				.initialize(builder -> {
-					if (backupServiceOpt.isPresent()) {
-						BackupService<K, S> backupService = backupServiceOpt.get();
-						builder
-								.with(POST, "/backup", request -> {
-									if (backupService.backupInProgress()) {
-										return HttpResponse.ofCode(403)
-												.withBody("Backup is already in progress".getBytes(UTF_8))
-												.toPromise();
-									}
-									backupService.backup();
-									return HttpResponse.ofCode(202).toPromise();
-								})
-								.with(POST, "/awaitBackup", request ->
-										backupService.backupInProgress() ?
-												backupService.backup()
-														.then($ -> HttpResponse.ofCode(204)
-																.withBody("Finished already running backup".getBytes(UTF_8))
-																.toPromise()) :
-												backupService.backup()
-														.then($ -> HttpResponse.ok200().toPromise()));
+			.with(POST, "/", request -> request.loadBody()
+				.then(body -> {
+					try {
+						K key = fromJson(descriptor.keyManifest(), body);
+						S state = client.get(key);
+						if (state != null) {
+							return HttpResponse.ok200()
+								.withBody(toJson(descriptor.stateManifest(), state))
+								.toPromise();
+						}
+						return HttpResponse.ofCode(404)
+							.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
+							.toPromise();
+					} catch (MalformedDataException e) {
+						throw HttpError.ofCode(400, e);
 					}
-				})
-				.build();
+				}))
+			.with(PUT, "/", request -> request.loadBody()
+				.then(body -> {
+					try {
+						client.put(fromJson(crdtDataManifest.getType(), body));
+						return HttpResponse.ok200().toPromise();
+					} catch (MalformedDataException e) {
+						throw HttpError.ofCode(400, e);
+					}
+				}))
+			.with(DELETE, "/", request -> request.loadBody()
+				.then(body -> {
+					try {
+						K key = fromJson(descriptor.keyManifest(), body);
+						if (client.remove(key)) {
+							return HttpResponse.ok200().toPromise();
+						}
+						return HttpResponse.ofCode(404)
+							.withBody(("Key '" + key + "' not found").getBytes(UTF_8))
+							.toPromise();
+					} catch (MalformedDataException e) {
+						throw HttpError.ofCode(400, e);
+					}
+				}))
+			.initialize(builder -> {
+				if (backupServiceOpt.isPresent()) {
+					BackupService<K, S> backupService = backupServiceOpt.get();
+					builder
+						.with(POST, "/backup", request -> {
+							if (backupService.backupInProgress()) {
+								return HttpResponse.ofCode(403)
+									.withBody("Backup is already in progress".getBytes(UTF_8))
+									.toPromise();
+							}
+							backupService.backup();
+							return HttpResponse.ofCode(202).toPromise();
+						})
+						.with(POST, "/awaitBackup", request ->
+							backupService.backupInProgress() ?
+								backupService.backup()
+									.then($ -> HttpResponse.ofCode(204)
+										.withBody("Finished already running backup".getBytes(UTF_8))
+										.toPromise()) :
+								backupService.backup()
+									.then($ -> HttpResponse.ok200().toPromise()));
+				}
+			})
+			.build();
 	}
 }

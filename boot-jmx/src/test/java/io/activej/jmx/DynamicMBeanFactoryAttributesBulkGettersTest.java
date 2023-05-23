@@ -18,7 +18,7 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 	@Test
 	public void bulkGetOmitsAttributesWithExceptionButReturnsValidAttributes() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanStub()), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(new MBeanStub()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> attrs = Utils.nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -40,7 +40,7 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 	@Test(expected = MBeanException.class)
 	public void propagatesExceptionInCaseOfSingleAttributeGet() throws Exception {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanStub()), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(new MBeanStub()), JmxBeanSettings.create(), false);
 
 		mbean.getAttribute("value");
 	}

@@ -40,8 +40,8 @@ import static java.util.stream.Collectors.toList;
 
 public final class Utils {
 	private static final StreamCodec<Version> VERSION_CODEC = StreamCodec.create(Version::new,
-			Version::major, StreamCodecs.ofVarInt(),
-			Version::minor, StreamCodecs.ofVarInt()
+		Version::major, StreamCodecs.ofVarInt(),
+		Version::minor, StreamCodecs.ofVarInt()
 	);
 
 	public static final StreamCodec<CrdtRequest> CRDT_REQUEST_CODEC = createCrdtRequestStreamCodec();
@@ -49,13 +49,13 @@ public final class Utils {
 
 	public static Promise<List<Path>> getWalFiles(Executor executor, Path walDir) {
 		return Promise.ofBlocking(executor,
-				() -> {
-					try (Stream<Path> list = Files.list(walDir)) {
-						return list
-								.filter(file -> Files.isRegularFile(file) && file.toString().endsWith(EXT_FINAL))
-								.collect(toList());
-					}
-				});
+			() -> {
+				try (Stream<Path> list = Files.list(walDir)) {
+					return list
+						.filter(file -> Files.isRegularFile(file) && file.toString().endsWith(EXT_FINAL))
+						.collect(toList());
+				}
+			});
 	}
 
 	public static Promise<Void> deleteWalFiles(Executor executor, Collection<Path> walFiles) {
@@ -86,10 +86,10 @@ public final class Utils {
 		SubtypeBuilder<CrdtRequest> builder = new SubtypeBuilder<>();
 
 		builder.add(CrdtRequest.Download.class, StreamCodec.create(CrdtRequest.Download::new,
-				CrdtRequest.Download::token, StreamCodecs.ofVarLong())
+			CrdtRequest.Download::token, StreamCodecs.ofVarLong())
 		);
 		builder.add(CrdtRequest.Handshake.class, StreamCodec.create(CrdtRequest.Handshake::new,
-				CrdtRequest.Handshake::version, VERSION_CODEC)
+			CrdtRequest.Handshake::version, VERSION_CODEC)
 		);
 		builder.add(CrdtRequest.Ping.class, StreamCodecs.singleton(new CrdtRequest.Ping()));
 		builder.add(CrdtRequest.Take.class, StreamCodecs.singleton(new CrdtRequest.Take()));
@@ -104,17 +104,17 @@ public final class Utils {
 
 		builder.add(CrdtResponse.DownloadStarted.class, StreamCodecs.singleton(new CrdtResponse.DownloadStarted()));
 		builder.add(CrdtResponse.Handshake.class, StreamCodec.create(CrdtResponse.Handshake::new,
-				CrdtResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
-						StreamCodec.create(CrdtResponse.HandshakeFailure::new,
-								CrdtResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
-								CrdtResponse.HandshakeFailure::message, StreamCodecs.ofString())
-				))
+			CrdtResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
+				StreamCodec.create(CrdtResponse.HandshakeFailure::new,
+					CrdtResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
+					CrdtResponse.HandshakeFailure::message, StreamCodecs.ofString())
+			))
 		);
 		builder.add(CrdtResponse.Pong.class, StreamCodecs.singleton(new CrdtResponse.Pong()));
 		builder.add(CrdtResponse.RemoveAck.class, StreamCodecs.singleton(new CrdtResponse.RemoveAck()));
 		builder.add(CrdtResponse.ServerError.class, StreamCodec.create(CrdtResponse.ServerError::new,
-						CrdtResponse.ServerError::message, StreamCodecs.ofString()
-				)
+				CrdtResponse.ServerError::message, StreamCodecs.ofString()
+			)
 		);
 		builder.add(CrdtResponse.TakeStarted.class, StreamCodecs.singleton(new CrdtResponse.TakeStarted()));
 		builder.add(CrdtResponse.UploadAck.class, StreamCodecs.singleton(new CrdtResponse.UploadAck()));

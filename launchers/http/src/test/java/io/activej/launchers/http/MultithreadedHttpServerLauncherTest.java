@@ -53,7 +53,7 @@ public class MultithreadedHttpServerLauncherTest {
 			@Override
 			Config config() {
 				return super.config()
-						.overrideWith(Config.create().with("http.listenAddresses", "0"));
+					.overrideWith(Config.create().with("http.listenAddresses", "0"));
 			}
 		};
 
@@ -92,11 +92,11 @@ public class MultithreadedHttpServerLauncherTest {
 
 		await(ofCompletionStage(launcher.getStartFuture()));
 		assertEquals(
-				MultithreadedHttpServerLauncher.PORT,
-				launcher.primaryServer.getListenAddresses().get(0).getPort());
+			MultithreadedHttpServerLauncher.PORT,
+			launcher.primaryServer.getListenAddresses().get(0).getPort());
 		assertEquals(
-				MultithreadedHttpServerLauncher.PORT,
-				launcher.primaryServer.getBoundAddresses().get(0).getPort());
+			MultithreadedHttpServerLauncher.PORT,
+			launcher.primaryServer.getBoundAddresses().get(0).getPort());
 
 		launcher.shutdown();
 		await(ofCompletionStage(launcher.getCompleteFuture()));

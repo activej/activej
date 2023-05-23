@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MergeStubStreamSorterStorage<T> extends ImplicitlyReactive
-		implements IStreamSorterStorage<T> {
+	implements IStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override

@@ -53,7 +53,7 @@ public final class TypeDispatching implements RpcStrategy {
 		public Builder with(Class<?> dataType, RpcStrategy strategy) {
 			checkNotBuilt(this);
 			checkState(!dataTypeToStrategy.containsKey(dataType),
-					() -> "Strategy for type " + dataType.toString() + " is already set");
+				() -> "Strategy for type " + dataType.toString() + " is already set");
 			dataTypeToStrategy.put(dataType, strategy);
 			return this;
 		}

@@ -13,7 +13,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class FailingStubStreamSorterStorage<T> extends ImplicitlyReactive
-		implements IStreamSorterStorage<T> {
+	implements IStreamSorterStorage<T> {
 	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
 	private IStreamSorterStorage<T> storage;

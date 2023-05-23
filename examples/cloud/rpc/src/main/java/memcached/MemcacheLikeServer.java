@@ -31,17 +31,17 @@ public class MemcacheLikeServer extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("memcache.buffers", "4")
-				.with("memcache.bufferCapacity", "64mb");
+			.with("memcache.buffers", "4")
+			.with("memcache.bufferCapacity", "64mb");
 	}
 
 	@Override
 	protected Module getModule() {
 		return ModuleBuilder.create()
-				.install(ServiceGraphModule.create())
-				.install(MemcacheMultiServerModule.create())
-				.install(WorkerPoolModule.create())
-				.build();
+			.install(ServiceGraphModule.create())
+			.install(MemcacheMultiServerModule.create())
+			.install(WorkerPoolModule.create())
+			.build();
 	}
 
 	@Override

@@ -28,9 +28,7 @@ public enum CustomConnectionProperty implements ConnectionProperty {
 		}
 	}
 
-	CustomConnectionProperty(String camelName,
-	                         Type type,
-	                         Object defaultValue) {
+	CustomConnectionProperty(String camelName, Type type, Object defaultValue) {
 		this.camelName = camelName;
 		this.type = type;
 		this.defaultValue = defaultValue;

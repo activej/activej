@@ -39,23 +39,23 @@ public class Utils {
 
 	public static OTSystem<TestOp> createTestOp() {
 		return OTSystemImpl.<TestOp>builder()
-				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> of(add(right.getDelta()), add(left.getDelta())))
-				.withTransformFunction(TestAdd.class, TestSet.class, (left, right) -> left(set(right.getPrev() + left.getDelta(), right.getNext())))
-				.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
-					checkArgument(left.getPrev() == right.getPrev(), "Previous values of left and right set operation should be equal");
-					if (left.getNext() > right.getNext()) return left(set(left.getNext(), right.getNext()));
-					if (left.getNext() < right.getNext()) return right(set(right.getNext(), left.getNext()));
-					return empty();
-				})
-				.withSquashFunction(TestAdd.class, TestAdd.class, (op1, op2) -> add(op1.getDelta() + op2.getDelta()))
-				.withSquashFunction(TestSet.class, TestSet.class, (op1, op2) -> set(op1.getPrev(), op2.getNext()))
-				.withSquashFunction(TestAdd.class, TestSet.class, (op1, op2) -> set(op1.inverse().apply(op2.getPrev()), op2.getNext()))
-				.withSquashFunction(TestSet.class, TestAdd.class, (op1, op2) -> set(op1.getPrev(), op1.getNext() + op2.getDelta()))
-				.withEmptyPredicate(TestAdd.class, add -> add.getDelta() == 0)
-				.withEmptyPredicate(TestSet.class, set -> set.getPrev() == set.getNext())
-				.withInvertFunction(TestAdd.class, op -> List.of(op.inverse()))
-				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
-				.build();
+			.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> of(add(right.getDelta()), add(left.getDelta())))
+			.withTransformFunction(TestAdd.class, TestSet.class, (left, right) -> left(set(right.getPrev() + left.getDelta(), right.getNext())))
+			.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
+				checkArgument(left.getPrev() == right.getPrev(), "Previous values of left and right set operation should be equal");
+				if (left.getNext() > right.getNext()) return left(set(left.getNext(), right.getNext()));
+				if (left.getNext() < right.getNext()) return right(set(right.getNext(), left.getNext()));
+				return empty();
+			})
+			.withSquashFunction(TestAdd.class, TestAdd.class, (op1, op2) -> add(op1.getDelta() + op2.getDelta()))
+			.withSquashFunction(TestSet.class, TestSet.class, (op1, op2) -> set(op1.getPrev(), op2.getNext()))
+			.withSquashFunction(TestAdd.class, TestSet.class, (op1, op2) -> set(op1.inverse().apply(op2.getPrev()), op2.getNext()))
+			.withSquashFunction(TestSet.class, TestAdd.class, (op1, op2) -> set(op1.getPrev(), op1.getNext() + op2.getDelta()))
+			.withEmptyPredicate(TestAdd.class, add -> add.getDelta() == 0)
+			.withEmptyPredicate(TestSet.class, set -> set.getPrev() == set.getNext())
+			.withInvertFunction(TestAdd.class, op -> List.of(op.inverse()))
+			.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
+			.build();
 	}
 
 	static final class JsonConverters {
@@ -124,17 +124,17 @@ public class Utils {
 	public static <K> long calcLevels(K commitId, Map<K, Long> levels, Function<K, Collection<K>> getParents) {
 		if (!levels.containsKey(commitId)) {
 			levels.put(commitId, 1L + getParents.apply(commitId).stream()
-					.mapToLong(parentId -> calcLevels(parentId, levels, getParents))
-					.max()
-					.orElse(0L));
+				.mapToLong(parentId -> calcLevels(parentId, levels, getParents))
+				.max()
+				.orElse(0L));
 		}
 		return levels.get(commitId);
 	}
 
 	public static <D> Consumer<OTGraphBuilder<Long, D>> asLong(Consumer<OTGraphBuilder<Integer, D>> intGraphConsumer) {
 		return longGraphBuilder ->
-				intGraphConsumer.accept((parent, child, diffs) ->
-						longGraphBuilder.add((long) parent, (long) child, diffs));
+			intGraphConsumer.accept((parent, child, diffs) ->
+				longGraphBuilder.add((long) parent, (long) child, diffs));
 	}
 
 	public static <K, D> List<OTCommit<K, D>> commits(Consumer<OTGraphBuilder<K, D>> graphBuilder) {
@@ -145,19 +145,19 @@ public class Utils {
 	public static <K, D> List<OTCommit<K, D>> commits(Consumer<OTGraphBuilder<K, D>> graphBuilder, boolean withRoots, long initialLevel) {
 		Map<K, Map<K, List<D>>> graph = new HashMap<>();
 		graphBuilder.accept((parent, child, diffs) ->
-				graph.computeIfAbsent(child, $ -> new HashMap<>()).computeIfAbsent(parent, $ -> new ArrayList<>()).addAll(diffs));
+			graph.computeIfAbsent(child, $ -> new HashMap<>()).computeIfAbsent(parent, $ -> new ArrayList<>()).addAll(diffs));
 		Set<K> heads = difference(
-				graph.keySet(),
-				graph.values()
-						.stream()
-						.flatMap(parents -> parents.keySet().stream())
-						.collect(toSet()));
+			graph.keySet(),
+			graph.values()
+				.stream()
+				.flatMap(parents -> parents.keySet().stream())
+				.collect(toSet()));
 		Set<K> roots = difference(
-				graph.values()
-						.stream()
-						.flatMap(parents -> parents.keySet().stream())
-						.collect(toSet()),
-				graph.keySet());
+			graph.values()
+				.stream()
+				.flatMap(parents -> parents.keySet().stream())
+				.collect(toSet()),
+			graph.keySet());
 		HashMap<K, Long> levels = new HashMap<>();
 		for (K head : heads) {
 			calcLevels(head, levels, id -> graph.getOrDefault(id, Map.of()).keySet());
@@ -170,21 +170,21 @@ public class Utils {
 			}
 		}
 		return graph.entrySet()
-				.stream()
-				.map(entry -> OTCommit.builder(
-								0,
-								entry.getKey(),
-								entry.getValue().entrySet().stream()
-										.collect(Collectors.toMap(
-												Map.Entry::getKey,
-												e -> new DiffsWithLevel<>(
-														initialLevel + levels.getOrDefault(e.getKey(), 0L) - 1L,
-														e.getValue()
-												)
-										)))
-						.withTimestamp(initialLevel - 1L + levels.get(entry.getKey()))
-						.build())
-				.collect(toList());
+			.stream()
+			.map(entry -> OTCommit.builder(
+					0,
+					entry.getKey(),
+					entry.getValue().entrySet().stream()
+						.collect(Collectors.toMap(
+							Map.Entry::getKey,
+							e -> new DiffsWithLevel<>(
+								initialLevel + levels.getOrDefault(e.getKey(), 0L) - 1L,
+								e.getValue()
+							)
+						)))
+				.withTimestamp(initialLevel - 1L + levels.get(entry.getKey()))
+				.build())
+			.collect(toList());
 	}
 
 }

@@ -1,4 +1,3 @@
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
@@ -37,7 +36,7 @@ public class SerializeNoPathExample {
 	public static void main(String[] args) {
 		//[START Serializer]
 		BinarySerializer<Storage> serializer = SerializerFactory.defaultInstance()
-				.create(Storage.class);
+			.create(Storage.class);
 		//[END Serializer]
 
 		Storage storage = new Storage();

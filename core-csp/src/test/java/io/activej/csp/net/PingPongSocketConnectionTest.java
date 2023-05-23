@@ -33,7 +33,7 @@ public final class PingPongSocketConnectionTest {
 	private static final String RESPONSE_MSG = "PONG";
 
 	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoders.ofFixedSize(4)
-			.andThen(buf -> buf.asString(UTF_8));
+		.andThen(buf -> buf.asString(UTF_8));
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -54,33 +54,33 @@ public final class PingPongSocketConnectionTest {
 	@Test
 	public void test() throws IOException {
 		SimpleServer.builder(
-						getCurrentReactor(),
-						socket -> {
-							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
-							loop(ITERATIONS,
-									i -> i != 0,
-									i -> bufsSupplier.decode(DECODER)
-											.whenResult(res -> assertEquals(REQUEST_MSG, res))
-											.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
-											.map($ -> i - 1))
-									.whenComplete(socket::close)
-									.whenComplete(assertCompleteFn());
-						})
-				.withListenAddress(address)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				getCurrentReactor(),
+				socket -> {
+					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
+					loop(ITERATIONS,
+						i -> i != 0,
+						i -> bufsSupplier.decode(DECODER)
+							.whenResult(res -> assertEquals(REQUEST_MSG, res))
+							.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
+							.map($ -> i - 1))
+						.whenComplete(socket::close)
+						.whenComplete(assertCompleteFn());
+				})
+			.withListenAddress(address)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
-				.then(socket -> {
-					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
-					return loop(ITERATIONS,
-							i -> i != 0,
-							i -> socket.write(wrapAscii(REQUEST_MSG))
-									.then(() -> bufsSupplier.decode(DECODER))
-									.whenResult(res -> assertEquals(RESPONSE_MSG, res))
-									.map($ -> i - 1))
-							.whenResult(socket::close);
-				}));
+			.then(socket -> {
+				BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket));
+				return loop(ITERATIONS,
+					i -> i != 0,
+					i -> socket.write(wrapAscii(REQUEST_MSG))
+						.then(() -> bufsSupplier.decode(DECODER))
+						.whenResult(res -> assertEquals(RESPONSE_MSG, res))
+						.map($ -> i - 1))
+					.whenResult(socket::close);
+			}));
 	}
 }

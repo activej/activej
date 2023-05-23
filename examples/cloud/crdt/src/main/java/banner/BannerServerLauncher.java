@@ -12,24 +12,24 @@ import java.util.List;
 
 public final class BannerServerLauncher extends Launcher {
 	public static final List<Class<?>> MESSAGE_TYPES = List.of(
-			BannerCommands.GetRequest.class, BannerCommands.GetResponse.class,
-			BannerCommands.PutRequest.class, BannerCommands.PutResponse.class,
-			BannerCommands.IsBannerSeenRequest.class, Boolean.class);
+		BannerCommands.GetRequest.class, BannerCommands.GetResponse.class,
+		BannerCommands.PutRequest.class, BannerCommands.PutResponse.class,
+		BannerCommands.IsBannerSeenRequest.class, Boolean.class);
 
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				new CrdtRpcServerModule<Long, GSet<Integer>>() {
-					@Override
-					protected List<Class<?>> getMessageTypes() {
-						return MESSAGE_TYPES;
-					}
-				},
-				new BannerServerModule()
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			new CrdtRpcServerModule<Long, GSet<Integer>>() {
+				@Override
+				protected List<Class<?>> getMessageTypes() {
+					return MESSAGE_TYPES;
+				}
+			},
+			new BannerServerModule()
 		);
 	}
 

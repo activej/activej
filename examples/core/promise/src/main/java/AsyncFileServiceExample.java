@@ -21,8 +21,8 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 @SuppressWarnings("Convert2MethodRef")
 public final class AsyncFileServiceExample {
 	private static final Eventloop EVENTLOOP = Eventloop.builder()
-			.withCurrentThread()
-			.build();
+		.withCurrentThread()
+		.build();
 	private static final ExecutorService EXECUTOR_SERVICE = newCachedThreadPool();
 	private static final IFileService FILE_SERVICE = new ExecutorFileService(EVENTLOOP, EXECUTOR_SERVICE);
 	private static final Path PATH;
@@ -45,9 +45,9 @@ public final class AsyncFileServiceExample {
 			byte[] message3 = "This is the 3rd line in file".getBytes();
 
 			return FILE_SERVICE.write(channel, 0, message1, 0, message1.length)
-					.then(() -> FILE_SERVICE.write(channel, 0, message2, 0, message2.length))
-					.then(() -> FILE_SERVICE.write(channel, 0, message3, 0, message3.length))
-					.toVoid();
+				.then(() -> FILE_SERVICE.write(channel, 0, message2, 0, message2.length))
+				.then(() -> FILE_SERVICE.write(channel, 0, message3, 0, message3.length))
+				.toVoid();
 		} catch (IOException e) {
 			return Promise.ofException(e);
 		}
@@ -63,29 +63,29 @@ public final class AsyncFileServiceExample {
 		}
 
 		return FILE_SERVICE.read(channel, 0, array, 0, array.length)
-				.map(bytesRead -> {
-					ByteBuf buf = ByteBuf.wrap(array, 0, bytesRead);
-					System.out.println(buf.getString(UTF_8));
-					return buf;
-				});
+			.map(bytesRead -> {
+				ByteBuf buf = ByteBuf.wrap(array, 0, bytesRead);
+				System.out.println(buf.getString(UTF_8));
+				return buf;
+			});
 	}
 	//[END REGION_1]
 
 	public static void main(String[] args) {
 		Promises.sequence(
-						() -> writeToFile(),
-						() -> readFromFile().toVoid())
-				.whenComplete(($, e) -> {
-					if (e != null) {
-						System.out.println("Something went wrong : " + e);
-					}
-					try {
-						delete(PATH);
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
-					EXECUTOR_SERVICE.shutdown();
-				});
+				() -> writeToFile(),
+				() -> readFromFile().toVoid())
+			.whenComplete(($, e) -> {
+				if (e != null) {
+					System.out.println("Something went wrong : " + e);
+				}
+				try {
+					delete(PATH);
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+				EXECUTOR_SERVICE.shutdown();
+			});
 
 		EVENTLOOP.run();
 	}

@@ -58,8 +58,10 @@ public class LogItem {
 	public LogItem() {
 	}
 
-	public LogItem(int date, int advertiser, int campaign, int banner,
-			long impressions, long clicks, long conversions, double revenue) {
+	public LogItem(
+		int date, int advertiser, int campaign, int banner, long impressions, long clicks, long conversions,
+		double revenue
+	) {
 		this.date = date;
 		this.advertiser = advertiser;
 		this.campaign = campaign;

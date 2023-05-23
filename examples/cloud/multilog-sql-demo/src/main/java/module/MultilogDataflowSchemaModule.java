@@ -19,15 +19,15 @@ public class MultilogDataflowSchemaModule extends AbstractModule {
 	@ProvidesIntoSet
 	DataflowTable<LogItem> logItemTable(DefiningClassLoader classLoader) {
 		return DataflowTable.builder(classLoader, LOG_ITEM_TABLE_NAME, LogItem.class)
-				.withColumn("date", int.class, logItem -> logItem.date)
-				.withColumn("advertiser", int.class, logItem -> logItem.advertiser)
-				.withColumn("campaign", int.class, logItem -> logItem.campaign)
-				.withColumn("banner", int.class, logItem -> logItem.banner)
-				.withColumn("impressions", long.class, logItem -> logItem.impressions)
-				.withColumn("clicks", long.class, logItem -> logItem.clicks)
-				.withColumn("conversions", long.class, logItem -> logItem.conversions)
-				.withColumn("revenue", double.class, logItem -> logItem.revenue)
-				.withColumn("testString", String.class, logItem -> logItem.testString)
-				.build();
+			.withColumn("date", int.class, logItem -> logItem.date)
+			.withColumn("advertiser", int.class, logItem -> logItem.advertiser)
+			.withColumn("campaign", int.class, logItem -> logItem.campaign)
+			.withColumn("banner", int.class, logItem -> logItem.banner)
+			.withColumn("impressions", long.class, logItem -> logItem.impressions)
+			.withColumn("clicks", long.class, logItem -> logItem.clicks)
+			.withColumn("conversions", long.class, logItem -> logItem.conversions)
+			.withColumn("revenue", double.class, logItem -> logItem.revenue)
+			.withColumn("testString", String.class, logItem -> logItem.testString)
+			.build();
 	}
 }

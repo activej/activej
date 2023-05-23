@@ -69,8 +69,8 @@ public interface LogNamingScheme {
 		@Override
 		public LogFile format(long currentTimeMillis) {
 			return new LogFile(
-					DEFAULT_DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(currentTimeMillis)),
-					(int) ((currentTimeMillis / 1000L) % 3600));
+				DEFAULT_DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(currentTimeMillis)),
+				(int) ((currentTimeMillis / 1000L) % 3600));
 		}
 
 		@Override

@@ -45,7 +45,7 @@ public class ConfigConverters {
 	 * @return a config converter for {@link RendezvousPartitionScheme.Builder}
 	 */
 	public static <P> ConfigConverter<RendezvousPartitionScheme<P>.Builder> ofRendezvousPartitionSchemeBuilder(
-			ConfigConverter<P> partitionIdConverter
+		ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<>() {
 			@Override
@@ -79,7 +79,7 @@ public class ConfigConverters {
 	 * @return a config converter for {@link RendezvousPartitionScheme}
 	 */
 	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
-			ConfigConverter<P> partitionIdConverter
+		ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<>() {
 			@Override

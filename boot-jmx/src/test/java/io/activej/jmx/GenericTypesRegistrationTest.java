@@ -27,7 +27,7 @@ public class GenericTypesRegistrationTest {
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(with(service),
-					with(objectname(domain + ":type=ServiceStubOne,T1=String")));
+				with(objectname(domain + ":type=ServiceStubOne,T1=String")));
 		}});
 
 		Key<?> key = new Key<ServiceStubOne<String>>() {};
@@ -40,7 +40,7 @@ public class GenericTypesRegistrationTest {
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(with(service),
-					with(objectname(domain + ":type=ServiceStubThree,T1=String,T2=Integer,T3=Long"))
+				with(objectname(domain + ":type=ServiceStubThree,T1=String,T2=Integer,T3=Long"))
 			);
 		}});
 
@@ -54,7 +54,7 @@ public class GenericTypesRegistrationTest {
 
 		context.checking(new Expectations() {{
 			oneOf(mBeanServer).registerMBean(with(service),
-					with(objectname(domain + ":type=ServiceStubThree,T1=String,T2=List<Integer>,T3=Map<Long;List<String>>"))
+				with(objectname(domain + ":type=ServiceStubThree,T1=String,T2=List<Integer>,T3=Map<Long;List<String>>"))
 			);
 		}});
 

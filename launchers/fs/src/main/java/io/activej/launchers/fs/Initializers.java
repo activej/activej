@@ -50,14 +50,14 @@ public class Initializers {
 
 	public static Initializer<FileSystemServer.Builder> ofFileSystemServer(Config config) {
 		return builder -> builder
-				.initialize(ofAbstractServer(config));
+			.initialize(ofAbstractServer(config));
 	}
 
 	public static Initializer<ClusterRepartitionController.Builder> ofClusterRepartitionController(Config config) {
 		return builder -> builder
-				.withGlob(config.get("glob", "**"))
-				.withNegativeGlob(config.get("negativeGlob", ""))
-				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
+			.withGlob(config.get("glob", "**"))
+			.withNegativeGlob(config.get("negativeGlob", ""))
+			.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
 	public static IDiscoveryService constantDiscoveryService(NioReactor reactor, Config config) throws MalformedDataException {
@@ -90,50 +90,50 @@ public class Initializers {
 				builder.withReplicationCount(replicationCount);
 			} else {
 				builder.withDeadPartitionsThreshold(config.get(ofInteger(), "deadPartitionsThreshold", 0))
-						.withMinUploadTargets(config.get(ofInteger(), "uploadTargetsMin", 1))
-						.withMaxUploadTargets(config.get(ofInteger(), "uploadTargetsMax", 1));
+					.withMinUploadTargets(config.get(ofInteger(), "uploadTargetsMin", 1))
+					.withMaxUploadTargets(config.get(ofInteger(), "uploadTargetsMax", 1));
 			}
 		};
 	}
 
 	public static Initializer<TriggersModuleSettings> ofFileSystem() {
 		return triggersModule -> triggersModule
-				.with(FileSystem.class, HIGH, "errorUploadBegin", fs -> ofPromiseStats(fs.getUploadBeginPromise()))
-				.with(FileSystem.class, HIGH, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
-				.with(FileSystem.class, HIGH, "errorAppendBegin", fs -> ofPromiseStats(fs.getAppendBeginPromise()))
-				.with(FileSystem.class, HIGH, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
-				.with(FileSystem.class, HIGH, "errorDownloadBegin", fs -> ofPromiseStats(fs.getDownloadBeginPromise()))
-				.with(FileSystem.class, HIGH, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
-				.with(FileSystem.class, HIGH, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
-				.with(FileSystem.class, HIGH, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
-				.with(FileSystem.class, HIGH, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
-				.with(FileSystem.class, HIGH, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
-				.with(FileSystem.class, HIGH, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
-				.with(FileSystem.class, HIGH, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
-				.with(FileSystem.class, HIGH, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
-				.with(FileSystem.class, HIGH, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
-				.with(FileSystem.class, HIGH, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()));
+			.with(FileSystem.class, HIGH, "errorUploadBegin", fs -> ofPromiseStats(fs.getUploadBeginPromise()))
+			.with(FileSystem.class, HIGH, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
+			.with(FileSystem.class, HIGH, "errorAppendBegin", fs -> ofPromiseStats(fs.getAppendBeginPromise()))
+			.with(FileSystem.class, HIGH, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
+			.with(FileSystem.class, HIGH, "errorDownloadBegin", fs -> ofPromiseStats(fs.getDownloadBeginPromise()))
+			.with(FileSystem.class, HIGH, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
+			.with(FileSystem.class, HIGH, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
+			.with(FileSystem.class, HIGH, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
+			.with(FileSystem.class, HIGH, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
+			.with(FileSystem.class, HIGH, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
+			.with(FileSystem.class, HIGH, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
+			.with(FileSystem.class, HIGH, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
+			.with(FileSystem.class, HIGH, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
+			.with(FileSystem.class, HIGH, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
+			.with(FileSystem.class, HIGH, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()));
 	}
 
 	public static Initializer<TriggersModuleSettings> ofRemoteFileSystem() {
 		return triggersModule -> triggersModule
-				.with(RemoteFileSystem.class, WARNING, "errorUploadStart", fs -> ofPromiseStats(fs.getUploadStartPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorDownloadStart", fs -> ofPromiseStats(fs.getDownloadStartPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorConnect", fs -> ofPromiseStats(fs.getConnectPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorAppendStart", fs -> ofPromiseStats(fs.getAppendStartPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorPing", fs -> ofPromiseStats(fs.getPingPromise()))
-				.with(RemoteFileSystem.class, WARNING, "errorHandshake", fs -> ofPromiseStats(fs.getHandshakePromise()));
+			.with(RemoteFileSystem.class, WARNING, "errorUploadStart", fs -> ofPromiseStats(fs.getUploadStartPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorDownloadStart", fs -> ofPromiseStats(fs.getDownloadStartPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorConnect", fs -> ofPromiseStats(fs.getConnectPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorAppendStart", fs -> ofPromiseStats(fs.getAppendStartPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorPing", fs -> ofPromiseStats(fs.getPingPromise()))
+			.with(RemoteFileSystem.class, WARNING, "errorHandshake", fs -> ofPromiseStats(fs.getHandshakePromise()));
 	}
 }

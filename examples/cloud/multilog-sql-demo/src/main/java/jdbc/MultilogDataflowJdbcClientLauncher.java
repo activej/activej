@@ -26,9 +26,9 @@ public final class MultilogDataflowJdbcClientLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("dataflow.jdbc.url", "http://localhost:" + DEFAULT_JDBC_SERVER_PORT)
-				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
+			.with("dataflow.jdbc.url", "http://localhost:" + DEFAULT_JDBC_SERVER_PORT)
+			.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}
 
 	@Provides
@@ -46,8 +46,8 @@ public final class MultilogDataflowJdbcClientLauncher extends Launcher {
 		Scanner scanIn = new Scanner(System.in);
 
 		try (
-				Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + url);
-				Statement statement = connection.createStatement()
+			Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + url);
+			Statement statement = connection.createStatement()
 		) {
 			while (true) {
 				System.out.println("Enter your query:");

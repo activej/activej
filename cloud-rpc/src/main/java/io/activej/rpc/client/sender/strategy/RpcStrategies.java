@@ -22,8 +22,8 @@ public class RpcStrategies {
 	public static List<? extends RpcStrategy> servers(List<InetSocketAddress> addresses) {
 		checkArgument(!addresses.isEmpty(), "At least one address must be present");
 		return addresses.stream()
-				.map(Server::new)
-				.toList();
+			.map(Server::new)
+			.toList();
 	}
 
 	public static RpcStrategy firstAvailable(RpcStrategy... strategies) {

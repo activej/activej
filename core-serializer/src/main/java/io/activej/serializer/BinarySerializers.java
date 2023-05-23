@@ -59,9 +59,9 @@ public final class BinarySerializers {
 		@Override
 		public Integer decode(byte[] array, int pos) {
 			return ((array[pos] & 0xFF) << 24)
-					| ((array[pos + 1] & 0xFF) << 16)
-					| ((array[pos + 2] & 0xFF) << 8)
-					| (array[pos + 3] & 0xFF);
+				| ((array[pos + 1] & 0xFF) << 16)
+				| ((array[pos + 2] & 0xFF) << 8)
+				| (array[pos + 3] & 0xFF);
 		}
 
 		@Override
@@ -94,13 +94,13 @@ public final class BinarySerializers {
 		@Override
 		public Long decode(byte[] array, int pos) {
 			return ((long) array[pos] << 56)
-					| ((long) (array[pos + 1] & 0xFF) << 48)
-					| ((long) (array[pos + 2] & 0xFF) << 40)
-					| ((long) (array[pos + 3] & 0xFF) << 32)
-					| ((long) (array[pos + 4] & 0xFF) << 24)
-					| ((array[pos + 5] & 0xFF) << 16)
-					| ((array[pos + 6] & 0xFF) << 8)
-					| (array[pos + 7] & 0xFF);
+				| ((long) (array[pos + 1] & 0xFF) << 48)
+				| ((long) (array[pos + 2] & 0xFF) << 40)
+				| ((long) (array[pos + 3] & 0xFF) << 32)
+				| ((long) (array[pos + 4] & 0xFF) << 24)
+				| ((array[pos + 5] & 0xFF) << 16)
+				| ((array[pos + 6] & 0xFF) << 8)
+				| (array[pos + 7] & 0xFF);
 		}
 
 		@Override
@@ -128,9 +128,9 @@ public final class BinarySerializers {
 		@Override
 		public Float decode(byte[] array, int pos) {
 			return Float.intBitsToFloat(((array[pos] & 0xFF) << 24)
-					| ((array[pos + 1] & 0xFF) << 16)
-					| ((array[pos + 2] & 0xFF) << 8)
-					| (array[pos + 3] & 0xFF));
+				| ((array[pos + 1] & 0xFF) << 16)
+				| ((array[pos + 2] & 0xFF) << 8)
+				| (array[pos + 3] & 0xFF));
 		}
 
 		@Override
@@ -164,13 +164,13 @@ public final class BinarySerializers {
 		@Override
 		public Double decode(byte[] array, int pos) {
 			return Double.longBitsToDouble(((long) array[pos] << 56)
-					| ((long) (array[pos + 1] & 0xFF) << 48)
-					| ((long) (array[pos + 2] & 0xFF) << 40)
-					| ((long) (array[pos + 3] & 0xFF) << 32)
-					| ((long) (array[pos + 4] & 0xFF) << 24)
-					| ((array[pos + 5] & 0xFF) << 16)
-					| ((array[pos + 6] & 0xFF) << 8)
-					| (array[pos + 7] & 0xFF));
+				| ((long) (array[pos + 1] & 0xFF) << 48)
+				| ((long) (array[pos + 2] & 0xFF) << 40)
+				| ((long) (array[pos + 3] & 0xFF) << 32)
+				| ((long) (array[pos + 4] & 0xFF) << 24)
+				| ((array[pos + 5] & 0xFF) << 16)
+				| ((array[pos + 6] & 0xFF) << 8)
+				| (array[pos + 7] & 0xFF));
 		}
 
 		@Override

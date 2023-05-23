@@ -44,28 +44,28 @@ public abstract class DataflowServerLauncher extends Launcher {
 	@Named("Dataflow")
 	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
+			.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				DataflowServerModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule()
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			DataflowServerModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule()
 		);
 	}
 

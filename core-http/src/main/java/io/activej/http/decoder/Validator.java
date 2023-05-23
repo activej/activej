@@ -100,7 +100,7 @@ public interface Validator<T> {
 	 */
 	static <T> Validator<T> of(Predicate<T> predicate, String template) {
 		return value -> predicate.test(value) ?
-				List.of() :
-				List.of(DecodeError.of(template, value));
+			List.of() :
+			List.of(DecodeError.of(template, value));
 	}
 }

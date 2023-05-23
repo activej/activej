@@ -74,64 +74,64 @@ public final class AbstractHttpConnectionTest {
 		port = getFreePort();
 		url = "http://127.0.0.1:" + port;
 		client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withInspector(new JmxInspector())
-				.build();
+			.withInspector(new JmxInspector())
+			.build();
 	}
 
 	@Test
 	public void testMultiLineHeader() throws Exception {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
-								.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
-								.withHeader(CONTENT_TYPE, "text/\n          html")
-								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>"))
-								.toPromise())
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				request -> HttpResponse.ok200()
+					.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
+					.withHeader(CONTENT_TYPE, "text/\n          html")
+					.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>"))
+					.toPromise())
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		await(client.request(HttpRequest.get(url).build())
-				.then(response -> response.loadBody()
-						.whenComplete(TestUtils.assertCompleteFn(body -> {
-							assertEquals("text/           html", response.getHeader(CONTENT_TYPE));
-							assertEquals("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>", body.getString(UTF_8));
-						}))));
+			.then(response -> response.loadBody()
+				.whenComplete(TestUtils.assertCompleteFn(body -> {
+					assertEquals("text/           html", response.getHeader(CONTENT_TYPE));
+					assertEquals("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>", body.getString(UTF_8));
+				}))));
 	}
 
 	@Test
 	public void testGzipCompression() throws Exception {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
-								.withBodyGzipCompression()
-								.withBody(encodeAscii("Test message"))
-								.toPromise())
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				request -> HttpResponse.ok200()
+					.withBodyGzipCompression()
+					.withBody(encodeAscii("Test message"))
+					.toPromise())
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		await(client.request(HttpRequest.get(url)
-						.withHeader(ACCEPT_ENCODING, "gzip")
-						.build())
-				.then(response -> response.loadBody()
-						.whenComplete(TestUtils.assertCompleteFn(body -> {
-							assertEquals("Test message", body.getString(UTF_8));
-							assertNotNull(response.getHeader(CONTENT_ENCODING));
-						}))));
+				.withHeader(ACCEPT_ENCODING, "gzip")
+				.build())
+			.then(response -> response.loadBody()
+				.whenComplete(TestUtils.assertCompleteFn(body -> {
+					assertEquals("Test message", body.getString(UTF_8));
+					assertNotNull(response.getHeader(CONTENT_ENCODING));
+				}))));
 	}
 
 	@Test
 	public void testClientWithMaxKeepAliveRequests() throws Exception {
 		client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withInspector(new JmxInspector())
-				.withKeepAliveTimeout(Duration.ofSeconds(1))
-				.withMaxKeepAliveRequests(5)
-				.build();
+			.withInspector(new JmxInspector())
+			.withKeepAliveTimeout(Duration.ofSeconds(1))
+			.withMaxKeepAliveRequests(5)
+			.build();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
-				.withListenPort(port)
-				.build();
+			.withListenPort(port)
+			.build();
 		server.listen();
 
 		assertNotNull(client.getStats());
@@ -141,13 +141,13 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testServerWithMaxKeepAliveRequests() throws Exception {
 		client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withKeepAliveTimeout(Duration.ofSeconds(1))
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(1))
+			.build();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
-				.withListenPort(port)
-				.withMaxKeepAliveRequests(5)
-				.build();
+			.withListenPort(port)
+			.withMaxKeepAliveRequests(5)
+			.build();
 		server.listen();
 
 		assertNotNull(server.getAccepts());
@@ -157,23 +157,23 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testServerWithNoKeepAlive() throws Exception {
 		client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withKeepAliveTimeout(Duration.ofSeconds(30))
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(30))
+			.build();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
-				.withListenPort(port)
-				.withKeepAliveTimeout(Duration.ZERO)
-				.build();
+			.withListenPort(port)
+			.withKeepAliveTimeout(Duration.ZERO)
+			.build();
 		server.listen();
 
 		int code = await(client.request(HttpRequest.get(url).build())
-				.then(response -> {
-					assertEquals(200, response.getCode());
-					return post(null);
-				})
-				.then(() -> client.request(HttpRequest.get(url).build()))
-				.map(HttpResponse::getCode)
-				.whenComplete(server::close));
+			.then(response -> {
+				assertEquals(200, response.getCode());
+				return post(null);
+			})
+			.then(() -> client.request(HttpRequest.get(url).build()))
+			.map(HttpResponse::getCode)
+			.whenComplete(server::close));
 
 		assertEquals(200, code);
 	}
@@ -184,14 +184,14 @@ public final class AbstractHttpConnectionTest {
 		int size = 10_000;
 
 		SocketSettings socketSettings = SocketSettings.builder()
-				.withSendBufferSize(MemSize.of(1))
-				.withReceiveBufferSize(MemSize.of(1))
-				.withImplReadBufferSize(MemSize.of(1))
-				.build();
+			.withSendBufferSize(MemSize.of(1))
+			.withReceiveBufferSize(MemSize.of(1))
+			.withImplReadBufferSize(MemSize.of(1))
+			.build();
 
 		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withSocketSettings(socketSettings)
-				.build();
+			.withSocketSettings(socketSettings)
+			.build();
 
 		// regular
 		doTestHugeStreams(client, socketSettings, size, httpMessage -> httpMessage.withHeader(CONTENT_LENGTH, String.valueOf(size)));
@@ -214,34 +214,34 @@ public final class AbstractHttpConnectionTest {
 		long size = 3_000_000_000L;
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
-								.withHeader(CONTENT_LENGTH, String.valueOf(size))
-								.withBodyStream(request.takeBodyStream())
-								.toPromise())
-				.withListenPort(port)
-				.build();
+				request -> HttpResponse.ok200()
+					.withHeader(CONTENT_LENGTH, String.valueOf(size))
+					.withBodyStream(request.takeBodyStream())
+					.toPromise())
+			.withListenPort(port)
+			.build();
 		server.listen();
 
 		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
-				.withHeader(CONTENT_LENGTH, String.valueOf(size))
-				.withBodyStream(ChannelSuppliers.ofStream(
-						Stream.generate(() -> {
-									int length = 1_000_000;
-									byte[] temp = new byte[length];
-									RANDOM.nextBytes(temp);
-									outChecksum.update(temp, 0, length);
-									return ByteBuf.wrapForReading(temp);
-								})
-								.limit(3_000)))
-				.build();
+			.withHeader(CONTENT_LENGTH, String.valueOf(size))
+			.withBodyStream(ChannelSuppliers.ofStream(
+				Stream.generate(() -> {
+						int length = 1_000_000;
+						byte[] temp = new byte[length];
+						RANDOM.nextBytes(temp);
+						outChecksum.update(temp, 0, length);
+						return ByteBuf.wrapForReading(temp);
+					})
+					.limit(3_000)))
+			.build();
 
 		await(client.request(request)
-				.then(response -> response.takeBodyStream()
-						.streamTo(ChannelConsumers.ofConsumer(buf -> {
-							byte[] bytes = buf.asArray();
-							inChecksum.update(bytes, 0, bytes.length);
-						})))
-				.whenComplete(server::close));
+			.then(response -> response.takeBodyStream()
+				.streamTo(ChannelConsumers.ofConsumer(buf -> {
+					byte[] bytes = buf.asArray();
+					inChecksum.update(bytes, 0, bytes.length);
+				})))
+			.whenComplete(server::close));
 
 		assertEquals(inChecksum.getValue(), outChecksum.getValue());
 	}
@@ -251,23 +251,23 @@ public final class AbstractHttpConnectionTest {
 		int size = 1_000_000;
 		ByteBuf expected = ByteBufPool.allocate(size);
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> {
-							byte[] bytes = new byte[size];
-							RANDOM.nextBytes(bytes);
-							expected.put(bytes);
-							ByteBuf value = expected.slice();
-							return HttpResponse.ok200()
-									.withBodyGzipCompression()
-									.withBodyStream(ChannelSuppliers.ofValue(value))
-									.toPromise();
-						})
-				.withAcceptOnce()
-				.withListenPort(port)
-				.build()
-				.listen();
+				request -> {
+					byte[] bytes = new byte[size];
+					RANDOM.nextBytes(bytes);
+					expected.put(bytes);
+					ByteBuf value = expected.slice();
+					return HttpResponse.ok200()
+						.withBodyGzipCompression()
+						.withBodyStream(ChannelSuppliers.ofValue(value))
+						.toPromise();
+				})
+			.withAcceptOnce()
+			.withListenPort(port)
+			.build()
+			.listen();
 
 		ByteBuf result = await(HttpClient.create(Reactor.getCurrentReactor()).request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
+			.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
 
@@ -275,38 +275,38 @@ public final class AbstractHttpConnectionTest {
 	public void testEmptyRequestResponse() {
 		//noinspection Convert2MethodRef
 		List<Initializer<HttpMessage.Builder<?, ?>>> initializers = List.of(
-				builder -> {},
-				builder -> builder
-						.withBodyGzipCompression(),
-				builder -> builder
-						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder
-						.withBodyGzipCompression()
-						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder
-						.withBody(ByteBuf.empty()),
-				builder -> builder
-						.withBody(ByteBuf.empty())
-						.withBodyGzipCompression(),
-				builder -> builder
-						.withBody(ByteBuf.empty())
-						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder
-						.withBody(ByteBuf.empty())
-						.withBodyGzipCompression()
-						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder
-						.withBodyStream(ChannelSuppliers.empty()),
-				builder -> builder
-						.withBodyStream(ChannelSuppliers.empty())
-						.withBodyGzipCompression(),
-				builder -> builder
-						.withBodyStream(ChannelSuppliers.empty())
-						.withHeader(CONTENT_LENGTH, "0"),
-				builder -> builder
-						.withBodyStream(ChannelSuppliers.empty())
-						.withBodyGzipCompression()
-						.withHeader(CONTENT_LENGTH, "0")
+			builder -> {},
+			builder -> builder
+				.withBodyGzipCompression(),
+			builder -> builder
+				.withHeader(CONTENT_LENGTH, "0"),
+			builder -> builder
+				.withBodyGzipCompression()
+				.withHeader(CONTENT_LENGTH, "0"),
+			builder -> builder
+				.withBody(ByteBuf.empty()),
+			builder -> builder
+				.withBody(ByteBuf.empty())
+				.withBodyGzipCompression(),
+			builder -> builder
+				.withBody(ByteBuf.empty())
+				.withHeader(CONTENT_LENGTH, "0"),
+			builder -> builder
+				.withBody(ByteBuf.empty())
+				.withBodyGzipCompression()
+				.withHeader(CONTENT_LENGTH, "0"),
+			builder -> builder
+				.withBodyStream(ChannelSuppliers.empty()),
+			builder -> builder
+				.withBodyStream(ChannelSuppliers.empty())
+				.withBodyGzipCompression(),
+			builder -> builder
+				.withBodyStream(ChannelSuppliers.empty())
+				.withHeader(CONTENT_LENGTH, "0"),
+			builder -> builder
+				.withBodyStream(ChannelSuppliers.empty())
+				.withBodyGzipCompression()
+				.withHeader(CONTENT_LENGTH, "0")
 		);
 
 		doTestEmptyRequestResponsePermutations(initializers);
@@ -318,16 +318,16 @@ public final class AbstractHttpConnectionTest {
 		Arrays.fill(chars, 'a');
 
 		client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withKeepAliveTimeout(Duration.ofSeconds(30))
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(30))
+			.build();
 
 		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
 		HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
-				.withListenPort(port)
-				.withInspector(inspector)
-				.withAcceptOnce()
-				.build()
-				.listen();
+			.withListenPort(port)
+			.withInspector(inspector)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		HttpResponse response = await(client.request(HttpRequest.get(url + '/' + new String(chars)).build()));
 
@@ -347,22 +347,22 @@ public final class AbstractHttpConnectionTest {
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> {
-							ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
-							return HttpResponse.ok200()
-									.withBodyStream(ChannelSuppliers.ofValue(value))
-									.toPromise();
-						})
-				.withInspector(serverInspector)
-				.withListenPort(port)
-				.build();
+				request -> {
+					ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
+					return HttpResponse.ok200()
+						.withBodyStream(ChannelSuppliers.ofValue(value))
+						.toPromise();
+				})
+			.withInspector(serverInspector)
+			.withListenPort(port)
+			.build();
 
 		server.listen();
 
 		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withKeepAliveTimeout(Duration.ofSeconds(10))
-				.withInspector(clientInspector)
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(10))
+			.withInspector(clientInspector)
+			.build();
 
 		assertEquals(0, client.getConnectionsKeepAliveCount());
 		assertEquals(0, clientInspector.getConnected().getTotalCount());
@@ -372,24 +372,24 @@ public final class AbstractHttpConnectionTest {
 
 		String url = "http://127.0.0.1:" + port;
 		await(client.request(HttpRequest.get(url).build())
-				.then(ensureHelloWorldAsyncFn())
-				.whenResult(() -> {
-					assertEquals(1, client.getConnectionsKeepAliveCount());
-					assertEquals(1, clientInspector.getConnected().getTotalCount());
+			.then(ensureHelloWorldAsyncFn())
+			.whenResult(() -> {
+				assertEquals(1, client.getConnectionsKeepAliveCount());
+				assertEquals(1, clientInspector.getConnected().getTotalCount());
 
-					assertEquals(1, server.getConnectionsKeepAliveCount());
-					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
-				})
-				.then(() -> client.request(HttpRequest.get(url).build()))
-				.then(ensureHelloWorldAsyncFn())
-				.whenResult(() -> {
-					assertEquals(1, client.getConnectionsKeepAliveCount());
-					assertEquals(1, clientInspector.getConnected().getTotalCount());
+				assertEquals(1, server.getConnectionsKeepAliveCount());
+				assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+			})
+			.then(() -> client.request(HttpRequest.get(url).build()))
+			.then(ensureHelloWorldAsyncFn())
+			.whenResult(() -> {
+				assertEquals(1, client.getConnectionsKeepAliveCount());
+				assertEquals(1, clientInspector.getConnected().getTotalCount());
 
-					assertEquals(1, server.getConnectionsKeepAliveCount());
-					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
-				})
-				.whenComplete(server::close));
+				assertEquals(1, server.getConnectionsKeepAliveCount());
+				assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+			})
+			.whenComplete(server::close));
 	}
 
 	@Test
@@ -398,21 +398,21 @@ public final class AbstractHttpConnectionTest {
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();
 
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> request.loadBody()
-								.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-								.then($ -> HttpResponse.ok200()
-										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))
-										.toPromise()))
-				.withInspector(serverInspector)
-				.withListenPort(port)
-				.build();
+				request -> request.loadBody()
+					.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
+					.then($ -> HttpResponse.ok200()
+						.withBody(ByteBuf.wrapForReading(HELLO_WORLD))
+						.toPromise()))
+			.withInspector(serverInspector)
+			.withListenPort(port)
+			.build();
 
 		server.listen();
 
 		HttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withKeepAliveTimeout(Duration.ofSeconds(10))
-				.withInspector(clientInspector)
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(10))
+			.withInspector(clientInspector)
+			.build();
 
 		assertEquals(0, client.getConnectionsKeepAliveCount());
 		assertEquals(0, clientInspector.getConnected().getTotalCount());
@@ -423,31 +423,31 @@ public final class AbstractHttpConnectionTest {
 		String url = "http://127.0.0.1:" + port;
 		ByteBuf value1 = ByteBuf.wrapForReading(HELLO_WORLD);
 		await(client.request(HttpRequest.get(url)
-						.withBodyStream(ChannelSuppliers.ofValue(value1))
-						.build())
-				.then(ensureHelloWorldAsyncFn())
-				.whenResult(() -> {
-					assertEquals(1, client.getConnectionsKeepAliveCount());
-					assertEquals(1, clientInspector.getConnected().getTotalCount());
+				.withBodyStream(ChannelSuppliers.ofValue(value1))
+				.build())
+			.then(ensureHelloWorldAsyncFn())
+			.whenResult(() -> {
+				assertEquals(1, client.getConnectionsKeepAliveCount());
+				assertEquals(1, clientInspector.getConnected().getTotalCount());
 
-					assertEquals(1, server.getConnectionsKeepAliveCount());
-					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
-				})
-				.then(() -> {
-					ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
-					return client.request(HttpRequest.get(url)
-							.withBodyStream(ChannelSuppliers.ofValue(value))
-							.build());
-				})
-				.then(ensureHelloWorldAsyncFn())
-				.whenResult(() -> {
-					assertEquals(1, client.getConnectionsKeepAliveCount());
-					assertEquals(1, clientInspector.getConnected().getTotalCount());
+				assertEquals(1, server.getConnectionsKeepAliveCount());
+				assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+			})
+			.then(() -> {
+				ByteBuf value = ByteBuf.wrapForReading(HELLO_WORLD);
+				return client.request(HttpRequest.get(url)
+					.withBodyStream(ChannelSuppliers.ofValue(value))
+					.build());
+			})
+			.then(ensureHelloWorldAsyncFn())
+			.whenResult(() -> {
+				assertEquals(1, client.getConnectionsKeepAliveCount());
+				assertEquals(1, clientInspector.getConnected().getTotalCount());
 
-					assertEquals(1, server.getConnectionsKeepAliveCount());
-					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
-				})
-				.whenComplete(server::close));
+				assertEquals(1, server.getConnectionsKeepAliveCount());
+				assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
+			})
+			.whenComplete(server::close));
 	}
 
 	@Test
@@ -456,29 +456,29 @@ public final class AbstractHttpConnectionTest {
 		Ref<Throwable> errorRef = new Ref<>();
 
 		NioReactor reactor = Eventloop.builder()
-				.withCurrentThread()
-				.withFatalErrorHandler((e, context) -> {
-					assertNull(errorRef.get());
-					errorRef.set(e);
-				})
-				.build();
+			.withCurrentThread()
+			.withFatalErrorHandler((e, context) -> {
+				assertNull(errorRef.get());
+				errorRef.set(e);
+			})
+			.build();
 
 		HttpServer server = HttpServer.builder(reactor,
-						request -> {
-							throw fatalError;
-						})
-				.withListenPort(port)
-				.build();
+				request -> {
+					throw fatalError;
+				})
+			.withListenPort(port)
+			.build();
 
 		server.listen();
 
 		IHttpClient client = HttpClient.builder(reactor)
-				.withKeepAliveTimeout(Duration.ofSeconds(10))
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(10))
+			.build();
 
 		int responseCode = await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.map(HttpResponse::getCode)
-				.whenComplete(server::close));
+			.map(HttpResponse::getCode)
+			.whenComplete(server::close));
 
 		assertEquals(500, responseCode);
 		assertSame(fatalError, errorRef.get());
@@ -486,8 +486,8 @@ public final class AbstractHttpConnectionTest {
 
 	private AsyncFunctionEx<HttpResponse, ByteBuf> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
-				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
-				.then(AbstractHttpConnectionTest::post);
+			.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
+			.then(AbstractHttpConnectionTest::post);
 	}
 
 	private void doTestEmptyRequestResponsePermutations(List<Initializer<HttpMessage.Builder<?, ?>>> initializers) {
@@ -497,12 +497,12 @@ public final class AbstractHttpConnectionTest {
 				try {
 					Initializer<HttpMessage.Builder<?, ?>> responseInitializer = initializers.get(j);
 					HttpServer server = HttpServer.builder(reactor,
-									$ -> HttpResponse.ok200()
-											.initialize(responseInitializer)
-											.toPromise())
-							.withListenPort(port)
-							.withAcceptOnce()
-							.build();
+							$ -> HttpResponse.ok200()
+								.initialize(responseInitializer)
+								.toPromise())
+						.withListenPort(port)
+						.withAcceptOnce()
+						.build();
 
 					try {
 						server.listen();
@@ -511,9 +511,9 @@ public final class AbstractHttpConnectionTest {
 					}
 
 					String responseText = await(client.request(
-									HttpRequest.post(url).initialize(initializers.get(i)).build())
-							.then(response -> response.loadBody())
-							.map(buf -> buf.getString(UTF_8)));
+							HttpRequest.post(url).initialize(initializers.get(i)).build())
+						.then(response -> response.loadBody())
+						.map(buf -> buf.getString(UTF_8)));
 
 					assertTrue(responseText.isEmpty());
 				} catch (AssertionError e) {
@@ -528,61 +528,61 @@ public final class AbstractHttpConnectionTest {
 	private void doTestHugeStreams(IHttpClient client, SocketSettings socketSettings, int size, Consumer<Builder<?, ?>> decorator) throws IOException {
 		ByteBuf expected = ByteBufPool.allocate(size);
 		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> request.loadBody()
-								.then(body -> {
-									HttpResponse.Builder httpResponseBuilder = HttpResponse.ok200()
-											.withBodyStream(request.takeBodyStream()
-													.transformWith(ChannelTransformers.chunkBytes(MemSize.of(1), MemSize.of(1))));
-									decorator.accept(httpResponseBuilder);
-									return httpResponseBuilder.toPromise();
-								}))
-				.withListenPort(port)
-				.withSocketSettings(socketSettings)
-				.build();
+				request -> request.loadBody()
+					.then(body -> {
+						HttpResponse.Builder httpResponseBuilder = HttpResponse.ok200()
+							.withBodyStream(request.takeBodyStream()
+								.transformWith(ChannelTransformers.chunkBytes(MemSize.of(1), MemSize.of(1))));
+						decorator.accept(httpResponseBuilder);
+						return httpResponseBuilder.toPromise();
+					}))
+			.withListenPort(port)
+			.withSocketSettings(socketSettings)
+			.build();
 		server.listen();
 
 		HttpRequest.Builder requestBuilder = HttpRequest.post("http://127.0.0.1:" + port)
-				.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
-					byte[] temp = new byte[1];
-					RANDOM.nextBytes(temp);
-					ByteBuf buf = ByteBuf.wrapForReading(temp);
-					expected.put(buf.slice());
-					return buf;
-				}).limit(size)));
+			.withBodyStream(ChannelSuppliers.ofStream(Stream.generate(() -> {
+				byte[] temp = new byte[1];
+				RANDOM.nextBytes(temp);
+				ByteBuf buf = ByteBuf.wrapForReading(temp);
+				expected.put(buf.slice());
+				return buf;
+			}).limit(size)));
 
 		decorator.accept(requestBuilder);
 
 		ByteBuf result = await(client.request(requestBuilder.build())
-				.then(response -> response.takeBodyStream()
-						.toCollector(ByteBufs.collector()))
-				.whenComplete(server::close));
+			.then(response -> response.takeBodyStream()
+				.toCollector(ByteBufs.collector()))
+			.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
 
 	private Promise<HttpResponse> checkRequest(String expectedHeader, int expectedConnectionCount, EventStats connectionCount) {
 		return client.request(HttpRequest.get(url).build())
-				.then((response, e) -> {
-					if (e != null) throw new AssertionError(e);
-					assertEquals(expectedHeader, response.getHeader(CONNECTION));
-					connectionCount.refresh(System.currentTimeMillis());
-					assertEquals(expectedConnectionCount, connectionCount.getTotalCount());
-					return Promise.of(response);
-				});
+			.then((response, e) -> {
+				if (e != null) throw new AssertionError(e);
+				assertEquals(expectedHeader, response.getHeader(CONNECTION));
+				connectionCount.refresh(System.currentTimeMillis());
+				assertEquals(expectedConnectionCount, connectionCount.getTotalCount());
+				return Promise.of(response);
+			});
 	}
 
 	@SuppressWarnings("SameParameterValue")
 	private void checkMaxKeepAlive(int maxKeepAlive, HttpServer server, EventStats connectionCount) {
 		await(Promises.sequence(
-						IntStream.range(0, maxKeepAlive - 1)
-								.mapToObj($ ->
-										() -> checkRequest("keep-alive", 1, connectionCount)
-												.then(AbstractHttpConnectionTest::post)
-												.toVoid()))
-				.then(() -> checkRequest("close", 1, connectionCount))
-				.then(AbstractHttpConnectionTest::post)
-				.then(() -> checkRequest("keep-alive", 2, connectionCount))
-				.then(AbstractHttpConnectionTest::post)
-				.whenComplete(server::close));
+				IntStream.range(0, maxKeepAlive - 1)
+					.mapToObj($ ->
+						() -> checkRequest("keep-alive", 1, connectionCount)
+							.then(AbstractHttpConnectionTest::post)
+							.toVoid()))
+			.then(() -> checkRequest("close", 1, connectionCount))
+			.then(AbstractHttpConnectionTest::post)
+			.then(() -> checkRequest("keep-alive", 2, connectionCount))
+			.then(AbstractHttpConnectionTest::post)
+			.whenComplete(server::close));
 	}
 
 	private static <T> Promise<T> post(T value) {

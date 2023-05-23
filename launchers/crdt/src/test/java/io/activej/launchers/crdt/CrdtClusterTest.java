@@ -82,10 +82,10 @@ public final class CrdtClusterTest {
 				@Provides
 				CrdtDescriptor<String, Integer> descriptor() {
 					return new CrdtDescriptor<>(
-							ignoringTimestamp(Integer::max),
-							new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-							String.class,
-							Integer.class);
+						ignoringTimestamp(Integer::max),
+						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+						String.class,
+						Integer.class);
 				}
 
 				@Provides
@@ -104,28 +104,28 @@ public final class CrdtClusterTest {
 	@Test
 	public void startFirst() throws Exception {
 		new TestNodeLauncher(Config.create()
-				.with("crdt.http.listenAddresses", "localhost:7000")
-				.with("crdt.server.listenAddresses", "localhost:8000")
-				.with("crdt.cluster.server.listenAddresses", "localhost:9000")
-				.with("crdt.local.path", "/tmp/TESTS/crdt")
-				.with("crdt.cluster.localPartitionId", "first")
-				.with("crdt.cluster.replicationCount", "2")
-				.with("crdt.cluster.partitions.second", "localhost:8001")
-				//				.with("crdt.cluster.partitions.file", "localhost:8002")
+			.with("crdt.http.listenAddresses", "localhost:7000")
+			.with("crdt.server.listenAddresses", "localhost:8000")
+			.with("crdt.cluster.server.listenAddresses", "localhost:9000")
+			.with("crdt.local.path", "/tmp/TESTS/crdt")
+			.with("crdt.cluster.localPartitionId", "first")
+			.with("crdt.cluster.replicationCount", "2")
+			.with("crdt.cluster.partitions.second", "localhost:8001")
+			//				.with("crdt.cluster.partitions.file", "localhost:8002")
 		).launch(new String[0]);
 	}
 
 	@Test
 	public void startSecond() throws Exception {
 		new TestNodeLauncher(Config.create()
-				.with("crdt.http.listenAddresses", "localhost:7001")
-				.with("crdt.server.listenAddresses", "localhost:8001")
-				.with("crdt.cluster.server.listenAddresses", "localhost:9001")
-				.with("crdt.local.path", "/tmp/TESTS/crdt")
-				.with("crdt.cluster.localPartitionId", "second")
-				.with("crdt.cluster.replicationCount", "2")
-				.with("crdt.cluster.partitions.first", "localhost:8000")
-				//				.with("crdt.cluster.partitions.file", "localhost:8002")
+			.with("crdt.http.listenAddresses", "localhost:7001")
+			.with("crdt.server.listenAddresses", "localhost:8001")
+			.with("crdt.cluster.server.listenAddresses", "localhost:9001")
+			.with("crdt.local.path", "/tmp/TESTS/crdt")
+			.with("crdt.cluster.localPartitionId", "second")
+			.with("crdt.cluster.replicationCount", "2")
+			.with("crdt.cluster.partitions.first", "localhost:8000")
+			//				.with("crdt.cluster.partitions.file", "localhost:8002")
 		).launch(new String[0]);
 	}
 
@@ -143,8 +143,8 @@ public final class CrdtClusterTest {
 					@Provides
 					Config config() {
 						return Config.create()
-								.with("crdt.localPath", "/tmp/TESTS/fileServer")
-								.with("crdt.server.listenAddresses", "localhost:8002");
+							.with("crdt.localPath", "/tmp/TESTS/fileServer")
+							.with("crdt.server.listenAddresses", "localhost:8002");
 					}
 				};
 			}
@@ -152,10 +152,10 @@ public final class CrdtClusterTest {
 			@Provides
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
-						ignoringTimestamp(Integer::max),
-						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-						String.class,
-						Integer.class);
+					ignoringTimestamp(Integer::max),
+					new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+					String.class,
+					Integer.class);
 			}
 		}.launch(new String[0]);
 	}
@@ -169,18 +169,18 @@ public final class CrdtClusterTest {
 		Type manifest = new TypeT<CrdtData<String, Integer>>() {}.getType();
 
 		Promises.sequence(IntStream.range(0, 1_000_000)
-						.mapToObj(i ->
-								() -> client.request(HttpRequest.builder(PUT, "http://127.0.0.1:7000")
-												.withBody(toJson(manifest, new CrdtData<>(
-														"value_" + i,
-														Reactor.getCurrentReactor().currentTimeMillis(),
-														i
-												)))
-												.build())
-										.toVoid()))
-				.whenException(Exception::printStackTrace)
-				.whenComplete(uploadStat.recordStats())
-				.whenComplete(assertCompleteFn($ -> System.out.println(uploadStat)));
+				.mapToObj(i ->
+					() -> client.request(HttpRequest.builder(PUT, "http://127.0.0.1:7000")
+							.withBody(toJson(manifest, new CrdtData<>(
+								"value_" + i,
+								Reactor.getCurrentReactor().currentTimeMillis(),
+								i
+							)))
+							.build())
+						.toVoid()))
+			.whenException(Exception::printStackTrace)
+			.whenComplete(uploadStat.recordStats())
+			.whenComplete(assertCompleteFn($ -> System.out.println(uploadStat)));
 
 		// RemoteCrdtClient<String, Integer> client = RemoteCrdtClient.create(eventloop, ADDRESS, CRDT_DATA_SERIALIZER);
 		//
@@ -197,13 +197,13 @@ public final class CrdtClusterTest {
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
 		StreamSuppliers.ofStream(IntStream.range(0, 1000000)
-						.mapToObj(i -> new CrdtData<>("value_" + i, Reactor.getCurrentReactor().currentTimeMillis(), i)))
-				.streamTo(StreamConsumers.ofPromise(client.upload()))
-				.whenComplete(uploadStat.recordStats())
-				.whenComplete(assertCompleteFn($ -> {
-					System.out.println(uploadStat);
-					System.out.println("finished");
-				}));
+				.mapToObj(i -> new CrdtData<>("value_" + i, Reactor.getCurrentReactor().currentTimeMillis(), i)))
+			.streamTo(StreamConsumers.ofPromise(client.upload()))
+			.whenComplete(uploadStat.recordStats())
+			.whenComplete(assertCompleteFn($ -> {
+				System.out.println(uploadStat);
+				System.out.println("finished");
+			}));
 	}
 
 	@Test

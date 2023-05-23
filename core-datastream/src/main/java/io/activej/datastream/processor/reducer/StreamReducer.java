@@ -180,8 +180,8 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 			}
 			output.reduce();
 			output.getAcknowledgement()
-					.whenResult(this::acknowledge)
-					.whenException(this::closeEx);
+				.whenResult(this::acknowledge)
+				.whenException(this::closeEx);
 		}
 
 		@Override

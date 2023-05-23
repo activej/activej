@@ -38,10 +38,10 @@ public final class FieldAccess implements Operand<FieldAccess> {
 		Class<?> objectClass = object.getClass();
 
 		FieldGetter fieldGetter = classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(FieldGetter.class, objectClass, fieldName),
-				() -> ClassGenerator.builder(FieldGetter.class)
-						.withMethod("getField", property(cast(arg(0), objectClass), fieldName))
-						.build()
+			ClassKey.of(FieldGetter.class, objectClass, fieldName),
+			() -> ClassGenerator.builder(FieldGetter.class)
+				.withMethod("getField", property(cast(arg(0), objectClass), fieldName))
+				.build()
 		);
 
 		return fieldGetter.getField(object, fieldName);
@@ -83,9 +83,9 @@ public final class FieldAccess implements Operand<FieldAccess> {
 	@Override
 	public FieldAccess materialize(List<Object> params) {
 		return new FieldAccess(
-				objectOperand.materialize(params),
-				fieldName,
-				classLoader
+			objectOperand.materialize(params),
+			fieldName,
+			classLoader
 		);
 	}
 
@@ -101,7 +101,7 @@ public final class FieldAccess implements Operand<FieldAccess> {
 	@Override
 	public String toString() {
 		return "FieldAccess[" +
-				"objectOperand=" + objectOperand + ", " +
-				"fieldName=" + fieldName + ']';
+			"objectOperand=" + objectOperand + ", " +
+			"fieldName=" + fieldName + ']';
 	}
 }

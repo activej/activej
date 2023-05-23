@@ -68,10 +68,10 @@ public class EffectiveConfigTest {
 	@Test
 	public void testCompoundConfig() {
 		config = EffectiveConfig.wrap(
-				Config.create()
-						.with("Server.socketSettings.backlog", "10")
-						.with("Server.socketSettings.receiveBufferSize", "10")
-						.with("Server.socketSettings.reuseAddress", "true")
+			Config.create()
+				.with("Server.socketSettings.backlog", "10")
+				.with("Server.socketSettings.receiveBufferSize", "10")
+				.with("Server.socketSettings.reuseAddress", "true")
 		);
 
 		ConfigConverter<ServerSocketSettings> converter = ofServerSocketSettings();
@@ -87,17 +87,17 @@ public class EffectiveConfigTest {
 	@Test
 	public void testWorksWithDefaultNulls() {
 		String expected = """
-				# a.a.a =\s
-				## a.a.b = value1
-				a.a.c = value2
-				## a.b.a = value3
-				""";
+			# a.a.a =\s
+			## a.a.b = value1
+			a.a.c = value2
+			## a.b.a = value3
+			""";
 
 		EffectiveConfig config = EffectiveConfig.wrap(
-				Config.create()
-						.with("a.a.b", "value1")
-						.with("a.a.c", "value2")
-						.with("a.b.a", "value3")
+			Config.create()
+				.with("a.a.b", "value1")
+				.with("a.a.c", "value2")
+				.with("a.b.a", "value3")
 		);
 
 		assertNull(config.get("a.a.a", null));

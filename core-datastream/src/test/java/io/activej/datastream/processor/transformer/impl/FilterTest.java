@@ -34,7 +34,7 @@ public class FilterTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(supplier.transformWith(filter)
-				.streamTo(consumer.transformWith(randomlySuspending())));
+			.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertEquals(List.of(1, 3, 5), consumer.getList());
 		assertEndOfStream(supplier);
@@ -50,9 +50,9 @@ public class FilterTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(source.transformWith(streamFilter)
-				.streamTo(consumer
-						.transformWith(decorate(promise ->
-								promise.then(item -> item == 4 ? Promise.ofException(exception) : Promise.of(item))))));
+			.streamTo(consumer
+				.transformWith(decorate(promise ->
+					promise.then(item -> item == 4 ? Promise.ofException(exception) : Promise.of(item))))));
 
 		assertSame(exception, e);
 
@@ -66,15 +66,15 @@ public class FilterTest {
 	public void testSupplierDisconnectWithError() {
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<Integer> source = StreamSuppliers.concat(
-				StreamSuppliers.ofIterable(List.of(1, 2, 3, 4, 5, 6)),
-				StreamSuppliers.closingWithError(exception));
+			StreamSuppliers.ofIterable(List.of(1, 2, 3, 4, 5, 6)),
+			StreamSuppliers.closingWithError(exception));
 
 		StreamTransformer<Integer, Integer> streamFilter = new Filter<>(input -> input % 2 != 1);
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		Exception e = awaitException(source.transformWith(streamFilter)
-				.streamTo(consumer.transformWith(randomlySuspending())));
+			.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertSame(exception, e);
 
@@ -90,8 +90,8 @@ public class FilterTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		StreamConsumer<Integer> transformedConsumer = consumer
-				.transformWith(filter)
-				.transformWith(randomlySuspending());
+			.transformWith(filter)
+			.transformWith(randomlySuspending());
 
 		await(supplier.streamTo(transformedConsumer));
 

@@ -68,8 +68,8 @@ public class CubeMySqlOTUplinkTest {
 		dataSource = dataSource("test.properties");
 
 		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodec.of(
-				jsonReader -> PrimaryKey.ofArray(jsonReader.readArray(StringConverter.READER, new String[0])),
-				(jsonWriter, primaryKey) -> jsonWriter.serialize((List) List.of(primaryKey.getArray()), StringConverter.WRITER)
+			jsonReader -> PrimaryKey.ofArray(jsonReader.readArray(StringConverter.READER, new String[0])),
+			(jsonWriter, primaryKey) -> jsonWriter.serialize((List) List.of(primaryKey.getArray()), StringConverter.WRITER)
 		);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofLookUp($ -> primaryKeyCodec);
@@ -146,10 +146,10 @@ public class CubeMySqlOTUplinkTest {
 	@Test
 	public void chunkRemovalSameCommit() {
 		List<LogDiff<CubeDiff>> diffs = List.of(
-				LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
-						"test", AggregationDiff.of(Set.of(chunk(10)))))),
-				LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
-						"test", AggregationDiff.of(Set.of(), Set.of(chunk(10))))))
+			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
+				"test", AggregationDiff.of(Set.of(chunk(10)))))),
+			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
+				"test", AggregationDiff.of(Set.of(), Set.of(chunk(10))))))
 		);
 		UplinkProtoCommit protoCommit = await(uplink.createProtoCommit(0L, diffs, 0));
 		await(uplink.push(protoCommit));
@@ -162,8 +162,8 @@ public class CubeMySqlOTUplinkTest {
 	@Test
 	public void chunkRemovalTwoCommits() {
 		List<LogDiff<CubeDiff>> diffs = List.of(
-				LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
-						"test", AggregationDiff.of(Set.of(chunk(10)))))));
+			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
+				"test", AggregationDiff.of(Set.of(chunk(10)))))));
 		UplinkProtoCommit protoCommit = await(uplink.createProtoCommit(0L, diffs, 0));
 		await(uplink.push(protoCommit));
 
@@ -174,11 +174,11 @@ public class CubeMySqlOTUplinkTest {
 
 		assertTrue(state.positions.isEmpty());
 		assertEquals(Map.of(
-				"test", Set.of(chunk(10))), state.chunks);
+			"test", Set.of(chunk(10))), state.chunks);
 
 		diffs = List.of(
-				LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
-						"test", AggregationDiff.of(Set.of(), Set.of(chunk(10)))))));
+			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
+				"test", AggregationDiff.of(Set.of(), Set.of(chunk(10)))))));
 		protoCommit = await(uplink.createProtoCommit(1L, diffs, 1));
 		await(uplink.push(protoCommit));
 
@@ -198,18 +198,18 @@ public class CubeMySqlOTUplinkTest {
 	@Test
 	public void pushSameParent() {
 		List<LogDiff<CubeDiff>> diffs1 = List.of(LogDiff.of(Map.of(
-						"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a1", 12), 100))),
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(Set.of(chunk(1), chunk(2), chunk(3))),
-						"aggr2", AggregationDiff.of(Set.of(chunk(4), chunk(5), chunk(6))))
-				)
+				"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a1", 12), 100))),
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(Set.of(chunk(1), chunk(2), chunk(3))),
+				"aggr2", AggregationDiff.of(Set.of(chunk(4), chunk(5), chunk(6))))
+			)
 		));
 
 		List<LogDiff<CubeDiff>> diffs2 = List.of(LogDiff.of(Map.of(
-						"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b1", 50), 200))),
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(Set.of(chunk(10), chunk(20), chunk(30))),
-						"aggr2", AggregationDiff.of(Set.of(chunk(40), chunk(50), chunk(60)))))
+				"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b1", 50), 200))),
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(Set.of(chunk(10), chunk(20), chunk(30))),
+				"aggr2", AggregationDiff.of(Set.of(chunk(40), chunk(50), chunk(60)))))
 		));
 
 		UplinkProtoCommit protoCommit1 = await(uplink.createProtoCommit(0L, diffs1, 0));
@@ -232,27 +232,27 @@ public class CubeMySqlOTUplinkTest {
 	@Test
 	public void pushSameParentWithConflict() {
 		List<LogDiff<CubeDiff>> initialDiffs = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(Set.of(chunk(2), chunk(3), chunk(30), chunk(100)))))
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(Set.of(chunk(2), chunk(3), chunk(30), chunk(100)))))
 		));
 
 		await(uplink.push(await(uplink.createProtoCommit(0L, initialDiffs, 0))));
 
 		List<LogDiff<CubeDiff>> diffs1 = List.of(LogDiff.of(Map.of(
-						"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a1", 12), 100))),
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(chunk(1)),
-								Set.of(chunk(2), chunk(3)))))
+				"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a1", 12), 100))),
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(chunk(1)),
+					Set.of(chunk(2), chunk(3)))))
 		));
 
 		List<LogDiff<CubeDiff>> diffs2 = List.of(LogDiff.of(Map.of(
-						"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b1", 50), 200))),
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(chunk(10)),
-								Set.of(chunk(2), chunk(30))))
-				)
+				"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b1", 50), 200))),
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(chunk(10)),
+					Set.of(chunk(2), chunk(30))))
+			)
 		));
 
 		UplinkProtoCommit protoCommit1 = await(uplink.createProtoCommit(1L, diffs1, 1));
@@ -285,49 +285,49 @@ public class CubeMySqlOTUplinkTest {
 	*/
 	public void fetchChunkDiffs() throws SQLException, MalformedDataException {
 		List<LogDiff<CubeDiff>> diffsRev1 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(chunk(1), chunk(2), chunk(3), chunk(4))
-						)))));
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(chunk(1), chunk(2), chunk(3), chunk(4))
+				)))));
 		await(uplink.push(await(uplink.createProtoCommit(0L, diffsRev1, 0))));
 
 		List<LogDiff<CubeDiff>> diffsRev2 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(),
-								Set.of(chunk(2))
-						)))));
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(),
+					Set.of(chunk(2))
+				)))));
 		await(uplink.push(await(uplink.createProtoCommit(1L, diffsRev2, 1))));
 
 		List<LogDiff<CubeDiff>> diffsRev3 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of("aggr1", AggregationDiff.of(
-						Set.of(chunk(5), chunk(6), chunk(7)),
-						Set.of(chunk(3))
-				)))));
+			CubeDiff.of(Map.of("aggr1", AggregationDiff.of(
+				Set.of(chunk(5), chunk(6), chunk(7)),
+				Set.of(chunk(3))
+			)))));
 		await(uplink.push(await(uplink.createProtoCommit(2L, diffsRev3, 2))));
 
 		List<LogDiff<CubeDiff>> diffsRev4 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(),
-								Set.of(chunk(6))
-						)))));
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(),
+					Set.of(chunk(6))
+				)))));
 		await(uplink.push(await(uplink.createProtoCommit(3L, diffsRev4, 3))));
 
 		List<LogDiff<CubeDiff>> diffsRev5 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(chunk(8), chunk(9)),
-								Set.of(chunk(4), chunk(7))
-						)))));
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(chunk(8), chunk(9)),
+					Set.of(chunk(4), chunk(7))
+				)))));
 		await(uplink.push(await(uplink.createProtoCommit(4L, diffsRev5, 4))));
 
 		List<LogDiff<CubeDiff>> diffsRev6 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggr1", AggregationDiff.of(
-								Set.of(),
-								Set.of(chunk(9))
-						)))));
+			CubeDiff.of(Map.of(
+				"aggr1", AggregationDiff.of(
+					Set.of(),
+					Set.of(chunk(9))
+				)))));
 		await(uplink.push(await(uplink.createProtoCommit(5L, diffsRev6, 5))));
 
 		try (Connection connection = dataSource.getConnection()) {
@@ -424,42 +424,42 @@ public class CubeMySqlOTUplinkTest {
 	*/
 	public void fetchPositionDiffs() throws SQLException {
 		List<LogDiff<CubeDiff>> diffsRev1 = List.of(LogDiff.of(Map.of(
-						"a", new LogPositionDiff(
-								LogPosition.initial(),
-								LogPosition.create(new LogFile("a", 0), 101)),
-						"b", new LogPositionDiff(
-								LogPosition.initial(),
-								LogPosition.create(new LogFile("b", 0), 102)), "c", new LogPositionDiff(
-								LogPosition.initial(),
-								LogPosition.create(new LogFile("c", 0), 103))),
-				List.of()
+				"a", new LogPositionDiff(
+					LogPosition.initial(),
+					LogPosition.create(new LogFile("a", 0), 101)),
+				"b", new LogPositionDiff(
+					LogPosition.initial(),
+					LogPosition.create(new LogFile("b", 0), 102)), "c", new LogPositionDiff(
+					LogPosition.initial(),
+					LogPosition.create(new LogFile("c", 0), 103))),
+			List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(0L, diffsRev1, 0))));
 
 		List<LogDiff<CubeDiff>> diffsRev2 = List.of(LogDiff.of(Map.of(
-						"a", new LogPositionDiff(
-								LogPosition.create(new LogFile("a", 0), 101),
-								LogPosition.create(new LogFile("a", 0), 201)),
-						"b", new LogPositionDiff(
-								LogPosition.create(new LogFile("b", 0), 102),
-								LogPosition.create(new LogFile("b", 0), 202))),
-				List.of()
+				"a", new LogPositionDiff(
+					LogPosition.create(new LogFile("a", 0), 101),
+					LogPosition.create(new LogFile("a", 0), 201)),
+				"b", new LogPositionDiff(
+					LogPosition.create(new LogFile("b", 0), 102),
+					LogPosition.create(new LogFile("b", 0), 202))),
+			List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(1L, diffsRev2, 1))));
 
 		List<LogDiff<CubeDiff>> diffsRev3 = List.of(LogDiff.of(Map.of(
-						"a", new LogPositionDiff(
-								LogPosition.create(new LogFile("a", 0), 201),
-								LogPosition.create(new LogFile("a", 0), 301))),
-				List.of()
+				"a", new LogPositionDiff(
+					LogPosition.create(new LogFile("a", 0), 201),
+					LogPosition.create(new LogFile("a", 0), 301))),
+			List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(2L, diffsRev3, 2))));
 
 		List<LogDiff<CubeDiff>> diffsRev4 = List.of(LogDiff.of(Map.of(
-						"a", new LogPositionDiff(
-								LogPosition.create(new LogFile("a", 0), 301),
-								LogPosition.create(new LogFile("a", 0), 401))),
-				List.of()
+				"a", new LogPositionDiff(
+					LogPosition.create(new LogFile("a", 0), 301),
+					LogPosition.create(new LogFile("a", 0), 401))),
+			List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(3L, diffsRev4, 3))));
 
@@ -467,70 +467,70 @@ public class CubeMySqlOTUplinkTest {
 			{
 				Map<String, LogPositionDiff> diff0to1 = uplink.fetchPositionDiffs(connection, 0, 1);
 				assertPositionDiff(Map.of(
-								"a", diff(0, 101),
-								"b", diff(0, 102),
-								"c", diff(0, 103)),
-						diff0to1);
+						"a", diff(0, 101),
+						"b", diff(0, 102),
+						"c", diff(0, 103)),
+					diff0to1);
 
 				Map<String, LogPositionDiff> diff0to2 = uplink.fetchPositionDiffs(connection, 0, 2);
 				assertPositionDiff(Map.of(
-								"a", diff(0, 201),
-								"b", diff(0, 202),
-								"c", diff(0, 103)),
-						diff0to2);
+						"a", diff(0, 201),
+						"b", diff(0, 202),
+						"c", diff(0, 103)),
+					diff0to2);
 
 				Map<String, LogPositionDiff> diff0to3 = uplink.fetchPositionDiffs(connection, 0, 3);
 				assertPositionDiff(Map.of(
-								"a", diff(0, 301),
-								"b", diff(0, 202),
-								"c", diff(0, 103)),
-						diff0to3);
+						"a", diff(0, 301),
+						"b", diff(0, 202),
+						"c", diff(0, 103)),
+					diff0to3);
 
 				Map<String, LogPositionDiff> diff0to4 = uplink.fetchPositionDiffs(connection, 0, 4);
 				assertPositionDiff(Map.of(
-								"a", diff(0, 401),
-								"b", diff(0, 202),
-								"c", diff(0, 103)),
-						diff0to4);
+						"a", diff(0, 401),
+						"b", diff(0, 202),
+						"c", diff(0, 103)),
+					diff0to4);
 			}
 
 			{
 				Map<String, LogPositionDiff> diff1to2 = uplink.fetchPositionDiffs(connection, 1, 2);
 				assertPositionDiff(Map.of(
-								"a", diff(101, 201),
-								"b", diff(102, 202)),
-						diff1to2);
+						"a", diff(101, 201),
+						"b", diff(102, 202)),
+					diff1to2);
 
 				Map<String, LogPositionDiff> diff1to3 = uplink.fetchPositionDiffs(connection, 1, 3);
 				assertPositionDiff(Map.of(
-								"a", diff(101, 301),
-								"b", diff(102, 202)),
-						diff1to3);
+						"a", diff(101, 301),
+						"b", diff(102, 202)),
+					diff1to3);
 
 				Map<String, LogPositionDiff> diff1to4 = uplink.fetchPositionDiffs(connection, 1, 4);
 				assertPositionDiff(Map.of(
-								"a", diff(101, 401),
-								"b", diff(102, 202)),
-						diff1to4);
+						"a", diff(101, 401),
+						"b", diff(102, 202)),
+					diff1to4);
 			}
 
 			{
 				Map<String, LogPositionDiff> diff2to3 = uplink.fetchPositionDiffs(connection, 2, 3);
 				assertPositionDiff(Map.of(
-								"a", diff(201, 301)),
-						diff2to3);
+						"a", diff(201, 301)),
+					diff2to3);
 
 				Map<String, LogPositionDiff> diff2to4 = uplink.fetchPositionDiffs(connection, 2, 4);
 				assertPositionDiff(Map.of(
-								"a", diff(201, 401)),
-						diff2to4);
+						"a", diff(201, 401)),
+					diff2to4);
 			}
 
 			{
 				Map<String, LogPositionDiff> diff3to4 = uplink.fetchPositionDiffs(connection, 3, 4);
 				assertPositionDiff(Map.of(
-								"a", diff(301, 401)),
-						diff3to4);
+						"a", diff(301, 401)),
+					diff3to4);
 			}
 		}
 	}
@@ -538,8 +538,8 @@ public class CubeMySqlOTUplinkTest {
 	@Test
 	public void deleteAlreadyCleanedUpChunk() {
 		List<LogDiff<CubeDiff>> diffs = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggregation", AggregationDiff.of(Set.of(), Set.of(chunk(100)))))
+			CubeDiff.of(Map.of(
+				"aggregation", AggregationDiff.of(Set.of(), Set.of(chunk(100)))))
 		));
 		Throwable exception = awaitException(uplink.push(await(uplink.createProtoCommit(0L, diffs, 0))));
 
@@ -550,27 +550,27 @@ public class CubeMySqlOTUplinkTest {
 	@Test
 	public void fetchStateFarAhead() throws SQLException {
 		List<LogDiff<CubeDiff>> diffs1 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggregation", AggregationDiff.of(Set.of(chunk(1), chunk(2)))))
+			CubeDiff.of(Map.of(
+				"aggregation", AggregationDiff.of(Set.of(chunk(1), chunk(2)))))
 		));
 		await(uplink.push(await(uplink.createProtoCommit(0L, diffs1, 0))));
 
 		List<LogDiff<CubeDiff>> diffs2 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggregation", AggregationDiff.of(Set.of(chunk(3), chunk(4)))))
+			CubeDiff.of(Map.of(
+				"aggregation", AggregationDiff.of(Set.of(chunk(3), chunk(4)))))
 		));
 		await(uplink.push(await(uplink.createProtoCommit(1L, diffs2, 1))));
 
 		List<LogDiff<CubeDiff>> diffs3 = List.of(LogDiff.forCurrentPosition(
-				CubeDiff.of(Map.of(
-						"aggregation", AggregationDiff.of(Set.of(chunk(5), chunk(6)))))
+			CubeDiff.of(Map.of(
+				"aggregation", AggregationDiff.of(Set.of(chunk(5), chunk(6)))))
 		));
 		await(uplink.push(await(uplink.createProtoCommit(2L, diffs3, 2))));
 
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
 				statement.execute("DELETE FROM " + CubeMySqlOTUplink.REVISION_TABLE +
-						" WHERE `revision` IN (0,1,2)");
+					" WHERE `revision` IN (0,1,2)");
 			}
 		}
 

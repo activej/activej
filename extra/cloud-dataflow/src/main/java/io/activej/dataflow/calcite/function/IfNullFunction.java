@@ -16,7 +16,7 @@ import static org.apache.calcite.sql.type.OperandTypes.family;
 public final class IfNullFunction extends ProjectionFunction {
 	public IfNullFunction() {
 		super("IFNULL", SqlKind.OTHER_FUNCTION, opBinding -> opBinding.getOperandType(1),
-				InferTypes.ANY_NULLABLE, family(SqlTypeFamily.ANY, SqlTypeFamily.ANY), SqlFunctionCategory.USER_DEFINED_FUNCTION);
+			InferTypes.ANY_NULLABLE, family(SqlTypeFamily.ANY, SqlTypeFamily.ANY), SqlFunctionCategory.USER_DEFINED_FUNCTION);
 	}
 
 	@Override

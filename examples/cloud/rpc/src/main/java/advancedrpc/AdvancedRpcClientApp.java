@@ -24,18 +24,18 @@ public class AdvancedRpcClientApp extends Launcher {
 	@Override
 	protected Module getModule() {
 		return ModuleBuilder.create()
-				.install(ServiceGraphModule.create())
-				.install(AdvancedRpcClientModule.create())
-				.build();
+			.install(ServiceGraphModule.create())
+			.install(AdvancedRpcClientModule.create())
+			.build();
 	}
 
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
 		System.out.println();
 		CompletableFuture<Void> future = reactor.submit(() ->
-				Promises.all(range(0, 100).mapToObj(i ->
-						client.sendRequest(i, 1000)
-								.whenResult(res -> System.out.println("Answer : " + res)))));
+			Promises.all(range(0, 100).mapToObj(i ->
+				client.sendRequest(i, 1000)
+					.whenResult(res -> System.out.println("Answer : " + res)))));
 		future.get();
 		System.out.println();
 	}

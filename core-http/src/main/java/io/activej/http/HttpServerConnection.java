@@ -100,8 +100,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Reactor reactor, ITcpSocket socket, InetAddress remoteAddress,
-			HttpServer server, AsyncServlet servlet) {
+	HttpServerConnection(
+		Reactor reactor, ITcpSocket socket, InetAddress remoteAddress, HttpServer server, AsyncServlet servlet
+	) {
 		super(reactor, socket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
 		this.server = server;
@@ -165,7 +166,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		this.writeBuf = null;
 
 		socket.write(writeBuf)
-				.whenComplete(this::close);
+			.whenComplete(this::close);
 	}
 
 	/**
@@ -182,7 +183,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (method == null) {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP method");
 			throw new MalformedHttpException("Unknown HTTP method. First line: " +
-					new String(line, 0, limit, ISO_8859_1));
+				new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int urlStart = pos + method.size + 1;
@@ -203,7 +204,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		HttpVersion version;
 		if (p + 7 < limit
-				&& line[p + 0] == 'H' && line[p + 1] == 'T' && line[p + 2] == 'T' && line[p + 3] == 'P' && line[p + 4] == '/' && line[p + 5] == '1' && line[p + 6] == '.') {
+			&& line[p + 0] == 'H' && line[p + 1] == 'T' && line[p + 2] == 'T' && line[p + 3] == 'P' && line[p + 4] == '/' && line[p + 5] == '1' && line[p + 6] == '.') {
 			if (line[p + 7] == '1') {
 				flags |= KEEP_ALIVE; // keep-alive for HTTP/1.1
 				version = HTTP_1_1;
@@ -212,12 +213,12 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			} else {
 				if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP version");
 				throw new MalformedHttpException("Unknown HTTP version. First line: " +
-						new String(line, 0, limit, ISO_8859_1));
+					new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unsupported HTTP version");
 			throw new MalformedHttpException(
-					"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
+				"Unsupported HTTP version. First line: " + new String(line, 0, limit, ISO_8859_1));
 		}
 
 		request = new HttpRequest(version, method, UrlParser.parse(line, urlStart, urlEnd), this);
@@ -272,7 +273,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (!isWebSocket || httpResponse.getCode() != 101) {
 			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
 			if (server.keepAliveTimeoutMillis == 0 ||
-					numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
+				numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
 				connectionHeader = CONNECTION_CLOSE_HEADER;
 			}
 			httpResponse.headers.add(CONNECTION, connectionHeader);
@@ -335,8 +336,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private ByteBuf ensureWriteBuffer(int messageSize) {
 		return writeBuf == null ?
-				ByteBufPool.allocate(Math.max(messageSize, INITIAL_WRITE_BUFFER_SIZE)) :
-				ByteBufPool.ensureWriteRemaining(writeBuf, messageSize);
+			ByteBufPool.allocate(Math.max(messageSize, INITIAL_WRITE_BUFFER_SIZE)) :
+			ByteBufPool.ensureWriteRemaining(writeBuf, messageSize);
 	}
 
 	@Override
@@ -415,7 +416,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			ChannelSupplier<ByteBuf> ofReadBufSupplier = ChannelSuppliers.ofValue(detachReadBuf());
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSuppliers.ofSocket(socket);
 			request.bodyStream = sanitize(concat(ofReadBufSupplier, ofSocketSupplier)
-					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
+				.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
 			request.setProtocol(socket instanceof SslTcpSocket ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;
 			return true;
@@ -488,9 +489,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	@Override
 	public String toString() {
 		return "HttpServerConnection{" +
-				"pool=" + getCurrentPool() +
-				", remoteAddress=" + remoteAddress +
-				',' + super.toString() +
-				'}';
+			"pool=" + getCurrentPool() +
+			", remoteAddress=" + remoteAddress +
+			',' + super.toString() +
+			'}';
 	}
 }

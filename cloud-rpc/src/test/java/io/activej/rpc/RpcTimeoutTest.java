@@ -55,19 +55,19 @@ public final class RpcTimeoutTest {
 		List<Class<?>> messageTypes = List.of(String.class);
 
 		server = RpcServer.builder(reactor)
-				.withMessageTypes(messageTypes)
-				.withHandler(String.class,
-						request -> Promise.ofBlocking(executor, () -> {
-							Thread.sleep(SERVER_DELAY);
-							return request;
-						}))
-				.withListenPort(port)
-				.build();
+			.withMessageTypes(messageTypes)
+			.withHandler(String.class,
+				request -> Promise.ofBlocking(executor, () -> {
+					Thread.sleep(SERVER_DELAY);
+					return request;
+				}))
+			.withListenPort(port)
+			.build();
 
 		client = RpcClient.builder(reactor)
-				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(port)))
-				.build();
+			.withMessageTypes(messageTypes)
+			.withStrategy(server(new InetSocketAddress(port)))
+			.build();
 
 		server.listen();
 	}
@@ -75,10 +75,10 @@ public final class RpcTimeoutTest {
 	@Test
 	public void noTimeout() {
 		String res = (String) await(client.start()
-				.then(() -> client.sendRequest(DATA))
-				.then(response -> client.stop()
-						.then(server::close)
-						.map($ -> response)));
+			.then(() -> client.sendRequest(DATA))
+			.then(response -> client.stop()
+				.then(server::close)
+				.map($ -> response)));
 
 		assertEquals(DATA, res);
 	}
@@ -87,10 +87,10 @@ public final class RpcTimeoutTest {
 	public void shouldNotTimeout() {
 		int timeout = SERVER_DELAY * 2;
 		String res = (String) await(client.start()
-				.then(() -> client.sendRequest(DATA, timeout))
-				.then(response -> client.stop()
-						.then(server::close)
-						.map($ -> response)));
+			.then(() -> client.sendRequest(DATA, timeout))
+			.then(response -> client.stop()
+				.then(server::close)
+				.map($ -> response)));
 
 		assertEquals(DATA, res);
 	}
@@ -100,10 +100,10 @@ public final class RpcTimeoutTest {
 		int timeout = SERVER_DELAY / 2;
 		//noinspection ConstantConditions
 		Exception exception = awaitException(client.start()
-				.then(() -> client.sendRequest(DATA, timeout))
-				.then(($, e) -> client.stop()
-						.then(server::close)
-						.then($2 -> Promise.ofException(e))));
+			.then(() -> client.sendRequest(DATA, timeout))
+			.then(($, e) -> client.stop()
+				.then(server::close)
+				.then($2 -> Promise.ofException(e))));
 
 		assertThat(exception, instanceOf(AsyncTimeoutException.class));
 	}

@@ -117,32 +117,32 @@ public final class Task {
 	public Promise<Void> execute() {
 		started = Instant.now();
 		return Promises.all(suppliers.entrySet().stream().map(supplierEntry -> {
-					StreamId streamId = supplierEntry.getKey();
-					try {
-						StreamSupplier<Object> supplier = (StreamSupplier<Object>) supplierEntry.getValue();
-						StreamConsumer<Object> consumer = (StreamConsumer<Object>) consumers.get(streamId);
-						checkNotNull(supplier, "Supplier not found for %s, consumer %s", streamId, consumer);
-						checkNotNull(consumer, "Consumer not found for %s, supplier %s", streamId, supplier);
+				StreamId streamId = supplierEntry.getKey();
+				try {
+					StreamSupplier<Object> supplier = (StreamSupplier<Object>) supplierEntry.getValue();
+					StreamConsumer<Object> consumer = (StreamConsumer<Object>) consumers.get(streamId);
+					checkNotNull(supplier, "Supplier not found for %s, consumer %s", streamId, consumer);
+					checkNotNull(consumer, "Consumer not found for %s, supplier %s", streamId, supplier);
 
-						return supplier.streamTo(consumer);
-					} catch (Exception e) {
-						return Promise.ofException(new DataflowException(e));
-					}
-				}).collect(toList()))
-				.whenComplete(($, e) -> {
-					finished = Instant.now();
-					if (e != null && !(e instanceof DataflowException)) {
-						error = new DataflowException(e);
-					} else {
-						error = e;
-					}
-					status = e == null ?
-							TaskStatus.COMPLETED :
-							e instanceof AsyncCloseException ?
-									TaskStatus.CANCELED :
-									TaskStatus.FAILED;
-					executionPromise.set($, e);
-				});
+					return supplier.streamTo(consumer);
+				} catch (Exception e) {
+					return Promise.ofException(new DataflowException(e));
+				}
+			}).collect(toList()))
+			.whenComplete(($, e) -> {
+				finished = Instant.now();
+				if (e != null && !(e instanceof DataflowException)) {
+					error = new DataflowException(e);
+				} else {
+					error = e;
+				}
+				status = e == null ?
+					TaskStatus.COMPLETED :
+					e instanceof AsyncCloseException ?
+						TaskStatus.CANCELED :
+						TaskStatus.FAILED;
+				executionPromise.set($, e);
+			});
 	}
 
 	public void cancel() {
@@ -243,15 +243,15 @@ public final class Task {
 		ids.forEach((node, id) -> {
 			String name = node.getClass().getSimpleName();
 			sb.append("  " + id)
-					.append(" [label=\"" + name)
-					.append("\" id=" + id);
+				.append(" [label=\"" + name)
+				.append("\" id=" + id);
 			Exception error = node.getError();
 			if (error != null) {
 				StringWriter str = new StringWriter();
 				error.printStackTrace(new PrintWriter(str));
 				sb.append(" color=red tooltip=\"")
-						.append(str.toString().replace("\"", "\\\""))
-						.append("\"");
+					.append(str.toString().replace("\"", "\\\""))
+					.append("\"");
 			} else if (node.getFinished() != null) {
 				sb.append(" color=blue");
 			}

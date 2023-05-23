@@ -23,13 +23,13 @@ public class WorkerPoolTest {
 	public void setUp() {
 		RefInt counter = new RefInt(0);
 		Injector injector = Injector.of(
-				new AbstractModule() {
-					@Override
-					protected void configure() {
-						bind(String.class).in(Worker.class).to(() -> "String: " + counter.value++);
-					}
-				},
-				WorkerPoolModule.create());
+			new AbstractModule() {
+				@Override
+				protected void configure() {
+					bind(String.class).in(Worker.class).to(() -> "String: " + counter.value++);
+				}
+			},
+			WorkerPoolModule.create());
 
 		pools = injector.getInstance(WorkerPools.class);
 		first = pools.createPool(4);

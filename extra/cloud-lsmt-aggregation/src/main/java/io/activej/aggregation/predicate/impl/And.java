@@ -74,10 +74,10 @@ public final class And implements AggregationPredicate {
 		} while (simplified);
 
 		return simplifiedPredicates.isEmpty() ?
-				alwaysTrue() :
-				simplifiedPredicates.size() == 1 ?
-						first(simplifiedPredicates) :
-						and(new ArrayList<>(simplifiedPredicates));
+			alwaysTrue() :
+			simplifiedPredicates.size() == 1 ?
+				first(simplifiedPredicates) :
+				and(new ArrayList<>(simplifiedPredicates));
 	}
 
 	@SuppressWarnings("unchecked")

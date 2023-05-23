@@ -84,12 +84,12 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 		SettablePromise<Void> waitingForBuffer = new SettablePromise<>();
 		this.waitingForBuffer = waitingForBuffer;
 		return bufferFactory.get()
-				.then(buffer -> {
-					this.buffer = buffer;
-					waitingForBuffer.set(null);
-					this.waitingForBuffer = null;
-					return secondaryPut(item);
-				});
+			.then(buffer -> {
+				this.buffer = buffer;
+				waitingForBuffer.set(null);
+				this.waitingForBuffer = null;
+				return secondaryPut(item);
+			});
 	}
 
 	private Promise<T> doTake() {
@@ -110,16 +110,16 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 	private Promise<Void> secondaryPut(@Nullable T item) {
 		assert buffer != null;
 		return buffer.put(item)
-				.then(Promise::of,
-						e -> {
-							if (!(e instanceof AsyncCloseException)) {
-								return Promise.ofException(e);
-							}
-							// buffer was already closed for whatever reason,
-							// retry the whole thing (may cause loops, but should not)
-							buffer = null;
-							return doPut(item);
-						});
+			.then(Promise::of,
+				e -> {
+					if (!(e instanceof AsyncCloseException)) {
+						return Promise.ofException(e);
+					}
+					// buffer was already closed for whatever reason,
+					// retry the whole thing (may cause loops, but should not)
+					buffer = null;
+					return doPut(item);
+				});
 	}
 
 	private Promise<T> secondaryTake() {
@@ -127,22 +127,22 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 			return doTake();
 		}
 		return buffer.take()
-				.then((item, e) -> {
-					if (e != null) {
-						if (!(e instanceof AsyncCloseException)) {
-							return Promise.ofException(e);
-						}
-					} else if (item != null) {
-						return Promise.of(item);
-					} else {
-						// here item was null and we had no exception
-						buffer.close();
+			.then((item, e) -> {
+				if (e != null) {
+					if (!(e instanceof AsyncCloseException)) {
+						return Promise.ofException(e);
 					}
-					// here either we had a close exception or item was null,
-					// so we retry the whole thing (same as in secondaryPut)
-					buffer = null;
-					return doTake();
-				});
+				} else if (item != null) {
+					return Promise.of(item);
+				} else {
+					// here item was null and we had no exception
+					buffer.close();
+				}
+				// here either we had a close exception or item was null,
+				// so we retry the whole thing (same as in secondaryPut)
+				buffer = null;
+				return doTake();
+			});
 	}
 
 	@Override

@@ -48,7 +48,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * exceptionally.
  */
 public abstract class WebSocketServlet extends AbstractReactive
-		implements AsyncServlet {
+	implements AsyncServlet {
 	private static final boolean CHECKS = Checks.isEnabled(WebSocketServlet.class);
 
 	protected WebSocketServlet(Reactor reactor) {
@@ -66,61 +66,61 @@ public abstract class WebSocketServlet extends AbstractReactive
 	public final Promise<HttpResponse> serve(HttpRequest request) {
 		if (CHECKS) checkInReactorThread(this);
 		return validateHeaders(request)
-				.<String>thenCallback(cb -> processAnswer(request, cb))
-				.then(answer -> {
-					ChannelSupplier<ByteBuf> rawStream = request.takeBodyStream();
-					assert rawStream != null;
+			.<String>thenCallback(cb -> processAnswer(request, cb))
+			.then(answer -> {
+				ChannelSupplier<ByteBuf> rawStream = request.takeBodyStream();
+				assert rawStream != null;
 
-					return onRequest(request)
-							.whenException(e -> recycleStream(rawStream))
-							.map(response -> {
-								if (response.getCode() != 101) {
-									recycleStream(rawStream);
-									return response;
-								}
+				return onRequest(request)
+					.whenException(e -> recycleStream(rawStream))
+					.map(response -> {
+						if (response.getCode() != 101) {
+							recycleStream(rawStream);
+							return response;
+						}
 
-								checkState(response.body == null && response.bodyStream == null, "Illegal body or stream");
+						checkState(response.body == null && response.bodyStream == null, "Illegal body or stream");
 
-								ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
+						ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 
-								ChannelSupplier<ByteBuf> bodySupplier = buffer.getSupplier();
-								response.bodyStream = bodySupplier;
-								response.headers.add(UPGRADE, HttpHeaderValue.of("Websocket"));
-								response.headers.add(CONNECTION, HttpHeaderValue.of("Upgrade"));
-								response.headers.add(SEC_WEBSOCKET_ACCEPT, HttpHeaderValue.of(answer));
+						ChannelSupplier<ByteBuf> bodySupplier = buffer.getSupplier();
+						response.bodyStream = bodySupplier;
+						response.headers.add(UPGRADE, HttpHeaderValue.of("Websocket"));
+						response.headers.add(CONNECTION, HttpHeaderValue.of("Upgrade"));
+						response.headers.add(SEC_WEBSOCKET_ACCEPT, HttpHeaderValue.of(answer));
 
-								WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(false);
-								WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(
-										request.maxBodySize,
-										encoder::sendPong,
-										ByteBuf::recycle,
-										true);
+						WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(false);
+						WebSocketBufsToFrames decoder = WebSocketBufsToFrames.create(
+							request.maxBodySize,
+							encoder::sendPong,
+							ByteBuf::recycle,
+							true);
 
-								bindWebSocketTransformers(rawStream, encoder, decoder);
+						bindWebSocketTransformers(rawStream, encoder, decoder);
 
-								onWebSocket(new WebSocket(
-										request,
-										response,
-										rawStream.transformWith(decoder),
-										buffer.getConsumer().transformWith(encoder),
-										decoder::onProtocolError,
-										request.maxBodySize
-								));
+						onWebSocket(new WebSocket(
+							request,
+							response,
+							rawStream.transformWith(decoder),
+							buffer.getConsumer().transformWith(encoder),
+							decoder::onProtocolError,
+							request.maxBodySize
+						));
 
-								return response;
-							});
-				});
+						return response;
+					});
+			});
 	}
 
 	private static void bindWebSocketTransformers(ChannelSupplier<ByteBuf> rawStream, WebSocketFramesToBufs encoder, WebSocketBufsToFrames decoder) {
 		encoder.getCloseSentPromise()
-				.then(decoder::getCloseReceivedPromise)
-				.whenResult(rawStream::closeEx)
-				.whenException(rawStream::closeEx);
+			.then(decoder::getCloseReceivedPromise)
+			.whenResult(rawStream::closeEx)
+			.whenException(rawStream::closeEx);
 
 		decoder.getProcessCompletion()
-				.whenResult(() -> encoder.sendCloseFrame(REGULAR_CLOSE))
-				.whenException(encoder::closeEx);
+			.whenResult(() -> encoder.sendCloseFrame(REGULAR_CLOSE))
+			.whenException(encoder::closeEx);
 	}
 
 	private static boolean isUpgradeHeaderMissing(HttpMessage message) {
@@ -137,7 +137,7 @@ public abstract class WebSocketServlet extends AbstractReactive
 
 	private static Promise<Void> validateHeaders(HttpRequest request) {
 		if (isUpgradeHeaderMissing(request) ||
-				!Arrays.equals(WEB_SOCKET_VERSION, request.getHeader(SEC_WEBSOCKET_VERSION, ByteBuf::getArray))) {
+			!Arrays.equals(WEB_SOCKET_VERSION, request.getHeader(SEC_WEBSOCKET_VERSION, ByteBuf::getArray))) {
 			return Promise.ofException(NOT_A_WEB_SOCKET_REQUEST);
 		}
 		return Promise.complete();

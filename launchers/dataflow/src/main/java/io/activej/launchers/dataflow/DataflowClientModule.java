@@ -49,7 +49,7 @@ public final class DataflowClientModule extends AbstractModule {
 
 	@Provides
 	DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
-			BinarySerializerLocator serializers
+		BinarySerializerLocator serializers
 	) {
 		return DataflowClient.create(reactor, codec, serializers);
 	}
@@ -62,7 +62,7 @@ public final class DataflowClientModule extends AbstractModule {
 	@Provides
 	List<Partition> partitions(Config config) {
 		return config.get(ofList(ofInetSocketAddress()), "dataflow.partitions").stream()
-				.map(Partition::new)
-				.toList();
+			.map(Partition::new)
+			.toList();
 	}
 }

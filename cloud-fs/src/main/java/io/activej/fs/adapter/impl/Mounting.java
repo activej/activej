@@ -88,7 +88,7 @@ public final class Mounting implements IFileSystem {
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return Promises.toList(Stream.concat(Stream.of(root), mounts.values().stream()).map(f -> f.list(glob)))
-				.map(listOfMaps -> FileMetadata.flatten(listOfMaps.stream()));
+			.map(listOfMaps -> FileMetadata.flatten(listOfMaps.stream()));
 	}
 
 	@Override
@@ -100,12 +100,12 @@ public final class Mounting implements IFileSystem {
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-						.collect(groupingBy(this::findMount, toSet()))
-						.entrySet().stream()
-						.map(entry -> entry.getKey()
-								.infoAll(entry.getValue())
-								.whenResult(result::putAll)))
-				.map($ -> result);
+				.collect(groupingBy(this::findMount, toSet()))
+				.entrySet().stream()
+				.map(entry -> entry.getKey()
+					.infoAll(entry.getValue())
+					.whenResult(result::putAll)))
+			.map($ -> result);
 	}
 
 	@Override
@@ -142,9 +142,9 @@ public final class Mounting implements IFileSystem {
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		return Promises.all(toDelete.stream()
-				.collect(groupingBy(this::findMount, IdentityHashMap::new, toSet()))
-				.entrySet().stream()
-				.map(entry -> entry.getKey().deleteAll(entry.getValue())));
+			.collect(groupingBy(this::findMount, IdentityHashMap::new, toSet()))
+			.entrySet().stream()
+			.map(entry -> entry.getKey().deleteAll(entry.getValue())));
 	}
 
 	private Promise<Void> transfer(String source, String target, BiFunction<String, String, AsyncConsumer<IFileSystem>> action, boolean deleteSource) {
@@ -154,8 +154,8 @@ public final class Mounting implements IFileSystem {
 			return action.apply(source, target).accept(first);
 		}
 		return first.download(source)
-				.then(supplier -> supplier.streamTo(second.upload(target)))
-				.then(() -> deleteSource ? first.delete(source) : Promise.complete());
+			.then(supplier -> supplier.streamTo(second.upload(target)))
+			.then(() -> deleteSource ? first.delete(source) : Promise.complete());
 	}
 
 	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncBiConsumer<IFileSystem, Map<String, String>> action, boolean deleteSource) {
@@ -170,14 +170,14 @@ public final class Mounting implements IFileSystem {
 			IFileSystem second = findMount(target);
 			if (first == second) {
 				groupedBySameFileSystems
-						.computeIfAbsent(first, $ -> new HashMap<>())
-						.put(source, target);
+					.computeIfAbsent(first, $ -> new HashMap<>())
+					.put(source, target);
 			} else {
 				movePromises.add(() -> first.download(source)
-						.then(supplier -> supplier.streamTo(second.upload(target)))
-						.then(() -> deleteSource ? first.delete(target) : Promise.complete())
-						.toTry()
-						.map(aTry -> new Tuple2<>(source, aTry)));
+					.then(supplier -> supplier.streamTo(second.upload(target)))
+					.then(() -> deleteSource ? first.delete(target) : Promise.complete())
+					.toTry()
+					.map(aTry -> new Tuple2<>(source, aTry)));
 			}
 		}
 		for (Map.Entry<IFileSystem, Map<String, String>> entry : groupedBySameFileSystems.entrySet()) {
@@ -185,27 +185,27 @@ public final class Mounting implements IFileSystem {
 		}
 
 		return Promises.toList(movePromises.stream().map(AsyncSupplier::get))
-				.whenResult(list -> {
-					List<Tuple2<String, Exception>> exceptions = list.stream()
-							.filter(tuple -> tuple.value2().isException())
-							.map(tuple -> new Tuple2<>(tuple.value1(), tuple.value2().getException()))
-							.toList();
-					if (!exceptions.isEmpty()) {
-						Map<String, FileSystemScalarException> scalarExceptions = new HashMap<>();
-						for (Tuple2<String, Exception> tuple : exceptions) {
-							Exception exception = tuple.value2();
-							if (exception instanceof FileSystemScalarException) {
-								scalarExceptions.put(tuple.value1(), (FileSystemScalarException) exception);
-							} else if (exception instanceof FileSystemBatchException) {
-								scalarExceptions.putAll(((FileSystemBatchException) exception).getExceptions());
-							} else {
-								throw exception;
-							}
+			.whenResult(list -> {
+				List<Tuple2<String, Exception>> exceptions = list.stream()
+					.filter(tuple -> tuple.value2().isException())
+					.map(tuple -> new Tuple2<>(tuple.value1(), tuple.value2().getException()))
+					.toList();
+				if (!exceptions.isEmpty()) {
+					Map<String, FileSystemScalarException> scalarExceptions = new HashMap<>();
+					for (Tuple2<String, Exception> tuple : exceptions) {
+						Exception exception = tuple.value2();
+						if (exception instanceof FileSystemScalarException) {
+							scalarExceptions.put(tuple.value1(), (FileSystemScalarException) exception);
+						} else if (exception instanceof FileSystemBatchException) {
+							scalarExceptions.putAll(((FileSystemBatchException) exception).getExceptions());
+						} else {
+							throw exception;
 						}
-						throw new FileSystemBatchException(scalarExceptions);
 					}
-				})
-				.toVoid();
+					throw new FileSystemBatchException(scalarExceptions);
+				}
+			})
+			.toVoid();
 	}
 
 }

@@ -54,9 +54,9 @@ public final class HttpReactiveWorkerServerTest {
 			@Worker
 			AsyncServlet servlet(@WorkerId int worker) {
 				return request ->
-						HttpResponse.ok200()
-								.withBody(ByteBuf.wrapForReading(encodeAscii("Hello, world! #" + worker)))
-								.toPromise();
+					HttpResponse.ok200()
+						.withBody(ByteBuf.wrapForReading(encodeAscii("Hello, world! #" + worker)))
+						.toPromise();
 			}
 
 			@Override
@@ -65,7 +65,7 @@ public final class HttpReactiveWorkerServerTest {
 					@Provides
 					Config config() {
 						return Config.create()
-								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(port)));
+							.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(port)));
 					}
 				};
 			}
@@ -83,56 +83,56 @@ public final class HttpReactiveWorkerServerTest {
 
 			for (int i = 0; i < 10; i++) {
 				socket0.getOutputStream().write(encodeAscii("""
-						GET /abc HTTP/1.1\r
-						Host: localhost\r
-						Connection: keep-alive
-						\r
-						"""));
+					GET /abc HTTP/1.1\r
+					Host: localhost\r
+					Connection: keep-alive
+					\r
+					"""));
 				readAndAssert(socket0.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 16\r
-						\r
-						Hello, world! #0""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 16\r
+					\r
+					Hello, world! #0""");
 
 				socket0.getOutputStream().write(encodeAscii("""
-						GET /abc HTTP/1.1\r
-						Host: localhost\r
-						Connection: keep-alive
-						\r
-						"""));
+					GET /abc HTTP/1.1\r
+					Host: localhost\r
+					Connection: keep-alive
+					\r
+					"""));
 				readAndAssert(socket0.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 16\r
-						\r
-						Hello, world! #0""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 16\r
+					\r
+					Hello, world! #0""");
 
 				socket1.getOutputStream().write(encodeAscii("""
-						GET /abc HTTP/1.1\r
-						Host: localhost\r
-						Connection: keep-alive
-						\r
-						"""));
+					GET /abc HTTP/1.1\r
+					Host: localhost\r
+					Connection: keep-alive
+					\r
+					"""));
 				readAndAssert(socket1.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 16\r
-						\r
-						Hello, world! #1""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 16\r
+					\r
+					Hello, world! #1""");
 
 				socket1.getOutputStream().write(encodeAscii("""
-						GET /abc HTTP/1.1\r
-						Host: localhost\r
-						Connection: keep-alive
-						\r
-						"""));
+					GET /abc HTTP/1.1\r
+					Host: localhost\r
+					Connection: keep-alive
+					\r
+					"""));
 				readAndAssert(socket1.getInputStream(), """
-						HTTP/1.1 200 OK\r
-						Connection: keep-alive\r
-						Content-Length: 16\r
-						\r
-						Hello, world! #1""");
+					HTTP/1.1 200 OK\r
+					Connection: keep-alive\r
+					Content-Length: 16\r
+					\r
+					Hello, world! #1""");
 			}
 		} finally {
 			serviceGraph.stopFuture().get();

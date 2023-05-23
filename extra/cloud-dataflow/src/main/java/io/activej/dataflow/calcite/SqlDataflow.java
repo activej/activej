@@ -59,8 +59,10 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 
 	private final RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private SqlDataflow(Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
-			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
+	private SqlDataflow(
+		Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+		SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter
+	) {
 		super(reactor);
 		this.client = client;
 		this.partitions = partitions;
@@ -71,8 +73,10 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 		this.relToDatasetConverter = relToDatasetConverter;
 	}
 
-	public static SqlDataflow create(Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
-			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
+	public static SqlDataflow create(
+		Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+		SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter
+	) {
 		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
 	}
 
@@ -142,8 +146,8 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 	private RelNode optimize(RelRoot root) {
 		HepProgramBuilder builder = new HepProgramBuilder();
 		builder.addRuleCollection(List.of(CoreRules.FILTER_INTO_JOIN,
-				FilterScanTableRule.create(),
-				SortScanTableRule.create())
+			FilterScanTableRule.create(),
+			SortScanTableRule.create())
 		);
 		Program prog = Programs.of(builder.build(), true, DefaultRelMetadataProvider.INSTANCE);
 		Program program = Programs.sequence(prog);
@@ -177,14 +181,14 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 	}
 
 	private <
-			B extends AbstractCollector<Record, ?>.Builder<B, C>,
-			C extends AbstractCollector<Record, ?>
-			>
+		B extends AbstractCollector<Record, ?>.Builder<B, C>,
+		C extends AbstractCollector<Record, ?>
+		>
 	ICollector<Record> createCollector(Dataset<Record> dataset, long limit) {
 		//noinspection unchecked
 		B collectorBuilder = (B) (dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
-				MergeCollector.builder(reactor, sortedDataset, client) :
-				UnionCollector.builder(reactor, dataset, client));
+			MergeCollector.builder(reactor, sortedDataset, client) :
+			UnionCollector.builder(reactor, dataset, client));
 
 		if (limit != Limiter.NO_LIMIT) {
 			collectorBuilder.withLimit(limit);

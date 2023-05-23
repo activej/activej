@@ -27,7 +27,7 @@ public class TriggersModuleTest {
 	@Test
 	public void testDuplicatesRejection() {
 		TriggersModule.Builder triggersModuleBuilder = TriggersModule.builder()
-				.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
+			.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
 
 		try {
 			triggersModuleBuilder.with(Eventloop.class, Severity.HIGH, "test", eventloop -> TriggerResult.create());
@@ -42,38 +42,38 @@ public class TriggersModuleTest {
 		int firstPoolSize = 10;
 		int secondPoolSize = 5;
 		Injector injector = Injector.of(
-				WorkerPoolModule.create(),
-				new AbstractModule() {
-					int counter = 0;
+			WorkerPoolModule.create(),
+			new AbstractModule() {
+				int counter = 0;
 
-					@Provides
-					@Named("first")
-					WorkerPool firstPool(WorkerPools workerPools) {
-						return workerPools.createPool(firstPoolSize);
-					}
+				@Provides
+				@Named("first")
+				WorkerPool firstPool(WorkerPools workerPools) {
+					return workerPools.createPool(firstPoolSize);
+				}
 
-					@Provides
-					@Named("second")
-					WorkerPool secondPool(WorkerPools workerPools) {
-						return workerPools.createPool(secondPoolSize);
-					}
+				@Provides
+				@Named("second")
+				WorkerPool secondPool(WorkerPools workerPools) {
+					return workerPools.createPool(secondPoolSize);
+				}
 
-					@Provides
-					@Worker
-					String worker() {
-						return "" + counter++;
-					}
+				@Provides
+				@Worker
+				String worker() {
+					return "" + counter++;
+				}
 
-					@Provides
-					Integer provide(@Named("first") WorkerPool workerPool1, @Named("second") WorkerPool workerPool2) {
-						workerPool1.getInstances(String.class);
-						workerPool2.getInstances(String.class);
-						return 0;
-					}
-				},
-				TriggersModule.builder()
-						.with(String.class, Severity.HIGH, "test", s -> TriggerResult.create())
-						.build()
+				@Provides
+				Integer provide(@Named("first") WorkerPool workerPool1, @Named("second") WorkerPool workerPool2) {
+					workerPool1.getInstances(String.class);
+					workerPool2.getInstances(String.class);
+					return 0;
+				}
+			},
+			TriggersModule.builder()
+				.with(String.class, Severity.HIGH, "test", s -> TriggerResult.create())
+				.build()
 		);
 		injector.getInstance(Key.of(WorkerPool.class, "first")).getInstances(String.class);
 		injector.getInstance(Key.of(WorkerPool.class, "second")).getInstances(String.class);
@@ -85,7 +85,7 @@ public class TriggersModuleTest {
 			Triggers triggersWatcher = injector.getInstance(Triggers.class);
 			assertEquals(firstPoolSize + secondPoolSize, triggersWatcher.getResults().size());
 			triggersWatcher.getResults()
-					.forEach(triggerWithResult -> assertTrue(triggerWithResult.toString().startsWith("HIGH : String : test :: ")));
+				.forEach(triggerWithResult -> assertTrue(triggerWithResult.toString().startsWith("HIGH : String : test :: ")));
 			wasExecuted.set(true);
 		} finally {
 			assertTrue(wasExecuted.get());
@@ -95,13 +95,13 @@ public class TriggersModuleTest {
 	@Test
 	public void testPresentOptionalDependency() throws Exception {
 		Injector injector = Injector.of(
-				new AbstractModule() {
-					@Provides
-					OptionalDependency<TestClass> optionalTestClass() {
-						return OptionalDependency.of(new TestClass());
-					}
-				},
-				TriggersModule.create()
+			new AbstractModule() {
+				@Provides
+				OptionalDependency<TestClass> optionalTestClass() {
+					return OptionalDependency.of(new TestClass());
+				}
+			},
+			TriggersModule.create()
 		);
 
 		OptionalDependency<TestClass> optional = injector.getOptionalDependency(TestClass.class);
@@ -126,18 +126,18 @@ public class TriggersModuleTest {
 	@Test
 	public void testSyntheticOptionalDependency() throws Exception {
 		Injector injector = Injector.of(
-				new AbstractModule() {
-					@Override
-					protected void configure() {
-						bindOptionalDependency(TestClass.class);
-					}
+			new AbstractModule() {
+				@Override
+				protected void configure() {
+					bindOptionalDependency(TestClass.class);
+				}
 
-					@Provides
-					TestClass testClass() {
-						return new TestClass();
-					}
-				},
-				TriggersModule.create()
+				@Provides
+				TestClass testClass() {
+					return new TestClass();
+				}
+			},
+			TriggersModule.create()
 		);
 
 		OptionalDependency<TestClass> optional = injector.getOptionalDependency(TestClass.class);
@@ -162,13 +162,13 @@ public class TriggersModuleTest {
 	@Test
 	public void testMissingOptionalDependency() throws Exception {
 		Injector injector = Injector.of(
-				new AbstractModule() {
-					@Provides
-					OptionalDependency<TestClass> optionalTestClass() {
-						return OptionalDependency.empty();
-					}
-				},
-				TriggersModule.create()
+			new AbstractModule() {
+				@Provides
+				OptionalDependency<TestClass> optionalTestClass() {
+					return OptionalDependency.empty();
+				}
+			},
+			TriggersModule.create()
 		);
 
 		OptionalDependency<TestClass> optional = injector.getOptionalDependency(TestClass.class);
@@ -188,31 +188,31 @@ public class TriggersModuleTest {
 		int firstPoolSize = 10;
 		int secondPoolSize = 5;
 		Injector injector = Injector.of(
-				WorkerPoolModule.create(),
-				new AbstractModule() {
+			WorkerPoolModule.create(),
+			new AbstractModule() {
 
-					@Provides
-					@Named("first")
-					WorkerPool firstPool(WorkerPools workerPools) {
-						return workerPools.createPool(firstPoolSize);
-					}
+				@Provides
+				@Named("first")
+				WorkerPool firstPool(WorkerPools workerPools) {
+					return workerPools.createPool(firstPoolSize);
+				}
 
-					@Provides
-					@Named("second")
-					WorkerPool secondPool(WorkerPools workerPools) {
-						return workerPools.createPool(secondPoolSize);
-					}
+				@Provides
+				@Named("second")
+				WorkerPool secondPool(WorkerPools workerPools) {
+					return workerPools.createPool(secondPoolSize);
+				}
 
-					@Provides
-					@Worker
-					OptionalDependency<TestClass> optionalTestClass() {
-						return OptionalDependency.of(new TestClass());
-					}
-				},
-				TriggersModule.create()
+				@Provides
+				@Worker
+				OptionalDependency<TestClass> optionalTestClass() {
+					return OptionalDependency.of(new TestClass());
+				}
+			},
+			TriggersModule.create()
 		);
 		Instances<OptionalDependency<TestClass>> firstPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "first"))
-				.getInstances(new Key<>() {});
+			.getInstances(new Key<>() {});
 
 		assertEquals(firstPoolSize, firstPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : firstPoolInstances) {
@@ -220,7 +220,7 @@ public class TriggersModuleTest {
 		}
 
 		Instances<OptionalDependency<TestClass>> secondPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "second"))
-				.getInstances(new Key<>() {});
+			.getInstances(new Key<>() {});
 
 		assertEquals(secondPoolSize, secondPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : secondPoolInstances) {
@@ -247,36 +247,36 @@ public class TriggersModuleTest {
 		int firstPoolSize = 10;
 		int secondPoolSize = 5;
 		Injector injector = Injector.of(
-				WorkerPoolModule.create(),
-				new AbstractModule() {
+			WorkerPoolModule.create(),
+			new AbstractModule() {
 
-					@Override
-					protected void configure() {
-						bind(new Key<OptionalDependency<TestClass>>() {}).in(Worker.class);
-					}
+				@Override
+				protected void configure() {
+					bind(new Key<OptionalDependency<TestClass>>() {}).in(Worker.class);
+				}
 
-					@Provides
-					@Named("first")
-					WorkerPool firstPool(WorkerPools workerPools) {
-						return workerPools.createPool(firstPoolSize);
-					}
+				@Provides
+				@Named("first")
+				WorkerPool firstPool(WorkerPools workerPools) {
+					return workerPools.createPool(firstPoolSize);
+				}
 
-					@Provides
-					@Named("second")
-					WorkerPool secondPool(WorkerPools workerPools) {
-						return workerPools.createPool(secondPoolSize);
-					}
+				@Provides
+				@Named("second")
+				WorkerPool secondPool(WorkerPools workerPools) {
+					return workerPools.createPool(secondPoolSize);
+				}
 
-					@Provides
-					@Worker
-					TestClass testClass() {
-						return new TestClass();
-					}
-				},
-				TriggersModule.create()
+				@Provides
+				@Worker
+				TestClass testClass() {
+					return new TestClass();
+				}
+			},
+			TriggersModule.create()
 		);
 		Instances<OptionalDependency<TestClass>> firstPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "first"))
-				.getInstances(new Key<>() {});
+			.getInstances(new Key<>() {});
 
 		assertEquals(firstPoolSize, firstPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : firstPoolInstances) {
@@ -284,7 +284,7 @@ public class TriggersModuleTest {
 		}
 
 		Instances<OptionalDependency<TestClass>> secondPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "second"))
-				.getInstances(new Key<>() {});
+			.getInstances(new Key<>() {});
 
 		assertEquals(secondPoolSize, secondPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : secondPoolInstances) {

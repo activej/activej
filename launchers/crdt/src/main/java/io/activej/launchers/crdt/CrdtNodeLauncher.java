@@ -45,20 +45,20 @@ public abstract class CrdtNodeLauncher<K extends Comparable<K>, S> extends Launc
 	@Provides
 	Config config() {
 		return Config.create()
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				TriggersModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule());
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			TriggersModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule());
 	}
 
 	protected abstract CrdtNodeLogicModule<K, S> getBusinessLogicModule();

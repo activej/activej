@@ -26,9 +26,10 @@ public interface NioReactor extends Reactor, NioReactive {
 	 * @return DatagramSocket of this connection
 	 * @throws IOException if an I/O error occurs on opening DatagramChannel
 	 */
-	static DatagramChannel createDatagramChannel(DatagramSocketSettings datagramSocketSettings,
-			@Nullable InetSocketAddress bindAddress,
-			@Nullable InetSocketAddress connectAddress) throws IOException {
+	static DatagramChannel createDatagramChannel(
+		DatagramSocketSettings datagramSocketSettings,
+		@Nullable InetSocketAddress bindAddress, @Nullable InetSocketAddress connectAddress
+	) throws IOException {
 		DatagramChannel datagramChannel = null;
 		try {
 			datagramChannel = DatagramChannel.open();

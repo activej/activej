@@ -23,10 +23,10 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 	@Test
 	public void createdMBeanShouldUseSpecifiedReducerForAggregation() throws Exception {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(
-						List.of(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
-						JmxBeanSettings.create(),
-						false);
+			.createDynamicMBean(
+				List.of(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
+				JmxBeanSettings.create(),
+				false);
 
 		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.getAttribute("attr"));
 		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.invoke("getOp", new String[0], new String[0]));
@@ -65,22 +65,22 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 	@Test
 	public void createdCustomMBeanShouldUseSpecifiedReducerForAggregation() throws Exception {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(
-						List.of(
-								new CustomMBeanWithCustomReducer(200),
-								new CustomMBeanWithCustomReducer(350),
-								new CustomMBeanWithCustomReducer(100)
-						),
-						JmxBeanSettings.builder()
-								.withCustomTypes(Collections.singletonMap(
-										Duration.class,
-										new JmxCustomTypeAdapter<>(
-												StringFormatUtils::formatDuration,
-												StringFormatUtils::parseDuration
-										)
-								))
-								.build(),
-						false);
+			.createDynamicMBean(
+				List.of(
+					new CustomMBeanWithCustomReducer(200),
+					new CustomMBeanWithCustomReducer(350),
+					new CustomMBeanWithCustomReducer(100)
+				),
+				JmxBeanSettings.builder()
+					.withCustomTypes(Collections.singletonMap(
+						Duration.class,
+						new JmxCustomTypeAdapter<>(
+							StringFormatUtils::formatDuration,
+							StringFormatUtils::parseDuration
+						)
+					))
+					.build(),
+				false);
 
 		String maxDuration = StringFormatUtils.formatDuration(Duration.ofSeconds(350));
 
@@ -120,10 +120,10 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 		MBeanWithPojoReducer mbean_1 = new MBeanWithPojoReducer(new PojoStub(10, "abc"));
 		MBeanWithPojoReducer mbean_2 = new MBeanWithPojoReducer(new PojoStub(15, "xz"));
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(
-						List.of(mbean_1, mbean_2),
-						JmxBeanSettings.create(),
-						false);
+			.createDynamicMBean(
+				List.of(mbean_1, mbean_2),
+				JmxBeanSettings.create(),
+				false);
 
 		assertEquals(25, mbean.getAttribute("pojo_count"));
 		assertEquals("abcxz", mbean.getAttribute("pojo_name"));
@@ -182,10 +182,10 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 	@Test
 	public void properlyAggregatesJmxOperationResults() throws Exception {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(
-						List.of(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
-						JmxBeanSettings.create(),
-						false);
+			.createDynamicMBean(
+				List.of(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
+				JmxBeanSettings.create(),
+				false);
 
 		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.invoke("getOp", new String[0], new String[0]));
 	}

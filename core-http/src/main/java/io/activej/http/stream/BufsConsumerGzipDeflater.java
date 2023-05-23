@@ -44,7 +44,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * method is used.
  */
 public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf> {
+	implements WithChannelTransformer<BufsConsumerGzipDeflater, ByteBuf, ByteBuf> {
 	public static final int DEFAULT_MAX_BUF_SIZE = 16384;
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, (byte) 0xff};
@@ -125,18 +125,18 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 
 	private void writeHeader() {
 		output.accept(ByteBuf.wrapForReading(GZIP_HEADER))
-				.whenResult(this::writeBody);
+			.whenResult(this::writeBody);
 	}
 
 	private void writeBody() {
 		input.streamTo(ChannelConsumers.ofAsyncConsumer(buf -> {
-					crc32.update(buf.array(), buf.head(), buf.readRemaining());
-					deflater.setInput(buf.array(), buf.head(), buf.readRemaining());
-					ByteBufs bufs = deflate();
-					buf.recycle();
-					return output.acceptAll(bufs.asIterator());
-				}))
-				.whenResult(this::writeFooter);
+				crc32.update(buf.array(), buf.head(), buf.readRemaining());
+				deflater.setInput(buf.array(), buf.head(), buf.readRemaining());
+				ByteBufs bufs = deflate();
+				buf.recycle();
+				return output.acceptAll(bufs.asIterator());
+			}))
+			.whenResult(this::writeFooter);
 	}
 
 	private void writeFooter() {
@@ -147,8 +147,8 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 		footer.writeInt(Integer.reverseBytes(deflater.getTotalIn()));
 		bufs.add(footer);
 		output.acceptAll(bufs.asIterator())
-				.then(output::acceptEndOfStream)
-				.whenResult(this::completeProcess);
+			.then(output::acceptEndOfStream)
+			.whenResult(this::completeProcess);
 	}
 
 	private ByteBufs deflate() {

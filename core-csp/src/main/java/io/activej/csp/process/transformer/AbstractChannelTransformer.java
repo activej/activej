@@ -30,8 +30,9 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractChannelTransformer<S extends AbstractChannelTransformer<S, I, O>, I, O>
-		extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<S, I, O> {
+	extends AbstractCommunicatingProcess
+	implements WithChannelTransformer<S, I, O> {
+
 	private static final boolean CHECKS = Checks.isEnabled(AbstractChannelTransformer.class);
 
 	protected ChannelSupplier<I> input;
@@ -64,11 +65,11 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	protected void doProcess() {
 		Promise.complete()
-				.then(this::onProcessStart)
-				.then(() -> input.streamTo(ChannelConsumers.ofAsyncConsumer(this::onItem)))
-				.then(this::onProcessFinish)
-				.whenResult(this::completeProcess)
-				.whenException(this::closeEx);
+			.then(this::onProcessStart)
+			.then(() -> input.streamTo(ChannelConsumers.ofAsyncConsumer(this::onItem)))
+			.then(this::onProcessFinish)
+			.whenResult(this::completeProcess)
+			.whenException(this::closeEx);
 	}
 
 	@SuppressWarnings("ConstantConditions")

@@ -62,21 +62,21 @@ public final class BooleanSerializerDef extends PrimitiveSerializerDef implement
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
 		return !nullable ?
-				writeByte(byteArray, off, value) :
-				ifNull(value,
-						writeByte(byteArray, off, value(NULLABLE_NULL)),
-						writeByte(byteArray, off, bitOr(cast(call(value, "booleanValue"), byte.class), value(0b10))));
+			writeByte(byteArray, off, value) :
+			ifNull(value,
+				writeByte(byteArray, off, value(NULLABLE_NULL)),
+				writeByte(byteArray, off, bitOr(cast(call(value, "booleanValue"), byte.class), value(0b10))));
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
 		return let(readByte(in), aByte ->
-				!nullable ?
-						cast(aByte, boolean.class) :
-						ifEq(aByte, value(NULLABLE_NULL),
-								nullRef(Boolean.class),
-								cast(bitAnd(aByte, value(1)), Boolean.class)
-						));
+			!nullable ?
+				cast(aByte, boolean.class) :
+				ifEq(aByte, value(NULLABLE_NULL),
+					nullRef(Boolean.class),
+					cast(bitAnd(aByte, value(1)), Boolean.class)
+				));
 	}
 
 	@Override

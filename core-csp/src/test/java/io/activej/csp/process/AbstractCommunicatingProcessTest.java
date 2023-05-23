@@ -64,20 +64,20 @@ public final class AbstractCommunicatingProcessTest {
 		}
 
 		acknowledgement = ChannelSuppliers.ofList(expectedData)
-				.bindTo(processes[0].getInput());
+			.bindTo(processes[0].getInput());
 	}
 
 	@Test
 	public void testAckPropagation() {
 		processes[size - 1].getOutput()
-				.set(ChannelConsumers.ofAsyncConsumer(value -> {
-					actualData.add(value);
-					if (expectedData.size() == actualData.size()) {
-						Recyclers.recycle(actualData);
-						consumedAll = true;
-					}
-					return Promise.complete();
-				}));
+			.set(ChannelConsumers.ofAsyncConsumer(value -> {
+				actualData.add(value);
+				if (expectedData.size() == actualData.size()) {
+					Recyclers.recycle(actualData);
+					consumedAll = true;
+				}
+				return Promise.complete();
+			}));
 
 		await(acknowledgement);
 		assertTrue(consumedAll);
@@ -86,10 +86,10 @@ public final class AbstractCommunicatingProcessTest {
 	@Test
 	public void testAckPropagationWithFailure() {
 		processes[size - 1].getOutput()
-				.set(ChannelConsumers.ofAsyncConsumer(value -> {
-					Recyclers.recycle(value);
-					return Promise.ofException(ERROR);
-				}));
+			.set(ChannelConsumers.ofAsyncConsumer(value -> {
+				Recyclers.recycle(value);
+				return Promise.ofException(ERROR);
+			}));
 
 		assertSame(ERROR, awaitException(acknowledgement));
 	}
@@ -119,17 +119,17 @@ public final class AbstractCommunicatingProcessTest {
 		@Override
 		protected void doProcess() {
 			input.get()
-					.whenComplete((data, e) -> {
-						if (data == null) {
-							output.acceptEndOfStream()
-									.whenResult(this::completeProcess)
-									.whenException(this::closeEx);
-						} else {
-							output.accept(data)
-									.whenResult(this::doProcess)
-									.whenException(this::closeEx);
-						}
-					});
+				.whenComplete((data, e) -> {
+					if (data == null) {
+						output.acceptEndOfStream()
+							.whenResult(this::completeProcess)
+							.whenException(this::closeEx);
+					} else {
+						output.accept(data)
+							.whenResult(this::doProcess)
+							.whenException(this::closeEx);
+					}
+				});
 		}
 
 		@Override

@@ -32,30 +32,30 @@ public class RpcBenchmarkServer extends Launcher {
 	@Eager
 	public RpcServer rpcServer(@Named("server") NioReactor reactor, Config config) {
 		return RpcServer.builder(reactor)
-				.withStreamProtocol(
-						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofFrameFormat(), "rpc.compression", null))
-				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
-				.withMessageTypes(Integer.class)
-				.withHandler(Integer.class, req -> Promise.of(req * 2))
-				.build();
+			.withStreamProtocol(
+				config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
+				config.get(ofFrameFormat(), "rpc.compression", null))
+			.withListenPort(config.get(ofInteger(), "rpc.server.port"))
+			.withMessageTypes(Integer.class)
+			.withHandler(Integer.class, req -> Promise.of(req * 2))
+			.build();
 
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("rpc.server.port", "" + SERVICE_PORT)
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("rpc.server.port", "" + SERVICE_PORT)
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	@Override

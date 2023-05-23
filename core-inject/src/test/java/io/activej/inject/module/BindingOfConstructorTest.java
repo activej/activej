@@ -16,9 +16,9 @@ public class BindingOfConstructorTest {
 		Constructor<Application> constructor = Application.class.getConstructor(MyInterface.class);
 
 		ModuleBuilder moduleBuilder = ModuleBuilder.create()
-				.bind(MyInterface.class).to(MyInterfaceImpl.class)
-				.bind(MyInterfaceImpl.class).to(MyInterfaceImpl::new)
-				.bind(Application.class).to(constructor);
+			.bind(MyInterface.class).to(MyInterfaceImpl.class)
+			.bind(MyInterfaceImpl.class).to(MyInterfaceImpl::new)
+			.bind(Application.class).to(constructor);
 
 		Module module = moduleBuilder.build();
 

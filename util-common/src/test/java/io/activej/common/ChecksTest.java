@@ -14,8 +14,8 @@ public final class ChecksTest {
 	@Before
 	public void setUp() {
 		System.getProperties().stringPropertyNames().stream()
-				.filter(s -> s.startsWith("chk"))
-				.forEach(System::clearProperty);
+			.filter(s -> s.startsWith("chk"))
+			.forEach(System::clearProperty);
 		System.setProperty("chk", "on");
 	}
 

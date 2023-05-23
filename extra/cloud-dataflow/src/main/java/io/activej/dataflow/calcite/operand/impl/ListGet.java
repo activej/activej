@@ -48,8 +48,8 @@ public final class ListGet extends FunctionOperand<ListGet> {
 	@Override
 	public ListGet materialize(List<Object> params) {
 		return new ListGet(
-				listOperand.materialize(params),
-				indexOperand.materialize(params)
+			listOperand.materialize(params),
+			indexOperand.materialize(params)
 		);
 	}
 
@@ -66,7 +66,7 @@ public final class ListGet extends FunctionOperand<ListGet> {
 	@Override
 	public String toString() {
 		return "ListGet[" +
-				"listOperand=" + listOperand + ", " +
-				"indexOperand=" + indexOperand + ']';
+			"listOperand=" + listOperand + ", " +
+			"indexOperand=" + indexOperand + ']';
 	}
 }

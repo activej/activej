@@ -192,16 +192,16 @@ public class PageRankTest {
 		Dataset<Rank> updates = join(pages, ranks, new PageRankLeftJoiner(), simple(Rank.class), new RankKeyFunction());
 
 		Dataset<Rank> newRanks = sortReduceRepartitionReduce(updates, new RankAccumulatorReducer(),
-				Long.class, new RankKeyFunction(), new LongComparator(),
-				simple(RankAccumulator.class), new RankAccumulatorKeyFunction(),
-				simple(Rank.class));
+			Long.class, new RankKeyFunction(), new LongComparator(),
+			simple(RankAccumulator.class), new RankAccumulatorKeyFunction(),
+			simple(Rank.class));
 
 		return castToSorted(newRanks, Long.class, new RankKeyFunction(), new LongComparator());
 	}
 
 	private static SortedDataset<Long, Rank> pageRank(SortedDataset<Long, Page> pages) {
 		SortedDataset<Long, Rank> ranks = castToSorted(map(pages, new PageToRankFunction(), simple(Rank.class)),
-				Long.class, new RankKeyFunction(), new LongComparator());
+			Long.class, new RankKeyFunction(), new LongComparator());
 
 		for (int i = 0; i < 10; i++) {
 			ranks = pageRankIteration(pages, ranks);
@@ -212,19 +212,19 @@ public class PageRankTest {
 
 	private Module createModule(Partition... partitions) {
 		return createCommon(List.of(partitions))
-				.install(createSerializersModule())
-				.build();
+			.install(createSerializersModule())
+			.build();
 	}
 
 	public DataflowServer launchServer(InetSocketAddress address, Object items, Object result) throws Exception {
 		Injector env = Injector.of(ModuleBuilder.create()
-				.install(createCommonServer(createModule(), executor, sortingExecutor))
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.install(DatasetIdModule.create())
-				.bind(datasetId("items")).toInstance(items)
-				.bind(datasetId("result")).toInstance(result)
-				.bind(Integer.class, "dataflowPort").toInstance(address.getPort())
-				.build());
+			.install(createCommonServer(createModule(), executor, sortingExecutor))
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.install(DatasetIdModule.create())
+			.bind(datasetId("items")).toInstance(items)
+			.bind(datasetId("result")).toInstance(result)
+			.bind(Integer.class, "dataflowPort").toInstance(address.getPort())
+			.build());
 		DataflowServer server = env.getInstance(DataflowServer.class);
 		server.listen();
 		return server;
@@ -265,12 +265,12 @@ public class PageRankTest {
 	@Test
 	public void runDebugServer() throws Exception {
 		Injector env = Injector.of(
-				createCommonServer(
-						createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)),
-						executor, sortingExecutor),
-				ModuleBuilder.create()
-						.bind(Integer.class, "debugPort").toInstance(8080)
-						.build()
+			createCommonServer(
+				createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)),
+				executor, sortingExecutor),
+			ModuleBuilder.create()
+				.bind(Integer.class, "debugPort").toInstance(8080)
+				.build()
 		);
 		env.getInstance(HttpServer.class).listen();
 		await();
@@ -296,8 +296,8 @@ public class PageRankTest {
 
 		ToListStreamConsumer<Rank> result1 = ToListStreamConsumer.create();
 		DataflowServer server1 = launchServer(address1, List.of(
-				new Page(1, new long[]{1, 2, 3}),
-				new Page(3, new long[]{1})), result1);
+			new Page(1, new long[]{1, 2, 3}),
+			new Page(3, new long[]{1})), result1);
 
 		ToListStreamConsumer<Rank> result2 = ToListStreamConsumer.create();
 		DataflowServer server2 = launchServer(address2, List.of(new Page(2, new long[]{1})), result2);
@@ -305,7 +305,7 @@ public class PageRankTest {
 		DataflowGraph graph = Injector.of(createCommonClient(common)).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfId("items",
-				simple(Page.class), Long.class, new PageKeyFunction(), new LongComparator()));
+			simple(Page.class), Long.class, new PageKeyFunction(), new LongComparator()));
 
 		SortedDataset<Long, Rank> pageRanks = pageRank(pages);
 
@@ -314,10 +314,10 @@ public class PageRankTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		List<Rank> result = new ArrayList<>();
 		result.addAll(result1.getList());
@@ -330,18 +330,18 @@ public class PageRankTest {
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
 
-				.bind(new Key<StreamCodec<PageKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new PageKeyFunction()))
-				.bind(new Key<StreamCodec<RankKeyFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new RankKeyFunction()))
-				.bind(new Key<StreamCodec<RankAccumulatorKeyFunction>>(subtype(2)) {}).toInstance(StreamCodecs.singleton(new RankAccumulatorKeyFunction()))
-				.bind(new Key<StreamCodec<PageToRankFunction>>(subtype(3)) {}).toInstance(StreamCodecs.singleton(new PageToRankFunction()))
+			.bind(new Key<StreamCodec<PageKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new PageKeyFunction()))
+			.bind(new Key<StreamCodec<RankKeyFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new RankKeyFunction()))
+			.bind(new Key<StreamCodec<RankAccumulatorKeyFunction>>(subtype(2)) {}).toInstance(StreamCodecs.singleton(new RankAccumulatorKeyFunction()))
+			.bind(new Key<StreamCodec<PageToRankFunction>>(subtype(3)) {}).toInstance(StreamCodecs.singleton(new PageToRankFunction()))
 
-				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new LongComparator()))
+			.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new LongComparator()))
 
-				.bind(new Key<StreamCodec<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new PageRankLeftJoiner()))
+			.bind(new Key<StreamCodec<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new PageRankLeftJoiner()))
 
-				.bind(new Key<StreamCodec<ReducerToResult<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new RankAccumulatorReducer()))
+			.bind(new Key<StreamCodec<ReducerToResult<?, ?, ?, ?>>>() {}).toInstance(StreamCodecs.singleton(new RankAccumulatorReducer()))
 
-				.build();
+			.build();
 	}
 
 }

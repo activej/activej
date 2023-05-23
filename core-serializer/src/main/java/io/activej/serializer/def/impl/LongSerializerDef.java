@@ -48,15 +48,15 @@ public final class LongSerializerDef extends PrimitiveSerializerDef implements S
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
 		return varLength ?
-				writeVarLong(byteArray, off, value) :
-				writeLong(byteArray, off, value, !compatibilityLevel.isLittleEndian());
+			writeVarLong(byteArray, off, value) :
+			writeLong(byteArray, off, value, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
 		return varLength ?
-				readVarLong(in) :
-				readLong(in, !compatibilityLevel.isLittleEndian());
+			readVarLong(in) :
+			readLong(in, !compatibilityLevel.isLittleEndian());
 	}
 
 	@Override

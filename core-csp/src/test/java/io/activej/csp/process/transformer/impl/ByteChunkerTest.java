@@ -26,7 +26,7 @@ public class ByteChunkerTest {
 	public void testForStackOverflow() {
 		ByteChunker byteChunker = new ByteChunker(10_000, 10_000);
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofStream(Stream.generate(() -> ByteBufStrings.wrapAscii("a")).limit(10_000))
-				.transformWith(byteChunker);
+			.transformWith(byteChunker);
 		await(supplier.streamTo(ChannelConsumers.ofConsumer(ByteBuf::recycle)));
 	}
 }

@@ -28,19 +28,19 @@ import static io.activej.common.Utils.hasIntersection;
 public class AggregationOT {
 	public static OTSystem<AggregationDiff> createAggregationOT() {
 		return OTSystemImpl.<AggregationDiff>builder()
-				.withTransformFunction(AggregationDiff.class, AggregationDiff.class, (left, right) -> {
-					if (!hasIntersection(left.getAddedChunks(), right.getAddedChunks()) && !hasIntersection(left.getRemovedChunks(), right.getRemovedChunks())) {
-						return TransformResult.of(right, left);
-					}
+			.withTransformFunction(AggregationDiff.class, AggregationDiff.class, (left, right) -> {
+				if (!hasIntersection(left.getAddedChunks(), right.getAddedChunks()) && !hasIntersection(left.getRemovedChunks(), right.getRemovedChunks())) {
+					return TransformResult.of(right, left);
+				}
 
-					return left.getRemovedChunks().size() > right.getRemovedChunks().size() ?
-							TransformResult.conflict(ConflictResolution.LEFT) :
-							TransformResult.conflict(ConflictResolution.RIGHT);
-				})
-				.withInvertFunction(AggregationDiff.class, op -> List.of(op.inverse()))
-				.withEmptyPredicate(AggregationDiff.class, AggregationDiff::isEmpty)
-				.withSquashFunction(AggregationDiff.class, AggregationDiff.class, AggregationDiff::squash)
-				.build();
+				return left.getRemovedChunks().size() > right.getRemovedChunks().size() ?
+					TransformResult.conflict(ConflictResolution.LEFT) :
+					TransformResult.conflict(ConflictResolution.RIGHT);
+			})
+			.withInvertFunction(AggregationDiff.class, op -> List.of(op.inverse()))
+			.withEmptyPredicate(AggregationDiff.class, AggregationDiff::isEmpty)
+			.withSquashFunction(AggregationDiff.class, AggregationDiff.class, AggregationDiff::squash)
+			.build();
 	}
 
 }

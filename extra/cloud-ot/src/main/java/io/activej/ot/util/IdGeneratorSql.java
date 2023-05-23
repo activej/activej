@@ -41,7 +41,7 @@ import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class IdGeneratorSql extends AbstractReactive
-		implements AsyncSupplier<Long>, ReactiveJmxBeanWithStats {
+	implements AsyncSupplier<Long>, ReactiveJmxBeanWithStats {
 	private static final boolean CHECKS = Checks.isEnabled(IdGeneratorSql.class);
 
 	private final Executor executor;
@@ -65,13 +65,15 @@ public final class IdGeneratorSql extends AbstractReactive
 		this.sequence = sequence;
 	}
 
-	public static IdGeneratorSql create(Reactor reactor, Executor executor, DataSource dataSource,
-			SqlAtomicSequence sequence) {
+	public static IdGeneratorSql create(
+		Reactor reactor, Executor executor, DataSource dataSource, SqlAtomicSequence sequence
+	) {
 		return builder(reactor, executor, dataSource, sequence).build();
 	}
 
-	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource,
-			SqlAtomicSequence sequence) {
+	public static Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, SqlAtomicSequence sequence
+	) {
 		return new IdGeneratorSql(reactor, executor, dataSource, sequence).new Builder();
 	}
 
@@ -93,11 +95,11 @@ public final class IdGeneratorSql extends AbstractReactive
 	private Promise<Void> doReserveId() {
 		int finalStride = stride;
 		return Promise.ofBlocking(executor, () -> getAndAdd(finalStride))
-				.whenResult(id -> {
-					next = id;
-					limit = id + finalStride;
-				})
-				.toVoid();
+			.whenResult(id -> {
+				next = id;
+				limit = id + finalStride;
+			})
+			.toVoid();
 	}
 
 	private long getAndAdd(int stride) throws SQLException {
@@ -115,9 +117,9 @@ public final class IdGeneratorSql extends AbstractReactive
 			return Promise.of(next++);
 		}
 		return retry(
-				isResultOrException(Objects::nonNull),
-				() -> reserveId.run()
-						.map($ -> next < limit ? next++ : null));
+			isResultOrException(Objects::nonNull),
+			() -> reserveId.run()
+				.map($ -> next < limit ? next++ : null));
 	}
 
 	@JmxAttribute

@@ -35,13 +35,13 @@ public final class WorkerQualifierTest {
 		@Override
 		protected void configure() {
 			install(ServiceGraphModule.builder()
-					.with(Element4.class, combinedAdapter(
-							immediateServiceAdapter(),
-							immediateServiceAdapter()))
-					.with(Element1.class, immediateServiceAdapter())
-					.with(Element2.class, immediateServiceAdapter())
-					.with(Element3.class, immediateServiceAdapter())
-					.build());
+				.with(Element4.class, combinedAdapter(
+					immediateServiceAdapter(),
+					immediateServiceAdapter()))
+				.with(Element1.class, immediateServiceAdapter())
+				.with(Element2.class, immediateServiceAdapter())
+				.with(Element3.class, immediateServiceAdapter())
+				.build());
 			install(WorkerPoolModule.create());
 		}
 

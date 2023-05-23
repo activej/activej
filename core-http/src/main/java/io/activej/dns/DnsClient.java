@@ -56,7 +56,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
 public final class DnsClient extends AbstractNioReactive
-		implements IDnsClient, ReactiveJmxBeanWithStats {
+	implements IDnsClient, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(DnsClient.class);
 	private static final boolean CHECKS = Checks.isEnabled(DnsClient.class);
 
@@ -154,13 +154,13 @@ public final class DnsClient extends AbstractNioReactive
 			logger.trace("Incoming query, opening UDP socket");
 			DatagramChannel channel = NioReactor.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
 			return UdpSocket.connect(reactor, channel)
-					.map(s -> {
-						if (socketInspector != null) {
-							socketInspector.onCreate(s);
-							s.setInspector(socketInspector);
-						}
-						return this.socket = s;
-					});
+				.map(s -> {
+					if (socketInspector != null) {
+						socketInspector.onCreate(s);
+						s.setInspector(socketInspector);
+					}
+					return this.socket = s;
+				});
 		} catch (IOException e) {
 			logger.error("UDP socket creation failed.", e);
 			return Promise.ofException(e);
@@ -191,69 +191,69 @@ public final class DnsClient extends AbstractNioReactive
 		// ignore the result because sooner or later it will be sent and just completed
 		// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
 		return getSocket()
-				.then(socket -> {
-					logger.trace("Resolving {} with DNS server {}", query, dnsServerAddress);
+			.then(socket -> {
+				logger.trace("Resolving {} with DNS server {}", query, dnsServerAddress);
 
-					DnsTransaction transaction = DnsTransaction.of(DnsProtocol.generateTransactionId(), query);
-					SettablePromise<DnsResponse> promise = new SettablePromise<>();
+				DnsTransaction transaction = DnsTransaction.of(DnsProtocol.generateTransactionId(), query);
+				SettablePromise<DnsResponse> promise = new SettablePromise<>();
 
-					transactions.put(transaction, promise);
+				transactions.put(transaction, promise);
 
-					ByteBuf payload = DnsProtocol.createDnsQueryPayload(transaction);
-					if (inspector != null) {
-						inspector.onDnsQuery(query, payload);
-					}
+				ByteBuf payload = DnsProtocol.createDnsQueryPayload(transaction);
+				if (inspector != null) {
+					inspector.onDnsQuery(query, payload);
+				}
 
-					// ignore the result because soon, or later it will be sent and just completed
-					socket.send(UdpPacket.of(payload, dnsServerAddress));
+				// ignore the result because soon, or later it will be sent and just completed
+				socket.send(UdpPacket.of(payload, dnsServerAddress));
 
-					// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
-					socket.receive()
-							.whenResult(packet -> {
-								try {
-									DnsResponse queryResult = DnsProtocol.readDnsResponse(packet.getBuf());
-									SettablePromise<DnsResponse> cb = transactions.remove(queryResult.getTransaction());
-									if (cb == null) {
-										logger.warn("Received a DNS response that had no listener (most likely because it timed out) : {}", queryResult);
-										return;
-									}
-									if (queryResult.isSuccessful()) {
-										cb.set(queryResult);
-									} else {
-										cb.setException(new DnsQueryException(queryResult));
-									}
-									closeIfDone();
-								} catch (MalformedDataException e) {
-									logger.warn("Received a UDP packet than cannot be decoded as a DNS server response.", e);
-								} finally {
-									packet.recycle();
+				// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
+				socket.receive()
+					.whenResult(packet -> {
+						try {
+							DnsResponse queryResult = DnsProtocol.readDnsResponse(packet.getBuf());
+							SettablePromise<DnsResponse> cb = transactions.remove(queryResult.getTransaction());
+							if (cb == null) {
+								logger.warn("Received a DNS response that had no listener (most likely because it timed out) : {}", queryResult);
+								return;
+							}
+							if (queryResult.isSuccessful()) {
+								cb.set(queryResult);
+							} else {
+								cb.setException(new DnsQueryException(queryResult));
+							}
+							closeIfDone();
+						} catch (MalformedDataException e) {
+							logger.warn("Received a UDP packet than cannot be decoded as a DNS server response.", e);
+						} finally {
+							packet.recycle();
+						}
+					});
+
+				return timeout(timeout, promise)
+					.thenCallback(
+						(queryResult, cb) -> {
+							if (inspector != null) {
+								inspector.onDnsQueryResult(query, queryResult);
+							}
+							logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
+							cb.set(queryResult);
+						},
+						(e, cb) -> {
+							if (e instanceof AsyncTimeoutException) {
+								if (inspector != null) {
+									inspector.onDnsQueryExpiration(query);
 								}
-							});
-
-					return timeout(timeout, promise)
-							.thenCallback(
-									(queryResult, cb) -> {
-										if (inspector != null) {
-											inspector.onDnsQueryResult(query, queryResult);
-										}
-										logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
-										cb.set(queryResult);
-									},
-									(e, cb) -> {
-										if (e instanceof AsyncTimeoutException) {
-											if (inspector != null) {
-												inspector.onDnsQueryExpiration(query);
-											}
-											logger.trace("{} timed out", query);
-											e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
-											transactions.remove(transaction);
-											closeIfDone();
-										} else if (inspector != null) {
-											inspector.onDnsQueryError(query, e);
-										}
-										cb.setException(e);
-									});
-				});
+								logger.trace("{} timed out", query);
+								e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
+								transactions.remove(transaction);
+								closeIfDone();
+							} else if (inspector != null) {
+								inspector.onDnsQueryError(query, e);
+							}
+							cb.setException(e);
+						});
+			});
 	}
 
 	private void closeIfDone() {

@@ -40,15 +40,15 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 	@Override
 	protected Module getOverrideModule() {
 		return ModuleBuilder.create()
-				.install(new DataflowSerializersModule())
+			.install(new DataflowSerializersModule())
 
-				.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
+			.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
 
-				.bind(Config.class).toInstance(
-						Config.create()
-								.with("dataflow.partitions", args.length == 0 ? DEFAULT_PARTITION : String.join(",", args))
-				)
-				.build();
+			.bind(Config.class).toInstance(
+				Config.create()
+					.with("dataflow.partitions", args.length == 0 ? DEFAULT_PARTITION : String.join(",", args))
+			)
+			.build();
 	}
 	//[END REGION_1]
 
@@ -81,12 +81,12 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 			System.out.println(graph.toGraphViz());
 
 			graph.execute().both(resultSupplier.streamTo(resultConsumer))
-					.whenException(Exception::printStackTrace)
-					.whenResult(() -> {
-						System.out.println("Top 100 words:");
-						resultConsumer.getList().stream().limit(100).forEach(System.out::println);
-					})
-					.whenComplete(this::shutdown);
+				.whenException(Exception::printStackTrace)
+				.whenResult(() -> {
+					System.out.println("Top 100 words:");
+					resultConsumer.getList().stream().limit(100).forEach(System.out::println);
+				})
+				.whenComplete(this::shutdown);
 		});
 
 		awaitShutdown();

@@ -36,8 +36,9 @@ public abstract class LocallySortedDataset<K, T> extends Dataset<T> {
 
 	private final Function<T, K> keyFunction;
 
-	protected LocallySortedDataset(StreamSchema<T> streamSchema, Comparator<K> keyComparator, Class<K> keyType,
-			Function<T, K> keyFunction) {
+	protected LocallySortedDataset(
+		StreamSchema<T> streamSchema, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction
+	) {
 		super(streamSchema);
 		this.keyComparator = keyComparator;
 		this.keyType = keyType;

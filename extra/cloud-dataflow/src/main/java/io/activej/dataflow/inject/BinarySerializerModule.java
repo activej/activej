@@ -64,29 +64,29 @@ public final class BinarySerializerModule extends AbstractModule {
 			}
 
 			return binding
-					.addDependencies(BinarySerializerLocator.class)
-					.mapInstance(List.of(Key.of(BinarySerializerLocator.class)), (dependencies, serializer) -> {
-						BinarySerializerLocator locator = (BinarySerializerLocator) dependencies[0];
-						locator.serializers.putIfAbsent(rawType, serializer);
-						return serializer;
-					});
+				.addDependencies(BinarySerializerLocator.class)
+				.mapInstance(List.of(Key.of(BinarySerializerLocator.class)), (dependencies, serializer) -> {
+					BinarySerializerLocator locator = (BinarySerializerLocator) dependencies[0];
+					locator.serializers.putIfAbsent(rawType, serializer);
+					return serializer;
+				});
 		});
 
 		transform(BinarySerializerLocator.class,
-				(bindings, scope, key, binding) -> binding.mapInstance(locator -> {
-					locator.transientSerializers = transientSerializers;
-					return locator;
-				}));
+			(bindings, scope, key, binding) -> binding.mapInstance(locator -> {
+				locator.transientSerializers = transientSerializers;
+				return locator;
+			}));
 	}
 
 	@Provides
-	BinarySerializerLocator serializerLocator(Injector injector,
-			OptionalDependency<DefiningClassLoader> optionalClassLoader,
-			OptionalDependency<SerializerFactory> optionalSerializerFactory
+	BinarySerializerLocator serializerLocator(
+		Injector injector, OptionalDependency<DefiningClassLoader> optionalClassLoader,
+		OptionalDependency<SerializerFactory> optionalSerializerFactory
 	) {
 		DefiningClassLoader classLoader = optionalClassLoader.isPresent() ?
-				optionalClassLoader.get() :
-				DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
+			optionalClassLoader.get() :
+			DefiningClassLoader.create(Thread.currentThread().getContextClassLoader());
 		BinarySerializerLocator locator = new BinarySerializerLocator(injector, classLoader);
 		if (optionalSerializerFactory.isPresent()) {
 			locator.builder = optionalSerializerFactory.get();

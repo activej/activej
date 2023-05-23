@@ -46,7 +46,8 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
 public final class MySqlChunkLocker<C> extends AbstractReactive
-		implements IChunkLocker<C> {
+	implements IChunkLocker<C> {
+
 	private static final Logger logger = LoggerFactory.getLogger(MySqlChunkLocker.class);
 
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(MySqlChunkLocker.class, "chunkTable", "cube_chunk");
@@ -64,11 +65,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
 	private MySqlChunkLocker(
-			Reactor reactor,
-			Executor executor,
-			DataSource dataSource,
-			ChunkIdJsonCodec<C> idCodec,
-			String aggregationId
+		Reactor reactor, Executor executor, DataSource dataSource, ChunkIdJsonCodec<C> idCodec, String aggregationId
 	) {
 		super(reactor);
 		this.executor = executor;
@@ -78,21 +75,13 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	}
 
 	public static <C> MySqlChunkLocker<C> create(
-			Reactor reactor,
-			Executor executor,
-			DataSource dataSource,
-			ChunkIdJsonCodec<C> idCodec,
-			String aggregationId
+		Reactor reactor, Executor executor, DataSource dataSource, ChunkIdJsonCodec<C> idCodec, String aggregationId
 	) {
 		return builder(reactor, executor, dataSource, idCodec, aggregationId).build();
 	}
 
 	public static <C> MySqlChunkLocker<C>.Builder builder(
-			Reactor reactor,
-			Executor executor,
-			DataSource dataSource,
-			ChunkIdJsonCodec<C> idCodec,
-			String aggregationId
+		Reactor reactor, Executor executor, DataSource dataSource, ChunkIdJsonCodec<C> idCodec, String aggregationId
 	) {
 		return new MySqlChunkLocker<>(reactor, executor, dataSource, idCodec, aggregationId).new Builder();
 	}
@@ -164,36 +153,36 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
 		return Promise.ofBlocking(executor,
-				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						connection.setAutoCommit(false);
-						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+			() -> {
+				try (Connection connection = dataSource.getConnection()) {
+					connection.setAutoCommit(false);
+					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"UPDATE {chunk} " +
-								"SET `locked_at`=NOW(), `locked_by`=?" +
-								"WHERE" +
-								" `removed_revision` IS NULL AND" +
-								" (`locked_at` IS NULL OR" +
-								" `locked_at` <= NOW() - INTERVAL ? SECOND) AND" +
-								" `id` IN " +
-								nCopies(chunkIds.size(), "?").stream()
-										.collect(joining(",", "(", ")"))
-						))) {
-							ps.setString(1, lockedBy);
-							ps.setLong(2, lockTtlSeconds);
-							int index = 3;
-							for (C chunkId : chunkIds) {
-								ps.setString(index++, idCodec.toFileName(chunkId));
-							}
-							int updated = ps.executeUpdate();
-							if (updated != chunkIds.size()) {
-								throw new ChunksAlreadyLockedException();
-							}
-							connection.commit();
+					try (PreparedStatement ps = connection.prepareStatement(sql("" +
+						"UPDATE {chunk} " +
+						"SET `locked_at`=NOW(), `locked_by`=?" +
+						"WHERE" +
+						" `removed_revision` IS NULL AND" +
+						" (`locked_at` IS NULL OR" +
+						" `locked_at` <= NOW() - INTERVAL ? SECOND) AND" +
+						" `id` IN " +
+						nCopies(chunkIds.size(), "?").stream()
+							.collect(joining(",", "(", ")"))
+					))) {
+						ps.setString(1, lockedBy);
+						ps.setLong(2, lockTtlSeconds);
+						int index = 3;
+						for (C chunkId : chunkIds) {
+							ps.setString(index++, idCodec.toFileName(chunkId));
 						}
+						int updated = ps.executeUpdate();
+						if (updated != chunkIds.size()) {
+							throw new ChunksAlreadyLockedException();
+						}
+						connection.commit();
 					}
-				});
+				}
+			});
 	}
 
 	@Override
@@ -202,63 +191,63 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
 
 		return Promise.ofBlocking(executor,
-				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						connection.setAutoCommit(true);
-						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+			() -> {
+				try (Connection connection = dataSource.getConnection()) {
+					connection.setAutoCommit(true);
+					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"UPDATE {chunk} " +
-								"SET `locked_at`=NULL, `locked_by`=NULL " +
-								"WHERE" +
-								" `aggregation` = ? AND" +
-								" `removed_revision` IS NULL AND" +
-								" `locked_by`=? AND" +
-								" `id` IN " +
-								nCopies(chunkIds.size(), "?").stream()
-										.collect(joining(",", "(", ")")))
-						)) {
-							ps.setString(1, aggregationId);
-							ps.setString(2, lockedBy);
-							int index = 3;
-							for (C chunkId : chunkIds) {
-								ps.setString(index++, idCodec.toFileName(chunkId));
-							}
-
-							ps.executeUpdate();
+					try (PreparedStatement ps = connection.prepareStatement(sql("" +
+						"UPDATE {chunk} " +
+						"SET `locked_at`=NULL, `locked_by`=NULL " +
+						"WHERE" +
+						" `aggregation` = ? AND" +
+						" `removed_revision` IS NULL AND" +
+						" `locked_by`=? AND" +
+						" `id` IN " +
+						nCopies(chunkIds.size(), "?").stream()
+							.collect(joining(",", "(", ")")))
+					)) {
+						ps.setString(1, aggregationId);
+						ps.setString(2, lockedBy);
+						int index = 3;
+						for (C chunkId : chunkIds) {
+							ps.setString(index++, idCodec.toFileName(chunkId));
 						}
+
+						ps.executeUpdate();
 					}
-				});
+				}
+			});
 	}
 
 	@Override
 	public Promise<Set<C>> getLockedChunks() {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+			() -> {
+				try (Connection connection = dataSource.getConnection()) {
+					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						try (PreparedStatement ps = connection.prepareStatement(sql("" +
-								"SELECT `id` " +
-								"FROM {chunk} " +
-								"WHERE" +
-								" `aggregation` = ? AND" +
-								" (`removed_revision` IS NOT NULL OR `locked_at` > NOW() - INTERVAL ? SECOND)"
-						))) {
-							ps.setString(1, aggregationId);
-							ps.setLong(2, lockTtlSeconds);
+					try (PreparedStatement ps = connection.prepareStatement(sql("" +
+						"SELECT `id` " +
+						"FROM {chunk} " +
+						"WHERE" +
+						" `aggregation` = ? AND" +
+						" (`removed_revision` IS NOT NULL OR `locked_at` > NOW() - INTERVAL ? SECOND)"
+					))) {
+						ps.setString(1, aggregationId);
+						ps.setLong(2, lockTtlSeconds);
 
-							ResultSet resultSet = ps.executeQuery();
+						ResultSet resultSet = ps.executeQuery();
 
-							Set<C> result = new HashSet<>();
-							while (resultSet.next()) {
-								C chunkId = idCodec.fromFileName(resultSet.getString(1));
-								result.add(chunkId);
-							}
-							return result;
+						Set<C> result = new HashSet<>();
+						while (resultSet.next()) {
+							C chunkId = idCodec.fromFileName(resultSet.getString(1));
+							result.add(chunkId);
 						}
+						return result;
 					}
-				});
+				}
+			});
 	}
 }

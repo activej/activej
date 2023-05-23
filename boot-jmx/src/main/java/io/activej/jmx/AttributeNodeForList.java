@@ -35,8 +35,10 @@ public final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	private final ArrayType<?> arrayType;
 	private final boolean isListOfJmxRefreshables;
 
-	public AttributeNodeForList(String name, @Nullable String description, boolean visible, ValueFetcher fetcher, AttributeNode subNode,
-			boolean isListOfJmxRefreshables) {
+	public AttributeNodeForList(
+		String name, @Nullable String description, boolean visible, ValueFetcher fetcher, AttributeNode subNode,
+		boolean isListOfJmxRefreshables
+	) {
 		super(name, description, fetcher, visible);
 		checkArgument(!name.isEmpty(), "List attribute cannot have empty name");
 		this.subNode = subNode;
@@ -78,7 +80,7 @@ public final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 				String[] itemNamesArr = itemNames.toArray(new String[0]);
 				OpenType<?>[] itemTypesArr = itemTypes.toArray(new OpenType<?>[0]);
 				elementType =
-						new CompositeType("CompositeData", "CompositeData", itemNamesArr, itemNamesArr, itemTypesArr);
+					new CompositeType("CompositeData", "CompositeData", itemNamesArr, itemNamesArr, itemTypesArr);
 			}
 
 			return new ArrayType<>(1, elementType);
@@ -102,7 +104,7 @@ public final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 				List<?> list = new ArrayList<>(currentList);
 				for (Object element : list) {
 					Map<String, Object> attributesFromElement =
-							subNode.aggregateAttributes(visibleSubAttrs, List.of(element));
+						subNode.aggregateAttributes(visibleSubAttrs, List.of(element));
 
 					attributesFromAllElements.add(attributesFromElement);
 				}
@@ -130,8 +132,9 @@ public final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 		}
 	}
 
-	private static Object jmxCompatibleObjectOf(OpenType<?> openType, Map<String, Object> attributes)
-			throws OpenDataException {
+	private static Object jmxCompatibleObjectOf(
+		OpenType<?> openType, Map<String, Object> attributes
+	) throws OpenDataException {
 		if (openType instanceof SimpleType || openType instanceof TabularType) {
 			checkArgument(attributes.size() == 1, "Only one attribute should be present");
 			return first(attributes.values());

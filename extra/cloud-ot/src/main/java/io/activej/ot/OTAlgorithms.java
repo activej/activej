@@ -50,49 +50,52 @@ import static java.util.stream.Collectors.toSet;
 public final class OTAlgorithms {
 	private static final Logger logger = LoggerFactory.getLogger(OTAlgorithms.class);
 
-	public static <K, D, R> Promise<R> reduce(AsyncOTRepository<K, D> repository, OTSystem<D> system,
-			Set<K> heads, GraphReducer<K, D, R> reducer) {
+	public static <K, D, R> Promise<R> reduce(
+		AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, GraphReducer<K, D, R> reducer
+	) {
 		return toList(heads.stream().map(repository::loadCommit))
-				.then(headCommits -> {
-					PriorityQueue<OTCommit<K, D>> queue = new PriorityQueue<>(reverseOrder(comparingLong(OTCommit::getLevel)));
-					queue.addAll(headCommits);
-					reducer.onStart(unmodifiableCollection(queue));
-					return Promise.ofCallback(cb -> walkGraphImpl(repository, reducer, queue, new HashSet<>(heads), cb));
-				});
+			.then(headCommits -> {
+				PriorityQueue<OTCommit<K, D>> queue = new PriorityQueue<>(reverseOrder(comparingLong(OTCommit::getLevel)));
+				queue.addAll(headCommits);
+				reducer.onStart(unmodifiableCollection(queue));
+				return Promise.ofCallback(cb -> walkGraphImpl(repository, reducer, queue, new HashSet<>(heads), cb));
+			});
 	}
 
-	private static <K, D, R> void walkGraphImpl(AsyncOTRepository<K, D> repository, GraphReducer<K, D, R> reducer,
-			PriorityQueue<OTCommit<K, D>> queue, Set<K> visited, SettableCallback<R> cb) {
+	private static <K, D, R> void walkGraphImpl(
+		AsyncOTRepository<K, D> repository, GraphReducer<K, D, R> reducer, PriorityQueue<OTCommit<K, D>> queue,
+		Set<K> visited, SettableCallback<R> cb
+	) {
 		OTCommit<K, D> commit = queue.peek();
 		if (commit == null) {
 			cb.setException(new GraphExhaustedException());
 			return;
 		}
 		reducer.onCommit(commit)
-				.subscribe((maybeResult, e) -> {
-					if (e != null) {
-						cb.setException(e);
-						return;
-					}
-					OTCommit<K, D> polledCommit = queue.poll();
-					assert polledCommit == commit;
-					if (maybeResult.isResume()) {
-						toList(commit.getParents().keySet().stream().filter(visited::add).map(repository::loadCommit))
-								.async()
-								.subscribe((parentCommits, e2) -> {
-									if (e2 == null) {
-										queue.addAll(parentCommits);
-										walkGraphImpl(repository, reducer, queue, visited, cb);
-									} else {
-										cb.setException(e2);
-									}
-								});
-					} else if (maybeResult.isSkip()) {
-						walkGraphImpl(repository, reducer, queue, visited, cb);
-					} else {
-						cb.set(maybeResult.get());
-					}
-				});
+			.subscribe((maybeResult, e) -> {
+				if (e != null) {
+					cb.setException(e);
+					return;
+				}
+				OTCommit<K, D> polledCommit = queue.poll();
+				assert polledCommit == commit;
+				if (maybeResult.isResume()) {
+					toList(commit.getParents().keySet().stream().filter(visited::add).map(repository::loadCommit))
+						.async()
+						.subscribe((parentCommits, e2) -> {
+							if (e2 == null) {
+								queue.addAll(parentCommits);
+								walkGraphImpl(repository, reducer, queue, visited, cb);
+							} else {
+								cb.setException(e2);
+							}
+						});
+				} else if (maybeResult.isSkip()) {
+					walkGraphImpl(repository, reducer, queue, visited, cb);
+				} else {
+					cb.set(maybeResult.get());
+				}
+			});
 	}
 
 	public static final class FindResult<K, A> {
@@ -145,127 +148,132 @@ public final class OTAlgorithms {
 		@Override
 		public String toString() {
 			return "FindResult{" +
-					"commit=" + commit +
-					", parents=" + commitParents +
-					", child=" + child +
-					", accumulator=" + accumulatedDiffs +
-					'}';
+				"commit=" + commit +
+				", parents=" + commitParents +
+				", child=" + child +
+				", accumulator=" + accumulatedDiffs +
+				'}';
 		}
 	}
 
-	public static <K, D, A> Promise<FindResult<K, A>> findParent(AsyncOTRepository<K, D> repository, OTSystem<D> system,
-			Set<K> startNodes, DiffsReducer<A, D> diffsReducer, AsyncPredicate<OTCommit<K, D>> matchPredicate) {
+	public static <K, D, A> Promise<FindResult<K, A>> findParent(
+		AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes, DiffsReducer<A, D> diffsReducer,
+		AsyncPredicate<OTCommit<K, D>> matchPredicate
+	) {
 		return reduce(repository, system, startNodes,
-				new AbstractGraphReducer<>(diffsReducer) {
-					int epoch;
+			new AbstractGraphReducer<>(diffsReducer) {
+				int epoch;
 
-					@Override
-					public void onStart(Collection<OTCommit<K, D>> queue) {
-						this.epoch = queue.iterator().next().getEpoch();
-						super.onStart(queue);
-					}
+				@Override
+				public void onStart(Collection<OTCommit<K, D>> queue) {
+					this.epoch = queue.iterator().next().getEpoch();
+					super.onStart(queue);
+				}
 
-					@Override
-					protected Promise<Optional<FindResult<K, A>>> tryGetResult(OTCommit<K, D> commit,
-							Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
-						return matchPredicate.test(commit)
-								.map(t -> {
-									if (t) {
-										Map.Entry<K, A> someHead = accumulators.get(commit.getId()).entrySet().iterator().next();
-										return Optional.of(new FindResult<>(
-												epoch, commit.getId(), commit.getParentIds(), commit.getLevel(),
-												someHead.getKey(), headCommits.get(someHead.getKey()).getLevel(),
-												someHead.getValue()
-										));
-									} else {
-										return Optional.empty();
-									}
-								});
-					}
-				});
+				@Override
+				protected Promise<Optional<FindResult<K, A>>> tryGetResult(
+					OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits
+				) {
+					return matchPredicate.test(commit)
+						.map(t -> {
+							if (t) {
+								Map.Entry<K, A> someHead = accumulators.get(commit.getId()).entrySet().iterator().next();
+								return Optional.of(new FindResult<>(
+									epoch, commit.getId(), commit.getParentIds(), commit.getLevel(),
+									someHead.getKey(), headCommits.get(someHead.getKey()).getLevel(),
+									someHead.getValue()
+								));
+							} else {
+								return Optional.empty();
+							}
+						});
+				}
+			});
 	}
 
 	public static <K, D> Promise<K> mergeAndPush(AsyncOTRepository<K, D> repository, OTSystem<D> system) {
 		return repository.getHeads()
-				.then(heads -> mergeAndPush(repository, system, heads))
-				.whenComplete(toLogger(logger, thisMethod()));
+			.then(heads -> mergeAndPush(repository, system, heads))
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	public static <K, D> Promise<K> mergeAndPush(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		if (heads.size() == 1) return Promise.of(first(heads)); // nothing to merge
 		return merge(repository, system, heads)
-				.then(mergeCommit -> repository.push(mergeCommit)
-						.map($ -> mergeCommit.getId()))
-				.whenComplete(toLogger(logger, thisMethod()));
+			.then(mergeCommit -> repository.push(mergeCommit)
+				.map($ -> mergeCommit.getId()))
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	public static <K, D> Promise<K> mergeAndUpdateHeads(AsyncOTRepository<K, D> repository, OTSystem<D> system) {
 		return repository.getHeads()
-				.then(heads -> mergeAndUpdateHeads(repository, system, heads));
+			.then(heads -> mergeAndUpdateHeads(repository, system, heads));
 	}
 
 	public static <K, D> Promise<K> mergeAndUpdateHeads(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return mergeAndPush(repository, system, heads)
-				.then(mergeId -> repository.updateHeads(difference(Set.of(mergeId), heads), difference(heads, Set.of(mergeId)))
-						.map($ -> mergeId))
-				.whenComplete(toLogger(logger, thisMethod()));
+			.then(mergeId -> repository.updateHeads(difference(Set.of(mergeId), heads), difference(heads, Set.of(mergeId)))
+				.map($ -> mergeId))
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	public static <K, D> Promise<OTCommit<K, D>> merge(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		checkArgument(heads.size() >= 2, "Cannot merge less than 2 heads");
 		return repository.getLevels(heads)
-				.then(levels ->
-						reduce(repository, system, heads, new LoadGraphReducer<>(system))
-								.map(graph -> {
-									try {
-										Map<K, List<D>> mergeResult = graph.merge(graph.excludeParents(heads));
-										if (logger.isTraceEnabled()) {
-											logger.info("{}\n", graph.toGraphViz());
-										}
-										return mergeResult;
-									} catch (OTException e) {
-										if (logger.isTraceEnabled()) {
-											logger.error("{}\n", graph.toGraphViz(), e);
-										}
-										throw e;
-									}
-								})
-								.then(mergeResult -> repository.createCommit(
-										heads.stream()
-												.collect(toLinkedHashMap(head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)))))));
+			.then(levels ->
+				reduce(repository, system, heads, new LoadGraphReducer<>(system))
+					.map(graph -> {
+						try {
+							Map<K, List<D>> mergeResult = graph.merge(graph.excludeParents(heads));
+							if (logger.isTraceEnabled()) {
+								logger.info("{}\n", graph.toGraphViz());
+							}
+							return mergeResult;
+						} catch (OTException e) {
+							if (logger.isTraceEnabled()) {
+								logger.error("{}\n", graph.toGraphViz(), e);
+							}
+							throw e;
+						}
+					})
+					.then(mergeResult -> repository.createCommit(
+						heads.stream()
+							.collect(toLinkedHashMap(head -> new DiffsWithLevel<>(levels.get(head), mergeResult.get(head)))))));
 	}
 
-	public static <K, D> Promise<Set<K>> findCut(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,
-			Predicate<Collection<OTCommit<K, D>>> matchPredicate) {
+	public static <K, D> Promise<Set<K>> findCut(
+		AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,
+		Predicate<Collection<OTCommit<K, D>>> matchPredicate
+	) {
 		return reduce(repository, system, startNodes,
-				new GraphReducer<>() {
-					private Collection<OTCommit<K, D>> queue;
+			new GraphReducer<>() {
+				private Collection<OTCommit<K, D>> queue;
 
-					@Override
-					public void onStart(Collection<OTCommit<K, D>> queue) {
-						this.queue = queue;
-					}
+				@Override
+				public void onStart(Collection<OTCommit<K, D>> queue) {
+					this.queue = queue;
+				}
 
-					@Override
-					public Promise<Result<Set<K>>> onCommit(OTCommit<K, D> commit) {
-						if (matchPredicate.test(queue)) {
-							return completePromise(queue.stream().map(OTCommit::getId).collect(toSet()));
-						}
-						return resumePromise();
+				@Override
+				public Promise<Result<Set<K>>> onCommit(OTCommit<K, D> commit) {
+					if (matchPredicate.test(queue)) {
+						return completePromise(queue.stream().map(OTCommit::getId).collect(toSet()));
 					}
-				});
+					return resumePromise();
+				}
+			});
 	}
 
 	public static <K, D> Promise<K> findAnyCommonParent(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startCut) {
 		return reduce(repository, system, startCut, new FindAnyCommonParentGraphReducer<>(DiffsReducer.toVoid()))
-				.map(Map.Entry::getKey)
-				.whenComplete(toLogger(logger, thisMethod(), startCut));
+			.map(Map.Entry::getKey)
+			.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
 	public static <K, D> Promise<Set<K>> findAllCommonParents(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startCut) {
 		return reduce(repository, system, startCut, new FindAllCommonParentsGraphReducer<>(DiffsReducer.toVoid()))
-				.map(Map::keySet)
-				.whenComplete(toLogger(logger, thisMethod(), startCut));
+			.map(Map::keySet)
+			.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
 	public static <K, D> Promise<List<D>> diff(AsyncOTRepository<K, D> repository, OTSystem<D> system, K node1, K node2) {
@@ -273,38 +281,38 @@ public final class OTAlgorithms {
 
 		Set<K> startCut = Set.of(node1, node2);
 		return reduce(repository, system, startCut, new FindAnyCommonParentGraphReducer<>(DiffsReducer.toList()))
-				.map(entry -> {
-					List<D> diffs1 = entry.getValue().get(node1);
-					List<D> diffs2 = entry.getValue().get(node2);
-					return concat(diffs2, system.invert(diffs1));
-				})
-				.whenComplete(toLogger(logger, thisMethod(), startCut));
+			.map(entry -> {
+				List<D> diffs1 = entry.getValue().get(node1);
+				List<D> diffs2 = entry.getValue().get(node2);
+				return concat(diffs2, system.invert(diffs1));
+			})
+			.whenComplete(toLogger(logger, thisMethod(), startCut));
 	}
 
 	public static <K, D> Promise<Set<K>> excludeParents(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes) {
 		checkArgument(!startNodes.isEmpty(), "Start nodes are empty");
 		if (startNodes.size() == 1) return Promise.of(startNodes);
 		return reduce(repository, system, startNodes,
-				new GraphReducer<K, D, Set<K>>() {
-					long minLevel;
-					final Set<K> nodes = new HashSet<>(startNodes);
+			new GraphReducer<K, D, Set<K>>() {
+				long minLevel;
+				final Set<K> nodes = new HashSet<>(startNodes);
 
-					@Override
-					public void onStart(Collection<OTCommit<K, D>> queue) {
-						//noinspection OptionalGetWithoutIsPresent
-						minLevel = queue.stream().mapToLong(OTCommit::getLevel).min().getAsLong();
-					}
+				@Override
+				public void onStart(Collection<OTCommit<K, D>> queue) {
+					//noinspection OptionalGetWithoutIsPresent
+					minLevel = queue.stream().mapToLong(OTCommit::getLevel).min().getAsLong();
+				}
 
-					@Override
-					public Promise<Result<Set<K>>> onCommit(OTCommit<K, D> commit) {
-						nodes.removeAll(commit.getParentIds());
-						if (commit.getLevel() <= minLevel) {
-							return completePromise(nodes);
-						}
-						return resumePromise();
+				@Override
+				public Promise<Result<Set<K>>> onCommit(OTCommit<K, D> commit) {
+					nodes.removeAll(commit.getParentIds());
+					if (commit.getLevel() <= minLevel) {
+						return completePromise(nodes);
 					}
-				})
-				.whenComplete(toLogger(logger, thisMethod(), startNodes));
+					return resumePromise();
+				}
+			})
+			.whenComplete(toLogger(logger, thisMethod(), startNodes));
 	}
 
 	public static final class FindAnyCommonParentGraphReducer<K, D, A> extends AbstractGraphReducer<K, D, A, Map.Entry<K, Map<K, A>>> {
@@ -313,12 +321,13 @@ public final class OTAlgorithms {
 		}
 
 		@Override
-		protected Promise<Optional<Map.Entry<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit,
-				Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
+		protected Promise<Optional<Map.Entry<K, Map<K, A>>>> tryGetResult(
+			OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits
+		) {
 			return Promise.of(accumulators.entrySet()
-					.stream()
-					.filter(entry -> Objects.equals(headCommits.keySet(), entry.getValue().keySet()))
-					.findAny()
+				.stream()
+				.filter(entry -> Objects.equals(headCommits.keySet(), entry.getValue().keySet()))
+				.findAny()
 			);
 		}
 	}
@@ -329,19 +338,22 @@ public final class OTAlgorithms {
 		}
 
 		@Override
-		protected Promise<Optional<Map<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
-				Map<K, OTCommit<K, D>> headCommits) {
+		protected Promise<Optional<Map<K, Map<K, A>>>> tryGetResult(
+			OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits
+		) {
 			return Promise.of(
-					accumulators.values()
-							.stream()
-							.map(Map::keySet)
-							.allMatch(headCommits.keySet()::equals) ? Optional.of(accumulators) : Optional.empty()
+				accumulators.values()
+					.stream()
+					.map(Map::keySet)
+					.allMatch(headCommits.keySet()::equals) ? Optional.of(accumulators) : Optional.empty()
 			);
 		}
 	}
 
-	public static <K, D, A> Promise<Map<K, A>> reduceEdges(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, K parentNode,
-			DiffsReducer<A, D> diffAccumulator) {
+	public static <K, D, A> Promise<Map<K, A>> reduceEdges(
+		AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, K parentNode,
+		DiffsReducer<A, D> diffAccumulator
+	) {
 		return reduce(repository, system, heads, new AbstractGraphReducer<>(diffAccumulator) {
 			@Override
 			protected Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
@@ -359,29 +371,29 @@ public final class OTAlgorithms {
 	public static <K, D> Promise<List<D>> checkout(AsyncOTRepository<K, D> repository, OTSystem<D> system) {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
-				.then(heads ->
-						findParent(repository, system, heads, DiffsReducer.toVoid(),
-								commit -> repository.loadSnapshot(commit.getId())
-										.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
-								.then(findResult -> Promise.of(cachedSnapshotRef.value)))
-				.whenComplete(toLogger(logger, thisMethod()));
+			.then(heads ->
+				findParent(repository, system, heads, DiffsReducer.toVoid(),
+					commit -> repository.loadSnapshot(commit.getId())
+						.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
+					.then(findResult -> Promise.of(cachedSnapshotRef.value)))
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	public static <K, D> Promise<List<D>> checkout(AsyncOTRepository<K, D> repository, OTSystem<D> system, K commitId) {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
-				.then(heads ->
-						findParent(repository, system, union(heads, Set.of(commitId)), DiffsReducer.toVoid(),
-								commit -> repository.loadSnapshot(commit.getId())
-										.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
-								.then(findResult -> diff(repository, system, findResult.commit, commitId)
-										.map(diff -> concat(cachedSnapshotRef.value, diff))))
-				.whenComplete(toLogger(logger, thisMethod(), commitId));
+			.then(heads ->
+				findParent(repository, system, union(heads, Set.of(commitId)), DiffsReducer.toVoid(),
+					commit -> repository.loadSnapshot(commit.getId())
+						.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
+					.then(findResult -> diff(repository, system, findResult.commit, commitId)
+						.map(diff -> concat(cachedSnapshotRef.value, diff))))
+			.whenComplete(toLogger(logger, thisMethod(), commitId));
 	}
 
 	public static <K, D> Promise<Void> saveSnapshot(AsyncOTRepository<K, D> repository, OTSystem<D> system, K revisionId) {
 		return checkout(repository, system, revisionId)
-				.then(diffs -> repository.saveSnapshot(revisionId, diffs));
+			.then(diffs -> repository.saveSnapshot(revisionId, diffs));
 	}
 
 	public static class LoadGraphReducer<K, D> implements GraphReducer<K, D, OTLoadedGraph<K, D>> {
@@ -437,8 +449,8 @@ public final class OTAlgorithms {
 			}
 
 			if (head2roots.keySet()
-					.stream()
-					.anyMatch(head -> head2roots.get(head).equals(root2heads.keySet()))) {
+				.stream()
+				.anyMatch(head -> head2roots.get(head).equals(root2heads.keySet()))) {
 				return completePromise(graph);
 			}
 			return resumePromise();
@@ -447,24 +459,24 @@ public final class OTAlgorithms {
 
 	public static <K, D> Promise<OTLoadedGraph<K, D>> loadForMerge(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return reduce(repository, system, heads, new LoadGraphReducer<>(system))
-				.whenComplete(toLogger(logger, thisMethod(), heads));
+			.whenComplete(toLogger(logger, thisMethod(), heads));
 	}
 
 	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, OTLoadedGraph<K, D> graph) {
 		return reduce(repository, system, heads,
-				commit -> {
-					if (graph.hasChild(commit.getId())) {
-						return skipPromise();
-					}
-					graph.addNode(commit.getId(), commit.getLevel(), commit.getParents());
-					return resumePromise();
-				})
-				.then((v, e) -> {
-					if (e instanceof GraphExhaustedException) return Promise.of(null);
-					return Promise.of(v, e);
-				})
-				.map($ -> graph)
-				.whenComplete(toLogger(logger, thisMethod(), heads, graph));
+			commit -> {
+				if (graph.hasChild(commit.getId())) {
+					return skipPromise();
+				}
+				graph.addNode(commit.getId(), commit.getLevel(), commit.getParents());
+				return resumePromise();
+			})
+			.then((v, e) -> {
+				if (e instanceof GraphExhaustedException) return Promise.of(null);
+				return Promise.of(v, e);
+			})
+			.map($ -> graph)
+			.whenComplete(toLogger(logger, thisMethod(), heads, graph));
 	}
 
 	public static <K, D> Promise<OTLoadedGraph<K, D>> loadGraph(AsyncOTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
@@ -477,31 +489,31 @@ public final class OTAlgorithms {
 
 	public static <K, D> Promise<Void> copy(AsyncOTRepository<K, D> from, AsyncOTRepository<K, D> to) {
 		return from.getHeads()
-				.then(heads -> toList(heads.stream().map(from::loadCommit))
-						.then(commits -> {
-							PriorityQueue<OTCommit<K, D>> queue = new PriorityQueue<>(reverseOrder(comparingLong(OTCommit::getLevel)));
-							queue.addAll(commits);
-							return Promises.repeat(
-									() -> {
-										if (queue.isEmpty()) return Promise.of(false);
-										OTCommit<K, D> commit = queue.poll();
-										return to.hasCommit(commit.getId())
-												.then(hasCommit -> hasCommit ?
-														Promise.complete() :
-														Promises.all(commit.getParents().keySet().stream()
-																		.map(parentId ->
-																				from.loadCommit(parentId)
-																						.whenResult(parent -> {
-																							if (!queue.contains(parent)) {
-																								queue.add(parent);
-																							}
-																						})))
-																.then(() -> to.push(commit)))
-												.map($ -> true);
-									});
+			.then(heads -> toList(heads.stream().map(from::loadCommit))
+				.then(commits -> {
+					PriorityQueue<OTCommit<K, D>> queue = new PriorityQueue<>(reverseOrder(comparingLong(OTCommit::getLevel)));
+					queue.addAll(commits);
+					return Promises.repeat(
+						() -> {
+							if (queue.isEmpty()) return Promise.of(false);
+							OTCommit<K, D> commit = queue.poll();
+							return to.hasCommit(commit.getId())
+								.then(hasCommit -> hasCommit ?
+									Promise.complete() :
+									Promises.all(commit.getParents().keySet().stream()
+											.map(parentId ->
+												from.loadCommit(parentId)
+													.whenResult(parent -> {
+														if (!queue.contains(parent)) {
+															queue.add(parent);
+														}
+													})))
+										.then(() -> to.push(commit)))
+								.map($ -> true);
+						});
 
-						})
-						.then(() -> to.updateHeads(heads, Set.of())));
+				})
+				.then(() -> to.updateHeads(heads, Set.of())));
 	}
 
 }

@@ -86,19 +86,19 @@ public class FileWriteAheadLogTest {
 		storage = FileSystemCrdtStorage.create(reactor, storageFS, serializer, function);
 		uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);
 		wal = FileWriteAheadLog.builder(reactor, executor, path, serializer, uploader)
-				.withCurrentTimeProvider(reactor)
-				.build();
+			.withCurrentTimeProvider(reactor)
+			.build();
 	}
 
 	@Test
 	public void singleFlushSequential() {
 		wal = FileWriteAheadLog.builder(getCurrentReactor(), executor, path, serializer, uploader)
-				.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
-				.build();
+			.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
+			.build();
 		await(wal.start());
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
-				new CrdtData<>(1L, 140, GSet.of(1, 2, 3, 6, 9, 10, 11)),
-				new CrdtData<>(2L, 130, GSet.of(-12, 0, 2, 3, 100, 200))
+			new CrdtData<>(1L, 140, GSet.of(1, 2, 3, 6, 9, 10, 11)),
+			new CrdtData<>(2L, 130, GSet.of(-12, 0, 2, 3, 100, 200))
 		);
 		await(wal.put(1L, GSet.of(1, 2, 3)));
 		await(wal.put(2L, GSet.of(-12, 0, 200)));
@@ -117,16 +117,16 @@ public class FileWriteAheadLogTest {
 		await(wal.start());
 		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
 		);
 		await(
-				wal.put(1L, GSet.of(1, 2, 3)),
-				wal.put(2L, GSet.of(-12, 0, 200)),
-				wal.put(1L, GSet.of(1, 6)),
-				wal.put(2L, GSet.of(2, 3, 100)),
-				wal.put(1L, GSet.of(9, 10, 11)),
-				wal.flush()
+			wal.put(1L, GSet.of(1, 2, 3)),
+			wal.put(2L, GSet.of(-12, 0, 200)),
+			wal.put(1L, GSet.of(1, 6)),
+			wal.put(2L, GSet.of(2, 3, 100)),
+			wal.put(1L, GSet.of(9, 10, 11)),
+			wal.flush()
 		);
 
 		List<CrdtData<Long, GSet<Integer>>> actual = await(await(storage.download()).toList());
@@ -136,16 +136,16 @@ public class FileWriteAheadLogTest {
 	@Test
 	public void multipleFlushesSequential() {
 		wal = FileWriteAheadLog.builder(getCurrentReactor(), executor, path, serializer, uploader)
-				.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
-				.build();
+			.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10))
+			.build();
 		await(wal.start());
 		List<CrdtData<Long, GSet<Integer>>> expectedAfterFlush1 = List.of(
-				new CrdtData<>(1L, 120, GSet.of(1, 2, 3, 6)),
-				new CrdtData<>(2L, 110, GSet.of(-12, 0, 200))
+			new CrdtData<>(1L, 120, GSet.of(1, 2, 3, 6)),
+			new CrdtData<>(2L, 110, GSet.of(-12, 0, 200))
 		);
 		List<CrdtData<Long, GSet<Integer>>> expectedAfterFlush2 = List.of(
-				new CrdtData<>(1L, 140, GSet.of(1, 2, 3, 6, 9, 10, 11)),
-				new CrdtData<>(2L, 130, GSet.of(-12, 0, 2, 3, 100, 200))
+			new CrdtData<>(1L, 140, GSet.of(1, 2, 3, 6, 9, 10, 11)),
+			new CrdtData<>(2L, 130, GSet.of(-12, 0, 2, 3, 100, 200))
 		);
 		await(wal.put(1L, GSet.of(1, 2, 3)));
 		await(wal.put(2L, GSet.of(-12, 0, 200)));
@@ -168,17 +168,17 @@ public class FileWriteAheadLogTest {
 		await(wal.start());
 		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
 		);
 		await(
-				wal.put(1L, GSet.of(1, 2, 3)),
-				wal.put(2L, GSet.of(-12, 0, 200)),
-				wal.put(1L, GSet.of(1, 6)),
-				wal.flush(),
-				wal.put(2L, GSet.of(2, 3, 100)),
-				wal.put(1L, GSet.of(9, 10, 11)),
-				wal.flush()
+			wal.put(1L, GSet.of(1, 2, 3)),
+			wal.put(2L, GSet.of(-12, 0, 200)),
+			wal.put(1L, GSet.of(1, 6)),
+			wal.flush(),
+			wal.put(2L, GSet.of(2, 3, 100)),
+			wal.put(1L, GSet.of(9, 10, 11)),
+			wal.flush()
 		);
 
 		List<CrdtData<Long, GSet<Integer>>> actual = await(await(storage.download()).toList());
@@ -189,17 +189,17 @@ public class FileWriteAheadLogTest {
 	public void startupWithRemainingWALFiles() throws IOException {
 		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
 		);
 		craftWALFile(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 200)),
-				new CrdtData<>(1L, now, GSet.of(1, 6))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 200)),
+			new CrdtData<>(1L, now, GSet.of(1, 6))
 		);
 		craftWALFile(
-				new CrdtData<>(2L, now, GSet.of(2, 3, 100)),
-				new CrdtData<>(1L, now, GSet.of(9, 10, 11))
+			new CrdtData<>(2L, now, GSet.of(2, 3, 100)),
+			new CrdtData<>(1L, now, GSet.of(9, 10, 11))
 		);
 
 		Set<Path> remainingWalFiles;
@@ -224,21 +224,21 @@ public class FileWriteAheadLogTest {
 	public void startupWithMalformedWALFiles() throws IOException {
 		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
-				new CrdtData<>(2L, now, GSet.of(-124, -12, 0, 2, 3, 4, 45, 100, 200))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
+			new CrdtData<>(2L, now, GSet.of(-124, -12, 0, 2, 3, 4, 45, 100, 200))
 		);
 		Path walFile1 = craftWALFile(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 200)),
-				new CrdtData<>(1L, now, GSet.of(1, 6)),
-				new CrdtData<>(1L, now, GSet.of(23, -53))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 200)),
+			new CrdtData<>(1L, now, GSet.of(1, 6)),
+			new CrdtData<>(1L, now, GSet.of(23, -53))
 		);
 		Path walFile2 = craftWALFile(
-				new CrdtData<>(2L, now, GSet.of(2, 3, 100)),
-				new CrdtData<>(1L, now, GSet.of(9, 10, 11)),
-				new CrdtData<>(2L, now, GSet.of(-124, 4, 45)),
-				new CrdtData<>(1L, now, GSet.of(20988, -300, 75)),
-				new CrdtData<>(2L, now, GSet.of(100000, -100000))
+			new CrdtData<>(2L, now, GSet.of(2, 3, 100)),
+			new CrdtData<>(1L, now, GSet.of(9, 10, 11)),
+			new CrdtData<>(2L, now, GSet.of(-124, 4, 45)),
+			new CrdtData<>(1L, now, GSet.of(20988, -300, 75)),
+			new CrdtData<>(2L, now, GSet.of(100000, -100000))
 		);
 		truncateFile(walFile1, 0.75);
 		truncateFile(walFile2, 0.75);
@@ -265,15 +265,15 @@ public class FileWriteAheadLogTest {
 	public void startupWithEmptyWALFiles() throws IOException {
 		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
-				new CrdtData<>(1L, now, GSet.of(-53, 1, 2, 3, 6, 23)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 12, 100, 200))
+			new CrdtData<>(1L, now, GSet.of(-53, 1, 2, 3, 6, 23)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 12, 100, 200))
 		);
 		craftWALFile(
-				new CrdtData<>(1L, now, GSet.of(1, 2, 3)),
-				new CrdtData<>(2L, now, GSet.of(-12, 0, 200)),
-				new CrdtData<>(1L, now, GSet.of(1, 6)),
-				new CrdtData<>(1L, now, GSet.of(23, -53)),
-				new CrdtData<>(2L, now, GSet.of(-12, 12, 100))
+			new CrdtData<>(1L, now, GSet.of(1, 2, 3)),
+			new CrdtData<>(2L, now, GSet.of(-12, 0, 200)),
+			new CrdtData<>(1L, now, GSet.of(1, 6)),
+			new CrdtData<>(1L, now, GSet.of(23, -53)),
+			new CrdtData<>(2L, now, GSet.of(-12, 12, 100))
 		);
 		craftWALFile();
 		Path walFile3 = craftWALFile();
@@ -301,12 +301,12 @@ public class FileWriteAheadLogTest {
 	private Path craftWALFile(CrdtData<Long, GSet<Integer>>... mockData) {
 		Path file = path.resolve(UUID.randomUUID() + EXT_FINAL);
 		await(StreamSuppliers.ofChannelSupplier(ChannelSuppliers.ofValues(mockData)
-						.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))
-				.transformWith(ChannelSerializer.builder(serializer)
-						.withAutoFlushInterval(Duration.ZERO)
-						.build())
-				.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
-				.streamTo(ChannelFileWriter.open(executor, file)));
+				.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))
+			.transformWith(ChannelSerializer.builder(serializer)
+				.withAutoFlushInterval(Duration.ZERO)
+				.build())
+			.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
+			.streamTo(ChannelFileWriter.open(executor, file)));
 		return file;
 	}
 

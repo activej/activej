@@ -6,7 +6,9 @@ import org.apache.calcite.avatica.ConnectionProperty;
 import org.apache.calcite.avatica.DriverVersion;
 import org.apache.calcite.avatica.remote.JsonService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 public class Driver extends org.apache.calcite.avatica.remote.Driver {
 	public static final String CONNECT_STRING_PREFIX = "jdbc:activej:dataflow:";
@@ -44,10 +46,10 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 	}
 
 	private static final Set<? extends ConnectionProperty> HIDDEN_PROPERTIES = Set.of(
-			BuiltInConnectionProperty.URL,
-			BuiltInConnectionProperty.FACTORY,
-			BuiltInConnectionProperty.HTTP_CLIENT_IMPL,
-			BuiltInConnectionProperty.HTTP_CLIENT_FACTORY
+		BuiltInConnectionProperty.URL,
+		BuiltInConnectionProperty.FACTORY,
+		BuiltInConnectionProperty.HTTP_CLIENT_IMPL,
+		BuiltInConnectionProperty.HTTP_CLIENT_FACTORY
 	);
 
 	@Override

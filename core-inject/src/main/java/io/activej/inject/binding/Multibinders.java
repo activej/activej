@@ -21,8 +21,8 @@ import static java.util.stream.Collectors.joining;
 public final class Multibinders {
 	private static final Multibinder<Object> ERROR_ON_DUPLICATE = (key, bindings) -> {
 		throw new DIException(bindings.stream()
-				.map(Utils::getLocation)
-				.collect(joining("\n\t", "Duplicate bindings for key " + key.getDisplayString() + ":\n\t", "\n")));
+			.map(Utils::getLocation)
+			.collect(joining("\n\t", "Duplicate bindings for key " + key.getDisplayString() + ":\n\t", "\n")));
 	};
 	private static final Multibinder<Set<Object>> TO_SET = ofReducer((key, stream) -> {
 		Set<Object> result = new HashSet<>();
@@ -32,10 +32,10 @@ public final class Multibinders {
 	private static final Multibinder<Map<Object, Object>> TO_MAP = ofReducer((key, stream) -> {
 		Map<Object, Object> result = new HashMap<>();
 		stream.forEach(map ->
-				map.forEach((k, v) ->
-						result.merge(k, v, ($, $2) -> {
-							throw new DIException("Duplicate key " + k + " while merging maps for key " + key.getDisplayString());
-						})));
+			map.forEach((k, v) ->
+				result.merge(k, v, ($, $2) -> {
+					throw new DIException("Duplicate key " + k + " while merging maps for key " + key.getDisplayString());
+				})));
 		return result;
 	});
 
@@ -53,33 +53,33 @@ public final class Multibinders {
 	@SuppressWarnings("rawtypes")
 	public static <T> Multibinder<T> ofReducer(BiFunction<Key<T>, Stream<T>, T> reducerFunction) {
 		return (key, bindings) ->
-				new Binding<>(bindings.stream().map(Binding::getDependencies).flatMap(Collection::stream).collect(Collectors.toSet())) {
-					@Override
-					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindingsLocator, boolean threadsafe, int scope, @Nullable Integer slot) {
-						final CompiledBinding[] compiledBindings = bindings.stream()
-								.map(binding -> binding.compile(compiledBindingsLocator, true, scope, null))
-								.toArray(CompiledBinding[]::new);
+			new Binding<>(bindings.stream().map(Binding::getDependencies).flatMap(Collection::stream).collect(Collectors.toSet())) {
+				@Override
+				public CompiledBinding<T> compile(CompiledBindingLocator compiledBindingsLocator, boolean threadsafe, int scope, @Nullable Integer slot) {
+					final CompiledBinding[] compiledBindings = bindings.stream()
+						.map(binding -> binding.compile(compiledBindingsLocator, true, scope, null))
+						.toArray(CompiledBinding[]::new);
 
-						//noinspection Convert2Lambda
-						return slot == null || bindings.stream().anyMatch(b -> b.getType() == TRANSIENT) ?
-								new CompiledBinding<>() {
-									@SuppressWarnings("unchecked")
-									@Override
-									public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										return reducerFunction.apply(key, Arrays.stream(compiledBindings)
-												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
-									}
-								} :
-								new AbstractCompiledBinding<>(scope, slot) {
-									@SuppressWarnings("unchecked")
-									@Override
-									protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										return reducerFunction.apply(key, Arrays.stream(compiledBindings)
-												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
-									}
-								};
-					}
-				};
+					//noinspection Convert2Lambda
+					return slot == null || bindings.stream().anyMatch(b -> b.getType() == TRANSIENT) ?
+						new CompiledBinding<>() {
+							@SuppressWarnings("unchecked")
+							@Override
+							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								return reducerFunction.apply(key, Arrays.stream(compiledBindings)
+									.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
+							}
+						} :
+						new AbstractCompiledBinding<>(scope, slot) {
+							@SuppressWarnings("unchecked")
+							@Override
+							protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								return reducerFunction.apply(key, Arrays.stream(compiledBindings)
+									.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
+							}
+						};
+				}
+			};
 	}
 
 	/**
@@ -117,6 +117,6 @@ public final class Multibinders {
 	@SuppressWarnings("unchecked")
 	public static Multibinder<?> combinedMultibinder(Map<Key<?>, Multibinder<?>> multibinders) {
 		return (key, bindings) ->
-				((Multibinder<Object>) multibinders.getOrDefault(key, ERROR_ON_DUPLICATE)).multibind(key, bindings);
+			((Multibinder<Object>) multibinders.getOrDefault(key, ERROR_ON_DUPLICATE)).multibind(key, bindings);
 	}
 }

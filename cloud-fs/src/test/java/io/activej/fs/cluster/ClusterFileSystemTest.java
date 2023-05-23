@@ -94,14 +94,14 @@ public final class ClusterFileSystemTest {
 			Files.createDirectories(path);
 
 			Eventloop serverEventloop = Eventloop.builder()
-					.withFatalErrorHandler(rethrow())
-					.build();
+				.withFatalErrorHandler(rethrow())
+				.build();
 			serverEventloop.keepAlive(true);
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(fileSystem::start);
 			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fileSystem))
-					.withListenPort(port)
-					.build();
+				.withListenPort(port)
+				.build();
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -122,8 +122,8 @@ public final class ClusterFileSystemTest {
 		discoveryService = IDiscoveryService.constant(partitions);
 		this.partitions = FileSystemPartitions.create(reactor, discoveryService);
 		client = ClusterFileSystem.builder(reactor, this.partitions)
-				.withReplicationCount(REPLICATION_COUNT) // there are those 3 dead nodes added above
-				.build();
+			.withReplicationCount(REPLICATION_COUNT) // there are those 3 dead nodes added above
+			.build();
 		await(this.partitions.start());
 		await(this.client.start());
 	}
@@ -140,7 +140,7 @@ public final class ClusterFileSystemTest {
 
 		ByteBuf value = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 		await(client.upload(resultFile)
-				.then(ChannelSuppliers.ofValue(value)::streamTo));
+			.then(ChannelSuppliers.ofValue(value)::streamTo));
 
 		int uploaded = 0;
 		for (Path path : serverStorages) {
@@ -163,7 +163,7 @@ public final class ClusterFileSystemTest {
 		Files.writeString(serverStorages.get(numOfServer).resolve(file), content);
 
 		await(ChannelSuppliers.ofPromise(client.download(file))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file))));
+			.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file))));
 
 		assertEquals(Files.readString(clientStorage.resolve(file)), content);
 	}
@@ -174,26 +174,26 @@ public final class ClusterFileSystemTest {
 		ByteBuf data = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 
 		partitions = FileSystemPartitions.builder(partitions.getReactor(), discoveryService)
-				.withServerSelector((fileName, serverKeys) -> {
-					String firstServer = fileName.contains("1") ?
-							"server_1" :
-							fileName.contains("2") ?
-									"server_2" :
-									fileName.contains("3") ?
-											"server_3" :
-											"server_0";
-					return serverKeys.stream()
-							.map(String.class::cast)
-							.sorted(Comparator.comparing(key -> key.equals(firstServer) ? -1 : 1))
-							.collect(toList());
-				})
-				.build();
+			.withServerSelector((fileName, serverKeys) -> {
+				String firstServer = fileName.contains("1") ?
+					"server_1" :
+					fileName.contains("2") ?
+						"server_2" :
+						fileName.contains("3") ?
+							"server_3" :
+							"server_0";
+				return serverKeys.stream()
+					.map(String.class::cast)
+					.sorted(Comparator.comparing(key -> key.equals(firstServer) ? -1 : 1))
+					.collect(toList());
+			})
+			.build();
 
 		client = ClusterFileSystem.builder(client.getReactor(), partitions)
-				.withDeadPartitionsThreshold(3)
-				.withMinUploadTargets(1)
-				.withMaxUploadTargets(1)
-				.build();
+			.withDeadPartitionsThreshold(3)
+			.withMinUploadTargets(1)
+			.withMaxUploadTargets(1)
+			.build();
 		await(partitions.start());
 		await(client.start());
 
@@ -203,7 +203,7 @@ public final class ClusterFileSystemTest {
 		{
 			ByteBuf value = data.slice();
 			return ChannelSuppliers.ofValue(value)
-					.streamTo(ChannelConsumers.ofPromise(client.upload(f)));
+				.streamTo(ChannelConsumers.ofPromise(client.upload(f)));
 		})));
 
 		assertEquals(Files.readString(serverStorages.get(1).resolve("file_1.txt")), content);
@@ -219,12 +219,12 @@ public final class ClusterFileSystemTest {
 		ByteBuf data = ByteBuf.wrapForReading(content.getBytes(UTF_8));
 
 		await(Promises.sequence(IntStream.range(0, 1_000)
-				.mapToObj(i ->
-						() -> {
-							ByteBuf value = data.slice();
-							return ChannelSuppliers.ofValue(value)
-									.streamTo(ChannelConsumers.ofPromise(client.upload("file_uploaded_" + i + ".txt")));
-						})));
+			.mapToObj(i ->
+				() -> {
+					ByteBuf value = data.slice();
+					return ChannelSuppliers.ofValue(value)
+						.streamTo(ChannelConsumers.ofPromise(client.upload("file_uploaded_" + i + ".txt")));
+				})));
 
 		for (int i = 0; i < 1000; i++) {
 			int replicasCount = 0;
@@ -245,7 +245,7 @@ public final class ClusterFileSystemTest {
 
 		ByteBuf value = ByteBuf.wrapForReading("whatever, blah-blah".getBytes(UTF_8));
 		Exception exception = awaitException(ChannelSuppliers.ofValue(value)
-				.streamTo(ChannelConsumers.ofPromise(client.upload("file_uploaded.txt"))));
+			.streamTo(ChannelConsumers.ofPromise(client.upload("file_uploaded.txt"))));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
 		assertThat(exception.getMessage(), containsString("Didn't connect to enough partitions"));
@@ -256,7 +256,7 @@ public final class ClusterFileSystemTest {
 		String fileName = "i_dont_exist.txt";
 
 		Exception exception = awaitException(ChannelSuppliers.ofPromise(client.download(fileName))
-				.streamTo(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of(ByteBuf::recycle))));
+			.streamTo(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of(ByteBuf::recycle))));
 
 		assertThat(exception, instanceOf(FileSystemException.class));
 		assertThat(exception.getMessage(), containsString(fileName));
@@ -277,7 +277,7 @@ public final class ClusterFileSystemTest {
 
 		await(client.copy(source, target));
 		ByteBuf result = await(client.download(target)
-				.then(supplier -> supplier.toCollector(ByteBufs.collector())));
+			.then(supplier -> supplier.toCollector(ByteBufs.collector())));
 
 		assertEquals(content, result.asString(UTF_8));
 
@@ -343,7 +343,7 @@ public final class ClusterFileSystemTest {
 	public void testCopyAllNotEnoughPartitions() throws IOException {
 		int numberOfServers = REPLICATION_COUNT - 1;
 		Map<String, String> sourceToTarget = IntStream.range(0, 10).boxed()
-				.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
+			.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -359,13 +359,13 @@ public final class ClusterFileSystemTest {
 		await(client.copyAll(sourceToTarget));
 
 		Map<String, Integer> copies = sourceToTarget.keySet().stream()
-				.collect(toLinkedHashMap($ -> 0));
+			.collect(toLinkedHashMap($ -> 0));
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			for (Path path : paths) {
 				Path targetPath = path.resolve(entry.getValue());
 				if (Files.exists(targetPath) &&
-						Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
+					Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
 					copies.computeIfPresent(source, ($, count) -> ++count);
 				}
 			}
@@ -379,7 +379,7 @@ public final class ClusterFileSystemTest {
 	@Test
 	public void testCopyAllWithMissingFiles() throws IOException {
 		Map<String, String> sourceToTarget = IntStream.range(0, 10).boxed()
-				.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
+			.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -424,7 +424,7 @@ public final class ClusterFileSystemTest {
 	public void testMoveAllNotEnoughPartitions() throws IOException {
 		int numberOfServers = REPLICATION_COUNT - 1;
 		Map<String, String> sourceToTarget = IntStream.range(0, 10).boxed()
-				.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
+			.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -440,13 +440,13 @@ public final class ClusterFileSystemTest {
 		await(client.moveAll(sourceToTarget));
 
 		Map<String, Integer> copies = sourceToTarget.keySet().stream()
-				.collect(toLinkedHashMap($ -> 0));
+			.collect(toLinkedHashMap($ -> 0));
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			for (Path path : paths) {
 				Path targetPath = path.resolve(entry.getValue());
 				if (Files.exists(targetPath) &&
-						Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
+					Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
 					copies.computeIfPresent(source, ($, count) -> ++count);
 				}
 			}
@@ -460,7 +460,7 @@ public final class ClusterFileSystemTest {
 	@Test
 	public void testMoveAllWithMissingFiles() throws IOException {
 		Map<String, String> sourceToTarget = IntStream.range(0, 10).boxed()
-				.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
+			.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -484,8 +484,8 @@ public final class ClusterFileSystemTest {
 	@Test
 	public void testInspectAll() throws IOException {
 		Set<String> names = IntStream.range(0, 10)
-				.mapToObj(i -> "the_file_" + i + ".txt")
-				.collect(toSet());
+			.mapToObj(i -> "the_file_" + i + ".txt")
+			.collect(toSet());
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -510,8 +510,8 @@ public final class ClusterFileSystemTest {
 	@Test
 	public void testInspectAllWithMissingFiles() throws IOException {
 		Set<String> existingNames = IntStream.range(0, 10)
-				.mapToObj(i -> "the_file_" + i + ".txt")
-				.collect(toSet());
+			.mapToObj(i -> "the_file_" + i + ".txt")
+			.collect(toSet());
 		String contentPrefix = "test content of the file ";
 		List<Path> paths = new ArrayList<>(serverStorages);
 
@@ -525,8 +525,8 @@ public final class ClusterFileSystemTest {
 		}
 
 		Set<String> nonExistingNames = IntStream.range(0, 10)
-				.mapToObj(i -> "nonexistent_" + i + ".txt")
-				.collect(toSet());
+			.mapToObj(i -> "nonexistent_" + i + ".txt")
+			.collect(toSet());
 
 		Map<String, @Nullable FileMetadata> result = await(client.infoAll(union(existingNames, nonExistingNames)));
 
@@ -544,13 +544,13 @@ public final class ClusterFileSystemTest {
 
 	private void doTestCopyAll(int numberOfFiles) throws IOException {
 		Map<String, String> sourceToTarget = IntStream.range(0, numberOfFiles).boxed()
-				.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
+			.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
 		doActionAndAssertFilesAreCopied(sourceToTarget, client::copyAll);
 	}
 
 	private void doTestMoveAll(int numberOfFiles) throws IOException {
 		Map<String, String> sourceToTarget = IntStream.range(0, numberOfFiles).boxed()
-				.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
+			.collect(toMap(i -> "the_file_" + i + ".txt", i -> "the_new_file_" + i + ".txt"));
 		doActionAndAssertFilesAreCopied(sourceToTarget, client::moveAll);
 
 		for (Path serverStorage : serverStorages) {
@@ -577,9 +577,9 @@ public final class ClusterFileSystemTest {
 
 		await(action.accept(sourceToTarget));
 		List<String> results = await(Promises.toList(sourceToTarget.values().stream()
-				.map(target -> client.download(target)
-						.then(supplier -> supplier.toCollector(ByteBufs.collector()))
-						.map(byteBuf -> byteBuf.asString(UTF_8)))));
+			.map(target -> client.download(target)
+				.then(supplier -> supplier.toCollector(ByteBufs.collector()))
+				.map(byteBuf -> byteBuf.asString(UTF_8)))));
 
 		Set<String> expectedContents = sourceToTarget.keySet().stream().map(source -> contentPrefix + source).collect(toSet());
 
@@ -590,7 +590,7 @@ public final class ClusterFileSystemTest {
 		assertTrue(expectedContents.isEmpty());
 
 		Map<String, String> expected = sourceToTarget.entrySet().stream()
-				.collect(toMap(Map.Entry::getValue, entry -> contentPrefix + entry.getKey()));
+			.collect(toMap(Map.Entry::getValue, entry -> contentPrefix + entry.getKey()));
 
 		for (Map.Entry<String, String> entry : expected.entrySet()) {
 			int copies = 0;

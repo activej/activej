@@ -99,35 +99,35 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.build();
+			.install(createSerializersModule())
+			.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(3),
-						new TestItem(5)))
-				.bind(datasetId("result")).toInstance(result1)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(3),
+				new TestItem(5)))
+			.bind(datasetId("result")).toInstance(result1)
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(2),
-						new TestItem(4),
-						new TestItem(6)
-				))
-				.bind(datasetId("result")).toInstance(result2)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(2),
+				new TestItem(4),
+				new TestItem(6)
+			))
+			.bind(datasetId("result")).toInstance(result2)
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -143,10 +143,10 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertEquals(List.of(new TestItem(1), new TestItem(3), new TestItem(5)), result1.getList());
 		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6)), result2.getList());
@@ -158,37 +158,37 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
-				.build();
+			.install(createSerializersModule())
+			.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
+			.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(2),
-						new TestItem(3),
-						new TestItem(4),
-						new TestItem(5),
-						new TestItem(6)))
-				.bind(datasetId("result")).toInstance(result1)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5),
+				new TestItem(6)))
+			.bind(datasetId("result")).toInstance(result1)
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(6)))
-				.bind(datasetId("result")).toInstance(result2)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(6)))
+			.bind(datasetId("result")).toInstance(result2)
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -200,15 +200,15 @@ public final class DataflowTest {
 		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
-				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
+			simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
 		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		List<TestItem> results = new ArrayList<>();
 		results.addAll(result1.getList());
@@ -216,14 +216,14 @@ public final class DataflowTest {
 		results.sort(Comparator.comparingLong(item -> item.value));
 
 		assertEquals(List.of(
-				new TestItem(1),
-				new TestItem(1),
-				new TestItem(2),
-				new TestItem(3),
-				new TestItem(4),
-				new TestItem(5),
-				new TestItem(6),
-				new TestItem(6)), results);
+			new TestItem(1),
+			new TestItem(1),
+			new TestItem(2),
+			new TestItem(3),
+			new TestItem(4),
+			new TestItem(5),
+			new TestItem(6),
+			new TestItem(6)), results);
 	}
 
 	@Test
@@ -237,9 +237,9 @@ public final class DataflowTest {
 		Partition partition3 = new Partition(address3);
 
 		Module common = createCommon(List.of(partition1, partition2, partition3))
-				.install(createSerializersModule())
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
@@ -248,44 +248,44 @@ public final class DataflowTest {
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		List<TestItem> list1 = List.of(
-				new TestItem(15),
-				new TestItem(12),
-				new TestItem(13),
-				new TestItem(17),
-				new TestItem(11),
-				new TestItem(13));
+			new TestItem(15),
+			new TestItem(12),
+			new TestItem(13),
+			new TestItem(17),
+			new TestItem(11),
+			new TestItem(13));
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(list1)
-				.bind(datasetId("result")).toInstance(result1)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(list1)
+			.bind(datasetId("result")).toInstance(result1)
+			.build();
 
 		List<TestItem> list2 = List.of(
-				new TestItem(21),
-				new TestItem(26));
+			new TestItem(21),
+			new TestItem(26));
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(list2)
-				.bind(datasetId("result")).toInstance(result2)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(list2)
+			.bind(datasetId("result")).toInstance(result2)
+			.build();
 
 		List<TestItem> list3 = List.of(
-				new TestItem(33),
-				new TestItem(35),
-				new TestItem(31),
-				new TestItem(38),
-				new TestItem(36));
+			new TestItem(33),
+			new TestItem(35),
+			new TestItem(31),
+			new TestItem(38),
+			new TestItem(36));
 		Module serverModule3 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address3.getPort())
-				.bind(datasetId("items")).toInstance(list3)
-				.bind(datasetId("result")).toInstance(result3)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address3.getPort())
+			.bind(datasetId("items")).toInstance(list3)
+			.bind(datasetId("result")).toInstance(result3)
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -299,24 +299,24 @@ public final class DataflowTest {
 		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		Dataset<TestItem> items = localSort(
-				repartition(
-						datasetOfId("items", simple(TestItem.class)),
-						new TestKeyFunction(),
-						List.of(partition2, partition3)
-				),
-				Long.class,
+			repartition(
+				datasetOfId("items", simple(TestItem.class)),
 				new TestKeyFunction(),
-				new TestComparator()
+				List.of(partition2, partition3)
+			),
+			Long.class,
+			new TestKeyFunction(),
+			new TestComparator()
 		);
 		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-					server3.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+				server3.close();
+			})));
 
 		Set<TestItem> expectedOnServers2And3 = new HashSet<>();
 		expectedOnServers2And3.addAll(list1);
@@ -337,9 +337,9 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
@@ -347,30 +347,30 @@ public final class DataflowTest {
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(6),
-						new TestItem(4),
-						new TestItem(2),
-						new TestItem(3),
-						new TestItem(1)))
-				.bind(datasetId("result")).toInstance(result1)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(6),
+				new TestItem(4),
+				new TestItem(2),
+				new TestItem(3),
+				new TestItem(1)))
+			.bind(datasetId("result")).toInstance(result1)
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(7),
-						new TestItem(7),
-						new TestItem(8),
-						new TestItem(2),
-						new TestItem(5)))
-				.bind(datasetId("result")).toInstance(result2)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(7),
+				new TestItem(7),
+				new TestItem(8),
+				new TestItem(2),
+				new TestItem(5)))
+			.bind(datasetId("result")).toInstance(result2)
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -387,10 +387,10 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6)), result1.getList());
 		assertEquals(List.of(new TestItem(2), new TestItem(8)), result2.getList());
@@ -404,35 +404,35 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(2),
-						new TestItem(3),
-						new TestItem(4),
-						new TestItem(5)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5)))
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(6),
-						new TestItem(7),
-						new TestItem(8),
-						new TestItem(9),
-						new TestItem(10)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(6),
+				new TestItem(7),
+				new TestItem(8),
+				new TestItem(9),
+				new TestItem(10)))
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -454,10 +454,10 @@ public final class DataflowTest {
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6), new TestItem(8), new TestItem(10)), resultConsumer.getList());
 	}
@@ -470,36 +470,36 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(2),
-						new TestItem(3),
-						new TestItem(4),
-						new TestItem(5)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5)))
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(List.of(
-						new TestItem(6),
-						new TestItem(7),
-						new TestItem(8),
-						new TestItem(9),
-						new TestItem(10)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(List.of(
+				new TestItem(6),
+				new TestItem(7),
+				new TestItem(8),
+				new TestItem(9),
+				new TestItem(10)))
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -522,10 +522,10 @@ public final class DataflowTest {
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertEquals(List.of(new TestItem(4), new TestItem(5), new TestItem(6), new TestItem(7)), resultConsumer.getList());
 	}
@@ -536,9 +536,9 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
@@ -546,18 +546,18 @@ public final class DataflowTest {
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("result")).toInstance(result1)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("result")).toInstance(result1)
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("result")).toInstance(result2)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("result")).toInstance(result2)
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -573,10 +573,10 @@ public final class DataflowTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertTrue(result1.getList().isEmpty());
 		assertTrue(result2.getList().isEmpty());
@@ -590,40 +590,40 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items1")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(2),
-						new TestItem(3)))
-				.bind(datasetId("items2")).toInstance(List.of(
-						new TestItem(3),
-						new TestItem(4),
-						new TestItem(5)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items1")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3)))
+			.bind(datasetId("items2")).toInstance(List.of(
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5)))
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items1")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(6),
-						new TestItem(7)))
-				.bind(datasetId("items2")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(5),
-						new TestItem(8)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items1")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(6),
+				new TestItem(7)))
+			.bind(datasetId("items2")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(5),
+				new TestItem(8)))
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -649,20 +649,20 @@ public final class DataflowTest {
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertEquals(List.of(
-				new TestItem(1),
-				new TestItem(2),
-				new TestItem(3),
-				new TestItem(4),
-				new TestItem(5),
-				new TestItem(6),
-				new TestItem(7),
-				new TestItem(8)
+			new TestItem(1),
+			new TestItem(2),
+			new TestItem(3),
+			new TestItem(4),
+			new TestItem(5),
+			new TestItem(6),
+			new TestItem(7),
+			new TestItem(8)
 		), resultConsumer.getList());
 	}
 
@@ -674,40 +674,40 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.install(createSerializersModule())
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
-				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
-				.build();
+			.install(createSerializersModule())
+			.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
+			.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+			.build();
 
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items1")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(2),
-						new TestItem(3)))
-				.bind(datasetId("items2")).toInstance(List.of(
-						new TestItem(3),
-						new TestItem(4),
-						new TestItem(5)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items1")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3)))
+			.bind(datasetId("items2")).toInstance(List.of(
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5)))
+			.build();
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items1")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(6),
-						new TestItem(7)))
-				.bind(datasetId("items2")).toInstance(List.of(
-						new TestItem(1),
-						new TestItem(5),
-						new TestItem(8)))
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items1")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(6),
+				new TestItem(7)))
+			.bind(datasetId("items2")).toInstance(List.of(
+				new TestItem(1),
+				new TestItem(5),
+				new TestItem(8)))
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -733,24 +733,24 @@ public final class DataflowTest {
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		assertEquals(List.of(
-				new TestItem(1),
-				new TestItem(1),
-				new TestItem(1),
-				new TestItem(2),
-				new TestItem(3),
-				new TestItem(3),
-				new TestItem(4),
-				new TestItem(5),
-				new TestItem(5),
-				new TestItem(6),
-				new TestItem(7),
-				new TestItem(8)
+			new TestItem(1),
+			new TestItem(1),
+			new TestItem(1),
+			new TestItem(2),
+			new TestItem(3),
+			new TestItem(3),
+			new TestItem(4),
+			new TestItem(5),
+			new TestItem(5),
+			new TestItem(6),
+			new TestItem(7),
+			new TestItem(8)
 		), resultConsumer.getList());
 	}
 
@@ -780,63 +780,63 @@ public final class DataflowTest {
 
 	public static ModuleBuilder createCommon(List<Partition> graphPartitions) {
 		return ModuleBuilder.create()
-				.install(DataflowModule.create())
-				.bind(NioReactor.class).toInstance(Reactor.getCurrentReactor())
-				.scan(new Object() {
-					@Provides
-					List<Partition> partitions() {
-						return graphPartitions;
-					}
+			.install(DataflowModule.create())
+			.bind(NioReactor.class).toInstance(Reactor.getCurrentReactor())
+			.scan(new Object() {
+				@Provides
+				List<Partition> partitions() {
+					return graphPartitions;
+				}
 
-					@Provides
-					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
-							BinarySerializerModule.BinarySerializerLocator serializers) {
-						return DataflowClient.create(reactor, codec, serializers);
-					}
-				});
+				@Provides
+				DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+					BinarySerializerModule.BinarySerializerLocator serializers) {
+					return DataflowClient.create(reactor, codec, serializers);
+				}
+			});
 	}
 
 	public static Module createCommonClient(Module common) {
 		return ModuleBuilder.create()
-				.install(common)
-				.scan(new Object() {
-					@Provides
-					@Transient
-					DataflowGraph graph(NioReactor reactor, DataflowClient client, List<Partition> partitions) {
-						return new DataflowGraph(reactor, client, partitions);
-					}
-				})
-				.build();
+			.install(common)
+			.scan(new Object() {
+				@Provides
+				@Transient
+				DataflowGraph graph(NioReactor reactor, DataflowClient client, List<Partition> partitions) {
+					return new DataflowGraph(reactor, client, partitions);
+				}
+			})
+			.build();
 	}
 
 	public static Module createCommonServer(Module common, Executor executor, Executor sortingExecutor) {
 		return ModuleBuilder.create()
-				.install(common)
-				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
-				.bind(Executor.class).toInstance(executor)
-				.scan(new Object() {
-					@Provides
-					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
-							BinarySerializerModule.BinarySerializerLocator serializers, Injector environment,
-							@Named("dataflowPort") OptionalDependency<Integer> listenPort) {
-						DataflowServer.Builder builder = DataflowServer.builder(reactor, codec, serializers, environment);
-						if (listenPort.isPresent()) {
-							builder.withListenPort(listenPort.get());
-						}
-						return builder.build();
+			.install(common)
+			.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
+			.bind(Executor.class).toInstance(executor)
+			.scan(new Object() {
+				@Provides
+				DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec,
+					BinarySerializerModule.BinarySerializerLocator serializers, Injector environment,
+					@Named("dataflowPort") OptionalDependency<Integer> listenPort) {
+					DataflowServer.Builder builder = DataflowServer.builder(reactor, codec, serializers, environment);
+					if (listenPort.isPresent()) {
+						builder.withListenPort(listenPort.get());
 					}
+					return builder.build();
+				}
 
-					@Provides
-					HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
-							List<Partition> partitions, Injector env, @Named("debugPort") OptionalDependency<Integer> listenPort) {
-						HttpServer.Builder builder = HttpServer.builder(reactor, new DataflowDebugServlet(reactor, partitions, executor, codec, env));
-						if (listenPort.isPresent()) {
-							builder.withListenPort(listenPort.get());
-						}
-						return builder.build();
+				@Provides
+				HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+					List<Partition> partitions, Injector env, @Named("debugPort") OptionalDependency<Integer> listenPort) {
+					HttpServer.Builder builder = HttpServer.builder(reactor, new DataflowDebugServlet(reactor, partitions, executor, codec, env));
+					if (listenPort.isPresent()) {
+						builder.withListenPort(listenPort.get());
 					}
-				})
-				.build();
+					return builder.build();
+				}
+			})
+			.build();
 	}
 
 	public static InetSocketAddress getFreeListenAddress() {
@@ -863,9 +863,9 @@ public final class DataflowTest {
 
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
-				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
-				.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
-				.bind(new Key<StreamCodec<Predicate<?>>>() {}).toInstance(StreamCodecs.singleton(new TestPredicate()))
-				.build();
+			.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
+			.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
+			.bind(new Key<StreamCodec<Predicate<?>>>() {}).toInstance(StreamCodecs.singleton(new TestPredicate()))
+			.build();
 	}
 }

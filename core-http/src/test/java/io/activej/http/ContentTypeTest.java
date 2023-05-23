@@ -59,11 +59,11 @@ public class ContentTypeTest {
 	@Test
 	public void testAcceptContentType() throws MalformedHttpException {
 		byte[] acceptCts = encodeAscii("text/html;q=0.1, " +
-				"application/xhtml+xml; method=get; q=0.3; bool=true," +
-				"application/xml;q=0.9," +
-				"image/webp," +
-				"*/*;q=0.8," +
-				"unknown/mime");
+			"application/xhtml+xml; method=get; q=0.3; bool=true," +
+			"application/xml;q=0.9," +
+			"image/webp," +
+			"*/*;q=0.8," +
+			"unknown/mime");
 		List<AcceptMediaType> result = new ArrayList<>();
 		AcceptMediaType.decode(acceptCts, 0, acceptCts.length, result);
 		List<AcceptMediaType> expected = new ArrayList<>();
@@ -79,8 +79,8 @@ public class ContentTypeTest {
 	@Test
 	public void testAcceptContentTypeMissingQ() throws MalformedHttpException {
 		byte[] acceptCts = encodeAscii("text/html;q=, " +
-				"application/xhtml+xml; method=get; q=; bool=true," +
-				"application/xml;q=");
+			"application/xhtml+xml; method=get; q=; bool=true," +
+			"application/xml;q=");
 		List<AcceptMediaType> result = new ArrayList<>();
 		AcceptMediaType.decode(acceptCts, 0, acceptCts.length, result);
 		List<AcceptMediaType> expected = new ArrayList<>();

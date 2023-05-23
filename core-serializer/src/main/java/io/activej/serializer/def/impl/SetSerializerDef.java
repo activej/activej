@@ -44,10 +44,10 @@ public final class SetSerializerDef extends RegularCollectionSerializerDef {
 	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return ifEq(length, value(0),
-				staticCall(Collections.class, "emptySet"),
-				ifEq(length, value(1),
-						staticCall(Collections.class, "singleton", decoder.decode(in)),
-						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
+			staticCall(Collections.class, "emptySet"),
+			ifEq(length, value(1),
+				staticCall(Collections.class, "singleton", decoder.decode(in)),
+				super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 
 	@Override

@@ -1,27 +1,27 @@
 /* remove those weird outlines */
 .nav-link:focus, .list-group-item:focus {
-  outline: none;
+    outline: none;
 }
 
 html, body {
-  position: relative;
-  width: 100vw;
-  height: 100%;
+    position: relative;
+    width: 100vw;
+    height: 100%;
 }
 
 body {
-  overflow-x: hidden;
+    overflow-x: hidden;
 }
 
 .pointer {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .unselectable {
-  user-select: none;
+    user-select: none;
 }
 
 g.node > text:hover {
-  text-decoration: underline;
-  fill: darkblue;
+    text-decoration: underline;
+    fill: darkblue;
 }

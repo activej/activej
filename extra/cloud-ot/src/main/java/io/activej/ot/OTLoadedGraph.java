@@ -130,14 +130,14 @@ public class OTLoadedGraph<K, D> {
 
 	public Set<K> getRoots() {
 		return Stream.concat(levels.keySet().stream(), parent2child.keySet().stream())
-				.filter(not(child2parent::containsKey))
-				.collect(toSet());
+			.filter(not(child2parent::containsKey))
+			.collect(toSet());
 	}
 
 	public Set<K> getTips() {
 		return Stream.concat(levels.keySet().stream(), child2parent.keySet().stream())
-				.filter(not(parent2child::containsKey))
-				.collect(toSet());
+			.filter(not(parent2child::containsKey))
+			.collect(toSet());
 	}
 
 	public List<D> findParent(K parent, K child) {
@@ -231,7 +231,7 @@ public class OTLoadedGraph<K, D> {
 		}
 		assert result.size() == nodes.size();
 		return result.entrySet().stream()
-				.collect(toMap(Map.Entry::getKey, ops -> otSystem.squash(ops.getValue())));
+			.collect(toMap(Map.Entry::getKey, ops -> otSystem.squash(ops.getValue())));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -253,7 +253,7 @@ public class OTLoadedGraph<K, D> {
 			K resultNode = (K) new MergeNode(mergeId.incrementAndGet());
 			addEdge(mergeNode, resultNode, List.of());
 			addEdge(pivotNode, resultNode,
-					otSystem.squash(concat(otSystem.invert(parentToPivotNode), parentToMergeNode)));
+				otSystem.squash(concat(otSystem.invert(parentToPivotNode), parentToMergeNode)));
 			return resultNode;
 		}
 
@@ -283,11 +283,11 @@ public class OTLoadedGraph<K, D> {
 			String color = (parent2diffs.size() == 1) ? "color=blue; " : "";
 			for (Map.Entry<K, List<? extends D>> parentAndDiffs : parent2diffs.entrySet()) {
 				sb.append("\t" +
-						nodeToGraphViz(child) +
-						" -> " + nodeToGraphViz(parentAndDiffs.getKey()) +
-						" [ dir=\"back\"; " + color + "label=\"" +
-						diffsToGraphViz(parentAndDiffs.getValue()) +
-						"\"];\n");
+					nodeToGraphViz(child) +
+					" -> " + nodeToGraphViz(parentAndDiffs.getKey()) +
+					" [ dir=\"back\"; " + color + "label=\"" +
+					diffsToGraphViz(parentAndDiffs.getValue()) +
+					"\"];\n");
 			}
 			addStyle(sb, child, currentCommit);
 		}
@@ -298,11 +298,11 @@ public class OTLoadedGraph<K, D> {
 		}
 
 		sb.append("\t{ rank=same; " +
-				getTips().stream().map(this::nodeToGraphViz).collect(joining(" ")) +
-				" }\n");
+			getTips().stream().map(this::nodeToGraphViz).collect(joining(" ")) +
+			" }\n");
 		sb.append("\t{ rank=same; " +
-				roots.stream().map(this::nodeToGraphViz).collect(joining(" ")) +
-				" }\n");
+			roots.stream().map(this::nodeToGraphViz).collect(joining(" ")) +
+			" }\n");
 		sb.append("}\n");
 
 		return sb.toString();
@@ -310,10 +310,10 @@ public class OTLoadedGraph<K, D> {
 
 	private void addStyle(StringBuilder sb, K node, @Nullable K revision) {
 		sb.append("\t" +
-				nodeToGraphViz(node) +
-				" [style=filled fillcolor=" +
-				(node.equals(revision) ? "green" : "white") +
-				"];\n");
+			nodeToGraphViz(node) +
+			" [style=filled fillcolor=" +
+			(node.equals(revision) ? "green" : "white") +
+			"];\n");
 	}
 
 	private String nodeToGraphViz(K node) {
@@ -327,6 +327,6 @@ public class OTLoadedGraph<K, D> {
 	@Override
 	public String toString() {
 		return "{nodes=" + union(child2parent.keySet(), parent2child.keySet()) +
-				", edges:" + parent2child.values().stream().mapToInt(Map::size).sum() + '}';
+			", edges:" + parent2child.values().stream().mapToInt(Map::size).sum() + '}';
 	}
 }

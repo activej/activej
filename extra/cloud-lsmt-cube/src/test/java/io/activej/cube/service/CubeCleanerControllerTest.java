@@ -69,18 +69,18 @@ public class CubeCleanerControllerTest {
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				FrameFormats.lz4(), FileSystem.create(reactor, executor, aggregationsDir));
+			FrameFormats.lz4(), FileSystem.create(reactor, executor, aggregationsDir));
 		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
-				.withDimension("pub", ofInt())
-				.withDimension("adv", ofInt())
-				.withMeasure("pubRequests", sum(ofLong()))
-				.withMeasure("advRequests", sum(ofLong()))
-				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
-				.build();
+			.withDimension("pub", ofInt())
+			.withDimension("adv", ofInt())
+			.withMeasure("pubRequests", sum(ofLong()))
+			.withMeasure("advRequests", sum(ofLong()))
+			.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
+			.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+			.build();
 
 		repository = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
-				OT_SYSTEM, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
+			OT_SYSTEM, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
 		repository.initialize();
 		repository.truncateTables();
 	}
@@ -91,10 +91,10 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.builder(reactor,
-						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
-				.withFreezeTimeout(Duration.ofMillis(0))
-				.withExtraSnapshotsCount(1000)
-				.build();
+				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
+			.withFreezeTimeout(Duration.ofMillis(0))
+			.withExtraSnapshotsCount(1000)
+			.build();
 
 		await(cleanerController.cleanup());
 	}
@@ -105,9 +105,9 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.builder(reactor,
-						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
-				.withFreezeTimeout(Duration.ofSeconds(10))
-				.build();
+				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
+			.withFreezeTimeout(Duration.ofSeconds(10))
+			.build();
 
 		await(cleanerController.cleanup());
 	}

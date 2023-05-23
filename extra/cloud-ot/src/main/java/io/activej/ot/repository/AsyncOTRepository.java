@@ -39,43 +39,43 @@ public interface AsyncOTRepository<K, D> extends AsyncOTCommitFactory<K, D> {
 
 	default Promise<Void> pushAndUpdateHead(OTCommit<K, D> commit) {
 		return push(commit)
-				.then(() -> updateHeads(Set.of(commit.getId()), commit.getParentIds()));
+			.then(() -> updateHeads(Set.of(commit.getId()), commit.getParentIds()));
 	}
 
 	default Promise<Void> pushAndUpdateHeads(Collection<OTCommit<K, D>> commits) {
 		Set<K> parents = commits.stream()
-				.flatMap(commit -> commit.getParentIds().stream())
-				.collect(toSet());
+			.flatMap(commit -> commit.getParentIds().stream())
+			.collect(toSet());
 		Set<K> heads = commits.stream()
-				.map(OTCommit::getId)
-				.filter(not(parents::contains))
-				.collect(toSet());
+			.map(OTCommit::getId)
+			.filter(not(parents::contains))
+			.collect(toSet());
 		return push(commits)
-				.then(() -> updateHeads(heads, parents));
+			.then(() -> updateHeads(heads, parents));
 	}
 
 	default Promise<Long> getLevel(K commitId) {
 		return loadCommit(commitId)
-				.map(OTCommit::getLevel);
+			.map(OTCommit::getLevel);
 	}
 
 	default Promise<Map<K, Long>> getLevels(Set<K> commitIds) {
 		ArrayList<K> ids = new ArrayList<>(commitIds);
 		return Promises.toList(ids.stream().map(this::getLevel))
-				.map(list -> IntStream.range(0, ids.size()).boxed().collect(toMap(ids::get, list::get)));
+			.map(list -> IntStream.range(0, ids.size()).boxed().collect(toMap(ids::get, list::get)));
 	}
 
 	default Promise<Set<K>> getHeads() {
 		return getHeadCommits()
-				.map(headCommits -> headCommits.stream().map(OTCommit::getId).collect(toSet()));
+			.map(headCommits -> headCommits.stream().map(OTCommit::getId).collect(toSet()));
 	}
 
 	default Promise<Collection<OTCommit<K, D>>> getHeadCommits() {
 		return getAllHeadCommits()
-				.map(allHeadCommits -> {
-					int maxEpoch = allHeadCommits.stream().mapToInt(OTCommit::getEpoch).max().orElse(0);
-					return allHeadCommits.stream().filter(commit -> commit.getEpoch() == maxEpoch).collect(toList());
-				});
+			.map(allHeadCommits -> {
+				int maxEpoch = allHeadCommits.stream().mapToInt(OTCommit::getEpoch).max().orElse(0);
+				return allHeadCommits.stream().filter(commit -> commit.getEpoch() == maxEpoch).collect(toList());
+			});
 	}
 
 	Promise<Set<K>> getAllHeads();
@@ -83,8 +83,8 @@ public interface AsyncOTRepository<K, D> extends AsyncOTCommitFactory<K, D> {
 	default Promise<Collection<OTCommit<K, D>>> getAllHeadCommits() {
 		//noinspection RedundantTypeArguments
 		return getAllHeads()
-				.then(allHeads -> Promises.toList(allHeads.stream().map(this::loadCommit)))
-				.<Collection<OTCommit<K, D>>>cast();
+			.then(allHeads -> Promises.toList(allHeads.stream().map(this::loadCommit)))
+			.<Collection<OTCommit<K, D>>>cast();
 	}
 
 	default AsyncSupplier<Set<K>> pollHeads() {

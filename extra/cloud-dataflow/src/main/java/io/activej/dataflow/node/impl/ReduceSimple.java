@@ -46,8 +46,10 @@ public final class ReduceSimple<K, I, O, A> extends AbstractNode {
 	public final List<StreamId> inputs;
 	public final StreamId output;
 
-	public ReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
-			List<StreamId> inputs, StreamId output) {
+	public ReduceSimple(
+		int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
+		List<StreamId> inputs, StreamId output
+	) {
 		super(index);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
@@ -56,8 +58,9 @@ public final class ReduceSimple<K, I, O, A> extends AbstractNode {
 		this.output = output;
 	}
 
-	public static <K, I, O, A> ReduceSimple<K, I, O, A>.Builder builder(int index, Function<I, K> keyFunction,
-			Comparator<K> keyComparator, Reducer<K, I, O, A> reducer) {
+	public static <K, I, O, A> ReduceSimple<K, I, O, A>.Builder builder(
+		int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer
+	) {
 		return new ReduceSimple<>(index, keyFunction, keyComparator, reducer, new ArrayList<>(), new StreamId()).new Builder();
 	}
 
@@ -98,10 +101,10 @@ public final class ReduceSimple<K, I, O, A> extends AbstractNode {
 	@Override
 	public String toString() {
 		return "ReduceSimple{keyFunction=" + keyFunction.getClass().getSimpleName() +
-				", keyComparator=" + keyComparator.getClass().getSimpleName() +
-				", reducer=" + reducer.getClass().getSimpleName() +
-				", inputs=" + inputs +
-				", output=" + output + '}';
+			", keyComparator=" + keyComparator.getClass().getSimpleName() +
+			", reducer=" + reducer.getClass().getSimpleName() +
+			", inputs=" + inputs +
+			", output=" + output + '}';
 	}
 }
 

@@ -16,11 +16,11 @@ public final class GetBenchmark {
 		@Override
 		protected Promise<?> redisCommand(RedisConnection connection) {
 			return connection.cmd(RedisRequest.of("GET", key), RedisResponse.BYTES_ISO_8859_1)
-					.whenResult(res -> {
-						if (!value.equals(res)) {
-							throw new AssertionError();
-						}
-					});
+				.whenResult(res -> {
+					if (!value.equals(res)) {
+						throw new AssertionError();
+					}
+				});
 		}
 
 		public static void main(String[] args) throws Exception {
@@ -37,11 +37,11 @@ public final class GetBenchmark {
 		@Override
 		protected Promise<?> redisCommand(RedisConnection connection) {
 			return connection.cmd(RedisRequest.of("GET", key), RedisResponse.BYTES_ISO_8859_1)
-					.whenResult(res -> {
-						if (!value.equals(res)) {
-							throw new AssertionError();
-						}
-					});
+				.whenResult(res -> {
+					if (!value.equals(res)) {
+						throw new AssertionError();
+					}
+				});
 		}
 
 		public static void main(String[] args) throws Exception {
@@ -58,11 +58,11 @@ public final class GetBenchmark {
 		@Override
 		protected Promise<?> redisCommand(RedisConnection connection) {
 			return connection.cmd(RedisRequest.of("GET", key), RedisResponse.BYTES_ISO_8859_1)
-					.whenResult(res -> {
-						if (!value.equals(res)) {
-							throw new AssertionError();
-						}
-					});
+				.whenResult(res -> {
+					if (!value.equals(res)) {
+						throw new AssertionError();
+					}
+				});
 		}
 
 		public static void main(String[] args) throws Exception {

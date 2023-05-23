@@ -26,15 +26,15 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 	@Override
 	protected Module getOverrideModule() {
 		return ModuleBuilder.create()
-				.install(new DataflowSerializersModule())
+			.install(new DataflowSerializersModule())
 
-				.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
+			.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
 
-				.bind(Config.class).toInstance(
-						Config.create()
-								.with("dataflow.server.listenAddresses", args.length > 0 ? args[0] : "9000")
-				)
-				.build();
+			.bind(Config.class).toInstance(
+				Config.create()
+					.with("dataflow.server.listenAddresses", args.length > 0 ? args[0] : "9000")
+			)
+			.build();
 	}
 
 	@Provides
@@ -42,9 +42,9 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 	List<String> words() {
 		String file = args.length > 1 ? args[1] : "words1.txt";
 		return new BufferedReader(new InputStreamReader(requireNonNull(getClass().getResourceAsStream(file))))
-				.lines()
-				.filter(not(String::isEmpty))
-				.collect(toList());
+			.lines()
+			.filter(not(String::isEmpty))
+			.collect(toList());
 	}
 
 	public static void main(String[] args) throws Exception {

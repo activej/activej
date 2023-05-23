@@ -43,8 +43,8 @@ public class MemcacheLikeClient extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("protocol.compression", "false")
-				.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002");
+			.with("protocol.compression", "false")
+			.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002");
 	}
 
 	@Provides
@@ -55,12 +55,12 @@ public class MemcacheLikeClient extends Launcher {
 	@Override
 	protected Module getModule() {
 		return ModuleBuilder.create()
-				.install(ServiceGraphModule.create())
-				.install(MemcacheClientModule.create())
-				.install(ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build())
-				.build();
+			.install(ServiceGraphModule.create())
+			.install(MemcacheClientModule.create())
+			.install(ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build())
+			.build();
 	}
 
 	@Override
@@ -69,11 +69,11 @@ public class MemcacheLikeClient extends Launcher {
 
 		System.out.println();
 		CompletableFuture<Void> future = reactor.submit(() ->
-				sequence(
-						() -> Promises.all(range(0, 25).mapToObj(i ->
-								client.put(i, message))),
-						() -> Promises.all(range(0, 25).mapToObj(i ->
-								client.get(i).whenResult(res -> System.out.println(i + " : " + res))))));
+			sequence(
+				() -> Promises.all(range(0, 25).mapToObj(i ->
+					client.put(i, message))),
+				() -> Promises.all(range(0, 25).mapToObj(i ->
+					client.get(i).whenResult(res -> System.out.println(i + " : " + res))))));
 		future.get();
 		System.out.println();
 	}

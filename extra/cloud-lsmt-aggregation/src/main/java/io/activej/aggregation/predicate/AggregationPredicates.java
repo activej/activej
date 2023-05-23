@@ -36,7 +36,8 @@ public class AggregationPredicates {
 	private static final class E extends Expressions {}
 
 	public record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
-			Class<L> leftType, Class<R> rightType) {
+		Class<L> leftType, Class<R> rightType
+	) {
 	}
 
 	@FunctionalInterface

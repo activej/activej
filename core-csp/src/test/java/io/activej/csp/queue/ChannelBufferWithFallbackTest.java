@@ -43,15 +43,15 @@ public final class ChannelBufferWithFallbackTest {
 
 	private ChannelBufferWithFallback<ByteBuf> createBufferedQueue(RefInt secondaryCounter) {
 		return new ChannelBufferWithFallback<>(
-				new ChannelZeroBuffer<>(),
-				() -> {
-					secondaryCounter.value++;
-					try {
-						return ChannelFileBuffer.create(executor, temporaryFolder.newFile().toPath());
-					} catch (IOException e) {
-						throw new AssertionError(e);
-					}
-				});
+			new ChannelZeroBuffer<>(),
+			() -> {
+				secondaryCounter.value++;
+				try {
+					return ChannelFileBuffer.create(executor, temporaryFolder.newFile().toPath());
+				} catch (IOException e) {
+					throw new AssertionError(e);
+				}
+			});
 	}
 
 	@Test

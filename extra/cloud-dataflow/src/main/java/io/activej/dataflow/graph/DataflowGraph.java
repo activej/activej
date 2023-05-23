@@ -48,9 +48,9 @@ import static java.util.stream.Collectors.*;
  */
 public final class DataflowGraph extends AbstractReactive {
 	private static final ObjectWriter OBJECT_WRITER = new ObjectMapper()
-			.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-			.writerFor(new TypeReference<List<Node>>() {})
-			.with(new DefaultPrettyPrinter("%n"));
+		.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+		.writerFor(new TypeReference<List<Node>>() {})
+		.with(new DefaultPrettyPrinter("%n"));
 
 	private final Map<Node, Partition> nodePartitions = new LinkedHashMap<>();
 	private final Map<StreamId, Node> streams = new LinkedHashMap<>();
@@ -78,7 +78,7 @@ public final class DataflowGraph extends AbstractReactive {
 
 	private Map<Partition, List<Node>> getNodesByPartition() {
 		return nodePartitions.entrySet().stream()
-				.collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
+			.collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
 	}
 
 	public static class PartitionSession extends ImplicitlyReactive implements AsyncCloseable {
@@ -108,28 +108,28 @@ public final class DataflowGraph extends AbstractReactive {
 		Map<Partition, List<Node>> nodesByPartition = getNodesByPartition();
 		long taskId = ThreadLocalRandom.current().nextInt() & (Integer.MAX_VALUE >>> 1);
 		return connect(nodesByPartition.keySet())
-				.then(sessions ->
-						Promises.all(
-										sessions.stream()
-												.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
-								.whenException(() -> sessions.forEach(PartitionSession::close)));
+			.then(sessions ->
+				Promises.all(
+						sessions.stream()
+							.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
+					.whenException(() -> sessions.forEach(PartitionSession::close)));
 	}
 
 	private Promise<List<PartitionSession>> connect(Set<Partition> partitions) {
 		return Promises.toList(partitions.stream()
-						.map(partition -> client.connect(partition.address()).map(session -> new PartitionSession(partition, session)).toTry()))
-				.map(tries -> {
-					List<PartitionSession> sessions = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(toList());
+				.map(partition -> client.connect(partition.address()).map(session -> new PartitionSession(partition, session)).toTry()))
+			.map(tries -> {
+				List<PartitionSession> sessions = tries.stream()
+					.filter(Try::isSuccess)
+					.map(Try::get)
+					.collect(toList());
 
-					if (sessions.size() != partitions.size()) {
-						sessions.forEach(PartitionSession::close);
-						throw new DataflowException("Cannot connect to all partitions");
-					}
-					return sessions;
-				});
+				if (sessions.size() != partitions.size()) {
+					sessions.forEach(PartitionSession::close);
+					throw new DataflowException("Cannot connect to all partitions");
+				}
+				return sessions;
+			});
 	}
 
 	public void addNode(Partition partition, Node node) {
@@ -198,33 +198,33 @@ public final class DataflowGraph extends AbstractReactive {
 
 		// define nodeStats and group them by partitions using graphviz clusters
 		getNodesByPartition()
-				.entrySet()
-				.stream()
-				.limit(maxPartitions == -1 ? availablePartitions.size() : maxPartitions)
-				.forEach(e -> {
-					sb.append("  subgraph cluster_")
-							.append(++clusterCounter.value)
-							.append(" {\n")
-							.append("    label=\"")
-							.append(e.getKey().address())
-							.append("\";\n    style=rounded;\n\n");
-					for (Node node : e.getValue()) {
-						// upload and download nodeStats have no common connections
-						// download nodeStats are never drawn, and upload only has an input
-						if ((node instanceof Download || (node instanceof Upload && network.containsKey(((Upload<?>) node).streamId)))) {
-							continue;
-						}
-						String nodeId = "n" + ++nodeCounter.value;
-						String name = node.getClass().getSimpleName();
-						sb.append("    ")
-								.append(nodeId)
-								.append(" [label=\"")
-								.append(name)
-								.append("\"];\n");
-						nodeIds.put(node, nodeId);
+			.entrySet()
+			.stream()
+			.limit(maxPartitions == -1 ? availablePartitions.size() : maxPartitions)
+			.forEach(e -> {
+				sb.append("  subgraph cluster_")
+					.append(++clusterCounter.value)
+					.append(" {\n")
+					.append("    label=\"")
+					.append(e.getKey().address())
+					.append("\";\n    style=rounded;\n\n");
+				for (Node node : e.getValue()) {
+					// upload and download nodeStats have no common connections
+					// download nodeStats are never drawn, and upload only has an input
+					if ((node instanceof Download || (node instanceof Upload && network.containsKey(((Upload<?>) node).streamId)))) {
+						continue;
 					}
-					sb.append("  }\n\n");
-				});
+					String nodeId = "n" + ++nodeCounter.value;
+					String name = node.getClass().getSimpleName();
+					sb.append("    ")
+						.append(nodeId)
+						.append(" [label=\"")
+						.append(name)
+						.append("\"];\n");
+					nodeIds.put(node, nodeId);
+				}
+				sb.append("  }\n\n");
+			});
 
 		Set<String> notFound = new HashSet<>();
 
@@ -257,21 +257,21 @@ public final class DataflowGraph extends AbstractReactive {
 				}
 				if (nodeId != null) { // nodeId might be null only for net nodeStats here, see previous 'if'
 					sb.append("  ")
-							.append(id)
-							.append(" -> ")
-							.append(nodeId)
-							.append(" [");
+						.append(id)
+						.append(" -> ")
+						.append(nodeId)
+						.append(" [");
 					if (streamLabels || forceLabel) {
 						if (prev != null) {
 							sb.append("taillabel=\"")
-									.append(prev)
-									.append("\", headlabel=\"")
-									.append(output)
-									.append("\"");
+								.append(prev)
+								.append("\", headlabel=\"")
+								.append(output)
+								.append("\"");
 						} else {
 							sb.append("xlabel=\"")
-									.append(output)
-									.append("\"");
+								.append(output)
+								.append("\"");
 						}
 						if (net) {
 							sb.append(", ");

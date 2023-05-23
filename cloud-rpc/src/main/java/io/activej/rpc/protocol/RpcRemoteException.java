@@ -39,9 +39,11 @@ public final class RpcRemoteException extends RpcException implements RpcMandato
 	}
 
 	@SuppressWarnings("unused")
-	public RpcRemoteException(@Deserialize("message") String message,
-			@Deserialize("causeClassName") @Nullable String causeClassName,
-			@Deserialize("causeMessage") @Nullable String causeMessage) {
+	public RpcRemoteException(
+		@Deserialize("message") String message,
+		@Deserialize("causeClassName") @Nullable String causeClassName,
+		@Deserialize("causeMessage") @Nullable String causeMessage
+	) {
 		super(message);
 		this.causeClassName = causeClassName;
 		this.causeMessage = causeMessage;

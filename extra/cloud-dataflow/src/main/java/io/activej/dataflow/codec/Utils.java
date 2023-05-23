@@ -15,35 +15,35 @@ public final class Utils {
 	private static final Map<Class<?>, Integer> CLASS_TO_INDEX = new HashMap<>();
 
 	public static final StreamCodec<StreamId> STREAM_ID_STREAM_CODEC = StreamCodec.create(StreamId::new,
-			StreamId::getId, StreamCodecs.ofVarLong()
+		StreamId::getId, StreamCodecs.ofVarLong()
 	);
 	public static final StreamCodec<Version> VERSION_STREAM_CODEC = StreamCodec.create(Version::new,
-			Version::major, StreamCodecs.ofVarInt(),
-			Version::minor, StreamCodecs.ofVarInt()
+		Version::major, StreamCodecs.ofVarInt(),
+		Version::minor, StreamCodecs.ofVarInt()
 	);
 	public static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StreamCodec.create(Instant::ofEpochSecond,
-			Instant::getEpochSecond, StreamCodecs.ofVarLong(),
-			Instant::getNano, StreamCodecs.ofVarInt()
+		Instant::getEpochSecond, StreamCodecs.ofVarLong(),
+		Instant::getNano, StreamCodecs.ofVarInt()
 	);
 	public static final StreamCodec<Class<?>> CLASS_STREAM_CODEC = StreamCodec.of(
-			(output, item) -> {
-				Integer index = CLASS_TO_INDEX.getOrDefault(item, 0);
-				output.writeByte(index.byteValue());
-				if (index == 0) {
-					output.writeString(item.getName());
-				}
-			},
-			input -> {
-				byte index = input.readByte();
-				Class<?> cls = INDEX_TO_CLASS.get(((int) index));
-				if (cls != null) return cls;
-
-				try {
-					return Class.forName(input.readString());
-				} catch (ClassNotFoundException e) {
-					throw new CorruptedDataException(e.getMessage());
-				}
+		(output, item) -> {
+			Integer index = CLASS_TO_INDEX.getOrDefault(item, 0);
+			output.writeByte(index.byteValue());
+			if (index == 0) {
+				output.writeString(item.getName());
 			}
+		},
+		input -> {
+			byte index = input.readByte();
+			Class<?> cls = INDEX_TO_CLASS.get(((int) index));
+			if (cls != null) return cls;
+
+			try {
+				return Class.forName(input.readString());
+			} catch (ClassNotFoundException e) {
+				throw new CorruptedDataException(e.getMessage());
+			}
+		}
 	);
 
 	static {

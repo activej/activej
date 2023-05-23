@@ -18,10 +18,10 @@ public class AdvancedRpcServerApp extends Launcher {
 	@Override
 	protected Module getModule() {
 		return ModuleBuilder.create()
-				.install(ServiceGraphModule.create())
-				.install(WorkerPoolModule.create())
-				.install(AdvancedRpcServerModule.create())
-				.build();
+			.install(ServiceGraphModule.create())
+			.install(WorkerPoolModule.create())
+			.install(AdvancedRpcServerModule.create())
+			.build();
 	}
 
 	@Override

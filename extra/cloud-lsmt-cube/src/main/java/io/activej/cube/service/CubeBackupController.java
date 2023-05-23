@@ -49,7 +49,8 @@ import static io.activej.ot.OTAlgorithms.checkout;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CubeBackupController<K, D, C> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats {
+	implements ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
@@ -64,8 +65,10 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseBackupDb = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseBackupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	CubeBackupController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage<C> storage) {
+	CubeBackupController(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+		AggregationChunkStorage<C> storage
+	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -73,11 +76,10 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 		this.storage = storage;
 	}
 
-	public static <K, D, C> CubeBackupController<K, D, C> create(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme,
-			AsyncOTRepository<K, D> otRepository,
-			OTSystem<D> otSystem,
-			AggregationChunkStorage<C> storage) {
+	public static <K, D, C> CubeBackupController<K, D, C> create(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> otRepository, OTSystem<D> otSystem,
+		AggregationChunkStorage<C> storage
+	) {
 		return new CubeBackupController<>(reactor, cubeDiffScheme, otRepository, otSystem, storage);
 	}
 
@@ -92,39 +94,39 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	public Promise<Void> backupHead() {
 		checkInReactorThread(this);
 		return repository.getHeads()
-				.mapException(e -> new CubeException("Failed to get heads", e))
-				.whenResult(heads -> {
-					if (heads.isEmpty()) throw new CubeException("Heads are empty");
-				})
-				.then(heads -> backup(first(heads)))
-				.whenComplete(promiseBackup.recordStats())
-				.whenComplete(toLogger(logger, thisMethod()));
+			.mapException(e -> new CubeException("Failed to get heads", e))
+			.whenResult(heads -> {
+				if (heads.isEmpty()) throw new CubeException("Heads are empty");
+			})
+			.then(heads -> backup(first(heads)))
+			.whenComplete(promiseBackup.recordStats())
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	public Promise<Void> backup(K commitId) {
 		checkInReactorThread(this);
 		return Promises.toTuple(repository.loadCommit(commitId), checkout(repository, otSystem, commitId))
-				.mapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e))
-				.then(tuple -> Promises.sequence(
-						() -> backupChunks(commitId, chunksInDiffs(cubeDiffScheme, tuple.value2())),
-						() -> backupDb(tuple.value1(), tuple.value2())))
-				.whenComplete(toLogger(logger, thisMethod(), commitId));
+			.mapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e))
+			.then(tuple -> Promises.sequence(
+				() -> backupChunks(commitId, chunksInDiffs(cubeDiffScheme, tuple.value2())),
+				() -> backupDb(tuple.value1(), tuple.value2())))
+			.whenComplete(toLogger(logger, thisMethod(), commitId));
 	}
 
 	private Promise<Void> backupChunks(K commitId, Set<C> chunkIds) {
 		return storage.backup(String.valueOf(commitId), chunkIds)
-				.mapException(e -> new CubeException("Failed to backup chunks on storage: " + storage, e))
-				.whenComplete(promiseBackupChunks.recordStats())
-				.whenComplete(logger.isTraceEnabled() ?
-						toLogger(logger, TRACE, thisMethod(), chunkIds) :
-						toLogger(logger, thisMethod(), Utils.toString(chunkIds)));
+			.mapException(e -> new CubeException("Failed to backup chunks on storage: " + storage, e))
+			.whenComplete(promiseBackupChunks.recordStats())
+			.whenComplete(logger.isTraceEnabled() ?
+				toLogger(logger, TRACE, thisMethod(), chunkIds) :
+				toLogger(logger, thisMethod(), Utils.toString(chunkIds)));
 	}
 
 	private Promise<Void> backupDb(OTCommit<K, D> commit, List<D> snapshot) {
 		return repository.backup(commit, snapshot)
-				.mapException(e -> new CubeException("Failed to backup chunks in repository: " + repository, e))
-				.whenComplete(promiseBackupDb.recordStats())
-				.whenComplete(toLogger(logger, thisMethod(), commit, snapshot));
+			.mapException(e -> new CubeException("Failed to backup chunks in repository: " + repository, e))
+			.whenComplete(promiseBackupDb.recordStats())
+			.whenComplete(toLogger(logger, thisMethod(), commit, snapshot));
 	}
 
 	@JmxOperation

@@ -42,7 +42,7 @@ public final class AttributeNodeForThrowable extends AbstractAttributeNodeForLea
 		try {
 			String[] itemNames = {THROWABLE_TYPE_KEY, THROWABLE_MESSAGE_KEY, THROWABLE_STACK_TRACE_KEY};
 			OpenType<?>[] itemTypes = new OpenType<?>[]{
-					SimpleType.STRING, SimpleType.STRING, new ArrayType<>(1, SimpleType.STRING)};
+				SimpleType.STRING, SimpleType.STRING, new ArrayType<>(1, SimpleType.STRING)};
 			return new CompositeType("CompositeType", "CompositeType", itemNames, itemNames, itemTypes);
 		} catch (OpenDataException e) {
 			throw new RuntimeException(e);

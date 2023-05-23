@@ -38,8 +38,8 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 			@Provides
 			Config config() {
 				return Config.create()
-						.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-						.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
+					.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+					.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 			}
 		};
 	}
@@ -72,8 +72,8 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
 				if (cause instanceof Exception &&
-						!(cause instanceof RuntimeException || cause instanceof DataflowException) ||
-						cause instanceof CalciteException) {
+					!(cause instanceof RuntimeException || cause instanceof DataflowException) ||
+					cause instanceof CalciteException) {
 					// recoverable
 					System.err.println("WARNING: " + cause.getMessage());
 					continue;
@@ -89,9 +89,9 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 
 	private List<Record> executeQuery(String query) throws InterruptedException, ExecutionException {
 		return reactor.submit(() ->
-						sqlDataflow.query(query)
-								.then(StreamSupplier::toList))
-				.get();
+				sqlDataflow.query(query)
+					.then(StreamSupplier::toList))
+			.get();
 	}
 
 	public static void main(String[] args) throws Exception {

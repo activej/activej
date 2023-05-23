@@ -87,33 +87,44 @@ public abstract class Binding<T> {
 		return new BindingToConstructorN<>(constructor, dependencies);
 	}
 
-	public static <T1, R> Binding<R> to(TupleConstructor1<T1, R> constructor,
-			Class<T1> dependency1) {
+	public static <T1, R> Binding<R> to(TupleConstructor1<T1, R> constructor, Class<T1> dependency1) {
 		return Binding.to(constructor, Key.of(dependency1));
 	}
 
-	public static <T1, T2, R> Binding<R> to(TupleConstructor2<T1, T2, R> constructor,
-			Class<T1> dependency1, Class<T2> dependency2) {
+	public static <T1, T2, R> Binding<R> to(
+		TupleConstructor2<T1, T2, R> constructor,
+		Class<T1> dependency1, Class<T2> dependency2
+	) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2));
 	}
 
-	public static <T1, T2, T3, R> Binding<R> to(TupleConstructor3<T1, T2, T3, R> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3) {
+	public static <T1, T2, T3, R> Binding<R> to(
+		TupleConstructor3<T1, T2, T3, R> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3
+	) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3));
 	}
 
-	public static <T1, T2, T3, T4, R> Binding<R> to(TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4) {
+	public static <T1, T2, T3, T4, R> Binding<R> to(
+		TupleConstructor4<T1, T2, T3, T4, R> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4
+	) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4));
 	}
 
-	public static <T1, T2, T3, T4, T5, R> Binding<R> to(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4, Class<T5> dependency5) {
+	public static <T1, T2, T3, T4, T5, R> Binding<R> to(
+		TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4,
+		Class<T5> dependency5
+	) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4), Key.of(dependency5));
 	}
 
-	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4, Class<T5> dependency5, Class<T6> dependency6) {
+	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(
+		TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4,
+		Class<T5> dependency5, Class<T6> dependency6
+	) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4), Key.of(dependency5), Key.of(dependency6));
 	}
 
@@ -121,33 +132,43 @@ public abstract class Binding<T> {
 		return new BindingToConstructor0<>(constructor);
 	}
 
-	public static <T1, R> Binding<R> to(TupleConstructor1<T1, R> constructor,
-			Key<T1> dependency1) {
+	public static <T1, R> Binding<R> to(TupleConstructor1<T1, R> constructor, Key<T1> dependency1) {
 		return new BindingToConstructor1<>(constructor, dependency1);
 	}
 
-	public static <T1, T2, R> Binding<R> to(TupleConstructor2<T1, T2, R> constructor,
-			Key<T1> dependency1, Key<T2> dependency2) {
+	public static <T1, T2, R> Binding<R> to(
+		TupleConstructor2<T1, T2, R> constructor,
+		Key<T1> dependency1, Key<T2> dependency2
+	) {
 		return new BindingToConstructor2<>(dependency1, dependency2, constructor);
 	}
 
-	public static <T1, T2, T3, R> Binding<R> to(TupleConstructor3<T1, T2, T3, R> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
+	public static <T1, T2, T3, R> Binding<R> to(
+		TupleConstructor3<T1, T2, T3, R> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3
+	) {
 		return new BindingToConstructor3<>(constructor, dependency1, dependency2, dependency3);
 	}
 
-	public static <T1, T2, T3, T4, R> Binding<R> to(TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
+	public static <T1, T2, T3, T4, R> Binding<R> to(
+		TupleConstructor4<T1, T2, T3, T4, R> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4
+	) {
 		return new BindingToConstructor4<>(constructor, dependency1, dependency2, dependency3, dependency4);
 	}
 
-	public static <T1, T2, T3, T4, T5, R> Binding<R> to(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
+	public static <T1, T2, T3, T4, T5, R> Binding<R> to(
+		TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5
+	) {
 		return new BindingToConstructor5<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5);
 	}
 
-	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
+	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(
+		TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5,
+		Key<T6> dependency6
+	) {
 		return new BindingToConstructor6<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6);
 	}
 	// endregion
@@ -175,20 +196,20 @@ public abstract class Binding<T> {
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
 				return slot != null ?
-						new AbstractCompiledBinding<>(scope, slot) {
-							@Override
-							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return fn.apply(instance);
-							}
-						} :
-						new CompiledBinding<>() {
-							@Override
-							public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return fn.apply(instance);
-							}
-						};
+					new AbstractCompiledBinding<>(scope, slot) {
+						@Override
+						protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+							return fn.apply(instance);
+						}
+					} :
+					new CompiledBinding<>() {
+						@Override
+						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+							return fn.apply(instance);
+						}
+					};
 			}
 		};
 	}
@@ -196,44 +217,44 @@ public abstract class Binding<T> {
 	@SuppressWarnings("Duplicates")
 	public <R> Binding<R> mapInstance(List<Key<?>> dependencies, BiFunction<Object[], ? super T, ? extends R> fn) {
 		Set<Key<?>> missing = dependencies.stream()
-				.filter(required -> !this.dependencies.contains(required))
-				.collect(toSet());
+			.filter(required -> !this.dependencies.contains(required))
+			.collect(toSet());
 
 		if (!missing.isEmpty()) {
 			throw new DIException(missing.stream()
-					.map(Key::getDisplayString)
-					.collect(joining(", ", "Binding has no dependencies ", " required by mapInstance call")));
+				.map(Key::getDisplayString)
+				.collect(joining(", ", "Binding has no dependencies ", " required by mapInstance call")));
 		}
 		return new Binding<>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				final CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
 				final CompiledBinding[] bindings =
-						dependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
+					dependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
 
 				return slot != null ?
-						new AbstractCompiledBinding<>(scope, slot) {
-							@Override
-							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								Object[] args = new Object[bindings.length];
-								for (int i = 0; i < bindings.length; i++) {
-									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
-								}
-								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return fn.apply(args, instance);
+					new AbstractCompiledBinding<>(scope, slot) {
+						@Override
+						protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							Object[] args = new Object[bindings.length];
+							for (int i = 0; i < bindings.length; i++) {
+								args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
 							}
-						} :
-						new CompiledBinding<>() {
-							@Override
-							public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								Object[] args = new Object[bindings.length];
-								for (int i = 0; i < bindings.length; i++) {
-									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
-								}
-								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return fn.apply(args, instance);
+							T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+							return fn.apply(args, instance);
+						}
+					} :
+					new CompiledBinding<>() {
+						@Override
+						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							Object[] args = new Object[bindings.length];
+							for (int i = 0; i < bindings.length; i++) {
+								args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
 							}
-						};
+							T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+							return fn.apply(args, instance);
+						}
+					};
 			}
 		};
 	}
@@ -286,54 +307,54 @@ public abstract class Binding<T> {
 
 	public Binding<T> addDependencies(Set<Key<?>> extraDependencies) {
 		return extraDependencies.isEmpty() ?
-				this :
-				new Binding<>(union(this.dependencies, extraDependencies), this.type, this.location) {
-					@Override
-					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-						CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, slot);
-						CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
-						return new CompiledBinding<>() {
-							@Override
-							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								//noinspection ForLoopReplaceableByForEach
-								for (int i = 0; i < compiledExtraBindings.length; i++) {
-									compiledExtraBindings[i].getInstance(scopedInstances, synchronizedScope);
-								}
-								return compiledBinding.getInstance(scopedInstances, synchronizedScope);
+			this :
+			new Binding<>(union(this.dependencies, extraDependencies), this.type, this.location) {
+				@Override
+				public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+					CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, slot);
+					CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
+					return new CompiledBinding<>() {
+						@Override
+						public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							//noinspection ForLoopReplaceableByForEach
+							for (int i = 0; i < compiledExtraBindings.length; i++) {
+								compiledExtraBindings[i].getInstance(scopedInstances, synchronizedScope);
 							}
-						};
-					}
-				};
+							return compiledBinding.getInstance(scopedInstances, synchronizedScope);
+						}
+					};
+				}
+			};
 	}
 
 	public Binding<T> initializeWith(BindingInitializer<T> bindingInitializer) {
 		return bindingInitializer == BindingInitializer.noop() ?
-				this :
-				new Binding<>(union(this.dependencies, bindingInitializer.getDependencies()), this.type, this.location) {
-					@Override
-					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-						final CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
-						final CompiledBindingInitializer<T> consumer = bindingInitializer.compile(compiledBindings);
+			this :
+			new Binding<>(union(this.dependencies, bindingInitializer.getDependencies()), this.type, this.location) {
+				@Override
+				public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+					final CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
+					final CompiledBindingInitializer<T> consumer = bindingInitializer.compile(compiledBindings);
 
-						return slot != null ?
-								new AbstractCompiledBinding<>(scope, slot) {
-									@Override
-									protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
-										consumer.initInstance(instance, scopedInstances, synchronizedScope);
-										return instance;
-									}
-								} :
-								new CompiledBinding<>() {
-									@Override
-									public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
-										consumer.initInstance(instance, scopedInstances, synchronizedScope);
-										return instance;
-									}
-								};
-					}
-				};
+					return slot != null ?
+						new AbstractCompiledBinding<>(scope, slot) {
+							@Override
+							protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
+								consumer.initInstance(instance, scopedInstances, synchronizedScope);
+								return instance;
+							}
+						} :
+						new CompiledBinding<>() {
+							@Override
+							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
+								consumer.initInstance(instance, scopedInstances, synchronizedScope);
+								return instance;
+							}
+						};
+				}
+			};
 	}
 
 	public abstract CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot);

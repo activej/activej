@@ -13,11 +13,11 @@ public class SupplierGeneratorModuleExample {
 	public static void main(String[] args) {
 		//[START REGION_1]
 		Injector injector = Injector.of(ModuleBuilder.create()
-				.install(new SupplierGeneratorModule())
-				.bind(String.class).toInstance("Hello, World")
-				.bind(new Key<Supplier<String>>() {})
-				.bind(new Key<Supplier<Integer>>() {})
-				.build());
+			.install(new SupplierGeneratorModule())
+			.bind(String.class).toInstance("Hello, World")
+			.bind(new Key<Supplier<String>>() {})
+			.bind(new Key<Supplier<Integer>>() {})
+			.build());
 		Supplier<String> stringSupplier = injector.getInstance(new Key<>() {});
 		System.out.println(stringSupplier.get()); // "Hello, World"
 
@@ -41,8 +41,8 @@ public class SupplierGeneratorModuleExample {
 			generate(Supplier.class, (bindings, scope, key) -> {
 				Binding<?> binding = bindings.get(key.getTypeParameter(0));
 				return binding != null ?
-						binding.mapInstance(instance -> () -> instance) :
-						Binding.toInstance(() -> null);
+					binding.mapInstance(instance -> () -> instance) :
+					Binding.toInstance(() -> null);
 			});
 		}
 	}

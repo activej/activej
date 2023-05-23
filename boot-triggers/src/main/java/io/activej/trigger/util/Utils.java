@@ -65,8 +65,8 @@ public final class Utils {
 	public static String prettyPrintSimpleKeyName(Key<?> key) {
 		Type type = key.getType();
 		return (key.getQualifier() != null ?
-				prettyPrintQualifier(key.getQualifier()) + " " :
-				"") + Types.getSimpleName(type);
+			prettyPrintQualifier(key.getQualifier()) + " " :
+			"") + Types.getSimpleName(type);
 	}
 
 }

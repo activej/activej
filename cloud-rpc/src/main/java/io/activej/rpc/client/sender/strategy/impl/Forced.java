@@ -24,7 +24,7 @@ public final class Forced implements RpcStrategy {
 	public RpcSender createSender(RpcClientConnectionPool pool) {
 		RpcSender sender = strategy.createSender(pool);
 		return sender == null ?
-				new RpcClient.NoSenderAvailable() :
-				sender;
+			new RpcClient.NoSenderAvailable() :
+			sender;
 	}
 }

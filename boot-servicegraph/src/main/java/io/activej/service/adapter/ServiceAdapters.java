@@ -218,8 +218,8 @@ public class ServiceAdapters {
 				instance.getReactor().execute(() -> {
 					try {
 						instance.start()
-								.whenResult(future::complete)
-								.whenException(future::completeExceptionally);
+							.whenResult(future::complete)
+							.whenException(future::completeExceptionally);
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
@@ -233,8 +233,8 @@ public class ServiceAdapters {
 				instance.getReactor().execute(() -> {
 					try {
 						instance.stop()
-								.whenResult(future::complete)
-								.whenException(future::completeExceptionally);
+							.whenResult(future::complete)
+							.whenException(future::completeExceptionally);
 					} catch (Exception e) {
 						future.completeExceptionally(e);
 					}
@@ -264,8 +264,8 @@ public class ServiceAdapters {
 			public CompletableFuture<?> stop(ReactiveServer instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
 				instance.getReactor().execute(() -> instance.close()
-						.whenResult(future::complete)
-						.whenException(future::completeExceptionally));
+					.whenResult(future::complete)
+					.whenException(future::completeExceptionally));
 				return future;
 			}
 		};
@@ -371,25 +371,27 @@ public class ServiceAdapters {
 		CompletableFuture<?> doAction(ServiceAdapter<T> serviceAdapter, T instance, Executor executor);
 	}
 
-	public static <T> ServiceAdapter<T> combinedAdapter(List<? extends ServiceAdapter<? super T>> startOrder,
-			List<? extends ServiceAdapter<? super T>> stopOrder) {
+	public static <T> ServiceAdapter<T> combinedAdapter(
+		List<? extends ServiceAdapter<? super T>> startOrder, List<? extends ServiceAdapter<? super T>> stopOrder
+	) {
 		return new ServiceAdapter<>() {
 			@SuppressWarnings("unchecked")
-			private void doAction(T instance, Executor executor,
-					Iterator<? extends ServiceAdapter<? super T>> iterator, CompletableFuture<?> future,
-					Action<T> action) {
+			private void doAction(
+				T instance, Executor executor, Iterator<? extends ServiceAdapter<? super T>> iterator,
+				CompletableFuture<?> future, Action<T> action
+			) {
 				if (iterator.hasNext()) {
 					action.doAction((ServiceAdapter<T>) iterator.next(), instance, executor)
-							.whenCompleteAsync(($, e) -> {
-								if (e == null) {
-									doAction(instance, executor, iterator, future, action);
-								} else if (e instanceof InterruptedException) {
-									Thread.currentThread().interrupt();
-									future.completeExceptionally(e);
-								} else if (e instanceof ExecutionException) {
-									future.completeExceptionally(e.getCause());
-								}
-							}, Runnable::run);
+						.whenCompleteAsync(($, e) -> {
+							if (e == null) {
+								doAction(instance, executor, iterator, future, action);
+							} else if (e instanceof InterruptedException) {
+								Thread.currentThread().interrupt();
+								future.completeExceptionally(e);
+							} else if (e instanceof ExecutionException) {
+								future.completeExceptionally(e.getCause());
+							}
+						}, Runnable::run);
 				} else {
 					future.complete(null);
 				}
@@ -399,7 +401,7 @@ public class ServiceAdapters {
 			public CompletableFuture<Void> start(T instance, Executor executor) {
 				CompletableFuture<Void> future = new CompletableFuture<>();
 				doAction(instance, executor, startOrder.iterator(), future,
-						ServiceAdapter::start);
+					ServiceAdapter::start);
 				return future;
 			}
 
@@ -407,7 +409,7 @@ public class ServiceAdapters {
 			public CompletableFuture<Void> stop(T instance, Executor executor) {
 				CompletableFuture<Void> future = new CompletableFuture<>();
 				doAction(instance, executor, stopOrder.iterator(), future,
-						ServiceAdapter::stop);
+					ServiceAdapter::stop);
 				return future;
 			}
 		};

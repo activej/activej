@@ -62,8 +62,8 @@ public final class Between implements AggregationPredicate {
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
 		return and(isNotNull(property, fields.get(key)),
-				isGe(property, value(toInternalValue(fields, key, from))),
-				isLe(property, value(toInternalValue(fields, key, to))));
+			isGe(property, value(toInternalValue(fields, key, from))),
+			isLe(property, value(toInternalValue(fields, key, to))));
 	}
 
 	@Override

@@ -59,7 +59,7 @@ public final class Union<K, T> extends SortedDataset<K, T> {
 		List<StreamId> rightStreamIds = repartitionAndSort(next, right, graph.getPartitions(leftStreamIds));
 
 		Map<Partition, List<StreamId>> partitioned = Stream.concat(leftStreamIds.stream(), rightStreamIds.stream())
-				.collect(Collectors.groupingBy(graph::getPartition));
+			.collect(Collectors.groupingBy(graph::getPartition));
 
 		int index = context.generateNodeIndex();
 

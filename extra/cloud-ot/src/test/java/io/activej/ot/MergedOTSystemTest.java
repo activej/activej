@@ -23,9 +23,9 @@ import static org.junit.Assert.*;
 
 public final class MergedOTSystemTest {
 	private static final OTSystem<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> MERGED = mergeOtSystems(Tuple3::new,
-			Tuple3::value1, createAddIntSystem(),
-			Tuple3::value2, createTestSetSystem(),
-			Tuple3::value3, createTestSetNameSystem());
+		Tuple3::value1, createAddIntSystem(),
+		Tuple3::value2, createTestSetSystem(),
+		Tuple3::value3, createTestSetNameSystem());
 
 	@Test
 	public void testIsEmpty() {
@@ -47,12 +47,12 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testInvert() {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> ops = List.of(
-				ops(add(1), null, null),
-				ops(null, set(0, 3), null),
-				ops(null, null, setName("", "test1")),
-				ops(null, null, null),
-				ops(add(12), set(3, 12), setName("test1", "test2")),
-				ops(add(-5), set(12, 123), setName("test2", "test3"))
+			ops(add(1), null, null),
+			ops(null, set(0, 3), null),
+			ops(null, null, setName("", "test1")),
+			ops(null, null, null),
+			ops(add(12), set(3, 12), setName("test1", "test2")),
+			ops(add(-5), set(12, 123), setName("test2", "test3"))
 		);
 		State state = new State();
 		state.init();
@@ -68,12 +68,12 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testSquash() {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> ops = List.of(
-				ops(add(1), null, null),
-				ops(null, set(0, 3), null),
-				ops(null, null, setName("", "test1")),
-				ops(null, null, null),
-				ops(add(12), set(3, 12), setName("test1", "test2")),
-				ops(add(-5), set(12, 123), setName("test2", "test3"))
+			ops(add(1), null, null),
+			ops(null, set(0, 3), null),
+			ops(null, null, setName("", "test1")),
+			ops(null, null, null),
+			ops(add(12), set(3, 12), setName("test1", "test2")),
+			ops(add(-5), set(12, 123), setName("test2", "test3"))
 		);
 		State state1 = new State();
 		state1.init();
@@ -95,8 +95,8 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testSquashAddSetAreEmpty() {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> ops = List.of(
-				ops(null, null, setName("", "aa")),
-				ops(null, null, setName("aa", "aaa"))
+			ops(null, null, setName("", "aa")),
+			ops(null, null, setName("aa", "aaa"))
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> squashed = MERGED.squash(ops);
 		assertEquals(List.of(ops(null, null, setName("", "aaa"))), squashed);
@@ -105,16 +105,16 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testTransform() throws TransformException {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> left = List.of(
-				new Tuple3<>(List.of(add(12), add(13), add(-2)), List.of(), List.of()),
-				new Tuple3<>(List.of(), List.of(set(0, 10), set(10, 14)), List.of()),
-				new Tuple3<>(List.of(), List.of(), List.of(setName("", "left1"), setName("left1", "left2"))),
-				new Tuple3<>(List.of(add(100), add(23)), List.of(set(14, 50), set(50, 3)), List.of(setName("left2", "left3"), setName("left3", "left4")))
+			new Tuple3<>(List.of(add(12), add(13), add(-2)), List.of(), List.of()),
+			new Tuple3<>(List.of(), List.of(set(0, 10), set(10, 14)), List.of()),
+			new Tuple3<>(List.of(), List.of(), List.of(setName("", "left1"), setName("left1", "left2"))),
+			new Tuple3<>(List.of(add(100), add(23)), List.of(set(14, 50), set(50, 3)), List.of(setName("left2", "left3"), setName("left3", "left4")))
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> right = List.of(
-				new Tuple3<>(List.of(), List.of(set(0, 3), set(3, 13)), List.of()),
-				new Tuple3<>(List.of(), List.of(), List.of(setName("", "right1"), setName("right1", "right2"))),
-				new Tuple3<>(List.of(add(-4), add(43)), List.of(), List.of()),
-				new Tuple3<>(List.of(add(1000), add(-123)), List.of(set(13, 11), set(11, 22)), List.of(setName("right2", "right3"), setName("right3", "right4")))
+			new Tuple3<>(List.of(), List.of(set(0, 3), set(3, 13)), List.of()),
+			new Tuple3<>(List.of(), List.of(), List.of(setName("", "right1"), setName("right1", "right2"))),
+			new Tuple3<>(List.of(add(-4), add(43)), List.of(), List.of()),
+			new Tuple3<>(List.of(add(1000), add(-123)), List.of(set(13, 11), set(11, 22)), List.of(setName("right2", "right3"), setName("right3", "right4")))
 		);
 
 		State stateLeft = new State();
@@ -142,8 +142,8 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testTransformWithEmptyDiffs() throws TransformException {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = List.of(
-				new Tuple3<>(List.of(add(12), add(13), add(-2)), List.of(), List.of()),
-				new Tuple3<>(List.of(), List.of(set(0, 10), set(10, 14)), List.of())
+			new Tuple3<>(List.of(add(12), add(13), add(-2)), List.of(), List.of()),
+			new Tuple3<>(List.of(), List.of(set(0, 10), set(10, 14)), List.of())
 		);
 
 		TransformResult<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> transform1 = MERGED.transform(diffs, List.of());
@@ -160,7 +160,7 @@ public final class MergedOTSystemTest {
 		assertTrue(squashed.isEmpty());
 
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = List.of(
-				new Tuple3<>(List.of(add(12), add(13), add(-2)), List.of(), List.of())
+			new Tuple3<>(List.of(add(12), add(13), add(-2)), List.of(), List.of())
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> inverted = MERGED.invert(diffs);
 
@@ -176,39 +176,39 @@ public final class MergedOTSystemTest {
 	// region helpers
 	private static OTSystem<TestAdd> createAddIntSystem() {
 		return OTSystemImpl.<TestAdd>builder()
-				.withEmptyPredicate(TestAdd.class, op -> op.getDelta() == 0)
-				.withInvertFunction(TestAdd.class, op -> List.of(add(-op.getDelta())))
-				.withSquashFunction(TestAdd.class, TestAdd.class, (first, second) -> add(first.getDelta() + second.getDelta()))
-				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> TransformResult.of(right, left))
-				.build();
+			.withEmptyPredicate(TestAdd.class, op -> op.getDelta() == 0)
+			.withInvertFunction(TestAdd.class, op -> List.of(add(-op.getDelta())))
+			.withSquashFunction(TestAdd.class, TestAdd.class, (first, second) -> add(first.getDelta() + second.getDelta()))
+			.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> TransformResult.of(right, left))
+			.build();
 	}
 
 	private static OTSystem<TestSet> createTestSetSystem() {
 		return OTSystemImpl.<TestSet>builder()
-				.withEmptyPredicate(TestSet.class, op -> op.getPrev() == op.getNext())
-				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
-				.withSquashFunction(TestSet.class, TestSet.class, (first, second) -> set(first.getPrev(), second.getNext()))
-				.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
-					if (left.getNext() > right.getNext()) return right(set(right.getNext(), left.getNext()));
-					if (left.getNext() < right.getNext()) return left(set(left.getNext(), right.getNext()));
-					return TransformResult.empty();
-				})
-				.build();
+			.withEmptyPredicate(TestSet.class, op -> op.getPrev() == op.getNext())
+			.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
+			.withSquashFunction(TestSet.class, TestSet.class, (first, second) -> set(first.getPrev(), second.getNext()))
+			.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
+				if (left.getNext() > right.getNext()) return right(set(right.getNext(), left.getNext()));
+				if (left.getNext() < right.getNext()) return left(set(left.getNext(), right.getNext()));
+				return TransformResult.empty();
+			})
+			.build();
 	}
 
 	private static OTSystem<TestSetName> createTestSetNameSystem() {
 		return OTSystemImpl.<TestSetName>builder()
-				.withEmptyPredicate(TestSetName.class, op -> op.getPrev().equals(op.getNext()))
-				.withInvertFunction(TestSetName.class, op -> List.of(setName(op.getNext(), op.getPrev())))
-				.withSquashFunction(TestSetName.class, TestSetName.class, (first, second) -> setName(first.getPrev(), second.getNext()))
-				.withTransformFunction(TestSetName.class, TestSetName.class, (left, right) -> {
-					if (left.getNext().compareTo(right.getNext()) > 0)
-						return right(setName(right.getNext(), left.getNext()));
-					if (left.getNext().compareTo(right.getNext()) < 0)
-						return left(setName(left.getNext(), right.getNext()));
-					return TransformResult.empty();
-				})
-				.build();
+			.withEmptyPredicate(TestSetName.class, op -> op.getPrev().equals(op.getNext()))
+			.withInvertFunction(TestSetName.class, op -> List.of(setName(op.getNext(), op.getPrev())))
+			.withSquashFunction(TestSetName.class, TestSetName.class, (first, second) -> setName(first.getPrev(), second.getNext()))
+			.withTransformFunction(TestSetName.class, TestSetName.class, (left, right) -> {
+				if (left.getNext().compareTo(right.getNext()) > 0)
+					return right(setName(right.getNext(), left.getNext()));
+				if (left.getNext().compareTo(right.getNext()) < 0)
+					return left(setName(left.getNext(), right.getNext()));
+				return TransformResult.empty();
+			})
+			.build();
 	}
 
 	private static void assertState(String name, int addVal, int setVal, State state) {
@@ -217,8 +217,9 @@ public final class MergedOTSystemTest {
 		assertEquals(setVal, state.getSetVal());
 	}
 
-	private static Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>> ops(@Nullable TestAdd add, @Nullable TestSet set,
-			@Nullable TestSetName setName) {
+	private static Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>> ops(
+		@Nullable TestAdd add, @Nullable TestSet set, @Nullable TestSetName setName
+	) {
 		List<TestAdd> testAdds = add == null ? List.of() : List.of(add);
 		List<TestSet> testSets = set == null ? List.of() : List.of(set);
 		List<TestSetName> testSetNames = setName == null ? List.of() : List.of(setName);

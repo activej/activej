@@ -48,8 +48,8 @@ public final class TestSimpleCrdt {
 		CrdtDataBinarySerializer<String, Integer> serializer = new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
 		int port = getFreePort();
 		server = CrdtServer.builder(getCurrentReactor(), remoteStorage, serializer)
-				.withListenAddress(new InetSocketAddress(port))
-				.build();
+			.withListenAddress(new InetSocketAddress(port))
+			.build();
 		server.listen();
 
 		client = RemoteCrdtStorage.create(getCurrentReactor(), new InetSocketAddress(port), serializer);
@@ -74,8 +74,8 @@ public final class TestSimpleCrdt {
 		localStorage.put("only_local", 12);
 
 		await(StreamSuppliers.ofIterator(localStorage.iterator())
-				.streamTo(StreamConsumers.ofPromise(client.upload()))
-				.whenComplete(server::close));
+			.streamTo(StreamConsumers.ofPromise(client.upload()))
+			.whenComplete(server::close));
 
 		System.out.println("Data at 'remote' storage:");
 		remoteStorage.iterator().forEachRemaining(System.out::println);
@@ -91,8 +91,8 @@ public final class TestSimpleCrdt {
 		MapCrdtStorage<String, Integer> localStorage = MapCrdtStorage.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 
 		await(client.download().then(supplier -> supplier
-				.streamTo(StreamConsumers.ofConsumer(localStorage::put))
-				.whenComplete(server::close)));
+			.streamTo(StreamConsumers.ofConsumer(localStorage::put))
+			.whenComplete(server::close)));
 
 		System.out.println("Data fetched from 'remote' storage:");
 		localStorage.iterator().forEachRemaining(System.out::println);
@@ -107,10 +107,10 @@ public final class TestSimpleCrdt {
 		MapCrdtStorage<String, Integer> localStorage = MapCrdtStorage.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 
 		await(client.take().then(supplier -> supplier
-				.streamTo(StreamConsumers.ofConsumer(localStorage::put))
-				.then(() -> client.download().then(StreamSupplier::toList)
-						.whenResult(afterTake -> assertTrue(afterTake.isEmpty())))
-				.whenComplete(server::close)));
+			.streamTo(StreamConsumers.ofConsumer(localStorage::put))
+			.then(() -> client.download().then(StreamSupplier::toList)
+				.whenResult(afterTake -> assertTrue(afterTake.isEmpty())))
+			.whenComplete(server::close)));
 
 		assertEquals(2, checkNotNull(localStorage.get("mx")).intValue());
 		assertEquals(5, checkNotNull(localStorage.get("test")).intValue());

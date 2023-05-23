@@ -337,11 +337,11 @@ public final class HttpUrlTest {
 	@Test
 	public void testLastEmptyValue() {
 		Map<String, String> map = map(
-				entry("key1", "value"),
-				entry("key2", ""),
-				entry("key3", "value2"),
-				entry("key4", "another_value"),
-				entry("k5", ""));
+			entry("key1", "value"),
+			entry("key2", ""),
+			entry("key3", "value2"),
+			entry("key4", "another_value"),
+			entry("k5", ""));
 
 		UrlParser url = UrlParser.of("http://abc.com/?key1=value&key2&key3=value2&key4=another_value&k5");
 		assertEquals(map, url.getQueryParameters());
@@ -353,10 +353,10 @@ public final class HttpUrlTest {
 	@Test
 	public void testAmpersandLastCharacter() {
 		Map<String, String> map = map(
-				entry("key1", "value"),
-				entry("key2", ""),
-				entry("key3", "value2"),
-				entry("key4", "another_value"));
+			entry("key1", "value"),
+			entry("key2", ""),
+			entry("key3", "value2"),
+			entry("key4", "another_value"));
 
 		UrlParser url = UrlParser.of("http://abc.com/?key1=value&key2&key3=value2&key4=another_value&");
 		assertEquals(map, url.getQueryParameters());

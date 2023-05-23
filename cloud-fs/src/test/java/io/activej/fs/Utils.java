@@ -123,8 +123,8 @@ public final class Utils {
 		List<Path> paths = new ArrayList<>();
 		list(directoryPath, paths, except, true);
 		return paths.stream()
-				.map(directoryPath::relativize)
-				.collect(toList());
+			.map(directoryPath::relativize)
+			.collect(toList());
 	}
 
 	public static void assertMetadataEquals(Map<String, FileMetadata> expected, Map<String, FileMetadata> actual) {
@@ -148,8 +148,8 @@ public final class Utils {
 
 	private static void list(Path directoryPath, List<Path> paths, Set<String> except, boolean includeDirs) {
 		Set<Path> exceptPaths = except.stream()
-				.map(directoryPath::resolve)
-				.collect(toSet());
+			.map(directoryPath::resolve)
+			.collect(toSet());
 
 		try {
 			List<Path> subPaths;
@@ -174,7 +174,7 @@ public final class Utils {
 
 	private static Map<String, FileMetadata> removeTimestamp(Map<String, FileMetadata> map) {
 		return map.entrySet().stream()
-				.collect(toMap(Map.Entry::getKey, e -> FileMetadata.of(e.getValue().getSize(), 0)));
+			.collect(toMap(Map.Entry::getKey, e -> FileMetadata.of(e.getValue().getSize(), 0)));
 	}
 
 }

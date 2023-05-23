@@ -44,7 +44,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * could then receive and use it.
  */
 public final class BasicAuthServlet extends AbstractReactive
-		implements AsyncServlet {
+	implements AsyncServlet {
 	private static final boolean CHECKS = Checks.isEnabled(BasicAuthServlet.class);
 
 	public static final BiPredicate<String, String> SILLY = (login, pass) -> true;
@@ -57,9 +57,9 @@ public final class BasicAuthServlet extends AbstractReactive
 	private final AsyncBiPredicate<String, String> credentialsLookup;
 
 	private UnaryOperator<HttpResponse.Builder> failureResponse =
-			response -> response
-					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
-					.withBody("Authentication is required".getBytes(UTF_8));
+		response -> response
+			.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
+			.withBody("Authentication is required".getBytes(UTF_8));
 
 	private BasicAuthServlet(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
 		super(reactor);
@@ -96,12 +96,13 @@ public final class BasicAuthServlet extends AbstractReactive
 		return next -> create(reactor, next, realm, credentialsLookup);
 	}
 
-	public static Function<AsyncServlet, AsyncServlet> decorator(Reactor reactor, String realm,
-			AsyncBiPredicate<String, String> credentialsLookup,
-			UnaryOperator<HttpResponse.Builder> failureResponse) {
+	public static Function<AsyncServlet, AsyncServlet> decorator(
+		Reactor reactor, String realm, AsyncBiPredicate<String, String> credentialsLookup,
+		UnaryOperator<HttpResponse.Builder> failureResponse
+	) {
 		return next -> builder(reactor, next, realm, credentialsLookup)
-				.withFailureResponse(failureResponse)
-				.build();
+			.withFailureResponse(failureResponse)
+			.build();
 	}
 
 	@Override
@@ -123,11 +124,11 @@ public final class BasicAuthServlet extends AbstractReactive
 			throw HttpError.ofCode(400, "No ':' separator");
 		}
 		return credentialsLookup.test(authData[0], authData[1])
-				.then(ok -> {
-					if (!ok) return failureResponse.apply(HttpResponse.unauthorized401(challenge)).toPromise();
-					request.attach(new BasicAuthCredentials(authData[0], authData[1]));
-					return next.serve(request);
-				});
+			.then(ok -> {
+				if (!ok) return failureResponse.apply(HttpResponse.unauthorized401(challenge)).toPromise();
+				request.attach(new BasicAuthCredentials(authData[0], authData[1]));
+				return next.serve(request);
+			});
 	}
 
 	public record BasicAuthCredentials(String username, String password) {

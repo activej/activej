@@ -83,7 +83,7 @@ public class OptionalDependencyTest {
 
 	private void doTest(AbstractModule module2) throws InterruptedException, ExecutionException {
 		Injector injector = Injector.of(
-				Modules.combine(ServiceGraphModule.create(), module2)
+			Modules.combine(ServiceGraphModule.create(), module2)
 		);
 
 		TestInterface instance = injector.getInstance(TestInterface.class);

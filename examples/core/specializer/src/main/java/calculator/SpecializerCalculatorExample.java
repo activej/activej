@@ -25,22 +25,22 @@ public final class SpecializerCalculatorExample {
 	private static final Parser<CalculatorExpression> PARENS = EXPRESSION_REF.lazy().between(DELIMITERS.token("("), DELIMITERS.token(")"));
 
 	private static final Parser<CalculatorExpression> ATOM =
-			Parsers.or(
-					PARENS,
-					NUMBER,
-					UNKNOWN
-			);
+		Parsers.or(
+			PARENS,
+			NUMBER,
+			UNKNOWN
+		);
 
 	//[START REGION_1]
 	private static final Parser<CalculatorExpression> EXPRESSION = new OperatorTable<CalculatorExpression>()
-			.infixl(DELIMITERS.token("+").retn(Sum::new), 10)
-			.infixl(DELIMITERS.token("-").retn(Sub::new), 10)
-			.infixl(DELIMITERS.token("*").retn(Mul::new), 20)
-			.infixl(DELIMITERS.token("/").retn(Div::new), 20)
-			.infixl(DELIMITERS.token("%").retn(Mod::new), 20)
-			.prefix(DELIMITERS.token("-").retn(Neg::new), 30)
-			.infixr(DELIMITERS.token("^").retn(Pow::new), 40)
-			.build(ATOM);
+		.infixl(DELIMITERS.token("+").retn(Sum::new), 10)
+		.infixl(DELIMITERS.token("-").retn(Sub::new), 10)
+		.infixl(DELIMITERS.token("*").retn(Mul::new), 20)
+		.infixl(DELIMITERS.token("/").retn(Div::new), 20)
+		.infixl(DELIMITERS.token("%").retn(Mod::new), 20)
+		.prefix(DELIMITERS.token("-").retn(Neg::new), 30)
+		.infixr(DELIMITERS.token("^").retn(Pow::new), 40)
+		.build(ATOM);
 	//[END REGION_1]
 
 	static {

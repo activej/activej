@@ -64,14 +64,14 @@ public class DatastreamBenchmark extends Launcher {
 	@Provides
 	Reactor reactor() {
 		return Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.overrideWith(Config.ofSystemProperties("config"));
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Provides
@@ -143,7 +143,7 @@ public class DatastreamBenchmark extends Launcher {
 		double avgTime = (double) time / benchmarkRounds;
 		long requestsPerSecond = (long) (totalElements / avgTime * 1000);
 		System.out.println("Time: " + time + "ms; Average time: " + avgTime + "ms; Best time: " +
-				bestTime + "ms; Worst time: " + worstTime + "ms; Operations per second: " + requestsPerSecond);
+			bestTime + "ms; Worst time: " + worstTime + "ms; Operations per second: " + requestsPerSecond);
 	}
 
 	private long round() throws Exception {
@@ -156,9 +156,9 @@ public class DatastreamBenchmark extends Launcher {
 		StreamConsumer<Integer> output = outputProvider.get();
 		long start = System.currentTimeMillis();
 		return input
-				.transformWith(mapper)
-				.streamTo(output)
-				.map($ -> System.currentTimeMillis() - start);
+			.transformWith(mapper)
+			.streamTo(output)
+			.map($ -> System.currentTimeMillis() - start);
 	}
 
 	public static void main(String[] args) throws Exception {

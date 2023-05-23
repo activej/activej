@@ -173,6 +173,6 @@ public class AsyncPredicateTest {
 
 	static Promise<Boolean> async(boolean value) {
 		return Promise.complete().async()
-				.map($ -> value);
+			.map($ -> value);
 	}
 }

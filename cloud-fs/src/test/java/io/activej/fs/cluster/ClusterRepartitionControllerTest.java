@@ -92,43 +92,43 @@ public final class ClusterRepartitionControllerTest {
 		await(peer.start());
 
 		FileSystemServer regularServer = FileSystemServer.builder(reactor, fileSystem)
-				.withListenAddress(regularPartitionAddress)
-				.build();
+			.withListenAddress(regularPartitionAddress)
+			.build();
 		regularServer.listen();
 		servers.add(regularServer);
 
 		FileSystemServer failingServer = FileSystemServer.builder(reactor,
-						new ForwardingFileSystem(peer) {
-							@Override
-							public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
-								return super.upload(name)
-										.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
-							}
-						})
-				.withListenAddress(failingPartitionAddress)
-				.build();
+				new ForwardingFileSystem(peer) {
+					@Override
+					public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
+						return super.upload(name)
+							.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
+					}
+				})
+			.withListenAddress(failingPartitionAddress)
+			.build();
 		failingServer.listen();
 		servers.add(failingServer);
 
 		IDiscoveryService discoveryService = IDiscoveryService.constant(partitions);
 		FileSystemPartitions fileSystemPartitions = FileSystemPartitions.builder(reactor, discoveryService)
-				.withServerSelector(RENDEZVOUS_HASH_SHARDER)
-				.build();
+			.withServerSelector(RENDEZVOUS_HASH_SHARDER)
+			.build();
 
 		Promise<Map<Object, IFileSystem>> discoverPromise = discoveryService.discover().get();
 		Map<Object, IFileSystem> discovered = discoverPromise.getResult();
 
 		ClusterRepartitionController controller = ClusterRepartitionController.builder(reactor, localPartitionId, fileSystemPartitions)
-				.withReplicationCount(partitions.size())    // full replication
-				.build();
+			.withReplicationCount(partitions.size())    // full replication
+			.build();
 
 		assertTrue(discovered.containsKey("regular"));
 		assertTrue(discovered.containsKey("failing")); // no one has marked it dead yet
 
 		await(fileSystemPartitions.start()
-				.then(controller::start)
-				.then(controller::repartition)
-				.whenComplete(TestUtils.assertCompleteFn($ -> servers.forEach(AbstractReactiveServer::close))));
+			.then(controller::start)
+			.then(controller::repartition)
+			.whenComplete(TestUtils.assertCompleteFn($ -> servers.forEach(AbstractReactiveServer::close))));
 
 		assertTrue(fileSystemPartitions.getAlivePartitions().containsKey("regular"));
 		assertFalse(fileSystemPartitions.getAlivePartitions().containsKey("failing"));

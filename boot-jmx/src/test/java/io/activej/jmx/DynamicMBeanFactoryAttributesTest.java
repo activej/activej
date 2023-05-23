@@ -253,12 +253,12 @@ public class DynamicMBeanFactoryAttributesTest {
 	@Test
 	public void handlesEmptyAttributeNamesProperly() throws Exception {
 		MBeanWithEmptyNames mBeanWithEmptyNames =
-				new MBeanWithEmptyNames(
-						new SamplePojo_L_1_1(10),
-						new SamplePojo_L_1_2(
-								new SamplePojo_L_2(25)
-						)
-				);
+			new MBeanWithEmptyNames(
+				new SamplePojo_L_1_1(10),
+				new SamplePojo_L_1_2(
+					new SamplePojo_L_2(25)
+				)
+			);
 
 		DynamicMBean mbean = createDynamicMBeanFor(mBeanWithEmptyNames);
 
@@ -358,7 +358,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		ArbitraryType arbitraryType = new ArbitraryType("String representation");
 		Date date = new Date();
 		MBeanWithJmxAttributesOfArbitraryTypes obj =
-				new MBeanWithJmxAttributesOfArbitraryTypes(arbitraryType, date);
+			new MBeanWithJmxAttributesOfArbitraryTypes(arbitraryType, date);
 		try {
 			createDynamicMBeanFor(obj);
 			fail();
@@ -388,24 +388,24 @@ public class DynamicMBeanFactoryAttributesTest {
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString("A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +
-					"' annotated with @JmxAttribute should be declared public"));
+				"' annotated with @JmxAttribute should be declared public"));
 		}
 	}
 
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(Object... objects) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(objects),
-						JmxBeanSettings.builder()
-								.withCustomTypes(Collections.singletonMap(
-										Duration.class,
-										new DynamicMBeanFactory.JmxCustomTypeAdapter<>(
-												StringFormatUtils::formatDuration,
-												StringFormatUtils::parseDuration
-										)
-								))
-								.build(),
-						false);
+			.createDynamicMBean(List.of(objects),
+				JmxBeanSettings.builder()
+					.withCustomTypes(Collections.singletonMap(
+						Duration.class,
+						new DynamicMBeanFactory.JmxCustomTypeAdapter<>(
+							StringFormatUtils::formatDuration,
+							StringFormatUtils::parseDuration
+						)
+					))
+					.build(),
+				false);
 	}
 
 	public static Object[] keyForTabularData(String key) {
@@ -512,7 +512,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		@JmxAttribute
 		public Map<String, Duration> getNameToDuration() {
 			return nameToNumber.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
@@ -523,7 +523,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		@JmxAttribute(reducer = JmxReducerSum.class)
 		public Map<String, Duration> getNameToDurationSum() {
 			return nameToNumber.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
 		}
 
 		@JmxOperation(reducer = JmxReducerSum.class)
@@ -534,7 +534,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		@JmxOperation(reducer = JmxReducerSum.class)
 		public Map<String, Duration> getNameToDurationSumOperation() {
 			return nameToNumber.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
 		}
 
 		@JmxAttribute(reducer = JmxReducerAvg.class)
@@ -545,7 +545,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		@JmxAttribute(reducer = JmxReducerAvg.class)
 		public Map<String, Duration> getNameToDurationAvg() {
 			return nameToNumber.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
 		}
 
 		@JmxOperation(reducer = JmxReducerAvg.class)
@@ -556,7 +556,7 @@ public class DynamicMBeanFactoryAttributesTest {
 		@JmxOperation(reducer = JmxReducerAvg.class)
 		public Map<String, Duration> getNameToDurationAvgOperation() {
 			return nameToNumber.entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Duration.ofSeconds(e.getValue())));
 		}
 	}
 

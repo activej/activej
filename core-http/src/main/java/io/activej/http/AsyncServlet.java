@@ -33,7 +33,7 @@ public interface AsyncServlet {
 	 */
 	static AsyncServlet ofBlocking(Executor executor, BlockingServlet blockingServlet) {
 		return request -> request.loadBody()
-				.then(() -> Promise.ofBlocking(executor,
-						() -> blockingServlet.serve(request)));
+			.then(() -> Promise.ofBlocking(executor,
+				() -> blockingServlet.serve(request)));
 	}
 }

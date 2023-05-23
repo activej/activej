@@ -49,17 +49,17 @@ public final class LogToCubeTest extends CubeTestBase {
 		FrameFormat frameFormat = FrameFormats.lz4();
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
-				.withDimension("pub", ofInt())
-				.withDimension("adv", ofInt())
-				.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
-				.withMeasure("pubRequests", sum(ofLong()))
-				.withMeasure("advRequests", sum(ofLong()))
-				.withAggregation(id("pub").withDimensions("pub", "testEnum").withMeasures("pubRequests")
+			.withDimension("pub", ofInt())
+			.withDimension("adv", ofInt())
+			.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
+			.withMeasure("pubRequests", sum(ofLong()))
+			.withMeasure("advRequests", sum(ofLong()))
+			.withAggregation(id("pub").withDimensions("pub", "testEnum").withMeasures("pubRequests")
 //						.withPredicate(AggregationPredicates.notEq("testEnum", null)) // ok
-								.withPredicate(AggregationPredicates.has("testEnum")) // fail
-				)
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
-				.build();
+					.withPredicate(AggregationPredicates.has("testEnum")) // fail
+			)
+			.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+			.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
@@ -71,33 +71,33 @@ public final class LogToCubeTest extends CubeTestBase {
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
 		IMultilog<TestPubRequest> multilog = Multilog.create(reactor, fileSystem,
-				frameFormat,
-				SerializerFactory.defaultInstance().create(CLASS_LOADER, TestPubRequest.class),
-				NAME_PARTITION_REMAINDER_SEQ);
+			frameFormat,
+			SerializerFactory.defaultInstance().create(CLASS_LOADER, TestPubRequest.class),
+			NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
-				multilog,
-				new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(EVENTLOOP, cube),
-				"testlog",
-				List.of("partitionA"),
-				cubeDiffLogOTState);
+			multilog,
+			new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(EVENTLOOP, cube),
+			"testlog",
+			List.of("partitionA"),
+			cubeDiffLogOTState);
 
 		StreamSupplier<TestPubRequest> supplier = StreamSuppliers.ofValues(
-				new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),
-				new TestPubRequest(1001, 2, List.of(new TestAdvRequest(10), new TestAdvRequest(20))),
-				new TestPubRequest(1002, 1, List.of(new TestAdvRequest(30))),
-				new TestPubRequest(1002, 2, List.of()));
+			new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),
+			new TestPubRequest(1001, 2, List.of(new TestAdvRequest(10), new TestAdvRequest(20))),
+			new TestPubRequest(1002, 1, List.of(new TestAdvRequest(30))),
+			new TestPubRequest(1002, 2, List.of()));
 
 		await(supplier.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<TestAdvResult> list = await(cube.queryRawStream(
-						List.of("adv"),
-						List.of("advRequests"),
-						alwaysTrue(),
-						TestAdvResult.class, CLASS_LOADER)
-				.toList());
+				List.of("adv"),
+				List.of("advRequests"),
+				alwaysTrue(),
+				TestAdvResult.class, CLASS_LOADER)
+			.toList());
 
 		assertEquals(expected, list);
 	}

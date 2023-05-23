@@ -75,8 +75,8 @@ public class CubeBackupControllerTest {
 		Executor executor = Executors.newCachedThreadPool();
 
 		eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		eventloop.keepAlive(true);
 
@@ -88,15 +88,15 @@ public class CubeBackupControllerTest {
 		eventloop.submit(fs::start).get();
 		fileSystem = fs;
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				FrameFormats.lz4(), fs);
+			FrameFormats.lz4(), fs);
 		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
-				.withDimension("pub", ofInt())
-				.withDimension("adv", ofInt())
-				.withMeasure("pubRequests", sum(ofLong()))
-				.withMeasure("advRequests", sum(ofLong()))
-				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests", "pubRequests"))
-				.build();
+			.withDimension("pub", ofInt())
+			.withDimension("adv", ofInt())
+			.withMeasure("pubRequests", sum(ofLong()))
+			.withMeasure("advRequests", sum(ofLong()))
+			.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
+			.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests", "pubRequests"))
+			.build();
 
 		IChunksBackupService chunksBackupService = IChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
@@ -114,33 +114,33 @@ public class CubeBackupControllerTest {
 	@Test
 	public void backup() throws CubeException {
 		List<LogDiff<CubeDiff>> diffs1 = List.of(
-				LogDiff.of(Map.of(
-								"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a", 12), 100)),
-								"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b", 1123), 1000))),
-						CubeDiff.of(Map.of(
-								"pub", AggregationDiff.of(Set.of(chunk(12), chunk(123), chunk(500))),
-								"adv", AggregationDiff.of(Set.of(chunk(10), chunk(1), chunk(44)))))
-				));
+			LogDiff.of(Map.of(
+					"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a", 12), 100)),
+					"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b", 1123), 1000))),
+				CubeDiff.of(Map.of(
+					"pub", AggregationDiff.of(Set.of(chunk(12), chunk(123), chunk(500))),
+					"adv", AggregationDiff.of(Set.of(chunk(10), chunk(1), chunk(44)))))
+			));
 		await(() -> uplink.push(new UplinkProtoCommit(0, diffs1)));
 		uploadStubChunks(diffs1);
 
 		List<LogDiff<CubeDiff>> diffs2 = List.of(
-				LogDiff.of(Map.of(
-								"b", new LogPositionDiff(LogPosition.create(new LogFile("b", 1123), 1000), LogPosition.create(new LogFile("b2", 9), 2341)),
-								"c", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("c", 555), 12))),
-						CubeDiff.of(Map.of(
-								"pub", AggregationDiff.of(Set.of(chunk(43)), Set.of(chunk(500))),
-								"adv", AggregationDiff.of(Set.of(chunk(512), chunk(786)), Set.of(chunk(44)))))
-				));
+			LogDiff.of(Map.of(
+					"b", new LogPositionDiff(LogPosition.create(new LogFile("b", 1123), 1000), LogPosition.create(new LogFile("b2", 9), 2341)),
+					"c", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("c", 555), 12))),
+				CubeDiff.of(Map.of(
+					"pub", AggregationDiff.of(Set.of(chunk(43)), Set.of(chunk(500))),
+					"adv", AggregationDiff.of(Set.of(chunk(512), chunk(786)), Set.of(chunk(44)))))
+			));
 		await(() -> uplink.push(new UplinkProtoCommit(1, diffs2)));
 		uploadStubChunks(diffs2);
 
 		List<LogDiff<CubeDiff>> diffs3 = List.of(
-				LogDiff.of(Map.of(
-								"d", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("d", 541), 5235))),
-						CubeDiff.of(Map.of(
-								"pub", AggregationDiff.of(Set.of(chunk(4566)), Set.of(chunk(12)))))
-				));
+			LogDiff.of(Map.of(
+					"d", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("d", 541), 5235))),
+				CubeDiff.of(Map.of(
+					"pub", AggregationDiff.of(Set.of(chunk(4566)), Set.of(chunk(12)))))
+			));
 		await(() -> uplink.push(new UplinkProtoCommit(2, diffs3)));
 		uploadStubChunks(diffs3);
 
@@ -156,21 +156,21 @@ public class CubeBackupControllerTest {
 
 		assertChunkIds(1, Set.of(1L, 10L, 12L, 44L, 123L, 500L));
 		assertPositions(1, Map.of(
-				"a", LogPosition.create(new LogFile("a", 12), 100),
-				"b", LogPosition.create(new LogFile("b", 1123), 1000)));
+			"a", LogPosition.create(new LogFile("a", 12), 100),
+			"b", LogPosition.create(new LogFile("b", 1123), 1000)));
 
 		assertChunkIds(2, Set.of(1L, 10L, 12L, 43L, 123L, 512L, 786L));
 		assertPositions(2, Map.of(
-				"a", LogPosition.create(new LogFile("a", 12), 100),
-				"b", LogPosition.create(new LogFile("b2", 9), 2341),
-				"c", LogPosition.create(new LogFile("c", 555), 12)));
+			"a", LogPosition.create(new LogFile("a", 12), 100),
+			"b", LogPosition.create(new LogFile("b2", 9), 2341),
+			"c", LogPosition.create(new LogFile("c", 555), 12)));
 
 		assertChunkIds(3, Set.of(1L, 10L, 43L, 123L, 512L, 786L, 4566L));
 		assertPositions(3, Map.of(
-				"a", LogPosition.create(new LogFile("a", 12), 100),
-				"b", LogPosition.create(new LogFile("b2", 9), 2341),
-				"c", LogPosition.create(new LogFile("c", 555), 12),
-				"d", LogPosition.create(new LogFile("d", 541), 5235)));
+			"a", LogPosition.create(new LogFile("a", 12), 100),
+			"b", LogPosition.create(new LogFile("b2", 9), 2341),
+			"c", LogPosition.create(new LogFile("c", 555), 12),
+			"d", LogPosition.create(new LogFile("d", 541), 5235)));
 	}
 
 	private static AggregationChunk chunk(long id) {
@@ -183,19 +183,19 @@ public class CubeBackupControllerTest {
 
 	private void uploadStubChunks(List<LogDiff<CubeDiff>> diffs) {
 		await(() -> Promises.all(diffs.stream()
-				.map(LogDiff::getDiffs)
-				.flatMap(Collection::stream)
-				.flatMap(CubeDiff::addedChunks)
-				.map(String::valueOf)
-				.map(name -> fileSystem.upload(name + LOG)
-						.then(consumer -> consumer.acceptAll(wrapUtf8("Stub chunk data"), null)))));
+			.map(LogDiff::getDiffs)
+			.flatMap(Collection::stream)
+			.flatMap(CubeDiff::addedChunks)
+			.map(String::valueOf)
+			.map(name -> fileSystem.upload(name + LOG)
+				.then(consumer -> consumer.acceptAll(wrapUtf8("Stub chunk data"), null)))));
 	}
 
 	private void assertBackups(long... backupIds) {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("" +
-					"SELECT `revision` " +
-					"FROM " + CubeBackupController.BACKUP_REVISION_TABLE
+				"SELECT `revision` " +
+				"FROM " + CubeBackupController.BACKUP_REVISION_TABLE
 			)) {
 				ResultSet resultSet = stmt.executeQuery();
 
@@ -214,9 +214,9 @@ public class CubeBackupControllerTest {
 	private void assertChunkIds(long backupId, Set<Long> chunkIds) {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("" +
-					"SELECT `id`, `added_revision` <= `backup_id` " +
-					"FROM " + CubeBackupController.BACKUP_CHUNK_TABLE +
-					" WHERE `backup_id` = ? "
+				"SELECT `id`, `added_revision` <= `backup_id` " +
+				"FROM " + CubeBackupController.BACKUP_CHUNK_TABLE +
+				" WHERE `backup_id` = ? "
 			)) {
 				stmt.setLong(1, backupId);
 
@@ -237,11 +237,11 @@ public class CubeBackupControllerTest {
 
 		String prefix = "backups" + IFileSystem.SEPARATOR + backupId + IFileSystem.SEPARATOR;
 		Set<Long> actualChunks = await(() -> fileSystem.list(prefix + "*" + LOG))
-				.keySet()
-				.stream()
-				.map(s -> s.substring(prefix.length(), s.length() - LOG.length()))
-				.map(Long::parseLong)
-				.collect(toSet());
+			.keySet()
+			.stream()
+			.map(s -> s.substring(prefix.length(), s.length() - LOG.length()))
+			.map(Long::parseLong)
+			.collect(toSet());
 
 		assertEquals(actualChunks, chunkIds);
 	}
@@ -249,9 +249,9 @@ public class CubeBackupControllerTest {
 	private void assertPositions(long backupId, Map<String, LogPosition> positions) {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement stmt = connection.prepareStatement("" +
-					"SELECT `partition_id`, `filename`, `remainder`, `position` " +
-					"FROM " + CubeBackupController.BACKUP_POSITION_TABLE +
-					" WHERE `backup_id` = ? "
+				"SELECT `partition_id`, `filename`, `remainder`, `position` " +
+				"FROM " + CubeBackupController.BACKUP_POSITION_TABLE +
+				" WHERE `backup_id` = ? "
 			)) {
 				stmt.setLong(1, backupId);
 

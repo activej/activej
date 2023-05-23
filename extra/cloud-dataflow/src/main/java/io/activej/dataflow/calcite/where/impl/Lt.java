@@ -33,16 +33,16 @@ public final class Lt implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new Lt(
-				left.materialize(params),
-				right.materialize(params)
+			left.materialize(params),
+			right.materialize(params)
 		);
 	}
 
 	@Override
 	public String toString() {
 		return "Lt[" +
-				"left=" + left + ", " +
-				"right=" + right + ']';
+			"left=" + left + ", " +
+			"right=" + right + ']';
 	}
 
 }

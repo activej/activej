@@ -120,36 +120,36 @@ public final class Transform implements IFileSystem {
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return globInto.apply(glob)
-				.map(transformedGlob -> parent.list(transformedGlob)
-						.map(transformMap($ -> true)))
-				.orElseGet(() -> parent.list("**")
-						.map(transformMap(RemoteFileSystemUtils.getGlobStringPredicate(glob))));
+			.map(transformedGlob -> parent.list(transformedGlob)
+				.map(transformMap($ -> true)))
+			.orElseGet(() -> parent.list("**")
+				.map(transformMap(RemoteFileSystemUtils.getGlobStringPredicate(glob))));
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
 		return into.apply(name)
-				.map(parent::info)
-				.orElse(Promise.of(null));
+			.map(parent::info)
+			.orElse(Promise.of(null));
 	}
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		Set<String> transformed = names.stream()
-				.map(into)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.collect(toSet());
+			.map(into)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.collect(toSet());
 		return transformed.isEmpty() ?
-				Promise.of(result) :
-				parent.infoAll(transformed)
-						.whenResult(map -> map.forEach((name, meta) -> {
-							Optional<String> maybeName = from.apply(name);
-							assert maybeName.isPresent();
-							result.put(maybeName.get(), meta);
-						}))
-						.map($ -> result);
+			Promise.of(result) :
+			parent.infoAll(transformed)
+				.whenResult(map -> map.forEach((name, meta) -> {
+					Optional<String> maybeName = from.apply(name);
+					assert maybeName.isPresent();
+					result.put(maybeName.get(), meta);
+				}))
+				.map($ -> result);
 	}
 
 	@Override
@@ -169,10 +169,10 @@ public final class Transform implements IFileSystem {
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		return parent.deleteAll(toDelete.stream()
-				.map(into)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.collect(toSet()));
+			.map(into)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.collect(toSet()));
 	}
 
 	private Promise<Void> transfer(String source, String target, AsyncBiConsumer<String, String> action) {
@@ -213,10 +213,10 @@ public final class Transform implements IFileSystem {
 
 	private FunctionEx<Map<String, FileMetadata>, Map<String, FileMetadata>> transformMap(Predicate<String> postPredicate) {
 		return map -> map.entrySet().stream()
-				.map(entry -> from.apply(entry.getKey())
-						.map(mappedName -> Map.entry(mappedName, entry.getValue())))
-				.filter(entry -> entry.isPresent() && postPredicate.test(entry.get().getKey()))
-				.map(Optional::get)
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			.map(entry -> from.apply(entry.getKey())
+				.map(mappedName -> Map.entry(mappedName, entry.getValue())))
+			.filter(entry -> entry.isPresent() && postPredicate.test(entry.get().getKey()))
+			.map(Optional::get)
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 }

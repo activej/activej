@@ -61,30 +61,32 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 		return projection(classLoader, List.of(schemeFrom, fields), schemeFrom, schemeTo, mapping);
 	}
 
-	public static RecordProjection projection(RecordScheme schemeFrom, RecordScheme schemeTo,
-			Map<String, UnaryOperator<Expression>> mapping) {
+	public static RecordProjection projection(
+		RecordScheme schemeFrom, RecordScheme schemeTo, Map<String, UnaryOperator<Expression>> mapping
+	) {
 		DefiningClassLoader classLoaderChild = getClassLoaderChild(schemeFrom.getClassLoader(), schemeTo.getClassLoader());
 		return projection(DefiningClassLoader.create(classLoaderChild), null, schemeFrom, schemeTo, mapping);
 	}
 
-	public static RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
-			RecordScheme schemeFrom, RecordScheme schemeTo,
-			Map<String, UnaryOperator<Expression>> mapping) {
+	public static RecordProjection projection(
+		DefiningClassLoader classLoader, @Nullable Object classKey, RecordScheme schemeFrom, RecordScheme schemeTo,
+		Map<String, UnaryOperator<Expression>> mapping
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(RecordProjection.class, classKey),
-				() -> ClassGenerator.builder(RecordProjection.class)
-						.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
-								superConstructor(arg(0), arg(1)))
-						.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
-							for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
-								seq.add(Expressions.set(
-										schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), entry.getKey()),
-										entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
-								));
-							}
-						}))
-						.build(),
-				schemeFrom, schemeTo);
+			ClassKey.of(RecordProjection.class, classKey),
+			() -> ClassGenerator.builder(RecordProjection.class)
+				.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
+					superConstructor(arg(0), arg(1)))
+				.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
+					for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
+						seq.add(Expressions.set(
+							schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), entry.getKey()),
+							entry.getValue().apply(cast(arg(0), schemeFrom.getRecordClass()))
+						));
+					}
+				}))
+				.build(),
+			schemeFrom, schemeTo);
 	}
 
 	private static DefiningClassLoader getClassLoaderChild(DefiningClassLoader classLoader1, DefiningClassLoader classLoader2) {

@@ -66,15 +66,15 @@ public final class PollSanitizer<T> implements AsyncSupplier<T> {
 	@Override
 	public Promise<T> get() {
 		return Promises.retry(poll,
-				(value, e) -> {
-					if (e != null) return true;
-					if (Objects.equals(value, lastValue)) {
-						return false;
-					} else {
-						this.lastValue = value;
-						return true;
-					}
-				},
-				exponentialBackoff(Duration.ofMillis(1), yieldInterval));
+			(value, e) -> {
+				if (e != null) return true;
+				if (Objects.equals(value, lastValue)) {
+					return false;
+				} else {
+					this.lastValue = value;
+					return true;
+				}
+			},
+			exponentialBackoff(Duration.ofMillis(1), yieldInterval));
 	}
 }

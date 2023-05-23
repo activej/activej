@@ -13,11 +13,11 @@ import java.util.stream.Stream;
 public class SplitterExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 		List<Integer> integers = Stream.iterate(1, i -> i + 1)
-				.limit(5)
-				.collect(Collectors.toList());
+			.limit(5)
+			.collect(Collectors.toList());
 
 		ChannelSplitter<Integer> splitter = ChannelSplitter.create(ChannelSuppliers.ofList(integers));
 

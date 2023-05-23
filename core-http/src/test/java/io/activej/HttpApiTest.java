@@ -62,12 +62,12 @@ public final class HttpApiTest {
 	public void setUp() {
 		port = getFreePort();
 		server = HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> {
-							testRequest(request);
-							return createResponse().toPromise();
-						})
-				.withListenPort(port)
-				.build();
+				request -> {
+					testRequest(request);
+					return createResponse().toPromise();
+				})
+			.withListenPort(port)
+			.build();
 
 		client = HttpClient.create(Reactor.getCurrentReactor());
 
@@ -98,31 +98,31 @@ public final class HttpApiTest {
 	public void test() throws IOException {
 		server.listen();
 		await(client.request(createRequest())
-				.whenResult(this::testResponse)
-				.whenComplete(server::close));
+			.whenResult(this::testResponse)
+			.whenComplete(server::close));
 	}
 
 	private HttpResponse createResponse() {
 		return HttpResponse.ok200()
-				.withHeader(DATE, ofInstant(responseDate))
-				.withHeader(EXPIRES, ofInstant(expiresDate))
-				.withHeader(CONTENT_TYPE, ofContentType(responseContentType))
-				.withHeader(LAST_MODIFIED, ofInstant(lastModified))
-				.withHeader(AGE, ofDecimal(age))
-				.withCookies(responseCookies)
-				.build();
+			.withHeader(DATE, ofInstant(responseDate))
+			.withHeader(EXPIRES, ofInstant(expiresDate))
+			.withHeader(CONTENT_TYPE, ofContentType(responseContentType))
+			.withHeader(LAST_MODIFIED, ofInstant(lastModified))
+			.withHeader(AGE, ofDecimal(age))
+			.withCookies(responseCookies)
+			.build();
 	}
 
 	private HttpRequest createRequest() {
 		return HttpRequest.get("http://127.0.0.1:" + port)
-				.withHeader(ACCEPT, ofAcceptMediaTypes(requestAcceptContentTypes))
-				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(requestAcceptCharsets))
-				.withHeader(DATE, ofInstant(requestDate))
-				.withHeader(CONTENT_TYPE, ofContentType(requestContentType))
-				.withHeader(IF_MODIFIED_SINCE, ofInstant(dateIMS))
-				.withHeader(IF_UNMODIFIED_SINCE, ofInstant(dateIUMS))
-				.initialize(httpRequestBuilder -> requestCookies.forEach(httpRequestBuilder::withCookie))
-				.build();
+			.withHeader(ACCEPT, ofAcceptMediaTypes(requestAcceptContentTypes))
+			.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(requestAcceptCharsets))
+			.withHeader(DATE, ofInstant(requestDate))
+			.withHeader(CONTENT_TYPE, ofContentType(requestContentType))
+			.withHeader(IF_MODIFIED_SINCE, ofInstant(dateIMS))
+			.withHeader(IF_UNMODIFIED_SINCE, ofInstant(dateIUMS))
+			.initialize(httpRequestBuilder -> requestCookies.forEach(httpRequestBuilder::withCookie))
+			.build();
 	}
 
 	@SuppressWarnings("ConstantConditions")

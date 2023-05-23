@@ -66,20 +66,20 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	@Provides
 	Config config() {
 		return Config.create()
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				TriggersModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule());
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			TriggersModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule());
 	}
 
 	protected abstract CrdtFileServerLogicModule<K, S> getBusinessLogicModule();
@@ -88,8 +88,8 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 		@Provides
 		CrdtServer<K, S> crdtServer(NioReactor reactor, FileSystemCrdtStorage<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
 			return CrdtServer.builder(reactor, crdtClient, descriptor.serializer())
-					.initialize(ofAbstractServer(config.getChild("crdt.server")))
-					.build();
+				.initialize(ofAbstractServer(config.getChild("crdt.server")))
+				.build();
 		}
 
 		@Provides

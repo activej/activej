@@ -55,8 +55,8 @@ public final class TcpClientExample {
 				}
 
 				BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
-						.decodeStream(ByteBufsDecoders.ofCrlfTerminatedBytes())
-						.streamTo(ChannelConsumers.ofConsumer(buf -> System.out.println(buf.asString(UTF_8))));
+					.decodeStream(ByteBufsDecoders.ofCrlfTerminatedBytes())
+					.streamTo(ChannelConsumers.ofConsumer(buf -> System.out.println(buf.asString(UTF_8))));
 
 				startCommandLineInterface(socket);
 			} else {

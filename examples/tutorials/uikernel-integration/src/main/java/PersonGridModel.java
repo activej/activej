@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toList;
 
 @Inject
 public class PersonGridModel extends AbstractReactive
-		implements IGridModel<Integer, Person> {
+	implements IGridModel<Integer, Person> {
 	private final Map<String, Comparator<Person>> comparators = createComparators();
 	private final Map<Integer, Person> storage = initStorage();
 	private int cursor = storage.size() + 1;

@@ -68,15 +68,15 @@ public final class RpcNoServerTest {
 
 	private RpcServer createServer(NioReactor reactor) {
 		return RpcServer.builder(reactor)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
-					if (name.equals("--")) {
-						throw new Exception("Illegal name");
-					}
-					return "Hello, " + name + "!";
-				}))
-				.withListenPort(port)
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
+				if (name.equals("--")) {
+					throw new Exception("Illegal name");
+				}
+				return "Hello, " + name + "!";
+			}))
+			.withListenPort(port)
+			.build();
 	}
 
 	private static final int TIMEOUT = 1500;
@@ -100,8 +100,8 @@ public final class RpcNoServerTest {
 
 	private void doTest(boolean startServerAfterConnectTimeout) throws UnknownHostException, InterruptedException {
 		Eventloop eventloopServer = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		RpcServer server = createServer(eventloopServer);
 		eventloopServer.submit(() -> {
 			try {
@@ -117,27 +117,27 @@ public final class RpcNoServerTest {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
 		RpcClient rpcClient = RpcClient.builder(reactor)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
-				.withConnectTimeout(Duration.ofMillis(TIMEOUT))
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
+			.withConnectTimeout(Duration.ofMillis(TIMEOUT))
+			.build();
 
 		try {
 			await(rpcClient.start()
-					.async()
-					.whenComplete(($, e) -> {
-						if (e != null) {
-							System.err.println(e.getMessage());
-							assertThat(e, instanceOf(RpcException.class));
-						}
-					})
-					.then(($1, $2) -> rpcClient.stop())
-					.whenComplete(() -> {
-						if (startServerAfterConnectTimeout) {
-							serverThread.start();
-						}
-					})
-					.whenComplete(() -> System.err.println("Eventloop: " + reactor))
+				.async()
+				.whenComplete(($, e) -> {
+					if (e != null) {
+						System.err.println(e.getMessage());
+						assertThat(e, instanceOf(RpcException.class));
+					}
+				})
+				.then(($1, $2) -> rpcClient.stop())
+				.whenComplete(() -> {
+					if (startServerAfterConnectTimeout) {
+						serverThread.start();
+					}
+				})
+				.whenComplete(() -> System.err.println("Eventloop: " + reactor))
 			);
 		} finally {
 			eventloopServer.submit(server::close);

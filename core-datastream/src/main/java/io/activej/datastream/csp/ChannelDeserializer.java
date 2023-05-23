@@ -38,7 +38,7 @@ import static java.lang.String.format;
  * that is deserialized from incoming binary data using given {@link BinarySerializer}.
  */
 public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
-		implements WithChannelToStream<ChannelDeserializer<T>, ByteBuf, T> {
+	implements WithChannelToStream<ChannelDeserializer<T>, ByteBuf, T> {
 	private ChannelSupplier<ByteBuf> input;
 	private final BinarySerializer<T> valueSerializer;
 
@@ -126,29 +126,29 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 
 		if (isReady()) {
 			input.get()
-					.whenResult(buf -> {
-						if (buf != null) {
-							if (endOfStream) {
-								buf.recycle();
-								closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, bufs)));
-								return;
-							}
-							bufs.add(buf);
-							asyncResume();
-						} else {
-							if (explicitEndOfStream && !endOfStream) {
-								closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing, %s : %s", this, bufs)));
-								return;
-							}
-
-							if (bufs.isEmpty()) {
-								sendEndOfStream();
-							} else {
-								closeEx(new TruncatedDataException(format("Truncated serialized data stream, %s : %s", this, bufs)));
-							}
+				.whenResult(buf -> {
+					if (buf != null) {
+						if (endOfStream) {
+							buf.recycle();
+							closeEx(new UnexpectedDataException(format("Unexpected data after end-of-stream, %s : %s", this, bufs)));
+							return;
 						}
-					})
-					.whenException(this::closeEx);
+						bufs.add(buf);
+						asyncResume();
+					} else {
+						if (explicitEndOfStream && !endOfStream) {
+							closeEx(new UnknownFormatException(format("Explicit end-of-stream is missing, %s : %s", this, bufs)));
+							return;
+						}
+
+						if (bufs.isEmpty()) {
+							sendEndOfStream();
+						} else {
+							closeEx(new TruncatedDataException(format("Truncated serialized data stream, %s : %s", this, bufs)));
+						}
+					}
+				})
+				.whenException(this::closeEx);
 		} else {
 			asyncEnd();
 		}

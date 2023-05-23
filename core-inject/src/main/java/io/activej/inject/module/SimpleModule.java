@@ -34,10 +34,12 @@ public final class SimpleModule implements Module {
 	private final Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators;
 	private final Map<Key<?>, Multibinder<?>> multibinders;
 
-	public SimpleModule(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
-			Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers,
-			Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators,
-			Map<Key<?>, Multibinder<?>> multibinders) {
+	public SimpleModule(
+		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings,
+		Map<KeyPattern<?>, Set<BindingTransformer<?>>> transformers,
+		Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators,
+		Map<Key<?>, Multibinder<?>> multibinders
+	) {
 		this.bindings = bindings;
 		this.transformers = transformers;
 		this.generators = generators;

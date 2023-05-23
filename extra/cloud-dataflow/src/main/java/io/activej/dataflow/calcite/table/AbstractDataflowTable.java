@@ -58,7 +58,8 @@ public abstract class AbstractDataflowTable<T> extends AbstractTable implements 
 
 	@SuppressWarnings("unchecked")
 	public abstract static class Builder<Self extends Builder<Self, DT, T>, DT extends AbstractDataflowTable<T>, T>
-			extends AbstractBuilder<Self, DT> {
+		extends AbstractBuilder<Self, DT> {
+
 		protected final DefiningClassLoader classLoader;
 		protected final String tableName;
 		protected final Class<T> type;
@@ -96,9 +97,9 @@ public abstract class AbstractDataflowTable<T> extends AbstractTable implements 
 
 		protected final <C> void addColumn(String columnName, Type columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
 			ColumnEntry<C> columnEntry = new ColumnEntry<>(
-					columnType,
-					getter,
-					typeFactory
+				columnType,
+				getter,
+				typeFactory
 			);
 
 			ColumnEntry<?> old = columns.put(columnName, columnEntry);
@@ -112,9 +113,9 @@ public abstract class AbstractDataflowTable<T> extends AbstractTable implements 
 
 				for (Map.Entry<String, ColumnEntry<?>> entry : columns.entrySet()) {
 					fields.add(new RelDataTypeFieldImpl(
-							entry.getKey(),
-							fields.size(),
-							entry.getValue().typeFactory.apply(relDataTypeFactory))
+						entry.getKey(),
+						fields.size(),
+						entry.getValue().typeFactory.apply(relDataTypeFactory))
 					);
 				}
 

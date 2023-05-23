@@ -47,20 +47,17 @@ public final class Max extends Measure {
 	}
 
 	@Override
-	public Expression reduce(Variable accumulator,
-			Variable nextAccumulator) {
+	public Expression reduce(Variable accumulator, Variable nextAccumulator) {
 		return set(accumulator, staticCall(Math.class, "max", accumulator, nextAccumulator));
 	}
 
 	@Override
-	public Expression initAccumulatorWithValue(Variable accumulator,
-			Variable firstValue) {
+	public Expression initAccumulatorWithValue(Variable accumulator, Variable firstValue) {
 		return set(accumulator, firstValue);
 	}
 
 	@Override
-	public Expression accumulate(Variable accumulator,
-			Variable nextValue) {
+	public Expression accumulate(Variable accumulator, Variable nextValue) {
 		return set(accumulator, staticCall(Math.class, "max", accumulator, nextValue));
 	}
 }

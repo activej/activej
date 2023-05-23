@@ -80,20 +80,20 @@ public final class RingBuffer implements RingBufferMBean {
 
 		static int intValueOf(byte[] bytes) {
 			return ((bytes[0] << 24)) |
-					(bytes[1] & 0xff) << 16 |
-					(bytes[2] & 0xff) << 8 |
-					(bytes[3] & 0xff);
+				(bytes[1] & 0xff) << 16 |
+				(bytes[2] & 0xff) << 8 |
+				(bytes[3] & 0xff);
 		}
 
 		static long longValueOf(byte[] bytes) {
 			return ((((long) bytes[0]) << 56) |
-					(((long) bytes[1] & 0xff) << 48) |
-					(((long) bytes[2] & 0xff) << 40) |
-					(((long) bytes[3] & 0xff) << 32) |
-					(((long) bytes[4] & 0xff) << 24) |
-					(((long) bytes[5] & 0xff) << 16) |
-					(((long) bytes[6] & 0xff) << 8) |
-					(((long) bytes[7] & 0xff)));
+				(((long) bytes[1] & 0xff) << 48) |
+				(((long) bytes[2] & 0xff) << 40) |
+				(((long) bytes[3] & 0xff) << 32) |
+				(((long) bytes[4] & 0xff) << 24) |
+				(((long) bytes[5] & 0xff) << 16) |
+				(((long) bytes[6] & 0xff) << 8) |
+				(((long) bytes[7] & 0xff)));
 		}
 
 		Slice get(byte[] key) {
@@ -201,7 +201,7 @@ public final class RingBuffer implements RingBufferMBean {
 	 */
 	public void put(byte[] key, byte[] data, int offset, int length) {
 		if (CHECKS) checkArgument(data.length <= ringBuffers[currentBuffer].array.length,
-				"Size of data is larger than the size of buffer");
+			"Size of data is larger than the size of buffer");
 		statsPuts.recordEvent();
 		if (ringBuffers[currentBuffer].remaining() < length) {
 			if (currentBuffer == ringBuffers.length - 1) {
@@ -310,7 +310,7 @@ public final class RingBuffer implements RingBufferMBean {
 	@Override
 	public String getCurrentBuffer() {
 		return (currentBuffer + 1) + " / " + ringBuffers.length + " @ " +
-				formatTimestamp(ringBuffers[currentBuffer].getTimestamp());
+			formatTimestamp(ringBuffers[currentBuffer].getTimestamp());
 	}
 
 	@Override

@@ -71,8 +71,9 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		private Builder() {}
 
 		@SuppressWarnings({"unchecked", "rawtypes"})
-		public <L extends D, R extends D> Builder withTransformFunction(Class<? super L> leftType, Class<? super R> rightType,
-				TransformFunction<D, L, R> transformer) {
+		public <L extends D, R extends D> Builder withTransformFunction(
+			Class<? super L> leftType, Class<? super R> rightType, TransformFunction<D, L, R> transformer
+		) {
 			checkNotBuilt(this);
 			transformers.put(new KeyPair(leftType, rightType), transformer);
 			if (leftType != rightType) {
@@ -92,8 +93,9 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 		}
 
 		@SuppressWarnings({"unchecked", "rawtypes"})
-		public <O1 extends D, O2 extends D> Builder withSquashFunction(Class<? super O1> opType1, Class<? super O2> opType2,
-				SquashFunction<D, O1, O2> squashFunction) {
+		public <O1 extends D, O2 extends D> Builder withSquashFunction(
+			Class<? super O1> opType1, Class<? super O2> opType2, SquashFunction<D, O1, O2> squashFunction
+		) {
 			checkNotBuilt(this);
 			squashers.put(new KeyPair(opType1, opType2), squashFunction);
 			return this;
@@ -141,13 +143,13 @@ public final class OTSystemImpl<D> implements OTSystem<D> {
 	private TransformResult<D> resolveConflicts(List<? extends D> leftDiffs, List<? extends D> rightDiffs, TransformResult<D> transform) {
 		if (transform.resolution == ConflictResolution.LEFT) {
 			return TransformResult.of(transform.resolution,
-					List.of(),
-					squash(concat(invert(rightDiffs).stream(), leftDiffs.stream()).collect(toList())));
+				List.of(),
+				squash(concat(invert(rightDiffs).stream(), leftDiffs.stream()).collect(toList())));
 		}
 		if (transform.resolution == ConflictResolution.RIGHT) {
 			return TransformResult.of(transform.resolution,
-					squash(concat(invert(leftDiffs).stream(), rightDiffs.stream()).collect(toList())),
-					List.of());
+				squash(concat(invert(leftDiffs).stream(), rightDiffs.stream()).collect(toList())),
+				List.of());
 		}
 		throw new AssertionError();
 	}

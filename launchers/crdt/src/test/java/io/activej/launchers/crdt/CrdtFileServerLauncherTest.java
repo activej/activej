@@ -26,10 +26,10 @@ public class CrdtFileServerLauncherTest {
 			@Provides
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
-						CrdtFunction.ignoringTimestamp(Integer::max),
-						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-						String.class,
-						Integer.class
+					CrdtFunction.ignoringTimestamp(Integer::max),
+					new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+					String.class,
+					Integer.class
 				);
 			}
 		}.testInjector();

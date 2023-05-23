@@ -37,7 +37,8 @@ import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelByteSplitter extends AbstractCommunicatingProcess
-		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
+	implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
+
 	private final List<ChannelConsumer<ByteBuf>> outputs = new ArrayList<>();
 	private final int requiredSuccesses;
 
@@ -92,28 +93,28 @@ public final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		}
 		List<ChannelConsumer<ByteBuf>> failed = new ArrayList<>();
 		input.get()
-				.whenResult(buf -> {
-					if (buf != null) {
-						Promises.all(outputs.stream()
-										.map(output -> output.accept(buf.slice())
-												.then(Promise::of,
-														e -> {
-															failed.add(output);
-															if (outputs.size() - failed.size() < requiredSuccesses) {
-																return Promise.ofException(e);
-															}
-															return Promise.complete();
-														})))
-								.whenComplete(() -> outputs.removeAll(failed))
-								.whenException(e -> closeEx(new FileSystemException("Not enough successes")))
-								.whenResult(this::doProcess);
-						buf.recycle();
-					} else {
-						Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
-								.whenComplete(($, e) -> completeProcessEx(e));
-					}
-				})
-				.whenException(this::closeEx);
+			.whenResult(buf -> {
+				if (buf != null) {
+					Promises.all(outputs.stream()
+							.map(output -> output.accept(buf.slice())
+								.then(Promise::of,
+									e -> {
+										failed.add(output);
+										if (outputs.size() - failed.size() < requiredSuccesses) {
+											return Promise.ofException(e);
+										}
+										return Promise.complete();
+									})))
+						.whenComplete(() -> outputs.removeAll(failed))
+						.whenException(e -> closeEx(new FileSystemException("Not enough successes")))
+						.whenResult(this::doProcess);
+					buf.recycle();
+				} else {
+					Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
+						.whenComplete(($, e) -> completeProcessEx(e));
+				}
+			})
+			.whenException(this::closeEx);
 	}
 
 	@Override

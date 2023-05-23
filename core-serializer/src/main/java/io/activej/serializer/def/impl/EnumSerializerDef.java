@@ -49,34 +49,34 @@ public final class EnumSerializerDef extends AbstractSerializerDef implements Se
 		Expression ordinal = call(cast(value, Enum.class), "ordinal");
 		if (isSmallEnum()) {
 			return !nullable ?
-					writeByte(buf, pos, cast(ordinal, byte.class)) :
-					ifNull(value,
-							writeByte(buf, pos, value((byte) 0)),
-							writeByte(buf, pos, cast(add(ordinal, value(1)), byte.class)));
+				writeByte(buf, pos, cast(ordinal, byte.class)) :
+				ifNull(value,
+					writeByte(buf, pos, value((byte) 0)),
+					writeByte(buf, pos, cast(add(ordinal, value(1)), byte.class)));
 		} else {
 			return !nullable ?
-					writeVarInt(buf, pos, ordinal) :
-					ifNull(value,
-							writeByte(buf, pos, value((byte) 0)),
-							writeVarInt(buf, pos, add(ordinal, value((byte) 1))));
+				writeVarInt(buf, pos, ordinal) :
+				ifNull(value,
+					writeByte(buf, pos, value((byte) 0)),
+					writeVarInt(buf, pos, add(ordinal, value((byte) 1))));
 		}
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return isSmallEnum() ?
-				let(readByte(in), b ->
-						!nullable ?
-								arrayGet(staticCall(enumType, "values"), b) :
-								ifEq(b, value((byte) 0),
-										nullRef(enumType),
-										arrayGet(staticCall(enumType, "values"), dec(b)))) :
-				let(readVarInt(in), value ->
-						!nullable ?
-								arrayGet(staticCall(enumType, "values"), value) :
-								ifEq(value, value(0),
-										nullRef(enumType),
-										arrayGet(staticCall(enumType, "values"), dec(value))));
+			let(readByte(in), b ->
+				!nullable ?
+					arrayGet(staticCall(enumType, "values"), b) :
+					ifEq(b, value((byte) 0),
+						nullRef(enumType),
+						arrayGet(staticCall(enumType, "values"), dec(b)))) :
+			let(readVarInt(in), value ->
+				!nullable ?
+					arrayGet(staticCall(enumType, "values"), value) :
+					ifEq(value, value(0),
+						nullRef(enumType),
+						arrayGet(staticCall(enumType, "values"), dec(value))));
 	}
 
 	private boolean isSmallEnum() {

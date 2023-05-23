@@ -50,116 +50,122 @@ public class Utils {
 	public static <K extends Comparable> Class<K> createKeyClass(Map<String, FieldType> keys, DefiningClassLoader classLoader) {
 		List<String> keyList = new ArrayList<>(keys.keySet());
 		return classLoader.ensureClass(
-				ClassKey.of(Object.class, keyList),
-				() -> ClassGenerator.builder((Class<K>) Comparable.class)
-						.initialize(b ->
-								keys.forEach((key, value) ->
-										b.withField(key, value.getInternalDataType())))
-						.withMethod("compareTo", comparableImpl(keyList))
-						.withMethod("equals", equalsImpl(keyList))
-						.withMethod("hashCode", hashCodeImpl(keyList))
-						.withMethod("toString", toStringImpl(keyList))
-						.build());
+			ClassKey.of(Object.class, keyList),
+			() -> ClassGenerator.builder((Class<K>) Comparable.class)
+				.initialize(b ->
+					keys.forEach((key, value) ->
+						b.withField(key, value.getInternalDataType())))
+				.withMethod("compareTo", comparableImpl(keyList))
+				.withMethod("equals", equalsImpl(keyList))
+				.withMethod("hashCode", hashCodeImpl(keyList))
+				.withMethod("toString", toStringImpl(keyList))
+				.build());
 	}
 
-	public static <R> Comparator<R> createKeyComparator(Class<R> recordClass, List<String> keys,
-			DefiningClassLoader classLoader) {
+	public static <R> Comparator<R> createKeyComparator(
+		Class<R> recordClass, List<String> keys, DefiningClassLoader classLoader
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(Comparator.class, recordClass, keys),
-				() -> ClassGenerator.builder(Comparator.class)
-						.withMethod("compare", comparatorImpl(recordClass, keys))
-						.build());
+			ClassKey.of(Comparator.class, recordClass, keys),
+			() -> ClassGenerator.builder(Comparator.class)
+				.withMethod("compare", comparatorImpl(recordClass, keys))
+				.build());
 	}
 
-	public static <T, R> Function<T, R> createMapper(Class<T> recordClass, Class<R> resultClass,
-			List<String> keys, List<String> fields,
-			DefiningClassLoader classLoader) {
+	public static <T, R> Function<T, R> createMapper(
+		Class<T> recordClass, Class<R> resultClass, List<String> keys, List<String> fields,
+		DefiningClassLoader classLoader
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(Function.class, recordClass, resultClass, keys, fields),
-				() -> ClassGenerator.builder(Function.class)
-						.withMethod("apply",
-								let(constructor(resultClass), result ->
-										sequence(seq -> {
-											for (String fieldName : concat(keys, fields)) {
-												seq.add(set(
-														property(result, fieldName),
-														property(cast(arg(0), recordClass), fieldName)));
-											}
-											return result;
-										})))
-						.build());
+			ClassKey.of(Function.class, recordClass, resultClass, keys, fields),
+			() -> ClassGenerator.builder(Function.class)
+				.withMethod("apply",
+					let(constructor(resultClass), result ->
+						sequence(seq -> {
+							for (String fieldName : concat(keys, fields)) {
+								seq.add(set(
+									property(result, fieldName),
+									property(cast(arg(0), recordClass), fieldName)));
+							}
+							return result;
+						})))
+				.build());
 	}
 
-	public static <K extends Comparable, R> Function<R, K> createKeyFunction(Class<R> recordClass, Class<K> keyClass,
-			List<String> keys,
-			DefiningClassLoader classLoader) {
+	public static <K extends Comparable, R> Function<R, K> createKeyFunction(
+		Class<R> recordClass, Class<K> keyClass, List<String> keys, DefiningClassLoader classLoader
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(Function.class, recordClass, keyClass, keys),
-				() -> ClassGenerator.builder(Function.class)
-						.withMethod("apply",
-								let(constructor(keyClass), key ->
-										sequence(seq -> {
-											for (String keyString : keys) {
-												seq.add(
-														set(
-																property(key, keyString),
-																property(cast(arg(0), recordClass), keyString)));
-											}
-											return key;
-										})))
-						.build());
+			ClassKey.of(Function.class, recordClass, keyClass, keys),
+			() -> ClassGenerator.builder(Function.class)
+				.withMethod("apply",
+					let(constructor(keyClass), key ->
+						sequence(seq -> {
+							for (String keyString : keys) {
+								seq.add(
+									set(
+										property(key, keyString),
+										property(cast(arg(0), recordClass), keyString)));
+							}
+							return key;
+						})))
+				.build());
 	}
 
-	public static <T> Class<T> createRecordClass(AggregationStructure aggregation,
-			Collection<String> keys, Collection<String> fields,
-			DefiningClassLoader classLoader) {
+	public static <T> Class<T> createRecordClass(
+		AggregationStructure aggregation, Collection<String> keys, Collection<String> fields,
+		DefiningClassLoader classLoader
+	) {
 		return createRecordClass(
-				keys.stream()
-						.collect(toLinkedHashMap(aggregation.getKeyTypes()::get)),
-				fields.stream()
-						.collect(toLinkedHashMap(aggregation.getMeasureTypes()::get)),
-				classLoader);
+			keys.stream()
+				.collect(toLinkedHashMap(aggregation.getKeyTypes()::get)),
+			fields.stream()
+				.collect(toLinkedHashMap(aggregation.getMeasureTypes()::get)),
+			classLoader);
 	}
 
-	public static <T> Class<T> createRecordClass(Map<String, FieldType> keys, Map<String, FieldType> fields,
-			DefiningClassLoader classLoader) {
+	public static <T> Class<T> createRecordClass(
+		Map<String, FieldType> keys, Map<String, FieldType> fields, DefiningClassLoader classLoader
+	) {
 		List<String> keysList = new ArrayList<>(keys.keySet());
 		List<String> fieldsList = new ArrayList<>(fields.keySet());
 		return (Class<T>) classLoader.ensureClass(
-				ClassKey.of(Object.class, keysList, fieldsList),
-				() -> ClassGenerator.builder(Object.class)
-						.initialize(b ->
-								keys.forEach((key, value) ->
-										b.withField(key, value.getInternalDataType())))
-						.initialize(b ->
-								fields.forEach((key, value) ->
-										b.withField(key, value.getInternalDataType())))
-						.withMethod("toString", toStringImpl(concat(keysList, fieldsList)))
-						.build());
+			ClassKey.of(Object.class, keysList, fieldsList),
+			() -> ClassGenerator.builder(Object.class)
+				.initialize(b ->
+					keys.forEach((key, value) ->
+						b.withField(key, value.getInternalDataType())))
+				.initialize(b ->
+					fields.forEach((key, value) ->
+						b.withField(key, value.getInternalDataType())))
+				.withMethod("toString", toStringImpl(concat(keysList, fieldsList)))
+				.build());
 	}
 
-	public static <T> BinarySerializer<T> createBinarySerializer(AggregationStructure aggregation, Class<T> recordClass,
-			List<String> keys, List<String> fields,
-			DefiningClassLoader classLoader) {
+	public static <T> BinarySerializer<T> createBinarySerializer(
+		AggregationStructure aggregation, Class<T> recordClass, List<String> keys, List<String> fields,
+		DefiningClassLoader classLoader
+	) {
 		return createBinarySerializer(recordClass,
-				keys.stream()
-						.collect(toLinkedHashMap(aggregation.getKeyTypes()::get)),
-				fields.stream()
-						.collect(toLinkedHashMap(aggregation.getMeasureTypes()::get)),
-				classLoader);
+			keys.stream()
+				.collect(toLinkedHashMap(aggregation.getKeyTypes()::get)),
+			fields.stream()
+				.collect(toLinkedHashMap(aggregation.getMeasureTypes()::get)),
+			classLoader);
 	}
 
-	private static <T> BinarySerializer<T> createBinarySerializer(Class<T> recordClass,
-			Map<String, FieldType> keys, Map<String, FieldType> fields,
-			DefiningClassLoader classLoader) {
+	private static <T> BinarySerializer<T> createBinarySerializer(
+		Class<T> recordClass, Map<String, FieldType> keys, Map<String, FieldType> fields,
+		DefiningClassLoader classLoader
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(BinarySerializer.class, recordClass, new ArrayList<>(keys.keySet()), new ArrayList<>(fields.keySet())),
-				() -> SerializerFactory.defaultInstance()
-						.toClassGenerator(
-								ClassSerializerDef.builder(recordClass)
-										.initialize(b -> addFields(b, recordClass, new ArrayList<>(keys.entrySet())))
-										.initialize(b -> addFields(b, recordClass, new ArrayList<>(fields.entrySet())))
-										.build()));
+			ClassKey.of(BinarySerializer.class, recordClass, new ArrayList<>(keys.keySet()), new ArrayList<>(fields.keySet())),
+			() -> SerializerFactory.defaultInstance()
+				.toClassGenerator(
+					ClassSerializerDef.builder(recordClass)
+						.initialize(b -> addFields(b, recordClass, new ArrayList<>(keys.entrySet())))
+						.initialize(b -> addFields(b, recordClass, new ArrayList<>(fields.entrySet())))
+						.build()));
 	}
 
 	private static <T> void addFields(ClassSerializerDef.Builder classSerializerBuilder, Class<T> recordClass, List<Entry<String, FieldType>> fields) {
@@ -172,94 +178,94 @@ public class Utils {
 		}
 	}
 
-	public static <K extends Comparable, I, O, A> Reducer<K, I, O, A> aggregationReducer(AggregationStructure aggregation, Class<I> inputClass, Class<O> outputClass,
-			List<String> keys, List<String> fields, Map<String, Measure> extraFields,
-			DefiningClassLoader classLoader) {
-
+	public static <K extends Comparable, I, O, A> Reducer<K, I, O, A> aggregationReducer(
+		AggregationStructure aggregation, Class<I> inputClass, Class<O> outputClass, List<String> keys,
+		List<String> fields, Map<String, Measure> extraFields, DefiningClassLoader classLoader
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(Reducer.class, inputClass, outputClass, keys, fields, extraFields.keySet()),
-				() -> ClassGenerator.builder(Reducer.class)
-						.withMethod("onFirstItem",
-								let(constructor(outputClass), accumulator ->
-										sequence(seq -> {
-											for (String key : keys) {
-												seq.add(
-														set(
-																property(accumulator, key),
-																property(cast(arg(2), inputClass), key)
-														));
-											}
-											for (String field : fields) {
-												seq.add(
-														aggregation.getMeasure(field)
-																.initAccumulatorWithAccumulator(
-																		property(accumulator, field),
-																		property(cast(arg(2), inputClass), field)
-																));
-											}
-											for (Entry<String, Measure> entry : extraFields.entrySet()) {
-												seq.add(entry.getValue()
-														.zeroAccumulator(property(accumulator, entry.getKey())));
-											}
-											return accumulator;
-										})))
-						.withMethod("onNextItem",
-								sequence(seq -> {
-									for (String field : fields) {
-										seq.add(
-												aggregation.getMeasure(field)
-														.reduce(
-																property(cast(arg(3), outputClass), field),
-																property(cast(arg(2), inputClass), field)
-														));
-									}
-									return arg(3);
-								}))
-						.withMethod("onComplete", call(arg(0), "accept", arg(2)))
-						.build());
+			ClassKey.of(Reducer.class, inputClass, outputClass, keys, fields, extraFields.keySet()),
+			() -> ClassGenerator.builder(Reducer.class)
+				.withMethod("onFirstItem",
+					let(constructor(outputClass), accumulator ->
+						sequence(seq -> {
+							for (String key : keys) {
+								seq.add(
+									set(
+										property(accumulator, key),
+										property(cast(arg(2), inputClass), key)
+									));
+							}
+							for (String field : fields) {
+								seq.add(
+									aggregation.getMeasure(field)
+										.initAccumulatorWithAccumulator(
+											property(accumulator, field),
+											property(cast(arg(2), inputClass), field)
+										));
+							}
+							for (Entry<String, Measure> entry : extraFields.entrySet()) {
+								seq.add(entry.getValue()
+									.zeroAccumulator(property(accumulator, entry.getKey())));
+							}
+							return accumulator;
+						})))
+				.withMethod("onNextItem",
+					sequence(seq -> {
+						for (String field : fields) {
+							seq.add(
+								aggregation.getMeasure(field)
+									.reduce(
+										property(cast(arg(3), outputClass), field),
+										property(cast(arg(2), inputClass), field)
+									));
+						}
+						return arg(3);
+					}))
+				.withMethod("onComplete", call(arg(0), "accept", arg(2)))
+				.build());
 	}
 
-	public static <I, O> Aggregate<O, Object> createPreaggregator(AggregationStructure aggregation, Class<I> inputClass, Class<O> outputClass,
-			Map<String, String> keyFields, Map<String, String> measureFields,
-			DefiningClassLoader classLoader) {
-
+	public static <I, O> Aggregate<O, Object> createPreaggregator(
+		AggregationStructure aggregation, Class<I> inputClass, Class<O> outputClass, Map<String, String> keyFields,
+		Map<String, String> measureFields, DefiningClassLoader classLoader
+	) {
 		ArrayList<String> keysList = new ArrayList<>(keyFields.keySet());
 		ArrayList<String> measuresList = new ArrayList<>(measureFields.keySet());
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(Aggregate.class, inputClass, outputClass, keysList, measuresList),
-				() -> ClassGenerator.builder(Aggregate.class)
-						.withMethod("createAccumulator",
-								let(constructor(outputClass), accumulator ->
-										sequence(seq -> {
-											for (Entry<String, String> entry : keyFields.entrySet()) {
-												seq.add(set(
-														property(accumulator, entry.getKey()),
-														property(cast(arg(0), inputClass), entry.getValue())));
-											}
-											for (Entry<String, String> entry : measureFields.entrySet()) {
-												String measure = entry.getKey();
-												String inputFields = entry.getValue();
-												Measure aggregateFunction = aggregation.getMeasure(measure);
+			ClassKey.of(Aggregate.class, inputClass, outputClass, keysList, measuresList),
+			() -> ClassGenerator.builder(Aggregate.class)
+				.withMethod("createAccumulator",
+					let(constructor(outputClass), accumulator ->
+						sequence(seq -> {
+							for (Entry<String, String> entry : keyFields.entrySet()) {
+								seq.add(set(
+									property(accumulator, entry.getKey()),
+									property(cast(arg(0), inputClass), entry.getValue())));
+							}
+							for (Entry<String, String> entry : measureFields.entrySet()) {
+								String measure = entry.getKey();
+								String inputFields = entry.getValue();
+								Measure aggregateFunction = aggregation.getMeasure(measure);
 
-												seq.add(aggregateFunction.initAccumulatorWithValue(
-														property(accumulator, measure),
-														inputFields == null ? null : property(cast(arg(0), inputClass), inputFields)));
-											}
-											return accumulator;
-										})))
-						.withMethod("accumulate",
-								sequence(seq -> {
-									for (Entry<String, String> entry : measureFields.entrySet()) {
-										String measure = entry.getKey();
-										String inputFields = entry.getValue();
-										Measure aggregateFunction = aggregation.getMeasure(measure);
+								seq.add(aggregateFunction.initAccumulatorWithValue(
+									property(accumulator, measure),
+									inputFields == null ? null : property(cast(arg(0), inputClass), inputFields)));
+							}
+							return accumulator;
+						})))
+				.withMethod("accumulate",
+					sequence(seq -> {
+						for (Entry<String, String> entry : measureFields.entrySet()) {
+							String measure = entry.getKey();
+							String inputFields = entry.getValue();
+							Measure aggregateFunction = aggregation.getMeasure(measure);
 
-										seq.add(aggregateFunction.accumulate(
-												property(cast(arg(0), outputClass), measure),
-												inputFields == null ? null : property(cast(arg(1), inputClass), inputFields)));
-									}
-								}))
-						.build());
+							seq.add(aggregateFunction.accumulate(
+								property(cast(arg(0), outputClass), measure),
+								inputFields == null ? null : property(cast(arg(1), inputClass), inputFields)));
+						}
+					}))
+				.build());
 	}
 
 	private static final PartitionPredicate SINGLE_PARTITION = (t, u) -> true;
@@ -268,20 +274,21 @@ public class Utils {
 		return SINGLE_PARTITION;
 	}
 
-	public static PartitionPredicate createPartitionPredicate(Class recordClass, List<String> partitioningKey,
-			DefiningClassLoader classLoader) {
+	public static PartitionPredicate createPartitionPredicate(
+		Class recordClass, List<String> partitioningKey, DefiningClassLoader classLoader
+	) {
 		if (partitioningKey.isEmpty())
 			return singlePartition();
 
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(PartitionPredicate.class, recordClass, partitioningKey),
-				() -> ClassGenerator.builder(PartitionPredicate.class)
-						.withMethod("isSamePartition", and(
-								partitioningKey.stream()
-										.map(keyComponent -> isEq(
-												property(cast(arg(0), recordClass), keyComponent),
-												property(cast(arg(1), recordClass), keyComponent)))))
-						.build());
+			ClassKey.of(PartitionPredicate.class, recordClass, partitioningKey),
+			() -> ClassGenerator.builder(PartitionPredicate.class)
+				.withMethod("isSamePartition", and(
+					partitioningKey.stream()
+						.map(keyComponent -> isEq(
+							property(cast(arg(0), recordClass), keyComponent),
+							property(cast(arg(1), recordClass), keyComponent)))))
+				.build());
 	}
 
 	public static <T> Map<String, String> scanKeyFields(Class<T> inputClass) {

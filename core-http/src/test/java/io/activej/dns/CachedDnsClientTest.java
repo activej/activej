@@ -43,8 +43,8 @@ public final class CachedDnsClientTest {
 	public void setUp() {
 		NioReactor reactor = Reactor.getCurrentReactor();
 		cachedDnsClient = CachedDnsClient.create(reactor, DnsClient.builder(reactor)
-				.withDnsServerAddress(LOCAL_DNS)
-				.build());
+			.withDnsServerAddress(LOCAL_DNS)
+			.build());
 	}
 
 	@Test
@@ -57,8 +57,8 @@ public final class CachedDnsClientTest {
 
 		assertNotNull(result.getRecord());
 		System.out.println(Arrays.stream(result.getRecord().getIps())
-				.map(InetAddress::toString)
-				.collect(joining(", ", "Resolved: ", ".")));
+			.map(InetAddress::toString)
+			.collect(joining(", ", "Resolved: ", ".")));
 	}
 
 	@Test
@@ -76,7 +76,7 @@ public final class CachedDnsClientTest {
 		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
 
 		List<DnsResponse> list = await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
-				.map(dnsClient::resolve4)));
+			.map(dnsClient::resolve4)));
 
 		assertFalse(list.isEmpty());
 	}
@@ -84,9 +84,9 @@ public final class CachedDnsClientTest {
 	@Test
 	public void testDnsClientTimeout() {
 		IDnsClient dnsClient = DnsClient.builder(Reactor.getCurrentReactor())
-				.withTimeout(Duration.ofMillis(20))
-				.withDnsServerAddress(UNREACHABLE_DNS)
-				.build();
+			.withTimeout(Duration.ofMillis(20))
+			.withDnsServerAddress(UNREACHABLE_DNS)
+			.build();
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("www.google.com"));
 		assertEquals(TIMED_OUT, e.getResult().getErrorCode());

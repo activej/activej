@@ -45,7 +45,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * This servlet allows building complex servlet trees, routing requests between them by the HTTP paths.
  */
 public final class RoutingServlet extends AbstractReactive
-		implements AsyncServlet, WithInitializer<RoutingServlet> {
+	implements AsyncServlet, WithInitializer<RoutingServlet> {
 	private static final boolean CHECKS = Checks.isEnabled(RoutingServlet.class);
 
 	private static final String ROOT = "/";
@@ -158,8 +158,8 @@ public final class RoutingServlet extends AbstractReactive
 		if (CHECKS) checkInReactorThread(this);
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
-				processed :
-				Promise.ofException(HttpError.notFound404());
+			processed :
+			Promise.ofException(HttpError.notFound404());
 	}
 
 	private @Nullable Promise<HttpResponse> tryServe(HttpRequest request) throws Exception {
@@ -208,16 +208,16 @@ public final class RoutingServlet extends AbstractReactive
 
 	public @Nullable RoutingServlet getChild(String path) {
 		return getChildImpl(path, (servlet, name) ->
-				name.startsWith(":") ?
-						servlet.parameters.get(name.substring(1)) :
-						servlet.routes.get(name));
+			name.startsWith(":") ?
+				servlet.parameters.get(name.substring(1)) :
+				servlet.routes.get(name));
 	}
 
 	private RoutingServlet ensureChild(String path) {
 		return getChildImpl(path, (servlet, name) ->
-				name.startsWith(":") ?
-						servlet.parameters.computeIfAbsent(name.substring(1), $ -> new RoutingServlet(reactor)) :
-						servlet.routes.computeIfAbsent(name, $ -> new RoutingServlet(reactor)));
+			name.startsWith(":") ?
+				servlet.parameters.computeIfAbsent(name.substring(1), $ -> new RoutingServlet(reactor)) :
+				servlet.routes.computeIfAbsent(name, $ -> new RoutingServlet(reactor)));
 	}
 
 	private RoutingServlet getChildImpl(String path, BiFunction<RoutingServlet, String, @Nullable RoutingServlet> childGetter) {
@@ -260,15 +260,15 @@ public final class RoutingServlet extends AbstractReactive
 			}
 		}
 		from.routes.forEach((key, value) ->
-				into.routes.merge(key, value, (s1, s2) -> {
-					mergeInto(s1, s2);
-					return s1;
-				}));
+			into.routes.merge(key, value, (s1, s2) -> {
+				mergeInto(s1, s2);
+				return s1;
+			}));
 		from.parameters.forEach((key, value) ->
-				into.parameters.merge(key, value, (s1, s2) -> {
-					mergeInto(s1, s2);
-					return s1;
-				}));
+			into.parameters.merge(key, value, (s1, s2) -> {
+				mergeInto(s1, s2);
+				return s1;
+			}));
 	}
 
 	private static void set(AsyncServlet[] servlets, int ordinal, AsyncServlet servlet) {

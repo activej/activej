@@ -106,8 +106,9 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <E extends Exception> Promise<T> mapException(Class<E> clazz,
-			FunctionEx<? super E, ? extends Exception> exceptionFn) {
+	public <E extends Exception> Promise<T> mapException(
+		Class<E> clazz, FunctionEx<? super E, ? extends Exception> exceptionFn
+	) {
 		try {
 			return clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply((E) exception)) : this;
 		} catch (Exception ex) {
@@ -157,9 +158,7 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(
-			AsyncFunctionEx<? super T, U> fn,
-			AsyncFunctionEx<Exception, U> exceptionFn) {
+	public <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn, AsyncFunctionEx<Exception, U> exceptionFn) {
 		try {
 			return exceptionFn.apply(exception);
 		} catch (Exception ex) {

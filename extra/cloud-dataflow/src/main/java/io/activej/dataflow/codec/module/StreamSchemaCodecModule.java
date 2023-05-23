@@ -13,7 +13,7 @@ public final class StreamSchemaCodecModule extends AbstractModule {
 	@Subtype(0)
 	StreamCodec<SimpleStreamSchema<?>> simpleStreamSchema() {
 		return StreamCodec.create(SimpleStreamSchema::new,
-				SimpleStreamSchema::getCls, CLASS_STREAM_CODEC
+			SimpleStreamSchema::getCls, CLASS_STREAM_CODEC
 		);
 	}
 }

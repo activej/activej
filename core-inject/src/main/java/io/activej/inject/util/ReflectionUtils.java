@@ -69,8 +69,8 @@ public final class ReflectionUtils {
 
 		ShortTypeName override = raw.getDeclaredAnnotation(ShortTypeName.class);
 		return override != null ?
-				RAW_PART.matcher(defaultName).replaceFirst(override.value()) :
-				defaultName;
+			RAW_PART.matcher(defaultName).replaceFirst(override.value()) :
+			defaultName;
 	}
 
 	public static String getShortName(Type type) {
@@ -131,13 +131,13 @@ public final class ReflectionUtils {
 		Annotation[] annotations = annotatedElement.getDeclaredAnnotations();
 
 		Set<Annotation> scopes = Arrays.stream(annotations)
-				.filter(annotation -> annotation.annotationType().isAnnotationPresent(ScopeAnnotation.class))
-				.collect(toSet());
+			.filter(annotation -> annotation.annotationType().isAnnotationPresent(ScopeAnnotation.class))
+			.collect(toSet());
 
 		Scopes nested = (Scopes) Arrays.stream(annotations)
-				.filter(annotation -> annotation.annotationType() == Scopes.class)
-				.findAny()
-				.orElse(null);
+			.filter(annotation -> annotation.annotationType() == Scopes.class)
+			.findAny()
+			.orElse(null);
 
 		if (nested != null) {
 			if (scopes.isEmpty()) {
@@ -152,9 +152,10 @@ public final class ReflectionUtils {
 		};
 	}
 
-	public static <T extends AnnotatedElement & Member> List<T> getAnnotatedElements(Class<?> cls,
-			Class<? extends Annotation> annotationType, Function<Class<?>, T[]> extractor, boolean allowStatic) {
-
+	public static <T extends AnnotatedElement & Member> List<T> getAnnotatedElements(
+		Class<?> cls, Class<? extends Annotation> annotationType, Function<Class<?>, T[]> extractor,
+		boolean allowStatic
+	) {
 		List<T> result = new ArrayList<>();
 		while (cls != null) {
 			for (T element : extractor.apply(cls)) {
@@ -173,8 +174,8 @@ public final class ReflectionUtils {
 	public static <T> @Nullable Binding<T> generateImplicitBinding(Key<T> key) {
 		Binding<T> binding = generateConstructorBinding(key);
 		return binding != null ?
-				binding.initializeWith(generateInjectingInitializer(key)).as(SYNTHETIC) :
-				null;
+			binding.initializeWith(generateInjectingInitializer(key)).as(SYNTHETIC) :
+			null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -184,15 +185,15 @@ public final class ReflectionUtils {
 		Inject classInjectAnnotation = cls.getAnnotation(Inject.class);
 		List<Constructor<?>> constructors = Arrays.asList(cls.getDeclaredConstructors());
 		List<Constructor<?>> injectConstructors = constructors.stream()
-				.filter(c -> c.isAnnotationPresent(Inject.class))
-				.toList();
+			.filter(c -> c.isAnnotationPresent(Inject.class))
+			.toList();
 
 		List<Method> factoryMethods = Arrays.stream(cls.getDeclaredMethods())
-				.filter(method -> method.getReturnType() == cls && Modifier.isStatic(method.getModifiers()))
-				.toList();
+			.filter(method -> method.getReturnType() == cls && Modifier.isStatic(method.getModifiers()))
+			.toList();
 		List<Method> injectFactoryMethods = factoryMethods.stream()
-				.filter(method -> method.isAnnotationPresent(Inject.class))
-				.toList();
+			.filter(method -> method.isAnnotationPresent(Inject.class))
+			.toList();
 
 		if (classInjectAnnotation != null) {
 			if (!injectConstructors.isEmpty()) {
@@ -241,12 +242,12 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> generateInjectingInitializer(Key<T> container) {
 		Class<T> rawType = container.getRawType();
 		List<BindingInitializer<T>> initializers = Stream.concat(
-						getAnnotatedElements(rawType, Inject.class, Class::getDeclaredFields, false).stream()
-								.map(field -> fieldInjector(container, field)),
-						getAnnotatedElements(rawType, Inject.class, Class::getDeclaredMethods, true).stream()
-								.filter(method -> !Modifier.isStatic(method.getModifiers())) // we allow them and just filter out to allow static factory methods
-								.map(method -> methodInjector(container, method)))
-				.collect(toList());
+				getAnnotatedElements(rawType, Inject.class, Class::getDeclaredFields, false).stream()
+					.map(field -> fieldInjector(container, field)),
+				getAnnotatedElements(rawType, Inject.class, Class::getDeclaredMethods, true).stream()
+					.filter(method -> !Modifier.isStatic(method.getModifiers())) // we allow them and just filter out to allow static factory methods
+					.map(method -> methodInjector(container, method)))
+			.collect(toList());
 		return BindingInitializer.combine(initializers);
 	}
 
@@ -282,8 +283,8 @@ public final class ReflectionUtils {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding[] argBindings = Stream.of(dependencies)
-						.map(compiledBindings::get)
-						.toArray(CompiledBinding[]::new);
+					.map(compiledBindings::get)
+					.toArray(CompiledBinding[]::new);
 				//noinspection Convert2Lambda
 				return new CompiledBindingInitializer<>() {
 					@Override
@@ -331,19 +332,19 @@ public final class ReflectionUtils {
 		method.setAccessible(true);
 
 		Binding<T> binding = Binding.to(
-				args -> {
-					try {
-						T result = (T) method.invoke(module, args);
-						if (result == null)
-							throw new NullPointerException("@Provides method must return non-null result, method " + method);
-						return result;
-					} catch (IllegalAccessException e) {
-						throw new DIException("Not allowed to call method " + method, e);
-					} catch (InvocationTargetException e) {
-						throw new DIException("Failed to call method " + method, e.getCause());
-					}
-				},
-				toDependencies(module != null ? module.getClass() : method.getDeclaringClass(), method));
+			args -> {
+				try {
+					T result = (T) method.invoke(module, args);
+					if (result == null)
+						throw new NullPointerException("@Provides method must return non-null result, method " + method);
+					return result;
+				} catch (IllegalAccessException e) {
+					throw new DIException("Not allowed to call method " + method, e);
+				} catch (InvocationTargetException e) {
+					throw new DIException("Failed to call method " + method, e.getCause());
+				}
+			},
+			toDependencies(module != null ? module.getClass() : method.getDeclaringClass(), method));
 
 		return module != null ? binding.at(LocationInfo.from(module, method)) : binding;
 	}
@@ -354,18 +355,18 @@ public final class ReflectionUtils {
 		Key<?>[] dependencies = toDependencies(key.getType(), constructor);
 
 		return Binding.to(
-				args -> {
-					try {
-						return constructor.newInstance(args);
-					} catch (InstantiationException e) {
-						throw new DIException("Cannot instantiate object from the constructor " + constructor + " to provide requested key " + key, e);
-					} catch (IllegalAccessException e) {
-						throw new DIException("Not allowed to call constructor " + constructor + " to provide requested key " + key, e);
-					} catch (InvocationTargetException e) {
-						throw new DIException("Failed to call constructor " + constructor + " to provide requested key " + key, e.getCause());
-					}
-				},
-				dependencies);
+			args -> {
+				try {
+					return constructor.newInstance(args);
+				} catch (InstantiationException e) {
+					throw new DIException("Cannot instantiate object from the constructor " + constructor + " to provide requested key " + key, e);
+				} catch (IllegalAccessException e) {
+					throw new DIException("Not allowed to call constructor " + constructor + " to provide requested key " + key, e);
+				} catch (InvocationTargetException e) {
+					throw new DIException("Failed to call constructor " + constructor + " to provide requested key " + key, e.getCause());
+				}
+			},
+			dependencies);
 	}
 
 	public static Module scanClass(Class<?> moduleClass, @Nullable Object module) {
@@ -403,14 +404,14 @@ public final class ReflectionUtils {
 					if (isTransient) binder.asTransient();
 				} else {
 					Set<TypeVariable<?>> unused = Arrays.stream(methodTypeParameters)
-							.filter(typeVar -> !TypeUtils.contains(returnType, typeVar))
-							.collect(toSet());
+						.filter(typeVar -> !TypeUtils.contains(returnType, typeVar))
+						.collect(toSet());
 					if (!unused.isEmpty()) {
 						throw new DIException("Generic type variables " + unused + " are not used in return type of templated provider method " + method);
 					}
 					builder.generate(
-							KeyPattern.of((Class<Object>) method.getReturnType()),
-							new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
+						KeyPattern.of((Class<Object>) method.getReturnType()),
+						new TemplatedProviderGenerator(methodScope, qualifier, method, module, returnType, isEager ? EAGER : isTransient ? TRANSIENT : REGULAR));
 				}
 
 			} else if (method.isAnnotationPresent(ProvidesIntoSet.class)) {
@@ -498,27 +499,27 @@ public final class ReflectionUtils {
 			Map<TypeVariable<?>, Type> mapping = TypeUtils.extractMatchingGenerics(genericReturnType, key.getType());
 
 			Key<?>[] dependencies = Arrays.stream(method.getParameters())
-					.map(parameter -> {
-						Type type = Types.bind(parameter.getParameterizedType(), mapping);
-						Object q = qualifierOf(parameter);
-						return Key.ofType(type, q);
-					})
-					.toArray(Key<?>[]::new);
+				.map(parameter -> {
+					Type type = Types.bind(parameter.getParameterizedType(), mapping);
+					Object q = qualifierOf(parameter);
+					return Key.ofType(type, q);
+				})
+				.toArray(Key<?>[]::new);
 
 			Binding<Object> binding = Binding.to(
-					args -> {
-						try {
-							Object result = method.invoke(module, args);
-							if (result == null)
-								throw new NullPointerException("@Provides method must return non-null result, method " + method);
-							return result;
-						} catch (IllegalAccessException e) {
-							throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + key, e);
-						} catch (InvocationTargetException e) {
-							throw new DIException("Failed to call generic method " + method + " to provide requested key " + key, e.getCause());
-						}
-					},
-					dependencies);
+				args -> {
+					try {
+						Object result = method.invoke(module, args);
+						if (result == null)
+							throw new NullPointerException("@Provides method must return non-null result, method " + method);
+						return result;
+					} catch (IllegalAccessException e) {
+						throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + key, e);
+					} catch (InvocationTargetException e) {
+						throw new DIException("Failed to call generic method " + method + " to provide requested key " + key, e.getCause());
+					}
+				},
+				dependencies);
 
 			return (module != null ? binding.at(LocationInfo.from(module, method)) : binding).as(bindingType);
 		}

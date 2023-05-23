@@ -129,7 +129,7 @@ public class JmxReducersTest {
 
 		double result = (double) avgReducer.reduce(numbers);
 		double acceptableError = 10E-3;
-		assertEquals(7.5/2, result, acceptableError);
+		assertEquals(7.5 / 2, result, acceptableError);
 	}
 
 	@Test

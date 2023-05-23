@@ -35,29 +35,29 @@ public final class UdpSocketTest {
 		DatagramChannel serverDatagramChannel = NioReactor.createDatagramChannel(DatagramSocketSettings.create(), SERVER_ADDRESS, null);
 
 		UdpSocket.connect(Reactor.getCurrentReactor(), serverDatagramChannel)
-				.then(serverSocket -> serverSocket.receive()
-						.then(serverSocket::send)
-						.whenComplete(serverSocket::close))
-				.whenComplete(assertCompleteFn());
+			.then(serverSocket -> serverSocket.receive()
+				.then(serverSocket::send)
+				.whenComplete(serverSocket::close))
+			.whenComplete(assertCompleteFn());
 
 		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(DatagramSocketSettings.create(), null, null);
 
 		Promise<UdpSocket> promise = UdpSocket.connect(Reactor.getCurrentReactor(), clientDatagramChannel)
-				.whenComplete(assertCompleteFn(clientSocket -> {
+			.whenComplete(assertCompleteFn(clientSocket -> {
 
-					clientSocket.send(UdpPacket.of(ByteBuf.wrapForReading(bytesToSend), SERVER_ADDRESS))
-							.whenComplete(assertCompleteFn());
+				clientSocket.send(UdpPacket.of(ByteBuf.wrapForReading(bytesToSend), SERVER_ADDRESS))
+					.whenComplete(assertCompleteFn());
 
-					clientSocket.receive()
-							.whenComplete(clientSocket::close)
-							.whenComplete(assertCompleteFn(packet -> {
-								byte[] message = packet.getBuf().asArray();
+				clientSocket.receive()
+					.whenComplete(clientSocket::close)
+					.whenComplete(assertCompleteFn(packet -> {
+						byte[] message = packet.getBuf().asArray();
 
-								assertArrayEquals(bytesToSend, message);
+						assertArrayEquals(bytesToSend, message);
 
-								System.out.println("message = " + Arrays.toString(message));
-							}));
-				}));
+						System.out.println("message = " + Arrays.toString(message));
+					}));
+			}));
 
 		await(promise);
 	}

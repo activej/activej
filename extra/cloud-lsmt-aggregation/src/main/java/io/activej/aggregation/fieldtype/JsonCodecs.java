@@ -40,34 +40,34 @@ public class JsonCodecs {
 	private static final JsonCodec<Boolean> BOOLEAN_CODEC = JsonCodec.of(BoolConverter::deserialize, (writer, value) -> BoolConverter.serialize(value, writer));
 
 	private static final JsonCodec<Byte> BYTE_CODEC = JsonCodec.of(
-			reader -> {
-				int result = NumberConverter.deserializeInt(reader);
-				if (result >= 0 && result <= 255) {
-					return (byte) result;
-				}
-				throw reader.newParseError("Read an int not in range [0, 255] while trying to read a byte");
-			},
-			(writer, value) -> NumberConverter.serialize(value & 0xFF, writer));
+		reader -> {
+			int result = NumberConverter.deserializeInt(reader);
+			if (result >= 0 && result <= 255) {
+				return (byte) result;
+			}
+			throw reader.newParseError("Read an int not in range [0, 255] while trying to read a byte");
+		},
+		(writer, value) -> NumberConverter.serialize(value & 0xFF, writer));
 
 	private static final JsonCodec<Character> CHARACTER_CODEC = JsonCodec.of(
-			reader -> {
-				String string = reader.readString();
-				if (string.length() == 1) {
-					return string.charAt(0);
-				}
-				throw reader.newParseError("Read a string with length != 1 while trying to read a character");
+		reader -> {
+			String string = reader.readString();
+			if (string.length() == 1) {
+				return string.charAt(0);
+			}
+			throw reader.newParseError("Read a string with length != 1 while trying to read a character");
 
-			},
-			(writer, value) -> writer.writeString(value.toString()));
+		},
+		(writer, value) -> writer.writeString(value.toString()));
 
 	private static final JsonCodec<LocalDate> LOCAL_DATE_CODEC = JsonCodec.of(
-			reader -> {
-				try {
-					return LocalDate.parse(reader.readString());
-				} catch (DateTimeParseException e) {
-					throw reader.newParseError(e.getMessage());
-				}
-			}, (writer, value) -> writer.writeString(value.toString())
+		reader -> {
+			try {
+				return LocalDate.parse(reader.readString());
+			} catch (DateTimeParseException e) {
+				throw reader.newParseError(e.getMessage());
+			}
+		}, (writer, value) -> writer.writeString(value.toString())
 	);
 
 	public static JsonCodec<Byte> ofByte() {

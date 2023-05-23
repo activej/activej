@@ -45,14 +45,14 @@ public class ReactiveServiceExample extends Launcher {
 		public Promise<?> start() {
 			System.out.println("|CUSTOM EVENTLOOP SERVICE STARTING|");
 			return Promises.delay(Duration.ofMillis(10))
-					.whenResult(() -> System.out.println("|CUSTOM EVENTLOOP SERVICE STARTED|"));
+				.whenResult(() -> System.out.println("|CUSTOM EVENTLOOP SERVICE STARTED|"));
 		}
 
 		@Override
 		public Promise<?> stop() {
 			System.out.println("|CUSTOM EVENTLOOP SERVICE STOPPING|");
 			return Promises.delay(Duration.ofMillis(10))
-					.whenResult(() -> System.out.println("|CUSTOM EVENTLOOP SERVICE STOPPED|"));
+				.whenResult(() -> System.out.println("|CUSTOM EVENTLOOP SERVICE STOPPED|"));
 		}
 	}
 

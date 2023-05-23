@@ -72,10 +72,10 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	private static final Collector<ByteBuf, ByteBufs, ByteBuf> COLLECTOR = Collector.of(
-			ByteBufs::new,
-			ByteBufs::add,
-			noMergeFunction(),
-			ByteBufs::takeRemaining);
+		ByteBufs::new,
+		ByteBufs::add,
+		noMergeFunction(),
+		ByteBufs::takeRemaining);
 
 	/**
 	 * Accumulates input {@link ByteBuf}s into {@link ByteBufs} and then transforms
@@ -89,19 +89,19 @@ public final class ByteBufs implements Recyclable {
 
 	public static Collector<ByteBuf, ByteBufs, ByteBuf> collector(int maxSize) {
 		return Collector.of(
-				ByteBufs::new,
-				(bufs, buf) -> {
-					int size = buf.readRemaining();
-					if (size > maxSize || bufs.hasRemainingBytes(maxSize - size + 1)) {
-						bufs.recycle();
-						buf.recycle();
-						throw UncheckedException.of(new InvalidSizeException(
-								"Size of ByteBufs exceeds maximum size of " + maxSize + " bytes"));
-					}
-					bufs.add(buf);
-				},
-				noMergeFunction(),
-				ByteBufs::takeRemaining);
+			ByteBufs::new,
+			(bufs, buf) -> {
+				int size = buf.readRemaining();
+				if (size > maxSize || bufs.hasRemainingBytes(maxSize - size + 1)) {
+					bufs.recycle();
+					buf.recycle();
+					throw UncheckedException.of(new InvalidSizeException(
+						"Size of ByteBufs exceeds maximum size of " + maxSize + " bytes"));
+				}
+				bufs.add(buf);
+			},
+			noMergeFunction(),
+			ByteBufs::takeRemaining);
 	}
 
 	private int next(int i) {

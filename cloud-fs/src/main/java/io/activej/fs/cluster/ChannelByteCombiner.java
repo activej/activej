@@ -37,7 +37,7 @@ import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelByteCombiner extends AbstractCommunicatingProcess
-		implements WithChannelInputs<ByteBuf>, WithChannelOutput<ChannelByteCombiner, ByteBuf> {
+	implements WithChannelInputs<ByteBuf>, WithChannelOutput<ChannelByteCombiner, ByteBuf> {
 
 	private final List<ChannelSupplier<ByteBuf>> inputs = new ArrayList<>();
 	private ChannelConsumer<ByteBuf> output;
@@ -81,31 +81,31 @@ public final class ChannelByteCombiner extends AbstractCommunicatingProcess
 	@Override
 	protected void doProcess() {
 		Promises.all(inputs.stream().map(this::doProcessInput))
-				.whenException(output::closeEx)
-				.then($ -> output.acceptEndOfStream())
-				.whenComplete(this::completeProcess);
+			.whenException(output::closeEx)
+			.then($ -> output.acceptEndOfStream())
+			.whenComplete(this::completeProcess);
 	}
 
 	private Promise<Void> doProcessInput(ChannelSupplier<ByteBuf> input) {
 		RefLong inputOffset = new RefLong(0);
 		return Promises.repeat(
-				() -> input.get()
-						.then(Promise::of,
-								e -> ++errorCount == inputs.size() ?
-										Promise.ofException(e) :
-										Promise.of(null))
-						.then(buf -> {
-							if (buf == null) return Promise.of(false);
-							int toSkip = (int) Math.min(outputOffset - inputOffset.value, buf.readRemaining());
-							inputOffset.value += buf.readRemaining();
-							buf.moveHead(toSkip);
-							if (!buf.canRead()) {
-								buf.recycle();
-								return Promise.of(true);
-							}
-							outputOffset += buf.readRemaining();
-							return output.accept(buf).map($ -> true);
-						}));
+			() -> input.get()
+				.then(Promise::of,
+					e -> ++errorCount == inputs.size() ?
+						Promise.ofException(e) :
+						Promise.of(null))
+				.then(buf -> {
+					if (buf == null) return Promise.of(false);
+					int toSkip = (int) Math.min(outputOffset - inputOffset.value, buf.readRemaining());
+					inputOffset.value += buf.readRemaining();
+					buf.moveHead(toSkip);
+					if (!buf.canRead()) {
+						buf.recycle();
+						return Promise.of(true);
+					}
+					outputOffset += buf.readRemaining();
+					return output.accept(buf).map($ -> true);
+				}));
 	}
 
 	@Override

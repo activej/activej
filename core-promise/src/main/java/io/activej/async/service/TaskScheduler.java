@@ -42,7 +42,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class TaskScheduler extends AbstractReactive
-		implements ReactiveService, ReactiveJmxBeanWithStats {
+	implements ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
 
 	private final AsyncSupplier<Object> task;
@@ -219,30 +219,30 @@ public final class TaskScheduler extends AbstractReactive
 	private Promise<Void> doCall() {
 		lastStartTime = reactor.currentTimeMillis();
 		return currentPromise = (retryPolicy == null ?
-				task.get() :
-				retry(task, ($, e) -> e == null || !enabled, retryPolicy))
-				.whenComplete(stats.recordStats())
-				.whenComplete(() -> lastCompleteTime = reactor.currentTimeMillis())
-				.whenComplete(($, e) -> {
-					if (enabled) {
-						if (e == null) {
-							lastException = null;
-							errorCount = 0;
-							scheduleTask();
+			task.get() :
+			retry(task, ($, e) -> e == null || !enabled, retryPolicy))
+			.whenComplete(stats.recordStats())
+			.whenComplete(() -> lastCompleteTime = reactor.currentTimeMillis())
+			.whenComplete(($, e) -> {
+				if (enabled) {
+					if (e == null) {
+						lastException = null;
+						errorCount = 0;
+						scheduleTask();
+					} else {
+						lastException = e;
+						errorCount++;
+						logger.warn("Retry attempt " + errorCount, e);
+						if (abortOnError) {
+							scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
+							throw new RuntimeException(e);
 						} else {
-							lastException = e;
-							errorCount++;
-							logger.warn("Retry attempt " + errorCount, e);
-							if (abortOnError) {
-								scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
-								throw new RuntimeException(e);
-							} else {
-								scheduleTask();
-							}
+							scheduleTask();
 						}
 					}
-				})
-				.toVoid();
+				}
+			})
+			.toVoid();
 	}
 
 	@Override

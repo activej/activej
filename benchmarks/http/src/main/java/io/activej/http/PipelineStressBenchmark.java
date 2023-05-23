@@ -20,12 +20,12 @@ import static java.util.Collections.nCopies;
 
 public final class PipelineStressBenchmark extends Launcher {
 	public static final String REQUEST = """
-			GET /plaintext HTTP/1.1\r
-			Host: activej.io\r
-			Accept: text/plain,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7\r
-			Connection: keep-alive\r
-			\r
-			""";
+		GET /plaintext HTTP/1.1\r
+		Host: activej.io\r
+		Accept: text/plain,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7\r
+		Connection: keep-alive\r
+		\r
+		""";
 
 	public static final int TOTAL_REQUESTS = 5_000_000;
 	public static final int PIPELINE_COUNT = 16;
@@ -49,10 +49,10 @@ public final class PipelineStressBenchmark extends Launcher {
 	@Provides
 	HttpServer server(NioReactor reactor) {
 		return HttpServer.builder(reactor, request -> HttpResponse.ok200()
-						.withPlainText("Hello, world!")
-						.toPromise())
-				.withListenPort(PORT)
-				.build();
+				.withPlainText("Hello, world!")
+				.toPromise())
+			.withListenPort(PORT)
+			.build();
 	}
 
 	@Override

@@ -116,8 +116,8 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		RpcStrategy roundRobin = RoundRobin.builder(servers(address1, address2, address3))
-				.withMinActiveSubStrategies(4)
-				.build();
+			.withMinActiveSubStrategies(4)
+			.build();
 
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);
@@ -132,8 +132,8 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcStrategy roundRobin = RoundRobin.builder(servers(address1, address2, address3))
-				.withMinActiveSubStrategies(3)
-				.build();
+			.withMinActiveSubStrategies(3)
+			.build();
 
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);

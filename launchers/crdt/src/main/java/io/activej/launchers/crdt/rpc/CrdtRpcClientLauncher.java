@@ -37,16 +37,16 @@ public abstract class CrdtRpcClientLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return Modules.combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				new CrdtRpcClientModule(),
-				getBusinessLogicModule(),
-				ModuleBuilder.create()
-						.bind(new Key<List<Class<?>>>() {})
-						.toInstance(getMessageTypes())
-						.build()
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			new CrdtRpcClientModule(),
+			getBusinessLogicModule(),
+			ModuleBuilder.create()
+				.bind(new Key<List<Class<?>>>() {})
+				.toInstance(getMessageTypes())
+				.build()
 		);
 	}
 

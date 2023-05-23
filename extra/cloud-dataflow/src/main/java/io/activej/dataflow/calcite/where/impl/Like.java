@@ -40,8 +40,8 @@ public final class Like implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new Like(
-				value.materialize(params),
-				pattern.materialize(params)
+			value.materialize(params),
+			pattern.materialize(params)
 		);
 	}
 
@@ -51,8 +51,8 @@ public final class Like implements WherePredicate {
 	@Override
 	public String toString() {
 		return "Like[" +
-				"value=" + value +
-				", pattern=" + pattern +
-				']';
+			"value=" + value +
+			", pattern=" + pattern +
+			']';
 	}
 }

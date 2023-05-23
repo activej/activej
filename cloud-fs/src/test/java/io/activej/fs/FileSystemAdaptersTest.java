@@ -96,9 +96,9 @@ public final class FileSystemAdaptersTest {
 		IFileSystem third = FileSystemAdapters.subdirectory(fileSystem, "third");
 
 		IFileSystem mounted = FileSystemAdapters.mount(root, Map.of(
-				"hello", first,
-				"test/inner", second,
-				"last", third));
+			"hello", first,
+			"test/inner", second,
+			"last", third));
 
 		//   /           ->  /root
 		//   /hello      ->  /first

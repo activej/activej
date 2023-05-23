@@ -49,8 +49,10 @@ public final class ToString implements Expression {
 	public String valueSeparator;
 	public final Map<Object, Expression> arguments;
 
-	public ToString(String begin, String end, @Nullable String nameSeparator, String valueSeparator,
-			Map<Object, Expression> arguments) {
+	public ToString(
+		String begin, String end, @Nullable String nameSeparator, String valueSeparator,
+		Map<Object, Expression> arguments
+	) {
 		this.begin = begin;
 		this.end = end;
 		this.nameSeparator = nameSeparator;

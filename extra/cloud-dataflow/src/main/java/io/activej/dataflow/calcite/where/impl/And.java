@@ -25,15 +25,14 @@ public final class And implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new And(
-				predicates.stream()
-						.map(wherePredicate -> wherePredicate.materialize(params))
-						.toList()
+			predicates.stream()
+				.map(wherePredicate -> wherePredicate.materialize(params))
+				.toList()
 		);
 	}
 
 	@Override
 	public String toString() {
-		return "And[" +
-				"predicates=" + predicates + ']';
+		return "And[predicates=" + predicates + ']';
 	}
 }

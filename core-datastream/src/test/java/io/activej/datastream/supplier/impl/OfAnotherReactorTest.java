@@ -36,8 +36,8 @@ public class OfAnotherReactorTest {
 	@Before
 	public void setUp() throws InterruptedException {
 		anotherEventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		anotherEventloop.keepAlive(true);
 		CountDownLatch latch = new CountDownLatch(1);
 		new Thread(() -> {
@@ -69,7 +69,7 @@ public class OfAnotherReactorTest {
 	public void testSupplierException() throws ExecutionException, InterruptedException {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> anotherEventloopSupplier = fromAnotherEventloop(() ->
-				StreamSuppliers.concat(StreamSuppliers.ofValues(1, 2, 3), StreamSuppliers.closingWithError(expectedException), StreamSuppliers.ofValues(4, 5, 6)));
+			StreamSuppliers.concat(StreamSuppliers.ofValues(1, 2, 3), StreamSuppliers.closingWithError(expectedException), StreamSuppliers.ofValues(4, 5, 6)));
 		StreamSupplier<Integer> supplier = StreamSuppliers.ofAnotherReactor(anotherEventloop, anotherEventloopSupplier);
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
@@ -88,8 +88,8 @@ public class OfAnotherReactorTest {
 		StreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		Exception exception = awaitException(supplier.streamTo(consumer
-				.transformWith(decorate(promise -> promise
-						.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))));
+			.transformWith(decorate(promise -> promise
+				.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))));
 
 		assertSame(expectedException, exception);
 		assertClosedWithError(expectedException, supplier, consumer);

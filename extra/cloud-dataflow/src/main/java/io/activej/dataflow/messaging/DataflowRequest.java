@@ -7,10 +7,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public sealed interface DataflowRequest permits
-		DataflowRequest.Handshake,
-		DataflowRequest.Download,
-		DataflowRequest.Execute,
-		DataflowRequest.GetTasks {
+	DataflowRequest.Handshake,
+	DataflowRequest.Download,
+	DataflowRequest.Execute,
+	DataflowRequest.GetTasks {
 
 	record Handshake(Version version) implements DataflowRequest {
 	}

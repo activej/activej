@@ -11,7 +11,7 @@ public final class RecordSerializationExample {
 		Person jim = new Person(34, "Jim");
 		byte[] buffer = new byte[200];
 		BinarySerializer<Person> serializer = SerializerFactory.defaultInstance()
-				.create(Person.class);
+			.create(Person.class);
 		//[END REGION_2]
 
 		//[START REGION_3]

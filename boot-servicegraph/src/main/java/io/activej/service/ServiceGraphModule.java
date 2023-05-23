@@ -103,9 +103,8 @@ public final class ServiceGraphModule extends AbstractModule {
 	private final Executor executor;
 
 	private ServiceGraphModule() {
-		this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-				10, TimeUnit.MILLISECONDS,
-				new SynchronousQueue<>());
+		this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.MILLISECONDS,
+			new SynchronousQueue<>());
 	}
 
 	/**
@@ -118,19 +117,19 @@ public final class ServiceGraphModule extends AbstractModule {
 	 */
 	public static Builder builder() {
 		return new ServiceGraphModule().new Builder()
-				.with(Service.class, forService())
-				.with(BlockingService.class, forBlockingService())
-				.with(AutoCloseable.class, forAutoCloseable())
-				.with(ExecutorService.class, forExecutorService())
-				.with(Timer.class, forTimer())
-				.initialize(b -> {
-					try {
-						currentThread().getContextClassLoader().loadClass("javax.sql.DataSource");
-						b.with(DataSource.class, forDataSource());
-					} catch (ClassNotFoundException ignored) {
-					}
-				})
-				.initialize(ServiceGraphModule::tryRegisterAsyncComponents);
+			.with(Service.class, forService())
+			.with(BlockingService.class, forBlockingService())
+			.with(AutoCloseable.class, forAutoCloseable())
+			.with(ExecutorService.class, forExecutorService())
+			.with(Timer.class, forTimer())
+			.initialize(b -> {
+				try {
+					currentThread().getContextClassLoader().loadClass("javax.sql.DataSource");
+					b.with(DataSource.class, forDataSource());
+				} catch (ClassNotFoundException ignored) {
+				}
+			})
+			.initialize(ServiceGraphModule::tryRegisterAsyncComponents);
 	}
 
 	/**
@@ -146,7 +145,7 @@ public final class ServiceGraphModule extends AbstractModule {
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, ServiceGraphModule>
-			implements ServiceGraphModuleSettings {
+		implements ServiceGraphModuleSettings {
 
 		private Builder() {}
 
@@ -264,7 +263,7 @@ public final class ServiceGraphModule extends AbstractModule {
 			}
 			ServiceKey other = (ServiceKey) o;
 			return workerPool == other.workerPool &&
-					key.equals(other.key);
+				key.equals(other.key);
 		}
 
 		@Override
@@ -283,14 +282,14 @@ public final class ServiceGraphModule extends AbstractModule {
 		if (isClassPresent("io.activej.eventloop.Eventloop")) {
 			// 'eventloop' module is present
 			builder
-					.with(Eventloop.class, forEventloop())
-					.with(ReactiveService.class, forReactiveService());
+				.with(Eventloop.class, forEventloop())
+				.with(ReactiveService.class, forReactiveService());
 		}
 		if (isClassPresent("io.activej.net.ReactiveServer")) {
 			// 'net' module is present
 			builder
-					.with(BlockingSocketServer.class, forBlockingSocketServer())
-					.with(ReactiveServer.class, forReactiveServer());
+				.with(BlockingSocketServer.class, forBlockingSocketServer())
+				.with(ReactiveServer.class, forReactiveServer());
 		}
 	}
 
@@ -312,27 +311,27 @@ public final class ServiceGraphModule extends AbstractModule {
 			public CompletableFuture<?> start() {
 				CompletableFuture<Void> future = new CompletableFuture<>();
 				serviceGraph.startFuture()
-						.whenComplete(($, e) -> {
-							if (e == null) {
-								if (logger.isInfoEnabled()) {
-									logger.info("Effective ServiceGraph:\n\n{}", serviceGraph);
-								}
-								future.complete(null);
-							} else {
-								logger.error("Could not start ServiceGraph", e);
-								if (logger.isInfoEnabled()) {
-									logger.info("Effective ServiceGraph:\n\n{}", serviceGraph);
-								}
-								logger.warn("Stopping services of partially started ServiceGraph...");
-								serviceGraph.stopFuture()
-										.whenComplete(($2, e2) -> {
-											if (e2 != null) {
-												e.addSuppressed(e2);
-											}
-											future.completeExceptionally(e);
-										});
+					.whenComplete(($, e) -> {
+						if (e == null) {
+							if (logger.isInfoEnabled()) {
+								logger.info("Effective ServiceGraph:\n\n{}", serviceGraph);
 							}
-						});
+							future.complete(null);
+						} else {
+							logger.error("Could not start ServiceGraph", e);
+							if (logger.isInfoEnabled()) {
+								logger.info("Effective ServiceGraph:\n\n{}", serviceGraph);
+							}
+							logger.warn("Stopping services of partially started ServiceGraph...");
+							serviceGraph.stopFuture()
+								.whenComplete(($2, e2) -> {
+									if (e2 != null) {
+										e.addSuppressed(e2);
+									}
+									future.completeExceptionally(e);
+								});
+						}
+					});
 				return future;
 			}
 
@@ -366,12 +365,12 @@ public final class ServiceGraphModule extends AbstractModule {
 					instances.put(serviceKey, workerInstances.getList());
 					workerInstanceToKey.put(workerInstances.get(0), serviceKey);
 					instanceDependencies.put(serviceKey,
-							scopeDependencies.get(key)
-									.stream()
-									.map(scopedDependency -> scopedDependency.isScoped() ?
-											new ServiceKey(scopedDependency.getKey(), pool) :
-											new ServiceKey(scopedDependency.getKey()))
-									.collect(toSet()));
+						scopeDependencies.get(key)
+							.stream()
+							.map(scopedDependency -> scopedDependency.isScoped() ?
+								new ServiceKey(scopedDependency.getKey(), pool) :
+								new ServiceKey(scopedDependency.getKey()))
+							.collect(toSet()));
 				}
 			}
 		}
@@ -393,27 +392,27 @@ public final class ServiceGraphModule extends AbstractModule {
 			ServiceKey serviceKey = new ServiceKey(key);
 			instances.put(serviceKey, List.of(instance));
 			instanceDependencies.put(serviceKey,
-					binding.getDependencies().stream()
-							.map(dependency -> {
-								Class<?> dependencyRawType = dependency.getRawType();
-								boolean rawTypeMatches = dependencyRawType == WorkerPool.class || dependencyRawType == WorkerPools.class;
-								boolean instanceMatches = instance instanceof WorkerPool.Instances;
+				binding.getDependencies().stream()
+					.map(dependency -> {
+						Class<?> dependencyRawType = dependency.getRawType();
+						boolean rawTypeMatches = dependencyRawType == WorkerPool.class || dependencyRawType == WorkerPools.class;
+						boolean instanceMatches = instance instanceof WorkerPool.Instances;
 
-								if (rawTypeMatches && instanceMatches) {
-									WorkerPool.Instances<?> workerInstances = (WorkerPool.Instances<?>) instance;
-									return workerInstanceToKey.get(workerInstances.get(0));
-								}
+						if (rawTypeMatches && instanceMatches) {
+							WorkerPool.Instances<?> workerInstances = (WorkerPool.Instances<?>) instance;
+							return workerInstanceToKey.get(workerInstances.get(0));
+						}
 
-								if (rawTypeMatches && !(instance instanceof WorkerPool)) {
-									logger.warn("Unsupported service {} at {} : worker instances is expected", key, binding.getLocation());
-								}
+						if (rawTypeMatches && !(instance instanceof WorkerPool)) {
+							logger.warn("Unsupported service {} at {} : worker instances is expected", key, binding.getLocation());
+						}
 
-								if (instanceMatches) {
-									logger.warn("Unsupported service {} at {} : dependency to WorkerPool or WorkerPools is expected", key, binding.getLocation());
-								}
-								return new ServiceKey(dependency);
-							})
-							.collect(toSet()));
+						if (instanceMatches) {
+							logger.warn("Unsupported service {} at {} : dependency to WorkerPool or WorkerPools is expected", key, binding.getLocation());
+						}
+						return new ServiceKey(dependency);
+					})
+					.collect(toSet()));
 		}
 
 		doStart(serviceGraph, instances, instanceDependencies);
@@ -422,15 +421,15 @@ public final class ServiceGraphModule extends AbstractModule {
 	private Map<Key<?>, Set<ScopedKey>> getScopeDependencies(Injector injector, Scope scope) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, Map.of());
 		return scopeBindings.get()
-				.entrySet()
-				.stream()
-				.collect(toMap(Map.Entry::getKey,
-						entry -> entry.getValue().getDependencies().stream()
-								.map(dependencyKey ->
-										scopeBindings.get().containsKey(dependencyKey) ?
-												ScopedKey.of(scope, dependencyKey) :
-												ScopedKey.of(dependencyKey))
-								.collect(toSet())));
+			.entrySet()
+			.stream()
+			.collect(toMap(Map.Entry::getKey,
+				entry -> entry.getValue().getDependencies().stream()
+					.map(dependencyKey ->
+						scopeBindings.get().containsKey(dependencyKey) ?
+							ScopedKey.of(scope, dependencyKey) :
+							ScopedKey.of(dependencyKey))
+					.collect(toSet())));
 	}
 
 	private void doStart(ServiceGraph serviceGraph, Map<ServiceKey, List<?>> instances, Map<ServiceKey, Set<ServiceKey>> instanceDependencies) {
@@ -509,21 +508,21 @@ public final class ServiceGraphModule extends AbstractModule {
 		@Override
 		public CompletableFuture<?> start() {
 			return combineAll(
-					services.stream()
-							.map(service -> safeCall(service::start)
-									.thenRun(() -> {
-										synchronized (this) {
-											startedServices.add(service);
-										}
-									}))
-							.collect(toList()))
-					.thenApply(v -> (Throwable) null)
-					.exceptionally(e -> e)
-					.thenCompose((Throwable e) ->
-							e == null ?
-									completedFuture(null) :
-									combineAll(startedServices.stream().map(service -> safeCall(service::stop)).collect(toList()))
-											.thenCompose($ -> completedExceptionallyFuture(e)));
+				services.stream()
+					.map(service -> safeCall(service::start)
+						.thenRun(() -> {
+							synchronized (this) {
+								startedServices.add(service);
+							}
+						}))
+					.collect(toList()))
+				.thenApply(v -> (Throwable) null)
+				.exceptionally(e -> e)
+				.thenCompose((Throwable e) ->
+					e == null ?
+						completedFuture(null) :
+						combineAll(startedServices.stream().map(service -> safeCall(service::stop)).collect(toList()))
+							.thenCompose($ -> completedExceptionallyFuture(e)));
 		}
 
 		@Override
@@ -615,7 +614,7 @@ public final class ServiceGraphModule extends AbstractModule {
 			}
 			if (foundRegisteredClasses.size() > 1) {
 				throw new IllegalArgumentException("Ambiguous services found for " + instanceClass +
-						" : " + foundRegisteredClasses + ". Use register() methods to specify service.");
+					" : " + foundRegisteredClasses + ". Use register() methods to specify service.");
 			}
 		}
 		return serviceAdapter;

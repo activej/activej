@@ -53,27 +53,27 @@ public final class RpcBlockingTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 
 		serverOne = RpcServer.builder(eventloop)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class,
-						helloServiceRequestHandler(new HelloServiceImplOne()))
-				.withListenPort(port1)
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withHandler(HelloRequest.class,
+				helloServiceRequestHandler(new HelloServiceImplOne()))
+			.withListenPort(port1)
+			.build();
 		serverOne.listen();
 
 		serverTwo = RpcServer.builder(eventloop)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class,
-						helloServiceRequestHandler(new HelloServiceImplTwo()))
-				.withListenPort(port2)
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withHandler(HelloRequest.class,
+				helloServiceRequestHandler(new HelloServiceImplTwo()))
+			.withListenPort(port2)
+			.build();
 		serverTwo.listen();
 
 		serverThree = RpcServer.builder(eventloop)
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withHandler(HelloRequest.class,
-						helloServiceRequestHandler(new HelloServiceImplThree()))
-				.withListenPort(port3)
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withHandler(HelloRequest.class,
+				helloServiceRequestHandler(new HelloServiceImplThree()))
+			.withListenPort(port3)
+			.build();
 		serverThree.listen();
 
 		thread = new Thread(eventloop);
@@ -92,22 +92,22 @@ public final class RpcBlockingTest {
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
 
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withStrategy(
-						RpcStrategies.roundRobin(
-								server(address1),
-								Sharding.builder(
-												(HelloRequest item) -> {
-													int shard = 0;
-													if (item.name.startsWith("S")) {
-														shard = 1;
-													}
-													return shard;
-												},
-												server(address2), server(address3))
-										.withMinActiveSubStrategies(2)
-										.build()))
-				.build();
+			.withMessageTypes(HelloRequest.class, HelloResponse.class)
+			.withStrategy(
+				RpcStrategies.roundRobin(
+					server(address1),
+					Sharding.builder(
+							(HelloRequest item) -> {
+								int shard = 0;
+								if (item.name.startsWith("S")) {
+									shard = 1;
+								}
+								return shard;
+							},
+							server(address2), server(address3))
+						.withMinActiveSubStrategies(2)
+						.build()))
+			.build();
 
 		client.startFuture().get();
 
@@ -154,10 +154,10 @@ public final class RpcBlockingTest {
 	private static String blockingRequest(RpcClient rpcClient, String name) throws Exception {
 		try {
 			return rpcClient.getReactor().submit(
-							() -> rpcClient
-									.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
-					.get()
-					.message;
+					() -> rpcClient
+						.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
+				.get()
+				.message;
 		} catch (ExecutionException e) {
 			//noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException - cause is rethrown
 			throw (Exception) e.getCause();

@@ -41,8 +41,10 @@ public interface IAggregationChunkStorage<C> {
 	 * @param chunkId     id of chunk
 	 * @return StreamSupplier, which will stream read records to its wired consumer.
 	 */
-	<T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields,
-			Class<T> recordClass, C chunkId, DefiningClassLoader classLoader);
+	<T> Promise<StreamSupplier<T>> read(
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		DefiningClassLoader classLoader
+	);
 
 	/**
 	 * Creates a {@code StreamConsumer} that persists streamed records.
@@ -52,8 +54,10 @@ public interface IAggregationChunkStorage<C> {
 	 * @param recordClass class of chunk record
 	 * @param chunkId     id of chunk
 	 */
-	<T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields,
-			Class<T> recordClass, C chunkId, DefiningClassLoader classLoader);
+	<T> Promise<StreamConsumer<T>> write(
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		DefiningClassLoader classLoader
+	);
 
 	Promise<Void> finish(Set<C> chunkIds);
 

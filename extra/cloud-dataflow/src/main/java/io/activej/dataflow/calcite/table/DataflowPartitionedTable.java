@@ -37,12 +37,9 @@ public final class DataflowPartitionedTable<T> extends AbstractDataflowTable<T> 
 	private final Reducer<Record, Record, Record, ?> reducer;
 
 	private DataflowPartitionedTable(
-			String tableName,
-			Class<T> type,
-			Function<RelDataTypeFactory, RelDataType> relDataTypeFactory,
-			RecordFunction<T> recordFunction,
-			Reducer<Record, Record, Record, ?> reducer,
-			Collection<Integer> primaryKeyIndexes
+		String tableName, Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory,
+		RecordFunction<T> recordFunction, Reducer<Record, Record, Record, ?> reducer,
+		Collection<Integer> primaryKeyIndexes
 	) {
 		super(tableName, type, relDataTypeFactory, recordFunction);
 		this.reducer = reducer;

@@ -59,6 +59,6 @@ public interface ProtoObjectNameMapper {
 
 	default ProtoObjectNameMapper then(ProtoObjectNameMapper next) {
 		return protoObjectName -> next
-				.apply(apply(protoObjectName));
+			.apply(apply(protoObjectName));
 	}
 }

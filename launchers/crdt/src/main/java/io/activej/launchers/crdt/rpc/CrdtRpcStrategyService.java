@@ -34,7 +34,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CrdtRpcStrategyService<K extends Comparable<K>> extends AbstractReactive
-		implements ReactiveService {
+	implements ReactiveService {
 	private final IDiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
@@ -84,21 +84,21 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 
 		AsyncSupplier<? extends IDiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
-				.whenResult(partitionScheme -> {
-					RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(keyGetter);
-					rpcClient.changeStrategy(strategyMapFn.apply(rpcStrategy), false);
-					Promises.repeat(() ->
-							discoverySupplier.get()
-									.map((newPartitionScheme, e) -> {
-										if (stopped) return false;
-										if (e == null) {
-											RpcStrategy newRpcStrategy = newPartitionScheme.createRpcStrategy(keyGetter);
-											rpcClient.changeStrategy(strategyMapFn.apply(newRpcStrategy), true);
-										}
-										return true;
-									})
-					);
-				});
+			.whenResult(partitionScheme -> {
+				RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(keyGetter);
+				rpcClient.changeStrategy(strategyMapFn.apply(rpcStrategy), false);
+				Promises.repeat(() ->
+					discoverySupplier.get()
+						.map((newPartitionScheme, e) -> {
+							if (stopped) return false;
+							if (e == null) {
+								RpcStrategy newRpcStrategy = newPartitionScheme.createRpcStrategy(keyGetter);
+								rpcClient.changeStrategy(strategyMapFn.apply(newRpcStrategy), true);
+							}
+							return true;
+						})
+				);
+			});
 
 	}
 

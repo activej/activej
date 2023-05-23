@@ -23,10 +23,10 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
-		ElementType.FIELD,
-		ElementType.METHOD,
-		ElementType.TYPE_USE,
-		ElementType.RECORD_COMPONENT})
+	ElementType.FIELD,
+	ElementType.METHOD,
+	ElementType.TYPE_USE,
+	ElementType.RECORD_COMPONENT})
 public @interface SerializeStringFormats {
 	SerializeStringFormat[] value();
 }

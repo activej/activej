@@ -47,8 +47,8 @@ public class HttpThrottlingServer {
 
 		public static void usage() {
 			System.err.println(HttpThrottlingServer.class.getSimpleName() + " [options]\n" +
-					"\t-l    - value of load server\n" +
-					"\t-h/-? - this help.");
+				"\t-l    - value of load server\n" +
+				"\t-h/-? - this help.");
 		}
 
 		@Override
@@ -66,9 +66,9 @@ public class HttpThrottlingServer {
 	private static HttpServer buildHttpServer(NioReactor reactor, int loadBusinessLogic) {
 //		final ByteBufPool byteBufferPool = new ByteBufPool(16, 65536);
 		return HttpServer.builder(reactor,
-						request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic))
-				.withListenPort(SERVER_PORT)
-				.build();
+				request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic))
+			.withListenPort(SERVER_PORT)
+			.build();
 	}
 
 	@SuppressWarnings("SameParameterValue")
@@ -84,8 +84,8 @@ public class HttpThrottlingServer {
 			response += "!";
 		}
 		return HttpResponse.ok200()
-				.withBody(ByteBufStrings.encodeAscii(response))
-				.toPromise();
+			.withBody(ByteBufStrings.encodeAscii(response))
+			.toPromise();
 	}
 
 	public void start() throws Exception {
@@ -109,10 +109,10 @@ public class HttpThrottlingServer {
 
 		EventloopInspector throttlingController = ThrottlingController.create();
 		Eventloop eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.withCurrentThread()
-				.withInspector(throttlingController)
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.withCurrentThread()
+			.withInspector(throttlingController)
+			.build();
 
 		HttpThrottlingServer server = new HttpThrottlingServer(eventloop, options);
 

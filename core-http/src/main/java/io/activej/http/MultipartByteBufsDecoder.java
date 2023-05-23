@@ -93,41 +93,42 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 			return Promise.ofException(new MalformedHttpException("Content-Disposition type is not 'form-data'"));
 		}
 		return Promise.of(Arrays.stream(headerParts)
-				.skip(1)
-				.map(part -> part.trim().split("=", 2))
-				.collect(toMap(s -> s[0], s -> {
-					String value = s.length == 1 ? "" : s[1];
-					// stripping double quotation
-					return value.substring(1, value.length() - 1);
-				})));
+			.skip(1)
+			.map(part -> part.trim().split("=", 2))
+			.collect(toMap(s -> s[0], s -> {
+				String value = s.length == 1 ? "" : s[1];
+				// stripping double quotation
+				return value.substring(1, value.length() - 1);
+			})));
 	}
 
-	private Promise<Void> doSplit(MultipartFrame headerFrame, ChannelSupplier<MultipartFrame> frames,
-			AsyncMultipartDataHandler dataHandler) {
+	private Promise<Void> doSplit(
+		MultipartFrame headerFrame, ChannelSupplier<MultipartFrame> frames, AsyncMultipartDataHandler dataHandler
+	) {
 		return getContentDispositionFields(headerFrame)
-				.then(contentDispositionFields -> {
-					String fieldName = contentDispositionFields.get("name");
-					String fileName = contentDispositionFields.get("filename");
-					Ref<MultipartFrame> lastRef = new Ref<>();
-					return frames
-							.until(f -> {
-								if (f.isHeaders()) {
-									lastRef.set(f);
-									return true;
-								}
-								return false;
-							})
-							.filter(MultipartFrame::isData)
-							.map(MultipartFrame::getData)
-							.streamTo(ChannelConsumers.ofPromise(fileName == null ?
-									dataHandler.handleField(fieldName) :
-									dataHandler.handleFile(fieldName, fileName)
-							))
-							.then(() -> lastRef.get() != null ?
-									doSplit(lastRef.get(), frames, dataHandler) :
-									Promise.complete())
-							.toVoid();
-				});
+			.then(contentDispositionFields -> {
+				String fieldName = contentDispositionFields.get("name");
+				String fileName = contentDispositionFields.get("filename");
+				Ref<MultipartFrame> lastRef = new Ref<>();
+				return frames
+					.until(f -> {
+						if (f.isHeaders()) {
+							lastRef.set(f);
+							return true;
+						}
+						return false;
+					})
+					.filter(MultipartFrame::isData)
+					.map(MultipartFrame::getData)
+					.streamTo(ChannelConsumers.ofPromise(fileName == null ?
+						dataHandler.handleField(fieldName) :
+						dataHandler.handleFile(fieldName, fileName)
+					))
+					.then(() -> lastRef.get() != null ?
+						doSplit(lastRef.get(), frames, dataHandler) :
+						Promise.complete())
+					.toVoid();
+			});
 	}
 
 	/**
@@ -137,15 +138,15 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 	public Promise<Void> split(ChannelSupplier<ByteBuf> source, AsyncMultipartDataHandler dataHandler) {
 		ChannelSupplier<MultipartFrame> frames = BinaryChannelSupplier.of(source).decodeStream(this);
 		return frames.get()
-				.then(frame -> {
-					if (frame == null) return Promise.of(null);
-					if (frame.isHeaders()) {
-						return doSplit(frame, frames, dataHandler);
-					}
-					Exception e = new MalformedHttpException("First frame had no headers");
-					frames.closeEx(e);
-					return Promise.ofException(e);
-				});
+			.then(frame -> {
+				if (frame == null) return Promise.of(null);
+				if (frame.isHeaders()) {
+					return doSplit(frame, frames, dataHandler);
+				}
+				Exception e = new MalformedHttpException("First frame had no headers");
+				frames.closeEx(e);
+				return Promise.ofException(e);
+			});
 	}
 
 	private boolean sawCrlf = true;
@@ -186,8 +187,8 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 						break;
 					}
 					return MultipartFrame.of(readingHeaders.stream()
-							.map(s -> s.split(":\\s?", 2))
-							.collect(toMap(s -> s[0].toLowerCase(), s -> s[1])));
+						.map(s -> s.split(":\\s?", 2))
+						.collect(toMap(s -> s[0].toLowerCase(), s -> s[1])));
 				}
 			} else {
 				sawCrlf = true;
@@ -291,21 +292,24 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 			return fieldsToMap(fields, ($1, $2) -> Promise.of(ChannelConsumers.recycling()));
 		}
 
-		static AsyncMultipartDataHandler fieldsToMap(Map<String, String> fields,
-				Function<String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
+		static AsyncMultipartDataHandler fieldsToMap(
+			Map<String, String> fields, Function<String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader
+		) {
 			return fieldsToMap(fields, ($, fileName) -> uploader.apply(fileName));
 		}
 
-		static AsyncMultipartDataHandler fieldsToMap(Map<String, String> fields,
-				BiFunction<String, String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
+		static AsyncMultipartDataHandler fieldsToMap(
+			Map<String, String> fields,
+			BiFunction<String, String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader
+		) {
 			return new AsyncMultipartDataHandler() {
 				@Override
 				public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 					return Promise.of(ChannelConsumers.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
-							.map(value -> {
-								fields.put(fieldName, value.asString(UTF_8));
-								return null;
-							})));
+						.map(value -> {
+							fields.put(fieldName, value.asString(UTF_8));
+							return null;
+						})));
 				}
 
 				@Override

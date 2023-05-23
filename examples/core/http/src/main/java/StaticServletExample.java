@@ -25,8 +25,8 @@ public final class StaticServletExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
 		return StaticServlet.builder(reactor, staticLoader)
-				.withIndexHtml()
-				.build();
+			.withIndexHtml()
+			.build();
 	}
 	//[END EXAMPLE]
 

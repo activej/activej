@@ -47,10 +47,10 @@ public final class Or implements AggregationPredicate {
 			}
 		}
 		return simplifiedPredicates.isEmpty() ?
-				AggregationPredicates.alwaysTrue() :
-				simplifiedPredicates.size() == 1 ?
-						first(simplifiedPredicates) :
-						AggregationPredicates.or(new ArrayList<>(simplifiedPredicates));
+			AggregationPredicates.alwaysTrue() :
+			simplifiedPredicates.size() == 1 ?
+				first(simplifiedPredicates) :
+				AggregationPredicates.or(new ArrayList<>(simplifiedPredicates));
 	}
 
 	@Override

@@ -44,7 +44,7 @@ import static io.activej.reactor.Reactor.checkInReactorThread;
  * connects to some DNS server and gets the response from it.
  */
 public final class CachedDnsClient extends AbstractReactive
-		implements IDnsClient, ReactiveJmxBean {
+	implements IDnsClient, ReactiveJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
 	private static final boolean CHECKS = Checks.isEnabled(CachedDnsClient.class);
 
@@ -122,12 +122,12 @@ public final class CachedDnsClient extends AbstractReactive
 
 				anotherReactor.startExternalTask(); // keep other reactor alive while we wait for an answer in main one
 				return Promise.ofCallback(cb ->
-						reactor.execute(() ->
-								CachedDnsClient.this.resolve(query)
-										.subscribe((result, e) -> {
-											anotherReactor.execute(() -> cb.set(result, e));
-											anotherReactor.completeExternalTask();
-										})));
+					reactor.execute(() ->
+						CachedDnsClient.this.resolve(query)
+							.subscribe((result, e) -> {
+								anotherReactor.execute(() -> cb.set(result, e));
+								anotherReactor.completeExternalTask();
+							})));
 			}
 
 			@Override
@@ -153,10 +153,10 @@ public final class CachedDnsClient extends AbstractReactive
 		}
 		logger.trace("Refreshing {}", query);
 		client.resolve(query)
-				.subscribe((response, e) -> {
-					addToCache(query, response, e);
-					refreshingNow.remove(query);
-				});
+			.subscribe((response, e) -> {
+				addToCache(query, response, e);
+				refreshingNow.remove(query);
+			});
 	}
 
 	@Override

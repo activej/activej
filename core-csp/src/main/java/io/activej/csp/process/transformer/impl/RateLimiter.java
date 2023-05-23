@@ -98,10 +98,10 @@ public final class RateLimiter<T> extends AbstractChannelTransformer<RateLimiter
 		}
 
 		return Promise.ofCallback(cb ->
-				scheduledRunnable = reactor.delay(
-						calculateDelay(itemTokens),
-						() -> onItem(item)
-								.subscribe(cb))
+			scheduledRunnable = reactor.delay(
+				calculateDelay(itemTokens),
+				() -> onItem(item)
+					.subscribe(cb))
 		);
 	}
 

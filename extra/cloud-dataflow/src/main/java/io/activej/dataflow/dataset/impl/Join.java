@@ -43,8 +43,10 @@ public final class Join<K, L, R, V> extends SortedDataset<K, V> {
 
 	public final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
-	public Join(SortedDataset<K, L> left, SortedDataset<K, R> right, LeftJoiner<K, L, R, V> leftJoiner,
-			StreamSchema<V> resultStreamSchema, Function<V, K> keyFunction) {
+	public Join(
+		SortedDataset<K, L> left, SortedDataset<K, R> right, LeftJoiner<K, L, R, V> leftJoiner,
+		StreamSchema<V> resultStreamSchema, Function<V, K> keyFunction
+	) {
 		super(resultStreamSchema, left.keyComparator(), left.keyType(), keyFunction);
 		this.left = left;
 		this.right = right;
@@ -67,7 +69,7 @@ public final class Join<K, L, R, V> extends SortedDataset<K, V> {
 			StreamId leftStreamId = leftStreamIds.get(i);
 			StreamId rightStreamId = rightStreamIds.get(i);
 			Node node = Nodes.join(index, leftStreamId, rightStreamId, left.keyComparator(),
-					left.keyFunction(), right.keyFunction(), leftJoiner);
+				left.keyFunction(), right.keyFunction(), leftJoiner);
 			graph.addNode(graph.getPartition(leftStreamId), node);
 			outputStreamIds.addAll(node.getOutputs());
 		}

@@ -18,7 +18,7 @@ public class SerializerDefs {
 
 	public static SerializerDef ofArray(SerializerDef elementSerializer) {
 		checkArgument(elementSerializer.getEncodeType() == elementSerializer.getDecodeType(),
-				"Ambiguous encode and decode types");
+			"Ambiguous encode and decode types");
 		return ofArray(elementSerializer, elementSerializer.getEncodeType());
 	}
 
@@ -90,14 +90,16 @@ public class SerializerDefs {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static SerializerDef ofCollection(SerializerDef elementSerializer,
-			Class<? extends Collection> collectionType) {
+	public static SerializerDef ofCollection(
+		SerializerDef elementSerializer, Class<? extends Collection> collectionType
+	) {
 		return ofCollection(elementSerializer, collectionType, collectionType);
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static SerializerDef ofCollection(SerializerDef elementSerializer,
-			Class<? extends Collection> encodeType, Class<? extends Collection> decodeType) {
+	public static SerializerDef ofCollection(
+		SerializerDef elementSerializer, Class<? extends Collection> encodeType, Class<? extends Collection> decodeType
+	) {
 		return new RegularCollectionSerializerDef(elementSerializer, encodeType, decodeType, Object.class, false);
 	}
 
@@ -114,8 +116,9 @@ public class SerializerDefs {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static SerializerDef ofHashSet(SerializerDef elementSerializer,
-			Class<? extends HashSet> encodeType, Class<? extends HashSet> decodeType) {
+	public static SerializerDef ofHashSet(
+		SerializerDef elementSerializer, Class<? extends HashSet> encodeType, Class<? extends HashSet> decodeType
+	) {
 		return new HashSetSerializerDef(elementSerializer, encodeType, decodeType, false);
 	}
 
@@ -128,8 +131,10 @@ public class SerializerDefs {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static SerializerDef ofHashMap(SerializerDef keySerializer, SerializerDef valueSerializer,
-			Class<? extends HashMap> encodeType, Class<? extends HashMap> decodeType) {
+	public static SerializerDef ofHashMap(
+		SerializerDef keySerializer, SerializerDef valueSerializer,
+		Class<? extends HashMap> encodeType, Class<? extends HashMap> decodeType
+	) {
 		return new HashMapSerializerDef(keySerializer, valueSerializer, encodeType, decodeType, false);
 	}
 

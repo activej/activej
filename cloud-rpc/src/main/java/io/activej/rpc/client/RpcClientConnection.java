@@ -77,8 +77,9 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	private final long keepAliveMillis;
 	private boolean pongReceived;
 
-	RpcClientConnection(Reactor reactor, RpcClient rpcClient, InetSocketAddress address, RpcStream stream,
-			long keepAliveMillis) {
+	RpcClientConnection(
+		Reactor reactor, RpcClient rpcClient, InetSocketAddress address, RpcStream stream, long keepAliveMillis
+	) {
 		super(reactor);
 		this.rpcClient = rpcClient;
 		this.stream = stream;
@@ -368,8 +369,9 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		private final RpcRequestStats requestStatsPerClass;
 		private final long dueTimestamp;
 
-		public JmxConnectionMonitoringResultCallback(RpcRequestStats requestStatsPerClass, Callback<T> cb,
-				long timeout) {
+		public JmxConnectionMonitoringResultCallback(
+			RpcRequestStats requestStatsPerClass, Callback<T> cb, long timeout
+		) {
 			this.stopwatch = Stopwatch.createStarted();
 			this.callback = cb;
 			this.requestStatsPerClass = requestStatsPerClass;
@@ -435,10 +437,10 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		long failed = connectionStats.getFailedRequests().getTotalCount();
 
 		return "RpcClientConnection{" +
-				"address=" + address +
-				", active=" + active +
-				", successes=" + (connectionStats.getTotalRequests().getTotalCount() - failed - active) +
-				", failures=" + failed +
-				'}';
+			"address=" + address +
+			", active=" + active +
+			", successes=" + (connectionStats.getTotalRequests().getTotalCount() - failed - active) +
+			", failures=" + failed +
+			'}';
 	}
 }

@@ -84,12 +84,12 @@ public final class Shard<K, T> extends AbstractNode {
 		int partitions = outputs.size();
 		int bits = partitions - 1;
 		BiConsumer<T, StreamDataAcceptor<T>[]> splitter = (partitions & bits) == 0 ?
-				(item, acceptors) -> acceptors[murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce) & bits].accept(item) :
-				(item, acceptors) -> {
-					int hash = murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce);
-					int hashAbs = hash < 0 ? hash == Integer.MIN_VALUE ? Integer.MAX_VALUE : -hash : hash;
-					acceptors[hashAbs % partitions].accept(item);
-				};
+			(item, acceptors) -> acceptors[murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce) & bits].accept(item) :
+			(item, acceptors) -> {
+				int hash = murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce);
+				int hashAbs = hash < 0 ? hash == Integer.MIN_VALUE ? Integer.MAX_VALUE : -hash : hash;
+				acceptors[hashAbs % partitions].accept(item);
+			};
 
 		StreamSplitter<T, T> streamSharder = StreamSplitter.create(splitter);
 
@@ -103,8 +103,8 @@ public final class Shard<K, T> extends AbstractNode {
 	@Override
 	public String toString() {
 		return "Shard{keyFunction=" + keyFunction.getClass().getSimpleName() +
-				", input=" + input +
-				", outputs=" + outputs +
-				'}';
+			", input=" + input +
+			", outputs=" + outputs +
+			'}';
 	}
 }

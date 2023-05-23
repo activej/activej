@@ -56,7 +56,7 @@ public final class ConcatCollector<T> extends AbstractCollector<T, List<StreamSu
 	@Override
 	protected StreamSupplier<T> getResult(List<StreamSupplier<T>> accumulator) {
 		return StreamSuppliers.concat(accumulator)
-				.withEndOfStream(eos -> eos
-						.whenException(e -> accumulator.forEach(supplier -> supplier.closeEx(e))));
+			.withEndOfStream(eos -> eos
+				.whenException(e -> accumulator.forEach(supplier -> supplier.closeEx(e))));
 	}
 }

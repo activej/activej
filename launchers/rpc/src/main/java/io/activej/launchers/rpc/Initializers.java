@@ -39,20 +39,20 @@ public class Initializers {
 
 	public static Initializer<RpcServer.Builder> ofRpcServer(Config config) {
 		return builder -> builder
-				.initialize(ofAbstractServer(config.getChild("rpc.server")))
-				.withStreamProtocol(
-						config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
-						config.get(ofFrameFormat(), "rpc.streamProtocol.frameFormat", null))
-				.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
+			.initialize(ofAbstractServer(config.getChild("rpc.server")))
+			.withStreamProtocol(
+				config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
+				config.get(ofFrameFormat(), "rpc.streamProtocol.frameFormat", null))
+			.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
 	}
 
 	public static Initializer<TriggersModuleSettings> ofRpcClient() {
 		return triggersSettings -> triggersSettings
-				.with(RpcClient.class, HIGH, "unresponsiveServers",
-						rpcClient -> {
-							List<String> unresponsiveServers = rpcClient.getUnresponsiveServers();
-							return unresponsiveServers.isEmpty() ? TriggerResult.none() :
-									TriggerResult.ofValue(unresponsiveServers);
-						});
+			.with(RpcClient.class, HIGH, "unresponsiveServers",
+				rpcClient -> {
+					List<String> unresponsiveServers = rpcClient.getUnresponsiveServers();
+					return unresponsiveServers.isEmpty() ? TriggerResult.none() :
+						TriggerResult.ofValue(unresponsiveServers);
+				});
 	}
 }

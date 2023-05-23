@@ -32,17 +32,17 @@ public final class AdderServerLauncher extends Launcher {
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				new CrdtRpcServerModule<Long, DetailedSumsCrdtState>() {
-					@Override
-					protected List<Class<?>> getMessageTypes() {
-						return MESSAGE_TYPES;
-					}
-				},
-				new AdderServerModule()
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			new CrdtRpcServerModule<Long, DetailedSumsCrdtState>() {
+				@Override
+				protected List<Class<?>> getMessageTypes() {
+					return MESSAGE_TYPES;
+				}
+			},
+			new AdderServerModule()
 		);
 	}
 
@@ -53,21 +53,21 @@ public final class AdderServerLauncher extends Launcher {
 		checkState((map instanceof AdderCrdtMap));
 
 		return TaskScheduler.builder(reactor, () -> storage.download()
-						.then(StreamSupplier::toList)
-						.whenResult(crdtData -> logger.info("""
+				.then(StreamSupplier::toList)
+				.whenResult(crdtData -> logger.info("""
 
-										Local storage data:\s
-										{}
-										Local map data:\s
-										{}""",
-								crdtData.stream()
-										.map(data -> data.getKey() + ": " + data.getState().getSum())
-										.collect(Collectors.joining("\n")),
-								((AdderCrdtMap) map).getMap().entrySet().stream()
-										.map(data -> data.getKey() + ": " + data.getValue().value())
-										.collect(Collectors.joining("\n")))))
-				.withInterval(Duration.ofSeconds(10))
-				.build();
+						Local storage data:\s
+						{}
+						Local map data:\s
+						{}""",
+					crdtData.stream()
+						.map(data -> data.getKey() + ": " + data.getState().getSum())
+						.collect(Collectors.joining("\n")),
+					((AdderCrdtMap) map).getMap().entrySet().stream()
+						.map(data -> data.getKey() + ": " + data.getValue().value())
+						.collect(Collectors.joining("\n")))))
+			.withInterval(Duration.ofSeconds(10))
+			.build();
 	}
 
 	@Override

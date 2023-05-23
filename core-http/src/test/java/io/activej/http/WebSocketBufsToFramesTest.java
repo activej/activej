@@ -34,9 +34,9 @@ public final class WebSocketBufsToFramesTest {
 
 		ByteBuf value = wrapForReading(frame);
 		Frame result = await(ChannelSuppliers.ofValue(value)
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
-				.get());
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
+			.get());
 
 		assertEquals(TEXT, result.getType());
 		assertEquals("Hello", result.getPayload().asString(UTF_8));
@@ -47,13 +47,13 @@ public final class WebSocketBufsToFramesTest {
 	public void decodeSingleFrameMaskedTextMessage() {
 		// Masked "Hello" message, RFC 6455 - 5.7
 		byte[] frame = new byte[]{(byte) 0x81, (byte) 0x85, (byte) 0x37, (byte) 0xfa, (byte) 0x21,
-				(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
+			(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
 
 		ByteBuf value = wrapForReading(frame);
 		Frame result = await(ChannelSuppliers.ofValue(value)
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), true))
-				.get());
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), true))
+			.get());
 
 		assertEquals(TEXT, result.getType());
 		assertEquals("Hello", result.getPayload().asString(UTF_8));
@@ -68,8 +68,8 @@ public final class WebSocketBufsToFramesTest {
 		byte[] frame2 = new byte[]{(byte) 0x80, (byte) 0x02, (byte) 0x6c, (byte) 0x6f};
 
 		ChannelSupplier<Frame> supplier = ChannelSuppliers.ofValues(wrapForReading(frame1), wrapForReading(frame2))
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false));
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false));
 
 		Frame firstFrame = await(supplier.get());
 		assertEquals(TEXT, firstFrame.getType());
@@ -89,9 +89,9 @@ public final class WebSocketBufsToFramesTest {
 		byte[] payload = randomBytes(256);
 
 		Frame result = await(ChannelSuppliers.ofValues(wrapForReading(header), wrapForReading(payload))
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
-				.get());
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
+			.get());
 
 		assertEquals(BINARY, result.getType());
 		assertArrayEquals(payload, result.getPayload().asArray());
@@ -102,13 +102,13 @@ public final class WebSocketBufsToFramesTest {
 	public void decode64KiBInSingleUnmaskedFrame() {
 		// RFC 6455 - 5.7
 		byte[] header = new byte[]{(byte) 0x82, (byte) 0x7F, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-				(byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00};
+			(byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00};
 		byte[] payload = randomBytes(65536);
 
 		Frame result = await(ChannelSuppliers.ofValues(wrapForReading(header), wrapForReading(payload))
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
-				.get());
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), false))
+			.get());
 
 		assertEquals(BINARY, result.getType());
 		assertArrayEquals(payload, result.getPayload().asArray());
@@ -122,9 +122,9 @@ public final class WebSocketBufsToFramesTest {
 
 		ByteBufs pingMessage = new ByteBufs();
 		await(ChannelSuppliers.ofValues(wrapForReading(pingFrame), closeUnmasked())
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, pingMessage::add, failOnItem(), false))
-				.streamTo(ChannelConsumers.ofConsumer($ -> fail())));
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, pingMessage::add, failOnItem(), false))
+			.streamTo(ChannelConsumers.ofConsumer($ -> fail())));
 
 		assertEquals("Hello", pingMessage.takeRemaining().asString(UTF_8));
 	}
@@ -133,13 +133,13 @@ public final class WebSocketBufsToFramesTest {
 	public void decodeMaskedPong() {
 		// Masked Ping response, RFC 6455 - 5.7
 		byte[] pingFrame = new byte[]{(byte) 0x8a, (byte) 0x85, (byte) 0x37, (byte) 0xfa, (byte) 0x21,
-				(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
+			(byte) 0x3d, (byte) 0x7f, (byte) 0x9f, (byte) 0x4d, (byte) 0x51, (byte) 0x58};
 
 		ByteBufs pongMessage = new ByteBufs();
 		await(ChannelSuppliers.ofValues(wrapForReading(pingFrame), closeMasked())
-				.transformWith(chunker())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), pongMessage::add, true))
-				.streamTo(ChannelConsumers.ofConsumer($ -> fail())));
+			.transformWith(chunker())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), pongMessage::add, true))
+			.streamTo(ChannelConsumers.ofConsumer($ -> fail())));
 
 		assertEquals("Hello", pongMessage.takeRemaining().asString(UTF_8));
 	}

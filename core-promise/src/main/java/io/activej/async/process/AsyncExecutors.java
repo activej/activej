@@ -53,10 +53,10 @@ public class AsyncExecutors {
 				return Promise.ofCallback(cb -> {
 					currentReactor.startExternalTask();
 					reactor.execute(() -> supplier.get()
-							.subscribe((result, e) -> {
-								currentReactor.execute(() -> cb.set(result, e));
-								currentReactor.completeExternalTask();
-							}));
+						.subscribe((result, e) -> {
+							currentReactor.execute(() -> cb.set(result, e));
+							currentReactor.completeExternalTask();
+						}));
 				});
 			}
 		};
@@ -101,11 +101,11 @@ public class AsyncExecutors {
 						continue;
 					}
 					promise
-							.subscribe((result, e) -> {
-								pendingCalls--;
-								processBuffer();
-								cb.set(result, e);
-							});
+						.subscribe((result, e) -> {
+							pendingCalls--;
+							processBuffer();
+							cb.set(result, e);
+						});
 				}
 			}
 

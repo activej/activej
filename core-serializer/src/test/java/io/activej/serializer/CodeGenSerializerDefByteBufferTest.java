@@ -28,9 +28,9 @@ public class CodeGenSerializerDefByteBufferTest {
 		ByteBuffer testBuffer1 = ByteBuffer.wrap(array);
 
 		BinarySerializer<ByteBuffer> serializerByteBuffer = SerializerFactory.builder()
-				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
-				.build()
-				.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
+			.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
+			.build()
+			.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
 		ByteBuffer testBuffer2 = doTest(testBuffer1, serializerByteBuffer);
 
 		assertNotNull(testBuffer2);
@@ -46,9 +46,9 @@ public class CodeGenSerializerDefByteBufferTest {
 		ByteBuffer testBuffer1 = ByteBuffer.wrap(array);
 
 		BinarySerializer<ByteBuffer> serializerByteBuffer = SerializerFactory.builder()
-				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(true))
-				.build()
-				.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
+			.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(true))
+			.build()
+			.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
 
 		ByteBuffer testBuffer2 = doTest(testBuffer1, serializerByteBuffer);
 
@@ -66,9 +66,9 @@ public class CodeGenSerializerDefByteBufferTest {
 		ByteBuffer testBuffer1 = ByteBuffer.wrap(array, 10, 100);
 
 		BinarySerializer<ByteBuffer> serializer = SerializerFactory.builder()
-				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
-				.build()
-				.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
+			.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
+			.build()
+			.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
 
 		byte[] buffer = new byte[1000];
 		serializer.encode(buffer, 0, testBuffer1);
@@ -92,9 +92,9 @@ public class CodeGenSerializerDefByteBufferTest {
 		ByteBuffer testBuffer1 = ByteBuffer.wrap(array, 10, 100);
 
 		BinarySerializer<ByteBuffer> serializer = SerializerFactory.builder()
-				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(true))
-				.build()
-				.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
+			.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(true))
+			.build()
+			.create(DEFINING_CLASS_LOADER, ByteBuffer.class);
 
 		byte[] buffer = new byte[1000];
 		serializer.encode(buffer, 0, testBuffer1);
@@ -136,9 +136,9 @@ public class CodeGenSerializerDefByteBufferTest {
 		TestByteBufferData testBuffer1 = new TestByteBufferData(ByteBuffer.wrap(array, 10, 2));
 
 		BinarySerializer<TestByteBufferData> serializer = SerializerFactory.builder()
-				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
-				.build()
-				.create(DEFINING_CLASS_LOADER, TestByteBufferData.class);
+			.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
+			.build()
+			.create(DEFINING_CLASS_LOADER, TestByteBufferData.class);
 
 		byte[] buffer = new byte[1000];
 		serializer.encode(buffer, 0, testBuffer1);
@@ -159,9 +159,9 @@ public class CodeGenSerializerDefByteBufferTest {
 		TestByteBufferData testBuffer1 = new TestByteBufferData(ByteBuffer.wrap(array, 10, 100));
 
 		BinarySerializer<TestByteBufferData> serializer = SerializerFactory.builder()
-				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(true))
-				.build()
-				.create(DEFINING_CLASS_LOADER, TestByteBufferData.class);
+			.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(true))
+			.build()
+			.create(DEFINING_CLASS_LOADER, TestByteBufferData.class);
 
 		byte[] buffer = new byte[1000];
 		serializer.encode(buffer, 0, testBuffer1);
@@ -171,7 +171,6 @@ public class CodeGenSerializerDefByteBufferTest {
 		assertNotNull(testBuffer3.getBuffer());
 		assertEquals(testBuffer1.getBuffer(), testBuffer3.getBuffer());
 	}
-
 
 	public static class TestByteBuffer {
 		@Serialize
@@ -186,19 +185,19 @@ public class CodeGenSerializerDefByteBufferTest {
 
 		{
 			BinarySerializer<TestByteBuffer> serializer = SerializerFactory.builder()
-					.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
-					.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
-					.build()
-					.create(DEFINING_CLASS_LOADER, TestByteBuffer.class);
+				.withCompatibilityLevel(CompatibilityLevel.LEVEL_2)
+				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
+				.build()
+				.create(DEFINING_CLASS_LOADER, TestByteBuffer.class);
 			TestByteBuffer deserialized = doTest(object, serializer);
 			assertNull(deserialized.buffer);
 		}
 
 		{
 			BinarySerializer<TestByteBuffer> serializer = SerializerFactory.builder()
-					.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
-					.build()
-					.create(DEFINING_CLASS_LOADER, TestByteBuffer.class);
+				.with(ByteBuffer.class, ctx -> SerializerDefs.ofByteBuffer(false))
+				.build()
+				.create(DEFINING_CLASS_LOADER, TestByteBuffer.class);
 			TestByteBuffer deserialized = doTest(object, serializer);
 			assertNull(deserialized.buffer);
 		}

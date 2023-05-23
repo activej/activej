@@ -28,13 +28,9 @@ public final class RecordLeftJoiner implements LeftJoiner<Record, Record, Record
 	private final RecordGetter<?>[] rightGetters;
 
 	private RecordLeftJoiner(
-			JoinRelType joinType,
-			RecordScheme scheme,
-			RecordScheme leftScheme,
-			RecordScheme rightScheme,
-			RecordSetter<?>[] setters,
-			RecordGetter<?>[] leftGetters,
-			RecordGetter<?>[] rightGetters) {
+		JoinRelType joinType, RecordScheme scheme, RecordScheme leftScheme, RecordScheme rightScheme,
+		RecordSetter<?>[] setters, RecordGetter<?>[] leftGetters, RecordGetter<?>[] rightGetters
+	) {
 		this.joinType = joinType;
 		this.scheme = scheme;
 		this.left = leftScheme;
@@ -119,8 +115,8 @@ public final class RecordLeftJoiner implements LeftJoiner<Record, Record, Record
 		addFields(schemeBuilder, rightScheme, fieldNames, leftScheme.size(), joinType == LEFT);
 
 		return schemeBuilder
-				.withComparatorFields(fieldNames)
-				.build();
+			.withComparatorFields(fieldNames)
+			.build();
 	}
 
 	private static void addFields(RecordScheme.Builder toSchemeBuilder, RecordScheme fromScheme, List<String> fieldNames, int offset, boolean forceNullability) {

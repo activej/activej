@@ -170,8 +170,8 @@ public interface IFileSystem {
 	 */
 	default Promise<Void> deleteAll(Set<String> toDelete) {
 		return Promises.toList(toDelete.stream().map(name -> delete(name).toTry()))
-				.whenResult(tries -> reduceErrors(tries, toDelete.iterator()))
-				.toVoid();
+			.whenResult(tries -> reduceErrors(tries, toDelete.iterator()))
+			.toVoid();
 	}
 
 	/**
@@ -203,9 +203,9 @@ public interface IFileSystem {
 
 		Set<Entry<String, String>> entrySet = sourceToTarget.entrySet();
 		return Promises.toList(entrySet.stream()
-						.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
-				.whenResult(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)))
-				.toVoid();
+				.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
+			.whenResult(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)))
+			.toVoid();
 	}
 
 	/**
@@ -218,7 +218,7 @@ public interface IFileSystem {
 	 */
 	default Promise<Void> move(String name, String target) {
 		return copy(name, target)
-				.then(() -> name.equals(target) ? Promise.complete() : delete(name));
+			.then(() -> name.equals(target) ? Promise.complete() : delete(name));
 	}
 
 	/**
@@ -241,10 +241,10 @@ public interface IFileSystem {
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return copyAll(sourceToTarget)
-				.then(() -> deleteAll(sourceToTarget.entrySet().stream()
-						.filter(entry -> !entry.getKey().equals(entry.getValue()))
-						.map(Entry::getKey)
-						.collect(toSet())));
+			.then(() -> deleteAll(sourceToTarget.entrySet().stream()
+				.filter(entry -> !entry.getKey().equals(entry.getValue()))
+				.map(Entry::getKey)
+				.collect(toSet())));
 	}
 
 	/**
@@ -265,7 +265,7 @@ public interface IFileSystem {
 	 */
 	default Promise<@Nullable FileMetadata> info(String name) {
 		return list(escapeGlob(name))
-				.map(list -> list.get(name));
+			.map(list -> list.get(name));
 	}
 
 	/**
@@ -280,9 +280,9 @@ public interface IFileSystem {
 
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-						.map(name -> info(name)
-								.whenResult(metadata -> {if (metadata != null) result.put(name, metadata);})))
-				.map($ -> result);
+				.map(name -> info(name)
+					.whenResult(metadata -> {if (metadata != null) result.put(name, metadata);})))
+			.map($ -> result);
 	}
 
 	/**

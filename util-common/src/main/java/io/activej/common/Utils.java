@@ -126,8 +126,9 @@ public class Utils {
 	}
 
 	public static boolean arraysEquals(
-			byte[] array1, int pos1, int len1,
-			byte[] array2, int pos2, int len2) {
+		byte[] array1, int pos1, int len1,
+		byte[] array2, int pos2, int len2
+	) {
 		if (len1 != len2) return false;
 		for (int i = 0; i < len1; i++) {
 			if (array1[pos1 + i] != array2[pos2 + i]) {
@@ -179,14 +180,14 @@ public class Utils {
 	 */
 	public static <T> Set<T> intersection(Set<? extends T> a, Set<? extends T> b) {
 		return a.size() < b.size() ?
-				a.stream().filter(b::contains).collect(toSet()) :
-				b.stream().filter(a::contains).collect(toSet());
+			a.stream().filter(b::contains).collect(toSet()) :
+			b.stream().filter(a::contains).collect(toSet());
 	}
 
 	public static <T> boolean hasIntersection(Set<? extends T> a, Set<? extends T> b) {
 		return a.size() < b.size() ?
-				a.stream().anyMatch(b::contains) :
-				b.stream().anyMatch(a::contains);
+			a.stream().anyMatch(b::contains) :
+			b.stream().anyMatch(a::contains);
 	}
 
 	/**
@@ -342,22 +343,22 @@ public class Utils {
 
 	public static <T> Stream<T> iterate(T seed, Predicate<? super T> hasNext, UnaryOperator<T> f) {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-				new Iterator<>() {
-					T item = seed;
+			new Iterator<>() {
+				T item = seed;
 
-					@Override
-					public boolean hasNext() {
-						return hasNext.test(item);
-					}
+				@Override
+				public boolean hasNext() {
+					return hasNext.test(item);
+				}
 
-					@Override
-					public T next() {
-						T next = item;
-						item = f.apply(item);
-						return next;
-					}
-				},
-				Spliterator.ORDERED | Spliterator.IMMUTABLE), false);
+				@Override
+				public T next() {
+					T next = item;
+					item = f.apply(item);
+					return next;
+				}
+			},
+			Spliterator.ORDERED | Spliterator.IMMUTABLE), false);
 	}
 
 	public static <T> BinaryOperator<T> noMergeFunction() {
@@ -366,8 +367,8 @@ public class Utils {
 	}
 
 	public static <K, V, M extends Map<K, V>>
-	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(
-			Supplier<M> mapFactory) {
+	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(Supplier<M> mapFactory) {
+
 		return toMap(Map.Entry::getKey, Map.Entry::getValue, mapFactory);
 	}
 
@@ -383,83 +384,95 @@ public class Utils {
 
 	public static <K, V, K1, V1, M extends Map<K1, V1>>
 	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(
-			Function<? super K, ? extends K1> keyMapper,
-			Function<? super V, ? extends V1> valueMapper,
-			Supplier<M> mapFactory) {
+		Function<? super K, ? extends K1> keyMapper,
+		Function<? super V, ? extends V1> valueMapper,
+		Supplier<M> mapFactory
+	) {
 		return toMap(entry -> keyMapper.apply(entry.getKey()), entry -> valueMapper.apply(entry.getValue()), mapFactory);
 	}
 
 	public static <K, V, K1, V1>
 	Collector<Map.Entry<? extends K, ? extends V>, ?, LinkedHashMap<K1, V1>> entriesToLinkedHashMap(
-			Function<? super K, ? extends K1> keyMapper,
-			Function<? super V, ? extends V1> valueMapper) {
+		Function<? super K, ? extends K1> keyMapper,
+		Function<? super V, ? extends V1> valueMapper
+	) {
 		return entriesToMap(keyMapper, valueMapper, LinkedHashMap::new);
 	}
 
 	public static <K, V, K1, V1>
 	Collector<Map.Entry<? extends K, ? extends V>, ?, HashMap<K1, V1>> entriesToHashMap(
-			Function<? super K, ? extends K1> keyMapper,
-			Function<? super V, ? extends V1> valueMapper) {
+		Function<? super K, ? extends K1> keyMapper,
+		Function<? super V, ? extends V1> valueMapper
+	) {
 		return entriesToMap(keyMapper, valueMapper, HashMap::new);
 	}
 
 	public static <K, V, V1, M extends Map<K, V1>>
 	Collector<Map.Entry<? extends K, ? extends V>, ?, M> entriesToMap(
-			Function<? super V, ? extends V1> valueMapper,
-			Supplier<M> mapFactory) {
+		Function<? super V, ? extends V1> valueMapper,
+		Supplier<M> mapFactory
+	) {
 		return toMap(Map.Entry::getKey, entry -> valueMapper.apply(entry.getValue()), mapFactory);
 	}
 
 	public static <K, V, V1>
 	Collector<Map.Entry<? extends K, ? extends V>, ?, LinkedHashMap<K, V1>> entriesToLinkedHashMap(
-			Function<? super V, ? extends V1> valueMapper) {
+		Function<? super V, ? extends V1> valueMapper
+	) {
 		return entriesToMap(valueMapper, LinkedHashMap::new);
 	}
 
 	public static <K, V, V1>
 	Collector<Map.Entry<? extends K, ? extends V>, ?, HashMap<K, V1>> entriesToHashMap(
-			Function<? super V, ? extends V1> valueMapper) {
+		Function<? super V, ? extends V1> valueMapper
+	) {
 		return entriesToMap(valueMapper, HashMap::new);
 	}
 
 	public static <T, K, V, M extends Map<K, V>>
 	Collector<T, ?, M> toMap(
-			Function<? super T, ? extends K> keyMapper,
-			Function<? super T, ? extends V> valueMapper,
-			Supplier<M> mapFactory) {
+		Function<? super T, ? extends K> keyMapper,
+		Function<? super T, ? extends V> valueMapper,
+		Supplier<M> mapFactory
+	) {
 		return Collectors.toMap(keyMapper, valueMapper, noMergeFunction(), mapFactory);
 	}
 
 	public static <T, K, V>
 	Collector<T, ?, LinkedHashMap<K, V>> toLinkedHashMap(
-			Function<? super T, ? extends K> keyMapper,
-			Function<? super T, ? extends V> valueMapper) {
+		Function<? super T, ? extends K> keyMapper,
+		Function<? super T, ? extends V> valueMapper
+	) {
 		return toMap(keyMapper, valueMapper, LinkedHashMap::new);
 	}
 
 	public static <T, K, V>
 	Collector<T, ?, HashMap<K, V>> toHashMap(
-			Function<? super T, ? extends K> keyMapper,
-			Function<? super T, ? extends V> valueMapper) {
+		Function<? super T, ? extends K> keyMapper,
+		Function<? super T, ? extends V> valueMapper
+	) {
 		return toMap(keyMapper, valueMapper, HashMap::new);
 	}
 
 	public static <K, V, M extends Map<K, V>>
 	Collector<K, ?, M> toMap(
-			Function<? super K, ? extends V> valueMapper,
-			Supplier<M> mapFactory) {
+		Function<? super K, ? extends V> valueMapper,
+		Supplier<M> mapFactory
+	) {
 		return toMap(identity(), valueMapper, mapFactory);
 	}
 
 	public static <K, V>
 	Collector<K, ?, LinkedHashMap<K, V>> toLinkedHashMap(
-			Function<? super K, ? extends V> valueMapper) {
+		Function<? super K, ? extends V> valueMapper
+	) {
 		return toLinkedHashMap(identity(), valueMapper);
 	}
 
 	public static <K, V>
 	Collector<K, ?, HashMap<K, V>> toHashMap(
-			Function<? super K, ? extends V> valueMapper) {
+		Function<? super K, ? extends V> valueMapper
+	) {
 		return toHashMap(identity(), valueMapper);
 	}
 
@@ -473,15 +486,15 @@ public class Utils {
 
 	public static <T> String toString(Collection<? extends T> collection, int limit) {
 		return collection.stream()
-				.limit(limit)
-				.map(Object::toString)
-				.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
+			.limit(limit)
+			.map(Object::toString)
+			.collect(joining(",", "[", collection.size() <= limit ? "]" : ", ..and " + (collection.size() - limit) + " more]"));
 	}
 
 	public static <K, V> String toString(Map<? extends K, ? extends V> map, int limit) {
 		return map.entrySet().stream()
-				.limit(limit)
-				.map(element -> element.getKey() + "=" + element.getValue())
-				.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
+			.limit(limit)
+			.map(element -> element.getKey() + "=" + element.getValue())
+			.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
 	}
 }

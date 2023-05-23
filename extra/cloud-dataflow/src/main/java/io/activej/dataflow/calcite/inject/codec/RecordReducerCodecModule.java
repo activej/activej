@@ -19,12 +19,12 @@ public final class RecordReducerCodecModule extends AbstractModule {
 
 	@Provides
 	StreamCodec<ReducerToResult<?, ?, ?, ?>> reducerToResult(
-			StreamCodec<RecordScheme> recordSchemeStreamCodec,
-			StreamCodec<FieldReducer<Object, Object, Object>> fieldReducerStreamCodec
+		StreamCodec<RecordScheme> recordSchemeStreamCodec,
+		StreamCodec<FieldReducer<Object, Object, Object>> fieldReducerStreamCodec
 	) {
 		//noinspection unchecked,rawtypes
 		return (StreamCodec) StreamCodec.create((value1, value2) -> RecordReducer.create(value1, ((List) value2)),
-				RecordReducer::getOriginalScheme, recordSchemeStreamCodec,
-				RecordReducer::getReducers, StreamCodecs.ofList(fieldReducerStreamCodec));
+			RecordReducer::getOriginalScheme, recordSchemeStreamCodec,
+			RecordReducer::getReducers, StreamCodecs.ofList(fieldReducerStreamCodec));
 	}
 }

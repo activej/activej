@@ -47,12 +47,12 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	@Override
 	protected Module getBusinessLogicModule() {
 		return Modules.combine(
-				new ModuleA(),
-				new ModuleB(),
-				new ModuleC(),
-				ModuleBuilder.create()
-						.multibind(Key.of(RoutingServlet.class), SERVLET_MULTIBINDER)
-						.build()
+			new ModuleA(),
+			new ModuleB(),
+			new ModuleC(),
+			ModuleBuilder.create()
+				.multibind(Key.of(RoutingServlet.class), SERVLET_MULTIBINDER)
+				.build()
 		);
 	}
 	//[END MAIN_MODULE]
@@ -66,16 +66,16 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.builder(reactor)
-					.with(GET, "/a", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/a' path\n")
-							.toPromise())
-					.with(GET, "/b", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/b' path\n")
-							.toPromise())
-					.with(GET, "/", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/' path\n")
-							.toPromise())
-					.build();
+				.with(GET, "/a", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/a' path\n")
+					.toPromise())
+				.with(GET, "/b", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/b' path\n")
+					.toPromise())
+				.with(GET, "/", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/' path\n")
+					.toPromise())
+				.build();
 		}
 	}
 	//[END MODULE_A]
@@ -85,16 +85,16 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.builder(reactor)
-					.with(GET, "/a/b", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/a/b' path\n")
-							.toPromise())
-					.with(GET, "/b/a", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/b/a' path\n")
-							.toPromise())
-					.with(GET, "/d", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/d' path\n")
-							.toPromise())
-					.build();
+				.with(GET, "/a/b", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/a/b' path\n")
+					.toPromise())
+				.with(GET, "/b/a", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/b/a' path\n")
+					.toPromise())
+				.with(GET, "/d", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/d' path\n")
+					.toPromise())
+				.build();
 		}
 	}
 	//[END MODULE_B]
@@ -104,16 +104,16 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 		@Provides
 		RoutingServlet servlet(Reactor reactor) {
 			return RoutingServlet.builder(reactor)
-					.with(GET, "/a/c", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/a/c' path\n")
-							.toPromise())
-					.with(GET, "/b/c", request -> HttpResponse.ok200()
-							.withPlainText("Hello from '/b/c' path\n")
-							.toPromise())
-					.with(POST, "/d", request -> HttpResponse.ok200()
-							.withPlainText("Hello from POST '/d' path\n")
-							.toPromise())
-					.build();
+				.with(GET, "/a/c", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/a/c' path\n")
+					.toPromise())
+				.with(GET, "/b/c", request -> HttpResponse.ok200()
+					.withPlainText("Hello from '/b/c' path\n")
+					.toPromise())
+				.with(POST, "/d", request -> HttpResponse.ok200()
+					.withPlainText("Hello from POST '/d' path\n")
+					.toPromise())
+				.build();
 		}
 	}
 	//[END MODULE_C]

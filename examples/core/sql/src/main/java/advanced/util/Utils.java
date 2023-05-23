@@ -24,9 +24,9 @@ public final class Utils {
 					System.out.println('\"' + table + "\":\n" + HORIZONTAL_BORDER);
 					ResultSetMetaData metaData = resultSet.getMetaData();
 					System.out.printf("|%3s|%12s|%12s|%n",
-							metaData.getColumnName(1),
-							metaData.getColumnName(2),
-							metaData.getColumnName(3));
+						metaData.getColumnName(1),
+						metaData.getColumnName(2),
+						metaData.getColumnName(3));
 
 					System.out.println(HORIZONTAL_BORDER);
 
@@ -34,9 +34,9 @@ public final class Utils {
 					while (resultSet.next()) {
 						isEmpty = false;
 						System.out.printf("|%3s|%12s|%12s|%n",
-								resultSet.getInt(1),
-								resultSet.getString(2),
-								resultSet.getString(3));
+							resultSet.getInt(1),
+							resultSet.getString(2),
+							resultSet.getString(3));
 					}
 
 					System.out.println(isEmpty ? '\n' : HORIZONTAL_BORDER + '\n');
@@ -70,8 +70,8 @@ public final class Utils {
 
 	private static byte[] loadResource(String initScript) throws IOException {
 		try (InputStream stream = Thread.currentThread()
-				.getContextClassLoader()
-				.getResourceAsStream(initScript)
+			.getContextClassLoader()
+			.getResourceAsStream(initScript)
 		) {
 			assert stream != null;
 			return stream.readAllBytes();

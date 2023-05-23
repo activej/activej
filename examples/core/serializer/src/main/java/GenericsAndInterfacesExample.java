@@ -1,4 +1,3 @@
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
@@ -11,12 +10,12 @@ public final class GenericsAndInterfacesExample {
 		//[START REGION_4]
 		Developer developer = new Developer();
 		developer.setSkills(List.of(
-				new Skill<>(1, "Java"),
-				new Skill<>(2, "ActiveJ")));
+			new Skill<>(1, "Java"),
+			new Skill<>(2, "ActiveJ")));
 
 		byte[] buffer = new byte[200];
 		BinarySerializer<Developer> serializer = SerializerFactory.defaultInstance()
-				.create(Developer.class);
+			.create(Developer.class);
 		//[END REGION_4]
 
 		//[START REGION_5]
@@ -27,7 +26,7 @@ public final class GenericsAndInterfacesExample {
 		//[START REGION_6]
 		for (int i = 0; i < developer.getSkills().size(); i++) {
 			System.out.println(developer.getSkills().get(i).getKey() + " - " + developer.getSkills().get(i).getValue() +
-					", " + developer2.getSkills().get(i).getKey() + " - " + developer2.getSkills().get(i).getValue());
+				", " + developer2.getSkills().get(i).getKey() + " - " + developer2.getSkills().get(i).getValue());
 		}
 		//[END REGION_6]
 	}
@@ -60,8 +59,7 @@ public final class GenericsAndInterfacesExample {
 		private final K key;
 		private final V value;
 
-		public Skill(@Deserialize("key") K key,
-				@Deserialize("value") V value) {
+		public Skill(@Deserialize("key") K key, @Deserialize("value") V value) {
 			this.key = key;
 			this.value = value;
 		}

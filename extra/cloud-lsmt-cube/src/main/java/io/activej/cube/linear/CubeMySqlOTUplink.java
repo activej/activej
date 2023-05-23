@@ -64,7 +64,8 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeMySqlOTUplink extends AbstractReactive
-		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeMySqlOTUplink.UplinkProtoCommit> {
+	implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeMySqlOTUplink.UplinkProtoCommit> {
+
 	private static final Logger logger = LoggerFactory.getLogger(CubeMySqlOTUplink.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeMySqlOTUplink.class, "smoothingWindow", Duration.ofMinutes(5));
@@ -143,60 +144,60 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> checkout() {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								long revision = getMaxRevision(connection);
+						long revision = getMaxRevision(connection);
 
-								if (revision == ROOT_REVISION) {
-									return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
-								}
+						if (revision == ROOT_REVISION) {
+							return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
+						}
 
-								List<LogDiff<CubeDiff>> diffs = doFetch(connection, ROOT_REVISION, revision);
+						List<LogDiff<CubeDiff>> diffs = doFetch(connection, ROOT_REVISION, revision);
 
-								try (PreparedStatement ps = connection.prepareStatement(sql("" +
-										"SELECT EXISTS " +
-										"(SELECT * FROM {revision} WHERE `revision`=?)")
-								)) {
-									ps.setLong(1, revision);
-									ResultSet resultSet = ps.executeQuery();
-									resultSet.next();
-									if (!resultSet.getBoolean(1)) {
-										throw new StateFarAheadException(0L, Set.of(revision));
-									}
-								}
-
-								return new FetchData<>(revision, revision, diffs);
+						try (PreparedStatement ps = connection.prepareStatement(sql("" +
+							"SELECT EXISTS " +
+							"(SELECT * FROM {revision} WHERE `revision`=?)")
+						)) {
+							ps.setLong(1, revision);
+							ResultSet resultSet = ps.executeQuery();
+							resultSet.next();
+							if (!resultSet.getBoolean(1)) {
+								throw new StateFarAheadException(0L, Set.of(revision));
 							}
-						})
-				.whenComplete(toLogger(logger, "checkout"))
-				.whenComplete(promiseCheckout.recordStats());
+						}
+
+						return new FetchData<>(revision, revision, diffs);
+					}
+				})
+			.whenComplete(toLogger(logger, "checkout"))
+			.whenComplete(promiseCheckout.recordStats());
 	}
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								long revision = getMaxRevision(connection);
-								if (revision == currentCommitId) {
-									return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
-								}
-								if (revision < currentCommitId) {
-									throw new IllegalArgumentException("Passed revision is higher than uplink revision");
-								}
+						long revision = getMaxRevision(connection);
+						if (revision == currentCommitId) {
+							return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
+						}
+						if (revision < currentCommitId) {
+							throw new IllegalArgumentException("Passed revision is higher than uplink revision");
+						}
 
-								List<LogDiff<CubeDiff>> diffs = doFetch(connection, currentCommitId, revision);
-								checkRevisions(connection, currentCommitId, revision);
-								return new FetchData<>(revision, revision, diffs);
-							}
-						})
-				.whenComplete(toLogger(logger, "fetch", currentCommitId))
-				.whenComplete(promiseFetch.recordStats());
+						List<LogDiff<CubeDiff>> diffs = doFetch(connection, currentCommitId, revision);
+						checkRevisions(connection, currentCommitId, revision);
+						return new FetchData<>(revision, revision, diffs);
+					}
+				})
+			.whenComplete(toLogger(logger, "fetch", currentCommitId))
+			.whenComplete(promiseFetch.recordStats());
 	}
 
 	@Override
@@ -211,80 +212,80 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Connection connection = dataSource.getConnection()) {
-								connection.setAutoCommit(false);
-								connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
+				() -> {
+					try (Connection connection = dataSource.getConnection()) {
+						connection.setAutoCommit(false);
+						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-								long revision = getMaxRevision(connection);
-								if (revision < protoCommit.parentRevision) {
-									throw new IllegalArgumentException("Uplink revision is less than parent revision");
-								}
-								while (true) {
-									try (PreparedStatement ps = connection.prepareStatement(sql("" +
-											"INSERT INTO {revision} (`revision`, `created_by`) VALUES (?,?)"
-									))) {
-										ps.setLong(1, ++revision);
-										ps.setString(2, createdBy);
-										ps.executeUpdate();
-										logger.trace("Successfully inserted revision {}", revision);
-										break;
-									} catch (SQLIntegrityConstraintViolationException ignored) {
-										logger.warn("Someone pushed to the same revision number {}, retry with the next revision", revision);
-									}
-								}
-
-								List<LogDiff<CubeDiff>> diffsList = protoCommit.diffs;
-
-								Set<ChunkWithAggregationId> added = collectChunks(diffsList, true);
-								Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
-
-								// squash
-								Set<ChunkWithAggregationId> intersection = intersection(added, removed);
-								added.removeAll(intersection);
-								removed.removeAll(intersection);
-
-								if (!added.isEmpty()) {
-									addChunks(connection, revision, added);
-								}
-
-								if (!removed.isEmpty()) {
-									removeChunks(connection, revision, removed);
-								}
-
-								Map<String, LogPosition> positions = collectPositions(diffsList);
-								if (!positions.isEmpty()) {
-									updatePositions(connection, revision, positions);
-								}
-
-								if (revision == protoCommit.parentRevision + 1) {
-									logger.trace("Nothing to fetch after diffs are pushed");
-									connection.commit();
-									return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
-								}
-
-								logger.trace("Fetching diffs from finished concurrent pushes");
-								List<LogDiff<CubeDiff>> diffs = doFetch(connection, protoCommit.parentRevision, revision - 1);
-								checkRevisions(connection, protoCommit.parentRevision, revision - 1);
-								connection.commit();
-								return new FetchData<>(revision, revision, diffs);
+						long revision = getMaxRevision(connection);
+						if (revision < protoCommit.parentRevision) {
+							throw new IllegalArgumentException("Uplink revision is less than parent revision");
+						}
+						while (true) {
+							try (PreparedStatement ps = connection.prepareStatement(sql("" +
+								"INSERT INTO {revision} (`revision`, `created_by`) VALUES (?,?)"
+							))) {
+								ps.setLong(1, ++revision);
+								ps.setString(2, createdBy);
+								ps.executeUpdate();
+								logger.trace("Successfully inserted revision {}", revision);
+								break;
+							} catch (SQLIntegrityConstraintViolationException ignored) {
+								logger.warn("Someone pushed to the same revision number {}, retry with the next revision", revision);
 							}
-						})
-				.whenComplete(toLogger(logger, "push", protoCommit))
-				.whenComplete(promisePush.recordStats());
+						}
+
+						List<LogDiff<CubeDiff>> diffsList = protoCommit.diffs;
+
+						Set<ChunkWithAggregationId> added = collectChunks(diffsList, true);
+						Set<ChunkWithAggregationId> removed = collectChunks(diffsList, false);
+
+						// squash
+						Set<ChunkWithAggregationId> intersection = intersection(added, removed);
+						added.removeAll(intersection);
+						removed.removeAll(intersection);
+
+						if (!added.isEmpty()) {
+							addChunks(connection, revision, added);
+						}
+
+						if (!removed.isEmpty()) {
+							removeChunks(connection, revision, removed);
+						}
+
+						Map<String, LogPosition> positions = collectPositions(diffsList);
+						if (!positions.isEmpty()) {
+							updatePositions(connection, revision, positions);
+						}
+
+						if (revision == protoCommit.parentRevision + 1) {
+							logger.trace("Nothing to fetch after diffs are pushed");
+							connection.commit();
+							return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
+						}
+
+						logger.trace("Fetching diffs from finished concurrent pushes");
+						List<LogDiff<CubeDiff>> diffs = doFetch(connection, protoCommit.parentRevision, revision - 1);
+						checkRevisions(connection, protoCommit.parentRevision, revision - 1);
+						connection.commit();
+						return new FetchData<>(revision, revision, diffs);
+					}
+				})
+			.whenComplete(toLogger(logger, "push", protoCommit))
+			.whenComplete(promisePush.recordStats());
 	}
 
 	@VisibleForTesting
 	CubeDiff fetchChunkDiffs(Connection connection, long from, long to) throws SQLException, MalformedDataException {
 		CubeDiff cubeDiff;
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`," +
-				" ISNULL(`removed_revision`) OR `removed_revision`>? " +
-				"FROM {chunk} " +
-				"WHERE " +
-				"(`removed_revision` BETWEEN ? AND ? AND `added_revision`<?)" +
-				" OR " +
-				"(`added_revision` BETWEEN ? AND ? AND (`removed_revision` IS NULL OR `removed_revision`>?))"
+			"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`," +
+			" ISNULL(`removed_revision`) OR `removed_revision`>? " +
+			"FROM {chunk} " +
+			"WHERE " +
+			"(`removed_revision` BETWEEN ? AND ? AND `added_revision`<?)" +
+			" OR " +
+			"(`added_revision` BETWEEN ? AND ? AND (`removed_revision` IS NULL OR `removed_revision`>?))"
 		))) {
 			from++;
 			ps.setLong(1, to);
@@ -314,7 +315,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				AggregationChunk chunk = AggregationChunk.create(chunkId, measures, minKey, maxKey, count);
 
 				Tuple2<Set<AggregationChunk>, Set<AggregationChunk>> tuple = aggregationDiffs
-						.computeIfAbsent(aggregationId, $ -> new Tuple2<>(new HashSet<>(), new HashSet<>()));
+					.computeIfAbsent(aggregationId, $ -> new Tuple2<>(new HashSet<>(), new HashSet<>()));
 
 				if (isAdded) {
 					tuple.value1().add(chunk);
@@ -324,7 +325,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			}
 
 			cubeDiff = CubeDiff.of(aggregationDiffs.entrySet().stream()
-					.collect(entriesToLinkedHashMap(tuple -> AggregationDiff.of(tuple.value1(), tuple.value2()))));
+				.collect(entriesToLinkedHashMap(tuple -> AggregationDiff.of(tuple.value1(), tuple.value2()))));
 		}
 		return cubeDiff;
 	}
@@ -333,16 +334,16 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, long to) throws SQLException {
 		Map<String, LogPositionDiff> positions = new HashMap<>();
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to` " +
-				"FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id`>? as `to`" +
-				" FROM {position}" +
-				" WHERE `revision_id`<=?" +
-				" GROUP BY `partition_id`, `to`) g " +
-				"LEFT JOIN" +
-				" {position} p " +
-				"ON p.`partition_id` = g.`partition_id` " +
-				"AND p.`revision_id` = g.`max_revision` " +
-				"ORDER BY p.`partition_id`, `to`"
+			"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to` " +
+			"FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id`>? as `to`" +
+			" FROM {position}" +
+			" WHERE `revision_id`<=?" +
+			" GROUP BY `partition_id`, `to`) g " +
+			"LEFT JOIN" +
+			" {position} p " +
+			"ON p.`partition_id` = g.`partition_id` " +
+			"AND p.`revision_id` = g.`max_revision` " +
+			"ORDER BY p.`partition_id`, `to`"
 		))) {
 			ps.setLong(1, from);
 			ps.setLong(2, to);
@@ -385,16 +386,16 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private List<LogDiff<CubeDiff>> doFetch(Connection connection, long from, long to) throws SQLException, MalformedDataException {
 		return toLogDiffs(
-				fetchChunkDiffs(connection, from, to),
-				fetchPositionDiffs(connection, from, to)
+			fetchChunkDiffs(connection, from, to),
+			fetchPositionDiffs(connection, from, to)
 		);
 	}
 
 	private void checkRevisions(Connection connection, long from, long to) throws SQLException, StateFarAheadException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"SELECT `revision` " +
-				"FROM {revision} " +
-				"WHERE `revision` BETWEEN ? AND ?"))
+			"SELECT `revision` " +
+			"FROM {revision} " +
+			"WHERE `revision` BETWEEN ? AND ?"))
 		) {
 			ps.setLong(1, from);
 			ps.setLong(2, to);
@@ -407,8 +408,8 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			if (retrieved.size() == to - from + 1) return;
 
 			Set<Long> expected = LongStream.range(from, to + 1)
-					.boxed()
-					.collect(toSet());
+				.boxed()
+				.collect(toSet());
 
 			throw new StateFarAheadException(from, difference(expected, retrieved));
 		}
@@ -416,8 +417,8 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private void addChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"INSERT INTO {chunk} (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
-				"VALUES " + String.join(",", nCopies(chunks.size(), "(?,?,?,?,?,?,?)"))
+			"INSERT INTO {chunk} (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
+			"VALUES " + String.join(",", nCopies(chunks.size(), "(?,?,?,?,?,?,?)"))
 		))) {
 			int index = 1;
 			for (ChunkWithAggregationId chunk : chunks) {
@@ -447,12 +448,12 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private void removeChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException, OTException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"UPDATE {chunk} " +
-				"SET `removed_revision`=? " +
-				"WHERE `id` IN " +
-				nCopies(chunks.size(), "?")
-						.stream()
-						.collect(joining(",", "(", ")"))
+			"UPDATE {chunk} " +
+			"SET `removed_revision`=? " +
+			"WHERE `id` IN " +
+			nCopies(chunks.size(), "?")
+				.stream()
+				.collect(joining(",", "(", ")"))
 		))) {
 			int index = 1;
 			ps.setLong(index++, newRevision);
@@ -470,8 +471,8 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private void updatePositions(Connection connection, long newRevision, Map<String, LogPosition> positions) throws SQLException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"INSERT INTO {position} (`revision_id`, `partition_id`, `filename`, `remainder`, `position`) " +
-				"VALUES " + String.join(",", nCopies(positions.size(), "(?,?,?,?,?)"))
+			"INSERT INTO {position} (`revision_id`, `partition_id`, `filename`, `remainder`, `position`) " +
+			"VALUES " + String.join(",", nCopies(positions.size(), "(?,?,?,?,?)"))
 		))) {
 			int index = 1;
 			for (Map.Entry<String, LogPosition> entry : positions.entrySet()) {
@@ -505,9 +506,9 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private String sql(String sql) {
 		return sql
-				.replace("{revision}", tableRevision)
-				.replace("{position}", tablePosition)
-				.replace("{chunk}", tableChunk);
+			.replace("{revision}", tableRevision)
+			.replace("{position}", tablePosition)
+			.replace("{chunk}", tableChunk);
 	}
 
 	public void initialize() throws IOException, SQLException {
@@ -530,7 +531,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private long getMaxRevision(Connection connection) throws SQLException, OTException {
 		try (PreparedStatement ps = connection.prepareStatement(sql("" +
-				"SELECT MAX(`revision`) FROM {revision}"
+			"SELECT MAX(`revision`) FROM {revision}"
 		))) {
 			ResultSet resultSet = ps.executeQuery();
 			if (!resultSet.next()) {

@@ -43,13 +43,13 @@ public class BlockingTakeQueueTest {
 	@Parameterized.Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"Slow put, single take thread", true, false, 1, 100_000},
-				new Object[]{"Slow take, single take thread", false, true, 1, 1_000},
-				new Object[]{"Equal, single take thread", false, false, 1, 5_000_000},
+			new Object[]{"Slow put, single take thread", true, false, 1, 100_000},
+			new Object[]{"Slow take, single take thread", false, true, 1, 1_000},
+			new Object[]{"Equal, single take thread", false, false, 1, 5_000_000},
 
-				new Object[]{"Slow put, ten take threads", true, false, 10, 100_000},
-				new Object[]{"Slow take, ten take threads", false, true, 10, 10_000},
-				new Object[]{"Equal, ten take threads", false, false, 10, 5_000_000}
+			new Object[]{"Slow put, ten take threads", true, false, 10, 100_000},
+			new Object[]{"Slow take, ten take threads", false, true, 10, 10_000},
+			new Object[]{"Equal, ten take threads", false, false, 10, 5_000_000}
 		);
 	}
 

@@ -36,12 +36,12 @@ public class ChannelSupplierTest {
 	@Test
 	public void testToCollector() {
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(List.of(
-				ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
-				ByteBuf.wrapForReading("Test2".getBytes(UTF_8)),
-				ByteBuf.wrapForReading("Test3".getBytes(UTF_8)),
-				ByteBuf.wrapForReading("Test4".getBytes(UTF_8)),
-				ByteBuf.wrapForReading("Test5".getBytes(UTF_8)),
-				ByteBuf.wrapForReading("Test6".getBytes(UTF_8))
+			ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
+			ByteBuf.wrapForReading("Test2".getBytes(UTF_8)),
+			ByteBuf.wrapForReading("Test3".getBytes(UTF_8)),
+			ByteBuf.wrapForReading("Test4".getBytes(UTF_8)),
+			ByteBuf.wrapForReading("Test5".getBytes(UTF_8)),
+			ByteBuf.wrapForReading("Test6".getBytes(UTF_8))
 		));
 
 		ByteBuf resultBuf = await(supplier.toCollector(ByteBufs.collector()));
@@ -54,8 +54,8 @@ public class ChannelSupplierTest {
 		value.put("Test".getBytes(UTF_8));
 		Exception exception = new Exception("Test Exception");
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.concat(
-				ChannelSuppliers.ofValue(value),
-				ChannelSuppliers.ofException(exception)
+			ChannelSuppliers.ofValue(value),
+			ChannelSuppliers.ofException(exception)
 		);
 
 		Exception e = awaitException(supplier.toCollector(ByteBufs.collector()));
@@ -122,21 +122,21 @@ public class ChannelSupplierTest {
 	@Test
 	public void testAsInputStream() {
 		ChannelSupplier<ByteBuf> channelSupplier = ChannelSuppliers.ofValues(
-				ByteBuf.wrapForReading("Hello".getBytes()),
-				ByteBuf.wrapForReading("World".getBytes()));
+			ByteBuf.wrapForReading("Hello".getBytes()),
+			ByteBuf.wrapForReading("World".getBytes()));
 
 		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
-				() -> {
-					try (InputStream inputStream = channelSupplierAsInputStream(reactor, channelSupplier)) {
-						int b;
-						ByteBuf buf = ByteBufPool.allocate(100);
-						while ((b = inputStream.read()) != -1) {
-							buf.writeByte((byte) b);
-						}
-						assertEquals("HelloWorld", buf.asString(UTF_8));
+			() -> {
+				try (InputStream inputStream = channelSupplierAsInputStream(reactor, channelSupplier)) {
+					int b;
+					ByteBuf buf = ByteBufPool.allocate(100);
+					while ((b = inputStream.read()) != -1) {
+						buf.writeByte((byte) b);
 					}
-				}));
+					assertEquals("HelloWorld", buf.asString(UTF_8));
+				}
+			}));
 	}
 
 	@Test
@@ -145,15 +145,15 @@ public class ChannelSupplierTest {
 
 		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
-				() -> {
-					try (InputStream inputStream = channelSupplierAsInputStream(reactor, channelSupplier)) {
-						int b;
-						ByteBuf buf = ByteBufPool.allocate(100);
-						while ((b = inputStream.read()) != -1) {
-							buf.writeByte((byte) b);
-						}
-						assertTrue(buf.asString(UTF_8).isEmpty());
+			() -> {
+				try (InputStream inputStream = channelSupplierAsInputStream(reactor, channelSupplier)) {
+					int b;
+					ByteBuf buf = ByteBufPool.allocate(100);
+					while ((b = inputStream.read()) != -1) {
+						buf.writeByte((byte) b);
 					}
-				}));
+					assertTrue(buf.asString(UTF_8).isEmpty());
+				}
+			}));
 	}
 }

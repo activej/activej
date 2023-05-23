@@ -55,9 +55,9 @@ public final class In implements AggregationPredicate {
 	@Override
 	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		return isNe(
-				value(false),
-				call(value(values), "contains",
-						cast(property(record, key.replace('.', '$')), Object.class)));
+			value(false),
+			call(value(values), "contains",
+				cast(property(record, key.replace('.', '$')), Object.class)));
 	}
 
 	@Override

@@ -310,15 +310,15 @@ public class SpringDiBenchmark {
 
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
-				.include(SpringDiBenchmark.class.getSimpleName())
-				.forks(2)
-				.warmupIterations(3)
-				.warmupTime(TimeValue.seconds(1L))
-				.measurementIterations(10)
-				.measurementTime(TimeValue.seconds(2L))
-				.mode(Mode.AverageTime)
-				.timeUnit(TimeUnit.MICROSECONDS)
-				.build();
+			.include(SpringDiBenchmark.class.getSimpleName())
+			.forks(2)
+			.warmupIterations(3)
+			.warmupTime(TimeValue.seconds(1L))
+			.measurementIterations(10)
+			.measurementTime(TimeValue.seconds(2L))
+			.mode(Mode.AverageTime)
+			.timeUnit(TimeUnit.MICROSECONDS)
+			.build();
 
 		new Runner(opt).run();
 	}

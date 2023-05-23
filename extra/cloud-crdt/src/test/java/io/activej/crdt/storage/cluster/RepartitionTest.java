@@ -45,20 +45,20 @@ public final class RepartitionTest {
 		String localPartitionId = "client_0";
 		long now = reactor.currentTimeMillis();
 		List<CrdtData<String, Long>> data = LongStream.range(1, 100)
-				.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
+			.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
 		await(StreamSuppliers.ofIterator(data.iterator())
-				.streamTo(StreamConsumers.ofPromise(clients.get(localPartitionId).upload())));
+			.streamTo(StreamConsumers.ofPromise(clients.get(localPartitionId).upload())));
 
 		int replicationCount = 3;
 		ClusterCrdtStorage<String, Long, String> cluster = ClusterCrdtStorage.create(reactor,
-				IDiscoveryService.of(
-						RendezvousPartitionScheme.<String>builder()
-								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
-										.withReplicas(replicationCount)
-										.build())
-								.withCrdtProvider(clients::get)
-								.build()),
-				crdtFunction);
+			IDiscoveryService.of(
+				RendezvousPartitionScheme.<String>builder()
+					.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+						.withReplicas(replicationCount)
+						.build())
+					.withCrdtProvider(clients::get)
+					.build()),
+			crdtFunction);
 		await(cluster.start());
 
 		await(CrdtRepartitionController.create(reactor, cluster, localPartitionId).repartition());
@@ -67,15 +67,15 @@ public final class RepartitionTest {
 		Map<String, Long> states = new HashMap<>();
 
 		clients.values().forEach(v -> v.iterator()
-				.forEachRemaining(x -> {
-					counts.compute(x.getKey(), ($, count) -> count == null ? 1 : (count + 1));
-					states.compute(x.getKey(), ($, state) -> {
-						if (state != null) {
-							assertEquals(state, x.getState());
-						}
-						return x.getState();
-					});
-				}));
+			.forEachRemaining(x -> {
+				counts.compute(x.getKey(), ($, count) -> count == null ? 1 : (count + 1));
+				states.compute(x.getKey(), ($, state) -> {
+					if (state != null) {
+						assertEquals(state, x.getState());
+					}
+					return x.getState();
+				});
+			}));
 
 		Map<String, Long> expectedStates = data.stream().collect(toMap(CrdtEntity::getKey, CrdtData::getState));
 		assertEquals(expectedStates, states);

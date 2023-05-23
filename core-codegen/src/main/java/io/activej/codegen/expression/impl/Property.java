@@ -83,9 +83,9 @@ public final class Property implements Variable {
 			Class<?> propertyClass = ctx.getFields().get(property);
 			if (propertyClass == null) {
 				throw new RuntimeException(format("No property \"%s\" in generated class %s. %s",
-						property,
-						ctx.getSelfType().getClassName(),
-						exceptionInGeneratedClass(ctx)));
+					property,
+					ctx.getSelfType().getClassName(),
+					exceptionInGeneratedClass(ctx)));
 			}
 			Type propertyType = getType(propertyClass);
 			ctx.cast(valueType, propertyType);
@@ -134,9 +134,9 @@ public final class Property implements Variable {
 		}
 
 		throw new RuntimeException(format("No public property or setter for class %s for property \"%s\". %s ",
-				ownerType.getClassName(),
-				property,
-				exceptionInGeneratedClass(ctx))
+			ownerType.getClassName(),
+			property,
+			exceptionInGeneratedClass(ctx))
 		);
 	}
 
@@ -189,9 +189,9 @@ public final class Property implements Variable {
 				return resultType;
 			} else {
 				throw new RuntimeException(format("No public property or getter for class %s for property \"%s\". %s",
-						ownerType.getClassName(),
-						property,
-						exceptionInGeneratedClass(ctx)));
+					ownerType.getClassName(),
+					property,
+					exceptionInGeneratedClass(ctx)));
 			}
 		}
 
@@ -231,8 +231,8 @@ public final class Property implements Variable {
 		}
 
 		throw new RuntimeException(format("No public property or getter for class %s for property \"%s\". %s",
-				ownerType.getClassName(),
-				property,
-				exceptionInGeneratedClass(ctx)));
+			ownerType.getClassName(),
+			property,
+			exceptionInGeneratedClass(ctx)));
 	}
 }

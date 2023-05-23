@@ -66,9 +66,9 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 
 	public RecordProjectionFn materialize(List<Object> params) {
 		return create(
-				fieldProjections.stream()
-						.map(fieldProjection -> new FieldProjection(fieldProjection.operand().materialize(params), fieldProjection.fieldName()))
-						.toList());
+			fieldProjections.stream()
+				.map(fieldProjection -> new FieldProjection(fieldProjection.operand().materialize(params), fieldProjection.fieldName()))
+				.toList());
 	}
 
 	public RecordScheme getToScheme(RecordScheme original, BiFunction<String, UnaryOperator<Expression>, @Nullable UnaryOperator<Expression>> mapping) {

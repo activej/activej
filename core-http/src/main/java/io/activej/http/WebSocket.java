@@ -63,12 +63,13 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 	private @Nullable SettablePromise<Void> writePromise;
 
 	WebSocket(
-			HttpRequest request,
-			HttpResponse response,
-			ChannelSupplier<Frame> frameInput,
-			ChannelConsumer<Frame> frameOutput,
-			Consumer<WebSocketException> onProtocolError,
-			int maxMessageSize) {
+		HttpRequest request,
+		HttpResponse response,
+		ChannelSupplier<Frame> frameInput,
+		ChannelConsumer<Frame> frameOutput,
+		Consumer<WebSocketException> onProtocolError,
+		int maxMessageSize
+	) {
 		this.request = request;
 		this.response = response;
 		this.frameInput = prefetch(sanitize(frameInput));
@@ -84,45 +85,45 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
 			return Promises.repeat(() -> frameInput.get()
-							.thenCallback((frame, cb) -> {
-								if (frame == null) {
-									if (typeRef.get() == null) {
-										cb.set(false);
-										return;
-									}
-									// hence, all other exceptions would fail get() promise
-									cb.setException(REGULAR_CLOSE);
-									return;
-								}
-								if (typeRef.get() == null) {
-									typeRef.set(frameToMessageType(frame.getType()));
-								}
-								ByteBuf payload = frame.getPayload();
-								if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
-									protocolError(MESSAGE_TOO_BIG, cb);
-									return;
-								}
-								messageBufs.add(payload);
-								cb.set(!frame.isLastFrame());
-							}))
-					.whenException(e -> messageBufs.recycle())
-					.thenCallback(($, cb) -> {
-						ByteBuf payload = messageBufs.takeRemaining();
-						MessageType type = typeRef.get();
-						if (type == MessageType.TEXT) {
-							try {
-								cb.set(Message.text(getUTF8(payload)));
-							} catch (CharacterCodingException e) {
-								protocolError(NOT_A_VALID_UTF_8, cb);
-							} finally {
-								payload.recycle();
+					.thenCallback((frame, cb) -> {
+						if (frame == null) {
+							if (typeRef.get() == null) {
+								cb.set(false);
+								return;
 							}
-						} else if (type == MessageType.BINARY) {
-							cb.set(Message.binary(payload));
-						} else {
-							cb.set(null);
+							// hence, all other exceptions would fail get() promise
+							cb.setException(REGULAR_CLOSE);
+							return;
 						}
-					});
+						if (typeRef.get() == null) {
+							typeRef.set(frameToMessageType(frame.getType()));
+						}
+						ByteBuf payload = frame.getPayload();
+						if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
+							protocolError(MESSAGE_TOO_BIG, cb);
+							return;
+						}
+						messageBufs.add(payload);
+						cb.set(!frame.isLastFrame());
+					}))
+				.whenException(e -> messageBufs.recycle())
+				.thenCallback(($, cb) -> {
+					ByteBuf payload = messageBufs.takeRemaining();
+					MessageType type = typeRef.get();
+					if (type == MessageType.TEXT) {
+						try {
+							cb.set(Message.text(getUTF8(payload)));
+						} catch (CharacterCodingException e) {
+							protocolError(NOT_A_VALID_UTF_8, cb);
+						} finally {
+							payload.recycle();
+						}
+					} else if (type == MessageType.BINARY) {
+						cb.set(Message.binary(payload));
+					} else {
+						cb.set(null);
+					}
+				});
 		});
 	}
 
@@ -192,10 +193,10 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 		SettablePromise<T> readPromise = new SettablePromise<>();
 		this.readPromise = readPromise;
 		supplier.get()
-				.subscribe((result, e) -> {
-					this.readPromise = null;
-					readPromise.trySet(result, e);
-				});
+			.subscribe((result, e) -> {
+				this.readPromise = null;
+				readPromise.trySet(result, e);
+			});
 		return readPromise;
 	}
 
@@ -211,10 +212,10 @@ public final class WebSocket extends AbstractAsyncCloseable implements IWebSocke
 		SettablePromise<Void> writePromise = new SettablePromise<>();
 		this.writePromise = writePromise;
 		runnable.run()
-				.subscribe((result, e) -> {
-					this.writePromise = null;
-					writePromise.trySet(result, e);
-				});
+			.subscribe((result, e) -> {
+				this.writePromise = null;
+				writePromise.trySet(result, e);
+			});
 		return writePromise;
 	}
 

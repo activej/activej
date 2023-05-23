@@ -67,11 +67,11 @@ public class MemcacheRpcBenchmark extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("memcache.buffers", Integer.toString(NUMBER_BUFFERS))
-				.with("memcache.bufferCapacity", BUFFER_CAPACITY.format())
-				.with("server.listenAddresses", "localhost:8080")
-				.with("client.addresses", "localhost:8080")
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("memcache.buffers", Integer.toString(NUMBER_BUFFERS))
+			.with("memcache.bufferCapacity", BUFFER_CAPACITY.format())
+			.with("server.listenAddresses", "localhost:8080")
+			.with("client.addresses", "localhost:8080")
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@ProvidesIntoSet
@@ -83,12 +83,12 @@ public class MemcacheRpcBenchmark extends Launcher {
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				MemcacheServerModule.create(),
-				MemcacheClientModule.create()
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			MemcacheServerModule.create(),
+			MemcacheClientModule.create()
 		);
 	}
 
@@ -139,7 +139,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 		double avgTime = (double) timeAllRounds / benchmarkRounds;
 		long requestsPerSecond = (long) (totalRequests / avgTime * 1000);
 		System.out.println("Time: " + timeAllRounds + "ms; Average time: " + avgTime + "ms; Best time: " +
-				bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
+			bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
 	}
 
 	private long round(AsyncSupplier<Long> function) throws Exception {

@@ -12,16 +12,14 @@ import io.activej.serializer.stream.StreamCodecs;
 public final class NodeCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(15)
-	StreamCodec<FilterableSupplierNode<?>> filterableNodeSupplierOfId(
-			StreamCodec<WherePredicate> predicateStreamCodec
-	) {
+	StreamCodec<FilterableSupplierNode<?>> filterableNodeSupplierOfId(StreamCodec<WherePredicate> predicateStreamCodec) {
 		return StreamCodec.create(FilterableSupplierNode::new,
-				FilterableSupplierNode::getIndex, StreamCodecs.ofVarInt(),
-				FilterableSupplierNode::getId, StreamCodecs.ofString(),
-				FilterableSupplierNode::getPredicate, predicateStreamCodec,
-				FilterableSupplierNode::getPartitionIndex, StreamCodecs.ofVarInt(),
-				FilterableSupplierNode::getMaxPartitions, StreamCodecs.ofVarInt(),
-				FilterableSupplierNode::getOutput, Utils.STREAM_ID_STREAM_CODEC
+			FilterableSupplierNode::getIndex, StreamCodecs.ofVarInt(),
+			FilterableSupplierNode::getId, StreamCodecs.ofString(),
+			FilterableSupplierNode::getPredicate, predicateStreamCodec,
+			FilterableSupplierNode::getPartitionIndex, StreamCodecs.ofVarInt(),
+			FilterableSupplierNode::getMaxPartitions, StreamCodecs.ofVarInt(),
+			FilterableSupplierNode::getOutput, Utils.STREAM_ID_STREAM_CODEC
 		);
 	}
 }

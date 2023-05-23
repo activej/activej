@@ -42,24 +42,24 @@ public final class ByteChunker extends AbstractChannelTransformer<ByteChunker, B
 	protected Promise<Void> onItem(ByteBuf item) {
 		bufs.add(item);
 		return Promises.repeat(
-				() -> {
-					if (!bufs.hasRemainingBytes(minChunkSize)) return Promise.of(false);
-					int exactSize = 0;
-					for (int i = 0; i != bufs.remainingBufs(); i++) {
-						exactSize += bufs.peekBuf(i).readRemaining();
-						if (exactSize >= minChunkSize) {
-							break;
-						}
+			() -> {
+				if (!bufs.hasRemainingBytes(minChunkSize)) return Promise.of(false);
+				int exactSize = 0;
+				for (int i = 0; i != bufs.remainingBufs(); i++) {
+					exactSize += bufs.peekBuf(i).readRemaining();
+					if (exactSize >= minChunkSize) {
+						break;
 					}
-					return send(bufs.takeExactSize(min(exactSize, maxChunkSize)))
-							.map($ -> true);
-				});
+				}
+				return send(bufs.takeExactSize(min(exactSize, maxChunkSize)))
+					.map($ -> true);
+			});
 	}
 
 	@Override
 	protected Promise<Void> onProcessFinish() {
 		return (bufs.hasRemaining() ? send(bufs.takeRemaining()) : Promise.complete())
-				.then(this::sendEndOfStream);
+			.then(this::sendEndOfStream);
 	}
 
 	@Override

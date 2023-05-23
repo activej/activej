@@ -22,16 +22,16 @@ public class StreamTransformers {
 		checkState(skip >= Skip.NO_SKIP, "Skip value cannot be a negative value");
 
 		return skip == Skip.NO_SKIP ?
-				identity() :
-				new Skip<>(skip);
+			identity() :
+			new Skip<>(skip);
 	}
 
 	public static <T> StreamTransformer<T, T> limit(long limit) {
 		checkState(limit >= Limiter.NO_LIMIT, "Limit cannot be a negative value");
 
 		return limit == Limiter.NO_LIMIT ?
-				identity() :
-				new Limiter<>(limit);
+			identity() :
+			new Limiter<>(limit);
 	}
 
 	public static <T> StreamTransformer<T, T> filter(Predicate<T> predicate) {

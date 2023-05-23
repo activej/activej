@@ -41,18 +41,18 @@ public class Utils {
 
 	static boolean isStandardMBean(Class<?> clazz) {
 		return walkClassHierarchy(clazz, anInterface ->
-				anInterface.isInterface() && anInterface.getSimpleName().equals(clazz.getSimpleName() + "MBean") ?
-						Optional.of(anInterface) :
-						Optional.empty())
-				.isPresent();
+			anInterface.isInterface() && anInterface.getSimpleName().equals(clazz.getSimpleName() + "MBean") ?
+				Optional.of(anInterface) :
+				Optional.empty())
+			.isPresent();
 	}
 
 	static boolean isMXBean(Class<?> clazz) {
 		return walkClassHierarchy(clazz, anInterface ->
-				anInterface.isInterface() && (anInterface.getSimpleName().endsWith("MXBean") || anInterface.isAnnotationPresent(MXBean.class)) ?
-						Optional.of(anInterface) :
-						Optional.empty())
-				.isPresent();
+			anInterface.isInterface() && (anInterface.getSimpleName().endsWith("MXBean") || anInterface.isAnnotationPresent(MXBean.class)) ?
+				Optional.of(anInterface) :
+				Optional.empty())
+			.isPresent();
 	}
 
 	static boolean isDynamicMBean(Class<?> clazz) {
@@ -74,9 +74,10 @@ public class Utils {
 		return qualifier.toString();
 	}
 
-	static <T> ProtoObjectNameMapper doMap(Function<ProtoObjectName, @Nullable T> extractor,
-			UnaryOperator<T> mapper,
-			BiFunction<ProtoObjectName, @Nullable T, ProtoObjectName> result) {
+	static <T> ProtoObjectNameMapper doMap(
+		Function<ProtoObjectName, @Nullable T> extractor, UnaryOperator<T> mapper, BiFunction<ProtoObjectName,
+		@Nullable T, ProtoObjectName> result
+	) {
 		return protoObjectName -> {
 			T value = extractor.apply(protoObjectName);
 			if (value == null) return protoObjectName;

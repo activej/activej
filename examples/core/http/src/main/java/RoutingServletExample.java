@@ -13,45 +13,45 @@ public final class RoutingServletExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
 		return RoutingServlet.builder(reactor)
-				//[START REGION_2]
-				.with(GET, "/", request ->
-						HttpResponse.ok200()
-								.withHtml("<h1>Go to some pages</h1>" +
-										"<a href=\"/path1\"> Path 1 </a><br>" +
-										"<a href=\"/path2\"> Path 2 </a><br>" +
-										"<a href=\"/user/0\"> Data for user with ID 0 </a><br>" +
-										"<br>" +
-										"<a href=\"/path3\"> Non existent </a>")
-								.toPromise())
-				//[END REGION_2]
-				.with(GET, "/path1", request ->
-						HttpResponse.ok200()
-								.withHtml("<h1>Hello from the first path!</h1>" +
-										"<a href=\"/\">Go home</a>")
-								.toPromise())
-				.with(GET, "/path2", request ->
-						HttpResponse.ok200()
-								.withHtml("<h1>Hello from the second path!</h1>" +
-										"<a href=\"/\">Go home</a>")
-								.toPromise())
+			//[START REGION_2]
+			.with(GET, "/", request ->
+				HttpResponse.ok200()
+					.withHtml("<h1>Go to some pages</h1>" +
+						"<a href=\"/path1\"> Path 1 </a><br>" +
+						"<a href=\"/path2\"> Path 2 </a><br>" +
+						"<a href=\"/user/0\"> Data for user with ID 0 </a><br>" +
+						"<br>" +
+						"<a href=\"/path3\"> Non existent </a>")
+					.toPromise())
+			//[END REGION_2]
+			.with(GET, "/path1", request ->
+				HttpResponse.ok200()
+					.withHtml("<h1>Hello from the first path!</h1>" +
+						"<a href=\"/\">Go home</a>")
+					.toPromise())
+			.with(GET, "/path2", request ->
+				HttpResponse.ok200()
+					.withHtml("<h1>Hello from the second path!</h1>" +
+						"<a href=\"/\">Go home</a>")
+					.toPromise())
 
-				//[START REGION_3]
-				.with(GET, "/user/:user_id", request -> {
-					String userId = request.getPathParameter("user_id");
-					return HttpResponse.ok200()
-							.withHtml("<h1>You have requested data for user with ID: " + userId + "</h1>" +
-									"<h3>Try changing URL after <i>'.../user/'</i> to get data for users with different IDs</h3>")
-							.toPromise();
-				})
-				//[END REGION_3]
+			//[START REGION_3]
+			.with(GET, "/user/:user_id", request -> {
+				String userId = request.getPathParameter("user_id");
+				return HttpResponse.ok200()
+					.withHtml("<h1>You have requested data for user with ID: " + userId + "</h1>" +
+						"<h3>Try changing URL after <i>'.../user/'</i> to get data for users with different IDs</h3>")
+					.toPromise();
+			})
+			//[END REGION_3]
 
-				//[START REGION_4]
-				.with("/*", request ->
-						HttpResponse.ofCode(404)
-								.withHtml("<h1>404</h1><p>Path '" + request.getRelativePath() + "' not found</p>" +
-										"<a href=\"/\">Go home</a>")
-								.toPromise())
-				.build();
+			//[START REGION_4]
+			.with("/*", request ->
+				HttpResponse.ofCode(404)
+					.withHtml("<h1>404</h1><p>Path '" + request.getRelativePath() + "' not found</p>" +
+						"<a href=\"/\">Go home</a>")
+					.toPromise())
+			.build();
 		//[END REGION_4]
 	}
 	//[END REGION_1]

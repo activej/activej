@@ -93,8 +93,8 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy2 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy strategy3 = new RequestSenderOnResultWithNullRpcStrategy();
 		RpcStrategy firstValidResult = FirstValidResult.builder(strategy1, strategy2, strategy3)
-				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
-				.build();
+			.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
+			.build();
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 
 		CompletableFuture<Object> future = new CompletableFuture<>();
@@ -115,9 +115,9 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy2 = new RequestSenderOnResultWithValueRpcStrategy(validKey);
 		RpcStrategy strategy3 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy firstValidResult = FirstValidResult.builder(strategy1, strategy2, strategy3)
-				.withResultValidator((Predicate<Integer>) input -> input == validKey)
-				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
-				.build();
+			.withResultValidator((Predicate<Integer>) input -> input == validKey)
+			.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
+			.build();
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
 
@@ -134,9 +134,9 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy2 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy strategy3 = new RequestSenderOnResultWithValueRpcStrategy(invalidKey);
 		RpcStrategy firstValidResult = FirstValidResult.builder(strategy1, strategy2, strategy3)
-				.withResultValidator((Predicate<Integer>) input -> input == validKey)
-				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
-				.build();
+			.withResultValidator((Predicate<Integer>) input -> input == validKey)
+			.withNoValidResultException(NO_VALID_RESULT_EXCEPTION)
+			.build();
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
 		sender.sendRequest(new Object(), 50, forFuture(future));

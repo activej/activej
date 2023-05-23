@@ -24,8 +24,8 @@ public class OfStreamCodecsTest {
 	@Test
 	public void testCodec() throws MalformedDataException {
 		ByteBufsCodec<String, String> codec = new OfStreamCodecs<>(
-				StreamCodecs.ofString(),
-				StreamCodecs.ofString()
+			StreamCodecs.ofString(),
+			StreamCodecs.ofString()
 		);
 
 		ByteBufs bufs = new ByteBufs();
@@ -50,8 +50,8 @@ public class OfStreamCodecsTest {
 	@Test
 	public void testCodecLargeMessages() throws MalformedDataException {
 		ByteBufsCodec<byte[], byte[]> codec = ByteBufsCodecs.ofStreamCodecs(
-				StreamCodecs.ofByteArray(),
-				StreamCodecs.ofByteArray()
+			StreamCodecs.ofByteArray(),
+			StreamCodecs.ofByteArray()
 		);
 
 		Random random = ThreadLocalRandom.current();

@@ -66,8 +66,8 @@ public class ComputedMeasures {
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
 				Expression value2 = E.cast(measure2.getExpression(record, storedMeasures), double.class);
 				return E.ifNe(value2, E.value(0.0),
-						E.div(measure1.getExpression(record, storedMeasures), value2),
-						E.value(0.0));
+					E.div(measure1.getExpression(record, storedMeasures), value2),
+					E.value(0.0));
 			}
 		};
 	}
@@ -91,11 +91,11 @@ public class ComputedMeasures {
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
 				return E.let(
-						E.cast(measure.getExpression(record, storedMeasures), double.class),
-						value ->
-								E.ifLe(value, E.value(0.0d),
-										E.value(0.0d),
-										E.staticCall(Math.class, "sqrt", value)));
+					E.cast(measure.getExpression(record, storedMeasures), double.class),
+					value ->
+						E.ifLe(value, E.value(0.0d),
+							E.value(0.0d),
+							E.staticCall(Math.class, "sqrt", value)));
 			}
 		};
 	}
@@ -110,7 +110,7 @@ public class ComputedMeasures {
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
 				return E.let(E.cast(measure.getExpression(record, storedMeasures), double.class), value ->
-						E.mul(value, value));
+					E.mul(value, value));
 			}
 		};
 	}

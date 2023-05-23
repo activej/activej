@@ -34,9 +34,9 @@ public class PredicatesTest {
 		assertEquals(and(eq("date", 20160101), eq("publisher", 20)), and(eq("date", 20160101), eq("publisher", 20)).simplify());
 
 		assertEquals(and(eq("date", 20160101), eq("publisher", 20)),
-				and(not(not(and(not(not(eq("date", 20160101))), eq("publisher", 20)))), not(not(eq("publisher", 20)))).simplify());
+			and(not(not(and(not(not(eq("date", 20160101))), eq("publisher", 20)))), not(not(eq("publisher", 20)))).simplify());
 		assertEquals(and(eq("date", 20160101), eq("publisher", 20)),
-				and(and(not(not(eq("publisher", 20))), not(not(eq("date", 20160101)))), and(eq("date", 20160101), eq("publisher", 20))).simplify());
+			and(and(not(not(eq("publisher", 20))), not(not(eq("date", 20160101)))), and(eq("date", 20160101), eq("publisher", 20))).simplify());
 	}
 
 	@Test
@@ -64,10 +64,10 @@ public class PredicatesTest {
 	@Test
 	public void testUnnecessaryPredicates_areRemoved_whenSimplified() {
 		AggregationPredicate predicate = and(
-				not(eq("x", 1)),
-				notEq("x", 1),
-				not(not(not(eq("x", 1)))),
-				eq("x", 2));
+			not(eq("x", 1)),
+			notEq("x", 1),
+			not(not(not(eq("x", 1)))),
+			eq("x", 2));
 		AggregationPredicate expected = and(notEq("x", 1), eq("x", 2)).simplify();
 		assertEquals(expected, predicate.simplify());
 	}
@@ -684,37 +684,38 @@ public class PredicatesTest {
 		assertTrue(matcher.match(has("other")));
 	}
 
-	private void testMatches(Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate) {
-
+	private void testMatches(
+		Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate
+	) {
 		assertTrue(matcher.match(belongPredicate));
 		assertTrue(matcher.match(and(
-				in("campaign", 1, 3, 30)
+			in("campaign", 1, 3, 30)
 		)));
 		assertTrue(matcher.match(and(
-				belongPredicate,
-				in("campaign", 1, 3, 30)
+			belongPredicate,
+			in("campaign", 1, 3, 30)
 		)));
 		assertTrue(matcher.match(and(
-				belongPredicate,
-				in("campaign", 1, 3, 30)
+			belongPredicate,
+			in("campaign", 1, 3, 30)
 		)));
 		assertTrue(matcher.match(and(
-				belongOtherPredicate,
-				in("campaign", 1, 3, 30)
+			belongOtherPredicate,
+			in("campaign", 1, 3, 30)
 		)));
 		assertTrue(matcher.match(and(
-				belongPredicate,
-				belongOtherPredicate,
-				in("campaign", 1, 3, 30)
+			belongPredicate,
+			belongOtherPredicate,
+			in("campaign", 1, 3, 30)
 		)));
 		assertTrue(matcher.match(and(
-				in("other", 1, 3, 30),
-				in("campaign", 1, 3, 30)
+			in("other", 1, 3, 30),
+			in("campaign", 1, 3, 30)
 		)));
 		assertTrue(matcher.match(and(
-				belongPredicate,
-				in("other", 1, 3, 30),
-				in("campaign", 1, 3, 30)
+			belongPredicate,
+			in("other", 1, 3, 30),
+			in("campaign", 1, 3, 30)
 		)));
 	}
 
@@ -722,11 +723,11 @@ public class PredicatesTest {
 	private boolean matches(Record record, String field, @Language("RegExp") String pattern) {
 		AggregationPredicate predicate = AggregationPredicates.regexp(field, pattern);
 		return ClassGenerator.builder(Predicate.class)
-				.withMethod("test", boolean.class, List.of(Object.class),
-						predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
-				.build()
-				.generateClassAndCreateInstance(CLASS_LOADER)
-				.test(record);
+			.withMethod("test", boolean.class, List.of(Object.class),
+				predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
+			.build()
+			.generateClassAndCreateInstance(CLASS_LOADER)
+			.test(record);
 	}
 
 	public static final class Record {

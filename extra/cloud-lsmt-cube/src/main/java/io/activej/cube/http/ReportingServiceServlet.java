@@ -65,13 +65,13 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	public static RoutingServlet createRootServlet(Reactor reactor, ICube cube) {
 		return createRootServlet(
-				ReportingServiceServlet.create(reactor, cube));
+			ReportingServiceServlet.create(reactor, cube));
 	}
 
 	public static RoutingServlet createRootServlet(ReportingServiceServlet reportingServiceServlet) {
 		return RoutingServlet.builder(reportingServiceServlet.reactor)
-				.with(GET, "/", reportingServiceServlet)
-				.build();
+			.with(GET, "/", reportingServiceServlet)
+			.build();
 	}
 
 	public static Builder builder(Reactor reactor, ICube cube) {
@@ -114,14 +114,14 @@ public final class ReportingServiceServlet extends ServletWithStats {
 			Stopwatch totalTimeStopwatch = Stopwatch.createStarted();
 			CubeQuery cubeQuery = parseQuery(httpRequest);
 			return cube.query(cubeQuery)
-					.then(queryResult -> {
-						Stopwatch resultProcessingStopwatch = Stopwatch.createStarted();
-						ByteBuf jsonBuf = toJsonBuf(getQueryResultCodec(), queryResult);
-						Promise<HttpResponse> httpResponse = createResponse(jsonBuf);
-						logger.info("Processed request {} ({}) [totalTime={}, jsonConstruction={}]", httpRequest,
-								cubeQuery, totalTimeStopwatch, resultProcessingStopwatch);
-						return httpResponse;
-					});
+				.then(queryResult -> {
+					Stopwatch resultProcessingStopwatch = Stopwatch.createStarted();
+					ByteBuf jsonBuf = toJsonBuf(getQueryResultCodec(), queryResult);
+					Promise<HttpResponse> httpResponse = createResponse(jsonBuf);
+					logger.info("Processed request {} ({}) [totalTime={}, jsonConstruction={}]", httpRequest,
+						cubeQuery, totalTimeStopwatch, resultProcessingStopwatch);
+					return httpResponse;
+				});
 		} catch (QueryException e) {
 			logger.warn("Query exception: " + httpRequest, e);
 			return createErrorResponse(e.getMessage());
@@ -133,27 +133,27 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private static Promise<HttpResponse> createResponse(ByteBuf body) {
 		return HttpResponse.ok200()
-				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)))
-				.withBody(body)
-				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-				.toPromise();
+			.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.JSON, StandardCharsets.UTF_8)))
+			.withBody(body)
+			.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+			.toPromise();
 	}
 
 	private static Promise<HttpResponse> createErrorResponse(String body) {
 		return HttpResponse.ofCode(400)
-				.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.PLAIN_TEXT, StandardCharsets.UTF_8)))
-				.withBody(wrapUtf8(body))
-				.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-				.toPromise();
+			.withHeader(CONTENT_TYPE, ofContentType(ContentType.of(MediaTypes.PLAIN_TEXT, StandardCharsets.UTF_8)))
+			.withBody(wrapUtf8(body))
+			.withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+			.toPromise();
 	}
 
 	private static final Pattern SPLITTER = Pattern.compile(",");
 
 	private static List<String> split(String input) {
 		return SPLITTER.splitAsStream(input)
-				.map(String::trim)
-				.filter(not(String::isEmpty))
-				.collect(toList());
+			.map(String::trim)
+			.filter(not(String::isEmpty))
+			.collect(toList());
 	}
 
 	public CubeQuery parseQuery(HttpRequest request) throws MalformedDataException {

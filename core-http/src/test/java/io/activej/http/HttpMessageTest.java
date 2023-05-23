@@ -33,177 +33,177 @@ public final class HttpMessageTest {
 	@Test
 	public void testHttpResponse() {
 		assertHttpMessageEquals("""
-				HTTP/1.1 100 Continue\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(100).build());
+			HTTP/1.1 100 Continue\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(100).build());
 		assertHttpMessageEquals("""
-				HTTP/1.1 123 OK\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(123).build());
+			HTTP/1.1 123 OK\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(123).build());
+		assertHttpMessageEquals("""
+			HTTP/1.1 200 OK\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(200).build());
+		assertHttpMessageEquals("""
+			HTTP/1.1 400 Bad Request\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(400).build());
+		assertHttpMessageEquals("""
+			HTTP/1.1 405 Method Not Allowed\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(405).build());
+		assertHttpMessageEquals("""
+			HTTP/1.1 456 Error\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(456).build());
+		assertHttpMessageEquals("""
+			HTTP/1.1 500 Internal Server Error\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(500).build());
+		assertHttpMessageEquals("""
+			HTTP/1.1 502 Bad Gateway\r
+			Content-Length: 11\r
+			\r
+			Bad Gateway""", HttpResponse.ofCode(502)
+			.withBody("Bad Gateway".getBytes(StandardCharsets.UTF_8))
+			.build());
 		assertHttpMessageEquals("""
 				HTTP/1.1 200 OK\r
+				Set-Cookie: cookie1=value1\r
 				Content-Length: 0\r
 				\r
-				""", HttpResponse.ofCode(200).build());
-		assertHttpMessageEquals("""
-				HTTP/1.1 400 Bad Request\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(400).build());
-		assertHttpMessageEquals("""
-				HTTP/1.1 405 Method Not Allowed\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(405).build());
-		assertHttpMessageEquals("""
-				HTTP/1.1 456 Error\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(456).build());
-		assertHttpMessageEquals("""
-				HTTP/1.1 500 Internal Server Error\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(500).build());
-		assertHttpMessageEquals("""
-				HTTP/1.1 502 Bad Gateway\r
-				Content-Length: 11\r
-				\r
-				Bad Gateway""", HttpResponse.ofCode(502)
-				.withBody("Bad Gateway".getBytes(StandardCharsets.UTF_8))
+				""",
+			HttpResponse.ofCode(200)
+				.withCookies(List.of(HttpCookie.of("cookie1", "value1")))
 				.build());
 		assertHttpMessageEquals("""
-						HTTP/1.1 200 OK\r
-						Set-Cookie: cookie1=value1\r
-						Content-Length: 0\r
-						\r
-						""",
-				HttpResponse.ofCode(200)
-						.withCookies(List.of(HttpCookie.of("cookie1", "value1")))
-						.build());
+				HTTP/1.1 200 OK\r
+				Set-Cookie: cookie1=value1\r
+				Set-Cookie: cookie2=value2\r
+				Content-Length: 0\r
+				\r
+				""",
+			HttpResponse.ofCode(200)
+				.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
+				.build());
 		assertHttpMessageEquals("""
-						HTTP/1.1 200 OK\r
-						Set-Cookie: cookie1=value1\r
-						Set-Cookie: cookie2=value2\r
-						Content-Length: 0\r
-						\r
-						""",
-				HttpResponse.ofCode(200)
-						.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
-						.build());
-		assertHttpMessageEquals("""
-						HTTP/1.1 200 OK\r
-						Set-Cookie: cookie1=value1\r
-						Set-Cookie: cookie2=value2\r
-						Content-Length: 0\r
-						\r
-						""",
-				HttpResponse.ofCode(200)
-						.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
-						.build());
+				HTTP/1.1 200 OK\r
+				Set-Cookie: cookie1=value1\r
+				Set-Cookie: cookie2=value2\r
+				Content-Length: 0\r
+				\r
+				""",
+			HttpResponse.ofCode(200)
+				.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
+				.build());
 	}
 
 	@Test
 	public void testHttpRequest() {
 		assertHttpMessageEquals("""
-				GET /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.get("http://test.com/index.html").build());
+			GET /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.get("http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				POST /index.html HTTP/1.1\r
-				Host: test.com\r
-				Content-Length: 0\r
-				\r
-				""", HttpRequest.post("http://test.com/index.html").build());
+			POST /index.html HTTP/1.1\r
+			Host: test.com\r
+			Content-Length: 0\r
+			\r
+			""", HttpRequest.post("http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				CONNECT /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.builder(HttpMethod.CONNECT, "http://test.com/index.html").build());
+			CONNECT /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.builder(HttpMethod.CONNECT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				GET /index.html HTTP/1.1\r
-				Host: test.com\r
-				Cookie: cookie1=value1\r
-				\r
-				""", HttpRequest.get("http://test.com/index.html")
-				.withCookie(HttpCookie.of("cookie1", "value1"))
-				.build());
+			GET /index.html HTTP/1.1\r
+			Host: test.com\r
+			Cookie: cookie1=value1\r
+			\r
+			""", HttpRequest.get("http://test.com/index.html")
+			.withCookie(HttpCookie.of("cookie1", "value1"))
+			.build());
 		assertHttpMessageEquals("""
-				GET /index.html HTTP/1.1\r
-				Host: test.com\r
-				Cookie: cookie1=value1; cookie2=value2\r
-				\r
-				""", HttpRequest.get("http://test.com/index.html")
-				.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
-				.build());
+			GET /index.html HTTP/1.1\r
+			Host: test.com\r
+			Cookie: cookie1=value1; cookie2=value2\r
+			\r
+			""", HttpRequest.get("http://test.com/index.html")
+			.withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2")))
+			.build());
 
 		ByteBuf buf = ByteBufPool.allocate(100);
 		buf.put("/abc".getBytes(), 0, 4);
 		assertHttpMessageEquals("""
-				POST /index.html HTTP/1.1\r
-				Host: test.com\r
-				Content-Length: 4\r
-				\r
-				/abc""", HttpRequest.post("http://test.com/index.html")
-				.withBody(buf)
-				.build());
+			POST /index.html HTTP/1.1\r
+			Host: test.com\r
+			Content-Length: 4\r
+			\r
+			/abc""", HttpRequest.post("http://test.com/index.html")
+			.withBody(buf)
+			.build());
 	}
 
 	@Test
 	public void testHttpRequestWithNoPayload() {
 		assertHttpMessageEquals("""
-				GET /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.builder(GET, "http://test.com/index.html").build());
+			GET /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.builder(GET, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				HEAD /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.builder(HEAD, "http://test.com/index.html").build());
+			HEAD /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.builder(HEAD, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				CONNECT /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.builder(CONNECT, "http://test.com/index.html").build());
+			CONNECT /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.builder(CONNECT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				OPTIONS /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.builder(OPTIONS, "http://test.com/index.html").build());
+			OPTIONS /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.builder(OPTIONS, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				TRACE /index.html HTTP/1.1\r
-				Host: test.com\r
-				\r
-				""", HttpRequest.builder(TRACE, "http://test.com/index.html").build());
+			TRACE /index.html HTTP/1.1\r
+			Host: test.com\r
+			\r
+			""", HttpRequest.builder(TRACE, "http://test.com/index.html").build());
 
 		assertHttpMessageEquals("""
-				POST /index.html HTTP/1.1\r
-				Host: test.com\r
-				Content-Length: 0\r
-				\r
-				""", HttpRequest.builder(POST, "http://test.com/index.html").build());
+			POST /index.html HTTP/1.1\r
+			Host: test.com\r
+			Content-Length: 0\r
+			\r
+			""", HttpRequest.builder(POST, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				PUT /index.html HTTP/1.1\r
-				Host: test.com\r
-				Content-Length: 0\r
-				\r
-				""", HttpRequest.builder(PUT, "http://test.com/index.html").build());
+			PUT /index.html HTTP/1.1\r
+			Host: test.com\r
+			Content-Length: 0\r
+			\r
+			""", HttpRequest.builder(PUT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				DELETE /index.html HTTP/1.1\r
-				Host: test.com\r
-				Content-Length: 0\r
-				\r
-				""", HttpRequest.builder(DELETE, "http://test.com/index.html").build());
+			DELETE /index.html HTTP/1.1\r
+			Host: test.com\r
+			Content-Length: 0\r
+			\r
+			""", HttpRequest.builder(DELETE, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
-				PATCH /index.html HTTP/1.1\r
-				Host: test.com\r
-				Content-Length: 0\r
-				\r
-				""", HttpRequest.builder(PATCH, "http://test.com/index.html").build());
+			PATCH /index.html HTTP/1.1\r
+			Host: test.com\r
+			Content-Length: 0\r
+			\r
+			""", HttpRequest.builder(PATCH, "http://test.com/index.html").build());
 	}
 
 	@Test
@@ -212,15 +212,15 @@ public final class HttpMessageTest {
 		HttpHeader HEADER1 = of("HEADER1");
 
 		assertHttpMessageEquals("""
-				HTTP/1.1 200 OK\r
-				header1: value1\r
-				HEADER1: VALUE1\r
-				Content-Length: 0\r
-				\r
-				""", HttpResponse.ofCode(200)
-				.withHeader(header1, "value1")
-				.withHeader(HEADER1, "VALUE1")
-				.build());
+			HTTP/1.1 200 OK\r
+			header1: value1\r
+			HEADER1: VALUE1\r
+			Content-Length: 0\r
+			\r
+			""", HttpResponse.ofCode(200)
+			.withHeader(header1, "value1")
+			.withHeader(HEADER1, "VALUE1")
+			.build());
 	}
 
 	@Test

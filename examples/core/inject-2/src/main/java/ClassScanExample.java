@@ -44,10 +44,10 @@ public class ClassScanExample {
 	//[START REGION_3]
 	public static void main(String[] args) {
 		Injector injector = Injector.of(
-				ModuleBuilder.create()
-						.scan(StaticProviders.class)
-						.scan(new MixedProviders("example.com"))
-						.build()
+			ModuleBuilder.create()
+				.scan(StaticProviders.class)
+				.scan(new MixedProviders("example.com"))
+				.build()
 		);
 
 		DataSource dataSource = injector.getInstance(DataSource.class);

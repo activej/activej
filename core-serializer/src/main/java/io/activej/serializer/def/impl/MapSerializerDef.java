@@ -45,12 +45,12 @@ public final class MapSerializerDef extends RegularMapSerializerDef {
 		SerializerDef.Decoder keyDecoder = keySerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		SerializerDef.Decoder valueDecoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return ifEq(length, value(0),
-				staticCall(Collections.class, "emptyMap"),
-				ifEq(length, value(1),
-						staticCall(Collections.class, "singletonMap",
-								keyDecoder.decode(in),
-								valueDecoder.decode(in)),
-						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
+			staticCall(Collections.class, "emptyMap"),
+			ifEq(length, value(1),
+				staticCall(Collections.class, "singletonMap",
+					keyDecoder.decode(in),
+					valueDecoder.decode(in)),
+				super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}
 
 	@Override

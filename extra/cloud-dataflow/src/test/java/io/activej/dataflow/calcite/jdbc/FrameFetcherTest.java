@@ -27,8 +27,8 @@ public class FrameFetcherTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private static final RecordScheme SCHEME = RecordScheme.builder()
-			.withField("id", long.class)
-			.build();
+		.withField("id", long.class)
+		.build();
 
 	@Test
 	public void test0Frames() {
@@ -82,11 +82,11 @@ public class FrameFetcherTest {
 		RefLong idRef = new RefLong(0);
 
 		StreamSupplier<Record> recordSupplier = StreamSuppliers.ofStream(Stream.generate(() -> {
-					Record record = SCHEME.record();
-					record.set("id", ++idRef.value);
-					return record;
-				})
-				.limit(maxCount));
+				Record record = SCHEME.record();
+				record.set("id", ++idRef.value);
+				return record;
+			})
+			.limit(maxCount));
 
 		BlockingStreamConsumer<Record> blockingStreamConsumer = BlockingStreamConsumer.create();
 		FrameFetcher frameFetcher = new FrameFetcher(blockingStreamConsumer, SCHEME.size());
@@ -99,8 +99,8 @@ public class FrameFetcherTest {
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 			while (true) {
 				int maxRows = random.nextBoolean() ?
-						-1 :
-						random.nextInt(1000);
+					-1 :
+					random.nextInt(1000);
 
 				Meta.Frame frame = frameFetcher.fetch(countRef.get(), maxRows);
 

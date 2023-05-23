@@ -9,8 +9,8 @@ max_line_length = off
 indent_style = tab
 indent_size = 4
 # noinspection EditorConfigKeyCorrectness
-continuation_indent_size = 8
-ij_continuation_indent_size = 8
+continuation_indent_size = 4
+ij_continuation_indent_size = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
 

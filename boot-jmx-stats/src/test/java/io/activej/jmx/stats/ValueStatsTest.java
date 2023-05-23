@@ -149,8 +149,8 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldBuildHistogram() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 15, 500})
-				.build();
+			.withHistogram(new int[]{5, 15, 500})
+			.build();
 
 		// first interval
 		stats.recordValue(2);
@@ -175,10 +175,10 @@ public class ValueStatsTest {
 		}
 
 		List<String> expected = List.of(
-				"( -∞,   5)  :  14",
-				"[  5,  15)  :   3",
-				"[ 15, 500)  :   0",
-				"[500,  +∞)  :   2"
+			"( -∞,   5)  :  14",
+			"[  5,  15)  :   3",
+			"[ 15, 500)  :   0",
+			"[500,  +∞)  :   2"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -186,8 +186,8 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldNotRenderUnusedLeftAndRightHistogramLevels() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 10, 15, 20, 25, 30, 35})
-				.build();
+			.withHistogram(new int[]{5, 10, 15, 20, 25, 30, 35})
+			.build();
 
 		stats.recordValue(12);
 		stats.recordValue(14);
@@ -195,9 +195,9 @@ public class ValueStatsTest {
 		stats.recordValue(23);
 
 		List<String> expected = List.of(
-				"[10, 15)  :  2",
-				"[15, 20)  :  0",
-				"[20, 25)  :  1"
+			"[10, 15)  :  2",
+			"[15, 20)  :  0",
+			"[20, 25)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -205,13 +205,13 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldBuildHistogramProperlyInCaseOfOnlyOneIntermediateValue() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 15, 500})
-				.build();
+			.withHistogram(new int[]{5, 15, 500})
+			.build();
 
 		stats.recordValue(17);
 
 		List<String> expected = List.of(
-				"[15, 500)  :  1"
+			"[15, 500)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -219,13 +219,13 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldBuildHistogramProperlyInCaseOfOnlyOneRightmostValue() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 15, 500})
-				.build();
+			.withHistogram(new int[]{5, 15, 500})
+			.build();
 
 		stats.recordValue(600);
 
 		List<String> expected = List.of(
-				"[500, +∞)  :  1"
+			"[500, +∞)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -233,13 +233,13 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldBuildHistogramProperlyInCaseOfOnlyOneLeftmostValue() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 15, 500})
-				.build();
+			.withHistogram(new int[]{5, 15, 500})
+			.build();
 
 		stats.recordValue(-10);
 
 		List<String> expected = List.of(
-				"(-∞,  5)  :  1"
+			"(-∞,  5)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -247,11 +247,11 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldAccumulateHistogram() {
 		ValueStats stats_1 = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 10, 15})
-				.build();
+			.withHistogram(new int[]{5, 10, 15})
+			.build();
 		ValueStats stats_2 = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(new int[]{5, 10, 15})
-				.build();
+			.withHistogram(new int[]{5, 10, 15})
+			.build();
 
 		// first interval
 		stats_1.recordValue(2);
@@ -274,10 +274,10 @@ public class ValueStatsTest {
 		accumulator.add(stats_2);
 
 		List<String> expected = List.of(
-				"(-∞,  5)  :  3",
-				"[ 5, 10)  :  1",
-				"[10, 15)  :  0",
-				"[15, +∞)  :  1"
+			"(-∞,  5)  :  3",
+			"[ 5, 10)  :  1",
+			"[10, 15)  :  0",
+			"[15, +∞)  :  1"
 		);
 		assertEquals(expected, accumulator.getHistogram());
 	}
@@ -285,8 +285,8 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyBuild_Pow2_Histogram() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(POWERS_OF_TWO)
-				.build();
+			.withHistogram(POWERS_OF_TWO)
+			.build();
 
 		stats.recordValue(-10);
 
@@ -300,11 +300,11 @@ public class ValueStatsTest {
 		stats.recordValue(7);
 
 		List<String> expected = List.of(
-				"(-∞,  0)  :  1",
-				"[ 0,  1)  :  2",
-				"[ 1,  2)  :  0",
-				"[ 2,  4)  :  3",
-				"[ 4,  8)  :  1"
+			"(-∞,  0)  :  1",
+			"[ 0,  1)  :  2",
+			"[ 1,  2)  :  0",
+			"[ 2,  4)  :  3",
+			"[ 4,  8)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -312,44 +312,44 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyBuild_Pow2_Histogram_withLimitValues() {
 		ValueStats stats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withHistogram(POWERS_OF_TWO)
-				.build();
+			.withHistogram(POWERS_OF_TWO)
+			.build();
 
 		stats.recordValue(Integer.MAX_VALUE);
 
 		List<String> expected = List.of(
-				"[         0,          1)  :  0",
-				"[         1,          2)  :  0",
-				"[         2,          4)  :  0",
-				"[         4,          8)  :  0",
-				"[         8,         16)  :  0",
-				"[        16,         32)  :  0",
-				"[        32,         64)  :  0",
-				"[        64,        128)  :  0",
-				"[       128,        256)  :  0",
-				"[       256,        512)  :  0",
-				"[       512,       1024)  :  0",
-				"[      1024,       2048)  :  0",
-				"[      2048,       4096)  :  0",
-				"[      4096,       8192)  :  0",
-				"[      8192,      16384)  :  0",
-				"[     16384,      32768)  :  0",
-				"[     32768,      65536)  :  0",
-				"[     65536,     131072)  :  0",
-				"[    131072,     262144)  :  0",
-				"[    262144,     524288)  :  0",
-				"[    524288,    1048576)  :  0",
-				"[   1048576,    2097152)  :  0",
-				"[   2097152,    4194304)  :  0",
-				"[   4194304,    8388608)  :  0",
-				"[   8388608,   16777216)  :  0",
-				"[  16777216,   33554432)  :  0",
-				"[  33554432,   67108864)  :  0",
-				"[  67108864,  134217728)  :  0",
-				"[ 134217728,  268435456)  :  0",
-				"[ 268435456,  536870912)  :  0",
-				"[ 536870912, 1073741824)  :  0",
-				"[1073741824,         +∞)  :  1"
+			"[         0,          1)  :  0",
+			"[         1,          2)  :  0",
+			"[         2,          4)  :  0",
+			"[         4,          8)  :  0",
+			"[         8,         16)  :  0",
+			"[        16,         32)  :  0",
+			"[        32,         64)  :  0",
+			"[        64,        128)  :  0",
+			"[       128,        256)  :  0",
+			"[       256,        512)  :  0",
+			"[       512,       1024)  :  0",
+			"[      1024,       2048)  :  0",
+			"[      2048,       4096)  :  0",
+			"[      4096,       8192)  :  0",
+			"[      8192,      16384)  :  0",
+			"[     16384,      32768)  :  0",
+			"[     32768,      65536)  :  0",
+			"[     65536,     131072)  :  0",
+			"[    131072,     262144)  :  0",
+			"[    262144,     524288)  :  0",
+			"[    524288,    1048576)  :  0",
+			"[   1048576,    2097152)  :  0",
+			"[   2097152,    4194304)  :  0",
+			"[   4194304,    8388608)  :  0",
+			"[   8388608,   16777216)  :  0",
+			"[  16777216,   33554432)  :  0",
+			"[  33554432,   67108864)  :  0",
+			"[  67108864,  134217728)  :  0",
+			"[ 134217728,  268435456)  :  0",
+			"[ 268435456,  536870912)  :  0",
+			"[ 536870912, 1073741824)  :  0",
+			"[1073741824,         +∞)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
 	}
@@ -362,8 +362,8 @@ public class ValueStatsTest {
 	public void itShouldProperlyBuildStringForPositiveNumbers() {
 		long currentTimestamp = 0;
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withRate()
-				.build();
+			.withRate()
+			.build();
 		double inputValue = 1;
 		int iterations = 100;
 		int rate = ONE_SECOND_IN_MILLIS;
@@ -404,8 +404,8 @@ public class ValueStatsTest {
 	public void itShouldProperlyBuildStringForNegativeNumbers() {
 		long currentTimestamp = 0;
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withRate()
-				.build();
+			.withRate()
+			.build();
 		double inputValue = 0;
 		int iterations = 100;
 		int rate = ONE_SECOND_IN_MILLIS;
@@ -449,9 +449,9 @@ public class ValueStatsTest {
 		long currentTimestamp = 0;
 
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withAbsoluteValues(true)
-				.withRate()
-				.build();
+			.withAbsoluteValues(true)
+			.withRate()
+			.build();
 		int rate = ONE_SECOND_IN_MILLIS;
 
 		double inputValue = -1.1;
@@ -481,8 +481,8 @@ public class ValueStatsTest {
 	@Test
 	public void testFormatterEdgeCases() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withRate()
-				.build();
+			.withRate()
+			.build();
 
 		// Test if min == max
 		long currentTimestamp = 0;
@@ -523,8 +523,8 @@ public class ValueStatsTest {
 	@Test
 	public void testPrecision() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withAbsoluteValues(true)
-				.build();
+			.withAbsoluteValues(true)
+			.build();
 
 		long currentTimestamp = 0;
 		double inputValue = 0.123456789123456789d;
@@ -581,8 +581,8 @@ public class ValueStatsTest {
 		// Test if precision is 100, difference is 10 - precision should be 10/100 = 0.1 (1 digit)
 		inputValue = 0.123456789;
 		valueStats = ValueStats.builder(SMOOTHING_WINDOW)
-				.withPrecision(100)
-				.build();
+			.withPrecision(100)
+			.build();
 		for (int i = 0; i < 2; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += ONE_SECOND_IN_MILLIS;
@@ -595,8 +595,8 @@ public class ValueStatsTest {
 	@Test
 	public void testWithUnit() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withUnit("bytes")
-				.build();
+			.withUnit("bytes")
+			.build();
 
 		long currentTimestamp = 0;
 		double inputValue = 1;
@@ -615,8 +615,8 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyBuildStringWithFormatter() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withRate()
-				.build();
+			.withRate()
+			.build();
 
 		long currentTimestamp = 0;
 		double inputValue = 1;
@@ -671,8 +671,8 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyCalculateRateWithRateUnit() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(1))
-				.withRate()
-				.build();
+			.withRate()
+			.build();
 		long currentTimestamp = 0;
 		int events = 10000;
 		double rate = 20.0;
@@ -692,8 +692,8 @@ public class ValueStatsTest {
 	@Test
 	public void itShouldProperlyCalculateRateWithNamedRateUnit() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(1))
-				.withRate("requests")
-				.build();
+			.withRate("requests")
+			.build();
 		long currentTimestamp = 0;
 		int events = 10000;
 		double rate = 20.0;
@@ -713,8 +713,8 @@ public class ValueStatsTest {
 	@Test
 	public void testScientificNotation() {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
-				.withScientificNotation()
-				.build();
+			.withScientificNotation()
+			.build();
 
 		long currentTimestamp = 0;
 		double inputValue = 1.23456789;
@@ -744,8 +744,8 @@ public class ValueStatsTest {
 	@Test
 	public void testValueStatsWithoutComponents() {
 		ValueStats valueStats1 = ValueStats.builder(Duration.ofSeconds(10))
-				.withAverageAndDeviation(false)
-				.build();
+			.withAverageAndDeviation(false)
+			.build();
 		long currentTimestamp = 0;
 		double inputValue = 1.23456789;
 		valueStats1.recordValue(inputValue);
@@ -754,26 +754,26 @@ public class ValueStatsTest {
 		assertEquals("[1.234568...1.234568]  last: 1.234568", valueStats1.toString());
 
 		ValueStats valueStats2 = ValueStats.builder(Duration.ofSeconds(10))
-				.withMinMax(false)
-				.build();
+			.withMinMax(false)
+			.build();
 		valueStats2.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats2.refresh(currentTimestamp);
 		assertEquals("1.234568±0  last: 1.234568", valueStats2.toString());
 
 		ValueStats valueStats3 = ValueStats.builder(Duration.ofSeconds(10))
-				.withLastValue(false)
-				.build();
+			.withLastValue(false)
+			.build();
 		valueStats3.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats3.refresh(currentTimestamp);
 		assertEquals("1.234568±0  [1.234568...1.234568]", valueStats3.toString());
 
 		ValueStats valueStats4 = ValueStats.builder(Duration.ofSeconds(10))
-				.withLastValue(false)
-				.withMinMax(false)
-				.withAverageAndDeviation(false)
-				.build();
+			.withLastValue(false)
+			.withMinMax(false)
+			.withAverageAndDeviation(false)
+			.build();
 		valueStats4.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats4.refresh(currentTimestamp);
@@ -783,8 +783,8 @@ public class ValueStatsTest {
 	@Test
 	public void testValueStatsWithComponents() {
 		ValueStats valueStats1 = ValueStats.builder(Duration.ofSeconds(10))
-				.withRate()
-				.build();
+			.withRate()
+			.build();
 		long currentTimestamp = 0;
 		double inputValue = 1.23456789;
 		valueStats1.recordValue(inputValue);
@@ -796,8 +796,8 @@ public class ValueStatsTest {
 		assertEquals("1.7519±0.4997  [1.2692...2.2346]  last: 2.2346  calls: 2 @ 1.933/second", valueStats1.toString());
 
 		ValueStats valueStats2 = ValueStats.builder(Duration.ofSeconds(10))
-				.withAbsoluteValues(true)
-				.build();
+			.withAbsoluteValues(true)
+			.build();
 		valueStats2.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats2.refresh(currentTimestamp);
@@ -807,9 +807,9 @@ public class ValueStatsTest {
 		assertEquals("1.752±0.5  [1.235...2.235]  last: 2.235", valueStats2.toString());
 
 		ValueStats valueStats3 = ValueStats.builder(Duration.ofSeconds(10))
-				.withAbsoluteValues(true)
-				.withRate()
-				.build();
+			.withAbsoluteValues(true)
+			.withRate()
+			.build();
 		valueStats3.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats3.refresh(currentTimestamp);

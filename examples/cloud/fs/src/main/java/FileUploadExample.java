@@ -61,10 +61,10 @@ public final class FileUploadExample extends Launcher {
 	protected void run() throws Exception {
 		ExecutorService executor = newSingleThreadExecutor();
 		CompletableFuture<Void> future = reactor.submit(() ->
-				// consumer result here is a marker of it being successfully uploaded
-				ChannelFileReader.open(executor, clientFile)
-						.then(cfr -> cfr.streamTo(client.upload(FILE_NAME, EXAMPLE_TEXT.length())))
-						.whenResult(() -> System.out.printf("%nFile '%s' successfully uploaded%n%n", FILE_NAME))
+			// consumer result here is a marker of it being successfully uploaded
+			ChannelFileReader.open(executor, clientFile)
+				.then(cfr -> cfr.streamTo(client.upload(FILE_NAME, EXAMPLE_TEXT.length())))
+				.whenResult(() -> System.out.printf("%nFile '%s' successfully uploaded%n%n", FILE_NAME))
 		);
 		try {
 			future.get();

@@ -34,7 +34,7 @@ public class MapperTest {
 		StreamTransformer<Integer, Integer> mapper = new Mapper<>(input -> input * input);
 
 		await(supplier.transformWith(mapper)
-				.streamTo(consumer.transformWith(oneByOne())));
+			.streamTo(consumer.transformWith(oneByOne())));
 
 		assertEquals(List.of(1, 4, 9), consumer.getList());
 
@@ -53,9 +53,9 @@ public class MapperTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(source1.transformWith(mapper)
-				.streamTo(consumer
-						.transformWith(decorate(promise -> promise.then(
-								item -> item == 2 * 2 ? Promise.ofException(exception) : Promise.of(item))))));
+			.streamTo(consumer
+				.transformWith(decorate(promise -> promise.then(
+					item -> item == 2 * 2 ? Promise.ofException(exception) : Promise.of(item))))));
 
 		assertSame(exception, e);
 		assertEquals(List.of(1, 4), list);
@@ -71,15 +71,15 @@ public class MapperTest {
 
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<Integer> supplier = concat(
-				StreamSuppliers.ofValues(1, 2, 3),
-				StreamSuppliers.ofValues(4, 5, 6),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofValues(1, 2, 3),
+			StreamSuppliers.ofValues(4, 5, 6),
+			StreamSuppliers.closingWithError(exception)
 		);
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		Exception e = awaitException(supplier.transformWith(mapper)
-				.streamTo(consumer));
+			.streamTo(consumer));
 
 		assertSame(exception, e);
 		assertEquals(List.of(1, 4, 9, 16, 25, 36), consumer.getList());
@@ -95,8 +95,8 @@ public class MapperTest {
 		StreamTransformer<Integer, Integer> mapper = new Mapper<>(input -> input * input);
 
 		StreamConsumer<Integer> mappedConsumer = consumer
-				.transformWith(mapper)
-				.transformWith(oneByOne());
+			.transformWith(mapper)
+			.transformWith(oneByOne());
 
 		await(supplier.streamTo(mappedConsumer));
 
@@ -116,7 +116,7 @@ public class MapperTest {
 		StreamTransformer<Integer, Integer> mul10Mapper = new Mapper<>(input -> input * 10);
 
 		await(supplier.transformWith(squareMapper).transformWith(doubleMapper)
-				.streamTo(consumer.transformWith(mul10Mapper).transformWith(randomlySuspending())));
+			.streamTo(consumer.transformWith(mul10Mapper).transformWith(randomlySuspending())));
 
 		assertEquals(List.of(20, 80, 180, 320, 500, 720), consumer.getList());
 

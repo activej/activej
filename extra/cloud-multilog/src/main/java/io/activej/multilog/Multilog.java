@@ -63,7 +63,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
 public final class Multilog<T> extends AbstractReactive
-		implements IMultilog<T>, ReactiveJmxBeanWithStats {
+	implements IMultilog<T>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Multilog.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
@@ -81,14 +81,16 @@ public final class Multilog<T> extends AbstractReactive
 	private final StreamRegistry<String> streamWrites = StreamRegistry.create();
 
 	private final DetailedStreamStats<ByteBuf> streamReadStats = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 	private final DetailedStreamStats<ByteBuf> streamWriteStats = StreamStats.<ByteBuf>detailedBuilder()
-			.withSizeCounter(forByteBufs())
-			.build();
+		.withSizeCounter(forByteBufs())
+		.build();
 
-	private Multilog(Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
-			LogNamingScheme namingScheme) {
+	private Multilog(
+		Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+		LogNamingScheme namingScheme
+	) {
 		super(reactor);
 		this.fileSystem = fileSystem;
 		this.frameFormat = frameFormat;
@@ -96,13 +98,17 @@ public final class Multilog<T> extends AbstractReactive
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> Multilog<T> create(Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
-			LogNamingScheme namingScheme) {
+	public static <T> Multilog<T> create(
+		Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+		LogNamingScheme namingScheme
+	) {
 		return builder(reactor, fileSystem, frameFormat, serializer, namingScheme).build();
 	}
 
-	public static <T> Multilog<T>.Builder builder(Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
-			LogNamingScheme namingScheme) {
+	public static <T> Multilog<T>.Builder builder(
+		Reactor reactor, IFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
+		LogNamingScheme namingScheme
+	) {
 		return new Multilog<>(reactor, fileSystem, frameFormat, serializer, namingScheme).new Builder();
 	}
 
@@ -145,59 +151,59 @@ public final class Multilog<T> extends AbstractReactive
 		validateLogPartition(logPartition);
 
 		return Promise.of(StreamConsumers.<T>ofSupplier(
-						supplier -> supplier
-								.transformWith(ChannelSerializer.builder(serializer)
-										.withAutoFlushInterval(autoFlushInterval)
-										.withInitialBufferSize(bufferSize)
-										.withSkipSerializationErrors()
-										.build())
-								.transformWith(streamWrites.register(logPartition))
-								.transformWith(streamWriteStats)
-								.bindTo(new LogStreamChunker(reactor, fileSystem, namingScheme, logPartition,
-										consumer -> consumer.transformWith(
-												ChannelFrameEncoder.builder(frameFormat)
-														.withEncoderResets()
-														.build()))))
-				.withAcknowledgement(ack -> ack
-						.mapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e))));
+				supplier -> supplier
+					.transformWith(ChannelSerializer.builder(serializer)
+						.withAutoFlushInterval(autoFlushInterval)
+						.withInitialBufferSize(bufferSize)
+						.withSkipSerializationErrors()
+						.build())
+					.transformWith(streamWrites.register(logPartition))
+					.transformWith(streamWriteStats)
+					.bindTo(new LogStreamChunker(reactor, fileSystem, namingScheme, logPartition,
+						consumer -> consumer.transformWith(
+							ChannelFrameEncoder.builder(frameFormat)
+								.withEncoderResets()
+								.build()))))
+			.withAcknowledgement(ack -> ack
+				.mapException(e -> new MultilogException("Failed to write logs to partition '" + logPartition + '\'', e))));
 	}
 
 	@Override
-	public Promise<StreamSupplierWithResult<T, LogPosition>> read(String logPartition,
-			LogFile startLogFile, long startOffset,
-			@Nullable LogFile endLogFile) {
+	public Promise<StreamSupplierWithResult<T, LogPosition>> read(
+		String logPartition, LogFile startLogFile, long startOffset, @Nullable LogFile endLogFile
+	) {
 		checkInReactorThread(this);
 		validateLogPartition(logPartition);
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
 		return fileSystem.list(namingScheme.getListGlob(logPartition))
-				.map(files ->
-						files.keySet().stream()
-								.map(namingScheme::parse)
-								.filter(Objects::nonNull)
-								.filter(partitionAndFile -> partitionAndFile.logPartition().equals(logPartition))
-								.map(PartitionAndFile::logFile)
-								.collect(toList()))
-				.map(logFiles -> {
-					RefBoolean lastFileRef = new RefBoolean(true);
-					return readLogFiles(logPartition, startPosition, logFiles.stream()
-							.filter(logFile -> {
-								if (logFile.compareTo(startPosition.getLogFile()) < 0)
-									return false;
+			.map(files ->
+				files.keySet().stream()
+					.map(namingScheme::parse)
+					.filter(Objects::nonNull)
+					.filter(partitionAndFile -> partitionAndFile.logPartition().equals(logPartition))
+					.map(PartitionAndFile::logFile)
+					.collect(toList()))
+			.map(logFiles -> {
+				RefBoolean lastFileRef = new RefBoolean(true);
+				return readLogFiles(logPartition, startPosition, logFiles.stream()
+					.filter(logFile -> {
+						if (logFile.compareTo(startPosition.getLogFile()) < 0)
+							return false;
 
-								if (endLogFile == null || logFile.compareTo(endLogFile) <= 0) {
-									return true;
-								}
+						if (endLogFile == null || logFile.compareTo(endLogFile) <= 0) {
+							return true;
+						}
 
-								lastFileRef.set(false);
-								return false;
-							})
-							.map(logFile -> logFile.equals(startPosition.getLogFile()) ?
-									startPosition : LogPosition.create(logFile, 0)
-							)
-							.sorted()
-							.collect(toList()), lastFileRef.get());
-				})
-				.mapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e));
+						lastFileRef.set(false);
+						return false;
+					})
+					.map(logFile -> logFile.equals(startPosition.getLogFile()) ?
+						startPosition : LogPosition.create(logFile, 0)
+					)
+					.sorted()
+					.collect(toList()), lastFileRef.get());
+			})
+			.mapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e));
 	}
 
 	private StreamSupplierWithResult<T, LogPosition> readLogFiles(String logPartition, LogPosition startPosition, List<LogPosition> logFiles, boolean lastFile) {
@@ -233,62 +239,62 @@ public final class Multilog<T> extends AbstractReactive
 					logger.trace("Read log file `{}` from: {}", currentLogFile, position);
 
 				return StreamSuppliers.ofPromise(
-						fileSystem.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
-								.then(Promise::of,
-										e -> {
-											if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
-												if (logger.isWarnEnabled()) {
-													logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
-															position, fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
-															sw, countingFormat.getCount(), e);
+					fileSystem.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
+						.then(Promise::of,
+							e -> {
+								if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
+									if (logger.isWarnEnabled()) {
+										logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
+											position, fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
+											sw, countingFormat.getCount(), e);
+									}
+									return Promise.of(ChannelSuppliers.<ByteBuf>empty());
+								}
+								return Promise.ofException(e);
+							})
+						.map(fileStream -> {
+							countingFormat.resetCount();
+							sw.reset().start();
+							return fileStream
+								.transformWith(streamReads.register(logPartition + ":" + currentLogFile + "@" + position))
+								.transformWith(streamReadStats)
+								.transformWith(
+									ChannelFrameDecoder.builder(countingFormat)
+										.withDecoderResets()
+										.build())
+								.transformWith(supplier ->
+									supplier.withEndOfStream(eos ->
+										eos.map(identity(),
+											e -> {
+												if (e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
+													return null;
 												}
-												return Promise.of(ChannelSuppliers.<ByteBuf>empty());
-											}
-											return Promise.ofException(e);
-										})
-								.map(fileStream -> {
-									countingFormat.resetCount();
-									sw.reset().start();
-									return fileStream
-											.transformWith(streamReads.register(logPartition + ":" + currentLogFile + "@" + position))
-											.transformWith(streamReadStats)
-											.transformWith(
-													ChannelFrameDecoder.builder(countingFormat)
-															.withDecoderResets()
-															.build())
-											.transformWith(supplier ->
-													supplier.withEndOfStream(eos ->
-															eos.map(identity(),
-																	e -> {
-																		if (e instanceof TruncatedDataException && !it.hasNext() && lastFile) {
-																			return null;
-																		}
-																		if (ignoreMalformedLogs && e instanceof MalformedDataException) {
-																			if (logger.isWarnEnabled()) {
-																				logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
-																						fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
-																						sw, countingFormat.getCount(), e);
-																			}
-																			return null;
-																		} else {
-																			throw e;
-																		}
-																	})))
-											.transformWith(ChannelDeserializer.create(serializer))
-											.withEndOfStream(eos ->
-													eos.whenComplete(($, e) -> log(e)));
-								}));
+												if (ignoreMalformedLogs && e instanceof MalformedDataException) {
+													if (logger.isWarnEnabled()) {
+														logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
+															fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
+															sw, countingFormat.getCount(), e);
+													}
+													return null;
+												} else {
+													throw e;
+												}
+											})))
+								.transformWith(ChannelDeserializer.create(serializer))
+								.withEndOfStream(eos ->
+									eos.whenComplete(($, e) -> log(e)));
+						}));
 			}
 
 			private void log(Exception e) {
 				if (e == null && logger.isTraceEnabled()) {
 					logger.trace("Finish log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
-							fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
-							sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1));
+						fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
+						sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1));
 				} else if (e != null && logger.isErrorEnabled()) {
 					logger.error("Error on log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
-							fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
-							sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1), e);
+						fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
+						sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1), e);
 				}
 			}
 		};

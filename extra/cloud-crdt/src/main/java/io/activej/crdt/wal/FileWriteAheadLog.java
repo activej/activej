@@ -50,7 +50,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -73,7 +72,8 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
 public final class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
-		implements IWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IWriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(FileWriteAheadLog.class);
 	private static final boolean CHECKS = Checks.isEnabled(FileWriteAheadLog.class);
 
@@ -105,13 +105,15 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 	private final EventStats totalPuts = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats totalFlushes = EventStats.create(SMOOTHING_WINDOW);
 	private final ValueStats totalFlushedSize = ValueStats.builder(SMOOTHING_WINDOW)
-			.withUnit("bytes")
-			.build();
+		.withUnit("bytes")
+		.build();
 	private boolean detailedMonitoring;
 	// endregion
 
-	private FileWriteAheadLog(Reactor reactor, Executor executor,
-			Path path, CrdtDataBinarySerializer<K, S> serializer, FlushMode flushMode, @Nullable WalUploader<K, S> uploader) {
+	private FileWriteAheadLog(
+		Reactor reactor, Executor executor, Path path, CrdtDataBinarySerializer<K, S> serializer, FlushMode flushMode,
+		@Nullable WalUploader<K, S> uploader
+	) {
 		super(reactor);
 		this.executor = executor;
 		this.path = path;
@@ -121,41 +123,27 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	public static <K extends Comparable<K>, S> FileWriteAheadLog<K, S> create(
-			Reactor reactor,
-			Executor executor,
-			Path path,
-			CrdtDataBinarySerializer<K, S> serializer,
-			WalUploader<K, S> uploader
+		Reactor reactor, Executor executor, Path path, CrdtDataBinarySerializer<K, S> serializer,
+		WalUploader<K, S> uploader
 	) {
 		return builder(reactor, executor, path, serializer, uploader).build();
 	}
 
 	public static <K extends Comparable<K>, S> FileWriteAheadLog<K, S> create(
-			Reactor reactor,
-			Executor executor,
-			Path path,
-			CrdtDataBinarySerializer<K, S> serializer,
-			FlushMode flushMode
+		Reactor reactor, Executor executor, Path path, CrdtDataBinarySerializer<K, S> serializer, FlushMode flushMode
 	) {
 		return builder(reactor, executor, path, serializer, flushMode).build();
 	}
 
 	public static <K extends Comparable<K>, S> FileWriteAheadLog<K, S>.Builder builder(
-			Reactor reactor,
-			Executor executor,
-			Path path,
-			CrdtDataBinarySerializer<K, S> serializer,
-			WalUploader<K, S> uploader
+		Reactor reactor, Executor executor, Path path, CrdtDataBinarySerializer<K, S> serializer,
+		WalUploader<K, S> uploader
 	) {
 		return new FileWriteAheadLog<>(reactor, executor, path, serializer, UPLOAD_TO_STORAGE, uploader).new Builder();
 	}
 
 	public static <K extends Comparable<K>, S> FileWriteAheadLog<K, S>.Builder builder(
-			Reactor reactor,
-			Executor executor,
-			Path path,
-			CrdtDataBinarySerializer<K, S> serializer,
-			FlushMode flushMode
+		Reactor reactor, Executor executor, Path path, CrdtDataBinarySerializer<K, S> serializer, FlushMode flushMode
 	) {
 		checkArgument(flushMode == ROTATE_FILE || flushMode == ROTATE_FILE_AWAIT);
 		return new FileWriteAheadLog<>(reactor, executor, path, serializer, flushMode, null).new Builder();
@@ -188,7 +176,7 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 		flushRequired = true;
 		return consumer.accept(new CrdtData<>(key, now.currentTimeMillis(), value))
-				.whenComplete(putPromise.recordStats());
+			.whenComplete(putPromise.recordStats());
 	}
 
 	@Override
@@ -196,15 +184,15 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 		if (CHECKS) checkInReactorThread(this);
 		logger.trace("Flush called");
 		return flush.run()
-				.whenComplete(flushPromise.recordStats());
+			.whenComplete(flushPromise.recordStats());
 	}
 
 	@Override
 	public Promise<?> start() {
 		checkInReactorThread(this);
 		return scanLostFiles()
-				.then(this::flushFiles)
-				.whenResult(() -> this.consumer = createConsumer());
+			.then(this::flushFiles)
+			.whenResult(() -> this.consumer = createConsumer());
 	}
 
 	@Override
@@ -242,12 +230,12 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 		}
 
 		return finishedConsumer.finish()
-				.then(() -> Promise.ofBlocking(executor, () -> rename(finishedConsumer.walFile))
-						.whenException(e -> scanLostFiles = true))
-				.then(this::scanLostFiles)
-				.then(this::flushFiles)
-				.whenException(e -> flushRequired = true)
-				.whenComplete(toLogger(logger, TRACE, TRACE, "doFlush", this));
+			.then(() -> Promise.ofBlocking(executor, () -> rename(finishedConsumer.walFile))
+				.whenException(e -> scanLostFiles = true))
+			.then(this::scanLostFiles)
+			.then(this::flushFiles)
+			.whenException(e -> flushRequired = true)
+			.whenComplete(toLogger(logger, TRACE, TRACE, "doFlush", this));
 	}
 
 	private Promise<Void> flushFiles() {
@@ -266,13 +254,13 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 		if (!scanLostFiles) return Promise.complete();
 
 		return getLostFiles()
-				.then(lostFiles ->
-						Promise.ofBlocking(executor, () -> {
-							for (Path lostFile : lostFiles) {
-								rename(lostFile);
-							}
-						}))
-				.whenResult(() -> scanLostFiles = false);
+			.then(lostFiles ->
+				Promise.ofBlocking(executor, () -> {
+					for (Path lostFile : lostFiles) {
+						rename(lostFile);
+					}
+				}))
+			.whenResult(() -> scanLostFiles = false);
 	}
 
 	private void rename(Path from) throws IOException {
@@ -290,28 +278,28 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 
 	private Promise<Void> awaitExternalFlush() {
 		return getWalFiles(executor, path)
-				.then(list -> list.isEmpty() ?
-						Promise.complete() :
-						Promises.delay(Duration.ofSeconds(1))
-				.then(this::awaitExternalFlush));
+			.then(list -> list.isEmpty() ?
+				Promise.complete() :
+				Promises.delay(Duration.ofSeconds(1))
+					.then(this::awaitExternalFlush));
 	}
 
 	private Promise<List<Path>> getLostFiles() {
 		return Promise.ofBlocking(executor,
-						() -> {
-							try (Stream<Path> list = Files.list(path)) {
-								return list
-										.filter(file -> Files.isRegularFile(file) &&
-												file.toString().endsWith(EXT_CURRENT) &&
-												(consumer == null || !file.equals(consumer.getWalFile())))
-										.collect(toList());
-							}
-						})
-				.whenResult(walFiles -> {
-					if (logger.isTraceEnabled()) {
-						logger.trace("Found {} lost files {}", walFiles.size(), walFiles.stream().map(Path::getFileName).collect(toList()));
+				() -> {
+					try (Stream<Path> list = Files.list(path)) {
+						return list
+							.filter(file -> Files.isRegularFile(file) &&
+								file.toString().endsWith(EXT_CURRENT) &&
+								(consumer == null || !file.equals(consumer.getWalFile())))
+							.collect(toList());
 					}
-				});
+				})
+			.whenResult(walFiles -> {
+				if (logger.isTraceEnabled()) {
+					logger.trace("Found {} lost files {}", walFiles.size(), walFiles.stream().map(Path::getFileName).collect(toList()));
+				}
+			});
 	}
 
 	public final class WalConsumer {
@@ -329,18 +317,18 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 			this.walFile = walFile;
 			ChannelConsumer<ByteBuf> writer = ChannelConsumers.ofPromise(ChannelFileWriter.open(executor, walFile));
 			internalSupplier.streamTo(StreamConsumers.ofSupplier(supplier -> supplier
-					.transformWith(ChannelSerializer.builder(serializer)
-							.withAutoFlushInterval(Duration.ZERO)
-							.build())
-					.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
-					.streamTo(ChannelConsumers.ofAsyncConsumer(value -> {
-						if (this.writeCallback == null) return writer.accept(value);
+				.transformWith(ChannelSerializer.builder(serializer)
+					.withAutoFlushInterval(Duration.ZERO)
+					.build())
+				.transformWith(ChannelFrameEncoder.create(FRAME_FORMAT))
+				.streamTo(ChannelConsumers.ofAsyncConsumer(value -> {
+					if (this.writeCallback == null) return writer.accept(value);
 
-						SettablePromise<Void> writeCallback = this.writeCallback;
-						this.writeCallback = null;
-						return writer.accept(value)
-								.whenComplete(writeCallback::set);
-					}))));
+					SettablePromise<Void> writeCallback = this.writeCallback;
+					this.writeCallback = null;
+					return writer.accept(value)
+						.whenComplete(writeCallback::set);
+				}))));
 		}
 
 		public Path getWalFile() {

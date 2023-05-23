@@ -36,16 +36,16 @@ public class DefiningClassLoaderTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"No bytecode storage", (Supplier<DefiningClassLoader>) DefiningClassLoader::create},
-				new Object[]{"File bytecode storage", (Supplier<DefiningClassLoader>) () -> {
-					try {
-						return DefiningClassLoader.builder()
-								.withBytecodeStorage(FileBytecodeStorage.create(temporaryFolder.newFolder().toPath()))
-								.build();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				}}
+			new Object[]{"No bytecode storage", (Supplier<DefiningClassLoader>) DefiningClassLoader::create},
+			new Object[]{"File bytecode storage", (Supplier<DefiningClassLoader>) () -> {
+				try {
+					return DefiningClassLoader.builder()
+						.withBytecodeStorage(FileBytecodeStorage.create(temporaryFolder.newFolder().toPath()))
+						.build();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}}
 		);
 	}
 
@@ -59,9 +59,9 @@ public class DefiningClassLoaderTest {
 		String testString = "test string";
 		String className = "io.activej.codegen.TestSupplier";
 		Class<Supplier> supplier1Class = classLoader.ensureClass(className,
-				() -> ClassGenerator.builder(Supplier.class)
-						.withMethod("get", value(testString))
-						.build());
+			() -> ClassGenerator.builder(Supplier.class)
+				.withMethod("get", value(testString))
+				.build());
 
 		Class<Supplier> supplier2Class = classLoader.ensureClass(className, failingSupplier());
 
@@ -78,8 +78,8 @@ public class DefiningClassLoaderTest {
 		String className2 = "MySupplier";
 
 		Supplier<ClassGenerator<Supplier>> cbSupplier = () -> ClassGenerator.builder(Supplier.class)
-				.withMethod("get", value(testString))
-				.build();
+			.withMethod("get", value(testString))
+			.build();
 
 		Class<Supplier> supplier1Class = classLoader.ensureClass(className1, cbSupplier);
 		Class<Supplier> supplier2Class = classLoader.ensureClass(className2, cbSupplier);
@@ -99,9 +99,9 @@ public class DefiningClassLoaderTest {
 
 		try {
 			classLoader.ensureClass(className,
-					() -> ClassGenerator.builder(Supplier.class)
-							.withMethod("get", value(testString))
-							.build());
+				() -> ClassGenerator.builder(Supplier.class)
+					.withMethod("get", value(testString))
+					.build());
 			fail();
 		} catch (ClassFormatError ignored) {
 		}
@@ -114,9 +114,9 @@ public class DefiningClassLoaderTest {
 
 		try {
 			classLoader.ensureClass(className,
-					() -> ClassGenerator.builder(Supplier.class)
-							.withMethod("get", value(testString))
-							.build());
+				() -> ClassGenerator.builder(Supplier.class)
+					.withMethod("get", value(testString))
+					.build());
 			fail();
 		} catch (NoClassDefFoundError e) {
 			assertTrue(e.getMessage().startsWith("IllegalName"));

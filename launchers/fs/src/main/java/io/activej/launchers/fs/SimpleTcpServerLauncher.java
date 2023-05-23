@@ -56,25 +56,25 @@ public class SimpleTcpServerLauncher extends Launcher {
 	@Provides
 	public NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Eager
 	@Provides
 	FileSystemServer fileSystemServer(NioReactor reactor, IFileSystem fileSystem, Config config) {
 		return FileSystemServer.builder(reactor, fileSystem)
-				.initialize(ofFileSystemServer(config.getChild("fs")))
-				.build();
+			.initialize(ofFileSystemServer(config.getChild("fs")))
+			.build();
 	}
 
 	@Provides
 	@Eager
 	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.builder(reactor, servlet)
-				.initialize(ofHttpServer(config.getChild("fs.http.gui")))
-				.build();
+			.initialize(ofHttpServer(config.getChild("fs.http.gui")))
+			.build();
 	}
 
 	@Provides
@@ -95,24 +95,24 @@ public class SimpleTcpServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return createConfig()
-				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(Config.ofSystemProperties("config"));
+			.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	protected Config createConfig() {
 		return Config.create()
-				.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
-				.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
+			.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
+			.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	@Override

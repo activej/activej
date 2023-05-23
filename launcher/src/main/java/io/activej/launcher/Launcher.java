@@ -239,7 +239,7 @@ public abstract class Launcher {
 							startedServices.add(service);
 						} else {
 							exceptions.add(
-									(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
+								(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
 						}
 						latch.countDown();
 					}
@@ -260,7 +260,7 @@ public abstract class Launcher {
 			service.stop().whenComplete(($, e) -> {
 				if (e != null) {
 					logger.error("Stop error in " + service,
-							(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
+						(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
 				}
 				latch.countDown();
 			});
@@ -283,19 +283,19 @@ public abstract class Launcher {
 		Key<CompletionStage<Void>> completionStageKey = new Key<>() {};
 
 		return ModuleBuilder.create()
-				.bind(String[].class, Args.class).toInstance(args)
+			.bind(String[].class, Args.class).toInstance(args)
 
-				.bind(Launcher.class).to(launcherClass)
-				.bind(launcherClass).toInstance(this)
+			.bind(Launcher.class).to(launcherClass)
+			.bind(launcherClass).toInstance(this)
 
-				.bindIntoSet(INSTANCE_INJECTORS_KEY.getTypeParameter(0), Key.ofType(parameterizedType(InstanceInjector.class, launcherClass)))
+			.bindIntoSet(INSTANCE_INJECTORS_KEY.getTypeParameter(0), Key.ofType(parameterizedType(InstanceInjector.class, launcherClass)))
 
-				.bind(completionStageKey.qualified(OnStart.class)).toInstance(onStartFuture)
-				.bind(completionStageKey.qualified(OnRun.class)).toInstance(onRunFuture)
-				.bind(completionStageKey.qualified(OnComplete.class)).toInstance(onCompleteFuture)
+			.bind(completionStageKey.qualified(OnStart.class)).toInstance(onStartFuture)
+			.bind(completionStageKey.qualified(OnRun.class)).toInstance(onRunFuture)
+			.bind(completionStageKey.qualified(OnComplete.class)).toInstance(onCompleteFuture)
 
-				.scan(Launcher.this)
-				.build();
+			.scan(Launcher.this)
+			.build();
 	}
 
 	/**

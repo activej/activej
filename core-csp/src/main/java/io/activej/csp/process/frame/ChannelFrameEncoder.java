@@ -29,7 +29,8 @@ import io.activej.csp.supplier.ChannelSupplier;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf> {
+	implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf> {
+
 	private static final boolean CHECKS = Checks.isEnabled(ChannelFrameEncoder.class);
 
 	private final BlockEncoder encoder;
@@ -107,19 +108,19 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 
 	private void encodeBufs() {
 		input.filter(ByteBuf::canRead)
-				.get()
-				.whenResult(buf -> {
-					if (encoderResets) encoder.reset();
-					if (buf != null) {
-						ByteBuf outputBuf = encoder.encode(buf);
-						buf.recycle();
-						output.accept(outputBuf)
-								.whenResult(this::encodeBufs);
-					} else {
-						output.acceptAll(encoder.encodeEndOfStreamBlock(), null)
-								.whenResult(this::completeProcess);
-					}
-				});
+			.get()
+			.whenResult(buf -> {
+				if (encoderResets) encoder.reset();
+				if (buf != null) {
+					ByteBuf outputBuf = encoder.encode(buf);
+					buf.recycle();
+					output.accept(outputBuf)
+						.whenResult(this::encodeBufs);
+				} else {
+					output.acceptAll(encoder.encodeEndOfStreamBlock(), null)
+						.whenResult(this::completeProcess);
+				}
+			});
 	}
 
 	@Override

@@ -95,7 +95,7 @@ public class DynamicMBeanFactoryAttributesEnumTest {
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(MBeanWithEnum mBean) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(mBean), JmxBeanSettings.create(), false);
+			.createDynamicMBean(singletonList(mBean), JmxBeanSettings.create(), false);
 	}
 	// endregion
 }

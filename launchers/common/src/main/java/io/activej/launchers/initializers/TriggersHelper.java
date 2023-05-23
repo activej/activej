@@ -60,7 +60,7 @@ public final class TriggersHelper {
 			return TriggerResult.ofError(exceptionStats);
 		}
 		return completeExceptionTime.test(lastCompleteTime, lastExceptionTime)
-				? TriggerResult.ofError(exceptionStats)
-				: TriggerResult.none();
+			? TriggerResult.ofError(exceptionStats)
+			: TriggerResult.none();
 	}
 }

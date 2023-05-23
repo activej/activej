@@ -31,50 +31,50 @@ public class StreamLeftJoinTest {
 	@Test
 	public void test1() {
 		StreamSupplier<DataItemMaster> source1 = StreamSuppliers.ofValues(
-				new DataItemMaster(10, 10, "masterA"),
-				new DataItemMaster(20, 10, "masterB"),
-				new DataItemMaster(25, 15, "masterB+"),
-				new DataItemMaster(30, 20, "masterC"),
-				new DataItemMaster(40, 20, "masterD"));
+			new DataItemMaster(10, 10, "masterA"),
+			new DataItemMaster(20, 10, "masterB"),
+			new DataItemMaster(25, 15, "masterB+"),
+			new DataItemMaster(30, 20, "masterC"),
+			new DataItemMaster(40, 20, "masterD"));
 
 		StreamSupplier<DataItemDetail> source2 = StreamSuppliers.ofValues(
-				new DataItemDetail(10, "detailX"),
-				new DataItemDetail(20, "detailY"));
+			new DataItemDetail(10, "detailX"),
+			new DataItemDetail(20, "detailY"));
 
 		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamLeftJoin =
-				StreamLeftJoin.create(Integer::compareTo,
-						input -> input.detailId,
-						input -> input.id,
-						new ValueLeftJoiner<>() {
-							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
-							}
+			StreamLeftJoin.create(Integer::compareTo,
+				input -> input.detailId,
+				input -> input.id,
+				new ValueLeftJoiner<>() {
+					@Override
+					public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+					}
 
-							@Override
-							public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
-							}
-						}
-				);
+					@Override
+					public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+					}
+				}
+			);
 
 		ToListStreamConsumer<DataItemMasterDetail> consumer = ToListStreamConsumer.create();
 
 		await(
-				source1.streamTo(streamLeftJoin.getLeft()),
-				source2.streamTo(streamLeftJoin.getRight()),
-				streamLeftJoin.getOutput().streamTo(
-						consumer.transformWith(oneByOne()))
+			source1.streamTo(streamLeftJoin.getLeft()),
+			source2.streamTo(streamLeftJoin.getRight()),
+			streamLeftJoin.getOutput().streamTo(
+				consumer.transformWith(oneByOne()))
 		);
 
 		assertEquals(List.of(
-						new DataItemMasterDetail(10, 10, "masterA", "detailX"),
-						new DataItemMasterDetail(20, 10, "masterB", "detailX"),
-						new DataItemMasterDetail(25, 15, "masterB+", null),
-						new DataItemMasterDetail(30, 20, "masterC", "detailY"),
-						new DataItemMasterDetail(40, 20, "masterD", "detailY")
-				),
-				consumer.getList());
+				new DataItemMasterDetail(10, 10, "masterA", "detailX"),
+				new DataItemMasterDetail(20, 10, "masterB", "detailX"),
+				new DataItemMasterDetail(25, 15, "masterB+", null),
+				new DataItemMasterDetail(30, 20, "masterC", "detailY"),
+				new DataItemMasterDetail(40, 20, "masterD", "detailY")
+			),
+			consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
 	}
@@ -82,38 +82,38 @@ public class StreamLeftJoinTest {
 	@Test
 	public void testLeftJoinSingle() {
 		StreamSupplier<DataItemMaster> source1 = StreamSuppliers.ofValue(
-				new DataItemMaster(25, 5, "master")
+			new DataItemMaster(25, 5, "master")
 		);
 		StreamSupplier<DataItemDetail> source2 = StreamSuppliers.empty();
 
 		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamJoin =
-				StreamLeftJoin.create(Integer::compareTo,
-						input -> input.detailId,
-						input -> input.id,
-						new ValueLeftJoiner<>() {
-							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
-							}
+			StreamLeftJoin.create(Integer::compareTo,
+				input -> input.detailId,
+				input -> input.id,
+				new ValueLeftJoiner<>() {
+					@Override
+					public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+					}
 
-							@Override
-							public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
-							}
-						}
-				);
+					@Override
+					public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+					}
+				}
+			);
 
 		ToListStreamConsumer<DataItemMasterDetail> consumer = ToListStreamConsumer.create();
 
 		await(
-				source1.streamTo(streamJoin.getLeft()),
-				source2.streamTo(streamJoin.getRight()),
-				streamJoin.getOutput().streamTo(
-						consumer.transformWith(oneByOne()))
+			source1.streamTo(streamJoin.getLeft()),
+			source2.streamTo(streamJoin.getRight()),
+			streamJoin.getOutput().streamTo(
+				consumer.transformWith(oneByOne()))
 		);
 
 		assertEquals(List.of(new DataItemMasterDetail(25, 5, "master", null)),
-				consumer.getList());
+			consumer.getList());
 
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
@@ -122,38 +122,38 @@ public class StreamLeftJoinTest {
 	@Test
 	public void testLeftOuterJoinSingleLeft() {
 		StreamSupplier<DataItemMaster> source1 = StreamSuppliers.ofValue(
-				new DataItemMaster(25, 5, "master")
+			new DataItemMaster(25, 5, "master")
 		);
 		StreamSupplier<DataItemDetail> source2 = StreamSuppliers.empty();
 
 		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamLeftJoin =
-				StreamLeftJoin.create(Integer::compareTo,
-						input -> input.detailId,
-						input -> input.id,
-						new ValueLeftJoiner<>() {
-							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
-							}
+			StreamLeftJoin.create(Integer::compareTo,
+				input -> input.detailId,
+				input -> input.id,
+				new ValueLeftJoiner<>() {
+					@Override
+					public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+					}
 
-							@Override
-							public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
-							}
-						}
-				);
+					@Override
+					public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+					}
+				}
+			);
 
 		ToListStreamConsumer<DataItemMasterDetail> consumer = ToListStreamConsumer.create();
 
 		await(
-				source1.streamTo(streamLeftJoin.getLeft()),
-				source2.streamTo(streamLeftJoin.getRight()),
-				streamLeftJoin.getOutput().streamTo(
-						consumer.transformWith(oneByOne()))
+			source1.streamTo(streamLeftJoin.getLeft()),
+			source2.streamTo(streamLeftJoin.getRight()),
+			streamLeftJoin.getOutput().streamTo(
+				consumer.transformWith(oneByOne()))
 		);
 
 		assertEquals(singletonList(new DataItemMasterDetail(25, 5, "master", null)),
-				consumer.getList());
+			consumer.getList());
 
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
@@ -164,42 +164,42 @@ public class StreamLeftJoinTest {
 		List<DataItemMasterDetail> list = new ArrayList<>();
 
 		StreamSupplier<DataItemMaster> source1 = StreamSuppliers.ofValues(
-				new DataItemMaster(10, 10, "masterA"),
-				new DataItemMaster(20, 10, "masterB"),
-				new DataItemMaster(25, 15, "masterB+"),
-				new DataItemMaster(30, 20, "masterC"),
-				new DataItemMaster(40, 20, "masterD"));
+			new DataItemMaster(10, 10, "masterA"),
+			new DataItemMaster(20, 10, "masterB"),
+			new DataItemMaster(25, 15, "masterB+"),
+			new DataItemMaster(30, 20, "masterC"),
+			new DataItemMaster(40, 20, "masterD"));
 
 		StreamSupplier<DataItemDetail> source2 = StreamSuppliers.ofValues(
-				new DataItemDetail(10, "detailX"),
-				new DataItemDetail(20, "detailY"));
+			new DataItemDetail(10, "detailX"),
+			new DataItemDetail(20, "detailY"));
 
 		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamLeftJoin =
-				StreamLeftJoin.create(Integer::compareTo,
-						input -> input.detailId,
-						input -> input.id,
-						new ValueLeftJoiner<>() {
-							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
-							}
+			StreamLeftJoin.create(Integer::compareTo,
+				input -> input.detailId,
+				input -> input.id,
+				new ValueLeftJoiner<>() {
+					@Override
+					public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+					}
 
-							@Override
-							public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
-							}
-						}
-				);
+					@Override
+					public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+					}
+				}
+			);
 
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamConsumer<DataItemMasterDetail> consumer = ToListStreamConsumer.create(list)
-				.transformWith(decorate(promise ->
-						promise.then(item -> Promise.ofException(exception))));
+			.transformWith(decorate(promise ->
+				promise.then(item -> Promise.ofException(exception))));
 
 		Exception e = awaitException(
-				source1.streamTo(streamLeftJoin.getLeft()),
-				source2.streamTo(streamLeftJoin.getRight()),
-				streamLeftJoin.getOutput().streamTo(consumer)
+			source1.streamTo(streamLeftJoin.getLeft()),
+			source2.streamTo(streamLeftJoin.getRight()),
+			streamLeftJoin.getOutput().streamTo(consumer)
 		);
 
 		assertSame(exception, e);
@@ -212,44 +212,44 @@ public class StreamLeftJoinTest {
 	public void testSupplierWithError() {
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<DataItemMaster> source1 = StreamSuppliers.concat(
-				StreamSuppliers.ofValue(new DataItemMaster(10, 10, "masterA")),
-				StreamSuppliers.closingWithError(exception),
-				StreamSuppliers.ofValue(new DataItemMaster(20, 10, "masterB")),
-				StreamSuppliers.ofValue(new DataItemMaster(25, 15, "masterB+")),
-				StreamSuppliers.ofValue(new DataItemMaster(30, 20, "masterC")),
-				StreamSuppliers.ofValue(new DataItemMaster(40, 20, "masterD"))
+			StreamSuppliers.ofValue(new DataItemMaster(10, 10, "masterA")),
+			StreamSuppliers.closingWithError(exception),
+			StreamSuppliers.ofValue(new DataItemMaster(20, 10, "masterB")),
+			StreamSuppliers.ofValue(new DataItemMaster(25, 15, "masterB+")),
+			StreamSuppliers.ofValue(new DataItemMaster(30, 20, "masterC")),
+			StreamSuppliers.ofValue(new DataItemMaster(40, 20, "masterD"))
 		);
 
 		StreamSupplier<DataItemDetail> source2 = StreamSuppliers.concat(
-				StreamSuppliers.ofValue(new DataItemDetail(10, "detailX")),
-				StreamSuppliers.ofValue(new DataItemDetail(20, "detailY")),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofValue(new DataItemDetail(10, "detailX")),
+			StreamSuppliers.ofValue(new DataItemDetail(20, "detailY")),
+			StreamSuppliers.closingWithError(exception)
 		);
 
 		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamLeftJoin =
-				StreamLeftJoin.create(Integer::compareTo,
-						input -> input.detailId,
-						input -> input.id,
-						new ValueLeftJoiner<>() {
-							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
-							}
+			StreamLeftJoin.create(Integer::compareTo,
+				input -> input.detailId,
+				input -> input.id,
+				new ValueLeftJoiner<>() {
+					@Override
+					public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+					}
 
-							@Override
-							public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
-								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
-							}
-						}
-				);
+					@Override
+					public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+					}
+				}
+			);
 
 		List<DataItemMasterDetail> list = new ArrayList<>();
 		StreamConsumer<DataItemMasterDetail> consumer = ToListStreamConsumer.create(list);
 
 		Exception e = awaitException(
-				source1.streamTo(streamLeftJoin.getLeft()),
-				source2.streamTo(streamLeftJoin.getRight()),
-				streamLeftJoin.getOutput().streamTo(consumer.transformWith(oneByOne()))
+			source1.streamTo(streamLeftJoin.getLeft()),
+			source2.streamTo(streamLeftJoin.getRight()),
+			streamLeftJoin.getOutput().streamTo(consumer.transformWith(oneByOne()))
 		);
 
 		assertSame(exception, e);

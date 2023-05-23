@@ -67,9 +67,9 @@ public abstract class BindingInitializer<T> {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBindingInitializer<T>[] initializers = bindingInitializers.stream()
-						.filter(bindingInitializer -> bindingInitializer != NOOP)
-						.map(bindingInitializer -> bindingInitializer.compile(compiledBindings))
-						.toArray(CompiledBindingInitializer[]::new);
+					.filter(bindingInitializer -> bindingInitializer != NOOP)
+					.map(bindingInitializer -> bindingInitializer.compile(compiledBindings))
+					.toArray(CompiledBindingInitializer[]::new);
 				if (initializers.length == 0) return new CompiledBindingInitializer<>() {
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {

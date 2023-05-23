@@ -49,60 +49,60 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 	@Test
 	public void malformedRequest() {
 		String result = await(redis -> redis.cmd(RedisRequest.of("SET", "x", "value"), OK)
-				.then(() -> redis.cmd(RedisRequest.of("GETTTTT"), BYTES_ISO_8859_1)
-						.then(($, e) -> {
-							assertNotNull(e);
-							assertThat(e, instanceOf(ServerError.class));
-							assertThat(e.getMessage(), containsString("ERR unknown command `GETTTTT`"));
-							return redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1);
-						})));
+			.then(() -> redis.cmd(RedisRequest.of("GETTTTT"), BYTES_ISO_8859_1)
+				.then(($, e) -> {
+					assertNotNull(e);
+					assertThat(e, instanceOf(ServerError.class));
+					assertThat(e.getMessage(), containsString("ERR unknown command `GETTTTT`"));
+					return redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1);
+				})));
 		assertEquals("value", result);
 	}
 
 	@Test
 	public void simpleTransaction() {
 		await(redis -> redis.multi()
-				.then(() -> {
-					Promise<Object[]> listPromise = Promises.toArray(Object.class,
-							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-							redis.cmd(RedisRequest.of("SET", "x", "value"), OK),
-							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-							redis.cmd(RedisRequest.of("SET", "x", "new value"), OK),
-							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-							redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
-					);
-					return redis.exec()
-							.whenResult(transactionResult -> {
-								assertDeepEquals(listPromise.getResult(), transactionResult);
-								assertDeepEquals(new Object[]{null, null, "value", null, "new value", 1L}, transactionResult);
-							});
-				}));
+			.then(() -> {
+				Promise<Object[]> listPromise = Promises.toArray(Object.class,
+					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+					redis.cmd(RedisRequest.of("SET", "x", "value"), OK),
+					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+					redis.cmd(RedisRequest.of("SET", "x", "new value"), OK),
+					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+					redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
+				);
+				return redis.exec()
+					.whenResult(transactionResult -> {
+						assertDeepEquals(listPromise.getResult(), transactionResult);
+						assertDeepEquals(new Object[]{null, null, "value", null, "new value", 1L}, transactionResult);
+					});
+			}));
 	}
 
 	@Test
 	public void simpleTransactionWithError() {
 		String result = await(redis -> redis.multi()
-				.then(() -> {
-					Promise<Object[]> listPromise = Promises.toArray(Object.class,
-							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-							redis.cmd(RedisRequest.of("SETTTTTTT"), OK),
-							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-							redis.cmd(RedisRequest.of("SET", "x", "new value"), OK),
-							redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-							redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG));
-					return redis.exec()
-							.then(($, e) -> {
-								assertNotNull(e);
-								assertThat(e, instanceOf(ServerError.class));
-								assertThat(e.getMessage(), containsString("EXECABORT Transaction discarded because of previous errors."));
+			.then(() -> {
+				Promise<Object[]> listPromise = Promises.toArray(Object.class,
+					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+					redis.cmd(RedisRequest.of("SETTTTTTT"), OK),
+					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+					redis.cmd(RedisRequest.of("SET", "x", "new value"), OK),
+					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+					redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG));
+				return redis.exec()
+					.then(($, e) -> {
+						assertNotNull(e);
+						assertThat(e, instanceOf(ServerError.class));
+						assertThat(e.getMessage(), containsString("EXECABORT Transaction discarded because of previous errors."));
 
-								Exception exception = listPromise.getException();
-								assertThat(exception, instanceOf(ServerError.class));
-								assertThat(exception.getMessage(), containsString("ERR unknown command `SETTTTTTT`"));
-								return redis.cmd(RedisRequest.of("SET", "x", "value"), OK)
-										.then(() -> redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1));
-							});
-				}));
+						Exception exception = listPromise.getException();
+						assertThat(exception, instanceOf(ServerError.class));
+						assertThat(exception.getMessage(), containsString("ERR unknown command `SETTTTTTT`"));
+						return redis.cmd(RedisRequest.of("SET", "x", "value"), OK)
+							.then(() -> redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1));
+					});
+			}));
 		assertEquals("value", result);
 	}
 
@@ -111,19 +111,19 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		await(redis -> {
 			Promise<Void> multiPromise = redis.multi();
 			Promise<Object[]> listPromise = Promises.toArray(Object.class,
-					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("SET", "x", "value"), OK),
-					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("SET", "x", "new value"), OK),
-					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
+				redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("SET", "x", "value"), OK),
+				redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("SET", "x", "new value"), OK),
+				redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
 			);
 			return redis.exec()
-					.whenResult(transactionResult -> {
-						assertTrue(multiPromise.isResult());
-						assertDeepEquals(listPromise.getResult(), transactionResult);
-						assertDeepEquals(new Object[]{null, null, "value", null, "new value", 1L}, transactionResult);
-					});
+				.whenResult(transactionResult -> {
+					assertTrue(multiPromise.isResult());
+					assertDeepEquals(listPromise.getResult(), transactionResult);
+					assertDeepEquals(new Object[]{null, null, "value", null, "new value", 1L}, transactionResult);
+				});
 		});
 	}
 
@@ -132,33 +132,33 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		await(redis -> {
 			Promise<Void> multi1Promise = redis.multi();
 			Promise<Object[]> list1Promise = Promises.toArray(Object.class,
-					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("SET", "x", "value x"), OK),
-					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("SET", "x", "new value x"), OK),
-					redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1)
+				redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("SET", "x", "value x"), OK),
+				redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("SET", "x", "new value x"), OK),
+				redis.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1)
 			);
 			Promise<Object[]> exec1Promise = redis.exec();
 
 			Promise<Void> multi2Promise = redis.multi();
 			Promise<Object[]> list2Promise = Promises.toArray(Object.class,
-					redis.cmd(RedisRequest.of("GET", "y"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("SET", "y", "value y"), OK),
-					redis.cmd(RedisRequest.of("GET", "y"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("SET", "y", "new value y"), OK),
-					redis.cmd(RedisRequest.of("GET", "y"), BYTES_ISO_8859_1),
-					redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
+				redis.cmd(RedisRequest.of("GET", "y"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("SET", "y", "value y"), OK),
+				redis.cmd(RedisRequest.of("GET", "y"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("SET", "y", "new value y"), OK),
+				redis.cmd(RedisRequest.of("GET", "y"), BYTES_ISO_8859_1),
+				redis.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
 			);
 
 			return redis.exec()
-					.whenResult(transaction2Result -> {
-						assertTrue(multi1Promise.isResult() && multi2Promise.isResult());
-						assertDeepEquals(list1Promise.getResult(), exec1Promise.getResult());
-						assertDeepEquals(new Object[]{null, null, "value x", null, "new value x"}, exec1Promise.getResult());
+				.whenResult(transaction2Result -> {
+					assertTrue(multi1Promise.isResult() && multi2Promise.isResult());
+					assertDeepEquals(list1Promise.getResult(), exec1Promise.getResult());
+					assertDeepEquals(new Object[]{null, null, "value x", null, "new value x"}, exec1Promise.getResult());
 
-						assertDeepEquals(list2Promise.getResult(), transaction2Result);
-						assertDeepEquals(new Object[]{null, null, "value y", null, "new value y", 2L}, transaction2Result);
-					});
+					assertDeepEquals(list2Promise.getResult(), transaction2Result);
+					assertDeepEquals(new Object[]{null, null, "value y", null, "new value y", 2L}, transaction2Result);
+				});
 		});
 	}
 
@@ -169,15 +169,15 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		await(redis -> redis.multi().then(redis::discard));
 
 		String finalResult = await(redis -> redis.cmd(RedisRequest.of("SET", key, value), OK)
-				.then(redis::multi)
-				.then(() -> {
-					Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key, value + 1), OK);
-					return redis.discard()
-							.then(() -> {
-								assertThat(setPromise.getException(), instanceOf(TransactionDiscardedException.class));
-								return redis.cmd(RedisRequest.of("GET", key), BYTES_ISO_8859_1);
-							});
-				}));
+			.then(redis::multi)
+			.then(() -> {
+				Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key, value + 1), OK);
+				return redis.discard()
+					.then(() -> {
+						assertThat(setPromise.getException(), instanceOf(TransactionDiscardedException.class));
+						return redis.cmd(RedisRequest.of("GET", key), BYTES_ISO_8859_1);
+					});
+			}));
 
 		assertEquals(value, finalResult);
 	}
@@ -193,12 +193,12 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 			Promise<Void> multiPromise = redis.multi();
 			Promise<Void> set2Promise = redis.cmd(RedisRequest.of("SET", key, value + 1), OK);
 			return redis.discard()
-					.then(() -> {
-						assertTrue(set1Promise.isResult());
-						assertTrue(multiPromise.isResult());
-						assertThat(set2Promise.getException(), instanceOf(TransactionDiscardedException.class));
-						return redis.cmd(RedisRequest.of("GET", "key"), BYTES_ISO_8859_1);
-					});
+				.then(() -> {
+					assertTrue(set1Promise.isResult());
+					assertTrue(multiPromise.isResult());
+					assertThat(set2Promise.getException(), instanceOf(TransactionDiscardedException.class));
+					return redis.cmd(RedisRequest.of("GET", "key"), BYTES_ISO_8859_1);
+				});
 		});
 
 		assertEquals(value, finalResult);
@@ -218,15 +218,15 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 			Promise<Void> multi2Promise = redis.multi();
 			Promise<Void> set3Promise = redis.cmd(RedisRequest.of("SET", key, value + 2), OK);
 			return redis.discard()
-					.then(() -> {
-						assertTrue(set1Promise.isResult());
-						assertTrue(multi1Promise.isResult());
-						assertThat(set2Promise.getException(), instanceOf(TransactionDiscardedException.class));
-						assertTrue(multi2Promise.isResult());
-						assertTrue(discard1Promise.isResult());
-						assertThat(set3Promise.getException(), instanceOf(TransactionDiscardedException.class));
-						return redis.cmd(RedisRequest.of("GET", key), BYTES_ISO_8859_1);
-					});
+				.then(() -> {
+					assertTrue(set1Promise.isResult());
+					assertTrue(multi1Promise.isResult());
+					assertThat(set2Promise.getException(), instanceOf(TransactionDiscardedException.class));
+					assertTrue(multi2Promise.isResult());
+					assertTrue(discard1Promise.isResult());
+					assertThat(set3Promise.getException(), instanceOf(TransactionDiscardedException.class));
+					return redis.cmd(RedisRequest.of("GET", key), BYTES_ISO_8859_1);
+				});
 		});
 
 		assertEquals(value, finalResult);
@@ -246,15 +246,15 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 			Promise<Void> multi2Promise = redis.multi();
 			Promise<Void> set3Promise = redis.cmd(RedisRequest.of("SET", key, value + 2), OK);
 			return redis.discard()
-					.then(() -> {
-						assertTrue(set1Promise.isResult());
-						assertTrue(multi1Promise.isResult());
-						assertTrue(set2Promise.isResult());
-						assertTrue(multi2Promise.isResult());
-						assertDeepEquals(execPromise.getResult(), new Object[]{set2Promise.getResult()});
-						assertThat(set3Promise.getException(), instanceOf(TransactionDiscardedException.class));
-						return redis.cmd(RedisRequest.of("GET", key), BYTES_ISO_8859_1);
-					});
+				.then(() -> {
+					assertTrue(set1Promise.isResult());
+					assertTrue(multi1Promise.isResult());
+					assertTrue(set2Promise.isResult());
+					assertTrue(multi2Promise.isResult());
+					assertDeepEquals(execPromise.getResult(), new Object[]{set2Promise.getResult()});
+					assertThat(set3Promise.getException(), instanceOf(TransactionDiscardedException.class));
+					return redis.cmd(RedisRequest.of("GET", key), BYTES_ISO_8859_1);
+				});
 		});
 
 		assertEquals(value + 1, finalResult);
@@ -268,19 +268,19 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		String otherValue = "other value";
 
 		TestUtils.await(client, redis -> redis.cmd(RedisRequest.of("WATCH", key1, key2), OK)
-				.then(redis::multi)
-				.then(() -> client.connect())
-				.then(otherConnection -> otherConnection.cmd(RedisRequest.of("SET", key2, otherValue), OK)
-						.then(otherConnection::quit))
-				.then(() -> {
-					Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key1, value), OK);
-					return redis.exec()
-							.then((result, e) -> {
-								assertThat(e, instanceOf(TransactionFailedException.class));
-								assertThat(setPromise.getException(), instanceOf(TransactionFailedException.class));
-								return Promise.complete();
-							});
-				}));
+			.then(redis::multi)
+			.then(() -> client.connect())
+			.then(otherConnection -> otherConnection.cmd(RedisRequest.of("SET", key2, otherValue), OK)
+				.then(otherConnection::quit))
+			.then(() -> {
+				Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key1, value), OK);
+				return redis.exec()
+					.then((result, e) -> {
+						assertThat(e, instanceOf(TransactionFailedException.class));
+						assertThat(setPromise.getException(), instanceOf(TransactionFailedException.class));
+						return Promise.complete();
+					});
+			}));
 
 		assertNull(await(redis -> redis.cmd(RedisRequest.of("GET", key1), BYTES_ISO_8859_1)));
 		assertEquals(otherValue, await(redis -> redis.cmd(RedisRequest.of("GET", key2), BYTES_ISO_8859_1)));
@@ -294,16 +294,16 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		String otherValue = "other value";
 
 		Object[] execResult = TestUtils.await(client, redis -> redis.cmd(RedisRequest.of("WATCH", key1, key2), OK)
-				.then(() -> redis.cmd(RedisRequest.of("UNWATCH"), OK))
-				.then(redis::multi)
-				.then(() -> client.connect())
-				.then(otherConnection -> otherConnection.cmd(RedisRequest.of("SET", key2, otherValue), OK)
-						.then(otherConnection::quit))
-				.then(() -> {
-					Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key1, value), OK);
-					return redis.exec()
-							.whenResult(() -> assertTrue(setPromise.isResult()));
-				}));
+			.then(() -> redis.cmd(RedisRequest.of("UNWATCH"), OK))
+			.then(redis::multi)
+			.then(() -> client.connect())
+			.then(otherConnection -> otherConnection.cmd(RedisRequest.of("SET", key2, otherValue), OK)
+				.then(otherConnection::quit))
+			.then(() -> {
+				Promise<Void> setPromise = redis.cmd(RedisRequest.of("SET", key1, value), OK);
+				return redis.exec()
+					.whenResult(() -> assertTrue(setPromise.isResult()));
+			}));
 		assertArrayEquals(new Object[]{null}, execResult);
 
 		assertEquals(value, await(redis -> redis.cmd(RedisRequest.of("GET", key1), BYTES_ISO_8859_1)));
@@ -313,24 +313,24 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 	@Test
 	public void quitDuringTransaction() {
 		io.activej.promise.TestUtils.await(client.connect()
-				.then(connection -> connection.multi()
-						.then(() -> {
-							List<Promise<?>> promiseList = List.of(
-									connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-									connection.cmd(RedisRequest.of("SET", "x", "value"), OK),
-									connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-									connection.cmd(RedisRequest.of("SET", "x", "new value"), OK),
-									connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
-									connection.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
-							);
-							return connection.quit()
-									.whenResult(() -> {
-										for (Promise<?> promise : promiseList) {
-											assertThat(promise.getException(), instanceOf(QuitCalledException.class));
-										}
-									});
-						})
-				));
+			.then(connection -> connection.multi()
+				.then(() -> {
+					List<Promise<?>> promiseList = List.of(
+						connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+						connection.cmd(RedisRequest.of("SET", "x", "value"), OK),
+						connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+						connection.cmd(RedisRequest.of("SET", "x", "new value"), OK),
+						connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
+						connection.cmd(RedisRequest.of("DEL", "x", "y"), LONG)
+					);
+					return connection.quit()
+						.whenResult(() -> {
+							for (Promise<?> promise : promiseList) {
+								assertThat(promise.getException(), instanceOf(QuitCalledException.class));
+							}
+						});
+				})
+			));
 	}
 
 	@Test
@@ -344,20 +344,20 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 		try {
 			RedisAuthenticationException exception = awaitException(client.connect()
-					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
-							.whenException(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+					.whenException(connection::close)));
 
 			assertThat(exception.getMessage(), Matchers.containsString("Authentication required"));
 
 			String response = io.activej.promise.TestUtils.await(client.connect(password)
-					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+					.whenComplete(connection::close)));
 
 			assertEquals("PONG", response);
 		} finally {
 			io.activej.promise.TestUtils.await(client.connect(password)
-					.then(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", "default", "nopass"), OK)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("ACL", "SETUSER", "default", "nopass"), OK)
+					.whenComplete(connection::close)));
 		}
 	}
 
@@ -376,8 +376,8 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 		try {
 			String response = io.activej.promise.TestUtils.await(client.connect(username, password)
-					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+					.whenComplete(connection::close)));
 
 			assertEquals("PONG", response);
 		} finally {
@@ -410,14 +410,14 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 		try {
 			String response = io.activej.promise.TestUtils.await(client.connect(username, password)
-					.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("PING"), STRING)
+					.whenComplete(connection::close)));
 
 			assertEquals("PONG", response);
 
 			Exception exception = awaitException(client.connect(username, password)
-					.then(connection -> connection.cmd(RedisRequest.of("GET", "x"), STRING)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("GET", "x"), STRING)
+					.whenComplete(connection::close)));
 
 			assertThat(exception, instanceOf(RedisPermissionException.class));
 		} finally {
@@ -441,14 +441,14 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 		try {
 			String result = io.activej.promise.TestUtils.await(client.connect(username, password)
-					.then(connection -> connection.cmd(RedisRequest.of("GET", "a"), BYTES_ISO_8859_1)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("GET", "a"), BYTES_ISO_8859_1)
+					.whenComplete(connection::close)));
 
 			assertNull(result);
 
 			Exception exception = awaitException(client.connect(username, password)
-					.then(connection -> connection.cmd(RedisRequest.of("GET", "b"), BYTES_ISO_8859_1)
-							.whenComplete(connection::close)));
+				.then(connection -> connection.cmd(RedisRequest.of("GET", "b"), BYTES_ISO_8859_1)
+					.whenComplete(connection::close)));
 
 			assertThat(exception, instanceOf(RedisPermissionException.class));
 		} finally {

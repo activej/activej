@@ -57,8 +57,8 @@ public final class StreamSorterTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		StreamSorterStorage<Integer> storage = StreamSorterStorage.builder(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.getRoot().toPath())
-				.withWriteBlockSize(MemSize.of(64))
-				.build();
+			.withWriteBlockSize(MemSize.of(64))
+			.build();
 
 		StreamConsumer<Integer> writer1 = storage.writeStream(1);
 //		StreamConsumer<Integer> writer2 = storage.writeStream(2);
@@ -93,7 +93,7 @@ public final class StreamSorterTest {
 		ToListStreamConsumer<Integer> consumerToList = ToListStreamConsumer.create();
 
 		await(source.transformWith(sorter)
-				.streamTo(consumerToList.transformWith(randomlySuspending())));
+			.streamTo(consumerToList.transformWith(randomlySuspending())));
 
 		assertEquals(List.of(1, 2, 3, 4, 5), consumerToList.getList());
 		assertEndOfStream(source, consumerToList);
@@ -107,18 +107,18 @@ public final class StreamSorterTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
-				storage, Function.identity(), Integer::compareTo, true, 2);
+			storage, Function.identity(), Integer::compareTo, true, 2);
 
 		List<Integer> list = new ArrayList<>();
 		StreamConsumer<Integer> consumer = ToListStreamConsumer.create(list);
 		ExpectedException exception = new ExpectedException();
 
 		Exception e = awaitException(
-				source.streamTo(sorter.getInput()),
-				sorter.getOutput()
-						.streamTo(consumer
-								.transformWith(decorate(promise -> promise.then(
-										item -> item == 5 ? Promise.ofException(exception) : Promise.of(item)))))
+			source.streamTo(sorter.getInput()),
+			sorter.getOutput()
+				.streamTo(consumer
+					.transformWith(decorate(promise -> promise.then(
+						item -> item == 5 ? Promise.ofException(exception) : Promise.of(item)))))
 		);
 
 		assertSame(exception, e);
@@ -133,18 +133,18 @@ public final class StreamSorterTest {
 		ExpectedException exception = new ExpectedException();
 
 		StreamSupplier<Integer> source = StreamSuppliers.concat(
-				StreamSuppliers.ofValues(3, 1, 3, 2),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofValues(3, 1, 3, 2),
+			StreamSuppliers.closingWithError(exception)
 		);
 
 		IStreamSorterStorage<Integer> storage = StreamSorterStorage.create(Reactor.getCurrentReactor(), executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
 		StreamSorter<Integer, Integer> sorter = StreamSorter.create(
-				storage, Function.identity(), Integer::compareTo, true, 10);
+			storage, Function.identity(), Integer::compareTo, true, 10);
 
 		ToListStreamConsumer<Integer> consumerToList = ToListStreamConsumer.create();
 
 		Exception e = awaitException(source.transformWith(sorter)
-				.streamTo(consumerToList));
+			.streamTo(consumerToList));
 
 		assertSame(exception, e);
 		assertEquals(0, consumerToList.getList().size());
@@ -177,20 +177,20 @@ public final class StreamSorterTest {
 		}
 
 		await(Promises.all(inputPromise, sorter.getOutput().streamTo(consumer.transformWith(randomlySuspending())))
-				.whenResult(() -> {
-					try (Stream<Path> contents = Files.list(storagePath)) {
-						assertFalse(contents.findAny().isPresent());
-					} catch (IOException e) {
-						throw new AssertionError(e);
-					}
-				}));
+			.whenResult(() -> {
+				try (Stream<Path> contents = Files.list(storagePath)) {
+					assertFalse(contents.findAny().isPresent());
+				} catch (IOException e) {
+					throw new AssertionError(e);
+				}
+			}));
 	}
 
 	@Test
 	public void testErrorsOnStorage() throws IOException {
 		FailingStubStreamSorterStorage<Integer> failingNewPartitionStorage = FailingStubStreamSorterStorage.<Integer>builder()
-				.withFailNewPartition()
-				.build();
+			.withFailNewPartition()
+			.build();
 		doTestFailingStorage(failingNewPartitionStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -200,8 +200,8 @@ public final class StreamSorterTest {
 		});
 
 		FailingStubStreamSorterStorage<Integer> failingWriteStorage = FailingStubStreamSorterStorage.<Integer>builder()
-				.withFailWrite()
-				.build();
+			.withFailWrite()
+			.build();
 		doTestFailingStorage(failingWriteStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -211,8 +211,8 @@ public final class StreamSorterTest {
 		});
 
 		FailingStubStreamSorterStorage<Integer> failingReadStorage = FailingStubStreamSorterStorage.<Integer>builder()
-				.withFailRead()
-				.build();
+			.withFailRead()
+			.build();
 		doTestFailingStorage(failingReadStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -223,8 +223,8 @@ public final class StreamSorterTest {
 		});
 
 		FailingStubStreamSorterStorage<Integer> failingCleanup = FailingStubStreamSorterStorage.<Integer>builder()
-				.withFailCleanup()
-				.build();
+			.withFailCleanup()
+			.build();
 		doTestFailingStorage(failingCleanup, (streamPromise, sorter, supplier, consumerToList) -> {
 			await(streamPromise);
 			assertEndOfStream(sorter);
@@ -244,7 +244,7 @@ public final class StreamSorterTest {
 		ToListStreamConsumer<Integer> consumerToList = ToListStreamConsumer.create();
 
 		Promise<Void> streamPromise = source.transformWith(sorter)
-				.streamTo(consumerToList.transformWith(randomlySuspending()));
+			.streamTo(consumerToList.transformWith(randomlySuspending()));
 
 		validator.validate(streamPromise, sorter, source, consumerToList);
 

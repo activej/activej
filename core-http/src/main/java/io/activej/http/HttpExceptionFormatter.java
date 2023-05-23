@@ -32,29 +32,29 @@ public interface HttpExceptionFormatter {
 
 	@Language("HTML")
 	String HTTP_ERROR_HTML = """
-			<!doctype html>
-			<html lang="en">
-			<head>
-			<meta charset="UTF-8">
-			<title>{title}</title>
-			<style>h1, p { font-family: sans-serif; }</style>
-			</head>
-			<body>
-			<h1 style="text-align: center;">{title}</h1>
-			<hr>
-			<p style="text-align: center">{message}</p>
-			<hr>
-			<p style="text-align: center;">{activej_version}</p>
-			</body>
-			</html>
-			"""
-			.replace("{activej_version}", ACTIVEJ_VERSION);
+		<!doctype html>
+		<html lang="en">
+		<head>
+		<meta charset="UTF-8">
+		<title>{title}</title>
+		<style>h1, p { font-family: sans-serif; }</style>
+		</head>
+		<body>
+		<h1 style="text-align: center;">{title}</h1>
+		<hr>
+		<p style="text-align: center">{message}</p>
+		<hr>
+		<p style="text-align: center;">{activej_version}</p>
+		</body>
+		</html>
+		"""
+		.replace("{activej_version}", ACTIVEJ_VERSION);
 
 	String INTERNAL_SERVER_ERROR_HTML = HTTP_ERROR_HTML
-			.replace("{title}", "Internal Server Error")
-			.replace("""
-					<p style="text-align: center">{message}</p>
-					<hr>""", "");
+		.replace("{title}", "Internal Server Error")
+		.replace("""
+			<p style="text-align: center">{message}</p>
+			<hr>""", "");
 
 	Promise<HttpResponse> formatException(Exception e);
 
@@ -67,37 +67,37 @@ public interface HttpExceptionFormatter {
 		if (e instanceof HttpError) {
 			int code = ((HttpError) e).getCode();
 			responseBuilder = HttpResponse.ofCode(code)
-					.withHtml(HTTP_ERROR_HTML
-							.replace("{title}", HttpUtils.getHttpErrorTitle(code))
-							.replace("{message}", e.toString()));
+				.withHtml(HTTP_ERROR_HTML
+					.replace("{title}", HttpUtils.getHttpErrorTitle(code))
+					.replace("{message}", e.toString()));
 		} else {
 			responseBuilder = HttpResponse.ofCode(500)
-					.withHtml(INTERNAL_SERVER_ERROR_HTML);
+				.withHtml(INTERNAL_SERVER_ERROR_HTML);
 		}
 		// default formatter leaks no information about unknown exceptions
 		return responseBuilder
-				.withHeader(CACHE_CONTROL, "no-store")
-				.withHeader(PRAGMA, "no-cache")
-				.withHeader(AGE, "0")
-				.toPromise();
+			.withHeader(CACHE_CONTROL, "no-store")
+			.withHeader(PRAGMA, "no-cache")
+			.withHeader(AGE, "0")
+			.toPromise();
 	};
 
 	/**
 	 * This formatter prints the stacktrace of the exception into the HTTP response.
 	 */
 	HttpExceptionFormatter DEBUG_FORMATTER = e ->
-			DebugStacktraceRenderer.render(e, e instanceof HttpError ? ((HttpError) e).getCode() : 500)
-					.withHeader(CACHE_CONTROL, "no-store")
-					.withHeader(PRAGMA, "no-cache")
-					.withHeader(AGE, "0")
-					.toPromise();
+		DebugStacktraceRenderer.render(e, e instanceof HttpError ? ((HttpError) e).getCode() : 500)
+			.withHeader(CACHE_CONTROL, "no-store")
+			.withHeader(PRAGMA, "no-cache")
+			.withHeader(AGE, "0")
+			.toPromise();
 
 	/**
 	 * This formatter if either one of {@link #DEFAULT_FORMATTER} or {@link #DEBUG_FORMATTER},
 	 * depending on whether you start the application from the IntelliJ IDE or not.
 	 */
 	HttpExceptionFormatter COMMON_FORMATTER =
-			System.getProperty("java.class.path", "").contains("idea_rt.jar") ?
-					DEBUG_FORMATTER :
-					DEFAULT_FORMATTER;
+		System.getProperty("java.class.path", "").contains("idea_rt.jar") ?
+			DEBUG_FORMATTER :
+			DEFAULT_FORMATTER;
 }

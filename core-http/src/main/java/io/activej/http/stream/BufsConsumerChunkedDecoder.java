@@ -43,7 +43,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * data into its raw form.
  */
 public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder> {
+	implements WithChannelTransformer<BufsConsumerChunkedDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerChunkedDecoder> {
 	public static final int MAX_CHUNK_LENGTH_DIGITS = 8;
 
 	private static final byte[] CRLF = {13, 10};
@@ -96,44 +96,44 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 
 	private void processLength() {
 		input.decode(
-						bufs -> {
-							chunkLength = 0;
-							int bytes = this.bufs.scanBytes((index, c) -> {
-								if (c >= '0' && c <= '9') {
-									chunkLength = (chunkLength << 4) + (c - '0');
-								} else if (c >= 'a' && c <= 'f') {
-									chunkLength = (chunkLength << 4) + (c - 'a' + 10);
-								} else if (c >= 'A' && c <= 'F') {
-									chunkLength = (chunkLength << 4) + (c - 'A' + 10);
-								} else if (c == ';' || c == CR) {
-									// Success
-									if (index == 0 || chunkLength < 0) {
-										throw new InvalidSizeException("Malformed chunk length");
-									}
-									return true;
-								} else {
-									throw new InvalidSizeException("Unexpected data");
-								}
-								if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
-									throw new InvalidSizeException("Chunk length exceeds maximum allowed size");
-								}
-								return false;
-							});
-							if (bytes == 0) return null;
-							this.bufs.skip(bytes - 1);
-							return chunkLength;
-						})
-				.subscribe((chunkLength, e) -> {
-					if (e == null) {
-						if (chunkLength != 0) {
-							consumeCRLF(chunkLength);
+				bufs -> {
+					chunkLength = 0;
+					int bytes = this.bufs.scanBytes((index, c) -> {
+						if (c >= '0' && c <= '9') {
+							chunkLength = (chunkLength << 4) + (c - '0');
+						} else if (c >= 'a' && c <= 'f') {
+							chunkLength = (chunkLength << 4) + (c - 'a' + 10);
+						} else if (c >= 'A' && c <= 'F') {
+							chunkLength = (chunkLength << 4) + (c - 'A' + 10);
+						} else if (c == ';' || c == CR) {
+							// Success
+							if (index == 0 || chunkLength < 0) {
+								throw new InvalidSizeException("Malformed chunk length");
+							}
+							return true;
 						} else {
-							validateLastChunk();
+							throw new InvalidSizeException("Unexpected data");
 						}
+						if (index == MAX_CHUNK_LENGTH_DIGITS + 1) {
+							throw new InvalidSizeException("Chunk length exceeds maximum allowed size");
+						}
+						return false;
+					});
+					if (bytes == 0) return null;
+					this.bufs.skip(bytes - 1);
+					return chunkLength;
+				})
+			.subscribe((chunkLength, e) -> {
+				if (e == null) {
+					if (chunkLength != 0) {
+						consumeCRLF(chunkLength);
 					} else {
-						closeEx(e);
+						validateLastChunk();
 					}
-				});
+				} else {
+					closeEx(e);
+				}
+			});
 	}
 
 	private void processData(int chunkLength) {
@@ -141,40 +141,40 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 		int newChunkLength = chunkLength - buf.readRemaining();
 		if (newChunkLength != 0) {
 			Promise.complete()
-					.thenCallback(cb -> {
-						if (buf.canRead()) output.accept(buf).subscribe(cb);
-						else cb.set(null);
-					})
-					.thenCallback(cb -> {
-						if (bufs.isEmpty()) input.needMoreData().subscribe(cb);
-						else cb.set(null);
-					})
-					.whenResult(() -> processData(newChunkLength));
+				.thenCallback(cb -> {
+					if (buf.canRead()) output.accept(buf).subscribe(cb);
+					else cb.set(null);
+				})
+				.thenCallback(cb -> {
+					if (bufs.isEmpty()) input.needMoreData().subscribe(cb);
+					else cb.set(null);
+				})
+				.whenResult(() -> processData(newChunkLength));
 			return;
 		}
 		input.decode(assertBytes(CRLF))
-				.whenException(buf::recycle)
-				.thenCallback(cb -> output.accept(buf).subscribe(cb))
-				.whenResult(this::processLength);
+			.whenException(buf::recycle)
+			.thenCallback(cb -> output.accept(buf).subscribe(cb))
+			.whenResult(this::processLength);
 	}
 
 	private void consumeCRLF(int chunkLength) {
 		input.decode(
-						bufs -> {
-							ByteBuf maybeResult = ofCrlfTerminatedBytes().tryDecode(bufs);
-							if (maybeResult == null) {
-								bufs.skip(bufs.remainingBytes() - 1);
-							}
-							return maybeResult;
-						})
-				.subscribe((buf, e) -> {
-					if (e == null) {
-						buf.recycle();
-						processData(chunkLength);
-					} else {
-						closeEx(e);
+				bufs -> {
+					ByteBuf maybeResult = ofCrlfTerminatedBytes().tryDecode(bufs);
+					if (maybeResult == null) {
+						bufs.skip(bufs.remainingBytes() - 1);
 					}
-				});
+					return maybeResult;
+				})
+			.subscribe((buf, e) -> {
+				if (e == null) {
+					buf.recycle();
+					processData(chunkLength);
+				} else {
+					closeEx(e);
+				}
+			});
 	}
 
 	private void validateLastChunk() {
@@ -198,8 +198,8 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 				if (bytes != 0) {
 					bufs.skip(bytes);
 					input.endOfStream()
-							.then(output::acceptEndOfStream)
-							.whenResult(this::completeProcess);
+						.then(output::acceptEndOfStream)
+						.whenResult(this::completeProcess);
 					return;
 				}
 			} catch (MalformedDataException ignored) {
@@ -209,7 +209,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 			bufs.skip(remainingBytes - 3);
 		}
 		input.needMoreData()
-				.whenResult(this::validateLastChunk);
+			.whenResult(this::validateLastChunk);
 	}
 
 	@Override

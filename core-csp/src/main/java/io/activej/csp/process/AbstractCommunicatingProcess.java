@@ -197,7 +197,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 
 	protected final <T> Promise<T> sanitize(Promise<T> promise) {
 		return promise.async()
-				.then(this::doSanitize);
+			.then(this::doSanitize);
 	}
 
 	/**

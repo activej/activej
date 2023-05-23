@@ -12,8 +12,8 @@ public class PromiseAdvancedExample {
 
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 
 		firstExample();
 		secondExample();
@@ -42,8 +42,8 @@ public class PromiseAdvancedExample {
 		Promise<Integer> delayPromise = Promises.delay(delay, someValue);
 
 		Promise<Integer> result = intervalPromise
-				.combine(schedulePromise, (first, second) -> first - second)
-				.combine(delayPromise, Integer::sum);
+			.combine(schedulePromise, (first, second) -> first - second)
+			.combine(delayPromise, Integer::sum);
 
 		result.whenResult(res -> System.out.println("The second result is " + res));
 		//[END REGION_2]

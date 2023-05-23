@@ -89,7 +89,7 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 		return new EventStats(smoothingWindow.toMillis() / 1000.0).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, EventStats>{
+	public final class Builder extends AbstractBuilder<Builder, EventStats> {
 		private Builder() {}
 
 		public Builder withRateUnit(String rateUnit) {

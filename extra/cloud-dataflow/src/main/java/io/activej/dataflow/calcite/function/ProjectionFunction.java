@@ -13,8 +13,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public abstract class ProjectionFunction extends SqlFunction {
-	protected ProjectionFunction(String name, SqlKind kind, @Nullable SqlReturnTypeInference returnTypeInference,
-			@Nullable SqlOperandTypeInference operandTypeInference, @Nullable SqlOperandTypeChecker operandTypeChecker, SqlFunctionCategory category) {
+	protected ProjectionFunction(
+		String name, SqlKind kind, @Nullable SqlReturnTypeInference returnTypeInference,
+		@Nullable SqlOperandTypeInference operandTypeInference, @Nullable SqlOperandTypeChecker operandTypeChecker,
+		SqlFunctionCategory category
+	) {
 		super(name, kind, returnTypeInference, operandTypeInference, operandTypeChecker, category);
 	}
 

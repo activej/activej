@@ -34,24 +34,24 @@ public final class ReflectionUtils {
 
 	public static boolean isPrimitiveType(Class<?> cls) {
 		return cls == boolean.class
-				|| cls == byte.class
-				|| cls == char.class
-				|| cls == short.class
-				|| cls == int.class
-				|| cls == long.class
-				|| cls == float.class
-				|| cls == double.class;
+			|| cls == byte.class
+			|| cls == char.class
+			|| cls == short.class
+			|| cls == int.class
+			|| cls == long.class
+			|| cls == float.class
+			|| cls == double.class;
 	}
 
 	public static boolean isBoxedPrimitiveType(Class<?> cls) {
 		return cls == Boolean.class
-				|| cls == Byte.class
-				|| cls == Character.class
-				|| cls == Short.class
-				|| cls == Integer.class
-				|| cls == Long.class
-				|| cls == Float.class
-				|| cls == Double.class;
+			|| cls == Byte.class
+			|| cls == Character.class
+			|| cls == Short.class
+			|| cls == Integer.class
+			|| cls == Long.class
+			|| cls == Float.class
+			|| cls == Double.class;
 	}
 
 	public static boolean isPrimitiveTypeOrBox(Class<?> cls) {
@@ -76,16 +76,16 @@ public final class ReflectionUtils {
 
 	public static boolean isGetter(Method method) {
 		return method.getName().length() > 2
-				&& method.getParameterCount() == 0
-				&& (method.getName().startsWith("get") && method.getReturnType() != void.class
-				|| method.getName().startsWith("is") && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class));
+			&& method.getParameterCount() == 0
+			&& (method.getName().startsWith("get") && method.getReturnType() != void.class
+			|| method.getName().startsWith("is") && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class));
 	}
 
 	public static boolean isSetter(Method method) {
 		return method.getName().length() > 3
-				&& method.getName().startsWith("set")
-				&& method.getReturnType() == void.class
-				&& method.getParameterCount() == 1;
+			&& method.getName().startsWith("set")
+			&& method.getReturnType() == void.class
+			&& method.getParameterCount() == 1;
 	}
 
 	public static String extractFieldNameFromGetter(Method getter) {
@@ -142,16 +142,16 @@ public final class ReflectionUtils {
 			};
 		}
 		return Arrays.stream(cls.getConstructors())
-				.filter(c -> c.getParameterTypes().length == 0)
-				.findAny()
-				.<Supplier<T>>map(c -> () -> {
-					try {
-						return (T) c.newInstance();
-					} catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-						throw UncheckedException.of(e);
-					}
-				})
-				.orElse(null);
+			.filter(c -> c.getParameterTypes().length == 0)
+			.findAny()
+			.<Supplier<T>>map(c -> () -> {
+				try {
+					return (T) c.newInstance();
+				} catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+					throw UncheckedException.of(e);
+				}
+			})
+			.orElse(null);
 	}
 
 	public static boolean canBeCreated(Class<?> cls, String... factoryMethodNames) {
@@ -190,14 +190,14 @@ public final class ReflectionUtils {
 		Set<MethodSignature> methodSignatures = new LinkedHashSet<>();
 		walkClassHierarchy(cls, aClass -> {
 			Arrays.stream(aClass.getDeclaredMethods())
-					.filter(method -> !method.isBridge() && !method.isSynthetic())
-					.map(MethodSignature::new)
-					.forEach(methodSignatures::add);
+				.filter(method -> !method.isBridge() && !method.isSynthetic())
+				.map(MethodSignature::new)
+				.forEach(methodSignatures::add);
 			return Optional.empty();
 		});
 		return methodSignatures.stream()
-				.map(MethodSignature::getMethod)
-				.collect(toList());
+			.map(MethodSignature::getMethod)
+			.collect(toList());
 	}
 
 	public static <A extends Annotation> Optional<A> deepFindAnnotation(Class<?> aClass, Class<A> annotation) {
@@ -281,7 +281,7 @@ public final class ReflectionUtils {
 		Object value = element.invoke(annotation);
 		if (value == null) {
 			String errorMsg = "@" + annotation.annotationType().getName() + "." +
-					element.getName() + "() returned null";
+				element.getName() + "() returned null";
 			throw new NullPointerException(errorMsg);
 		}
 		return value;
@@ -303,7 +303,7 @@ public final class ReflectionUtils {
 		public boolean equals(Object obj) {
 			Method otherMethod = ((MethodSignature) obj).method;
 			return method.getName().equals(otherMethod.getName()) &&
-					Arrays.equals(method.getParameterTypes(), otherMethod.getParameterTypes());
+				Arrays.equals(method.getParameterTypes(), otherMethod.getParameterTypes());
 		}
 
 		@Override

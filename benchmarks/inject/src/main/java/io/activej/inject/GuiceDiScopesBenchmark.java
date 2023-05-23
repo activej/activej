@@ -330,16 +330,16 @@ public class GuiceDiScopesBenchmark {
 
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
-				.include(GuiceDiScopesBenchmark.class.getSimpleName())
-				.forks(2)
-				.warmupIterations(3)
-				.warmupTime(TimeValue.seconds(1L))
-				.measurementIterations(10)
-				.measurementTime(TimeValue.seconds(2L))
-				.mode(Mode.AverageTime)
-				.timeUnit(TimeUnit.NANOSECONDS)
-				.shouldDoGC(false)
-				.build();
+			.include(GuiceDiScopesBenchmark.class.getSimpleName())
+			.forks(2)
+			.warmupIterations(3)
+			.warmupTime(TimeValue.seconds(1L))
+			.measurementIterations(10)
+			.measurementTime(TimeValue.seconds(2L))
+			.mode(Mode.AverageTime)
+			.timeUnit(TimeUnit.NANOSECONDS)
+			.shouldDoGC(false)
+			.build();
 
 		new Runner(opt).run();
 	}

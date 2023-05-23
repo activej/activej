@@ -38,27 +38,27 @@ public final class AbstractReactiveServerTest {
 		String message = "Hello!";
 		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 		SocketSettings settings = SocketSettings.builder()
-				.withImplReadTimeout(Duration.ofMillis(100000L))
-				.withImplWriteTimeout(Duration.ofMillis(100000L))
-				.build();
+			.withImplReadTimeout(Duration.ofMillis(100000L))
+			.withImplWriteTimeout(Duration.ofMillis(100000L))
+			.build();
 
 		RefLong delay = new RefLong(5);
 		SimpleServer.builder(Reactor.getCurrentReactor(), socket -> Promises.repeat(
-						() -> socket.read()
-								.whenResult(buf ->
-										getCurrentReactor().delay(delay.inc(),
-												() -> socket.write(buf)
-														.whenComplete(() -> {
-															if (buf == null) {
-																socket.close();
-															}
-														})))
-								.map(Objects::nonNull)))
-				.withSocketSettings(settings)
-				.withListenAddress(address)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				() -> socket.read()
+					.whenResult(buf ->
+						getCurrentReactor().delay(delay.inc(),
+							() -> socket.write(buf)
+								.whenComplete(() -> {
+									if (buf == null) {
+										socket.close();
+									}
+								})))
+					.map(Objects::nonNull)))
+			.withSocketSettings(settings)
+			.withListenAddress(address)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		ByteBuf response = sendMessage(address, message);
 		assertEquals(message, response.asString(UTF_8));
@@ -101,34 +101,34 @@ public final class AbstractReactiveServerTest {
 
 	private static AbstractReactiveServer createServer(InetSocketAddress address) {
 		return SimpleServer.builder(
-						Reactor.getCurrentReactor(),
-						socket -> Promises.repeat(
-								() -> socket.read().whenResult(
-												buf -> socket.write(buf).whenComplete(() -> {
-													if (buf == null) {
-														socket.close();
-													}
-												})
-										)
-										.map(Objects::nonNull)))
-				.withListenAddress(address)
-				.withAcceptOnce()
-				.build();
+				Reactor.getCurrentReactor(),
+				socket -> Promises.repeat(
+					() -> socket.read().whenResult(
+							buf -> socket.write(buf).whenComplete(() -> {
+								if (buf == null) {
+									socket.close();
+								}
+							})
+						)
+						.map(Objects::nonNull)))
+			.withListenAddress(address)
+			.withAcceptOnce()
+			.build();
 	}
 
 	private static ByteBuf sendMessage(InetSocketAddress address, String message) {
 		return await(TcpSocket.connect(getCurrentReactor(), address)
-				.then(socket ->
-						socket.write(ByteBufStrings.wrapAscii(message))
-								.then(() -> socket.write(null))
-								.then(() -> {
-									ByteBufs bufs = new ByteBufs();
-									return Promises.<ByteBuf>until(null,
-													$2 -> socket.read()
-															.whenResult(buf -> {if (buf != null) bufs.add(buf);}),
-													Objects::isNull)
-											.map($2 -> bufs.takeRemaining());
-								})
-								.whenComplete(socket::close)));
+			.then(socket ->
+				socket.write(ByteBufStrings.wrapAscii(message))
+					.then(() -> socket.write(null))
+					.then(() -> {
+						ByteBufs bufs = new ByteBufs();
+						return Promises.<ByteBuf>until(null,
+								$2 -> socket.read()
+									.whenResult(buf -> {if (buf != null) bufs.add(buf);}),
+								Objects::isNull)
+							.map($2 -> bufs.takeRemaining());
+					})
+					.whenComplete(socket::close)));
 	}
 }

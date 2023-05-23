@@ -48,8 +48,8 @@ public final class DataflowContext {
 
 	public int getNonce() {
 		return nonce == null ?
-				ThreadLocalRandom.current().nextInt() :
-				nonce;
+			ThreadLocalRandom.current().nextInt() :
+			nonce;
 	}
 
 	public DataflowContext withFixedNonce(int nonce) {

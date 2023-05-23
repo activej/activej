@@ -28,9 +28,9 @@ import io.activej.datastream.supplier.StreamSupplier;
  * and are useful through both DSLs.
  */
 public interface WithStreamToChannel<Self, I, O> extends
-		StreamConsumer<I>,
-		WithChannelOutput<Self, O>,
-		StreamSupplierTransformer<I, ChannelSupplier<O>> {
+	StreamConsumer<I>,
+	WithChannelOutput<Self, O>,
+	StreamSupplierTransformer<I, ChannelSupplier<O>> {
 
 	@Override
 	default ChannelSupplier<O> transform(StreamSupplier<I> streamSupplier) {

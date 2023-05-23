@@ -124,14 +124,14 @@ public class Modules {
 		Map<Key<?>, Set<Binding<?>>> bindings = new HashMap<>();
 		Map<Key<?>, Scope[]> scopes = new HashMap<>();
 		from.getBindings().dfs(UNSCOPED, (scope, localBindings) ->
-				localBindings.forEach((k, b) -> {
-					bindings.merge(k, b, ($, $2) -> {
-						Scope[] alreadyThere = scopes.get(k);
-						String where = alreadyThere.length == 0 ? "in root" : "in scope " + getScopeDisplayString(alreadyThere);
-						throw new IllegalStateException("Duplicate key " + k + ", already defined " + where + " and in scope " + getScopeDisplayString(scope));
-					});
-					scopes.put(k, scope);
-				}));
+			localBindings.forEach((k, b) -> {
+				bindings.merge(k, b, ($, $2) -> {
+					Scope[] alreadyThere = scopes.get(k);
+					String where = alreadyThere.length == 0 ? "in root" : "in scope " + getScopeDisplayString(alreadyThere);
+					throw new IllegalStateException("Duplicate key " + k + ", already defined " + where + " and in scope " + getScopeDisplayString(scope));
+				});
+				scopes.put(k, scope);
+			}));
 		return new SimpleModule(Trie.leaf(bindings), from.getBindingTransformers(), from.getBindingGenerators(), from.getMultibinders());
 	}
 
@@ -142,9 +142,9 @@ public class Modules {
 	private static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie, Set<Key<?>> upperExports) {
 		Set<Key<?>> exports = union(upperExports, trie.get().keySet());
 		Set<Key<?>> imports = trie.get().values().stream()
-				.flatMap(bindings -> bindings.stream()
-						.flatMap(binding -> binding.getDependencies().stream()))
-				.collect(toCollection(HashSet::new));
+			.flatMap(bindings -> bindings.stream()
+				.flatMap(binding -> binding.getDependencies().stream()))
+			.collect(toCollection(HashSet::new));
 		imports.removeAll(exports);
 		Map<Scope, Trie<Scope, Set<Key<?>>>> subMap = new HashMap<>();
 		trie.getChildren().forEach((key, subtrie) -> subMap.put(key, getImports(subtrie, exports)));
@@ -162,14 +162,16 @@ public class Modules {
 		return remap(module, (path, key) -> remapping.apply(key), (path, key) -> remapping.apply(key));
 	}
 
-	public static Module remap(Module module,
-			BiFunction<Scope[], Key<?>, Key<?>> exportsMapping,
-			BiFunction<Scope[], Key<?>, Key<?>> importsMapping) {
+	public static Module remap(
+		Module module,
+		BiFunction<Scope[], Key<?>, Key<?>> exportsMapping,
+		BiFunction<Scope[], Key<?>, Key<?>> importsMapping
+	) {
 		return new SimpleModule(
-				remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), Map.of()),
-				module.getBindingTransformers(),
-				module.getBindingGenerators(),
-				module.getMultibinders());
+			remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), Map.of()),
+			module.getBindingTransformers(),
+			module.getBindingGenerators(),
+			module.getMultibinders());
 	}
 
 	public static Module restrict(Module module, Key<?>... exports) {
@@ -186,14 +188,15 @@ public class Modules {
 
 	public static Module restrict(Module module, BiPredicate<Scope[], Key<?>> exportsPredicate) {
 		return new SimpleModule(
-				restrict(exportsPredicate, module.getBindings()),
-				module.getBindingTransformers(),
-				module.getBindingGenerators(),
-				module.getMultibinders());
+			restrict(exportsPredicate, module.getBindings()),
+			module.getBindingTransformers(),
+			module.getBindingGenerators(),
+			module.getMultibinders());
 	}
 
-	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> restrict(BiPredicate<Scope[], Key<?>> exportsPredicate,
-			Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie) {
+	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> restrict(
+		BiPredicate<Scope[], Key<?>> exportsPredicate, Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie
+	) {
 		Map<List<Scope>, Map<Key<?>, Key<?>>> exportsMappings = new HashMap<>();
 		BiFunction<Scope[], Key<?>, Key<?>> remapping = (path, key) -> {
 			if (exportsPredicate.test(path, key)) {
@@ -210,8 +213,10 @@ public class Modules {
 		return remap(remapping, (path, key) -> key, UNSCOPED, trie, Map.of());
 	}
 
-	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> remap(BiFunction<Scope[], Key<?>, Key<?>> exportsMapping, BiFunction<Scope[], Key<?>, Key<?>> importsMapping,
-			Scope[] path, Trie<Scope, Map<Key<?>, Set<Binding<?>>>> oldBindingsTrie, Map<Key<?>, Scope[]> upperBindings) {
+	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> remap(
+		BiFunction<Scope[], Key<?>, Key<?>> exportsMapping, BiFunction<Scope[], Key<?>, Key<?>> importsMapping,
+		Scope[] path, Trie<Scope, Map<Key<?>, Set<Binding<?>>>> oldBindingsTrie, Map<Key<?>, Scope[]> upperBindings
+	) {
 		Map<Key<?>, Set<Binding<?>>> oldBindingsMap = oldBindingsTrie.get();
 		Map<Key<?>, Set<Binding<?>>> newBindingsMap = new HashMap<>();
 		Map<Key<?>, Scope[]> bindings = new HashMap<>(upperBindings);
@@ -230,38 +235,38 @@ public class Modules {
 				for (Key<?> oldDependency : oldDependencies) {
 					Scope[] importKeyPath = bindings.get(oldDependency);
 					Key<?> newImportKey = importKeyPath != null ?
-							exportsMapping.apply(importKeyPath, oldDependency) :
-							importsMapping.apply(path, oldDependency);
+						exportsMapping.apply(importKeyPath, oldDependency) :
+						importsMapping.apply(path, oldDependency);
 					changed |= !oldDependency.equals(newImportKey);
 					newDependencies.add(newImportKey);
 				}
 				Binding<?> newBinding = changed ?
-						new Binding<>(newDependencies) {
-							@Override
-							public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-								//noinspection unchecked
-								return (CompiledBinding<Object>) oldBinding.compile(
-										new CompiledBindingLocator() {
-											@Override
-											public <Q> CompiledBinding<Q> get(Key<Q> oldImportKey) {
-												Scope[] importKeyPath = bindings.get(oldImportKey);
-												Key<?> newImportKey = importKeyPath != null ?
-														exportsMapping.apply(importKeyPath, oldImportKey) :
-														importsMapping.apply(path, oldImportKey);
-												//noinspection unchecked
-												return compiledBindings.get((Key<Q>) newImportKey);
-											}
-										},
-										threadsafe, scope, slot);
-							}
-						} :
-						oldBinding;
+					new Binding<>(newDependencies) {
+						@Override
+						public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+							//noinspection unchecked
+							return (CompiledBinding<Object>) oldBinding.compile(
+								new CompiledBindingLocator() {
+									@Override
+									public <Q> CompiledBinding<Q> get(Key<Q> oldImportKey) {
+										Scope[] importKeyPath = bindings.get(oldImportKey);
+										Key<?> newImportKey = importKeyPath != null ?
+											exportsMapping.apply(importKeyPath, oldImportKey) :
+											importsMapping.apply(path, oldImportKey);
+										//noinspection unchecked
+										return compiledBindings.get((Key<Q>) newImportKey);
+									}
+								},
+								threadsafe, scope, slot);
+						}
+					} :
+					oldBinding;
 				newBindings.add(newBinding);
 			}
 		}
 		Map<Scope, Trie<Scope, Map<Key<?>, Set<Binding<?>>>>> newChildren = new HashMap<>();
 		oldBindingsTrie.getChildren().forEach((key, subtrie) -> newChildren.put(key, remap(exportsMapping, importsMapping,
-				next(path, key), subtrie, bindings)));
+			next(path, key), subtrie, bindings)));
 		return Trie.of(newBindingsMap, newChildren);
 	}
 

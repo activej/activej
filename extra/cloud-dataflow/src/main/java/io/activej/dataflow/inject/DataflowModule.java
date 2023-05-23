@@ -46,16 +46,14 @@ public final class DataflowModule extends AbstractModule {
 
 	@Provides
 	ByteBufsCodec<DataflowResponse, DataflowRequest> responseRequestCodec(
-			StreamCodec<DataflowRequest> requestStreamCodec,
-			StreamCodec<DataflowResponse> responseStreamCodec
+		StreamCodec<DataflowRequest> requestStreamCodec, StreamCodec<DataflowResponse> responseStreamCodec
 	) {
 		return ByteBufsCodecs.ofStreamCodecs(responseStreamCodec, requestStreamCodec);
 	}
 
 	@Provides
 	ByteBufsCodec<DataflowRequest, DataflowResponse> requestResponseCodec(
-			StreamCodec<DataflowRequest> requestStreamCodec,
-			StreamCodec<DataflowResponse> responseStreamCodec
+		StreamCodec<DataflowRequest> requestStreamCodec, StreamCodec<DataflowResponse> responseStreamCodec
 	) {
 		return ByteBufsCodecs.ofStreamCodecs(requestStreamCodec, responseStreamCodec);
 	}

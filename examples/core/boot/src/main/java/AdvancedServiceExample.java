@@ -38,8 +38,8 @@ public class AdvancedServiceExample extends Launcher {
 	@Provides
 	Reactor reactor() {
 		return Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 	}
 
 	@Provides
@@ -54,7 +54,7 @@ public class AdvancedServiceExample extends Launcher {
 
 	@SuppressWarnings("FieldCanBeLocal")
 	private static class AuthService extends AbstractReactive
-			implements ReactiveService {
+		implements ReactiveService {
 		private final Executor executor;
 		private final DBService dbService;
 
@@ -68,13 +68,13 @@ public class AdvancedServiceExample extends Launcher {
 		public Promise<?> start() {
 			System.out.println("AuthService starting");
 			return Promise.ofBlocking(executor,
-					() -> System.out.println("AuthService started"));
+				() -> System.out.println("AuthService started"));
 		}
 
 		@Override
 		public Promise<?> stop() {
 			return Promise.ofBlocking(executor,
-					() -> System.out.println("AuthService stopped"));
+				() -> System.out.println("AuthService stopped"));
 		}
 	}
 

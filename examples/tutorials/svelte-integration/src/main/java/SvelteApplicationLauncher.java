@@ -17,15 +17,15 @@ public final class SvelteApplicationLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	IStaticLoader staticLoader(Reactor reactor, Executor executor){
+	IStaticLoader staticLoader(Reactor reactor, Executor executor) {
 		return IStaticLoader.ofClassPath(reactor, executor, "public");
 	}
 
 	@Provides
 	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader) {
 		return StaticServlet.builder(reactor, staticLoader)
-				.withIndexHtml()
-				.build();
+			.withIndexHtml()
+			.build();
 	}
 
 	public static void main(String[] args) throws Exception {

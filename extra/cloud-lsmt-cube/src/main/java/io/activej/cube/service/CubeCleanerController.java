@@ -56,7 +56,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeCleanerController<K, D, C> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats {
+	implements ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration DEFAULT_CHUNKS_CLEANUP_DELAY = Duration.ofMinutes(1);
@@ -79,8 +80,10 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseCleanupRepository = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	CubeCleanerController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage<C> chunksStorage) {
+	CubeCleanerController(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+		AggregationChunkStorage<C> chunksStorage
+	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -88,19 +91,17 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 		this.chunksStorage = chunksStorage;
 	}
 
-	public static <K, D, C> CubeCleanerController<K, D, C> create(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme,
-			AsyncOTRepository<K, D> repository,
-			OTSystem<D> otSystem,
-			AggregationChunkStorage<C> storage) {
+	public static <K, D, C> CubeCleanerController<K, D, C> create(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+		AggregationChunkStorage<C> storage
+	) {
 		return builder(reactor, cubeDiffScheme, repository, otSystem, storage).build();
 	}
 
-	public static <K, D, C> CubeCleanerController<K, D, C>.Builder builder(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme,
-			AsyncOTRepository<K, D> repository,
-			OTSystem<D> otSystem,
-			AggregationChunkStorage<C> storage) {
+	public static <K, D, C> CubeCleanerController<K, D, C>.Builder builder(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+		AggregationChunkStorage<C> storage
+	) {
 		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage).new Builder();
 	}
 
@@ -140,60 +141,60 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	private Promise<Void> doCleanup() {
 		return repository.getHeads()
-				.then(heads -> excludeParents(repository, otSystem, heads))
-				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e))
-				.then(heads -> findFrozenCut(heads, reactor.currentInstant().minus(freezeTimeout)))
-				.then(this::cleanupFrozenCut)
-				.then((v, e) -> {
-					if (e instanceof GraphExhaustedException) return Promise.of(null);
-					return Promise.of(v, e);
-				})
-				.whenComplete(promiseCleanup.recordStats())
-				.whenComplete(toLogger(logger, thisMethod()));
+			.then(heads -> excludeParents(repository, otSystem, heads))
+			.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to get heads", e))
+			.then(heads -> findFrozenCut(heads, reactor.currentInstant().minus(freezeTimeout)))
+			.then(this::cleanupFrozenCut)
+			.then((v, e) -> {
+				if (e instanceof GraphExhaustedException) return Promise.of(null);
+				return Promise.of(v, e);
+			})
+			.whenComplete(promiseCleanup.recordStats())
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	private Promise<Set<K>> findFrozenCut(Set<K> heads, Instant freezeTimestamp) {
 		return findCut(repository, otSystem, heads,
-				commits -> commits.stream().allMatch(commit -> commit.getInstant().compareTo(freezeTimestamp) < 0))
-				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e))
-				.whenComplete(toLogger(logger, thisMethod(), heads, freezeTimestamp));
+			commits -> commits.stream().allMatch(commit -> commit.getInstant().compareTo(freezeTimestamp) < 0))
+			.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to find frozen cut, freeze timestamp: " + freezeTimestamp, e))
+			.whenComplete(toLogger(logger, thisMethod(), heads, freezeTimestamp));
 	}
 
 	private Promise<Void> cleanupFrozenCut(Set<K> frozenCut) {
 		return findAllCommonParents(repository, otSystem, frozenCut)
-				.then(parents -> findAnyCommonParent(repository, otSystem, parents))
-				.then(checkpointNode -> repository.hasSnapshot(checkpointNode)
-						.then(hasSnapshot -> {
-							if (hasSnapshot) {
-								logger.info("Snapshot already exists, skip cleanup");
-								return Promise.complete();
-							}
-							return trySaveSnapshotAndCleanupChunks(checkpointNode);
-						}))
-				.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
-				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
+			.then(parents -> findAnyCommonParent(repository, otSystem, parents))
+			.then(checkpointNode -> repository.hasSnapshot(checkpointNode)
+				.then(hasSnapshot -> {
+					if (hasSnapshot) {
+						logger.info("Snapshot already exists, skip cleanup");
+						return Promise.complete();
+					}
+					return trySaveSnapshotAndCleanupChunks(checkpointNode);
+				}))
+			.mapException(e -> e instanceof GraphExhaustedException ? e : new CubeException("Failed to cleanup frozen cut: " + Utils.toString(frozenCut), e))
+			.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
 	public record Tuple<K, D, C>(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {}
 
 	private Promise<Void> trySaveSnapshotAndCleanupChunks(K checkpointNode) {
 		return checkout(repository, otSystem, checkpointNode)
-				.then(checkpointDiffs -> repository.saveSnapshot(checkpointNode, checkpointDiffs)
-						.then(() -> findSnapshot(Set.of(checkpointNode), extraSnapshotsCount))
-						.then(lastSnapshot -> {
-							if (lastSnapshot.isEmpty()) {
-								logger.info("Not enough snapshots, skip cleanup");
-								return Promise.complete();
-							}
-							return Promises.toTuple(Tuple::new,
-											collectRequiredChunks(checkpointNode),
-											repository.loadCommit(lastSnapshot.get()))
-									.then(tuple ->
-											cleanup(lastSnapshot.get(),
-													union(chunksInDiffs(cubeDiffScheme, checkpointDiffs), tuple.collectedChunks),
-													tuple.lastSnapshot.getInstant().minus(chunksCleanupDelay)));
-						}))
-				.whenComplete(toLogger(logger, thisMethod(), checkpointNode));
+			.then(checkpointDiffs -> repository.saveSnapshot(checkpointNode, checkpointDiffs)
+				.then(() -> findSnapshot(Set.of(checkpointNode), extraSnapshotsCount))
+				.then(lastSnapshot -> {
+					if (lastSnapshot.isEmpty()) {
+						logger.info("Not enough snapshots, skip cleanup");
+						return Promise.complete();
+					}
+					return Promises.toTuple(Tuple::new,
+							collectRequiredChunks(checkpointNode),
+							repository.loadCommit(lastSnapshot.get()))
+						.then(tuple ->
+							cleanup(lastSnapshot.get(),
+								union(chunksInDiffs(cubeDiffScheme, checkpointDiffs), tuple.collectedChunks),
+								tuple.lastSnapshot.getInstant().minus(chunksCleanupDelay)));
+				}))
+			.whenComplete(toLogger(logger, thisMethod(), checkpointNode));
 	}
 
 	private Promise<Optional<K>> findSnapshot(Set<K> heads, int skipSnapshots) {
@@ -202,44 +203,44 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	private void findSnapshotImpl(Set<K> heads, int skipSnapshots, SettableCallback<Optional<K>> cb) {
 		findParent(repository, otSystem, heads, DiffsReducer.toVoid(),
-				commit -> repository.hasSnapshot(commit.getId()))
-				.async()
-				.whenResult(findResult -> {
-					if (skipSnapshots <= 0) {
-						cb.set(Optional.of(findResult.getCommit()));
-					} else if (findResult.getCommitParents().isEmpty()) {
-						cb.set(Optional.empty());
-					} else {
-						findSnapshotImpl(findResult.getCommitParents(), skipSnapshots - 1, cb);
-					}
-				})
-				.whenException(cb::setException);
+			commit -> repository.hasSnapshot(commit.getId()))
+			.async()
+			.whenResult(findResult -> {
+				if (skipSnapshots <= 0) {
+					cb.set(Optional.of(findResult.getCommit()));
+				} else if (findResult.getCommitParents().isEmpty()) {
+					cb.set(Optional.empty());
+				} else {
+					findSnapshotImpl(findResult.getCommitParents(), skipSnapshots - 1, cb);
+				}
+			})
+			.whenException(cb::setException);
 	}
 
 	private Promise<Set<C>> collectRequiredChunks(K checkpointNode) {
 		return repository.getHeads()
-				.then(heads ->
-						reduceEdges(repository, otSystem, heads, checkpointNode,
-								DiffsReducer.of(
-										new HashSet<>(),
-										(Set<C> accumulatedChunks, List<? extends D> diffs) ->
-												union(accumulatedChunks, chunksInDiffs(cubeDiffScheme, diffs)),
-										Utils::union))
-								.whenComplete(promiseCleanupCollectRequiredChunks.recordStats()))
-				.map(accumulators -> accumulators.values().stream().flatMap(Collection::stream).collect(toSet()))
-				.whenComplete(transform(Set::size,
-						toLogger(logger, thisMethod(), checkpointNode)));
+			.then(heads ->
+				reduceEdges(repository, otSystem, heads, checkpointNode,
+					DiffsReducer.of(
+						new HashSet<>(),
+						(Set<C> accumulatedChunks, List<? extends D> diffs) ->
+							union(accumulatedChunks, chunksInDiffs(cubeDiffScheme, diffs)),
+						Utils::union))
+					.whenComplete(promiseCleanupCollectRequiredChunks.recordStats()))
+			.map(accumulators -> accumulators.values().stream().flatMap(Collection::stream).collect(toSet()))
+			.whenComplete(transform(Set::size,
+				toLogger(logger, thisMethod(), checkpointNode)));
 	}
 
 	private Promise<Void> cleanup(K checkpointNode, Set<C> requiredChunks, Instant chunksCleanupTimestamp) {
 		return chunksStorage.checkRequiredChunks(requiredChunks)
-				.then(() -> repository.cleanup(checkpointNode)
-						.whenComplete(promiseCleanupRepository.recordStats()))
-				.then(() -> chunksStorage.cleanup(requiredChunks, chunksCleanupTimestamp)
-						.whenComplete(promiseCleanupChunks.recordStats()))
-				.whenComplete(logger.isTraceEnabled() ?
-						toLogger(logger, TRACE, thisMethod(), checkpointNode, chunksCleanupTimestamp, requiredChunks) :
-						toLogger(logger, thisMethod(), checkpointNode, chunksCleanupTimestamp, Utils.toString(requiredChunks)));
+			.then(() -> repository.cleanup(checkpointNode)
+				.whenComplete(promiseCleanupRepository.recordStats()))
+			.then(() -> chunksStorage.cleanup(requiredChunks, chunksCleanupTimestamp)
+				.whenComplete(promiseCleanupChunks.recordStats()))
+			.whenComplete(logger.isTraceEnabled() ?
+				toLogger(logger, TRACE, thisMethod(), checkpointNode, chunksCleanupTimestamp, requiredChunks) :
+				toLogger(logger, thisMethod(), checkpointNode, chunksCleanupTimestamp, Utils.toString(requiredChunks)));
 	}
 
 	@JmxAttribute

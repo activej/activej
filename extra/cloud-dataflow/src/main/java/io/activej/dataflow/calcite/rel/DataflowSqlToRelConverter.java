@@ -26,7 +26,7 @@ public final class DataflowSqlToRelConverter extends SqlToRelConverter {
 		super(viewExpander, validator, catalogReader, cluster, convertletTable, config);
 
 		this.relBuilder = config.getRelBuilderFactory().create(cluster, null)
-				.transform(config.getRelBuilderConfigTransform());
+			.transform(config.getRelBuilderConfigTransform());
 	}
 
 	@Override
@@ -40,13 +40,13 @@ public final class DataflowSqlToRelConverter extends SqlToRelConverter {
 		for (int i = leftFieldCount; i < fieldList.size(); i++) {
 			RelDataTypeField original = fieldList.get(i);
 			converted.set(i, new RelDataTypeFieldImpl(
-					original.getName(),
-					original.getIndex(),
-					typeFactory.createTypeWithNullability(original.getType(), true)
+				original.getName(),
+				original.getIndex(),
+				typeFactory.createTypeWithNullability(original.getType(), true)
 			));
 		}
 		return relBuilder.push(node)
-				.convert(new RelRecordType(converted), false)
-				.build();
+			.convert(new RelRecordType(converted), false)
+			.build();
 	}
 }

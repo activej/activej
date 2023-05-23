@@ -18,36 +18,36 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet mainServlet(Reactor reactor, @Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
 		return RoutingServlet.builder(reactor)
-				.with("/*", request -> {
-					if (ThreadLocalRandom.current().nextBoolean()) {
-						return firstServlet.serve(request);
-					} else {
-						return secondServlet.serve(request);
-					}
-				})
-				.build();
+			.with("/*", request -> {
+				if (ThreadLocalRandom.current().nextBoolean()) {
+					return firstServlet.serve(request);
+				} else {
+					return secondServlet.serve(request);
+				}
+			})
+			.build();
 	}
 
 	@Provides
 	@Named("First")
 	AsyncServlet firstServlet() {
 		return request -> HttpResponse.ok200()
-				.withHtml(
-						"<h1>This page is served by first servlet</h1>" +
-								"<h3>Try to reload the page</h3>"
-				)
-				.toPromise();
+			.withHtml(
+				"<h1>This page is served by first servlet</h1>" +
+					"<h3>Try to reload the page</h3>"
+			)
+			.toPromise();
 	}
 
 	@Provides
 	@Named("Second")
 	AsyncServlet secondServlet() {
 		return request -> HttpResponse.ok200()
-				.withHtml(
-						"<h1>This page is served by second servlet</h1>" +
-								"<h3>Try to reload the page</h3>"
-				)
-				.toPromise();
+			.withHtml(
+				"<h1>This page is served by second servlet</h1>" +
+					"<h3>Try to reload the page</h3>"
+			)
+			.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

@@ -87,8 +87,8 @@ public final class ClusterRepartitionControllerStressTest {
 			FileSystem fileSystem = FileSystem.create(reactor, executor, serverStorages[i]);
 			await(fileSystem.start());
 			FileSystemServer server = FileSystemServer.builder(reactor, fileSystem)
-					.withListenAddress(address)
-					.build();
+				.withListenAddress(address)
+				.build();
 			server.listen();
 			servers.add(server);
 		}
@@ -96,12 +96,12 @@ public final class ClusterRepartitionControllerStressTest {
 		this.partitions = FileSystemPartitions.create(reactor, IDiscoveryService.constant(partitions));
 
 		controller = ClusterRepartitionController.builder(reactor, localPartitionId, this.partitions)
-				.withReplicationCount(3)
-				.build();
+			.withReplicationCount(3)
+			.build();
 
 		scheduler = TaskScheduler.builder(reactor, this.partitions::checkDeadPartitions)
-				.withInterval(Duration.ofSeconds(1))
-				.build();
+			.withInterval(Duration.ofSeconds(1))
+			.build();
 
 		scheduler.start();
 
@@ -150,22 +150,22 @@ public final class ClusterRepartitionControllerStressTest {
 		long start2 = System.nanoTime();
 
 		await(controller.repartition()
-				.whenComplete(TestUtils.assertCompleteFn($ -> {
-					scheduler.stop();
-					double ms = (System.nanoTime() - start2) / 1e6;
-					System.out.printf("Done repartitioning in %.2f ms%n", ms);
-					Promises.toList(partitions.getAlivePartitions().values().stream().map(fsClient -> fsClient.list("**").toTry()))
-							.map(lss -> lss.stream().mapToLong(ls -> {
-								Map<String, FileMetadata> mss = ls.get();
-								return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
-							}).sum())
-							.whenComplete(TestUtils.assertCompleteFn(bytes -> {
-								System.out.printf("%d overall bytes%n", bytes);
-								System.out.printf("Average speed was %.2f mbit/second%n", bytes / (1 << 17) * (1000 / ms));
-								finished = true;
-								servers.forEach(AbstractReactiveServer::close);
-							}));
-				})));
+			.whenComplete(TestUtils.assertCompleteFn($ -> {
+				scheduler.stop();
+				double ms = (System.nanoTime() - start2) / 1e6;
+				System.out.printf("Done repartitioning in %.2f ms%n", ms);
+				Promises.toList(partitions.getAlivePartitions().values().stream().map(fsClient -> fsClient.list("**").toTry()))
+					.map(lss -> lss.stream().mapToLong(ls -> {
+						Map<String, FileMetadata> mss = ls.get();
+						return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
+					}).sum())
+					.whenComplete(TestUtils.assertCompleteFn(bytes -> {
+						System.out.printf("%d overall bytes%n", bytes);
+						System.out.printf("Average speed was %.2f mbit/second%n", bytes / (1 << 17) * (1000 / ms));
+						finished = true;
+						servers.forEach(AbstractReactiveServer::close);
+					}));
+			})));
 
 		List<Path> storages = Arrays.stream(serverStorages).collect(toList());
 		storages.add(localStorage);

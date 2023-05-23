@@ -84,8 +84,8 @@ public interface SerializerDef {
 
 	default Encoder defineEncoder(StaticEncoders staticEncoders, int version, CompatibilityLevel compatibilityLevel) {
 		return isInline(version, compatibilityLevel) ?
-				(buf, pos, value) -> encode(null, buf, pos, value, version, compatibilityLevel) :
-				staticEncoders.define(this);
+			(buf, pos, value) -> encode(null, buf, pos, value, version, compatibilityLevel) :
+			staticEncoders.define(this);
 	}
 
 	interface Decoder {
@@ -100,7 +100,7 @@ public interface SerializerDef {
 
 	default Decoder defineDecoder(StaticDecoders staticDecoders, int version, CompatibilityLevel compatibilityLevel) {
 		return isInline(version, compatibilityLevel) ?
-				in -> decode(null, in, version, compatibilityLevel) :
-				staticDecoders.define(this);
+			in -> decode(null, in, version, compatibilityLevel) :
+			staticDecoders.define(this);
 	}
 }

@@ -269,8 +269,8 @@ public final class Either<L, R> {
 	@Contract(pure = true)
 	public <T> Either<T, R> mapLeft(Function<? super L, ? extends T> fn) {
 		return isLeft() ?
-				new Either<>(fn.apply(left), null, false) :
-				(Either<T, R>) this;
+			new Either<>(fn.apply(left), null, false) :
+			(Either<T, R>) this;
 	}
 
 	/**
@@ -285,8 +285,8 @@ public final class Either<L, R> {
 	@Contract(pure = true)
 	public <T> Either<L, T> mapRight(Function<? super R, ? extends T> fn) {
 		return isRight() ?
-				new Either<>(null, fn.apply(right), true) :
-				(Either<L, T>) this;
+			new Either<>(null, fn.apply(right), true) :
+			(Either<L, T>) this;
 	}
 
 	/**
@@ -301,8 +301,8 @@ public final class Either<L, R> {
 	@Contract(pure = true)
 	public <T> Either<T, R> flatMapLeft(Function<? super L, Either<T, R>> fn) {
 		return isLeft() ?
-				fn.apply(left) :
-				(Either<T, R>) this;
+			fn.apply(left) :
+			(Either<T, R>) this;
 	}
 
 	/**
@@ -317,8 +317,8 @@ public final class Either<L, R> {
 	@Contract(pure = true)
 	public <T> Either<L, T> flatMapRight(Function<? super R, Either<L, T>> fn) {
 		return isRight() ?
-				fn.apply(right) :
-				(Either<L, T>) this;
+			fn.apply(right) :
+			(Either<L, T>) this;
 	}
 
 	@Override

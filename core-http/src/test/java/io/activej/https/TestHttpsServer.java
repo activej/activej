@@ -31,22 +31,22 @@ public class TestHttpsServer {
 
 	public static void main(String[] args) throws Exception {
 		Eventloop eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.withCurrentThread()
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.withCurrentThread()
+			.build();
 		Executor executor = newCachedThreadPool();
 
 		AsyncServlet bobServlet = request -> HttpResponse.ok200()
-				.withBody(wrapAscii("Hello, I am Bob!"))
-				.toPromise();
+			.withBody(wrapAscii("Hello, I am Bob!"))
+			.toPromise();
 
 		KeyManager[] keyManagers = createKeyManagers(new File("./src/test/resources/keystore.jks"), "testtest", "testtest");
 		TrustManager[] trustManagers = createTrustManagers(new File("./src/test/resources/truststore.jks"), "testtest");
 
 		HttpServer server = HttpServer.builder(eventloop, bobServlet)
-				.withSslListenPort(createSslContext("TLSv1", keyManagers, trustManagers, new SecureRandom()), executor, PORT)
-				.withListenPort(getFreePort())
-				.build();
+			.withSslListenPort(createSslContext("TLSv1", keyManagers, trustManagers, new SecureRandom()), executor, PORT)
+			.withListenPort(getFreePort())
+			.build();
 
 		System.out.println("https://127.0.0.1:" + PORT);
 

@@ -48,15 +48,16 @@ public final class StreamConsumerWithResult<T, X> {
 
 	public StreamConsumerWithResult<T, X> sanitize() {
 		return new StreamConsumerWithResult<>(consumer,
-				consumer.getAcknowledgement().combine(result.whenException(consumer::closeEx), ($, v) -> v).async());
+			consumer.getAcknowledgement().combine(result.whenException(consumer::closeEx), ($, v) -> v).async());
 	}
 
 	public <T1, X1> StreamConsumerWithResult<T1, X1> transform(
-			Function<StreamConsumer<T>, StreamConsumer<T1>> consumerTransformer,
-			Function<Promise<X>, Promise<X1>> resultTransformer) {
+		Function<StreamConsumer<T>, StreamConsumer<T1>> consumerTransformer,
+		Function<Promise<X>, Promise<X1>> resultTransformer
+	) {
 		return new StreamConsumerWithResult<>(
-				consumerTransformer.apply(consumer),
-				resultTransformer.apply(result));
+			consumerTransformer.apply(consumer),
+			resultTransformer.apply(result));
 	}
 
 	public <T1> StreamConsumerWithResult<T1, X> transformConsumer(Function<StreamConsumer<T>, StreamConsumer<T1>> consumerTransformer) {
@@ -69,8 +70,8 @@ public final class StreamConsumerWithResult<T, X> {
 
 	public static <T, X> StreamConsumerWithResult<T, X> ofPromise(Promise<StreamConsumerWithResult<T, X>> promise) {
 		return of(
-				StreamConsumers.ofPromise(promise.map(StreamConsumerWithResult::getConsumer)),
-				promise.then(StreamConsumerWithResult::getResult));
+			StreamConsumers.ofPromise(promise.map(StreamConsumerWithResult::getConsumer)),
+			promise.then(StreamConsumerWithResult::getResult));
 	}
 
 	public StreamConsumer<T> getConsumer() {

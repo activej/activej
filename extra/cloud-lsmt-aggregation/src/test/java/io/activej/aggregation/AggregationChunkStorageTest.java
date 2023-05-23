@@ -53,10 +53,10 @@ public class AggregationChunkStorageTest {
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
 	private final AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-			.withKey("key", ofInt())
-			.withMeasure("value", sum(ofInt()))
-			.withMeasure("timestamp", sum(ofLong()))
-			.build();
+		.withKey("key", ofInt())
+		.withMeasure("value", sum(ofInt()))
+		.withMeasure("timestamp", sum(ofLong()))
+		.build();
 
 	@Test
 	public void testAcknowledge() throws IOException {
@@ -65,32 +65,32 @@ public class AggregationChunkStorageTest {
 		FileSystem fs = FileSystem.create(reactor, newCachedThreadPool(), storageDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(
-				reactor,
-				ChunkIdJsonCodec.ofLong(),
-				AsyncSupplier.of(new RefLong(0)::inc),
-				FrameFormats.lz4(),
-				fs);
+			reactor,
+			ChunkIdJsonCodec.ofLong(),
+			AsyncSupplier.of(new RefLong(0)::inc),
+			FrameFormats.lz4(),
+			fs);
 
 		int nChunks = 100;
 		AggregationChunker<?, KeyValuePair> chunker = AggregationChunker.create(
-				structure, structure.getMeasures(), KeyValuePair.class, singlePartition(),
-				aggregationChunkStorage, classLoader, 1);
+			structure, structure.getMeasures(), KeyValuePair.class, singlePartition(),
+			aggregationChunkStorage, classLoader, 1);
 
 		Set<Path> expected = IntStream.range(0, nChunks + 1).mapToObj(i -> Paths.get((i + 1) + ".temp")).collect(toSet());
 
 		Random random = ThreadLocalRandom.current();
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofStream(
-				Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
-						.limit(nChunks));
+			Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
+				.limit(nChunks));
 
 		List<Path> paths = await(supplier.streamTo(chunker)
-				.map($ -> {
-					try (Stream<Path> list = Files.list(storageDir)) {
-						return list.collect(toList());
-					} catch (IOException e) {
-						throw new AssertionError(e);
-					}
-				}));
+			.map($ -> {
+				try (Stream<Path> list = Files.list(storageDir)) {
+					return list.collect(toList());
+				} catch (IOException e) {
+					throw new AssertionError(e);
+				}
+			}));
 
 		Set<Path> actual = paths.stream().filter(Files::isRegularFile).map(Path::getFileName).collect(toSet());
 

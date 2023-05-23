@@ -64,11 +64,11 @@ public final class NotEq implements AggregationPredicate {
 		Object internalValue = toInternalValue(fields, key, this.value);
 		FieldType fieldType = fields.get(key);
 		return internalValue == null ?
-				isNotNull(property, fieldType) :
-				or(
-						isNull(property, fieldType),
-						isNe(property, value(internalValue))
-				);
+			isNotNull(property, fieldType) :
+			or(
+				isNull(property, fieldType),
+				isNe(property, value(internalValue))
+			);
 	}
 
 	@Override

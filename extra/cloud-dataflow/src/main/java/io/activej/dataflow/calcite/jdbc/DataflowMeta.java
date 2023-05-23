@@ -134,8 +134,8 @@ public final class DataflowMeta extends LimitedMeta {
 		}
 
 		List<Object> params = parameterValues.stream()
-				.map(this::paramToJdbc)
-				.toList();
+			.map(this::paramToJdbc)
+			.toList();
 
 		Dataset<Record> dataset = datasetWithLimit.dataset.materialize(params);
 
@@ -236,11 +236,11 @@ public final class DataflowMeta extends LimitedMeta {
 			ColumnMetaData.AvaticaType avaticaType = getAvaticaType(relDataType, fieldType);
 
 			ColumnMetaData columnMetaData = new ColumnMetaData(i, false, true, false, false, 0, false,
-					1, fieldName, fieldName, SCHEMA_NAME,
-					getPrecision(relDataType),
-					getScale(relDataType),
-					"", SCHEMA_NAME,
-					avaticaType, true, false, false, Types.getRawType(fieldType).getName());
+				1, fieldName, fieldName, SCHEMA_NAME,
+				getPrecision(relDataType),
+				getScale(relDataType),
+				"", SCHEMA_NAME,
+				avaticaType, true, false, false, Types.getRawType(fieldType).getName());
 			columns.add(columnMetaData);
 		}
 
@@ -248,21 +248,21 @@ public final class DataflowMeta extends LimitedMeta {
 		for (RexDynamicParam dynamicParam : dynamicParams) {
 			RelDataType type = dynamicParam.getType();
 			parameters.add(new AvaticaParameter(false,
-					getPrecision(type),
-					getScale(type),
-					type.getSqlTypeName().getJdbcOrdinal(),
-					getTypeName(type),
-					Object.class.getName(),
-					dynamicParam.getName()
+				getPrecision(type),
+				getScale(type),
+				type.getSqlTypeName().getJdbcOrdinal(),
+				getTypeName(type),
+				Object.class.getName(),
+				dynamicParam.getName()
 			));
 		}
 
 		return Signature.create(
-				columns,
-				sql,
-				parameters,
-				CursorFactory.LIST,
-				StatementType.SELECT);
+			columns,
+			sql,
+			parameters,
+			CursorFactory.LIST,
+			StatementType.SELECT);
 	}
 
 	private static ColumnMetaData.AvaticaType getAvaticaType(RelDataType relDataType, @Nullable Type type) {
@@ -471,9 +471,9 @@ public final class DataflowMeta extends LimitedMeta {
 		List<Object[]> results = new ArrayList<>();
 		//noinspection PointlessBooleanExpression
 		if (true &&
-				(catalog == null || catalog.equals(SCHEMA_NAME)) &&
-				(schemaPattern.s == null || schemaPattern.s.isEmpty()) &&
-				(typeList == null || typeList.contains(TABLE))
+			(catalog == null || catalog.equals(SCHEMA_NAME)) &&
+			(schemaPattern.s == null || schemaPattern.s.isEmpty()) &&
+			(typeList == null || typeList.contains(TABLE))
 		) {
 			Predicate<String> tableNamePredicate = patternToPredicate(tableNamePattern);
 			for (String tableName : sqlDataflow.getSchema().getTableNames()) {
@@ -545,11 +545,11 @@ public final class DataflowMeta extends LimitedMeta {
 					SqlTypeName sqlTypeName = fieldType.getSqlTypeName();
 
 					int precision =
-							sqlTypeName.allowsPrec()
-									&& !(fieldType
-									instanceof RelDataTypeFactoryImpl.JavaType)
-									? fieldType.getPrecision()
-									: -1;
+						sqlTypeName.allowsPrec()
+							&& !(fieldType
+							instanceof RelDataTypeFactoryImpl.JavaType)
+							? fieldType.getPrecision()
+							: -1;
 
 					row[0] = SCHEMA_NAME;
 					row[2] = tableName;
@@ -558,14 +558,14 @@ public final class DataflowMeta extends LimitedMeta {
 					row[5] = sqlTypeName.getName();
 					row[6] = precision;
 					row[8] = sqlTypeName.allowsScale()
-							? fieldType.getScale()
-							: null;
+						? fieldType.getScale()
+						: null;
 					row[9] = 10;
 
 					boolean isNullable = field.getType().isNullable();
 					row[10] = isNullable
-							? DatabaseMetaData.columnNullable
-							: DatabaseMetaData.columnNoNulls;
+						? DatabaseMetaData.columnNullable
+						: DatabaseMetaData.columnNoNulls;
 					row[15] = precision;
 					row[16] = field.getIndex() + 1;
 					row[17] = isNullable ? YES : NO;
@@ -599,11 +599,11 @@ public final class DataflowMeta extends LimitedMeta {
 			ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(type);
 			ColumnMetaData.ScalarType scalarType = ColumnMetaData.scalar(rep.typeId, rep.name(), rep);
 			ColumnMetaData columnMetaData = new ColumnMetaData(i++, false, true, false, false, 0, false,
-					1, columnName, columnName, SCHEMA_NAME,
-					0,
-					0,
-					"", SCHEMA_NAME,
-					scalarType, true, false, false, typeName);
+				1, columnName, columnName, SCHEMA_NAME,
+				0,
+				0,
+				"", SCHEMA_NAME,
+				scalarType, true, false, false, typeName);
 			columnMetaDatas.add(columnMetaData);
 		}
 		return Signature.create(columnMetaDatas, null, null, CursorFactory.LIST, null);
@@ -611,14 +611,14 @@ public final class DataflowMeta extends LimitedMeta {
 
 	private static int getScale(RelDataType type) {
 		return type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
-				? 0
-				: type.getScale();
+			? 0
+			: type.getScale();
 	}
 
 	private static int getPrecision(RelDataType type) {
 		return type.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED
-				? 0
-				: type.getPrecision();
+			? 0
+			: type.getPrecision();
 	}
 
 	private static String getTypeName(RelDataType type) {

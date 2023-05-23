@@ -28,12 +28,12 @@ public final class RpcScopedModule extends AbstractModule {
 		bind(RpcResponse.class).to(RpcResponse::create, RpcRequest.class, CookieBucket.class).in(RpcRequestScope.class);
 
 		bind(new Key<RpcRequestHandler<RpcRequest, RpcResponse>>() {}).to(
-				injector ->
-						request -> {
-							Injector subInjector = injector.enterScope(RPC_REQUEST_SCOPE);
-							subInjector.putInstance(RpcRequest.class, request);
-							return Promise.of(subInjector.getInstance(RpcResponse.class));
-						},
-				Injector.class);
+			injector ->
+				request -> {
+					Injector subInjector = injector.enterScope(RPC_REQUEST_SCOPE);
+					subInjector.putInstance(RpcRequest.class, request);
+					return Promise.of(subInjector.getInstance(RpcResponse.class));
+				},
+			Injector.class);
 	}
 }

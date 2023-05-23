@@ -19,7 +19,6 @@ package io.activej.datastream.consumer;
 import io.activej.common.Checks;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSupplier;
-import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
@@ -60,8 +59,8 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 			onStarted();
 		}
 		streamSupplier.getEndOfStream()
-				.whenResult(this::endOfStream)
-				.whenException(this::closeEx);
+			.whenResult(this::endOfStream)
+			.whenException(this::closeEx);
 	}
 
 	@Override

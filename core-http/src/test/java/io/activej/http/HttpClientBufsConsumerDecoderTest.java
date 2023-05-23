@@ -43,13 +43,13 @@ public class HttpClientBufsConsumerDecoderTest {
 	@BeforeClass
 	public static void init() throws NoSuchAlgorithmException, IOException {
 		IDnsClient dnsClient = DnsClient.builder(Reactor.getCurrentReactor())
-				.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
-				.withTimeout(StringFormatUtils.parseDuration("5 seconds"))
-				.build();
+			.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
+			.withTimeout(StringFormatUtils.parseDuration("5 seconds"))
+			.build();
 		client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
-				.withDnsClient(dnsClient)
-				.build();
+			.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
+			.withDnsClient(dnsClient)
+			.build();
 	}
 
 	@Test
@@ -89,14 +89,14 @@ public class HttpClientBufsConsumerDecoderTest {
 
 	public void testUrl(String url) {
 		String result = await(client.request(
-						HttpRequest.get(url)
-								.withHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1")
-								.withHeader(HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-								.withHeader(HttpHeaders.ACCEPT_ENCODING, "gzip")
-								.withHeader(HttpHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.8")
-								.build())
-				.then(response -> response.loadBody())
-				.map(body -> body.getString(UTF_8)));
+				HttpRequest.get(url)
+					.withHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1")
+					.withHeader(HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+					.withHeader(HttpHeaders.ACCEPT_ENCODING, "gzip")
+					.withHeader(HttpHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.8")
+					.build())
+			.then(response -> response.loadBody())
+			.map(body -> body.getString(UTF_8)));
 		assertNotNull(result);
 		assertFalse(result.isEmpty());
 	}

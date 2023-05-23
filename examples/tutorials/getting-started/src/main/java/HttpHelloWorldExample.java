@@ -9,8 +9,8 @@ public final class HttpHelloWorldExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("Hello World")
-				.toPromise();
+			.withPlainText("Hello World")
+			.toPromise();
 	}
 
 	public static void main(String[] args) throws Exception {

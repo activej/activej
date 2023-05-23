@@ -44,14 +44,14 @@ public final class BlockingStreamSupplier<T> extends AbstractStreamSupplier<T> {
 	 * @param item item to be put to this supplier.
 	 * @return {@code true} if all data is acknowledged and no more data shoud be sent to the supplier
 	 * @throws InterruptedException if thread is interrupted while blocked
-	 * @throws ExecutionException       if some error occurs asynchronously while putting an item
+	 * @throws ExecutionException   if some error occurs asynchronously while putting an item
 	 */
 	public boolean put(T item) throws InterruptedException, ExecutionException {
 		checkState(!endOfStream);
 
 		queue.put(item);
 
-		if (isException()){
+		if (isException()) {
 			throw new ExecutionException(getAcknowledgement().getException());
 		}
 

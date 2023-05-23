@@ -22,20 +22,20 @@ public final class UdpPingClientExample {
 	//[START REGION_1]
 	public static void main(String[] args) throws Exception {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
 		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(socketSettings, null, null);
 
 		UdpSocket.connect(eventloop, clientDatagramChannel)
-				.whenResult(socket -> {
-					System.out.println("Sending PING to UDP server " + SERVER_ADDRESS);
+			.whenResult(socket -> {
+				System.out.println("Sending PING to UDP server " + SERVER_ADDRESS);
 
-					socket.send(UdpPacket.of(ByteBufStrings.wrapUtf8("PING"), SERVER_ADDRESS))
-							.then(socket::receive)
-							.whenResult(packet -> System.out.println("Received message: " + packet.getBuf().asString(UTF_8)))
-							.whenComplete(socket::close);
-				});
+				socket.send(UdpPacket.of(ByteBufStrings.wrapUtf8("PING"), SERVER_ADDRESS))
+					.then(socket::receive)
+					.whenResult(packet -> System.out.println("Received message: " + packet.getBuf().asString(UTF_8)))
+					.whenComplete(socket::close);
+			});
 
 		eventloop.run();
 	}

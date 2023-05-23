@@ -51,32 +51,32 @@ public class CubeIntegrationTest extends CubeTestBase {
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
 		FileSystem fs = FileSystem.builder(reactor, EXECUTOR, aggregationsDir)
-				.withTempDir(Files.createTempDirectory(""))
-				.build();
+			.withTempDir(Files.createTempDirectory(""))
+			.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
-				.withDimension("date", ofLocalDate())
-				.withDimension("advertiser", ofInt())
-				.withDimension("campaign", ofInt())
-				.withDimension("banner", ofInt())
-				.withRelation("campaign", "advertiser")
-				.withRelation("banner", "campaign")
-				.withMeasure("impressions", sum(ofLong()))
-				.withMeasure("clicks", sum(ofLong()))
-				.withMeasure("conversions", sum(ofLong()))
-				.withMeasure("revenue", sum(ofDouble()))
-				.withAggregation(id("detailed")
-						.withDimensions("date", "advertiser", "campaign", "banner")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"))
-				.withAggregation(id("date")
-						.withDimensions("date")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"))
-				.withAggregation(id("advertiser")
-						.withDimensions("advertiser")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"))
-				.build();
+			.withDimension("date", ofLocalDate())
+			.withDimension("advertiser", ofInt())
+			.withDimension("campaign", ofInt())
+			.withDimension("banner", ofInt())
+			.withRelation("campaign", "advertiser")
+			.withRelation("banner", "campaign")
+			.withMeasure("impressions", sum(ofLong()))
+			.withMeasure("clicks", sum(ofLong()))
+			.withMeasure("conversions", sum(ofLong()))
+			.withMeasure("revenue", sum(ofDouble()))
+			.withAggregation(id("detailed")
+				.withDimensions("date", "advertiser", "campaign", "banner")
+				.withMeasures("impressions", "clicks", "conversions", "revenue"))
+			.withAggregation(id("date")
+				.withDimensions("date")
+				.withMeasures("impressions", "clicks", "conversions", "revenue"))
+			.withAggregation(id("advertiser")
+				.withDimensions("advertiser")
+				.withMeasures("impressions", "clicks", "conversions", "revenue"))
+			.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
@@ -86,17 +86,17 @@ public class CubeIntegrationTest extends CubeTestBase {
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
-				fileSystem,
-				frameFormat,
-				SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
-				NAME_PARTITION_REMAINDER_SEQ);
+			fileSystem,
+			frameFormat,
+			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
+			NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
-				multilog,
-				cube.logStreamConsumer(LogItem.class),
-				"testlog",
-				List.of("partitionA"),
-				cubeDiffLogOTState);
+			multilog,
+			cube.logStreamConsumer(LogItem.class),
+			"testlog",
+			List.of("partitionA"),
+			cubeDiffLogOTState);
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
@@ -104,7 +104,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems = LogItem.getListOfRandomLogItems(100);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems).streamTo(
-				StreamConsumers.ofPromise(multilog.write("partitionA"))));
+			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
 		//		AsynchronousFileChannel channel = AsynchronousFileChannel.open(Files.list(logsDir).findFirst().get(),
@@ -119,14 +119,14 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(300);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems2).streamTo(
-				StreamConsumers.ofPromise(multilog.write("partitionA"))));
+			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<LogItem> listOfRandomLogItems3 = LogItem.getListOfRandomLogItems(50);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems3).streamTo(
-				StreamConsumers.ofPromise(multilog.write("partitionA"))));
+			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
@@ -134,8 +134,8 @@ public class CubeIntegrationTest extends CubeTestBase {
 		await(aggregationChunkStorage.backup("backup1", (Set) cube.getAllChunks()));
 
 		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
-						LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
-				.toList());
+				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
+			.toList());
 
 		// Aggregate manually
 		Map<Integer, Long> map = new HashMap<>();
@@ -158,16 +158,16 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		// Query
 		List<LogItem> queryResult = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
-				LogItem.class, DefiningClassLoader.create(CLASS_LOADER)).toList());
+			LogItem.class, DefiningClassLoader.create(CLASS_LOADER)).toList());
 
 		assertEquals(map, queryResult.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Check files in aggregations directory
 		Set<String> actualChunkFileNames = Arrays.stream(checkNotNull(aggregationsDir.toFile().listFiles()))
-				.map(File::getName)
-				.collect(toSet());
+			.map(File::getName)
+			.collect(toSet());
 		assertEquals(concat(Stream.of("backups"), cube.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
-				actualChunkFileNames);
+			actualChunkFileNames);
 	}
 
 	private void printDirContents(Path logsDir) throws IOException {

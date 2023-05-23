@@ -44,29 +44,29 @@ public final class Utils {
 	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = RecordStreamSchema.create(RecordScheme.builder().build());
 
 	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StreamCodec.create((scale, bytes) -> {
-				BigInteger unscaledValue = new BigInteger(bytes);
-				return new BigDecimal(unscaledValue, scale);
-			},
-			BigDecimal::scale, StreamCodecs.ofVarInt(),
-			bigDecimal -> bigDecimal.unscaledValue().toByteArray(), StreamCodecs.ofByteArray()
+			BigInteger unscaledValue = new BigInteger(bytes);
+			return new BigDecimal(unscaledValue, scale);
+		},
+		BigDecimal::scale, StreamCodecs.ofVarInt(),
+		bigDecimal -> bigDecimal.unscaledValue().toByteArray(), StreamCodecs.ofByteArray()
 	);
 
 	private static final StreamCodec<LocalDate> LOCAL_DATE_STREAM_CODEC = StreamCodec.create(LocalDate::of,
-			LocalDate::getYear, StreamCodecs.ofVarInt(),
-			LocalDate::getMonthValue, StreamCodecs.ofVarInt(),
-			LocalDate::getDayOfMonth, StreamCodecs.ofVarInt()
+		LocalDate::getYear, StreamCodecs.ofVarInt(),
+		LocalDate::getMonthValue, StreamCodecs.ofVarInt(),
+		LocalDate::getDayOfMonth, StreamCodecs.ofVarInt()
 	);
 
 	private static final StreamCodec<LocalTime> LOCAL_TIME_STREAM_CODEC = StreamCodec.create(LocalTime::of,
-			LocalTime::getHour, StreamCodecs.ofVarInt(),
-			LocalTime::getMinute, StreamCodecs.ofVarInt(),
-			LocalTime::getSecond, StreamCodecs.ofVarInt(),
-			LocalTime::getNano, StreamCodecs.ofVarInt()
+		LocalTime::getHour, StreamCodecs.ofVarInt(),
+		LocalTime::getMinute, StreamCodecs.ofVarInt(),
+		LocalTime::getSecond, StreamCodecs.ofVarInt(),
+		LocalTime::getNano, StreamCodecs.ofVarInt()
 	);
 
 	private static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StreamCodec.create(Instant::ofEpochSecond,
-			Instant::getEpochSecond, StreamCodecs.ofVarLong(),
-			Instant::getNano, StreamCodecs.ofVarInt()
+		Instant::getEpochSecond, StreamCodecs.ofVarLong(),
+		Instant::getNano, StreamCodecs.ofVarInt()
 	);
 
 	private static final LinkedHashMap<Class<?>, StreamCodec<?>> VALUE_CODECS = new LinkedHashMap<>();
@@ -91,11 +91,11 @@ public final class Utils {
 	private static final StreamCodec<Object> VALUE_OBJECT_STREAM_CODEC = StreamCodecs.ofSubtype(VALUE_CODECS);
 
 	public static final StreamCodec<Value> VALUE_STREAM_CODEC = StreamCodec.of(
-			(output, item) -> VALUE_OBJECT_STREAM_CODEC.encode(output, item.getValue()),
-			input -> {
-				Object decoded = VALUE_OBJECT_STREAM_CODEC.decode(input);
-				return Value.materializedValue(decoded.getClass(), decoded);
-			}
+		(output, item) -> VALUE_OBJECT_STREAM_CODEC.encode(output, item.getValue()),
+		input -> {
+			Object decoded = VALUE_OBJECT_STREAM_CODEC.decode(input);
+			return Value.materializedValue(decoded.getClass(), decoded);
+		}
 	);
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
@@ -136,9 +136,9 @@ public final class Utils {
 					SqlOperator operator = call.getOperator();
 					if (operator instanceof ProjectionFunction projectionFunction) {
 						List<Operand<?>> operands = call.getOperands()
-								.stream()
-								.map(operand -> toOperand(operand, classLoader))
-								.collect(Collectors.toList());
+							.stream()
+							.map(operand -> toOperand(operand, classLoader))
+							.collect(Collectors.toList());
 
 						return projectionFunction.toOperandFunction(operands);
 					}
@@ -180,7 +180,7 @@ public final class Utils {
 		object2 = tryCoerceEnum(object2, object1);
 
 		if (object1.getClass() != object2.getClass() &&
-				object1 instanceof Number number1 && object2 instanceof Number number2) {
+			object1 instanceof Number number1 && object2 instanceof Number number2) {
 			return Double.compare(number1.doubleValue(), number2.doubleValue()) == 0;
 		}
 
@@ -226,9 +226,9 @@ public final class Utils {
 
 				for (RecordComponent recordComponent : recordComponents) {
 					fields.add(new RelDataTypeFieldImpl(
-							recordComponent.getName(),
-							fields.size(),
-							toRowType(typeFactory, recordComponent.getGenericType())
+						recordComponent.getName(),
+						fields.size(),
+						toRowType(typeFactory, recordComponent.getGenericType())
 					));
 				}
 
@@ -246,9 +246,9 @@ public final class Utils {
 				if (Modifier.isStatic(field.getModifiers())) continue;
 
 				fields.add(new RelDataTypeFieldImpl(
-						field.getName(),
-						fields.size(),
-						toRowType(typeFactory, field.getGenericType())
+					field.getName(),
+					fields.size(),
+					toRowType(typeFactory, field.getGenericType())
 				));
 			}
 			return new JavaRecordType(fields, cls);
@@ -285,11 +285,11 @@ public final class Utils {
 	}
 
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
-			.parseCaseInsensitive()
-			.append(ISO_LOCAL_DATE)
-			.appendLiteral(' ')
-			.append(ISO_LOCAL_TIME)
-			.toFormatter();
+		.parseCaseInsensitive()
+		.append(ISO_LOCAL_DATE)
+		.appendLiteral(' ')
+		.append(ISO_LOCAL_TIME)
+		.toFormatter();
 
 	public static Instant parseInstantFromTimestampString(String timestampString) {
 		TemporalAccessor parsed = DATE_TIME_FORMATTER.parse(timestampString);

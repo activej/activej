@@ -31,7 +31,7 @@ public class FilterScanTableRule extends RelOptRule {
 
 	public static FilterScanTableRule create() {
 		return new FilterScanTableRule(operand(LogicalFilter.class,
-				operand(DataflowTableScan.class, none())));
+			operand(DataflowTableScan.class, none())));
 	}
 
 	@Override

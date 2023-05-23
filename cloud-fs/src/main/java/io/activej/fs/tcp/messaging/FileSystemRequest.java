@@ -4,20 +4,20 @@ import java.util.Map;
 import java.util.Set;
 
 public sealed interface FileSystemRequest permits
-		FileSystemRequest.Append,
-		FileSystemRequest.Copy,
-		FileSystemRequest.CopyAll,
-		FileSystemRequest.Delete,
-		FileSystemRequest.DeleteAll,
-		FileSystemRequest.Download,
-		FileSystemRequest.Handshake,
-		FileSystemRequest.Info,
-		FileSystemRequest.InfoAll,
-		FileSystemRequest.List,
-		FileSystemRequest.Move,
-		FileSystemRequest.MoveAll,
-		FileSystemRequest.Ping,
-		FileSystemRequest.Upload {
+	FileSystemRequest.Append,
+	FileSystemRequest.Copy,
+	FileSystemRequest.CopyAll,
+	FileSystemRequest.Delete,
+	FileSystemRequest.DeleteAll,
+	FileSystemRequest.Download,
+	FileSystemRequest.Handshake,
+	FileSystemRequest.Info,
+	FileSystemRequest.InfoAll,
+	FileSystemRequest.List,
+	FileSystemRequest.Move,
+	FileSystemRequest.MoveAll,
+	FileSystemRequest.Ping,
+	FileSystemRequest.Upload {
 
 	record Handshake(Version version) implements FileSystemRequest {
 	}

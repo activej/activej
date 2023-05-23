@@ -64,7 +64,7 @@ public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implemen
 
 	public final <T> Promise<T> sanitize(Promise<T> promise) {
 		return promise.async()
-				.then(this::doSanitize);
+			.then(this::doSanitize);
 	}
 
 	protected final <T> Promise<T> doSanitize(T value, @Nullable Exception e) {

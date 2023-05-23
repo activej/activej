@@ -34,7 +34,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static java.lang.Math.pow;
 
 public final class ThrottlingController
-		implements ReactiveJmxBean, EventloopInspector {
+	implements ReactiveJmxBean, EventloopInspector {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);
@@ -89,7 +89,7 @@ public final class ThrottlingController
 		return new ThrottlingController().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, ThrottlingController>{
+	public final class Builder extends AbstractBuilder<Builder, ThrottlingController> {
 		private Builder() {}
 
 		public Builder withEventloop(Eventloop eventloop) {
@@ -408,14 +408,14 @@ public final class ThrottlingController
 	@Override
 	public String toString() {
 		return String.format("{throttling:%2d%% avgKps=%-4d avgThrottling=%2d%% requests=%-4d throttled=%-4d rounds=%-3d zero=%-3d >targetTime=%-3d}",
-				(int) (throttling * 100),
-				(int) getAvgKeysPerSecond(),
-				(int) (smoothedThrottling * 100),
-				infoTotalRequests,
-				infoTotalRequestsThrottled,
-				infoRounds,
-				infoRoundsZeroThrottling,
-				infoRoundsExceededTargetTime);
+			(int) (throttling * 100),
+			(int) getAvgKeysPerSecond(),
+			(int) (smoothedThrottling * 100),
+			infoTotalRequests,
+			infoTotalRequestsThrottled,
+			infoRounds,
+			infoRoundsZeroThrottling,
+			infoRoundsExceededTargetTime);
 	}
 
 	@Override

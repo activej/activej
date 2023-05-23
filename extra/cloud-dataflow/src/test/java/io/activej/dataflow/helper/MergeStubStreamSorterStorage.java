@@ -19,7 +19,7 @@ import java.util.Map;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class MergeStubStreamSorterStorage<T> extends ImplicitlyReactive
-		implements IStreamSorterStorage<T> {
+	implements IStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override

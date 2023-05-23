@@ -60,7 +60,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController extends AbstractReactive
-		implements ReactiveJmxBeanWithStats, ReactiveService {
+	implements ReactiveJmxBeanWithStats, ReactiveService {
+
 	private static final Logger logger = LoggerFactory.getLogger(ClusterRepartitionController.class);
 
 	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
@@ -171,44 +172,44 @@ public final class ClusterRepartitionController extends AbstractReactive
 		isRepartitioning = true;
 		processedFiles.clear();
 		return recalculatePlan()
-				.then(() -> Promises.repeat(
-						() -> recalculatePlanIfNeeded()
-								.then(() -> {
-									if (!repartitionPlan.hasNext()) return Promise.of(false);
-									String name = repartitionPlan.next();
-									return fileSystem.info(name)
-											.then(meta -> {
-												if (meta == null) {
-													logger.warn("File '{}' that should be repartitioned has been deleted", name);
-													return Promise.of(false);
-												}
-												return repartitionFile(name, meta);
-											})
-											.whenComplete(singleFileRepartitionPromiseStats.recordStats())
-											.then(b -> {
-												processedFiles.add(name);
-												if (b) {
-													ensuredFiles++;
-												} else {
-													failedFiles++;
-												}
-												return Promise.complete();
-											})
-											.map($ -> true);
-								})))
-				.whenComplete(() -> isRepartitioning = false)
-				.whenComplete(repartitionPromiseStats.recordStats())
-				.then(($, e) -> {
-					if (e != null) {
-						logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched", ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles, e);
-					} else {
-						logger.info("repartition finished, {} files ensured, {} errored", ensuredFiles, failedFiles);
-					}
-					if (closeCallback != null) {
-						closeCallback.set($, e);
-					}
-					return Promise.complete();
-				});
+			.then(() -> Promises.repeat(
+				() -> recalculatePlanIfNeeded()
+					.then(() -> {
+						if (!repartitionPlan.hasNext()) return Promise.of(false);
+						String name = repartitionPlan.next();
+						return fileSystem.info(name)
+							.then(meta -> {
+								if (meta == null) {
+									logger.warn("File '{}' that should be repartitioned has been deleted", name);
+									return Promise.of(false);
+								}
+								return repartitionFile(name, meta);
+							})
+							.whenComplete(singleFileRepartitionPromiseStats.recordStats())
+							.then(b -> {
+								processedFiles.add(name);
+								if (b) {
+									ensuredFiles++;
+								} else {
+									failedFiles++;
+								}
+								return Promise.complete();
+							})
+							.map($ -> true);
+					})))
+			.whenComplete(() -> isRepartitioning = false)
+			.whenComplete(repartitionPromiseStats.recordStats())
+			.then(($, e) -> {
+				if (e != null) {
+					logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched", ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles, e);
+				} else {
+					logger.info("repartition finished, {} files ensured, {} errored", ensuredFiles, failedFiles);
+				}
+				if (closeCallback != null) {
+					closeCallback.set($, e);
+				}
+				return Promise.complete();
+			});
 	}
 
 	private Promise<Void> recalculatePlanIfNeeded() {
@@ -223,55 +224,55 @@ public final class ClusterRepartitionController extends AbstractReactive
 
 	private Promise<Void> recalculatePlan() {
 		return fileSystem.list(glob)
-				.then(map -> {
-					checkEnoughAlivePartitions();
+			.then(map -> {
+				checkEnoughAlivePartitions();
 
-					allFiles = map.size();
+				allFiles = map.size();
 
-					Map<String, FileMetadata> filteredMap = map.entrySet().stream()
-							.filter(entry -> negativeGlobPredicate.test(entry.getKey()))
-							.filter(entry -> !processedFiles.contains(entry.getKey()))
-							.collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+				Map<String, FileMetadata> filteredMap = map.entrySet().stream()
+					.filter(entry -> negativeGlobPredicate.test(entry.getKey()))
+					.filter(entry -> !processedFiles.contains(entry.getKey()))
+					.collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-					Map<Object, Set<String>> groupedById = new HashMap<>();
-					for (String name : filteredMap.keySet()) {
-						List<Object> selected = partitions.select(name).subList(0, replicationCount);
-						selected.remove(localPartitionId); // skip local partition if present
-						for (Object id : selected) {
-							groupedById.computeIfAbsent(id, $ -> new HashSet<>()).add(name);
-						}
+				Map<Object, Set<String>> groupedById = new HashMap<>();
+				for (String name : filteredMap.keySet()) {
+					List<Object> selected = partitions.select(name).subList(0, replicationCount);
+					selected.remove(localPartitionId); // skip local partition if present
+					for (Object id : selected) {
+						groupedById.computeIfAbsent(id, $ -> new HashSet<>()).add(name);
 					}
+				}
 
-					//noinspection ConstantConditions - get() after select()
-					return Promises.reduce(
-									filteredMap.entrySet().stream()
-											.map(e -> new InfoResults(e.getKey(), e.getValue()))
-											.collect(toMap(InfoResults::getName, Function.identity())),
-									(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
-									Map::values,
-									groupedById.size(),
-									groupedById.entrySet().stream()
-											.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
-													.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
-											.iterator())
-							.whenResult(results -> {
-								repartitionPlan = results.stream()
-										.sorted()
-										.filter(InfoResults::shouldBeProcessed)
-										.map(InfoResults::getName)
-										.iterator();
+				//noinspection ConstantConditions - get() after select()
+				return Promises.reduce(
+						filteredMap.entrySet().stream()
+							.map(e -> new InfoResults(e.getKey(), e.getValue()))
+							.collect(toMap(InfoResults::getName, Function.identity())),
+						(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
+						Map::values,
+						groupedById.size(),
+						groupedById.entrySet().stream()
+							.map(entry -> partitions.get(entry.getKey()).infoAll(entry.getValue())
+								.whenException(e -> partitions.markIfDead(entry.getKey(), e)))
+							.iterator())
+					.whenResult(results -> {
+						repartitionPlan = results.stream()
+							.sorted()
+							.filter(InfoResults::shouldBeProcessed)
+							.map(InfoResults::getName)
+							.iterator();
 
-								lastPlanRecalculation = getReactor().currentTimeMillis();
-								updateLastAlivePartitionIds();
-							})
-							.toVoid()
-							.then(Promise::of,
-									e -> {
-										logger.warn("Failed to recalculate repartition plan, retrying in 1 second", e);
-										return Promises.delay(Duration.ofSeconds(1))
-												.then(this::recalculatePlan);
-									});
-				});
+						lastPlanRecalculation = getReactor().currentTimeMillis();
+						updateLastAlivePartitionIds();
+					})
+					.toVoid()
+					.then(Promise::of,
+						e -> {
+							logger.warn("Failed to recalculate repartition plan, retrying in 1 second", e);
+							return Promises.delay(Duration.ofSeconds(1))
+								.then(this::recalculatePlan);
+						});
+			});
 	}
 
 	private Promise<Boolean> repartitionFile(String name, FileMetadata meta) throws FileSystemIOException {
@@ -281,105 +282,105 @@ public final class ClusterRepartitionController extends AbstractReactive
 		List<Object> ids = new ArrayList<>(selected);
 		boolean belongsToLocal = ids.remove(localPartitionId);
 		return getInfoResults(name, meta, ids)
-				.then(infoResults -> {
-					if (infoResults == null) return Promise.of(false);
-					if (infoResults.shouldBeDeleted()) { // everybody had the file
-						logger.trace("deleting file {} locally", meta);
-						return fileSystem.delete(name) // so we delete the copy which does not belong to local partition
-								.map($ -> {
-									logger.info("handled file {} : {} (ensured on {})", name, meta, ids);
-									return true;
-								});
-					}
-					if (!infoResults.shouldBeUploaded()) {                             // everybody had the file AND
-						logger.trace("handled file {} : {} (ensured on {})", name, meta, ids);     // we don't delete the local copy
-						return Promise.of(true);
-					}
+			.then(infoResults -> {
+				if (infoResults == null) return Promise.of(false);
+				if (infoResults.shouldBeDeleted()) { // everybody had the file
+					logger.trace("deleting file {} locally", meta);
+					return fileSystem.delete(name) // so we delete the copy which does not belong to local partition
+						.map($ -> {
+							logger.info("handled file {} : {} (ensured on {})", name, meta, ids);
+							return true;
+						});
+				}
+				if (!infoResults.shouldBeUploaded()) {                             // everybody had the file AND
+					logger.trace("handled file {} : {} (ensured on {})", name, meta, ids);     // we don't delete the local copy
+					return Promise.of(true);
+				}
 
-					// else we need to upload to at least one non-local partition
+				// else we need to upload to at least one non-local partition
 
-					logger.trace("uploading file {} to partitions {}...", meta, infoResults);
+				logger.trace("uploading file {} to partitions {}...", meta, infoResults);
 
-					//noinspection OptionalGetWithoutIsPresent
-					long offset = infoResults.remoteMetadata.stream()
-							.mapToLong(metadata -> metadata == null ? 0 : metadata.getSize())
-							.min()
-							.getAsLong();
+				//noinspection OptionalGetWithoutIsPresent
+				long offset = infoResults.remoteMetadata.stream()
+					.mapToLong(metadata -> metadata == null ? 0 : metadata.getSize())
+					.min()
+					.getAsLong();
 
-					ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
-							.withInput(ChannelSuppliers.ofPromise(fileSystem.download(name, offset, meta.getSize())));
+				ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
+					.withInput(ChannelSuppliers.ofPromise(fileSystem.download(name, offset, meta.getSize())));
 
-					RefInt idx = new RefInt(0);
-					return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
-									.map(remoteMeta -> {
-										Object partitionId = ids.get(idx.value++);
-										if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
-											return Promise.of(Try.of(null));
-										}
-										// upload file to this partition
-										IFileSystem fs = partitions.get(partitionId);
-										if (fs == null) {
-											return Promise.ofException(new FileSystemIOException("File system '" + partitionId + "' is not alive"));
-										}
-										return Promise.<Void>ofCallback(cb ->
-												splitter.addOutput()
-														.set(ChannelConsumers.ofPromise(Promise.complete()
-																		.then(() -> remoteMeta == null ?
-																				fs.upload(name, meta.getSize()) :
-																				fs.append(name, remoteMeta.getSize())
-																						.map(consumer -> consumer.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
-																		.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
-																.withAcknowledgement(ack -> ack
-																		.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
-																		.whenException(e -> {
-																			logger.warn("failed uploading to partition {}", partitionId, e);
-																			partitions.markIfDead(partitionId, e);
-																		})
-																		.whenComplete(cb::set))));
-									})
-									.map(Promise::toTry))
-							.then(tries -> {
-								if (!tries.stream().allMatch(Try::isSuccess)) {
-									logger.warn("failed uploading file {}, skipping", meta);
-									return Promise.of(false);
-								}
-								if (belongsToLocal) { // don't delete local if it was marked
-									logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
-									return Promise.of(true);
-								}
+				RefInt idx = new RefInt(0);
+				return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
+						.map(remoteMeta -> {
+							Object partitionId = ids.get(idx.value++);
+							if (remoteMeta != null && remoteMeta.getSize() >= meta.getSize()) {
+								return Promise.of(Try.of(null));
+							}
+							// upload file to this partition
+							IFileSystem fs = partitions.get(partitionId);
+							if (fs == null) {
+								return Promise.ofException(new FileSystemIOException("File system '" + partitionId + "' is not alive"));
+							}
+							return Promise.<Void>ofCallback(cb ->
+								splitter.addOutput()
+									.set(ChannelConsumers.ofPromise(Promise.complete()
+											.then(() -> remoteMeta == null ?
+												fs.upload(name, meta.getSize()) :
+												fs.append(name, remoteMeta.getSize())
+													.map(consumer -> consumer.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
+											.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
+										.withAcknowledgement(ack -> ack
+											.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))
+											.whenException(e -> {
+												logger.warn("failed uploading to partition {}", partitionId, e);
+												partitions.markIfDead(partitionId, e);
+											})
+											.whenComplete(cb::set))));
+						})
+						.map(Promise::toTry))
+					.then(tries -> {
+						if (!tries.stream().allMatch(Try::isSuccess)) {
+							logger.warn("failed uploading file {}, skipping", meta);
+							return Promise.of(false);
+						}
+						if (belongsToLocal) { // don't delete local if it was marked
+							logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
+							return Promise.of(true);
+						}
 
-								logger.trace("deleting file {} on {}", meta, localPartitionId);
-								return fileSystem.delete(name)
-										.map($ -> {
-											logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
-											return true;
-										});
+						logger.trace("deleting file {} on {}", meta, localPartitionId);
+						return fileSystem.delete(name)
+							.map($ -> {
+								logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
+								return true;
 							});
-				})
-				.whenComplete(toLogger(logger, TRACE, "repartitionFile", meta));
+					});
+			})
+			.whenComplete(toLogger(logger, TRACE, "repartitionFile", meta));
 	}
 
 	private Promise<InfoResults> getInfoResults(String name, FileMetadata fileToUpload, List<Object> selected) {
 		InfoResults infoResults = new InfoResults(name, fileToUpload);
 		//noinspection ConstantConditions - get() right after select()
 		return Promises.toList(selected.stream()
-						.map(partitionId -> partitions.get(partitionId)
-								.info(name) // checking file existence and size on particular partition
-								.whenComplete(
-										infoResults.remoteMetadata::add,
-										e -> {
-											logger.warn("failed connecting to partition {}", partitionId, e);
-											partitions.markIfDead(partitionId, e);
-										})
-								.toTry()))
-				.map(tries -> {
-					if (!tries.stream().allMatch(Try::isSuccess)) { // any of info calls failed
-						logger.warn("failed figuring out partitions for file {}, skipping", fileToUpload);
-						return null; // using null to mark failure without exceptions
-					}
+				.map(partitionId -> partitions.get(partitionId)
+					.info(name) // checking file existence and size on particular partition
+					.whenComplete(
+						infoResults.remoteMetadata::add,
+						e -> {
+							logger.warn("failed connecting to partition {}", partitionId, e);
+							partitions.markIfDead(partitionId, e);
+						})
+					.toTry()))
+			.map(tries -> {
+				if (!tries.stream().allMatch(Try::isSuccess)) { // any of info calls failed
+					logger.warn("failed figuring out partitions for file {}, skipping", fileToUpload);
+					return null; // using null to mark failure without exceptions
+				}
 
-					return infoResults;
-				});
+				return infoResults;
+			});
 	}
 
 	/**
@@ -411,8 +412,8 @@ public final class ClusterRepartitionController extends AbstractReactive
 	public Promise<Void> stop() {
 		checkInReactorThread(this);
 		return isRepartitioning() ?
-				Promise.ofCallback(cb -> this.closeCallback = cb) :
-				Promise.complete();
+			Promise.ofCallback(cb -> this.closeCallback = cb) :
+			Promise.complete();
 	}
 
 	// region JMX
@@ -468,14 +469,14 @@ public final class ClusterRepartitionController extends AbstractReactive
 	// endregion
 
 	private static final Comparator<InfoResults> INFO_RESULTS_COMPARATOR =
-			Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
-							.filter(Objects::isNull)
-							.count() +
-							(infoResults.isLocalMetaTheBest() ? 1 : 0))
-					.thenComparingLong(infoResults -> infoResults.remoteMetadata.stream()
-							.filter(Objects::nonNull)
-							.findAny().orElse(infoResults.localMetadata)
-							.getSize());
+		Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
+				.filter(Objects::isNull)
+				.count() +
+				(infoResults.isLocalMetaTheBest() ? 1 : 0))
+			.thenComparingLong(infoResults -> infoResults.remoteMetadata.stream()
+				.filter(Objects::nonNull)
+				.findAny().orElse(infoResults.localMetadata)
+				.getSize());
 
 	public final class InfoResults implements Comparable<InfoResults> {
 		final String name;
@@ -499,21 +500,21 @@ public final class ClusterRepartitionController extends AbstractReactive
 		// and there are remote partitions that do not have this file or have not a full version
 		boolean shouldBeUploaded() {
 			return isLocalMetaTheBest() &&
-					remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
+				remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
 		// (local) file should be deleted in case all the remote partitions have a better
 		// version of a file
 		boolean shouldBeDeleted() {
 			return remoteMetadata.size() == replicationCount &&
-					remoteMetadata.stream().noneMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
+				remoteMetadata.stream().noneMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
 		boolean isLocalMetaTheBest() {
 			long maxSize = remoteMetadata.stream()
-					.filter(Objects::nonNull)
-					.mapToLong(FileMetadata::getSize)
-					.max().orElse(0);
+				.filter(Objects::nonNull)
+				.mapToLong(FileMetadata::getSize)
+				.max().orElse(0);
 
 			return localMetadata.getSize() >= maxSize;
 		}

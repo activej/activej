@@ -45,12 +45,11 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 
 	private final int chunkSize;
 
-	private AggregationChunker(SwitcherStreamConsumer<T> switcher,
-			AggregationStructure aggregation, List<String> fields,
-			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			IAggregationChunkStorage<C> storage,
-			DefiningClassLoader classLoader,
-			int chunkSize) {
+	private AggregationChunker(
+		SwitcherStreamConsumer<T> switcher, AggregationStructure aggregation, List<String> fields, Class<T> recordClass,
+		PartitionPredicate<T> partitionPredicate, IAggregationChunkStorage<C> storage, DefiningClassLoader classLoader,
+		int chunkSize
+	) {
 		super(switcher);
 		this.switcher = switcher;
 		this.aggregation = aggregation;
@@ -61,16 +60,15 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		this.classLoader = classLoader;
 		this.chunkSize = chunkSize;
 		(this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>()))
-				.run(getAcknowledgement())
-				.whenComplete(result::trySet);
+			.run(getAcknowledgement())
+			.whenComplete(result::trySet);
 	}
 
-	public static <C, T> AggregationChunker<C, T> create(AggregationStructure aggregation, List<String> fields,
-			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			IAggregationChunkStorage<C> storage,
-			DefiningClassLoader classLoader,
-			int chunkSize) {
-
+	public static <C, T> AggregationChunker<C, T> create(
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass,
+		PartitionPredicate<T> partitionPredicate, IAggregationChunkStorage<C> storage, DefiningClassLoader classLoader,
+		int chunkSize
+	) {
 		SwitcherStreamConsumer<T> switcher = SwitcherStreamConsumer.create();
 		AggregationChunker<C, T> chunker = new AggregationChunker<>(switcher, aggregation, fields, recordClass, partitionPredicate, storage, classLoader, chunkSize);
 		chunker.startNewChunk();
@@ -91,20 +89,21 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		private T last;
 		private int count;
 
-		public ChunkWriter(StreamConsumer<T> actualConsumer,
-				C chunkId, int chunkSize, PartitionPredicate<T> partitionPredicate) {
+		public ChunkWriter(
+			StreamConsumer<T> actualConsumer, C chunkId, int chunkSize, PartitionPredicate<T> partitionPredicate
+		) {
 			super(actualConsumer);
 			this.chunkSize = chunkSize;
 			this.partitionPredicate = partitionPredicate;
 			actualConsumer.getAcknowledgement()
-					.map($ -> count == 0 ?
-							null :
-							AggregationChunk.create(chunkId,
-									fields,
-									PrimaryKey.ofObject(first, aggregation.getKeys()),
-									PrimaryKey.ofObject(last, aggregation.getKeys()),
-									count))
-					.whenComplete(result::trySet);
+				.map($ -> count == 0 ?
+					null :
+					AggregationChunk.create(chunkId,
+						fields,
+						PrimaryKey.ofObject(first, aggregation.getKeys()),
+						PrimaryKey.ofObject(last, aggregation.getKeys()),
+						count))
+				.whenComplete(result::trySet);
 		}
 
 		@Override
@@ -132,16 +131,16 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 
 	private void startNewChunk() {
 		switcher.switchTo(StreamConsumers.ofPromise(
-				storage.createId()
-						.then(chunkId -> storage.write(aggregation, fields, recordClass, chunkId, classLoader)
-								.map(streamConsumer -> new ChunkWriter(streamConsumer, chunkId, chunkSize, partitionPredicate))
-								.whenResult(chunkWriter -> chunksAccumulator.addPromise(
-										chunkWriter.getResult(),
-										(chunks, newChunk) -> {
-											if (newChunk != null && newChunk.getCount() != 0) {
-												chunks.add(newChunk);
-											}
-										})))));
+			storage.createId()
+				.then(chunkId -> storage.write(aggregation, fields, recordClass, chunkId, classLoader)
+					.map(streamConsumer -> new ChunkWriter(streamConsumer, chunkId, chunkSize, partitionPredicate))
+					.whenResult(chunkWriter -> chunksAccumulator.addPromise(
+						chunkWriter.getResult(),
+						(chunks, newChunk) -> {
+							if (newChunk != null && newChunk.getCount() != 0) {
+								chunks.add(newChunk);
+							}
+						})))));
 	}
 
 }

@@ -39,9 +39,10 @@ public final class JmxBeanSettings {
 		this.customTypes.putAll(customTypes);
 	}
 
-	public static JmxBeanSettings of(Set<String> includedOptionals,
-			Map<String, ? extends AttributeModifier<?>> modifiers,
-			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
+	public static JmxBeanSettings of(
+		Set<String> includedOptionals, Map<String, ? extends AttributeModifier<?>> modifiers,
+		Map<Type, JmxCustomTypeAdapter<?>> customTypes
+	) {
 		return new JmxBeanSettings(includedOptionals, modifiers, customTypes);
 	}
 

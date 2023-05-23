@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 public sealed interface DataflowResponse permits
-		DataflowResponse.Handshake,
-		DataflowResponse.PartitionData,
-		DataflowResponse.Result,
-		DataflowResponse.TaskData {
+	DataflowResponse.Handshake,
+	DataflowResponse.PartitionData,
+	DataflowResponse.Result,
+	DataflowResponse.TaskData {
 
 	record HandshakeFailure(Version minimalVersion, String message) {
 	}

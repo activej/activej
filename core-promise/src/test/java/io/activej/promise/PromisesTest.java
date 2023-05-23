@@ -73,17 +73,17 @@ public final class PromisesTest {
 	@Test
 	public void toListPreservesOrder() {
 		List<Integer> list = await(toList(List.of(
-				delay(20)
-						.map($ -> 1)
-						.whenResult(() -> System.out.println("First promise finished")),
-				delay(10)
-						.map($ -> 2)
-						.whenResult(() -> System.out.println("Second promise finished")),
-				Promise.of(3)
-						.whenResult(() -> System.out.println("Third promise finished")),
-				delay(30)
-						.map($ -> 3)
-						.whenResult(() -> System.out.println("Fourth promise finished")))));
+			delay(20)
+				.map($ -> 1)
+				.whenResult(() -> System.out.println("First promise finished")),
+			delay(10)
+				.map($ -> 2)
+				.whenResult(() -> System.out.println("Second promise finished")),
+			Promise.of(3)
+				.whenResult(() -> System.out.println("Third promise finished")),
+			delay(30)
+				.map($ -> 3)
+				.whenResult(() -> System.out.println("Fourth promise finished")))));
 
 		assertEquals(4, list.size());
 		for (int i = 0; i < 3; i++) {
@@ -249,18 +249,18 @@ public final class PromisesTest {
 	@Test
 	public void testLoop() {
 		loop(0,
-				i -> i < 5,
-				i -> Promise.of(i + 1)
-						.whenResult(counter::set));
+			i -> i < 5,
+			i -> Promise.of(i + 1)
+				.whenResult(counter::set));
 		assertEquals(5, counter.get());
 	}
 
 	@Test
 	public void testLoopAsync() {
 		await(loop(0,
-				i -> i < 5,
-				i -> delay(10L, i + 1)
-						.whenResult(counter::set)));
+			i -> i < 5,
+			i -> delay(10L, i + 1)
+				.whenResult(counter::set)));
 		assertEquals(5, counter.get());
 	}
 
@@ -268,17 +268,17 @@ public final class PromisesTest {
 	public void testRunSequence() {
 		List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7);
 		await(sequence(list.stream()
-				.map(n ->
-						() -> getPromise(n).toVoid())));
+			.map(n ->
+				() -> getPromise(n).toVoid())));
 	}
 
 	@Test
 	public void testRunSequenceWithSorted() {
 		List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7);
 		await(sequence(list.stream()
-				.sorted(Comparator.naturalOrder())
-				.map(n ->
-						() -> getPromise(n).toVoid())));
+			.sorted(Comparator.naturalOrder())
+			.map(n ->
+				() -> getPromise(n).toVoid())));
 	}
 
 	@Test
@@ -322,21 +322,21 @@ public final class PromisesTest {
 		for (int maxCalls = 2; maxCalls < 5; maxCalls++) {
 			int finalMaxCalls = maxCalls;
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2), it ->
-					assertEquals(List.of(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertEquals(List.of(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2).async(), it ->
-					assertEquals(List.of(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertEquals(List.of(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2), it ->
-					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2).async(), it ->
-					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.<Integer>ofException(e), it ->
-					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.<Integer>ofException(e).async(), it ->
-					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.<Integer>ofException(e), it ->
-					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.<Integer>ofException(e).async(), it ->
-					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+				assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 		}
 	}
 
@@ -344,10 +344,10 @@ public final class PromisesTest {
 	public void testFirstSuccessfulForStackOverflow() {
 		Exception exception = new Exception();
 		Stream<AsyncSupplier<Void>> suppliers = Stream.concat(
-				Stream.generate(() -> AsyncSupplier.<Void>of(() -> {
-					throw exception;
-				})).limit(100_000),
-				Stream.of(AsyncSupplier.of(() -> null))
+			Stream.generate(() -> AsyncSupplier.<Void>of(() -> {
+				throw exception;
+			})).limit(100_000),
+			Stream.of(AsyncSupplier.of(() -> null))
 		);
 		await(first(suppliers));
 	}
@@ -358,20 +358,22 @@ public final class PromisesTest {
 	}
 
 	// For testing cases when a some previous promise in Iterator is being completed by calling Iterator::hasNext or Iterator::next
-	private static <T> void doTestCompletingIterator(Consumer<SettablePromise<T>> firstPromiseConsumer, AsyncSupplier<T> secondPromiseSupplier,
-			Consumer<Iterator<Promise<T>>> assertion) {
-
+	private static <T> void doTestCompletingIterator(
+		Consumer<SettablePromise<T>> firstPromiseConsumer,
+		AsyncSupplier<T> secondPromiseSupplier,
+		Consumer<Iterator<Promise<T>>> assertion
+	) {
 		// completion inside stream
 		SettablePromise<T> settablePromise = new SettablePromise<>();
 		Iterator<Promise<T>> iteratorOfStream = Stream.of(1, 2)
-				.map(count -> {
-					if (count == 1) {
-						return settablePromise;
-					} else {
-						firstPromiseConsumer.accept(settablePromise);
-						return secondPromiseSupplier.get();
-					}
-				}).iterator();
+			.map(count -> {
+				if (count == 1) {
+					return settablePromise;
+				} else {
+					firstPromiseConsumer.accept(settablePromise);
+					return secondPromiseSupplier.get();
+				}
+			}).iterator();
 
 		// completion inside Iterator::next
 		Iterator<Promise<T>> iteratorNext = new Iterator<>() {
@@ -406,9 +408,9 @@ public final class PromisesTest {
 		counter.incrementAndGet();
 		SettablePromise<Integer> promise = new SettablePromise<>();
 		Reactor.getCurrentReactor().post(() ->
-				promise.set(number));
+			promise.set(number));
 		return promise
-				.whenResult(() ->
-						counter.decrementAndGet());
+			.whenResult(() ->
+				counter.decrementAndGet());
 	}
 }

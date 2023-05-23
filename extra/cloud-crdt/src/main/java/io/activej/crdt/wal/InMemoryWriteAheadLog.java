@@ -41,7 +41,8 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
-		implements IWriteAheadLog<K, S>, ReactiveService {
+	implements IWriteAheadLog<K, S>, ReactiveService {
+
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 	private static final boolean CHECKS = Checks.isEnabled(InMemoryWriteAheadLog.class);
 
@@ -117,10 +118,10 @@ public final class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends Abs
 		this.map = new TreeMap<>();
 
 		return storage.upload()
-				.then(consumer -> StreamSuppliers.ofIterable(map.values())
-						.streamTo(consumer))
-				.whenException(e -> map.forEach(this::doPut))
-				.whenComplete(toLogger(logger, INFO, INFO, "flush", map.size()));
+			.then(consumer -> StreamSuppliers.ofIterable(map.values())
+				.streamTo(consumer))
+			.whenException(e -> map.forEach(this::doPut))
+			.whenComplete(toLogger(logger, INFO, INFO, "flush", map.size()));
 	}
 
 	@Override

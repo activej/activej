@@ -29,7 +29,7 @@ import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class CacheStaticLoader extends AbstractReactive
-		implements IStaticLoader {
+	implements IStaticLoader {
 	private static final boolean CHECKS = Checks.isEnabled(CacheStaticLoader.class);
 
 	public static final byte[] NOT_FOUND = {};
@@ -60,7 +60,7 @@ public class CacheStaticLoader extends AbstractReactive
 
 	private Promise<ByteBuf> doLoad(String path) {
 		return resourceLoader.load(path)
-				.whenResult(buf -> put.accept(path, buf.getArray()))
-				.whenException(ResourceNotFoundException.class, e -> put.accept(path, NOT_FOUND));
+			.whenResult(buf -> put.accept(path, buf.getArray()))
+			.whenException(ResourceNotFoundException.class, e -> put.accept(path, NOT_FOUND));
 	}
 }

@@ -36,8 +36,10 @@ public final class RepartitionReduce<K, I, O> extends Dataset<O> {
 	public final Reducer<K, I, O, ?> reducer;
 	public final List<Partition> partitions;
 
-	public RepartitionReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
-			StreamSchema<O> resultStreamSchema, List<Partition> partitions) {
+	public RepartitionReduce(
+		LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer, StreamSchema<O> resultStreamSchema,
+		List<Partition> partitions
+	) {
 		super(resultStreamSchema);
 		this.input = input;
 		this.reducer = reducer;
@@ -47,8 +49,8 @@ public final class RepartitionReduce<K, I, O> extends Dataset<O> {
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		List<Partition> ps = partitions != null && !partitions.isEmpty() ?
-				partitions :
-				context.getGraph().getAvailablePartitions();
+			partitions :
+			context.getGraph().getAvailablePartitions();
 		return repartitionAndReduce(context, input, reducer, ps);
 	}
 

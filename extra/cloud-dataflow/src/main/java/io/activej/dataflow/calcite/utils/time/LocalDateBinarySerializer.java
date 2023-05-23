@@ -27,9 +27,9 @@ public final class LocalDateBinarySerializer implements BinarySerializer<LocalDa
 	@Override
 	public LocalDate decode(BinaryInput in) throws CorruptedDataException {
 		return LocalDate.of(
-				in.readVarInt(),
-				in.readVarInt(),
-				in.readVarInt()
+			in.readVarInt(),
+			in.readVarInt(),
+			in.readVarInt()
 		);
 	}
 

@@ -53,7 +53,7 @@ public class AsyncSuppliersTest {
 
 		Ref<Promise<Void>> nextPromiseRef = new Ref<>();
 		Promise<Void> promise1 = subscribe.get()
-				.whenComplete(() -> nextPromiseRef.value = subscribe.get());
+			.whenComplete(() -> nextPromiseRef.value = subscribe.get());
 
 		Promise<Void> promise2 = subscribe.get();
 		Promise<Void> promise3 = subscribe.get();
@@ -78,13 +78,13 @@ public class AsyncSuppliersTest {
 
 		Promise<Void>[] nextPromise = new Promise[3];
 		Promise<Void> promise1 = subscribe.get()
-				.whenComplete(() -> {
-					nextPromise[0] = subscribe.get();
-					nextPromise[0].subscribe(($, e) -> {
-						nextPromise[1] = subscribe.get();
-						nextPromise[1].subscribe(($2, e2) -> nextPromise[2] = subscribe.get());
-					});
+			.whenComplete(() -> {
+				nextPromise[0] = subscribe.get();
+				nextPromise[0].subscribe(($, e) -> {
+					nextPromise[1] = subscribe.get();
+					nextPromise[1].subscribe(($2, e2) -> nextPromise[2] = subscribe.get());
 				});
+			});
 
 		Promise<Void> promise2 = subscribe.get();
 		Promise<Void> promise3 = subscribe.get();
@@ -224,7 +224,7 @@ public class AsyncSuppliersTest {
 		Ref<Promise<Void>> nextPromiseRef = new Ref<>();
 		Promise<Void> promise1 = supplier.get();
 		Promise<Void> promise2 = supplier.get()
-				.whenComplete(() -> nextPromiseRef.value = supplier.get());
+			.whenComplete(() -> nextPromiseRef.value = supplier.get());
 		Promise<Void> promise3 = supplier.get();
 
 		await(promise1);

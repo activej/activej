@@ -18,31 +18,31 @@ public class DynamicClassCreationExample {
 		// setter for both fields - a sequence of actions
 		// compareTo, equals, hashCode and toString methods implementations follow the standard convention
 		Class<Person> personClass = ClassGenerator.builder(Person.class)
-				// declare fields
-				.withField("id", int.class)
-				.withField("name", String.class)
+			// declare fields
+			.withField("id", int.class)
+			.withField("name", String.class)
 
-				// setter for both fields - a sequence of actions
-				.withMethod("setIdAndName", sequence(
-						set(property(self(), "id"), arg(0)),
-						set(property(self(), "name"), arg(1))))
-				.withMethod("getId", property(self(), "id"))
-				.withMethod("getName", property(self(), "name"))
+			// setter for both fields - a sequence of actions
+			.withMethod("setIdAndName", sequence(
+				set(property(self(), "id"), arg(0)),
+				set(property(self(), "name"), arg(1))))
+			.withMethod("getId", property(self(), "id"))
+			.withMethod("getName", property(self(), "name"))
 
-				// compareTo, equals, hashCode and toString methods implementations follow the standard convention
-				.withMethod("int compareTo(Person)", comparableImpl("id", "name"))
-				.withMethod("equals", equalsImpl("id", "name"))
-				.withMethod("hash", hashCodeImpl("id", "name"))
-				.withMethod("hashOfPojo", HashCode.builder()
-						.with(property(arg(0), "id"))
-						.with(property(arg(0), "name"))
-						.build())
-				.withMethod("toString", ToString.builder()
-						.withField("id")
-						.with("name", property(self(), "name"))
-						.build())
-				.build()
-				.generateClass(CLASS_LOADER);
+			// compareTo, equals, hashCode and toString methods implementations follow the standard convention
+			.withMethod("int compareTo(Person)", comparableImpl("id", "name"))
+			.withMethod("equals", equalsImpl("id", "name"))
+			.withMethod("hash", hashCodeImpl("id", "name"))
+			.withMethod("hashOfPojo", HashCode.builder()
+				.with(property(arg(0), "id"))
+				.with(property(arg(0), "name"))
+				.build())
+			.withMethod("toString", ToString.builder()
+				.withField("id")
+				.with("name", property(self(), "name"))
+				.build())
+			.build()
+			.generateClass(CLASS_LOADER);
 		//[END REGION_2]
 
 		//[START REGION_3]

@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class AdderCrdtMap extends AbstractReactive
-		implements ICrdtMap<Long, SimpleSumsCrdtState>, ReactiveService {
+	implements ICrdtMap<Long, SimpleSumsCrdtState>, ReactiveService {
 	private final Map<Long, SimpleSumsCrdtState> map = new TreeMap<>();
 
 	private final String localServerId;
@@ -59,14 +59,14 @@ public class AdderCrdtMap extends AbstractReactive
 
 	private Promise<Void> doRefresh(ICrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		return storage.download()
-				.then(supplier -> supplier.streamTo(
-						StreamConsumers.ofConsumer(crdtData -> {
-							DetailedSumsCrdtState globalState = crdtData.getState();
+			.then(supplier -> supplier.streamTo(
+				StreamConsumers.ofConsumer(crdtData -> {
+					DetailedSumsCrdtState globalState = crdtData.getState();
 
-							float localSum = globalState.getSumFor(localServerId);
-							float otherSum = globalState.getSumExcept(localServerId);
+					float localSum = globalState.getSumFor(localServerId);
+					float otherSum = globalState.getSumExcept(localServerId);
 
-							map.put(crdtData.getKey(), SimpleSumsCrdtState.of(localSum, otherSum));
-						})));
+					map.put(crdtData.getKey(), SimpleSumsCrdtState.of(localSum, otherSum));
+				})));
 	}
 }

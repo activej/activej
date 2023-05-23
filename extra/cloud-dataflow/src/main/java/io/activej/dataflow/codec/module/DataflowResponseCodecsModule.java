@@ -22,11 +22,11 @@ public final class DataflowResponseCodecsModule extends AbstractModule {
 	@Subtype(0)
 	StreamCodec<Handshake> handshake() {
 		return StreamCodec.create(Handshake::new,
-				Handshake::handshakeFailure, StreamCodecs.ofNullable(
-						StreamCodec.create(HandshakeFailure::new,
-								HandshakeFailure::minimalVersion, VERSION_STREAM_CODEC,
-								HandshakeFailure::message, StreamCodecs.ofString())
-				)
+			Handshake::handshakeFailure, StreamCodecs.ofNullable(
+				StreamCodec.create(HandshakeFailure::new,
+					HandshakeFailure::minimalVersion, VERSION_STREAM_CODEC,
+					HandshakeFailure::message, StreamCodecs.ofString())
+			)
 		);
 	}
 
@@ -34,16 +34,16 @@ public final class DataflowResponseCodecsModule extends AbstractModule {
 	@Subtype(1)
 	StreamCodec<PartitionData> partitionData() {
 		return StreamCodec.create(PartitionData::new,
-				PartitionData::running, StreamCodecs.ofVarInt(),
-				PartitionData::succeeded, StreamCodecs.ofVarInt(),
-				PartitionData::failed, StreamCodecs.ofVarInt(),
-				PartitionData::cancelled, StreamCodecs.ofVarInt(),
-				PartitionData::lastTasks, StreamCodecs.ofList(
-						StreamCodec.create(TaskDescription::new,
-								TaskDescription::id, StreamCodecs.ofVarLong(),
-								TaskDescription::status, StreamCodecs.ofEnum(TaskStatus.class)
-						)
+			PartitionData::running, StreamCodecs.ofVarInt(),
+			PartitionData::succeeded, StreamCodecs.ofVarInt(),
+			PartitionData::failed, StreamCodecs.ofVarInt(),
+			PartitionData::cancelled, StreamCodecs.ofVarInt(),
+			PartitionData::lastTasks, StreamCodecs.ofList(
+				StreamCodec.create(TaskDescription::new,
+					TaskDescription::id, StreamCodecs.ofVarLong(),
+					TaskDescription::status, StreamCodecs.ofEnum(TaskStatus.class)
 				)
+			)
 		);
 	}
 
@@ -51,22 +51,20 @@ public final class DataflowResponseCodecsModule extends AbstractModule {
 	@Subtype(2)
 	StreamCodec<Result> result() {
 		return StreamCodec.create(Result::new,
-				Result::error, StreamCodecs.ofNullable(StreamCodecs.ofString())
+			Result::error, StreamCodecs.ofNullable(StreamCodecs.ofString())
 		);
 	}
 
 	@Provides
 	@Subtype(3)
-	StreamCodec<TaskData> taskData(
-			StreamCodec<NodeStat> nodeStatStreamCodec
-	) {
+	StreamCodec<TaskData> taskData(StreamCodec<NodeStat> nodeStatStreamCodec) {
 		return StreamCodec.create(TaskData::new,
-				TaskData::status, StreamCodecs.ofEnum(TaskStatus.class),
-				TaskData::startTime, StreamCodecs.ofNullable(INSTANT_STREAM_CODEC),
-				TaskData::finishTime, StreamCodecs.ofNullable(INSTANT_STREAM_CODEC),
-				TaskData::error, StreamCodecs.ofNullable(StreamCodecs.ofString()),
-				TaskData::nodes, StreamCodecs.ofMap(StreamCodecs.ofVarInt(), nodeStatStreamCodec),
-				TaskData::graphViz, StreamCodecs.ofString()
+			TaskData::status, StreamCodecs.ofEnum(TaskStatus.class),
+			TaskData::startTime, StreamCodecs.ofNullable(INSTANT_STREAM_CODEC),
+			TaskData::finishTime, StreamCodecs.ofNullable(INSTANT_STREAM_CODEC),
+			TaskData::error, StreamCodecs.ofNullable(StreamCodecs.ofString()),
+			TaskData::nodes, StreamCodecs.ofMap(StreamCodecs.ofVarInt(), nodeStatStreamCodec),
+			TaskData::graphViz, StreamCodecs.ofString()
 		);
 	}
 }

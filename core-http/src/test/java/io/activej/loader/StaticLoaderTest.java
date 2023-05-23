@@ -29,7 +29,7 @@ public class StaticLoaderTest {
 	@Test
 	public void testMap() {
 		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/")
-				.map(file -> file + ".txt");
+			.map(file -> file + ".txt");
 		ByteBuf file = await(staticLoader.load("testFile"));
 		assertTrue(file.readRemaining() > 0);
 	}
@@ -59,7 +59,7 @@ public class StaticLoaderTest {
 	@Test
 	public void testFilterFileClassPath() {
 		IStaticLoader staticLoader = IStaticLoader.ofClassPath(getCurrentReactor(), newCachedThreadPool(), "/")
-				.filter(file -> !file.equals("testFile.txt"));
+			.filter(file -> !file.equals("testFile.txt"));
 		Exception exception = awaitException(staticLoader.load("testFile.txt"));
 		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}
@@ -80,7 +80,7 @@ public class StaticLoaderTest {
 	@Test
 	public void testFilterFilePath() {
 		IStaticLoader staticLoader = IStaticLoader.ofPath(getCurrentReactor(), newCachedThreadPool(), Paths.get("/"))
-				.filter(file -> !file.equals("testFile.txt"));
+			.filter(file -> !file.equals("testFile.txt"));
 		Exception exception = awaitException(staticLoader.load("testFile.txt"));
 		assertThat(exception, instanceOf(ResourceNotFoundException.class));
 	}

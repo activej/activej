@@ -43,8 +43,8 @@ public final class RpcMessage {
 
 	@Serialize(order = 2)
 	@SerializeClass(
-			subclassesIdx = -1, subclasses = {RpcControlMessage.class, RpcRemoteException.class},
-			subclassesId = SUBCLASSES_ID
+		subclassesIdx = -1, subclasses = {RpcControlMessage.class, RpcRemoteException.class},
+		subclassesId = SUBCLASSES_ID
 	)
 	@SerializeNullable
 	public Object getMessage() {
@@ -54,8 +54,8 @@ public final class RpcMessage {
 	@Override
 	public String toString() {
 		return "RpcMessage{" +
-				"index=" + index +
-				", message=" + message +
-				'}';
+			"index=" + index +
+			", message=" + message +
+			'}';
 	}
 }

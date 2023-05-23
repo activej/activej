@@ -31,12 +31,12 @@ import static io.activej.inject.util.Utils.getScopeDisplayString;
 public final class DIException extends RuntimeException {
 	public static DIException cannotConstruct(Key<?> key, @Nullable Binding<?> binding) {
 		return new DIException((binding != null ? "Binding refused to" : "No binding to") + " construct an instance for key " +
-				key.getDisplayString() + (binding != null && binding.getLocation() != null ? ("\n\t at" + binding.getLocation()) : ""));
+			key.getDisplayString() + (binding != null && binding.getLocation() != null ? ("\n\t at" + binding.getLocation()) : ""));
 	}
 
 	public static DIException noCachedBinding(Key<?> key, Scope[] scope) {
 		throw new DIException("No cached binding was bound for key " + key.getDisplayString() + " in scope " + getScopeDisplayString(scope) + ". " +
-				"Either bind it or check if a binding for such key exists with hasBinding() call.");
+			"Either bind it or check if a binding for such key exists with hasBinding() call.");
 	}
 
 	public DIException(String message) {

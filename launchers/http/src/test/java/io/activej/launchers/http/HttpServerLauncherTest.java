@@ -50,7 +50,7 @@ public class HttpServerLauncherTest {
 			@Override
 			Config config() {
 				return super.config()
-						.overrideWith(Config.create().with("http.listenAddresses", "0"));
+					.overrideWith(Config.create().with("http.listenAddresses", "0"));
 			}
 		};
 
@@ -92,12 +92,12 @@ public class HttpServerLauncherTest {
 		await(ofCompletionStage(launcher.getStartFuture()));
 		assertEquals(1, launcher.httpServer.getListenAddresses().size());
 		assertEquals(
-				HttpServerLauncher.PORT,
-				launcher.httpServer.getListenAddresses().get(0).getPort());
+			HttpServerLauncher.PORT,
+			launcher.httpServer.getListenAddresses().get(0).getPort());
 		assertEquals(1, launcher.httpServer.getBoundAddresses().size());
 		assertEquals(
-				HttpServerLauncher.PORT,
-				launcher.httpServer.getBoundAddresses().get(0).getPort());
+			HttpServerLauncher.PORT,
+			launcher.httpServer.getBoundAddresses().get(0).getPort());
 
 		launcher.shutdown();
 		await(ofCompletionStage(launcher.getCompleteFuture()));

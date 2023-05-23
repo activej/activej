@@ -59,18 +59,17 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	@Provides
 	public NioReactor primaryReactor(Config config) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop.primary")))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop.primary")))
+			.build();
 	}
 
 	@Provides
 	@Worker
-	public NioReactor workerReactor(Config config,
-			OptionalDependency<ThrottlingController> throttlingController) {
+	public NioReactor workerReactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.builder()
-				.initialize(ofEventloop(config.getChild("eventloop.worker")))
-				.withInspector(throttlingController.orElse(null))
-				.build();
+			.initialize(ofEventloop(config.getChild("eventloop.worker")))
+			.withInspector(throttlingController.orElse(null))
+			.build();
 	}
 
 	@Provides
@@ -81,29 +80,29 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	@Provides
 	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<RpcServer> workerServers, Config config) {
 		return PrimaryServer.builder(primaryReactor, workerServers.getList())
-				.initialize(ofPrimaryServer(config))
-				.build();
+			.initialize(ofPrimaryServer(config))
+			.build();
 	}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
-				.with("workers", "" + WORKERS)
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(9000)))
+			.with("workers", "" + WORKERS)
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				JmxModule.create(),
-				WorkerPoolModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build(),
-				getBusinessLogicModule());
+			ServiceGraphModule.create(),
+			JmxModule.create(),
+			WorkerPoolModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build(),
+			getBusinessLogicModule());
 	}
 
 	// By design, user should provide worker RpcServer here.
@@ -125,10 +124,10 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 					@Worker
 					RpcServer server(NioReactor reactor, Config config, @WorkerId int id) {
 						return RpcServer.builder(reactor)
-								.withMessageTypes(String.class)
-								.withHandler(String.class,
-										req -> Promise.of("Request served by worker #" + id + ": " + req))
-								.build();
+							.withMessageTypes(String.class)
+							.withHandler(String.class,
+								req -> Promise.of("Request served by worker #" + id + ": " + req))
+							.build();
 					}
 				};
 			}

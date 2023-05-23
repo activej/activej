@@ -41,16 +41,16 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	@Provides
 	NioReactor reactor() {
 		return Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 	}
 
 	@Provides
 	IRpcClient client(NioReactor reactor) {
 		return RpcClient.builder(reactor)
-				.withMessageTypes(RpcRequest.class, RpcResponse.class)
-				.withStrategy(server(new InetSocketAddress(PORT)))
-				.build();
+			.withMessageTypes(RpcRequest.class, RpcResponse.class)
+			.withStrategy(server(new InetSocketAddress(PORT)))
+			.build();
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 		double avgTime = (double) time / BENCHMARK_ROUNDS;
 		long requestsPerSecond = (long) (TOTAL_REQUESTS / avgTime * 1000);
 		System.out.printf("Time: %dms; Average time: %sms; Best time: %dms; Worst time: %dms; Requests per second: %d%n",
-				time, avgTime, bestTime, worstTime, requestsPerSecond);
+			time, avgTime, bestTime, worstTime, requestsPerSecond);
 	}
 
 	private long round() throws Exception {

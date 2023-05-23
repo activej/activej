@@ -33,11 +33,11 @@ public final class IdSequentialExecutor<K> {
 		}
 
 		return result
-				.whenComplete(() -> {
-					if (--finalTuple.executionCount == 0) {
-						seqExecutors.remove(id);
-					}
-				});
+			.whenComplete(() -> {
+				if (--finalTuple.executionCount == 0) {
+					seqExecutors.remove(id);
+				}
+			});
 	}
 
 	private static final class Tuple {

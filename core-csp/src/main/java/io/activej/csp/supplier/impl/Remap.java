@@ -35,19 +35,19 @@ public final class Remap<T, V> extends AbstractChannelSupplier<V> {
 	private void next(SettableCallback<V> cb) {
 		if (!endOfStream) {
 			supplier.get()
-					.subscribe((item, e) -> {
-						if (e == null) {
-							if (item == null) endOfStream = true;
-							iterator = fn.apply(item);
-							if (iterator.hasNext()) {
-								cb.set(iterator.next());
-							} else {
-								next(cb);
-							}
+				.subscribe((item, e) -> {
+					if (e == null) {
+						if (item == null) endOfStream = true;
+						iterator = fn.apply(item);
+						if (iterator.hasNext()) {
+							cb.set(iterator.next());
 						} else {
-							cb.setException(e);
+							next(cb);
 						}
-					});
+					} else {
+						cb.setException(e);
+					}
+				});
 		} else {
 			cb.set(null);
 		}

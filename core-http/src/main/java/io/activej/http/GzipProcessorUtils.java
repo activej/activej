@@ -67,7 +67,7 @@ public final class GzipProcessorUtils {
 			throw new MalformedHttpException("Data format exception");
 		}
 		check(expectedSize == dst.readRemaining(), src, dst, () ->
-				new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
+			new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
 		check(src.readRemaining() == GZIP_FOOTER_SIZE, src, dst, () -> new MalformedHttpException("Compressed data was not read fully"));
 
 		src.recycle();
@@ -135,9 +135,9 @@ public final class GzipProcessorUtils {
 		totalUncompressedBytesCount += count;
 		dst.moveTail(count);
 		check(totalUncompressedBytesCount < maxSize, dst, src, () ->
-				new MalformedHttpException("Decompressed data size exceeds max expected size"));
+			new MalformedHttpException("Decompressed data size exceeds max expected size"));
 		check(decompressor.finished(), dst, src, () ->
-				new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
+			new MalformedHttpException("Decompressed data size is not equal to input size from GZIP trailer"));
 		int totalRead = decompressor.getTotalIn();
 		src.moveHead(totalRead);
 	}

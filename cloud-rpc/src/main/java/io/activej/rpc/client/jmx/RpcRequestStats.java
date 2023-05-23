@@ -41,14 +41,14 @@ public final class RpcRequestStats implements JmxRefreshable {
 		rejectedRequests = EventStats.create(smoothingWindow);
 		expiredRequests = EventStats.create(smoothingWindow);
 		responseTime = ValueStats.builder(smoothingWindow)
-				.withHistogram(POWERS_OF_TWO)
-				.withUnit("milliseconds")
-				.build();
+			.withHistogram(POWERS_OF_TWO)
+			.withUnit("milliseconds")
+			.build();
 		overdues = ValueStats.builder(smoothingWindow)
-				.withHistogram(POWERS_OF_TWO)
-				.withRate()
-				.withUnit("milliseconds")
-				.build();
+			.withHistogram(POWERS_OF_TWO)
+			.withRate()
+			.withUnit("milliseconds")
+			.build();
 		serverExceptions = ExceptionStats.create();
 	}
 
@@ -87,17 +87,17 @@ public final class RpcRequestStats implements JmxRefreshable {
 	}
 
 	@JmxAttribute(
-			description = "delay between successful or failed request/response (in milliseconds)",
-			extraSubAttributes = "histogram"
+		description = "delay between successful or failed request/response (in milliseconds)",
+		extraSubAttributes = "histogram"
 	)
 	public ValueStats getResponseTime() {
 		return responseTime;
 	}
 
 	@JmxAttribute(
-			description = "difference between due time and actual time of passing response to callback for " +
-					"successful or failed requests",
-			extraSubAttributes = "histogram"
+		description = "difference between due time and actual time of passing response to callback for " +
+			"successful or failed requests",
+		extraSubAttributes = "histogram"
 	)
 	public ValueStats getOverdues() {
 		return overdues;

@@ -61,8 +61,8 @@ public final class QueryPlan {
 		@Override
 		public String toString() {
 			return chunks.stream().map(AggregationChunk::getChunkId)
-					.map(Object::toString)
-					.collect(Collectors.joining(",", "[", "]"));
+				.map(Object::toString)
+				.collect(Collectors.joining(",", "[", "]"));
 		}
 	}
 
@@ -75,17 +75,17 @@ public final class QueryPlan {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb
-				.append("\nSequences (")
-				.append(sequences.size())
-				.append("): ");
+			.append("\nSequences (")
+			.append(sequences.size())
+			.append("): ");
 		for (int i = 0; i < sequences.size(); ++i) {
 			sb
-					.append('\n')
-					.append(i + 1)
-					.append(" (")
-					.append(sequences.get(i).chunks.size())
-					.append("). ")
-					.append(sequences.get(i) + " ");
+				.append('\n')
+				.append(i + 1)
+				.append(" (")
+				.append(sequences.get(i).chunks.size())
+				.append("). ")
+				.append(sequences.get(i) + " ");
 		}
 		return sb.toString();
 	}

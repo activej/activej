@@ -120,20 +120,20 @@ public final class HttpClientCube implements ICube {
 	@Override
 	public Promise<QueryResult> query(CubeQuery query) {
 		return httpClient.request(buildRequest(query))
+			.mapException(e -> new CubeException("HTTP request failed", e))
+			.then(response -> response.loadBody()
 				.mapException(e -> new CubeException("HTTP request failed", e))
-				.then(response -> response.loadBody()
-						.mapException(e -> new CubeException("HTTP request failed", e))
-						.map(body -> {
-							try {
-								if (response.getCode() != 200) {
-									throw new CubeException("CubeHTTP query failed. Response code: " + response.getCode() + " Body: " + body.getString(UTF_8));
-								}
-								return fromJson(getQueryResultCodec(), body);
-							} catch (MalformedDataException e) {
-								throw new CubeException("Cube HTTP query failed. Invalid data received", e);
-							}
-						})
-						.whenComplete(toLogger(logger, "query", query)));
+				.map(body -> {
+					try {
+						if (response.getCode() != 200) {
+							throw new CubeException("CubeHTTP query failed. Response code: " + response.getCode() + " Body: " + body.getString(UTF_8));
+						}
+						return fromJson(getQueryResultCodec(), body);
+					} catch (MalformedDataException e) {
+						throw new CubeException("Cube HTTP query failed. Invalid data received", e);
+					}
+				})
+				.whenComplete(toLogger(logger, "query", query)));
 	}
 
 	private HttpRequest buildRequest(CubeQuery query) {

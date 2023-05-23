@@ -16,18 +16,18 @@ public final class OfChannelSupplier<T> extends AbstractStreamSupplier<T> {
 	protected void onResumed() {
 		asyncBegin();
 		supplier.get()
-				.subscribe((item, e) -> {
-					if (e == null) {
-						if (item != null) {
-							send(item);
-							asyncResume();
-						} else {
-							sendEndOfStream();
-						}
+			.subscribe((item, e) -> {
+				if (e == null) {
+					if (item != null) {
+						send(item);
+						asyncResume();
 					} else {
-						closeEx(e);
+						sendEndOfStream();
 					}
-				});
+				} else {
+					closeEx(e);
+				}
+			});
 	}
 
 	@Override

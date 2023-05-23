@@ -11,17 +11,17 @@ public final class MultibindToSetExample {
 		Key<Set<Integer>> setKey = new Key<>() {};
 
 		Module module1 = ModuleBuilder.create()
-				.bind(setKey).toInstance(Set.of(1, 2, 3))
-				.build();
+			.bind(setKey).toInstance(Set.of(1, 2, 3))
+			.build();
 		Module module2 = ModuleBuilder.create()
-				.bind(setKey).toInstance(Set.of(3, 4, 5))
-				.build();
+			.bind(setKey).toInstance(Set.of(3, 4, 5))
+			.build();
 		//[END MODULES]
 
 		//[START MULTIBINDER]
 		Module multibinderModule = ModuleBuilder.create()
-				.multibindToSet(Integer.class)
-				.build();
+			.multibindToSet(Integer.class)
+			.build();
 		//[END MULTIBINDER]
 
 		//[START INJECTOR]

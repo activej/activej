@@ -36,20 +36,20 @@ public class HttpServerClientBreakConnectionTest {
 	public void init() throws IOException {
 		freePort = getFreePort();
 		server = HttpServer.builder(reactor,
-						request -> {
-							logger.info("Closing server...");
-							reactor.post(() ->
-									server.close()
-											.whenComplete(() -> logger.info("Server Closed")));
-							return Promises.delay(100L,
-									HttpResponse.ok200()
-											.withBody("Hello World".getBytes())
-											.build()
-							);
-						})
-				.withListenPort(freePort)
-				.withAcceptOnce()
-				.build();
+				request -> {
+					logger.info("Closing server...");
+					reactor.post(() ->
+						server.close()
+							.whenComplete(() -> logger.info("Server Closed")));
+					return Promises.delay(100L,
+						HttpResponse.ok200()
+							.withBody("Hello World".getBytes())
+							.build()
+					);
+				})
+			.withListenPort(freePort)
+			.withAcceptOnce()
+			.build();
 
 		client = HttpClient.create(reactor);
 		server.listen();
@@ -58,12 +58,12 @@ public class HttpServerClientBreakConnectionTest {
 	@Test
 	public void testBreakConnection() {
 		String result = await(client.request(
-						HttpRequest.post("http://127.0.0.1:" + freePort)
-								.withBody("Hello World".getBytes())
-								.build())
-				.then(response ->
-						response.loadBody()
-								.map(body -> body.getString(UTF_8))));
+				HttpRequest.post("http://127.0.0.1:" + freePort)
+					.withBody("Hello World".getBytes())
+					.build())
+			.then(response ->
+				response.loadBody()
+					.map(body -> body.getString(UTF_8))));
 
 		assertEquals("Hello World", result);
 	}

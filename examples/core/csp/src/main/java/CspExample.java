@@ -37,18 +37,18 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 	//[START REGION_1]
 	protected void doProcess() {
 		input.get()
-				.whenResult(data -> {
-					if (data == null) {
-						output.acceptEndOfStream()
-								.whenResult(this::completeProcess);
-					} else {
-						data = data.toUpperCase() + '(' + data.length() + ')';
+			.whenResult(data -> {
+				if (data == null) {
+					output.acceptEndOfStream()
+						.whenResult(this::completeProcess);
+				} else {
+					data = data.toUpperCase() + '(' + data.length() + ')';
 
-						output.accept(data)
-								.whenResult(this::doProcess);
-					}
-				})
-				.whenException(Throwable::printStackTrace);
+					output.accept(data)
+						.whenResult(this::doProcess);
+				}
+			})
+			.whenException(Throwable::printStackTrace);
 	}
 	//[END REGION_1]
 
@@ -61,13 +61,13 @@ public final class CspExample extends AbstractCommunicatingProcess implements Wi
 
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 
 		CspExample process = new CspExample();
 		ChannelSuppliers.ofValues("hello", "world", "nice", "to", "see", "you")
-				.transformWith(process)
-				.streamTo(ChannelConsumers.ofConsumer(System.out::println));
+			.transformWith(process)
+			.streamTo(ChannelConsumers.ofConsumer(System.out::println));
 
 		eventloop.run();
 	}

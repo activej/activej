@@ -57,7 +57,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractReactive
-		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+	implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final boolean CHECKS = Checks.isEnabled(MapCrdtStorage.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(MapCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -143,20 +144,20 @@ public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractRe
 		if (CHECKS) checkInReactorThread(this);
 		ToListStreamConsumer<CrdtData<K, S>> consumer = ToListStreamConsumer.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
-						.whenResult(() -> consumer.getList().forEach(this::doPut))
-						.mapException(e -> new CrdtException("Error while uploading CRDT data", e)))
-				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-				.transformWith(onItem(uploadedItems::recordEvent)));
+				.whenResult(() -> consumer.getList().forEach(this::doPut))
+				.mapException(e -> new CrdtException("Error while uploading CRDT data", e)))
+			.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+			.transformWith(onItem(uploadedItems::recordEvent)));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		if (CHECKS) checkInReactorThread(this);
 		return Promise.of(StreamSuppliers.ofStream(extract(timestamp))
-				.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
-				.transformWith(onItem(downloadedItems::recordEvent))
-				.withEndOfStream(eos -> eos
-						.mapException(e -> new CrdtException("Error while downloading CRDT data", e))));
+			.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+			.transformWith(onItem(downloadedItems::recordEvent))
+			.withEndOfStream(eos -> eos
+				.mapException(e -> new CrdtException("Error while downloading CRDT data", e))));
 	}
 
 	@Override
@@ -172,19 +173,19 @@ public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractRe
 		tombstones.clear();
 
 		StreamSupplier<CrdtData<K, S>> supplier = StreamSuppliers.ofIterable(takenMap.values())
-				.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-				.transformWith(onItem(takenItems::recordEvent));
+			.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+			.transformWith(onItem(takenItems::recordEvent));
 		supplier.getAcknowledgement()
-				.whenResult(() -> {
-					takenMap = null;
-					takenTombstones = null;
-				})
-				.mapException(e -> {
-					takenMap = nullify(takenMap, map -> map.values().forEach(this::doPut));
-					takenTombstones = nullify(takenTombstones, map -> map.values().forEach(this::doRemove));
+			.whenResult(() -> {
+				takenMap = null;
+				takenTombstones = null;
+			})
+			.mapException(e -> {
+				takenMap = nullify(takenMap, map -> map.values().forEach(this::doPut));
+				takenTombstones = nullify(takenTombstones, map -> map.values().forEach(this::doRemove));
 
-					return new CrdtException("Error while downloading CRDT data", e);
-				});
+				return new CrdtException("Error while downloading CRDT data", e);
+			});
 		return Promise.of(supplier);
 	}
 
@@ -193,10 +194,10 @@ public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractRe
 		if (CHECKS) checkInReactorThread(this);
 		ToListStreamConsumer<CrdtTombstone<K>> consumer = ToListStreamConsumer.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
-						.whenResult(() -> consumer.getList().forEach(this::doRemove))
-						.mapException(e -> new CrdtException("Error while removing CRDT data", e)))
-				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-				.transformWith(onItem(removedItems::recordEvent)));
+				.whenResult(() -> consumer.getList().forEach(this::doRemove))
+				.mapException(e -> new CrdtException("Error while removing CRDT data", e)))
+			.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+			.transformWith(onItem(removedItems::recordEvent)));
 	}
 
 	@Override
@@ -228,7 +229,7 @@ public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractRe
 		}
 
 		return map.values().stream()
-				.filter(data -> data.getTimestamp() >= timestamp);
+			.filter(data -> data.getTimestamp() >= timestamp);
 	}
 
 	private void doMerge(Map<K, CrdtData<K, S>> to, Map<K, CrdtData<K, S>> from) {

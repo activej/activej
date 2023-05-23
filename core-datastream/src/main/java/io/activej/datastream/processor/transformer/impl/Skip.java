@@ -37,10 +37,10 @@ public final class Skip<T> extends ImplicitlyReactive implements StreamTransform
 		this.output = new Output();
 
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		output.getAcknowledgement()
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 	}
 
 	@Override

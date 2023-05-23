@@ -67,8 +67,8 @@ public final class RemoteFileSystemPartialTest {
 		FileSystem fileSystem = FileSystem.create(Reactor.getCurrentReactor(), executor, serverStorage);
 		await(fileSystem.start());
 		server = FileSystemServer.builder(Reactor.getCurrentReactor(), fileSystem)
-				.withListenAddress(address)
-				.build();
+			.withListenAddress(address)
+			.build();
 		server.listen();
 		client = RemoteFileSystem.create(Reactor.getCurrentReactor(), address);
 
@@ -78,8 +78,8 @@ public final class RemoteFileSystemPartialTest {
 	@Test
 	public void justDownload() throws IOException {
 		await(ChannelSuppliers.ofPromise(client.download(FILE))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
-				.whenComplete(server::close));
+			.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
+			.whenComplete(server::close));
 
 		assertArrayEquals(CONTENT, Files.readAllBytes(clientStorage.resolve(FILE)));
 	}
@@ -94,7 +94,7 @@ public final class RemoteFileSystemPartialTest {
 		ChannelConsumer<ByteBuf> consumer = ChannelConsumers.ofPromise(client.upload("test_big_file.bin", data.length));
 
 		await(supplier.streamTo(consumer)
-				.whenComplete(server::close));
+			.whenComplete(server::close));
 
 		assertArrayEquals(data, Files.readAllBytes(serverStorage.resolve("test_big_file.bin")));
 	}
@@ -102,8 +102,8 @@ public final class RemoteFileSystemPartialTest {
 	@Test
 	public void downloadPrefix() throws IOException {
 		await(ChannelSuppliers.ofPromise(client.download(FILE, 0, 12))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
-				.whenComplete(server::close));
+			.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
+			.whenComplete(server::close));
 
 		assertArrayEquals("test content".getBytes(UTF_8), Files.readAllBytes(clientStorage.resolve(FILE)));
 	}
@@ -111,8 +111,8 @@ public final class RemoteFileSystemPartialTest {
 	@Test
 	public void downloadSuffix() throws IOException {
 		await(ChannelSuppliers.ofPromise(client.download(FILE, 13, Long.MAX_VALUE))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
-				.whenComplete(server::close));
+			.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
+			.whenComplete(server::close));
 
 		assertArrayEquals("of the file".getBytes(UTF_8), Files.readAllBytes(clientStorage.resolve(FILE)));
 	}
@@ -120,8 +120,8 @@ public final class RemoteFileSystemPartialTest {
 	@Test
 	public void downloadPart() throws IOException {
 		await(ChannelSuppliers.ofPromise(client.download(FILE, 5, 10))
-				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
-				.whenComplete(server::close));
+			.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(FILE)))
+			.whenComplete(server::close));
 
 		assertArrayEquals("content of".getBytes(UTF_8), Files.readAllBytes(clientStorage.resolve(FILE)));
 	}
@@ -130,8 +130,8 @@ public final class RemoteFileSystemPartialTest {
 	public void downloadOverSuffix() {
 		int offset = 13;
 		ByteBuf result = await(ChannelSuppliers.ofPromise(client.download(FILE, offset, 123))
-				.toCollector(ByteBufs.collector())
-				.whenComplete(server::close));
+			.toCollector(ByteBufs.collector())
+			.whenComplete(server::close));
 
 		assertEquals(new String(CONTENT, offset, CONTENT.length - offset, UTF_8), result.asString(UTF_8));
 	}
@@ -139,8 +139,8 @@ public final class RemoteFileSystemPartialTest {
 	@Test
 	public void downloadOver() {
 		Exception exception = awaitException(ChannelSuppliers.ofPromise(client.download(FILE, 123, 123))
-				.toCollector(ByteBufs.collector())
-				.whenComplete(server::close));
+			.toCollector(ByteBufs.collector())
+			.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(IllegalOffsetException.class));
 	}
@@ -148,7 +148,7 @@ public final class RemoteFileSystemPartialTest {
 	@Test
 	public void malformedGlob() {
 		Exception exception = awaitException(client.list("[")
-				.whenComplete(server::close));
+			.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(MalformedGlobException.class));
 	}

@@ -41,9 +41,9 @@ public final class FileSystemExceptionCodecTest {
 	@Test
 	public void testBatchException() {
 		doTest(new FileSystemBatchException(Map.of(
-				"file1", new FileSystemScalarException("Test"),
-				"file2", new FileNotFoundException("Test"),
-				"file3", new IsADirectoryException("Test")
+			"file1", new FileSystemScalarException("Test"),
+			"file2", new FileNotFoundException("Test"),
+			"file3", new IsADirectoryException("Test")
 		)));
 	}
 

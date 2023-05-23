@@ -59,7 +59,7 @@ public final class ConfigModule extends AbstractModule {
 			this.started = started;
 			this.children = new LinkedHashMap<>();
 			config.getChildren().forEach((key, value) ->
-					this.children.put(key, new ProtectedConfig(value, started)));
+				this.children.put(key, new ProtectedConfig(value, started)));
 		}
 
 		@Override
@@ -122,7 +122,7 @@ public final class ConfigModule extends AbstractModule {
 		public Builder withEffectiveConfigLogger() {
 			checkNotBuilt(this);
 			return withEffectiveConfigConsumer(effectiveConfig ->
-					logger.info("Effective Config:\n\n{}", effectiveConfig));
+				logger.info("Effective Config:\n\n{}", effectiveConfig));
 		}
 
 		@Override
@@ -146,15 +146,15 @@ public final class ConfigModule extends AbstractModule {
 		transform(KeyPattern.of(Config.class, null), (bindings, scope, key, binding) -> {
 			Key<CompletionStage<Void>> completionStageKey = new Key<>(OnStart.class) {};
 			return binding
-					.addDependencies(completionStageKey)
-					.mapInstance(List.of(completionStageKey), (args, config) -> {
-						CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];
-						AtomicBoolean started = new AtomicBoolean();
-						ProtectedConfig protectedConfig = new ProtectedConfig(FullPathConfig.wrap(config), started);
-						EffectiveConfig effectiveConfig = EffectiveConfig.wrap(protectedConfig);
-						onStart.thenRun(() -> save(effectiveConfig, started));
-						return effectiveConfig;
-					});
+				.addDependencies(completionStageKey)
+				.mapInstance(List.of(completionStageKey), (args, config) -> {
+					CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];
+					AtomicBoolean started = new AtomicBoolean();
+					ProtectedConfig protectedConfig = new ProtectedConfig(FullPathConfig.wrap(config), started);
+					EffectiveConfig effectiveConfig = EffectiveConfig.wrap(protectedConfig);
+					onStart.thenRun(() -> save(effectiveConfig, started));
+					return effectiveConfig;
+				});
 		});
 	}
 

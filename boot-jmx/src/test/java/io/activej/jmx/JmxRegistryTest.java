@@ -68,15 +68,15 @@ public class JmxRegistryTest {
 		context.checking(new Expectations() {{
 			// checking calls and names for each worker separately
 			oneOf(mBeanServer).unregisterMBean(
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-0")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-0")));
 			oneOf(mBeanServer).unregisterMBean(
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-1")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-1")));
 			oneOf(mBeanServer).unregisterMBean(
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-2")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-2")));
 
 			// checking calls and names for worker_pool DynamicMBean
 			oneOf(mBeanServer).unregisterMBean(
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker")));
 
 		}});
 
@@ -88,8 +88,8 @@ public class JmxRegistryTest {
 	@Test
 	public void registerWorkersWithPredicate() throws Exception {
 		jmxRegistry = JmxRegistry.builder(mBeanServer, mBeanFactory)
-				.withWorkerPredicate(($, workerId) -> workerId == 0)
-				.build();
+			.withWorkerPredicate(($, workerId) -> workerId == 0)
+			.build();
 
 		WorkerPool workerPool = getWorkerPool();
 		WorkerPool.Instances<ServiceStub> instances = workerPool.getInstances(ServiceStub.class);
@@ -101,15 +101,15 @@ public class JmxRegistryTest {
 		context.checking(new Expectations() {{
 			// checking calls and names for each worker separately
 			oneOf(mBeanServer).registerMBean(with(Matchers.any(DynamicMBean.class)),
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-0")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-0")));
 			never(mBeanServer).registerMBean(with(Matchers.any(DynamicMBean.class)),
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-1")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-1")));
 			never(mBeanServer).registerMBean(with(Matchers.any(DynamicMBean.class)),
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-2")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker,workerId=worker-2")));
 
 			// checking calls and names for worker_pool DynamicMBean
 			oneOf(mBeanServer).registerMBean(with(Matchers.any(DynamicMBean.class)),
-					with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker")));
+				with(objectname(DOMAIN + ":type=ServiceStub,annotation=BasicService,scope=Worker")));
 
 		}});
 

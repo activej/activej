@@ -63,8 +63,8 @@ public final class SubclassSerializerDef extends AbstractSerializerDef implement
 		public Builder withSubclass(Class<?> subclass, SerializerDef serializer) {
 			checkNotBuilt(this);
 			checkArgument(!Modifier.isAbstract(subclass.getModifiers()),
-					"A subclass should not be an " +
-							(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
+				"A subclass should not be an " +
+					(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
 			checkArgument(parentType.isAssignableFrom(subclass));
 			SubclassSerializerDef.this.subclassSerializers.put(subclass, serializer);
 			return this;
@@ -118,8 +118,8 @@ public final class SubclassSerializerDef extends AbstractSerializerDef implement
 			subclasses.add(entry.getKey());
 			Encoder encoder = subclassSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 			subclassWriters.add(sequence(
-					writeByte(buf, pos, value((byte) subClassIndex)),
-					encoder.encode(buf, pos, cast(value, subclassSerializer.getEncodeType()))
+				writeByte(buf, pos, value((byte) subClassIndex)),
+				encoder.encode(buf, pos, cast(value, subclassSerializer.getEncodeType()))
 			));
 
 			subClassIndex++;
@@ -158,20 +158,20 @@ public final class SubclassSerializerDef extends AbstractSerializerDef implement
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(startIndex != 0 ? sub(readByte(in), value(startIndex)) : cast(readByte(in), int.class),
-				idx -> {
-					List<Expression> subclasses = new ArrayList<>();
-					for (SerializerDef subclassSerializer : subclassSerializers.values()) {
-						subclasses.add(cast(subclassSerializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in), parentType));
-					}
-					if (nullable) subclasses.add(-startIndex, nullRef(getDecodeType()));
-					Map<Integer, Expression> cases = new HashMap<>();
-					for (int i = 0; i < subclasses.size(); i++) {
-						cases.put(i, subclasses.get(i));
-					}
-					return cast(
-							tableSwitch(idx, cases,
-									throwException(CorruptedDataException.class, value("Unsupported subclass"))),
-							parentType);
-				});
+			idx -> {
+				List<Expression> subclasses = new ArrayList<>();
+				for (SerializerDef subclassSerializer : subclassSerializers.values()) {
+					subclasses.add(cast(subclassSerializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in), parentType));
+				}
+				if (nullable) subclasses.add(-startIndex, nullRef(getDecodeType()));
+				Map<Integer, Expression> cases = new HashMap<>();
+				for (int i = 0; i < subclasses.size(); i++) {
+					cases.put(i, subclasses.get(i));
+				}
+				return cast(
+					tableSwitch(idx, cases,
+						throwException(CorruptedDataException.class, value("Unsupported subclass"))),
+					parentType);
+			});
 	}
 }

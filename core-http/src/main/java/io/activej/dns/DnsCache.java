@@ -186,8 +186,8 @@ public final class DnsCache extends AbstractReactive {
 			expirationTime += Math.min(minTtl, maxTtl);
 		} else {
 			expirationTime += response.getErrorCode() == ResponseErrorCode.TIMED_OUT ?
-					timedOutExpiration :
-					errorCacheExpiration;
+				timedOutExpiration :
+				errorCacheExpiration;
 		}
 		CachedDnsQueryResult cachedResult = new CachedDnsQueryResult(response, expirationTime);
 		CachedDnsQueryResult old = cache.put(query, cachedResult);
@@ -272,11 +272,11 @@ public final class DnsCache extends AbstractReactive {
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public int getFailedDomainsCount() {
 		return (int) cache.values().stream()
-				.filter(cachedResult -> {
-					assert cachedResult.response != null;
-					return !cachedResult.response.isSuccessful();
-				})
-				.count();
+			.filter(cachedResult -> {
+				assert cachedResult.response != null;
+				return !cachedResult.response.isSuccessful();
+			})
+			.count();
 	}
 
 	@JmxOperation
@@ -291,11 +291,11 @@ public final class DnsCache extends AbstractReactive {
 
 	private List<String> getDomainNames(Predicate<DnsResponse> predicate) {
 		return cache.entrySet()
-				.stream()
-				.filter(entry -> predicate.test(entry.getValue().response))
-				.map(Entry::getKey)
-				.map(DnsQuery::getDomainName)
-				.collect(Collectors.toList());
+			.stream()
+			.filter(entry -> predicate.test(entry.getValue().response))
+			.map(Entry::getKey)
+			.map(DnsQuery::getDomainName)
+			.collect(Collectors.toList());
 	}
 
 	public class RecordFormatter {
@@ -354,10 +354,10 @@ public final class DnsCache extends AbstractReactive {
 	@JmxOperation
 	public List<String> getDomainRecord(String domain) {
 		return cache.entrySet().stream()
-				.filter(e -> e.getKey().getDomainName().equalsIgnoreCase(domain))
-				.findFirst()
-				.map(e -> new RecordFormatter(e.getKey().getDomainName(), e.getValue()).formatMultiline())
-				.orElse(List.of());
+			.filter(e -> e.getKey().getDomainName().equalsIgnoreCase(domain))
+			.findFirst()
+			.map(e -> new RecordFormatter(e.getKey().getDomainName(), e.getValue()).formatMultiline())
+			.orElse(List.of());
 	}
 
 	@JmxOperation
@@ -371,18 +371,18 @@ public final class DnsCache extends AbstractReactive {
 		cache.forEach((domainName, cachedResult) -> {
 			RecordFormatter formatter = new RecordFormatter(domainName.getDomainName(), cachedResult);
 			lines.add(sb
-					.append(formatter.domain)
-					.append(";")
-					.append(formatter.getStatus())
-					.append(";")
-					.append(formatter.getIps())
-					.append(";")
-					.append(formatter.getMinTtlSeconds())
-					.append(";")
-					.append(formatter.getSecondsToSoftExpiration())
-					.append(";")
-					.append(formatter.getSecondsToHardExpiration())
-					.toString());
+				.append(formatter.domain)
+				.append(";")
+				.append(formatter.getStatus())
+				.append(";")
+				.append(formatter.getIps())
+				.append(";")
+				.append(formatter.getMinTtlSeconds())
+				.append(";")
+				.append(formatter.getSecondsToSoftExpiration())
+				.append(";")
+				.append(formatter.getSecondsToHardExpiration())
+				.toString());
 			sb.setLength(0);
 		});
 		return lines;

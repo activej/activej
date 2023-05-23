@@ -99,9 +99,9 @@ public final class FileSystemServletAndClientTest {
 		ChannelConsumer<ByteBuf> consumer = await(fileSystem.upload(filename));
 
 		Exception exception = awaitException(ChannelSuppliers.concat(
-						ChannelSuppliers.ofValues(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
-						ChannelSuppliers.ofException(expectedException))
-				.streamTo(consumer));
+				ChannelSuppliers.ofValues(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+				ChannelSuppliers.ofException(expectedException))
+			.streamTo(consumer));
 
 		assertSame(expectedException, exception);
 

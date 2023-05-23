@@ -42,26 +42,22 @@ public final class Min extends Measure {
 	}
 
 	@Override
-	public Expression initAccumulatorWithAccumulator(Variable accumulator,
-			Expression firstAccumulator) {
+	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
 		return set(accumulator, firstAccumulator);
 	}
 
 	@Override
-	public Expression reduce(Variable accumulator,
-			Variable nextAccumulator) {
+	public Expression reduce(Variable accumulator, Variable nextAccumulator) {
 		return set(accumulator, staticCall(Math.class, "min", accumulator, nextAccumulator));
 	}
 
 	@Override
-	public Expression initAccumulatorWithValue(Variable accumulator,
-			Variable firstValue) {
+	public Expression initAccumulatorWithValue(Variable accumulator, Variable firstValue) {
 		return set(accumulator, firstValue);
 	}
 
 	@Override
-	public Expression accumulate(Variable accumulator,
-			Variable nextValue) {
+	public Expression accumulate(Variable accumulator, Variable nextValue) {
 		return set(accumulator, staticCall(Math.class, "min", accumulator, nextValue));
 	}
 }

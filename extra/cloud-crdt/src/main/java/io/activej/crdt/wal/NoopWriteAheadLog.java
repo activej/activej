@@ -24,7 +24,8 @@ import io.activej.reactor.Reactor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class NoopWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
-		implements IWriteAheadLog<K, S> {
+	implements IWriteAheadLog<K, S> {
+
 	private static final boolean CHECKS = Checks.isEnabled(NoopWriteAheadLog.class);
 
 	private NoopWriteAheadLog(Reactor reactor) {

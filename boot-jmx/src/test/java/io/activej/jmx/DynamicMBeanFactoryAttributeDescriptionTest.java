@@ -17,7 +17,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void ifDescriptionIsNotSpecifiedItIsSameAsFullNameOfAttribute() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanWithNoJmxDescription()), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(new MBeanWithNoJmxDescription()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -41,7 +41,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void showsDescriptionWithoutChangesIfAttributeNameDoNotContainUnderscores() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanWithDescriptionInDirectNonPojoAttribute()), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(new MBeanWithDescriptionInDirectNonPojoAttribute()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -71,12 +71,12 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void formatsDescriptionsProperlyIfAttributeNameContainsUnderscores() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(List.of(new MBeanWithPojoDescription()), JmxBeanSettings.create(), false);
+			.createDynamicMBean(List.of(new MBeanWithPojoDescription()), JmxBeanSettings.create(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
 		assertEquals("\"stats\": desc of first-level pojo  |  \"info\": desc of info",
-				nameToAttr.get("stats_innerStats_info").getDescription());
+			nameToAttr.get("stats_innerStats_info").getDescription());
 	}
 
 	public static final class MBeanWithPojoDescription implements ConcurrentJmxBean {

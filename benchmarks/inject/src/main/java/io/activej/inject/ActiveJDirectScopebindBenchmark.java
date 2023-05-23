@@ -228,20 +228,20 @@ public class ActiveJDirectScopebindBenchmark {
 	@Setup
 	public void setup() {
 		cookbook = ModuleBuilder.create()
-				.bind(Kitchen.class).to(Kitchen::new)
-				.bind(Sugar.class).to(() -> new Sugar("WhiteSugar", 10.f)).in(OrderScope.class)
-				.bind(Butter.class).to(() -> new Butter("PerfectButter", 20.0f)).in(OrderScope.class)
-				.bind(Flour.class).to(() -> new Flour("GoodFlour", 100.0f)).in(OrderScope.class)
-				.bind(Pastry.class).to(Pastry::new, Sugar.class, Butter.class, Flour.class).in(OrderScope.class)
-				.bind(Cookie1.class).to(Cookie1::new, Pastry.class).in(OrderScope.class)
-				.bind(Cookie2.class).to(Cookie2::new, Pastry.class).in(OrderScope.class)
-				.bind(Cookie3.class).to(Cookie3::new, Pastry.class).in(OrderScope.class)
-				.bind(Cookie4.class).to(Cookie4::new, Pastry.class).in(OrderScope.class)
-				.bind(Cookie5.class).to(Cookie5::new, Pastry.class).in(OrderScope.class)
-				.bind(Cookie6.class).to(Cookie6::new, Pastry.class).in(OrderScope.class)
-				.bind(CookieBucket.class).to(CookieBucket::new, Cookie1.class, Cookie2.class,
-						Cookie3.class, Cookie4.class, Cookie5.class, Cookie6.class).in(OrderScope.class)
-				.build();
+			.bind(Kitchen.class).to(Kitchen::new)
+			.bind(Sugar.class).to(() -> new Sugar("WhiteSugar", 10.f)).in(OrderScope.class)
+			.bind(Butter.class).to(() -> new Butter("PerfectButter", 20.0f)).in(OrderScope.class)
+			.bind(Flour.class).to(() -> new Flour("GoodFlour", 100.0f)).in(OrderScope.class)
+			.bind(Pastry.class).to(Pastry::new, Sugar.class, Butter.class, Flour.class).in(OrderScope.class)
+			.bind(Cookie1.class).to(Cookie1::new, Pastry.class).in(OrderScope.class)
+			.bind(Cookie2.class).to(Cookie2::new, Pastry.class).in(OrderScope.class)
+			.bind(Cookie3.class).to(Cookie3::new, Pastry.class).in(OrderScope.class)
+			.bind(Cookie4.class).to(Cookie4::new, Pastry.class).in(OrderScope.class)
+			.bind(Cookie5.class).to(Cookie5::new, Pastry.class).in(OrderScope.class)
+			.bind(Cookie6.class).to(Cookie6::new, Pastry.class).in(OrderScope.class)
+			.bind(CookieBucket.class).to(CookieBucket::new, Cookie1.class, Cookie2.class,
+				Cookie3.class, Cookie4.class, Cookie5.class, Cookie6.class).in(OrderScope.class)
+			.build();
 
 		if (SPECIALIZE) {
 			Injector.useSpecializer();
@@ -272,15 +272,15 @@ public class ActiveJDirectScopebindBenchmark {
 		System.out.println("Running benchmark with specialization " + (SPECIALIZE ? "ON" : "OFF"));
 
 		Options opt = new OptionsBuilder()
-				.include(ActiveJDirectScopebindBenchmark.class.getSimpleName())
-				.forks(2)
-				.warmupIterations(3)
-				.warmupTime(TimeValue.seconds(1L))
-				.measurementIterations(10)
-				.measurementTime(TimeValue.seconds(2L))
-				.mode(Mode.AverageTime)
-				.timeUnit(TimeUnit.NANOSECONDS)
-				.build();
+			.include(ActiveJDirectScopebindBenchmark.class.getSimpleName())
+			.forks(2)
+			.warmupIterations(3)
+			.warmupTime(TimeValue.seconds(1L))
+			.measurementIterations(10)
+			.measurementTime(TimeValue.seconds(2L))
+			.mode(Mode.AverageTime)
+			.timeUnit(TimeUnit.NANOSECONDS)
+			.build();
 
 		new Runner(opt).run();
 	}

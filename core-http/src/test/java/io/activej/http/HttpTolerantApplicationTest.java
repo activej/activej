@@ -40,17 +40,17 @@ public final class HttpTolerantApplicationTest {
 		int port = getFreePort();
 
 		Eventloop eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		HttpServer server = HttpServer.builder(eventloop,
-						request ->
-								HttpResponse.ok200()
-										.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
-										.toPromise()
-										.async())
-				.withListenPort(port)
-				.build();
+				request ->
+					HttpResponse.ok200()
+						.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
+						.toPromise()
+						.async())
+			.withListenPort(port)
+			.build();
 
 		server.listen();
 
@@ -61,39 +61,39 @@ public final class HttpTolerantApplicationTest {
 
 		socket.connect(new InetSocketAddress("localhost", port));
 		write(socket, """
-				GET /abc  HTTP/1.1
-				Host: \tlocalhost
+			GET /abc  HTTP/1.1
+			Host: \tlocalhost
 
-				""");
+			""");
 		readAndAssert(socket.getInputStream(), """
-				HTTP/1.1 200 OK\r
-				Connection: keep-alive\r
-				Content-Length: 4\r
-				\r
-				/abc""");
+			HTTP/1.1 200 OK\r
+			Connection: keep-alive\r
+			Content-Length: 4\r
+			\r
+			/abc""");
 		write(socket, """
-				GET /abc  HTTP/1.0
-				Cost: \tlocalhost \t\s
-				Connection: keep-alive
+			GET /abc  HTTP/1.0
+			Cost: \tlocalhost \t\s
+			Connection: keep-alive
 
-				""");
+			""");
 		readAndAssert(socket.getInputStream(), """
-				HTTP/1.1 200 OK\r
-				Connection: keep-alive\r
-				Content-Length: 4\r
-				\r
-				/abc""");
+			HTTP/1.1 200 OK\r
+			Connection: keep-alive\r
+			Content-Length: 4\r
+			\r
+			/abc""");
 		write(socket, """
-				GET /abc  HTTP/1.0
-				Cost: \tlocalhost \t\s
+			GET /abc  HTTP/1.0
+			Cost: \tlocalhost \t\s
 
-				""");
+			""");
 		readAndAssert(socket.getInputStream(), """
-				HTTP/1.1 200 OK\r
-				Connection: close\r
-				Content-Length: 4\r
-				\r
-				/abc""");
+			HTTP/1.1 200 OK\r
+			Connection: close\r
+			Content-Length: 4\r
+			\r
+			/abc""");
 		assertEmpty(socket.getInputStream());
 		socket.close();
 
@@ -121,16 +121,16 @@ public final class HttpTolerantApplicationTest {
 				}
 			}
 		})
-				.start();
+			.start();
 
 		String header = await(HttpClient.create(Reactor.getCurrentReactor())
-				.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.loadBody()
-						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))
-						.map($ -> response.getHeader(HttpHeaders.CONTENT_TYPE))
-						.whenComplete(assertingFn(($, e) -> {
-							listener.close();
-						}))));
+			.request(HttpRequest.get("http://127.0.0.1:" + port).build())
+			.then(response -> response.loadBody()
+				.whenResult(body -> assertEquals(text, body.getString(UTF_8)))
+				.map($ -> response.getHeader(HttpHeaders.CONTENT_TYPE))
+				.whenComplete(assertingFn(($, e) -> {
+					listener.close();
+				}))));
 
 		assertEquals("text/html; charset=UTF-8", header);
 	}

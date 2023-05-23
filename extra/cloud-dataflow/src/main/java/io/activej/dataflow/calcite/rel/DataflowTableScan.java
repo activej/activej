@@ -23,9 +23,10 @@ public class DataflowTableScan extends TableScan {
 	private @Nullable RexNode offset;
 	private @Nullable RexNode limit;
 
-	private DataflowTableScan(RelOptCluster cluster, RelTraitSet traitSet,
-			RelOptTable table, List<RelHint> hints, @Nullable RexNode condition,
-			@Nullable RexNode offset, @Nullable RexNode limit) {
+	private DataflowTableScan(
+		RelOptCluster cluster, RelTraitSet traitSet, RelOptTable table, List<RelHint> hints,
+		@Nullable RexNode condition, @Nullable RexNode offset, @Nullable RexNode limit
+	) {
 		super(cluster, traitSet, hints, table);
 		this.condition = condition;
 		this.offset = offset;
@@ -39,17 +40,18 @@ public class DataflowTableScan extends TableScan {
 		return this;
 	}
 
-	public static DataflowTableScan create(RelOptCluster cluster,
-			final RelOptTable relOptTable, List<RelHint> hints) {
+	public static DataflowTableScan create(
+		RelOptCluster cluster, RelOptTable relOptTable, List<RelHint> hints
+	) {
 		final Table table = relOptTable.unwrap(Table.class);
 		final RelTraitSet traitSet =
-				cluster.traitSetOf(Convention.NONE)
-						.replaceIfs(RelCollationTraitDef.INSTANCE, () -> {
-							if (table != null) {
-								return table.getStatistic().getCollations();
-							}
-							return ImmutableList.of();
-						});
+			cluster.traitSetOf(Convention.NONE)
+				.replaceIfs(RelCollationTraitDef.INSTANCE, () -> {
+					if (table != null) {
+						return table.getStatistic().getCollations();
+					}
+					return ImmutableList.of();
+				});
 		return new DataflowTableScan(cluster, traitSet, relOptTable, hints, null, null, null);
 	}
 
@@ -85,9 +87,9 @@ public class DataflowTableScan extends TableScan {
 	@Override
 	public RelWriter explainTerms(RelWriter pw) {
 		return super.explainTerms(pw)
-				.item("condition", condition)
-				.item("offset", offset)
-				.item("limit", limit);
+			.item("condition", condition)
+			.item("offset", offset)
+			.item("limit", limit);
 	}
 
 	@Override
@@ -97,15 +99,15 @@ public class DataflowTableScan extends TableScan {
 		}
 		DataflowTableScan other = (DataflowTableScan) obj;
 		return Objects.equals(condition, other.condition) &&
-				Objects.equals(offset, other.offset) &&
-				Objects.equals(limit, other.limit);
+			Objects.equals(offset, other.offset) &&
+			Objects.equals(limit, other.limit);
 	}
 
 	@Override
 	public int deepHashCode() {
 		return super.deepHashCode() +
-				Objects.hashCode(condition) +
-				Objects.hashCode(offset) +
-				Objects.hashCode(limit);
+			Objects.hashCode(condition) +
+			Objects.hashCode(offset) +
+			Objects.hashCode(limit);
 	}
 }

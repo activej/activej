@@ -31,15 +31,15 @@ public final class OfPromise<T> extends AbstractStreamConsumer<T> {
 	@Override
 	protected void onInit() {
 		promise
-				.whenResult(consumer -> {
-					consumer.getAcknowledgement()
-							.whenResult(this::acknowledge)
-							.whenException(this::closeEx);
-					this.getAcknowledgement()
-							.whenException(consumer::closeEx);
-					internalSupplier.streamTo(consumer);
-				})
-				.whenException(this::closeEx);
+			.whenResult(consumer -> {
+				consumer.getAcknowledgement()
+					.whenResult(this::acknowledge)
+					.whenException(this::closeEx);
+				this.getAcknowledgement()
+					.whenException(consumer::closeEx);
+				internalSupplier.streamTo(consumer);
+			})
+			.whenException(this::closeEx);
 	}
 
 	@Override

@@ -104,11 +104,11 @@ public class Types {
 	 */
 	public static Map<TypeVariable<?>, Type> getAllTypeBindings(Type type) {
 		return typeBindingsCache.computeIfAbsent(type,
-				t -> {
-					Map<TypeVariable<?>, Type> mapping = new HashMap<>();
-					getAllTypeBindingsImpl(t, mapping);
-					return mapping;
-				});
+			t -> {
+				Map<TypeVariable<?>, Type> mapping = new HashMap<>();
+				getAllTypeBindingsImpl(t, mapping);
+				return mapping;
+			});
 	}
 
 	private static void getAllTypeBindingsImpl(Type type, Map<TypeVariable<?>, Type> mapping) {
@@ -121,8 +121,8 @@ public class Types {
 				for (int i = 0; i < typeArguments.length; i++) {
 					Type typeArgument = typeArguments[i];
 					mapping.put(typeVariables[i], typeArgument instanceof TypeVariable ?
-							Objects.requireNonNull(mapping.get(typeArgument)) :
-							typeArgument);
+						Objects.requireNonNull(mapping.get(typeArgument)) :
+						typeArgument);
 				}
 			}
 		}
@@ -159,7 +159,7 @@ public class Types {
 			Type actualType = bindings.apply(typeVariable);
 			if (actualType == null) {
 				throw new IllegalArgumentException("Type variable not found: " + typeVariable +
-						" ( " + typeVariable.getGenericDeclaration() + " ) ");
+					" ( " + typeVariable.getGenericDeclaration() + " ) ");
 			}
 			return actualType;
 		}
@@ -252,7 +252,7 @@ public class Types {
 		@Override
 		public String toString() {
 			return rawType.getTypeName() +
-					Arrays.stream(actualTypeArguments).map(Types::toString).collect(joining(", ", "<", ">"));
+				Arrays.stream(actualTypeArguments).map(Types::toString).collect(joining(", ", "<", ">"));
 		}
 	}
 
@@ -337,10 +337,10 @@ public class Types {
 		@Override
 		public String toString() {
 			return "?" +
-					(upperBounds.length == 0 ? "" :
-							" extends " + Arrays.stream(upperBounds).map(Types::toString).collect(joining(" & "))) +
-					(lowerBounds.length == 0 ? "" :
-							" super " + Arrays.stream(lowerBounds).map(Types::toString).collect(joining(" & ")));
+				(upperBounds.length == 0 ? "" :
+					" extends " + Arrays.stream(upperBounds).map(Types::toString).collect(joining(" & "))) +
+				(lowerBounds.length == 0 ? "" :
+					" super " + Arrays.stream(lowerBounds).map(Types::toString).collect(joining(" & ")));
 
 		}
 	}
@@ -401,16 +401,16 @@ public class Types {
 			return ((Class<?>) type).getSimpleName();
 		} else if (type instanceof ParameterizedType) {
 			return Arrays.stream(((ParameterizedType) type).getActualTypeArguments())
-					.map(Types::getSimpleName)
-					.collect(joining(",", "<", ">"));
+				.map(Types::getSimpleName)
+				.collect(joining(",", "<", ">"));
 		} else if (type instanceof WildcardType wildcardType) {
 			Type[] upperBounds = wildcardType.getUpperBounds();
 			Type[] lowerBounds = wildcardType.getLowerBounds();
 			return "?" +
-					(upperBounds.length == 0 ? "" :
-							" extends " + Arrays.stream(upperBounds).map(Types::getSimpleName).collect(joining(" & "))) +
-					(lowerBounds.length == 0 ? "" :
-							" super " + Arrays.stream(lowerBounds).map(Types::getSimpleName).collect(joining(" & ")));
+				(upperBounds.length == 0 ? "" :
+					" extends " + Arrays.stream(upperBounds).map(Types::getSimpleName).collect(joining(" & "))) +
+				(lowerBounds.length == 0 ? "" :
+					" super " + Arrays.stream(lowerBounds).map(Types::getSimpleName).collect(joining(" & ")));
 		} else if (type instanceof GenericArrayType) {
 			return Types.getSimpleName(((GenericArrayType) type).getGenericComponentType()) + "[]";
 		}

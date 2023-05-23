@@ -54,22 +54,20 @@ public final class HyperLogLog extends Measure {
 	@Override
 	public Expression initAccumulatorWithAccumulator(Variable accumulator, Expression firstAccumulator) {
 		return sequence(
-				Expressions.set(accumulator, constructor(io.activej.aggregation.util.HyperLogLog.class, value(registers))),
-				call(accumulator, "union", firstAccumulator));
+			Expressions.set(accumulator, constructor(io.activej.aggregation.util.HyperLogLog.class, value(registers))),
+			call(accumulator, "union", firstAccumulator));
 	}
 
 	@Override
-	public Expression reduce(Variable accumulator,
-			Variable nextAccumulator) {
+	public Expression reduce(Variable accumulator, Variable nextAccumulator) {
 		return call(accumulator, "union", nextAccumulator);
 	}
 
 	@Override
-	public Expression initAccumulatorWithValue(Variable accumulator,
-			Variable firstValue) {
+	public Expression initAccumulatorWithValue(Variable accumulator, Variable firstValue) {
 		return sequence(
-				Expressions.set(accumulator, constructor(io.activej.aggregation.util.HyperLogLog.class, value(registers))),
-				add(accumulator, firstValue));
+			Expressions.set(accumulator, constructor(io.activej.aggregation.util.HyperLogLog.class, value(registers))),
+			add(accumulator, firstValue));
 	}
 
 	@Override

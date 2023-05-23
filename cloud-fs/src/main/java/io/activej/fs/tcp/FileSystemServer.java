@@ -55,14 +55,14 @@ public final class FileSystemServer extends AbstractReactiveServer {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final ByteBufsCodec<FileSystemRequest, FileSystemResponse> SERIALIZER = ByteBufsCodecs.ofStreamCodecs(
-			RemoteFileSystemUtils.FS_REQUEST_CODEC,
-			RemoteFileSystemUtils.FS_RESPONSE_CODEC
+		RemoteFileSystemUtils.FS_REQUEST_CODEC,
+		RemoteFileSystemUtils.FS_RESPONSE_CODEC
 	);
 
 	private final IFileSystem fileSystem;
 
 	private Function<FileSystemRequest.Handshake, FileSystemResponse.Handshake> handshakeHandler = $ ->
-			new FileSystemResponse.Handshake(null);
+		new FileSystemResponse.Handshake(null);
 
 	// region JMX
 	private final PromiseStats handleRequestPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -110,24 +110,23 @@ public final class FileSystemServer extends AbstractReactiveServer {
 
 	@Override
 	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
-		Messaging<FileSystemRequest, FileSystemResponse> messaging =
-				Messaging.create(socket, SERIALIZER);
+		Messaging<FileSystemRequest, FileSystemResponse> messaging = Messaging.create(socket, SERIALIZER);
 		messaging.receive()
-				.then(request -> {
-					if (!(request instanceof FileSystemRequest.Handshake handshake)) {
-						return Promise.ofException(new FileSystemException("Handshake expected"));
-					}
-					return handleHandshake(messaging, handshake);
-				})
-				.then(messaging::receive)
-				.then(msg -> dispatch(messaging, msg))
-				.whenComplete(handleRequestPromise.recordStats())
-				.whenException(e -> {
-					logger.warn("got an error while handling message : {}", this, e);
-					messaging.send(new FileSystemResponse.ServerError(castError(e)))
-							.then(messaging::sendEndOfStream)
-							.whenResult(messaging::close);
-				});
+			.then(request -> {
+				if (!(request instanceof FileSystemRequest.Handshake handshake)) {
+					return Promise.ofException(new FileSystemException("Handshake expected"));
+				}
+				return handleHandshake(messaging, handshake);
+			})
+			.then(messaging::receive)
+			.then(msg -> dispatch(messaging, msg))
+			.whenComplete(handleRequestPromise.recordStats())
+			.whenException(e -> {
+				logger.warn("got an error while handling message : {}", this, e);
+				messaging.send(new FileSystemResponse.ServerError(castError(e)))
+					.then(messaging::sendEndOfStream)
+					.whenResult(messaging::close);
+			});
 	}
 
 	private Promise<Void> dispatch(Messaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest msg) throws Exception {
@@ -176,46 +175,47 @@ public final class FileSystemServer extends AbstractReactiveServer {
 		throw new AssertionError();
 	}
 
-	private Promise<Void> handleHandshake(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Handshake
-			handshake) {
+	private Promise<Void> handleHandshake(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Handshake handshake
+	) {
 		return messaging.send(handshakeHandler.apply(handshake))
-				.whenComplete(handshakePromise.recordStats())
-				.whenComplete(toLogger(logger, TRACE, "handshake", handshake, this));
+			.whenComplete(handshakePromise.recordStats())
+			.whenComplete(toLogger(logger, TRACE, "handshake", handshake, this));
 	}
 
 	private Promise<Void> handleUpload(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Upload upload) {
 		String name = upload.name();
 		long size = upload.size();
 		return (size == -1 ? fileSystem.upload(name) : fileSystem.upload(name, size))
-				.map(uploader -> size == -1 ? uploader : uploader.transformWith(ofFixedSize(size)))
-				.then(uploader -> messaging.send(new FileSystemResponse.UploadAck())
-						.then(() -> messaging.receiveBinaryStream()
-								.streamTo(uploader.withAcknowledgement(
-										ack -> ack
-												.whenComplete(uploadFinishPromise.recordStats())
-												.whenComplete(toLogger(logger, TRACE, "onUploadComplete", upload, this)))
-								)))
-				.then(() -> messaging.send(new FileSystemResponse.UploadFinished()))
-				.then(messaging::sendEndOfStream)
-				.whenResult(messaging::close)
-				.whenComplete(uploadBeginPromise.recordStats())
-				.whenComplete(toLogger(logger, TRACE, "upload", upload, this));
+			.map(uploader -> size == -1 ? uploader : uploader.transformWith(ofFixedSize(size)))
+			.then(uploader -> messaging.send(new FileSystemResponse.UploadAck())
+				.then(() -> messaging.receiveBinaryStream()
+					.streamTo(uploader.withAcknowledgement(
+						ack -> ack
+							.whenComplete(uploadFinishPromise.recordStats())
+							.whenComplete(toLogger(logger, TRACE, "onUploadComplete", upload, this)))
+					)))
+			.then(() -> messaging.send(new FileSystemResponse.UploadFinished()))
+			.then(messaging::sendEndOfStream)
+			.whenResult(messaging::close)
+			.whenComplete(uploadBeginPromise.recordStats())
+			.whenComplete(toLogger(logger, TRACE, "upload", upload, this));
 	}
 
 	private Promise<Void> handleAppend(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Append append) {
 		String name = append.name();
 		long offset = append.offset();
 		return fileSystem.append(name, offset)
-				.then(uploader -> messaging.send(new FileSystemResponse.AppendAck())
-						.then(() -> messaging.receiveBinaryStream().streamTo(uploader.withAcknowledgement(
-								ack -> ack
-										.whenComplete(appendFinishPromise.recordStats())
-										.whenComplete(toLogger(logger, TRACE, "onAppendComplete", append, this))))))
-				.then(() -> messaging.send(new FileSystemResponse.AppendFinished()))
-				.then(messaging::sendEndOfStream)
-				.whenResult(messaging::close)
-				.whenComplete(appendBeginPromise.recordStats())
-				.whenComplete(toLogger(logger, TRACE, "append", append, this));
+			.then(uploader -> messaging.send(new FileSystemResponse.AppendAck())
+				.then(() -> messaging.receiveBinaryStream().streamTo(uploader.withAcknowledgement(
+					ack -> ack
+						.whenComplete(appendFinishPromise.recordStats())
+						.whenComplete(toLogger(logger, TRACE, "onAppendComplete", append, this))))))
+			.then(() -> messaging.send(new FileSystemResponse.AppendFinished()))
+			.then(messaging::sendEndOfStream)
+			.whenResult(messaging::close)
+			.whenComplete(appendBeginPromise.recordStats())
+			.whenComplete(toLogger(logger, TRACE, "append", append, this));
 
 	}
 
@@ -224,65 +224,74 @@ public final class FileSystemServer extends AbstractReactiveServer {
 		long offset = download.offset();
 		long limit = download.limit();
 		return fileSystem.info(name)
-				.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
-				.then(meta -> {
-					//noinspection ConstantConditions
-					long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));
+			.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
+			.then(meta -> {
+				//noinspection ConstantConditions
+				long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));
 
-					return fileSystem.download(name, offset, fixedLimit)
-							.then(supplier -> messaging.send(new FileSystemResponse.DownloadSize(fixedLimit))
-									.whenException(supplier::closeEx)
-									.then(() -> supplier.streamTo(messaging.sendBinaryStream()
-											.withAcknowledgement(ack -> ack
-													.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", meta, offset, fixedLimit, this))
-													.whenComplete(downloadFinishPromise.recordStats())))))
-							.whenComplete(toLogger(logger, "download", meta, offset, fixedLimit, this));
-				})
-				.whenComplete(downloadBeginPromise.recordStats());
+				return fileSystem.download(name, offset, fixedLimit)
+					.then(supplier -> messaging.send(new FileSystemResponse.DownloadSize(fixedLimit))
+						.whenException(supplier::closeEx)
+						.then(() -> supplier.streamTo(messaging.sendBinaryStream()
+							.withAcknowledgement(ack -> ack
+								.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", meta, offset, fixedLimit, this))
+								.whenComplete(downloadFinishPromise.recordStats())))))
+					.whenComplete(toLogger(logger, "download", meta, offset, fixedLimit, this));
+			})
+			.whenComplete(downloadBeginPromise.recordStats());
 	}
 
-	private Promise<Void> handleCopy(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Copy copy) throws
-			Exception {
+	private Promise<Void> handleCopy(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Copy copy
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.copy(copy.name(), copy.target()), FileSystemResponse.CopyFinished::new, copyPromise);
 	}
 
-	private Promise<Void> handleCopyAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.CopyAll copyAll) throws
-			Exception {
+	private Promise<Void> handleCopyAll(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.CopyAll copyAll
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.copyAll(copyAll.sourceToTarget()), FileSystemResponse.CopyAllFinished::new, copyAllPromise);
 	}
 
-	private Promise<Void> handleMove(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Move move) throws
-			Exception {
+	private Promise<Void> handleMove(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Move move
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.move(move.name(), move.target()), FileSystemResponse.MoveFinished::new, movePromise);
 	}
 
-	private Promise<Void> handleMoveAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.MoveAll moveAll) throws
-			Exception {
+	private Promise<Void> handleMoveAll(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.MoveAll moveAll
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.moveAll(moveAll.sourceToTarget()), FileSystemResponse.MoveAllFinished::new, moveAllPromise);
 	}
 
-	private Promise<Void> handleDelete(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Delete delete) throws
-			Exception {
+	private Promise<Void> handleDelete(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Delete delete
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.delete(delete.name()), FileSystemResponse.DeleteFinished::new, deletePromise);
 	}
 
-	private Promise<Void> handleDeleteAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.DeleteAll
-			deleteAll) throws Exception {
+	private Promise<Void> handleDeleteAll(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.DeleteAll deleteAll
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.deleteAll(deleteAll.toDelete()), FileSystemResponse.DeleteAllFinished::new, deleteAllPromise);
 	}
 
-	private Promise<Void> handleList(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.List list) throws
-			Exception {
+	private Promise<Void> handleList(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.List list
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.list(list.glob()), FileSystemResponse.ListFinished::new, listPromise);
 	}
 
-	private Promise<Void> handleInfo(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Info info) throws
-			Exception {
+	private Promise<Void> handleInfo(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.Info info
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.info(info.name()), FileSystemResponse.InfoFinished::new, infoPromise);
 	}
 
-	private Promise<Void> handleInfoAll(IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.InfoAll infoAll) throws
-			Exception {
+	private Promise<Void> handleInfoAll(
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, FileSystemRequest.InfoAll infoAll
+	) throws Exception {
 		return simpleHandle(messaging, () -> fileSystem.infoAll(infoAll.names()), FileSystemResponse.InfoAllFinished::new, infoAllPromise);
 	}
 
@@ -291,24 +300,20 @@ public final class FileSystemServer extends AbstractReactiveServer {
 	}
 
 	private Promise<Void> simpleHandle(
-			IMessaging<FileSystemRequest, FileSystemResponse> messaging,
-			SupplierEx<Promise<Void>> action,
-			Supplier<FileSystemResponse> response,
-			PromiseStats stats
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, SupplierEx<Promise<Void>> action,
+		Supplier<FileSystemResponse> response, PromiseStats stats
 	) throws Exception {
 		return simpleHandle(messaging, action, $ -> response.get(), stats);
 	}
 
 	private <R> Promise<Void> simpleHandle(
-			IMessaging<FileSystemRequest, FileSystemResponse> messaging,
-			SupplierEx<Promise<R>> action,
-			Function<R, FileSystemResponse> response,
-			PromiseStats stats
+		IMessaging<FileSystemRequest, FileSystemResponse> messaging, SupplierEx<Promise<R>> action,
+		Function<R, FileSystemResponse> response, PromiseStats stats
 	) throws Exception {
 		return action.get()
-				.then(res -> messaging.send(response.apply(res)))
-				.then(messaging::sendEndOfStream)
-				.whenComplete(stats.recordStats());
+			.then(res -> messaging.send(response.apply(res)))
+			.then(messaging::sendEndOfStream)
+			.whenComplete(stats.recordStats());
 	}
 
 	@Override

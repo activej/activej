@@ -35,34 +35,33 @@ public class Decoders {
 	public static final String REQUIRED_PATH_PARAM = "Required path param: %s";
 	public static final String REQUIRED_COOKIE = "Required cookie: %s";
 
-	private static <T> Decoder<T> create(String paramName,
-			Mapper<String, T> fn,
-			BiFunction<HttpRequest, String, String> paramSupplier,
-			String message) {
+	private static <T> Decoder<T> create(
+		String paramName, Mapper<String, T> fn, BiFunction<HttpRequest, String, String> paramSupplier, String message
+	) {
 		return new AbstractDecoder<>(paramName) {
 			@Override
 			public Either<T, DecodeErrors> decode(HttpRequest request) {
 				String str = paramSupplier.apply(request, paramName);
 				return str != null ?
-						fn.map(str)
-								.mapRight(DecodeErrors::of) :
-						Either.right(DecodeErrors.of(message, paramName));
+					fn.map(str)
+						.mapRight(DecodeErrors::of) :
+					Either.right(DecodeErrors.of(message, paramName));
 			}
 		};
 	}
 
-	private static <T> Decoder<T> create(String paramName,
-			Mapper<String, T> fn,
-			BiFunction<HttpRequest, String, String> paramSupplier,
-			@Nullable T defaultValue) {
+	private static <T> Decoder<T> create(
+		String paramName, Mapper<String, T> fn, BiFunction<HttpRequest, String, String> paramSupplier,
+		@Nullable T defaultValue
+	) {
 		return new AbstractDecoder<>(paramName) {
 			@Override
 			public Either<T, DecodeErrors> decode(HttpRequest request) {
 				String str = paramSupplier.apply(request, paramName);
 				return str != null ?
-						fn.map(str)
-								.mapRight(DecodeErrors::of) :
-						Either.left(defaultValue);
+					fn.map(str)
+						.mapRight(DecodeErrors::of) :
+					Either.left(defaultValue);
 			}
 		};
 	}

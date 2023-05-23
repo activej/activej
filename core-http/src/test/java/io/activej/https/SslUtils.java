@@ -39,8 +39,9 @@ public class SslUtils {
 		return kmf.getKeyManagers();
 	}
 
-	static SSLContext createSslContext(String algorithm, KeyManager[] keyManagers, TrustManager[] trustManagers,
-			SecureRandom secureRandom) throws NoSuchAlgorithmException, KeyManagementException {
+	static SSLContext createSslContext(
+		String algorithm, KeyManager[] keyManagers, TrustManager[] trustManagers, SecureRandom secureRandom
+	) throws NoSuchAlgorithmException, KeyManagementException {
 		SSLContext instance = SSLContext.getInstance(algorithm);
 		instance.init(keyManagers, trustManagers, secureRandom);
 		return instance;

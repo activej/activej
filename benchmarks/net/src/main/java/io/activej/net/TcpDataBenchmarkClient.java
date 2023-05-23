@@ -41,12 +41,12 @@ public class TcpDataBenchmarkClient extends Launcher {
 	Config config;
 
 	@Provides
-	NioReactor reactor() { return Eventloop.create(); }
+	NioReactor reactor() {return Eventloop.create();}
 
 	@Provides
 	Config config() {
 		return Config.create()
-				.overrideWith(Config.ofSystemProperties("config"));
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 		long avgRoundTime = timeAllRounds / benchmarkRounds;
 		long avgRps = avgRoundTime != 0 ? (items * benchmarkRounds * 1000L / timeAllRounds) : 0;
 		System.out.println("Total time: " + timeAllRounds + "ms; Average round time: " + avgRoundTime + "ms; Best time: " +
-				bestTime + "ms; Worst time: " + worstTime + "ms; Average RPS: " + avgRps);
+			bestTime + "ms; Worst time: " + worstTime + "ms; Average RPS: " + avgRps);
 	}
 
 	private long round() throws Exception {
@@ -108,17 +108,17 @@ public class TcpDataBenchmarkClient extends Launcher {
 		int limit = config.get(ofInteger(), "benchmark.totalElements", TOTAL_ELEMENTS);
 
 		return TcpSocket.connect(reactor, address)
-				.then(socket -> {
-					StreamSupplierOfSequence.create(limit)
-							.transformWith(ChannelSerializer.create(INT_SERIALIZER))
-							.streamTo(ChannelConsumers.ofSocket(socket));
+			.then(socket -> {
+				StreamSupplierOfSequence.create(limit)
+					.transformWith(ChannelSerializer.create(INT_SERIALIZER))
+					.streamTo(ChannelConsumers.ofSocket(socket));
 
-					return ChannelSuppliers.ofSocket(socket)
-							.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-							.streamTo(StreamConsumers.skip())
-							.whenComplete(socket::close)
-							.map($ -> System.currentTimeMillis() - start);
-				});
+				return ChannelSuppliers.ofSocket(socket)
+					.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
+					.streamTo(StreamConsumers.skip())
+					.whenComplete(socket::close)
+					.map($ -> System.currentTimeMillis() - start);
+			});
 	}
 
 	static final class StreamSupplierOfSequence extends AbstractStreamSupplier<Integer> {

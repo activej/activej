@@ -22,17 +22,17 @@ public final class RendezvousPartitionGroup<P> {
 
 	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds, int replicas, boolean repartition, boolean active) {
 		return builder(serverIds)
-				.withReplicas(replicas)
-				.withRepartition(repartition)
-				.withActive(active)
-				.build();
+			.withReplicas(replicas)
+			.withRepartition(repartition)
+			.withActive(active)
+			.build();
 	}
 
 	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds) {
 		return builder(serverIds)
-				.withReplicas(1)
-				.withActive(true)
-				.build();
+			.withReplicas(1)
+			.withActive(true)
+			.build();
 	}
 
 	public static <P> RendezvousPartitionGroup<P>.Builder builder(Set<P> serverIds) {

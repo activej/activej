@@ -35,7 +35,7 @@ import java.util.concurrent.Executor;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class ClassPathStaticLoader extends AbstractReactive
-		implements IStaticLoader {
+	implements IStaticLoader {
 	private static final boolean CHECKS = Checks.isEnabled(ClassPathStaticLoader.class);
 
 	private static final String ROOT = "/";

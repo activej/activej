@@ -17,8 +17,8 @@ public final class BlockingReactorExecutorTest {
 	@Before
 	public void setUp() {
 		eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 	}
 
 	@Test

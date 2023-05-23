@@ -72,86 +72,86 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 		IStaticLoader staticLoader = IStaticLoader.ofClassPath(reactor, executor, "debug");
 
 		this.servlet = RoutingServlet.builder(reactor)
-				.with("/*", StaticServlet.builder(reactor, staticLoader)
-						.withIndexHtml()
-						.build())
-				.with("/api/*", RoutingServlet.builder(reactor)
-						.with(GET, "/partitions", request -> ok200()
-								.withJson(objectMapper.writeValueAsString(partitions.stream()
-										.map(Partition::address)
-										.collect(Collectors.toList())))
-								.toPromise())
-						.with(GET, "/tasks", request ->
-								Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
-										.then(partitionStats -> {
-											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
-											for (int i = 0; i < partitionStats.size(); i++) {
-												PartitionData partitionStat = partitionStats.get(i);
-												for (TaskDescription taskDesc : partitionStat.lastTasks()) {
-													tasks.computeIfAbsent(taskDesc.id(), $ -> Arrays.asList(new TaskStatus[partitionStats.size()]))
-															.set(i, taskDesc.status());
-												}
-											}
-											return ok200()
-													.withJson(objectMapper.writeValueAsString(tasks))
-													.toPromise();
-										}))
-						.with(GET, "/tasks/:taskID", request -> {
-							long id = getTaskId(request);
-							return Promises.toList(partitions.stream().map(p -> getTask(p.address(), id)).collect(toList()))
-									.then(localStats -> {
-										List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
-
-										Map<Integer, List<@Nullable NodeStat>> nodeStats = new HashMap<>();
-
-										for (int i = 0; i < localStats.size(); i++) {
-											TaskData localTaskData = localStats.get(i);
-											if (localTaskData == null) {
-												continue;
-											}
-											statuses.set(i, localTaskData.status());
-											int finalI = i;
-											localTaskData.nodes()
-													.forEach((index, nodeStat) ->
-															nodeStats.computeIfAbsent(index, $ -> Arrays.asList(new NodeStat[localStats.size()]))
-																	.set(finalI, nodeStat));
-										}
-
-										Map<Integer, @Nullable NodeStat> reduced = nodeStats.entrySet().stream()
-												.collect(HashMap::new, (m, e) -> {
-													NodeStat r = reduce(e.getValue(), env);
-													if (r != null) {
-														m.put(e.getKey(), r);
-													}
-												}, HashMap::putAll);
-
-										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).graphViz(), reduced);
-										return ok200()
-												.withJson(objectMapper.writeValueAsString(taskData))
-												.toPromise();
-									});
-						})
-						.with(GET, "/tasks/:taskID/:index", request -> {
-							long id = getTaskId(request);
-							String indexParam = request.getPathParameter("index");
-							Partition partition;
-							try {
-								partition = partitions.get(Integer.parseInt(indexParam));
-							} catch (NumberFormatException | IndexOutOfBoundsException e) {
-								throw HttpError.ofCode(400, "Bad index");
+			.with("/*", StaticServlet.builder(reactor, staticLoader)
+				.withIndexHtml()
+				.build())
+			.with("/api/*", RoutingServlet.builder(reactor)
+				.with(GET, "/partitions", request -> ok200()
+					.withJson(objectMapper.writeValueAsString(partitions.stream()
+						.map(Partition::address)
+						.collect(Collectors.toList())))
+					.toPromise())
+				.with(GET, "/tasks", request ->
+					Promises.toList(partitions.stream().map(p -> getPartitionData(p.address())))
+						.then(partitionStats -> {
+							Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
+							for (int i = 0; i < partitionStats.size(); i++) {
+								PartitionData partitionStat = partitionStats.get(i);
+								for (TaskDescription taskDesc : partitionStat.lastTasks()) {
+									tasks.computeIfAbsent(taskDesc.id(), $ -> Arrays.asList(new TaskStatus[partitionStats.size()]))
+										.set(i, taskDesc.status());
+								}
 							}
-							return getTask(partition.address(), id)
-									.then(task -> ok200()
-											.withJson(objectMapper.writeValueAsString(new LocalTaskData(task.status(), task.graphViz(),
-													task.nodes().entrySet().stream()
-															.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-													task.startTime(),
-													task.finishTime(),
-													task.error())))
-											.toPromise());
-						})
-						.build())
-				.build();
+							return ok200()
+								.withJson(objectMapper.writeValueAsString(tasks))
+								.toPromise();
+						}))
+				.with(GET, "/tasks/:taskID", request -> {
+					long id = getTaskId(request);
+					return Promises.toList(partitions.stream().map(p -> getTask(p.address(), id)).collect(toList()))
+						.then(localStats -> {
+							List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
+
+							Map<Integer, List<@Nullable NodeStat>> nodeStats = new HashMap<>();
+
+							for (int i = 0; i < localStats.size(); i++) {
+								TaskData localTaskData = localStats.get(i);
+								if (localTaskData == null) {
+									continue;
+								}
+								statuses.set(i, localTaskData.status());
+								int finalI = i;
+								localTaskData.nodes()
+									.forEach((index, nodeStat) ->
+										nodeStats.computeIfAbsent(index, $ -> Arrays.asList(new NodeStat[localStats.size()]))
+											.set(finalI, nodeStat));
+							}
+
+							Map<Integer, @Nullable NodeStat> reduced = nodeStats.entrySet().stream()
+								.collect(HashMap::new, (m, e) -> {
+									NodeStat r = reduce(e.getValue(), env);
+									if (r != null) {
+										m.put(e.getKey(), r);
+									}
+								}, HashMap::putAll);
+
+							ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).graphViz(), reduced);
+							return ok200()
+								.withJson(objectMapper.writeValueAsString(taskData))
+								.toPromise();
+						});
+				})
+				.with(GET, "/tasks/:taskID/:index", request -> {
+					long id = getTaskId(request);
+					String indexParam = request.getPathParameter("index");
+					Partition partition;
+					try {
+						partition = partitions.get(Integer.parseInt(indexParam));
+					} catch (NumberFormatException | IndexOutOfBoundsException e) {
+						throw HttpError.ofCode(400, "Bad index");
+					}
+					return getTask(partition.address(), id)
+						.then(task -> ok200()
+							.withJson(objectMapper.writeValueAsString(new LocalTaskData(task.status(), task.graphViz(),
+								task.nodes().entrySet().stream()
+									.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+								task.startTime(),
+								task.finishTime(),
+								task.error())))
+							.toPromise());
+				})
+				.build())
+			.build();
 	}
 
 	private static @Nullable NodeStat reduce(List<NodeStat> stats, ResourceLocator env) {
@@ -177,42 +177,42 @@ public final class DataflowDebugServlet extends AbstractReactive implements Asyn
 
 	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
 		return TcpSocket.connect(getCurrentReactor(), address)
-				.then(socket -> {
-					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
-					return DataflowClient.performHandshake(messaging)
-							.then(() -> messaging.send(new GetTasks(null)))
-							.then(messaging::receive)
-							.map(response -> {
-								messaging.close();
-								if (response instanceof PartitionData partitionData) {
-									return partitionData;
-								}
-								if (response instanceof Result result) {
-									throw new DataflowException("Error on remote server " + address + ": " + result.error());
-								}
-								throw new DataflowException("Bad response from server");
-							});
-				});
+			.then(socket -> {
+				IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+				return DataflowClient.performHandshake(messaging)
+					.then(() -> messaging.send(new GetTasks(null)))
+					.then(messaging::receive)
+					.map(response -> {
+						messaging.close();
+						if (response instanceof PartitionData partitionData) {
+							return partitionData;
+						}
+						if (response instanceof Result result) {
+							throw new DataflowException("Error on remote server " + address + ": " + result.error());
+						}
+						throw new DataflowException("Bad response from server");
+					});
+			});
 	}
 
 	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
 		return TcpSocket.connect(getCurrentReactor(), address)
-				.then(socket -> {
-					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
-					return DataflowClient.performHandshake(messaging)
-							.then(() -> messaging.send(new GetTasks(taskId)))
-							.then($ -> messaging.receive())
-							.map(response -> {
-								messaging.close();
-								if (response instanceof TaskData taskData) {
-									return taskData;
-								}
-								if (response instanceof Result result) {
-									throw new DataflowException("Error on remote server " + address + ": " + result.error());
-								}
-								throw new DataflowException("Bad response from server");
-							});
-				});
+			.then(socket -> {
+				IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+				return DataflowClient.performHandshake(messaging)
+					.then(() -> messaging.send(new GetTasks(taskId)))
+					.then($ -> messaging.receive())
+					.map(response -> {
+						messaging.close();
+						if (response instanceof TaskData taskData) {
+							return taskData;
+						}
+						if (response instanceof Result result) {
+							throw new DataflowException("Error on remote server " + address + ": " + result.error());
+						}
+						throw new DataflowException("Bad response from server");
+					});
+			});
 	}
 
 	@Override

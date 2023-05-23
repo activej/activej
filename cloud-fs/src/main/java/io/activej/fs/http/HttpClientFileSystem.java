@@ -54,7 +54,8 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Inherits all the limitations of {@link IFileSystem} implementation located on server.
  */
 public final class HttpClientFileSystem extends AbstractReactive
-		implements IFileSystem {
+	implements IFileSystem {
+
 	private final IHttpClient client;
 	private final String url;
 
@@ -85,8 +86,8 @@ public final class HttpClientFileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		UrlBuilder urlBuilder = UrlBuilder.create()
-				.withPath(APPEND.path())
-				.withPath(name.split("/"));
+			.withPath(APPEND.path())
+			.withPath(name.split("/"));
 		if (offset != 0) {
 			urlBuilder.withQuery("offset", offset);
 		}
@@ -98,8 +99,8 @@ public final class HttpClientFileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkArgument(offset >= 0 && limit >= 0);
 		UrlBuilder urlBuilder = UrlBuilder.create()
-				.withPath(DOWNLOAD.path())
-				.withPath(name.split("/"));
+			.withPath(DOWNLOAD.path())
+			.withPath(name.split("/"));
 		if (offset != 0) {
 			urlBuilder.withQuery("offset", offset);
 		}
@@ -107,67 +108,67 @@ public final class HttpClientFileSystem extends AbstractReactive
 			urlBuilder.withQuery("limit", limit);
 		}
 		return client.request(
-						HttpRequest.get(url + urlBuilder).build())
-				.then(HttpClientFileSystem::checkResponse)
-				.map(HttpMessage::takeBodyStream);
+				HttpRequest.get(url + urlBuilder).build())
+			.then(HttpClientFileSystem::checkResponse)
+			.map(HttpMessage::takeBodyStream);
 	}
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(url + UrlBuilder.create()
-										.withPath(LIST.path())
-										.withQuery("glob", glob))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.then(response -> response.loadBody())
-				.map(body -> fromJson(STRING_META_MAP_TYPE, body));
+				HttpRequest.get(url + UrlBuilder.create()
+						.withPath(LIST.path())
+						.withQuery("glob", glob))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.then(response -> response.loadBody())
+			.map(body -> fromJson(STRING_META_MAP_TYPE, body));
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(url + UrlBuilder.create().withPath(INFO.path(), name)).build())
-				.then(HttpClientFileSystem::checkResponse)
-				.then(response -> response.loadBody())
-				.map(body -> fromJson(FileMetadata.class, body));
+				HttpRequest.get(url + UrlBuilder.create().withPath(INFO.path(), name)).build())
+			.then(HttpClientFileSystem::checkResponse)
+			.then(response -> response.loadBody())
+			.map(body -> fromJson(FileMetadata.class, body));
 	}
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(url + UrlBuilder.create()
-										.withPath(INFO_ALL.path()))
-								.withBody(toJson(names))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.then(response -> response.loadBody())
-				.map(body -> fromJson(STRING_META_MAP_TYPE, body));
+				HttpRequest.get(url + UrlBuilder.create()
+						.withPath(INFO_ALL.path()))
+					.withBody(toJson(names))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.then(response -> response.loadBody())
+			.map(body -> fromJson(STRING_META_MAP_TYPE, body));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.get(url + UrlBuilder.create().withPath(PING.path())).build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.get(url + UrlBuilder.create().withPath(PING.path())).build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	@Override
 	public Promise<Void> move(String name, String target) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.post(url + UrlBuilder.create()
-										.withPath(MOVE.path())
-										.withQuery("name", name)
-										.withQuery("target", target))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.post(url + UrlBuilder.create()
+						.withPath(MOVE.path())
+						.withQuery("name", name)
+						.withQuery("target", target))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	@Override
@@ -177,25 +178,25 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-						HttpRequest.post(url + UrlBuilder.create()
-										.withPath(MOVE_ALL.path()))
-								.withBody(toJson(sourceToTarget))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.post(url + UrlBuilder.create()
+						.withPath(MOVE_ALL.path()))
+					.withBody(toJson(sourceToTarget))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.post(url + UrlBuilder.create()
-										.withPath(COPY.path())
-										.withQuery("name", name)
-										.withQuery("target", target))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.post(url + UrlBuilder.create()
+						.withPath(COPY.path())
+						.withQuery("name", name)
+						.withQuery("target", target))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	@Override
@@ -205,58 +206,58 @@ public final class HttpClientFileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return client.request(
-						HttpRequest.post(url + UrlBuilder.create()
-										.withPath(COPY_ALL.path()))
-								.withBody(toJson(sourceToTarget))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.post(url + UrlBuilder.create()
+						.withPath(COPY_ALL.path()))
+					.withBody(toJson(sourceToTarget))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	@Override
 	public Promise<Void> delete(String name) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.builder(HttpMethod.DELETE,
-										url + UrlBuilder.create()
-												.withPath(DELETE.path())
-												.withPath(name.split("/")))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.builder(HttpMethod.DELETE,
+						url + UrlBuilder.create()
+							.withPath(DELETE.path())
+							.withPath(name.split("/")))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		checkInReactorThread(this);
 		return client.request(
-						HttpRequest.post(url + UrlBuilder.create().withPath(DELETE_ALL.path()))
-								.withBody(toJson(toDelete))
-								.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.toVoid();
+				HttpRequest.post(url + UrlBuilder.create().withPath(DELETE_ALL.path()))
+					.withBody(toJson(toDelete))
+					.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.toVoid();
 	}
 
 	private static Promise<HttpResponse> checkResponse(HttpResponse response) throws HttpError {
 		return switch (response.getCode()) {
 			case 200, 206 -> Promise.of(response);
 			case 500 -> response.loadBody()
-					.map(body -> {
-						try {
-							throw fromJson(FileSystemException.class, body);
-						} catch (MalformedDataException ignored) {
-							throw HttpError.ofCode(500);
-						}
-					});
+				.map(body -> {
+					try {
+						throw fromJson(FileSystemException.class, body);
+					} catch (MalformedDataException ignored) {
+						throw HttpError.ofCode(500);
+					}
+				});
 			default -> throw HttpError.ofCode(response.getCode());
 		};
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(String filename, @Nullable Long size) {
 		HttpRequest.Builder builder = HttpRequest.post(
-				url + UrlBuilder.create()
-						.withPath(UPLOAD.path())
-						.withPath(filename.split("/")));
+			url + UrlBuilder.create()
+				.withPath(UPLOAD.path())
+				.withPath(filename.split("/")));
 
 		if (size != null) {
 			builder.withHeader(CONTENT_LENGTH, String.valueOf(size));
@@ -269,27 +270,27 @@ public final class HttpClientFileSystem extends AbstractReactive
 		SettablePromise<ChannelConsumer<ByteBuf>> channelPromise = new SettablePromise<>();
 		SettablePromise<HttpResponse> responsePromise = new SettablePromise<>();
 		client.request(builder
-						.withBodyStream(ChannelSuppliers.ofPromise(responsePromise
-								.map(response -> {
-									ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
-									ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();
-									channelPromise.trySet(consumer
-											.transformWith(transformer)
-											.withAcknowledgement(ack -> ack.both(response.loadBody()
-													.map(body -> fromJson(UploadAcknowledgement.class, body))
-													.whenResult(uploadAck -> {
-														if (!uploadAck.isOk()) throw uploadAck.getError();
-													})
-													.whenException(e -> {
-														channelPromise.trySetException(e);
-														buffer.closeEx(e);
-													}))));
-									return buffer.getSupplier();
-								})))
-						.build())
-				.then(HttpClientFileSystem::checkResponse)
-				.whenException(channelPromise::trySetException)
-				.whenComplete(responsePromise::trySet);
+				.withBodyStream(ChannelSuppliers.ofPromise(responsePromise
+					.map(response -> {
+						ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
+						ChannelConsumer<ByteBuf> consumer = buffer.getConsumer();
+						channelPromise.trySet(consumer
+							.transformWith(transformer)
+							.withAcknowledgement(ack -> ack.both(response.loadBody()
+								.map(body -> fromJson(UploadAcknowledgement.class, body))
+								.whenResult(uploadAck -> {
+									if (!uploadAck.isOk()) throw uploadAck.getError();
+								})
+								.whenException(e -> {
+									channelPromise.trySetException(e);
+									buffer.closeEx(e);
+								}))));
+						return buffer.getSupplier();
+					})))
+				.build())
+			.then(HttpClientFileSystem::checkResponse)
+			.whenException(channelPromise::trySetException)
+			.whenComplete(responsePromise::trySet);
 
 		return channelPromise;
 	}

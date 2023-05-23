@@ -46,7 +46,7 @@ import static java.lang.Math.max;
  * that is serialized into binary data using given {@link BinarySerializer}.
  */
 public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
-		implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf> {
+	implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
 	private static final boolean CHECKS = Checks.isEnabled(ChannelSerializer.class);
 
@@ -209,14 +209,14 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 				Promise<Void> acceptPromise = output.accept(bufs.poll());
 				if (acceptPromise.isResult()) continue;
 				acceptPromise
-						.subscribe(($, e) -> {
-							if (e == null) {
-								sending = false;
-								send();
-							} else {
-								closeEx(e);
-							}
-						});
+					.subscribe(($, e) -> {
+						if (e == null) {
+							sending = false;
+							send();
+						} else {
+							closeEx(e);
+						}
+					});
 				return;
 			}
 			sending = false;
@@ -224,13 +224,13 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 		} else if (isEndOfStream()) {
 			sending = true;
 			Promise.complete()
-					.then(() ->
-							explicitEndOfStream != null ?
-									output.accept(ByteBuf.wrapForReading(explicitEndOfStream)) :
-									Promise.complete())
-					.then(output::acceptEndOfStream)
-					.whenResult(this::acknowledge)
-					.whenException(this::closeEx);
+				.then(() ->
+					explicitEndOfStream != null ?
+						output.accept(ByteBuf.wrapForReading(explicitEndOfStream)) :
+						Promise.complete())
+				.then(output::acceptEndOfStream)
+				.whenResult(this::acknowledge)
+				.whenException(this::closeEx);
 		} else {
 			resume(input);
 		}

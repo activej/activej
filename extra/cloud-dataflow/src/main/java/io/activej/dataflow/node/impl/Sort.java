@@ -50,8 +50,10 @@ public final class Sort<K, T> extends AbstractNode {
 	public final StreamId input;
 	public final StreamId output;
 
-	public Sort(int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
-			boolean deduplicate, int itemsInMemorySize, StreamId input, StreamId output) {
+	public Sort(
+		int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
+		boolean deduplicate, int itemsInMemorySize, StreamId input, StreamId output
+	) {
 		super(index);
 		this.streamSchema = streamSchema;
 		this.keyFunction = keyFunction;
@@ -78,22 +80,22 @@ public final class Sort<K, T> extends AbstractNode {
 		StreamSorterStorageFactory storageFactory = task.get(StreamSorterStorageFactory.class);
 		IStreamSorterStorage<T> storage = storageFactory.create(streamSchema, task, task.getExecutionPromise());
 		StreamSorter<K, T> streamSorter = StreamSorter.builder(storage, keyFunction, keyComparator, deduplicate, itemsInMemorySize)
-				.withSortingExecutor(executor)
-				.build();
+			.withSortingExecutor(executor)
+			.build();
 		task.bindChannel(input, streamSorter.getInput());
 		task.export(output, streamSorter.getOutput());
 		streamSorter.getInput().getAcknowledgement()
-				.whenComplete(() -> storageFactory.cleanup(storage));
+			.whenComplete(() -> storageFactory.cleanup(storage));
 	}
 
 	@Override
 	public String toString() {
 		return "Sort{type=" + streamSchema +
-				", keyFunction=" + keyFunction.getClass().getSimpleName() +
-				", keyComparator=" + keyComparator.getClass().getSimpleName() +
-				", deduplicate=" + deduplicate +
-				", itemsInMemorySize=" + itemsInMemorySize +
-				", input=" + input +
-				", output=" + output + '}';
+			", keyFunction=" + keyFunction.getClass().getSimpleName() +
+			", keyComparator=" + keyComparator.getClass().getSimpleName() +
+			", deduplicate=" + deduplicate +
+			", itemsInMemorySize=" + itemsInMemorySize +
+			", input=" + input +
+			", output=" + output + '}';
 	}
 }

@@ -24,23 +24,23 @@ public final class Concat<T> extends AbstractChannelSupplier<T> {
 	@Override
 	protected Promise<T> doGet() {
 		return current.get()
-				.then((value, e) -> {
-					if (e == null) {
-						if (value != null) {
-							return Promise.of(value);
-						} else {
-							if (iterator.hasNext()) {
-								current = iterator.next();
-								return get();
-							} else {
-								return Promise.of(null);
-							}
-						}
+			.then((value, e) -> {
+				if (e == null) {
+					if (value != null) {
+						return Promise.of(value);
 					} else {
-						closeEx(e);
-						return Promise.ofException(e);
+						if (iterator.hasNext()) {
+							current = iterator.next();
+							return get();
+						} else {
+							return Promise.of(null);
+						}
 					}
-				});
+				} else {
+					closeEx(e);
+					return Promise.ofException(e);
+				}
+			});
 	}
 
 	@Override

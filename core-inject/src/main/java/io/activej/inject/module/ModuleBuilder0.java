@@ -100,96 +100,123 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1> ModuleBuilder1<T> to(TupleConstructor1<T1, ? extends T> constructor,
-			Class<T1> dependency1) {
+	default <T1> ModuleBuilder1<T> to(
+		TupleConstructor1<T1, ? extends T> constructor,
+		Class<T1> dependency1
+	) {
 		return to(Binding.to(constructor, dependency1));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2> ModuleBuilder1<T> to(TupleConstructor2<T1, T2, ? extends T> constructor,
-			Class<T1> dependency1, Class<T2> dependency2) {
+	default <T1, T2> ModuleBuilder1<T> to(
+		TupleConstructor2<T1, T2, ? extends T> constructor,
+		Class<T1> dependency1, Class<T2> dependency2
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3> ModuleBuilder1<T> to(TupleConstructor3<T1, T2, T3, ? extends T> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3) {
+	default <T1, T2, T3> ModuleBuilder1<T> to(
+		TupleConstructor3<T1, T2, T3, ? extends T> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3, T4> ModuleBuilder1<T> to(TupleConstructor4<T1, T2, T3, T4, ? extends T> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4) {
+	default <T1, T2, T3, T4> ModuleBuilder1<T> to(
+		TupleConstructor4<T1, T2, T3, T4, ? extends T> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3, T4, T5> ModuleBuilder1<T> to(TupleConstructor5<T1, T2, T3, T4, T5, ? extends T> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4, Class<T5> dependency5) {
+	default <T1, T2, T3, T4, T5> ModuleBuilder1<T> to(
+		TupleConstructor5<T1, T2, T3, T4, T5, ? extends T> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4,
+		Class<T5> dependency5
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4, dependency5));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(TupleConstructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
-			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4, Class<T5> dependency5, Class<T6> dependency6) {
+	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(
+		TupleConstructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
+		Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4,
+		Class<T5> dependency5, Class<T6> dependency6
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1> ModuleBuilder1<T> to(TupleConstructor1<T1, ? extends T> constructor,
-			Key<T1> dependency1) {
+	default <T1> ModuleBuilder1<T> to(
+		TupleConstructor1<T1, ? extends T> constructor,
+		Key<T1> dependency1
+	) {
 		return to(Binding.to(constructor, dependency1));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2> ModuleBuilder1<T> to(TupleConstructor2<T1, T2, ? extends T> constructor,
-			Key<T1> dependency1, Key<T2> dependency2) {
+	default <T1, T2> ModuleBuilder1<T> to(
+		TupleConstructor2<T1, T2, ? extends T> constructor,
+		Key<T1> dependency1, Key<T2> dependency2
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3> ModuleBuilder1<T> to(TupleConstructor3<T1, T2, T3, ? extends T> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
+	default <T1, T2, T3> ModuleBuilder1<T> to(
+		TupleConstructor3<T1, T2, T3, ? extends T> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3, T4> ModuleBuilder1<T> to(TupleConstructor4<T1, T2, T3, T4, ? extends T> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
+	default <T1, T2, T3, T4> ModuleBuilder1<T> to(
+		TupleConstructor4<T1, T2, T3, T4, ? extends T> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3, T4, T5> ModuleBuilder1<T> to(TupleConstructor5<T1, T2, T3, T4, T5, ? extends T> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
+	default <T1, T2, T3, T4, T5> ModuleBuilder1<T> to(
+		TupleConstructor5<T1, T2, T3, T4, T5, ? extends T> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4, dependency5));
 	}
 
 	/**
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
-	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(TupleConstructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
-			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
+	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(
+		TupleConstructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
+		Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5,
+		Key<T6> dependency6
+	) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6));
 	}
 

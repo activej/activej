@@ -49,12 +49,10 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	@Eager
 	@Named("repartition")
-	TaskScheduler repartitionScheduler(
-			ClusterRepartitionController controller,
-			Config config) {
+	TaskScheduler repartitionScheduler(ClusterRepartitionController controller, Config config) {
 		return TaskScheduler.builder(controller.getReactor(), controller::repartition)
-				.initialize(ofTaskScheduler(config.getChild("fs.repartition")))
-				.build();
+			.initialize(ofTaskScheduler(config.getChild("fs.repartition")))
+			.build();
 	}
 
 	@Provides
@@ -62,34 +60,35 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Named("clusterDeadCheck")
 	TaskScheduler deadCheckScheduler(Config config, FileSystemPartitions partitions) {
 		return TaskScheduler.builder(partitions.getReactor(), partitions::checkDeadPartitions)
-				.initialize(ofTaskScheduler(config.getChild("fs.repartition.deadCheck")))
-				.build();
+			.initialize(ofTaskScheduler(config.getChild("fs.repartition.deadCheck")))
+			.build();
 	}
 
 	@Provides
-	ClusterRepartitionController repartitionController(Reactor reactor,
-			FileSystemServer localServer, FileSystemPartitions partitions,
-			Config config) {
+	ClusterRepartitionController repartitionController(
+		Reactor reactor, FileSystemServer localServer, FileSystemPartitions partitions, Config config
+	) {
 		String localPartitionId = first(partitions.getAllPartitions());
 		assert localPartitionId != null;
 
 		return ClusterRepartitionController.builder(reactor, localPartitionId, partitions)
-				.initialize(ofClusterRepartitionController(config.getChild("fs.repartition")))
-				.build();
+			.initialize(ofClusterRepartitionController(config.getChild("fs.repartition")))
+			.build();
 	}
 
 	@Provides
 	IDiscoveryService discoveryService(NioReactor reactor,
-			IFileSystem fileSystem,
-			Config config) throws MalformedDataException {
+		IFileSystem fileSystem,
+		Config config) throws MalformedDataException {
+
 		return Initializers.constantDiscoveryService(reactor, fileSystem, config);
 	}
 
 	@Provides
 	FileSystemPartitions fileSystemPartitions(Reactor reactor, IDiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
 		return FileSystemPartitions.builder(reactor, discoveryService)
-				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER))
-				.build();
+			.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER))
+			.build();
 	}
 	//[END EXAMPLE]
 
@@ -106,11 +105,11 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Override
 	protected Config createConfig() {
 		return Config.create()
-				.with("fs.repartition.schedule.type", "interval")
-				.with("fs.repartition.schedule.value", DEFAULT_REPARTITION_INTERVAL)
-				.with("fs.repartition.deadCheck.schedule.type", "interval")
-				.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL)
-				.combineWith(super.createConfig());
+			.with("fs.repartition.schedule.type", "interval")
+			.with("fs.repartition.schedule.value", DEFAULT_REPARTITION_INTERVAL)
+			.with("fs.repartition.deadCheck.schedule.type", "interval")
+			.with("fs.repartition.deadCheck.schedule.value", DEFAULT_DEAD_CHECK_INTERVAL)
+			.combineWith(super.createConfig());
 	}
 
 	public static void main(String[] args) throws Exception {

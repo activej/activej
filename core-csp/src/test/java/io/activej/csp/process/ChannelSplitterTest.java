@@ -34,11 +34,11 @@ public class ChannelSplitterTest {
 		List<String> theList = new ArrayList<>();
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSuppliers.ofList(expected));
+			.withInput(ChannelSuppliers.ofList(expected));
 
 		for (int i = 0; i < n; i++) {
 			splitter.addOutput()
-					.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.<String>of(theList::add)).async());
+				.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.<String>of(theList::add)).async());
 		}
 
 		await(splitter.startProcess());
@@ -57,11 +57,11 @@ public class ChannelSplitterTest {
 
 		Exception exception = new Exception("test exception");
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSuppliers.concat(ChannelSuppliers.ofList(expected), ChannelSuppliers.ofException(exception)));
+			.withInput(ChannelSuppliers.concat(ChannelSuppliers.ofList(expected), ChannelSuppliers.ofException(exception)));
 
 		for (int i = 0; i < n; i++) {
 			splitter.addOutput()
-					.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
+				.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
 		}
 
 		assertSame(exception, awaitException(splitter.startProcess()));
@@ -77,16 +77,16 @@ public class ChannelSplitterTest {
 		expected.add("third");
 
 		ChannelSplitter<String> splitter = ChannelSplitter.<String>create()
-				.withInput(ChannelSuppliers.ofList(expected));
+			.withInput(ChannelSuppliers.ofList(expected));
 		Exception exception = new Exception("test exception");
 
 		for (int i = 0; i < n; i++) {
 			if (i == n / 2) {
 				splitter.addOutput()
-						.set(ChannelConsumers.ofException(exception));
+					.set(ChannelConsumers.ofException(exception));
 			} else {
 				splitter.addOutput()
-						.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
+					.set(ChannelConsumers.ofAsyncConsumer(AsyncConsumer.of((String s) -> { /*noop*/ })).async());
 			}
 		}
 

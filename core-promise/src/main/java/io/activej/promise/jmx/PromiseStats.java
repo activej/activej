@@ -165,11 +165,11 @@ public class PromiseStats {
 	@Override
 	public String toString() {
 		return "PromiseStats{" +
-				"activePromises=" + activePromises +
-				", lastStartTimestamp=" + Instant.ofEpochMilli(lastStartTimestamp) +
-				", lastCompleteTimestamp=" + Instant.ofEpochMilli(lastCompleteTimestamp) +
-				", duration=" + duration +
-				", exceptions=" + exceptions +
-				'}';
+			"activePromises=" + activePromises +
+			", lastStartTimestamp=" + Instant.ofEpochMilli(lastStartTimestamp) +
+			", lastCompleteTimestamp=" + Instant.ofEpochMilli(lastCompleteTimestamp) +
+			", duration=" + duration +
+			", exceptions=" + exceptions +
+			'}';
 	}
 }

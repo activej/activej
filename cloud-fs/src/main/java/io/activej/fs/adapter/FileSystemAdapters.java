@@ -40,9 +40,9 @@ public class FileSystemAdapters {
 		}
 		String escapedPrefix = escapeGlob(prefix);
 		return transform(originalFS,
-				name -> Optional.of(prefix + name),
-				name -> Optional.ofNullable(name.startsWith(prefix) ? name.substring(prefix.length()) : null),
-				name -> Optional.of(escapedPrefix + name)
+			name -> Optional.of(prefix + name),
+			name -> Optional.ofNullable(name.startsWith(prefix) ? name.substring(prefix.length()) : null),
+			name -> Optional.of(escapedPrefix + name)
 		);
 	}
 
@@ -60,9 +60,9 @@ public class FileSystemAdapters {
 		}
 		String escapedPrefix = escapeGlob(prefix);
 		return transform(originalFS,
-				name -> Optional.ofNullable(name.startsWith(prefix) ? name.substring(prefix.length()) : null),
-				name -> Optional.of(prefix + name),
-				name -> Optional.of(name.startsWith(escapedPrefix) ? name.substring(escapedPrefix.length()) : "**")
+			name -> Optional.ofNullable(name.startsWith(prefix) ? name.substring(prefix.length()) : null),
+			name -> Optional.of(prefix + name),
+			name -> Optional.of(name.startsWith(escapedPrefix) ? name.substring(escapedPrefix.length()) : "**")
 		);
 	}
 
@@ -82,10 +82,10 @@ public class FileSystemAdapters {
 	 */
 	public static IFileSystem mount(IFileSystem root, Map<String, IFileSystem> mounts) {
 		return new Mounting(root,
-				mounts.entrySet().stream()
-						.collect(Collectors.toMap(
-								Map.Entry::getKey,
-								e -> removePrefix(e.getValue(), e.getKey()))));
+			mounts.entrySet().stream()
+				.collect(Collectors.toMap(
+					Map.Entry::getKey,
+					e -> removePrefix(e.getValue(), e.getKey()))));
 	}
 
 }

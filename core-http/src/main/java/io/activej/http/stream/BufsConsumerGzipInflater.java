@@ -53,7 +53,7 @@ import static java.lang.Short.reverseBytes;
  * method is used.
  */
 public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
+	implements WithChannelTransformer<BufsConsumerGzipInflater, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerGzipInflater> {
 	public static final int MAX_HEADER_FIELD_LENGTH = 4096; //4 Kb
 	public static final int DEFAULT_BUF_SIZE = 512;
 	// rfc 1952 section 2.3.1
@@ -137,31 +137,31 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 
 	private void processHeader() {
 		input.decode(ofFixedSize(10))
-				.whenResult(buf -> {
-					//header validation
-					if (buf.get() != GZIP_HEADER[0] || buf.get() != GZIP_HEADER[1]) {
-						buf.recycle();
-						closeEx(new UnknownFormatException("Incorrect identification bytes. Not in GZIP format"));
-						return;
-					}
-					if (buf.get() != GZIP_HEADER[2]) {
-						buf.recycle();
-						closeEx(new UnknownFormatException("Unsupported compression method. Deflate compression required"));
-						return;
-					}
-
-					byte flag = buf.get();
-					if ((flag & 0b11100000) > 0) {
-						buf.recycle();
-						closeEx(new MalformedDataException("Flag byte of a header is malformed. Reserved bits are set"));
-						return;
-					}
-					// unsetting FTEXT bit
-					flag &= ~1;
+			.whenResult(buf -> {
+				//header validation
+				if (buf.get() != GZIP_HEADER[0] || buf.get() != GZIP_HEADER[1]) {
 					buf.recycle();
-					runNext(flag);
-				})
-				.whenException(this::closeEx);
+					closeEx(new UnknownFormatException("Incorrect identification bytes. Not in GZIP format"));
+					return;
+				}
+				if (buf.get() != GZIP_HEADER[2]) {
+					buf.recycle();
+					closeEx(new UnknownFormatException("Unsupported compression method. Deflate compression required"));
+					return;
+				}
+
+				byte flag = buf.get();
+				if ((flag & 0b11100000) > 0) {
+					buf.recycle();
+					closeEx(new MalformedDataException("Flag byte of a header is malformed. Reserved bits are set"));
+					return;
+				}
+				// unsetting FTEXT bit
+				flag &= ~1;
+				buf.recycle();
+				runNext(flag);
+			})
+			.whenException(this::closeEx);
 	}
 
 	private void processBody() {
@@ -180,34 +180,34 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 			}
 			if (inflater.finished()) {
 				output.acceptAll(bufs.asIterator())
-						.whenResult(this::processFooter);
+					.whenResult(this::processFooter);
 				return;
 			}
 		}
 		output.acceptAll(bufs.asIterator())
-				.then(() -> input.needMoreData())
-				.whenResult(this::processBody);
+			.then(() -> input.needMoreData())
+			.whenResult(this::processBody);
 	}
 
 	private void processFooter() {
 		input.decode(ofFixedSize(GZIP_FOOTER_SIZE))
-				.whenResult(buf -> {
-					if ((int) crc32.getValue() != reverseBytes(buf.readInt())) {
-						closeEx(new MalformedDataException("CRC32 value of uncompressed data differs"));
-						buf.recycle();
-						return;
-					}
-					if (inflater.getTotalOut() != reverseBytes(buf.readInt())) {
-						closeEx(new InvalidSizeException("Decompressed data size is not equal to input size from GZIP trailer"));
-						buf.recycle();
-						return;
-					}
+			.whenResult(buf -> {
+				if ((int) crc32.getValue() != reverseBytes(buf.readInt())) {
+					closeEx(new MalformedDataException("CRC32 value of uncompressed data differs"));
 					buf.recycle();
-					input.endOfStream()
-							.then(output::acceptEndOfStream)
-							.whenResult(this::completeProcess);
-				})
-				.whenException(this::closeEx);
+					return;
+				}
+				if (inflater.getTotalOut() != reverseBytes(buf.readInt())) {
+					closeEx(new InvalidSizeException("Decompressed data size is not equal to input size from GZIP trailer"));
+					buf.recycle();
+					return;
+				}
+				buf.recycle();
+				input.endOfStream()
+					.then(output::acceptEndOfStream)
+					.whenResult(this::completeProcess);
+			})
+			.whenException(this::closeEx);
 	}
 
 	private void inflate(ByteBufs bufs, ByteBuf src) throws DataFormatException {
@@ -245,36 +245,36 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 
 	private void skipTerminatorByte(int flag, int part) {
 		input.decode(ByteBufsDecoders.ofNullTerminatedBytes(MAX_HEADER_FIELD_LENGTH))
-				.whenException(e -> closeEx(new InvalidSizeException("FNAME or FEXTRA header is larger than maximum allowed length")))
-				.whenResult(ByteBuf::recycle)
-				.whenResult(() -> runNext(flag - part));
+			.whenException(e -> closeEx(new InvalidSizeException("FNAME or FEXTRA header is larger than maximum allowed length")))
+			.whenResult(ByteBuf::recycle)
+			.whenResult(() -> runNext(flag - part));
 	}
 
 	private void skipExtra(int flag) {
 		input.decode(ofFixedSize(2))
-				.map(shortBuf -> {
-					short toSkip = reverseBytes(shortBuf.readShort());
-					shortBuf.recycle();
-					return toSkip;
-				})
-				.then(toSkip -> {
-					if (toSkip > MAX_HEADER_FIELD_LENGTH) {
-						MalformedDataException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
-						closeEx(exception);
-						return Promise.ofException(exception);
-					}
-					return input.decode(ofFixedSize(toSkip));
-				})
-				.whenException(this::closeEx)
-				.whenResult(ByteBuf::recycle)
-				.whenResult(() -> runNext(flag - FEXTRA));
+			.map(shortBuf -> {
+				short toSkip = reverseBytes(shortBuf.readShort());
+				shortBuf.recycle();
+				return toSkip;
+			})
+			.then(toSkip -> {
+				if (toSkip > MAX_HEADER_FIELD_LENGTH) {
+					MalformedDataException exception = new InvalidSizeException("FEXTRA part of a header is larger than maximum allowed length");
+					closeEx(exception);
+					return Promise.ofException(exception);
+				}
+				return input.decode(ofFixedSize(toSkip));
+			})
+			.whenException(this::closeEx)
+			.whenResult(ByteBuf::recycle)
+			.whenResult(() -> runNext(flag - FEXTRA));
 	}
 
 	private void skipCRC16(int flag) {
 		input.decode(ofFixedSize(2))
-				.whenException(this::closeEx)
-				.whenResult(ByteBuf::recycle)
-				.whenResult(() -> runNext(flag - FHCRC));
+			.whenException(this::closeEx)
+			.whenResult(ByteBuf::recycle)
+			.whenResult(() -> runNext(flag - FHCRC));
 	}
 
 	private void runNext(int flag) {

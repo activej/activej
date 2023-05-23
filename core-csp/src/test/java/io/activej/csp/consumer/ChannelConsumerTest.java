@@ -49,8 +49,8 @@ public class ChannelConsumerTest {
 
 		ChannelConsumer<ByteBuf> channelConsumer = ofOutputStream(newSingleThreadExecutor(), outputStream);
 		await(channelConsumer.acceptAll(
-				ByteBuf.wrapForReading("Hello".getBytes()),
-				ByteBuf.wrapForReading("World".getBytes())));
+			ByteBuf.wrapForReading("Hello".getBytes()),
+			ByteBuf.wrapForReading("World".getBytes())));
 
 		assertEquals("HelloWorld", buf.asString(Charset.defaultCharset()));
 	}
@@ -93,21 +93,21 @@ public class ChannelConsumerTest {
 		ByteBuf result = ByteBuf.wrapForWriting(new byte[expectedSize]);
 
 		ChannelConsumer<ByteBuf> channelConsumer = ChannelConsumers.ofAsyncConsumer(
-				buf -> {
-					result.put(buf);
-					buf.recycle();
-					return Promise.complete();
-				});
+			buf -> {
+				result.put(buf);
+				buf.recycle();
+				return Promise.complete();
+			});
 
 		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(),
-				() -> {
-					try (OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer)) {
-						for (int i = 0; i < expectedSize; i++) {
-							outputStream.write(i);
-						}
+			() -> {
+				try (OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer)) {
+					for (int i = 0; i < expectedSize; i++) {
+						outputStream.write(i);
 					}
-				}));
+				}
+			}));
 
 		for (int i = 0; i < expectedSize; i++) {
 			assertEquals((byte) i, result.array()[i]);
@@ -155,9 +155,9 @@ public class ChannelConsumerTest {
 	@Test
 	public void testOfAnotherReactor() {
 		Eventloop anotherReactor = Eventloop
-				.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.builder()
+			.withFatalErrorHandler(rethrow())
+			.build();
 		List<Integer> expectedList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumers.ofConsumer(actualList::add));
@@ -173,8 +173,8 @@ public class ChannelConsumerTest {
 	@Test
 	public void testOfAnotherReactorException() {
 		Eventloop anotherReactor = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumers.ofConsumer(list::add));
@@ -182,9 +182,9 @@ public class ChannelConsumerTest {
 
 		startAnotherEventloop(anotherReactor);
 		Exception exception = awaitException(consumer.accept(1)
-				.then(() -> consumer.accept(2))
-				.whenComplete(() -> consumer.closeEx(expectedException))
-				.then(() -> consumer.accept(3)));
+			.then(() -> consumer.accept(2))
+			.whenComplete(() -> consumer.closeEx(expectedException))
+			.then(() -> consumer.accept(3)));
 		stopAnotherEventloop(anotherReactor);
 
 		assertSame(expectedException, exception);

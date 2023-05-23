@@ -38,18 +38,18 @@ public final class Between implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new Between(
-				value.materialize(params),
-				from.materialize(params),
-				to.materialize(params)
+			value.materialize(params),
+			from.materialize(params),
+			to.materialize(params)
 		);
 	}
 
 	@Override
 	public String toString() {
 		return "Between[" +
-				"value=" + value + ", " +
-				"from=" + from + ", " +
-				"to=" + to + ']';
+			"value=" + value + ", " +
+			"from=" + from + ", " +
+			"to=" + to + ']';
 	}
 
 }

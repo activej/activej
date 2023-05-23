@@ -28,10 +28,10 @@ public final class LocalTimeBinarySerializer implements BinarySerializer<LocalTi
 	@Override
 	public LocalTime decode(BinaryInput in) throws CorruptedDataException {
 		return LocalTime.of(
-				in.readVarInt(),
-				in.readVarInt(),
-				in.readVarInt(),
-				in.readVarInt()
+			in.readVarInt(),
+			in.readVarInt(),
+			in.readVarInt(),
+			in.readVarInt()
 		);
 	}
 }

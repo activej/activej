@@ -22,18 +22,18 @@ import static org.junit.Assert.*;
 public class ClusterRpcStrategyTest {
 
 	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_1 = Map.of(
-			"one", new InetSocketAddress(9001),
-			"two", new InetSocketAddress(9002),
-			"three", new InetSocketAddress(9003),
-			"four", new InetSocketAddress(9004)
+		"one", new InetSocketAddress(9001),
+		"two", new InetSocketAddress(9002),
+		"three", new InetSocketAddress(9003),
+		"four", new InetSocketAddress(9004)
 	);
 
 	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_2 = Map.of(
-			"five", new InetSocketAddress(9005),
-			"six", new InetSocketAddress(9006),
-			"seven", new InetSocketAddress(9007),
-			"eight", new InetSocketAddress(9008),
-			"nine", new InetSocketAddress(9009)
+		"five", new InetSocketAddress(9005),
+		"six", new InetSocketAddress(9006),
+		"seven", new InetSocketAddress(9007),
+		"eight", new InetSocketAddress(9008),
+		"nine", new InetSocketAddress(9009)
 	);
 
 	private static final Function<Object, Integer> KEY_GETTER = obj -> {
@@ -46,9 +46,9 @@ public class ClusterRpcStrategyTest {
 		Set<String> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet();
 
 		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>builder()
-				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false))
-				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)))
-				.build();
+			.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false))
+			.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)))
+			.build();
 
 		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, Set.of("two")));
 
@@ -68,9 +68,9 @@ public class ClusterRpcStrategyTest {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
 		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>builder()
-				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true))
-				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)))
-				.build();
+			.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true))
+			.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)))
+			.build();
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two")));
 
@@ -88,14 +88,14 @@ public class ClusterRpcStrategyTest {
 		assertNotNull(sharder);
 
 		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
-				.stream()
-				.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
+			.stream()
+			.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
 
 		for (int i = 0; i < 1000; i++) {
 			int[] partitionsIndexes = sharder.shard(i);
 			Set<String> partitions = Arrays.stream(partitionsIndexes)
-					.mapToObj(alivePartitions::get)
-					.collect(toSet());
+				.mapToObj(alivePartitions::get)
+				.collect(toSet());
 
 			sendRequest(sender, i);
 
@@ -121,9 +121,9 @@ public class ClusterRpcStrategyTest {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
 		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>builder()
-				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true))
-				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)))
-				.build();
+			.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true))
+			.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)))
+			.build();
 
 		List<String> alivePartitions = new ArrayList<>(partitionIds);
 
@@ -141,14 +141,14 @@ public class ClusterRpcStrategyTest {
 		assertNotNull(sharder);
 
 		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
-				.stream()
-				.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
+			.stream()
+			.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
 
 		for (int i = 0; i < 1000; i++) {
 			int[] partitionsIndexes = sharder.shard(i);
 			Set<String> partitions = Arrays.stream(partitionsIndexes)
-					.mapToObj(alivePartitions::get)
-					.collect(toSet());
+				.mapToObj(alivePartitions::get)
+				.collect(toSet());
 
 			sendRequest(sender, i);
 			if (partitions.isEmpty()) {
@@ -184,16 +184,16 @@ public class ClusterRpcStrategyTest {
 		partition2Address.putAll(PARTITION_ADDRESS_MAP_2);
 
 		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>builder()
-				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
-				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true))
-				.withRpcProvider(p -> server(partition2Address.get(p)))
-				.build();
+			.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
+			.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true))
+			.withRpcProvider(p -> server(partition2Address.get(p)))
+			.build();
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two", "seven", "nine")));
 
 		Map<InetSocketAddress, String> address2Partitions = partition2Address.entrySet()
-				.stream()
-				.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
+			.stream()
+			.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -211,8 +211,8 @@ public class ClusterRpcStrategyTest {
 		for (int i = 0; i < 1000; i++) {
 			int[] partitionsIndexes = sharder.shard(i);
 			Set<String> partitions = Arrays.stream(partitionsIndexes)
-					.mapToObj(alivePartitions::get)
-					.collect(toSet());
+				.mapToObj(alivePartitions::get)
+				.collect(toSet());
 
 			sendRequest(sender, i);
 

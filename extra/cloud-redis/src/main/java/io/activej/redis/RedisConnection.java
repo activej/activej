@@ -177,54 +177,54 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		this.transactionQueue = null;
 		int count = transactionQueue.size() / 2;
 		return cmd(RedisRequest.of("EXEC"),
-				new RedisResponse<Object[]>() {
-					@SuppressWarnings({"rawtypes", "unchecked"})
-					@Override
-					public Object[] parse(RESPv2 data) throws MalformedDataException {
-						Object[] results = parseResponses(data);
+			new RedisResponse<Object[]>() {
+				@SuppressWarnings({"rawtypes", "unchecked"})
+				@Override
+				public Object[] parse(RESPv2 data) throws MalformedDataException {
+					Object[] results = parseResponses(data);
 
-						if (results == null) return null;
+					if (results == null) return null;
 
-						for (int i = 0; i < count; i++) {
-							SettablePromise promise = (SettablePromise) transactionQueue.get(2 * i + 1);
-							Object result = results[i];
-							if (result instanceof ServerError) {
-								promise.trySetException((ServerError) result);
-							} else {
-								promise.set(result);
-							}
+					for (int i = 0; i < count; i++) {
+						SettablePromise promise = (SettablePromise) transactionQueue.get(2 * i + 1);
+						Object result = results[i];
+						if (result instanceof ServerError) {
+							promise.trySetException((ServerError) result);
+						} else {
+							promise.set(result);
 						}
-						return results;
 					}
+					return results;
+				}
 
-					private @Nullable Object @Nullable [] parseResponses(RESPv2 data) throws MalformedDataException {
-						long len = data.readArraySize();
-						if (len == -1) return null;
+				private @Nullable Object @Nullable [] parseResponses(RESPv2 data) throws MalformedDataException {
+					long len = data.readArraySize();
+					if (len == -1) return null;
 
-						if (len != count) throw new MalformedDataException(
-								"Sent " + count + " requests in a transaction, got responses for " + len);
+					if (len != count) throw new MalformedDataException(
+						"Sent " + count + " requests in a transaction, got responses for " + len);
 
-						Object[] results = new Object[count];
+					Object[] results = new Object[count];
 
-						byte[] array = data.array();
-						for (int i = 0; i < count; i++) {
-							if (!data.canRead()) throw NeedMoreDataException.NEED_MORE_DATA;
-							RedisResponse<?> response = (RedisResponse<?>) transactionQueue.get(2 * i);
+					byte[] array = data.array();
+					for (int i = 0; i < count; i++) {
+						if (!data.canRead()) throw NeedMoreDataException.NEED_MORE_DATA;
+						RedisResponse<?> response = (RedisResponse<?>) transactionQueue.get(2 * i);
 
-							if (array[data.head()] != RESPv2.ERROR_MARKER) {
-								results[i] = response.parse(data);
-							} else {
-								results[i] = data.readObject();
-							}
+						if (array[data.head()] != RESPv2.ERROR_MARKER) {
+							results[i] = response.parse(data);
+						} else {
+							results[i] = data.readObject();
 						}
-						return results;
 					}
-				})
-				.<Object[]>thenCallback((results, cb) -> {
-					if (results == null) cb.setException(new TransactionFailedException());
-					else cb.set(results);
-				})
-				.whenException(e -> abortTransaction(transactionQueue, e));
+					return results;
+				}
+			})
+			.<Object[]>thenCallback((results, cb) -> {
+				if (results == null) cb.setException(new TransactionFailedException());
+				else cb.set(results);
+			})
+			.whenException(e -> abortTransaction(transactionQueue, e));
 	}
 
 	/**
@@ -250,8 +250,8 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 			abortTransaction(transactionQueue, e);
 		}
 		return cmd(RedisRequest.of("QUIT"), RedisResponse.OK)
-				.then(this::sendEndOfStream)
-				.whenComplete(this::close);
+			.then(this::sendEndOfStream)
+			.whenComplete(this::close);
 	}
 	// endregion
 	// endregion
@@ -316,7 +316,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 		if (writeBuf == null) return;
 		if (writeBuf.canRead()) {
 			socket.write(writeBuf)
-					.whenException(e -> closeEx(new RedisException("Failed to write data", e)));
+				.whenException(e -> closeEx(new RedisException("Failed to write data", e)));
 		} else {
 			writeBuf.recycle();
 		}
@@ -325,57 +325,57 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	private Promise<Void> sendEndOfStream() {
 		return socket.write(null)
-				.whenResult(() -> {
-					writeDone = true;
-					closeIfDone();
-				})
-				.whenException(e -> closeEx(new RedisException("Failed to send end of stream", e)));
+			.whenResult(() -> {
+				writeDone = true;
+				closeIfDone();
+			})
+			.whenException(e -> closeEx(new RedisException("Failed to send end of stream", e)));
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	private void read() {
 		socket.read()
-				.whenResult(buf -> {
-					if (buf != null) {
-						readBuf = ByteBufPool.append(readBuf, buf);
-						RESPv2 data = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
+			.whenResult(buf -> {
+				if (buf != null) {
+					readBuf = ByteBufPool.append(readBuf, buf);
+					RESPv2 data = new RESPv2(readBuf.array(), readBuf.head(), readBuf.tail());
 
-						int head = data.head();
-						while (!receiveQueue.isEmpty() && data.canRead()) {
-							RedisResponse<Object> response = (RedisResponse<Object>) receiveQueue.peek();
-							try {
-								if (data.peek() != RESPv2.ERROR_MARKER) {
-									Object result = response.parse(data);
-									head = data.head();
-									receiveQueue.poll();
-									((Callback<Object>) receiveQueue.poll()).accept(result, null);
-								} else {
-									ServerError error = (ServerError) data.readObject();
-									head = data.head();
-									receiveQueue.poll();
-									((Callback<Object>) receiveQueue.poll()).accept(null, error);
-								}
-							} catch (NeedMoreDataException e) {
-								break;
-							} catch (MalformedDataException e) {
-								closeEx(new RedisException(e));
-								return;
+					int head = data.head();
+					while (!receiveQueue.isEmpty() && data.canRead()) {
+						RedisResponse<Object> response = (RedisResponse<Object>) receiveQueue.peek();
+						try {
+							if (data.peek() != RESPv2.ERROR_MARKER) {
+								Object result = response.parse(data);
+								head = data.head();
+								receiveQueue.poll();
+								((Callback<Object>) receiveQueue.poll()).accept(result, null);
+							} else {
+								ServerError error = (ServerError) data.readObject();
+								head = data.head();
+								receiveQueue.poll();
+								((Callback<Object>) receiveQueue.poll()).accept(null, error);
 							}
+						} catch (NeedMoreDataException e) {
+							break;
+						} catch (MalformedDataException e) {
+							closeEx(new RedisException(e));
+							return;
 						}
-						if (readBuf != null) {
-							readBuf.head(head);
-							if (!readBuf.canRead()) {
-								readBuf.recycle();
-								readBuf = ByteBuf.empty();
-							}
-						}
-						read();
-					} else {
-						readDone = true;
-						closeIfDone();
 					}
-				})
-				.whenException(e -> closeEx(new RedisException("Failed to read data", e)));
+					if (readBuf != null) {
+						readBuf.head(head);
+						if (!readBuf.canRead()) {
+							readBuf.recycle();
+							readBuf = ByteBuf.empty();
+						}
+					}
+					read();
+				} else {
+					readDone = true;
+					closeIfDone();
+				}
+			})
+			.whenException(e -> closeEx(new RedisException("Failed to read data", e)));
 	}
 
 	private void closeIfDone() {
@@ -407,10 +407,10 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	@Override
 	public String toString() {
 		return "RedisConnection{" +
-				"client=" + client +
-				", receiveQueue=" + receiveQueue.size() / 2 +
-				(transactionQueue != null ? (", transactionQueue=" + transactionQueue.size() / 2) : "") +
-				", closed=" + isClosed() +
-				'}';
+			"client=" + client +
+			", receiveQueue=" + receiveQueue.size() / 2 +
+			(transactionQueue != null ? (", transactionQueue=" + transactionQueue.size() / 2) : "") +
+			", closed=" + isClosed() +
+			'}';
 	}
 }

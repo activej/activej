@@ -57,32 +57,32 @@ public class RpcBenchmark extends Launcher {
 	@Named("server")
 	NioReactor reactorServer(@Named("client") NioReactor clientReactor, Config config) {
 		return config.get(ofBoolean(), "multithreaded", true) ?
-				Eventloop.create() :
-				clientReactor;
+			Eventloop.create() :
+			clientReactor;
 	}
 
 	@Provides
 	IRpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
 		return RpcClient.builder(reactor)
-				.withStreamProtocol(
-						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofFrameFormat(), "rpc.compression", null))
-				.withMessageTypes(Integer.class)
-				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
-				.build();
+			.withStreamProtocol(
+				config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
+				config.get(ofFrameFormat(), "rpc.compression", null))
+			.withMessageTypes(Integer.class)
+			.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
+			.build();
 	}
 
 	@Provides
 	@Eager
 	RpcServer rpcServer(@Named("server") NioReactor reactor, Config config) {
 		return RpcServer.builder(reactor)
-				.withStreamProtocol(
-						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
-						config.get(ofFrameFormat(), "rpc.compression", null))
-				.withListenPort(config.get(ofInteger(), "rpc.server.port"))
-				.withMessageTypes(Integer.class)
-				.withHandler(Integer.class, req -> Promise.of(req * 2))
-				.build();
+			.withStreamProtocol(
+				config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
+				config.get(ofFrameFormat(), "rpc.compression", null))
+			.withListenPort(config.get(ofInteger(), "rpc.server.port"))
+			.withMessageTypes(Integer.class)
+			.withHandler(Integer.class, req -> Promise.of(req * 2))
+			.build();
 
 	}
 
@@ -95,17 +95,17 @@ public class RpcBenchmark extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("rpc.server.port", "" + SERVICE_PORT)
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("rpc.server.port", "" + SERVICE_PORT)
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	private int warmupRounds;
@@ -165,7 +165,7 @@ public class RpcBenchmark extends Launcher {
 		double avgTime = (double) time / benchmarkRounds;
 		long requestsPerSecond = (long) (totalRequests / avgTime * 1000);
 		System.out.printf("Time: %dms; Average time: %sms; Best time: %dms; Worst time: %dms; Requests per second: %d%n",
-				time, avgTime, bestTime, worstTime, requestsPerSecond);
+			time, avgTime, bestTime, worstTime, requestsPerSecond);
 	}
 
 	private long round() throws Exception {

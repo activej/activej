@@ -22,10 +22,10 @@ public final class WebSocketEchoServerExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
 		return RoutingServlet.builder(reactor)
-				.withWebSocket("/", webSocket -> webSocket.messageReadChannel()
-						.peek(this::logMessage)
-						.streamTo(webSocket.messageWriteChannel()))
-				.build();
+			.withWebSocket("/", webSocket -> webSocket.messageReadChannel()
+				.peek(this::logMessage)
+				.streamTo(webSocket.messageWriteChannel()))
+			.build();
 	}
 	//[END MAIN]
 

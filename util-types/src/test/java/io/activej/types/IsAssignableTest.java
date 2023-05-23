@@ -21,8 +21,8 @@ public class IsAssignableTest {
 			List<String> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<String>>() {}.getType(),
-					new TypeT<List<String>>() {}.getType()
+				new TypeT<List<String>>() {}.getType(),
+				new TypeT<List<String>>() {}.getType()
 			));
 		}
 
@@ -31,8 +31,8 @@ public class IsAssignableTest {
 			List<String> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<CharSequence>>() {}.getType(),
-					new TypeT<List<String>>() {}.getType()
+				new TypeT<List<CharSequence>>() {}.getType(),
+				new TypeT<List<String>>() {}.getType()
 			));
 		}
 
@@ -41,8 +41,8 @@ public class IsAssignableTest {
 			List<CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<String>>() {}.getType(),
-					new TypeT<List<CharSequence>>() {}.getType()
+				new TypeT<List<String>>() {}.getType(),
+				new TypeT<List<CharSequence>>() {}.getType()
 			));
 		}
 	}
@@ -54,8 +54,8 @@ public class IsAssignableTest {
 			List<String> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<?>>() {}.getType(),
-					new TypeT<List<String>>() {}.getType()
+				new TypeT<List<?>>() {}.getType(),
+				new TypeT<List<String>>() {}.getType()
 			));
 		}
 
@@ -64,8 +64,8 @@ public class IsAssignableTest {
 			List<String> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? extends CharSequence>>() {}.getType(),
-					new TypeT<List<String>>() {}.getType()
+				new TypeT<List<? extends CharSequence>>() {}.getType(),
+				new TypeT<List<String>>() {}.getType()
 			));
 		}
 
@@ -74,8 +74,8 @@ public class IsAssignableTest {
 			List<CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? extends String>>() {}.getType(),
-					new TypeT<List<CharSequence>>() {}.getType()
+				new TypeT<List<? extends String>>() {}.getType(),
+				new TypeT<List<CharSequence>>() {}.getType()
 			));
 		}
 	}
@@ -87,8 +87,8 @@ public class IsAssignableTest {
 			List<Object> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? super Object>>() {}.getType(),
-					new TypeT<List<Object>>() {}.getType()
+				new TypeT<List<? super Object>>() {}.getType(),
+				new TypeT<List<Object>>() {}.getType()
 			));
 		}
 
@@ -97,8 +97,8 @@ public class IsAssignableTest {
 			List<Object> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? super String>>() {}.getType(),
-					new TypeT<List<Object>>() {}.getType()
+				new TypeT<List<? super String>>() {}.getType(),
+				new TypeT<List<Object>>() {}.getType()
 			));
 		}
 
@@ -107,8 +107,8 @@ public class IsAssignableTest {
 			List<CharSequence> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? super String>>() {}.getType(),
-					new TypeT<List<CharSequence>>() {}.getType()
+				new TypeT<List<? super String>>() {}.getType(),
+				new TypeT<List<CharSequence>>() {}.getType()
 			));
 		}
 
@@ -117,8 +117,8 @@ public class IsAssignableTest {
 			List<String> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? super CharSequence>>() {}.getType(),
-					new TypeT<List<String>>() {}.getType()
+				new TypeT<List<? super CharSequence>>() {}.getType(),
+				new TypeT<List<String>>() {}.getType()
 			));
 		}
 	}
@@ -130,8 +130,8 @@ public class IsAssignableTest {
 			List<? extends CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<CharSequence>>() {}.getType(),
-					new TypeT<List<? extends CharSequence>>() {}.getType()
+				new TypeT<List<CharSequence>>() {}.getType(),
+				new TypeT<List<? extends CharSequence>>() {}.getType()
 			));
 		}
 
@@ -140,8 +140,8 @@ public class IsAssignableTest {
 			List<? super CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<CharSequence>>() {}.getType(),
-					new TypeT<List<? super CharSequence>>() {}.getType()
+				new TypeT<List<CharSequence>>() {}.getType(),
+				new TypeT<List<? super CharSequence>>() {}.getType()
 			));
 		}
 	}
@@ -153,8 +153,8 @@ public class IsAssignableTest {
 			CharSequence from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<Object>() {}.getType(),
-					new TypeT<CharSequence>() {}.getType()
+				new TypeT<Object>() {}.getType(),
+				new TypeT<CharSequence>() {}.getType()
 			));
 		}
 
@@ -163,8 +163,8 @@ public class IsAssignableTest {
 			Object from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<CharSequence>() {}.getType(),
-					new TypeT<Object>() {}.getType()
+				new TypeT<CharSequence>() {}.getType(),
+				new TypeT<Object>() {}.getType()
 			));
 		}
 
@@ -173,8 +173,8 @@ public class IsAssignableTest {
 			List<? extends CharSequence> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<?>>() {}.getType(),
-					new TypeT<List<? extends CharSequence>>() {}.getType()
+				new TypeT<List<?>>() {}.getType(),
+				new TypeT<List<? extends CharSequence>>() {}.getType()
 			));
 		}
 
@@ -183,8 +183,8 @@ public class IsAssignableTest {
 			List<? extends CharSequence> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? extends CharSequence>>() {}.getType(),
-					new TypeT<List<? extends CharSequence>>() {}.getType()
+				new TypeT<List<? extends CharSequence>>() {}.getType(),
+				new TypeT<List<? extends CharSequence>>() {}.getType()
 			));
 		}
 
@@ -193,8 +193,8 @@ public class IsAssignableTest {
 			List<? extends String> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? extends CharSequence>>() {}.getType(),
-					new TypeT<List<? extends String>>() {}.getType()
+				new TypeT<List<? extends CharSequence>>() {}.getType(),
+				new TypeT<List<? extends String>>() {}.getType()
 			));
 		}
 
@@ -203,8 +203,8 @@ public class IsAssignableTest {
 			List<? extends CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? extends String>>() {}.getType(),
-					new TypeT<List<? extends CharSequence>>() {}.getType()
+				new TypeT<List<? extends String>>() {}.getType(),
+				new TypeT<List<? extends CharSequence>>() {}.getType()
 			));
 		}
 
@@ -213,8 +213,8 @@ public class IsAssignableTest {
 			List<? super CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? extends CharSequence>>() {}.getType(),
-					new TypeT<List<? super CharSequence>>() {}.getType()
+				new TypeT<List<? extends CharSequence>>() {}.getType(),
+				new TypeT<List<? super CharSequence>>() {}.getType()
 			));
 		}
 
@@ -223,8 +223,8 @@ public class IsAssignableTest {
 			List<? super String> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? extends CharSequence>>() {}.getType(),
-					new TypeT<List<? super String>>() {}.getType()
+				new TypeT<List<? extends CharSequence>>() {}.getType(),
+				new TypeT<List<? super String>>() {}.getType()
 			));
 		}
 
@@ -233,8 +233,8 @@ public class IsAssignableTest {
 			List<? super CharSequence> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? extends String>>() {}.getType(),
-					new TypeT<List<? super CharSequence>>() {}.getType()
+				new TypeT<List<? extends String>>() {}.getType(),
+				new TypeT<List<? super CharSequence>>() {}.getType()
 			));
 		}
 
@@ -243,8 +243,8 @@ public class IsAssignableTest {
 			List<? super CharSequence> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? super CharSequence>>() {}.getType(),
-					new TypeT<List<? super CharSequence>>() {}.getType()
+				new TypeT<List<? super CharSequence>>() {}.getType(),
+				new TypeT<List<? super CharSequence>>() {}.getType()
 			));
 		}
 
@@ -253,8 +253,8 @@ public class IsAssignableTest {
 			List<? super String> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? super CharSequence>>() {}.getType(),
-					new TypeT<List<? super String>>() {}.getType()
+				new TypeT<List<? super CharSequence>>() {}.getType(),
+				new TypeT<List<? super String>>() {}.getType()
 			));
 		}
 
@@ -263,8 +263,8 @@ public class IsAssignableTest {
 			List<? super CharSequence> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List<? super String>>() {}.getType(),
-					new TypeT<List<? super CharSequence>>() {}.getType()
+				new TypeT<List<? super String>>() {}.getType(),
+				new TypeT<List<? super CharSequence>>() {}.getType()
 			));
 		}
 
@@ -273,8 +273,8 @@ public class IsAssignableTest {
 			List<? super String> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<? super CharSequence>>() {}.getType(),
-					new TypeT<List<? super String>>() {}.getType()
+				new TypeT<List<? super CharSequence>>() {}.getType(),
+				new TypeT<List<? super String>>() {}.getType()
 			));
 		}
 	}
@@ -287,8 +287,8 @@ public class IsAssignableTest {
 			List<String> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<List>() {}.getType(),
-					new TypeT<List<String>>() {}.getType()
+				new TypeT<List>() {}.getType(),
+				new TypeT<List<String>>() {}.getType()
 			));
 		}
 		{
@@ -296,8 +296,8 @@ public class IsAssignableTest {
 			List<?> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<String>>() {}.getType(),
-					new TypeT<List<?>>() {}.getType()
+				new TypeT<List<String>>() {}.getType(),
+				new TypeT<List<?>>() {}.getType()
 			));
 		}
 		{
@@ -305,8 +305,8 @@ public class IsAssignableTest {
 			List from = null;
 			to = from;
 			assertFalse(isAssignable(
-					new TypeT<List<String>>() {}.getType(),
-					new TypeT<List>() {}.getType()
+				new TypeT<List<String>>() {}.getType(),
+				new TypeT<List>() {}.getType()
 			));
 		}
 		{
@@ -314,8 +314,8 @@ public class IsAssignableTest {
 			HashMap<CharSequence, ArrayList<Integer>> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<Map<? super String, ? extends List<? extends Number>>>() {}.getType(),
-					new TypeT<HashMap<CharSequence, ArrayList<Integer>>>() {}.getType()
+				new TypeT<Map<? super String, ? extends List<? extends Number>>>() {}.getType(),
+				new TypeT<HashMap<CharSequence, ArrayList<Integer>>>() {}.getType()
 			));
 		}
 	}
@@ -327,8 +327,8 @@ public class IsAssignableTest {
 			List<? extends Integer[]> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<Object[]>() {}.getType(),
-					new TypeT<Integer[]>() {}.getType()
+				new TypeT<Object[]>() {}.getType(),
+				new TypeT<Integer[]>() {}.getType()
 			));
 		}
 		{
@@ -336,8 +336,8 @@ public class IsAssignableTest {
 			List<? extends Object[]> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<Integer[]>() {}.getType(),
-					new TypeT<Object[]>() {}.getType()
+				new TypeT<Integer[]>() {}.getType(),
+				new TypeT<Object[]>() {}.getType()
 			));
 		}
 	}
@@ -349,8 +349,8 @@ public class IsAssignableTest {
 			TestClass2<String, Integer> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<TestClass1<Integer>>() {}.getType(),
-					new TypeT<TestClass2<String, Integer>>() {}.getType()
+				new TypeT<TestClass1<Integer>>() {}.getType(),
+				new TypeT<TestClass2<String, Integer>>() {}.getType()
 			));
 		}
 		{
@@ -358,8 +358,8 @@ public class IsAssignableTest {
 			TestClass2<Integer, Integer> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<TestClass1<Integer>>() {}.getType(),
-					new TypeT<TestClass2<Integer, Integer>>() {}.getType()
+				new TypeT<TestClass1<Integer>>() {}.getType(),
+				new TypeT<TestClass2<Integer, Integer>>() {}.getType()
 			));
 		}
 		{
@@ -367,8 +367,8 @@ public class IsAssignableTest {
 			TestClass2<String, Integer> from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<TestClass1<? extends Number>>() {}.getType(),
-					new TypeT<TestClass2<String, Integer>>() {}.getType()
+				new TypeT<TestClass1<? extends Number>>() {}.getType(),
+				new TypeT<TestClass2<String, Integer>>() {}.getType()
 			));
 		}
 		{
@@ -376,8 +376,8 @@ public class IsAssignableTest {
 			TestClass2<String, Integer> from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<TestClass1<Number>>() {}.getType(),
-					new TypeT<TestClass2<String, Integer>>() {}.getType()
+				new TypeT<TestClass1<Number>>() {}.getType(),
+				new TypeT<TestClass2<String, Integer>>() {}.getType()
 			));
 		}
 	}
@@ -386,24 +386,24 @@ public class IsAssignableTest {
 	@Test
 	public void test9() {
 		assertTrue(isAssignable(
-				new TypeT<Collection>() {}.getType(),
-				new TypeT<Queue>() {}.getType()
+			new TypeT<Collection>() {}.getType(),
+			new TypeT<Queue>() {}.getType()
 		));
 		assertTrue(isAssignable(
-				new TypeT<Collection>() {}.getType(),
-				new TypeT<Queue<String>>() {}.getType()
+			new TypeT<Collection>() {}.getType(),
+			new TypeT<Queue<String>>() {}.getType()
 		));
 		assertFalse(isAssignable(
-				new TypeT<Collection<String>>() {}.getType(),
-				new TypeT<Queue>() {}.getType()
+			new TypeT<Collection<String>>() {}.getType(),
+			new TypeT<Queue>() {}.getType()
 		));
 		assertFalse(isAssignable(
-				new TypeT<Collection<? extends String>>() {}.getType(),
-				new TypeT<Queue>() {}.getType()
+			new TypeT<Collection<? extends String>>() {}.getType(),
+			new TypeT<Queue>() {}.getType()
 		));
 		assertFalse(isAssignable(
-				new TypeT<Collection<? super String>>() {}.getType(),
-				new TypeT<Queue>() {}.getType()
+			new TypeT<Collection<? super String>>() {}.getType(),
+			new TypeT<Queue>() {}.getType()
 		));
 	}
 
@@ -414,20 +414,20 @@ public class IsAssignableTest {
 			Integer[] from = null;
 			to = from;
 			assertTrue(isAssignable(
-					new TypeT<Object[]>() {}.getType(),
-					new TypeT<Integer[]>() {}.getType()
+				new TypeT<Object[]>() {}.getType(),
+				new TypeT<Integer[]>() {}.getType()
 			));
 			assertTrue(isAssignable(
-					new GenericArrayTypeImpl(Object.class),
-					new GenericArrayTypeImpl(Integer.class)
+				new GenericArrayTypeImpl(Object.class),
+				new GenericArrayTypeImpl(Integer.class)
 			));
 			assertTrue(isAssignable(
-					Object[].class,
-					new GenericArrayTypeImpl(Integer.class)
+				Object[].class,
+				new GenericArrayTypeImpl(Integer.class)
 			));
 			assertTrue(isAssignable(
-					new GenericArrayTypeImpl(Object.class),
-					Integer[].class
+				new GenericArrayTypeImpl(Object.class),
+				Integer[].class
 			));
 		}
 		{
@@ -435,20 +435,20 @@ public class IsAssignableTest {
 			Object[] from = null;
 //			to = from;
 			assertFalse(isAssignable(
-					new TypeT<Integer[]>() {}.getType(),
-					new TypeT<Object[]>() {}.getType()
+				new TypeT<Integer[]>() {}.getType(),
+				new TypeT<Object[]>() {}.getType()
 			));
 			assertFalse(isAssignable(
-					new GenericArrayTypeImpl(Integer.class),
-					new GenericArrayTypeImpl(Object.class)
+				new GenericArrayTypeImpl(Integer.class),
+				new GenericArrayTypeImpl(Object.class)
 			));
 			assertFalse(isAssignable(
-					new GenericArrayTypeImpl(Integer.class),
-					Object[].class
+				new GenericArrayTypeImpl(Integer.class),
+				Object[].class
 			));
 			assertFalse(isAssignable(
-					Integer[].class,
-					new GenericArrayTypeImpl(Object.class)
+				Integer[].class,
+				new GenericArrayTypeImpl(Object.class)
 			));
 		}
 	}

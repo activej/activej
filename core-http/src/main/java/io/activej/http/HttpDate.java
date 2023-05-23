@@ -68,8 +68,8 @@ public final class HttpDate {
 		for (int i = 0; i < MONTHS_IN_YEAR.length; i++) {
 			byte[] entry = MONTHS_IN_YEAR[i];
 			if (entry[0] == bytes[start + 8] &&
-					entry[1] == bytes[start + 9] &&
-					entry[2] == bytes[start + 10]) {
+				entry[1] == bytes[start + 9] &&
+				entry[2] == bytes[start + 10]) {
 				month = i;
 			}
 		}

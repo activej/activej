@@ -53,8 +53,8 @@ public class CubeCleanerControllerTest {
 		Executor executor = Executors.newCachedThreadPool();
 
 		eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		eventloop.keepAlive(true);
 
@@ -65,15 +65,15 @@ public class CubeCleanerControllerTest {
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
 		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				FrameFormats.lz4(), fs);
+			FrameFormats.lz4(), fs);
 		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
-				.withDimension("pub", ofInt())
-				.withDimension("adv", ofInt())
-				.withMeasure("pubRequests", sum(ofLong()))
-				.withMeasure("advRequests", sum(ofLong()))
-				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
-				.build();
+			.withDimension("pub", ofInt())
+			.withDimension("adv", ofInt())
+			.withMeasure("pubRequests", sum(ofLong()))
+			.withMeasure("advRequests", sum(ofLong()))
+			.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
+			.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+			.build();
 
 		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		uplink.initialize();
@@ -93,8 +93,8 @@ public class CubeCleanerControllerTest {
 
 		IChunksCleanerService cleanerService = IChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		CubeCleanerController cleanerController = CubeCleanerController.builder(dataSource, cleanerService)
-				.withChunksCleanupDelay(Duration.ofMillis(0))
-				.build();
+			.withChunksCleanupDelay(Duration.ofMillis(0))
+			.build();
 
 		cleanerController.cleanup();
 	}
@@ -106,8 +106,8 @@ public class CubeCleanerControllerTest {
 
 		IChunksCleanerService cleanerService = IChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		CubeCleanerController cleanerController = CubeCleanerController.builder(dataSource, cleanerService)
-				.withChunksCleanupDelay(Duration.ofSeconds(10))
-				.build();
+			.withChunksCleanupDelay(Duration.ofSeconds(10))
+			.build();
 
 		cleanerController.cleanup();
 	}

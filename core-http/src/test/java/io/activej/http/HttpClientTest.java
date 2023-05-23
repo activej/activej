@@ -57,19 +57,19 @@ public final class HttpClientTest {
 
 	public void startServer() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
-								.withBodyStream(ChannelSuppliers.ofStream(
-										IntStream.range(0, HELLO_WORLD.length)
-												.mapToObj(idx -> {
-													ByteBuf buf = ByteBufPool.allocate(1);
-													buf.put(HELLO_WORLD[idx]);
-													return buf;
-												})))
-								.toPromise())
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				request -> HttpResponse.ok200()
+					.withBodyStream(ChannelSuppliers.ofStream(
+						IntStream.range(0, HELLO_WORLD.length)
+							.mapToObj(idx -> {
+								ByteBuf buf = ByteBufPool.allocate(1);
+								buf.put(HELLO_WORLD[idx]);
+								return buf;
+							})))
+					.toPromise())
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 	}
 
 	@Before
@@ -83,16 +83,16 @@ public final class HttpClientTest {
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.loadBody()
-						.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
+			.then(response -> response.loadBody()
+				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
 	}
 
 	@Test
 	@Ignore("Requires DNS look up, may flood remote server")
 	public void testClientTimeoutConnect() {
 		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withConnectTimeout(Duration.ofMillis(1))
-				.build();
+			.withConnectTimeout(Duration.ofMillis(1))
+			.build();
 		Exception e = awaitException(client.request(HttpRequest.get("http://google.com").build()));
 		assertThat(e, instanceOf(HttpException.class));
 		assertThat(e.getCause(), instanceOf(AsyncTimeoutException.class));
@@ -106,25 +106,25 @@ public final class HttpClientTest {
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.loadBody(maxBodySize)));
+			.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
 	}
 
 	@Test
 	public void testEmptyLineResponse() throws IOException {
 		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
-						socket.read()
-								.whenResult(ByteBuf::recycle)
-								.then(() -> socket.write(wrapAscii("\r\n")))
-								.whenComplete(socket::close))
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				socket.read()
+					.whenResult(ByteBuf::recycle)
+					.then(() -> socket.write(wrapAscii("\r\n")))
+					.whenComplete(socket::close))
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.loadBody()));
+			.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
 	}
@@ -136,42 +136,42 @@ public final class HttpClientTest {
 		List<SettableCallback<HttpResponse>> responses = new ArrayList<>();
 
 		HttpServer server = HttpServer.builder(reactor,
-						request -> Promise.ofCallback(responses::add))
-				.withListenPort(port)
-				.build();
+				request -> Promise.ofCallback(responses::add))
+			.withListenPort(port)
+			.build();
 
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
 		IHttpClient httpClient = HttpClient.builder(reactor)
-				.withNoKeepAlive()
-				.withConnectTimeout(Duration.ofMillis(20))
-				.withReadWriteTimeout(Duration.ofMillis(20))
-				.withInspector(inspector)
-				.build();
+			.withNoKeepAlive()
+			.withConnectTimeout(Duration.ofMillis(20))
+			.withReadWriteTimeout(Duration.ofMillis(20))
+			.withInspector(inspector)
+			.build();
 
 		Exception e = awaitException(Promises.all(
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
-						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()))
-				.whenComplete(() -> {
-					server.close();
-					responses.forEach(response -> response.set(HttpResponse.ok200().build()));
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()),
+				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build()))
+			.whenComplete(() -> {
+				server.close();
+				responses.forEach(response -> response.set(HttpResponse.ok200().build()));
 
-					inspector.getTotalRequests().refresh(reactor.currentTimeMillis());
-					inspector.getHttpTimeouts().refresh(reactor.currentTimeMillis());
+				inspector.getTotalRequests().refresh(reactor.currentTimeMillis());
+				inspector.getHttpTimeouts().refresh(reactor.currentTimeMillis());
 
-					System.out.println(inspector.getTotalRequests().getTotalCount());
-					System.out.println();
-					System.out.println(inspector.getHttpTimeouts().getTotalCount());
-					System.out.println(inspector.getResolveErrors().getTotal());
-					System.out.println(inspector.getConnectErrors().getTotal());
-					System.out.println(inspector.getTotalResponses());
+				System.out.println(inspector.getTotalRequests().getTotalCount());
+				System.out.println();
+				System.out.println(inspector.getHttpTimeouts().getTotalCount());
+				System.out.println(inspector.getResolveErrors().getTotal());
+				System.out.println(inspector.getConnectErrors().getTotal());
+				System.out.println(inspector.getTotalResponses());
 
-					assertEquals(4, inspector.getActiveRequests());
-				}));
+				assertEquals(4, inspector.getActiveRequests());
+			}));
 		assertThat(e, instanceOf(AsyncTimeoutException.class));
 	}
 
@@ -180,15 +180,15 @@ public final class HttpClientTest {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
 		HttpServer.builder(reactor, request -> HttpResponse.ok200().toPromise())
-				.withAcceptOnce()
-				.withListenPort(port)
-				.build()
-				.listen();
+			.withAcceptOnce()
+			.withListenPort(port)
+			.build()
+			.listen();
 
 		JmxInspector inspector = new JmxInspector();
 		IHttpClient httpClient = HttpClient.builder(reactor)
-				.withInspector(inspector)
-				.build();
+			.withInspector(inspector)
+			.build();
 
 		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build());
 		assertEquals(1, inspector.getActiveRequests());
@@ -201,8 +201,8 @@ public final class HttpClientTest {
 		String text = "content";
 		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n\r\n" + text));
 		String responseText = await(customResponse(req, false)
-				.then(response -> response.loadBody())
-				.map(byteBuf -> byteBuf.getString(UTF_8)));
+			.then(response -> response.loadBody())
+			.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
 
@@ -211,8 +211,8 @@ public final class HttpClientTest {
 		String text = "content";
 		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n\r\n" + text));
 		String responseText = await(customResponse(req, false)
-				.then(response -> response.loadBody())
-				.map(byteBuf -> byteBuf.getString(UTF_8)));
+			.then(response -> response.loadBody())
+			.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
 
@@ -220,14 +220,14 @@ public final class HttpClientTest {
 	public void testClientNoContentLengthGzipped() throws Exception {
 		String text = "content";
 		ByteBuf headLines = ByteBuf.wrapForReading(encodeAscii("""
-				HTTP/1.1 200 OK\r
-				Content-Encoding: gzip\r
-				\r
-				"""));
+			HTTP/1.1 200 OK\r
+			Content-Encoding: gzip\r
+			\r
+			"""));
 
 		String responseText = await(customResponse(ByteBufPool.append(headLines, GzipProcessorUtils.toGzip(wrapAscii(text))), false)
-				.then(response -> response.loadBody())
-				.map(byteBuf -> byteBuf.getString(UTF_8)));
+			.then(response -> response.loadBody())
+			.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
 
@@ -235,14 +235,14 @@ public final class HttpClientTest {
 	public void testClientNoContentLengthGzippedSSL() throws Exception {
 		String text = "content";
 		ByteBuf headLines = ByteBuf.wrapForReading(encodeAscii("""
-				HTTP/1.1 200 OK\r
-				Content-Encoding: gzip\r
-				\r
-				"""));
+			HTTP/1.1 200 OK\r
+			Content-Encoding: gzip\r
+			\r
+			"""));
 
 		String responseText = await(customResponse(ByteBufPool.append(headLines, GzipProcessorUtils.toGzip(wrapAscii(text))), true)
-				.then(response -> response.loadBody())
-				.map(byteBuf -> byteBuf.getString(UTF_8)));
+			.then(response -> response.loadBody())
+			.map(byteBuf -> byteBuf.getString(UTF_8)));
 		assertEquals(text, responseText);
 	}
 
@@ -261,13 +261,13 @@ public final class HttpClientTest {
 					while (b != -1 && !(((b = in.read()) == CR || b == LF) && (b = in.read()) == LF)) {
 					}
 					ByteBuf buf = ByteBuf.wrapForReading(encodeAscii("""
-							HTTP/1.1 200 OK
-							Content-Length:  4
+						HTTP/1.1 200 OK
+						Content-Length:  4
 
-							testHTTP/1.1 200 OK
-							Content-Length:  4
+						testHTTP/1.1 200 OK
+						Content-Length:  4
 
-							test"""));
+						test"""));
 					socket.getOutputStream().write(buf.array(), buf.head(), buf.readRemaining());
 				} catch (IOException ignored) {
 				}
@@ -275,26 +275,26 @@ public final class HttpClientTest {
 		}).start();
 
 		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withKeepAliveTimeout(Duration.ofSeconds(30))
-				.build();
+			.withKeepAliveTimeout(Duration.ofSeconds(30))
+			.build();
 
 		int code = await(client
-				.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.loadBody().async()
-						.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + port).build()))
-						.then(res -> {
-							assertFalse(res.isRecycled());
-							return res.loadBody()
-									.map(body -> {
-										assertEquals("test", body.getString(UTF_8));
-										return res;
-									});
-						})
-						.map(HttpResponse::getCode)
-						.whenComplete(assertingFn(($, e) -> {
-							socketRef.get().close();
-							listener.close();
-						}))));
+			.request(HttpRequest.get("http://127.0.0.1:" + port).build())
+			.then(response -> response.loadBody().async()
+				.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + port).build()))
+				.then(res -> {
+					assertFalse(res.isRecycled());
+					return res.loadBody()
+						.map(body -> {
+							assertEquals("test", body.getString(UTF_8));
+							return res;
+						});
+				})
+				.map(HttpResponse::getCode)
+				.whenComplete(assertingFn(($, e) -> {
+					socketRef.get().close();
+					listener.close();
+				}))));
 
 		assertEquals(200, code);
 	}
@@ -302,10 +302,10 @@ public final class HttpClientTest {
 	@Test
 	public void testResponseWithoutReasonPhrase() throws IOException {
 		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("""
-				HTTP/1.1 200
-				Content-Length: 0\r
-				\r
-				"""));
+			HTTP/1.1 200
+			Content-Length: 0\r
+			\r
+			"""));
 		assertEquals((Integer) 200, await(customResponse(req, false).map(HttpResponse::getCode)));
 	}
 
@@ -313,22 +313,22 @@ public final class HttpClientTest {
 	public void testActiveConnectionsCountWithFailingServer() throws IOException {
 		String serverResponse = "\r\n";
 		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
-						socket.read()
-								.whenResult(ByteBuf::recycle)
-								.then(() -> socket.write(wrapAscii(serverResponse)))
-								.whenComplete(socket::close))
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				socket.read()
+					.whenResult(ByteBuf::recycle)
+					.then(() -> socket.write(wrapAscii(serverResponse)))
+					.whenComplete(socket::close))
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		JmxInspector inspector = new JmxInspector();
 		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
-				.withInspector(inspector)
-				.build();
+			.withInspector(inspector)
+			.build();
 
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.then(response -> response.loadBody()));
+			.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
 
@@ -346,9 +346,9 @@ public final class HttpClientTest {
 	private static final ByteBufsDecoder<ByteBuf> REQUEST_DECODER = bufs -> {
 		for (int i = 0; i < bufs.remainingBytes() - 3; i++) {
 			if (bufs.peekByte(i) == CR &&
-					bufs.peekByte(i + 1) == LF &&
-					bufs.peekByte(i + 2) == CR &&
-					bufs.peekByte(i + 3) == LF) {
+				bufs.peekByte(i + 1) == LF &&
+				bufs.peekByte(i + 2) == CR &&
+				bufs.peekByte(i + 3) == LF) {
 				return bufs.takeRemaining();
 			}
 		}
@@ -357,12 +357,12 @@ public final class HttpClientTest {
 
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
 		SimpleServer.Builder builder = SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
-						BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
-								.decode(REQUEST_DECODER)
-								.whenResult(ByteBuf::recycle)
-								.then(() -> socket.write(rawResponse))
-								.whenResult(socket::close))
-				.withAcceptOnce();
+				BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(socket))
+					.decode(REQUEST_DECODER)
+					.whenResult(ByteBuf::recycle)
+					.then(() -> socket.write(rawResponse))
+					.whenResult(socket::close))
+			.withAcceptOnce();
 		if (ssl) {
 			builder.withSslListenAddress(createTestSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(port));
 		} else {
@@ -371,9 +371,9 @@ public final class HttpClientTest {
 		builder.build().listen();
 		String url = "http" + (ssl ? "s" : "") + "://127.0.0.1:" + port;
 		return HttpClient.builder(Reactor.getCurrentReactor())
-				.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
-				.build()
-				.request(HttpRequest.get(url).build());
+			.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
+			.build()
+			.request(HttpRequest.get(url).build());
 	}
 
 }

@@ -23,8 +23,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
-		ElementType.FIELD,
-		ElementType.METHOD})
+	ElementType.FIELD,
+	ElementType.METHOD})
 public @interface SerializeProfiles {
 	String COMMON_PROFILE = "";
 	int DEFAULT_VERSION = -1;

@@ -73,23 +73,23 @@ public final class RecordScheme {
 			hashCodeEqualsFields = builder.fieldToType.keySet();
 		}
 		List<String> hashCodeEqualsClassFields = hashCodeEqualsFields.stream()
-				.map(builder::getClassField)
-				.collect(Collectors.toList());
+			.map(builder::getClassField)
+			.collect(Collectors.toList());
 		this.recordClass = builder.classLoader.ensureClass(
-				ClassKey.of(Record.class, asList(builder.fields), asList(builder.types), hashCodeEqualsClassFields),
-				() -> ClassGenerator.builder(Record.class)
-						.withConstructor(List.of(RecordScheme.class),
-								superConstructor(arg(0)))
-						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
-						.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
-						.initialize(b -> {
-							for (Map.Entry<String, Type> entry : builder.fieldToType.entrySet()) {
-								Type type = entry.getValue();
-								//noinspection rawtypes
-								b.withField(builder.getClassField(entry.getKey()), type instanceof Class ? ((Class) type) : Object.class);
-							}
-						})
-						.build());
+			ClassKey.of(Record.class, asList(builder.fields), asList(builder.types), hashCodeEqualsClassFields),
+			() -> ClassGenerator.builder(Record.class)
+				.withConstructor(List.of(RecordScheme.class),
+					superConstructor(arg(0)))
+				.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
+				.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
+				.initialize(b -> {
+					for (Map.Entry<String, Type> entry : builder.fieldToType.entrySet()) {
+						Type type = entry.getValue();
+						//noinspection rawtypes
+						b.withField(builder.getClassField(entry.getKey()), type instanceof Class ? ((Class) type) : Object.class);
+					}
+				})
+				.build());
 		this.recordGettersMap = new HashMap<>();
 		this.recordSettersMap = new HashMap<>();
 		this.recordGetters = new RecordGetter[builder.size()];
@@ -99,41 +99,41 @@ public final class RecordScheme {
 			Type fieldType = entry.getValue();
 			Variable property = builder.property(cast(arg(0), recordClass), field);
 			RecordGetter<?> recordGetter = builder.classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(RecordGetter.class, recordClass, field),
-					() -> ClassGenerator.builder(RecordGetter.class)
-							.withMethod("get", property)
-							.initialize(b -> {
-								if (isImplicitType(fieldType)) {
-									b.withMethod("getInt", property);
-									b.withMethod("getLong", property);
-									b.withMethod("getFloat", property);
-									b.withMethod("getDouble", property);
-								}
-							})
-							.withMethod("getScheme", value(this))
-							.withMethod("getField", value(field))
-							.withMethod("getType", value(fieldType, Type.class))
-							.build());
+				ClassKey.of(RecordGetter.class, recordClass, field),
+				() -> ClassGenerator.builder(RecordGetter.class)
+					.withMethod("get", property)
+					.initialize(b -> {
+						if (isImplicitType(fieldType)) {
+							b.withMethod("getInt", property);
+							b.withMethod("getLong", property);
+							b.withMethod("getFloat", property);
+							b.withMethod("getDouble", property);
+						}
+					})
+					.withMethod("getScheme", value(this))
+					.withMethod("getField", value(field))
+					.withMethod("getType", value(fieldType, Type.class))
+					.build());
 			recordGetters[recordGettersMap.size()] = recordGetter;
 			recordGettersMap.put(field, recordGetter);
 
 			Expression set = Expressions.set(property, arg(1));
 			RecordSetter<?> recordSetter = builder.classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(RecordSetter.class, recordClass, field),
-					() -> ClassGenerator.builder(RecordSetter.class)
-							.withMethod("set", set)
-							.initialize(b -> {
-								if (isImplicitType(fieldType)) {
-									b.withMethod("setInt", set);
-									b.withMethod("setLong", set);
-									b.withMethod("setFloat", set);
-									b.withMethod("setDouble", set);
-								}
-							})
-							.withMethod("getScheme", value(this))
-							.withMethod("getField", value(field))
-							.withMethod("getType", value(fieldType, Type.class))
-							.build());
+				ClassKey.of(RecordSetter.class, recordClass, field),
+				() -> ClassGenerator.builder(RecordSetter.class)
+					.withMethod("set", set)
+					.initialize(b -> {
+						if (isImplicitType(fieldType)) {
+							b.withMethod("setInt", set);
+							b.withMethod("setLong", set);
+							b.withMethod("setFloat", set);
+							b.withMethod("setDouble", set);
+						}
+					})
+					.withMethod("getScheme", value(this))
+					.withMethod("getField", value(field))
+					.withMethod("getType", value(fieldType, Type.class))
+					.build());
 			recordSetters[recordSettersMap.size()] = recordSetter;
 			recordSettersMap.put(field, recordSetter);
 		}
@@ -145,24 +145,24 @@ public final class RecordScheme {
 			}
 
 			List<String> comparatorClassFields = builder.comparatorFields.stream()
-					.map(builder::getClassField)
-					.toList();
+				.map(builder::getClassField)
+				.toList();
 
 			//noinspection unchecked
 			comparator = builder.classLoader.ensureClassAndCreateInstance(
-					ClassKey.of(Comparator.class, recordClass, builder.comparatorFields),
-					() -> ClassGenerator.builder(Comparator.class)
-							.withMethod("compare", comparatorImpl(recordClass, comparatorClassFields))
-							.build());
+				ClassKey.of(Comparator.class, recordClass, builder.comparatorFields),
+				() -> ClassGenerator.builder(Comparator.class)
+					.withMethod("compare", comparatorImpl(recordClass, comparatorClassFields))
+					.build());
 		}
 
 		this.factory = builder.classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(RecordFactory.class, recordClass),
-				() -> ClassGenerator.builder(RecordFactory.class)
-						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
-						.withMethod("create", Record.class, List.of(),
-								constructor(recordClass, staticField("SCHEME")))
-						.build());
+			ClassKey.of(RecordFactory.class, recordClass),
+			() -> ClassGenerator.builder(RecordFactory.class)
+				.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
+				.withMethod("create", Record.class, List.of(),
+					constructor(recordClass, staticField("SCHEME")))
+				.build());
 
 		this.fieldToType = builder.fieldToType;
 		this.fieldToIndex = builder.fieldToIndex;
@@ -264,8 +264,8 @@ public final class RecordScheme {
 
 		private Set<String> getMissingFields(List<String> fields) {
 			return fields.stream()
-					.filter(field -> !fieldToType.containsKey(field))
-					.collect(toSet());
+				.filter(field -> !fieldToType.containsKey(field))
+				.collect(toSet());
 		}
 
 		private Variable property(Expression record, String field) {
@@ -348,7 +348,7 @@ public final class RecordScheme {
 
 	private static boolean isImplicitType(Type fieldType) {
 		return fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
-				fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class;
+			fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class;
 	}
 
 	private static void checkUnique(List<String> fields) {
@@ -465,8 +465,8 @@ public final class RecordScheme {
 		if (o == null || getClass() != o.getClass()) return false;
 		RecordScheme scheme = (RecordScheme) o;
 		return Arrays.equals(fields, scheme.fields) &&
-				Arrays.equals(types, scheme.types) &&
-				Objects.equals(comparatorFields, scheme.comparatorFields);
+			Arrays.equals(types, scheme.types) &&
+			Objects.equals(comparatorFields, scheme.comparatorFields);
 	}
 
 	@Override
@@ -480,8 +480,8 @@ public final class RecordScheme {
 	@Override
 	public String toString() {
 		return fieldToType.entrySet().stream()
-				.map(entry -> entry.getKey() + "=" +
-						(entry.getValue() instanceof Class ? ((Class<?>) entry.getValue()).getSimpleName() : entry.getValue()))
-				.collect(joining(", ", "{", "}"));
+			.map(entry -> entry.getKey() + "=" +
+				(entry.getValue() instanceof Class ? ((Class<?>) entry.getValue()).getSimpleName() : entry.getValue()))
+			.collect(joining(", ", "{", "}"));
 	}
 }

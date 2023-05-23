@@ -26,9 +26,9 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 	private static final List<Long> USER_IDS = Stream.generate(() -> RANDOM.nextLong(10L * USER_IDS_SIZE))
-			.distinct()
-			.limit(USER_IDS_SIZE)
-			.toList();
+		.distinct()
+		.limit(USER_IDS_SIZE)
+		.toList();
 
 	private final Map<Long, Set<Integer>> controlMap = new TreeMap<>();
 
@@ -56,22 +56,22 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 
 	private void uploadBannerIds() throws Exception {
 		reactor.submit(() ->
-				Promises.until(0, i -> Promises.all(USER_IDS.stream()
-										.map(userId -> {
-											int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
-											return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
-													.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
-										}))
-								.map($ -> i + 1),
-						i -> i == BANNER_SIZE / 2
-				)).get();
+			Promises.until(0, i -> Promises.all(USER_IDS.stream()
+						.map(userId -> {
+							int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
+							return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
+								.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
+						}))
+					.map($ -> i + 1),
+				i -> i == BANNER_SIZE / 2
+			)).get();
 		System.out.println("Banners are uploaded\n");
 	}
 
 	private Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
 		Set<Integer> fetchedBanners = reactor.submit(() ->
-				client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
-						.map(GetResponse::bannerIds)
+			client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
+				.map(GetResponse::bannerIds)
 		).get();
 
 		System.out.println("Fetched banners for user ID [" + randomUserId + "]: " + fetchedBanners);
@@ -83,20 +83,20 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private void checkIfBannerIsSeen(long randomUserId, Set<Integer> fetchedBanners) throws Exception {
 		// Banner should be seen
 		int seenBannerId = fetchedBanners.stream()
-				.skip(RANDOM.nextInt(fetchedBanners.size()))
-				.findFirst()
-				.orElseThrow();
+			.skip(RANDOM.nextInt(fetchedBanners.size()))
+			.findFirst()
+			.orElseThrow();
 		CompletableFuture<Boolean> shouldBeSeenFuture = reactor.submit(() ->
-				client.sendRequest(new IsBannerSeenRequest(randomUserId, seenBannerId)));
+			client.sendRequest(new IsBannerSeenRequest(randomUserId, seenBannerId)));
 		System.out.println("Should be seen. Has banner with id '" + seenBannerId + "' been seen? : " + shouldBeSeenFuture.get());
 
 		// Banner should not be seen
 		int unseenBannerId = IntStream.range(1, BANNER_SIZE + 1)
-				.filter(id -> !fetchedBanners.contains(id))
-				.findAny()
-				.orElseThrow(AssertionError::new);
+			.filter(id -> !fetchedBanners.contains(id))
+			.findAny()
+			.orElseThrow(AssertionError::new);
 		CompletableFuture<Boolean> shouldNotBeSeenFuture = reactor.submit(() ->
-				client.sendRequest(new IsBannerSeenRequest(randomUserId, unseenBannerId)));
+			client.sendRequest(new IsBannerSeenRequest(randomUserId, unseenBannerId)));
 		System.out.println("Should NOT be seen. Has banner with id '" + unseenBannerId + "' been seen? : " + shouldNotBeSeenFuture.get() + '\n');
 	}
 

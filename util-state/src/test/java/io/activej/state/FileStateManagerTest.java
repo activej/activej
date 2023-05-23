@@ -37,8 +37,8 @@ public class FileStateManagerTest {
 		fileSystem.start();
 
 		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
-				.withCodec(new IntegerCodec())
-				.build();
+			.withCodec(new IntegerCodec())
+			.build();
 	}
 
 	@Test
@@ -59,9 +59,9 @@ public class FileStateManagerTest {
 	@Test
 	public void saveAndLoadWithRevisions() throws IOException {
 		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
-				.withCodec(new IntegerCodec())
-				.withMaxSaveDiffs(3)
-				.build();
+			.withCodec(new IntegerCodec())
+			.withMaxSaveDiffs(3)
+			.build();
 
 		manager.save(100);
 		manager.save(101);
@@ -100,9 +100,9 @@ public class FileStateManagerTest {
 	public void getLastDiffRevision() throws IOException {
 		int maxSaveDiffs = 3;
 		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
-				.withCodec(new IntegerCodec())
-				.withMaxSaveDiffs(maxSaveDiffs)
-				.build();
+			.withCodec(new IntegerCodec())
+			.withMaxSaveDiffs(maxSaveDiffs)
+			.build();
 
 		Long revision = manager.save(100);
 		manager.save(200);
@@ -137,15 +137,15 @@ public class FileStateManagerTest {
 	public void uploadsAreAtomic() throws IOException {
 		IOException expectedException = new IOException("Failed");
 		manager = FileStateManager.<Integer>builder(fileSystem, NAMING_SCHEME)
-				.withEncoder((stream, item) -> {
-					stream.writeInt(1); // some header
-					if (item <= 100) {
-						stream.writeInt(item);
-					} else {
-						throw expectedException;
-					}
-				})
-				.build();
+			.withEncoder((stream, item) -> {
+				stream.writeInt(1); // some header
+				if (item <= 100) {
+					stream.writeInt(item);
+				} else {
+					throw expectedException;
+				}
+			})
+			.build();
 
 		manager.save(50);
 		assertEquals(1, fileSystem.list("**").size());

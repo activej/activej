@@ -78,9 +78,9 @@ public interface IBlockingFileSystem {
 			copy(entry.getKey(), entry.getValue());
 		}
 		deleteAll(sourceToTarget.entrySet().stream()
-				.filter(entry -> !entry.getKey().equals(entry.getValue()))
-				.map(Map.Entry::getKey)
-				.collect(toSet()));
+			.filter(entry -> !entry.getKey().equals(entry.getValue()))
+			.map(Map.Entry::getKey)
+			.collect(toSet()));
 	}
 
 	Map<String, FileMetadata> list(String glob) throws IOException;

@@ -37,7 +37,7 @@ public final class ClassBuilderConstantsRule implements TestRule {
 	@Override
 	public Statement apply(Statement base, Description description) {
 		if (description.getTestClass().getAnnotation(IgnoreLeaks.class) != null
-				|| description.getAnnotation(IgnoreLeaks.class) != null) {
+			|| description.getAnnotation(IgnoreLeaks.class) != null) {
 			return base;
 		}
 		return new LambdaStatement(() -> {

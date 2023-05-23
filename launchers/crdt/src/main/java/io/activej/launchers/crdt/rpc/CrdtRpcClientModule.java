@@ -45,17 +45,17 @@ public class CrdtRpcClientModule extends AbstractModule {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("address", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_PORT)))
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.with("address", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_PORT)))
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Provides
 	IRpcClient client(NioReactor reactor, RpcStrategy strategy, List<Class<?>> messageTypes) {
 		return RpcClient.builder(reactor)
-				.withMessageTypes(messageTypes)
-				.withStrategy(strategy)
-				.build();
+			.withMessageTypes(messageTypes)
+			.withStrategy(strategy)
+			.build();
 	}
 
 	@Provides

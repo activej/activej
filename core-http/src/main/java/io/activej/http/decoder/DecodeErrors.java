@@ -42,27 +42,27 @@ public final class DecodeErrors {
 
 	public static DecodeErrors of(String message, Object... args) {
 		return builder()
-				.with(DecodeError.of(message, args))
-				.build();
+			.with(DecodeError.of(message, args))
+			.build();
 	}
 
 	public static DecodeErrors of(DecodeError error) {
 		return builder()
-				.with(error)
-				.build();
+			.with(error)
+			.build();
 	}
 
 	public static DecodeErrors of(List<DecodeError> errors) {
 		return builder()
-				.with(errors)
-				.build();
+			.with(errors)
+			.build();
 	}
 
 	public static Builder builder() {
 		return new DecodeErrors().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, DecodeErrors>{
+	public final class Builder extends AbstractBuilder<Builder, DecodeErrors> {
 		private Builder() {}
 
 		public Builder with(DecodeError error) {
@@ -170,10 +170,10 @@ public final class DecodeErrors {
 		return toMultimap(formatter, DEFAULT_SEPARATOR);
 	}
 
-	private static void toMultimapImpl(DecodeErrors errors,
-			Map<String, List<String>> multimap, String prefix,
-			BiFunction<String, Object[], String> formatter,
-			String separator) {
+	private static void toMultimapImpl(
+		DecodeErrors errors, Map<String, List<String>> multimap, String prefix,
+		BiFunction<String, Object[], String> formatter, String separator
+	) {
 		if (errors.errors != null) {
 			multimap.put(prefix, errors.errors.stream().map(error -> formatter.apply(error.message, error.getArgs())).collect(toList()));
 		}
@@ -182,10 +182,10 @@ public final class DecodeErrors {
 		}
 	}
 
-	private static void toMapImpl(DecodeErrors errors,
-			Map<String, String> map, String prefix,
-			BiFunction<String, Object[], String> formatter,
-			String separator) {
+	private static void toMapImpl(
+		DecodeErrors errors, Map<String, String> map, String prefix, BiFunction<String, Object[], String> formatter,
+		String separator
+	) {
 		if (errors.errors != null) {
 			DecodeError error = errors.errors.get(0);
 			map.put(prefix, formatter.apply(error.message, error.getArgs()));

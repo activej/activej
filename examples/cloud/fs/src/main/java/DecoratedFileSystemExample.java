@@ -31,8 +31,8 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 			@Provides
 			FileSystemServer fileSystemServer(NioReactor reactor, @Named("decorated") IFileSystem decoratedFS, Config config) {
 				return FileSystemServer.builder(reactor, decoratedFS)
-						.initialize(ofFileSystemServer(config.getChild("fs")))
-						.build();
+					.initialize(ofFileSystemServer(config.getChild("fs")))
+					.build();
 			}
 
 			@Provides
@@ -60,23 +60,23 @@ public class DecoratedFileSystemExample extends ServerSetupExample {
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 			return super.upload(name)
-					.map(consumer -> {
-						logger.info("Starting upload of file: {}. File size is {} bytes", name, size);
-						return consumer
-								.withAcknowledgement(ack -> ack
-										.whenResult(() -> logger.info("Upload of file {} finished", name)));
-					});
+				.map(consumer -> {
+					logger.info("Starting upload of file: {}. File size is {} bytes", name, size);
+					return consumer
+						.withAcknowledgement(ack -> ack
+							.whenResult(() -> logger.info("Upload of file {} finished", name)));
+				});
 		}
 
 		@Override
 		public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 			return super.download(name, offset, limit)
-					.map(supplier -> {
-						logger.info("Starting downloading file: {}", name);
-						return supplier
-								.withEndOfStream(eos -> eos
-										.whenResult(() -> logger.info("Download of file {} finished", name)));
-					});
+				.map(supplier -> {
+					logger.info("Starting downloading file: {}", name);
+					return supplier
+						.withEndOfStream(eos -> eos
+							.whenResult(() -> logger.info("Download of file {} finished", name)));
+				});
 
 		}
 	}

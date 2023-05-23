@@ -77,62 +77,62 @@ public final class TriggerResult {
 
 	public static TriggerResult ofTimestamp(long timestamp) {
 		return timestamp != 0L ?
-				new TriggerResult(timestamp, null, null) : NONE;
+			new TriggerResult(timestamp, null, null) : NONE;
 	}
 
 	public static TriggerResult ofTimestamp(long timestamp, boolean condition) {
 		return timestamp != 0L && condition ?
-				new TriggerResult(timestamp, null, null) : NONE;
+			new TriggerResult(timestamp, null, null) : NONE;
 	}
 
 	public static TriggerResult ofInstant(@Nullable Instant instant) {
 		return instant != null ?
-				create(instant, null, null) : NONE;
+			create(instant, null, null) : NONE;
 	}
 
 	public static TriggerResult ofInstant(Instant instant, boolean condition) {
 		return instant != null && condition ?
-				create(instant, null, null) : NONE;
+			create(instant, null, null) : NONE;
 	}
 
 	public static TriggerResult ofError(Throwable e) {
 		return e != null ?
-				new TriggerResult(0L, e, null) : NONE;
+			new TriggerResult(0L, e, null) : NONE;
 	}
 
 	public static TriggerResult ofError(Throwable e, long timestamp) {
 		return e != null ?
-				new TriggerResult(timestamp, e, null) : NONE;
+			new TriggerResult(timestamp, e, null) : NONE;
 	}
 
 	public static TriggerResult ofError(Throwable e, Instant instant) {
 		return e != null ?
-				create(instant.toEpochMilli(), e, null) : NONE;
+			create(instant.toEpochMilli(), e, null) : NONE;
 	}
 
 	public static TriggerResult ofError(ExceptionStats exceptionStats) {
 		Throwable lastException = exceptionStats.getLastException();
 		return lastException != null ?
-				create(exceptionStats.getLastTime() != null ?
-								exceptionStats.getLastTime().toEpochMilli() :
-								0,
-						lastException, exceptionStats.getTotal()) :
-				NONE;
+			create(exceptionStats.getLastTime() != null ?
+					exceptionStats.getLastTime().toEpochMilli() :
+					0,
+				lastException, exceptionStats.getTotal()) :
+			NONE;
 	}
 
 	public static TriggerResult ofValue(Object value) {
 		return value != null ?
-				new TriggerResult(0L, null, value) : NONE;
+			new TriggerResult(0L, null, value) : NONE;
 	}
 
 	public static <T> TriggerResult ofValue(T value, Predicate<T> predicate) {
 		return value != null && predicate.test(value) ?
-				new TriggerResult(0L, null, value) : NONE;
+			new TriggerResult(0L, null, value) : NONE;
 	}
 
 	public static <T> TriggerResult ofValue(T value, boolean condition) {
 		return value != null && condition ?
-				new TriggerResult(0L, null, value) : NONE;
+			new TriggerResult(0L, null, value) : NONE;
 	}
 
 	public static <T> TriggerResult ofValue(Supplier<T> supplier, boolean condition) {
@@ -212,8 +212,8 @@ public final class TriggerResult {
 	@Override
 	public String toString() {
 		return "@" + Instant.ofEpochMilli(timestamp) +
-				(count != 1 ? " #" + count : "") +
-				(value != null ? " : " + value : "") +
-				(throwable != null ? "\n" + formatExceptionMultiline(throwable) : "");
+			(count != 1 ? " #" + count : "") +
+			(value != null ? " : " + value : "") +
+			(throwable != null ? "\n" + formatExceptionMultiline(throwable) : "");
 	}
 }

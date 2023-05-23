@@ -89,56 +89,56 @@ public class HttpUtilsTest {
 	@Test
 	public void testFormatUrl() {
 		testFormatUrl(
-				new InetSocketAddress("localhost", 80),
-				"http://localhost/",
-				"https://localhost:80/");
+			new InetSocketAddress("localhost", 80),
+			"http://localhost/",
+			"https://localhost:80/");
 		testFormatUrl(
-				new InetSocketAddress("localhost", 443),
-				"http://localhost:443/",
-				"https://localhost/");
+			new InetSocketAddress("localhost", 443),
+			"http://localhost:443/",
+			"https://localhost/");
 		testFormatUrl(
-				new InetSocketAddress("localhost", 1337),
-				"http://localhost:1337/",
-				"https://localhost:1337/");
+			new InetSocketAddress("localhost", 1337),
+			"http://localhost:1337/",
+			"https://localhost:1337/");
 
 		testFormatUrl(
-				new InetSocketAddress("0", 80),
-				"http://0.0.0.0/",
-				"https://0.0.0.0:80/");
+			new InetSocketAddress("0", 80),
+			"http://0.0.0.0/",
+			"https://0.0.0.0:80/");
 		testFormatUrl(
-				new InetSocketAddress("0", 443),
-				"http://0.0.0.0:443/",
-				"https://0.0.0.0/");
+			new InetSocketAddress("0", 443),
+			"http://0.0.0.0:443/",
+			"https://0.0.0.0/");
 		testFormatUrl(
-				new InetSocketAddress("0", 1337),
-				"http://0.0.0.0:1337/",
-				"https://0.0.0.0:1337/");
+			new InetSocketAddress("0", 1337),
+			"http://0.0.0.0:1337/",
+			"https://0.0.0.0:1337/");
 
 		testFormatUrl(
-				new InetSocketAddress("::1", 80),
-				List.of("http://localhost/", "http://ip6-localhost/"),
-				List.of("https://localhost:80/", "https://ip6-localhost:80/"));
+			new InetSocketAddress("::1", 80),
+			List.of("http://localhost/", "http://ip6-localhost/"),
+			List.of("https://localhost:80/", "https://ip6-localhost:80/"));
 		testFormatUrl(
-				new InetSocketAddress("::1", 443),
-				List.of("http://localhost:443/", "http://ip6-localhost:443/"),
-				List.of("https://localhost/", "https://ip6-localhost/"));
+			new InetSocketAddress("::1", 443),
+			List.of("http://localhost:443/", "http://ip6-localhost:443/"),
+			List.of("https://localhost/", "https://ip6-localhost/"));
 		testFormatUrl(
-				new InetSocketAddress("::1", 1337),
-				List.of("http://localhost:1337/", "http://ip6-localhost:1337/"),
-				List.of("https://localhost:1337/", "https://ip6-localhost:1337/"));
+			new InetSocketAddress("::1", 1337),
+			List.of("http://localhost:1337/", "http://ip6-localhost:1337/"),
+			List.of("https://localhost:1337/", "https://ip6-localhost:1337/"));
 
 		testFormatUrl(
-				new InetSocketAddress("::", 80),
-				"http://[0:0:0:0:0:0:0:0]/",
-				"https://[0:0:0:0:0:0:0:0]:80/");
+			new InetSocketAddress("::", 80),
+			"http://[0:0:0:0:0:0:0:0]/",
+			"https://[0:0:0:0:0:0:0:0]:80/");
 		testFormatUrl(
-				new InetSocketAddress("::", 443),
-				"http://[0:0:0:0:0:0:0:0]:443/",
-				"https://[0:0:0:0:0:0:0:0]/");
+			new InetSocketAddress("::", 443),
+			"http://[0:0:0:0:0:0:0:0]:443/",
+			"https://[0:0:0:0:0:0:0:0]/");
 		testFormatUrl(
-				new InetSocketAddress("::", 1337),
-				"http://[0:0:0:0:0:0:0:0]:1337/",
-				"https://[0:0:0:0:0:0:0:0]:1337/");
+			new InetSocketAddress("::", 1337),
+			"http://[0:0:0:0:0:0:0:0]:1337/",
+			"https://[0:0:0:0:0:0:0:0]:1337/");
 	}
 
 	private void testFormatUrl(InetSocketAddress address, String expectedUrl, String expectedSslUrl) {

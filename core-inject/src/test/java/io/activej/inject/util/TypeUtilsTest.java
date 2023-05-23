@@ -115,27 +115,27 @@ public class TypeUtilsTest {
 		{
 			//noinspection TypeParameterExplicitlyExtendsObject
 			Type type = new TypeT<TestClass<
-					Integer,
-					? extends Integer,
-					? super Integer,
-					Object,
-					? extends Object,
-					? super Object,
-					?,
-					Set<? extends TestInterface<Integer, ? extends Integer>>,
-					Set<? super TestInterface<Integer, ? super Integer>>
-					>>() {}.getType();
+				Integer,
+				? extends Integer,
+				? super Integer,
+				Object,
+				? extends Object,
+				? super Object,
+				?,
+				Set<? extends TestInterface<Integer, ? extends Integer>>,
+				Set<? super TestInterface<Integer, ? super Integer>>
+				>>() {}.getType();
 			Type expected = new TypeT<TestClass<
-					Integer,
-					Integer,
-					Integer,
-					Object,
-					Object,
-					Object,
-					Object,
-					Set<TestInterface<Integer, Integer>>,
-					Set<TestInterface<Integer, Integer>>
-					>>() {}.getType();
+				Integer,
+				Integer,
+				Integer,
+				Object,
+				Object,
+				Object,
+				Object,
+				Set<TestInterface<Integer, Integer>>,
+				Set<TestInterface<Integer, Integer>>
+				>>() {}.getType();
 			assertEquals(expected, simplifyType(type));
 		}
 	}
@@ -151,12 +151,12 @@ public class TypeUtilsTest {
 		double aDouble = 3.14;
 		long aLong = Long.MAX_VALUE;
 		Injector injector = Injector.of(genericModuleDoubleLong, genericModuleStringInteger,
-				ModuleBuilder.create()
-						.bind(String.class).to(() -> aString)
-						.bind(Integer.class).to(() -> anInteger)
-						.bind(Double.class).to(() -> aDouble)
-						.bind(Long.class).to(() -> aLong)
-						.build());
+			ModuleBuilder.create()
+				.bind(String.class).to(() -> aString)
+				.bind(Integer.class).to(() -> anInteger)
+				.bind(Double.class).to(() -> aDouble)
+				.bind(Long.class).to(() -> aLong)
+				.build());
 
 		Set<String> strings = injector.getInstance(new Key<>() {});
 		Set<? extends String> stringsExtends = injector.getInstance(new Key<>() {});

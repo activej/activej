@@ -70,8 +70,8 @@ public class Utils {
 					throw new IOException("Stream Closed");
 				}
 				submit(reactor,
-						() -> channelConsumer.accept(ByteBuf.wrap(b, off, off + len)),
-						this);
+					() -> channelConsumer.accept(ByteBuf.wrap(b, off, off + len)),
+					this);
 			}
 
 			@Override
@@ -79,9 +79,9 @@ public class Utils {
 				if (isClosed) return;
 				isClosed = true;
 				submit(reactor,
-						() -> channelConsumer.acceptEndOfStream()
-								.whenComplete(channelConsumer::close),
-						this);
+					() -> channelConsumer.acceptEndOfStream()
+						.whenComplete(channelConsumer::close),
+					this);
 			}
 		};
 	}
@@ -150,11 +150,11 @@ public class Utils {
 				isClosed = true;
 				current = nullify(current, ByteBuf::recycle);
 				submit(reactor,
-						() -> {
-							channelSupplier.close();
-							return Promise.complete();
-						},
-						this);
+					() -> {
+						channelSupplier.close();
+						return Promise.complete();
+					},
+					this);
 			}
 		};
 	}

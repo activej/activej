@@ -50,8 +50,8 @@ public final class MapGet extends FunctionOperand<MapGet> {
 	@Override
 	public MapGet materialize(List<Object> params) {
 		return new MapGet(
-				mapOperand.materialize(params),
-				keyOperand.materialize(params)
+			mapOperand.materialize(params),
+			keyOperand.materialize(params)
 		);
 	}
 
@@ -87,7 +87,7 @@ public final class MapGet extends FunctionOperand<MapGet> {
 	@Override
 	public String toString() {
 		return "MapGet[" +
-				"mapOperand=" + mapOperand + ", " +
-				"keyOperand=" + keyOperand + ']';
+			"mapOperand=" + mapOperand + ", " +
+			"keyOperand=" + keyOperand + ']';
 	}
 }

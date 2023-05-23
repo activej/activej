@@ -113,14 +113,14 @@ public final class Specializer {
 			this.instance = instance;
 			this.instanceClass = normalizeClass(instance.getClass());
 			this.specializedType = Type.getType(
-					"L" + classNaming.apply(instance, classLoader.classN.incrementAndGet()).replace('.', '/') + ";");
+				"L" + classNaming.apply(instance, classLoader.classN.incrementAndGet()).replace('.', '/') + ";");
 		}
 
 		void scanInstance() {
 			for (Class<?> clazz = instance.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
 				for (Field field : clazz.getDeclaredFields()) {
 					specializedFields.put(field,
-							field.getDeclaringClass().getSimpleName() + "$" + field.getName());
+						field.getDeclaringClass().getSimpleName() + "$" + field.getName());
 				}
 			}
 
@@ -129,7 +129,7 @@ public final class Specializer {
 					if (Modifier.isStatic(javaMethod.getModifiers())) continue;
 					if (Modifier.isAbstract(javaMethod.getModifiers())) continue;
 					specializedMethods.put(javaMethod,
-							javaMethod.getDeclaringClass().getSimpleName() + "$" + javaMethod.getName());
+						javaMethod.getDeclaringClass().getSimpleName() + "$" + javaMethod.getName());
 				}
 			}
 
@@ -185,20 +185,20 @@ public final class Specializer {
 
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 			cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-					specializedType.getInternalName(),
-					null,
-					Type.getInternalName(Object.class),
-					interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
+				specializedType.getInternalName(),
+				null,
+				Type.getInternalName(Object.class),
+				interfaces.stream().map(Type::getInternalName).toArray(String[]::new));
 
 			cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "$this",
-					Type.getType(instanceClass).getDescriptor(), null, null);
+				Type.getType(instanceClass).getDescriptor(), null, null);
 
 			for (Map.Entry<Field, String> entry : specializedFields.entrySet()) {
 				Field javaField = entry.getKey();
 				String name = entry.getValue();
 
 				cw.visitField(ACC_PUBLIC | ACC_STATIC | (javaField.getModifiers() & (ACC_FINAL | ACC_VOLATILE)), name,
-						Type.getType(javaField.getType()).getDescriptor(), null, null);
+					Type.getType(javaField.getType()).getDescriptor(), null, null);
 			}
 
 			{
@@ -207,7 +207,7 @@ public final class Specializer {
 
 				g.push(registerStaticValue(instance));
 				g.invokeStatic(Type.getType(Specializer.class),
-						new Method("takeStaticValue", getType(Object.class), new Type[]{getType(int.class)}));
+					new Method("takeStaticValue", getType(Object.class), new Type[]{getType(int.class)}));
 				g.checkCast(getType(instanceClass));
 				g.putStatic(specializedType, THIS, getType(instanceClass));
 
@@ -227,7 +227,7 @@ public final class Specializer {
 					} else {
 						g.push(registerStaticValue(fieldInstance));
 						g.invokeStatic(Type.getType(Specializer.class),
-								new Method("takeStaticValue", getType(Object.class), new Type[]{getType(int.class)}));
+							new Method("takeStaticValue", getType(Object.class), new Type[]{getType(int.class)}));
 					}
 					if (javaField.getType().isPrimitive()) {
 						g.checkCast(getType(getBoxedType(javaField.getType())));
@@ -256,29 +256,29 @@ public final class Specializer {
 				String specializedMethodName = entry.getValue();
 				ClassNode classNode = ensureClassNode(javaMethod.getDeclaringClass());
 				String methodDesc = getMethodDescriptor(
-						getType(javaMethod.getReturnType()),
-						Arrays.stream(javaMethod.getParameterTypes()).map(Type::getType).toArray(Type[]::new));
+					getType(javaMethod.getReturnType()),
+					Arrays.stream(javaMethod.getParameterTypes()).map(Type::getType).toArray(Type[]::new));
 				//noinspection OptionalGetWithoutIsPresent
 
 				transformMethod(
-						classNode.methods.stream()
-								.filter(methodNode -> true &&
-										methodNode.name.equals(javaMethod.getName()) &&
-										methodNode.desc.equals(methodDesc))
-								.findFirst()
-								.get(),
-						new GeneratorAdapter(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
-								new Method(specializedMethodName, methodDesc), null, null, cw));
+					classNode.methods.stream()
+						.filter(methodNode -> true &&
+							methodNode.name.equals(javaMethod.getName()) &&
+							methodNode.desc.equals(methodDesc))
+						.findFirst()
+						.get(),
+					new GeneratorAdapter(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
+						new Method(specializedMethodName, methodDesc), null, null, cw));
 			}
 
 			Set<Method> interfaceMethods = interfaces.stream()
-					.flatMap(i -> Arrays.stream(i.getMethods())
-							.map(m -> new Method(
-									m.getName(),
-									getMethodDescriptor(
-											getType(m.getReturnType()),
-											Arrays.stream(m.getParameterTypes()).map(Type::getType).toArray(Type[]::new)))))
-					.collect(toSet());
+				.flatMap(i -> Arrays.stream(i.getMethods())
+					.map(m -> new Method(
+						m.getName(),
+						getMethodDescriptor(
+							getType(m.getReturnType()),
+							Arrays.stream(m.getParameterTypes()).map(Type::getType).toArray(Type[]::new)))))
+				.collect(toSet());
 
 			for (Method method : interfaceMethods) {
 				String methodImpl = lookupMethod(instance.getClass(), method);
@@ -549,10 +549,10 @@ public final class Specializer {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
 						Type ownerType = getType(internalizeClassName(insnField.owner));
 						doCallStatic(ownerType,
-								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
-										.map(lookupField ->
-												() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
-								() -> g.visitFieldInsn(GETSTATIC, insnField.owner, insnField.name, insnField.desc));
+							s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+								.map(lookupField ->
+									() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
+							() -> g.visitFieldInsn(GETSTATIC, insnField.owner, insnField.name, insnField.desc));
 						break;
 					}
 
@@ -560,10 +560,10 @@ public final class Specializer {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
 						Type ownerType = getType(internalizeClassName(insnField.owner));
 						doCallStatic(ownerType,
-								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
-										.map(lookupField ->
-												() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
-								() -> g.visitFieldInsn(PUTSTATIC, insnField.owner, insnField.name, insnField.desc));
+							s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+								.map(lookupField ->
+									() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
+							() -> g.visitFieldInsn(PUTSTATIC, insnField.owner, insnField.name, insnField.desc));
 						break;
 					}
 
@@ -571,10 +571,10 @@ public final class Specializer {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
 						Type ownerType = getType(internalizeClassName(insnField.owner));
 						doCall(g, ownerType, new Type[]{},
-								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
-										.map(lookupField ->
-												() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
-								() -> g.visitFieldInsn(GETFIELD, insnField.owner, insnField.name, insnField.desc));
+							s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+								.map(lookupField ->
+									() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
+							() -> g.visitFieldInsn(GETFIELD, insnField.owner, insnField.name, insnField.desc));
 						break;
 					}
 
@@ -582,10 +582,10 @@ public final class Specializer {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
 						Type ownerType = getType(internalizeClassName(insnField.owner));
 						doCall(g, ownerType, new Type[]{getType(insnField.desc)},
-								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
-										.map(lookupField ->
-												() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
-								() -> g.visitFieldInsn(PUTFIELD, insnField.owner, insnField.name, insnField.desc));
+							s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+								.map(lookupField ->
+									() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
+							() -> g.visitFieldInsn(PUTFIELD, insnField.owner, insnField.name, insnField.desc));
 						break;
 					}
 
@@ -601,17 +601,17 @@ public final class Specializer {
 						Method method = new Method(insnMethod.name, insnMethod.desc);
 						Type ownerType = getType(internalizeClassName(insnMethod.owner));
 						doCall(g, ownerType, method.getArgumentTypes(),
-								s -> Optional.ofNullable(s.lookupMethod(s.instance.getClass(), method))
-										.map(lookupMethod ->
-												() -> g.invokeStatic(s.specializedType, new Method(lookupMethod, method.getDescriptor()))),
-								() -> {
-									if (opcode == INVOKEINTERFACE) {
-										g.invokeInterface(ownerType, method);
-									} else if (opcode == INVOKEVIRTUAL) {
-										g.invokeVirtual(ownerType, method);
-									}
+							s -> Optional.ofNullable(s.lookupMethod(s.instance.getClass(), method))
+								.map(lookupMethod ->
+									() -> g.invokeStatic(s.specializedType, new Method(lookupMethod, method.getDescriptor()))),
+							() -> {
+								if (opcode == INVOKEINTERFACE) {
+									g.invokeInterface(ownerType, method);
+								} else if (opcode == INVOKEVIRTUAL) {
+									g.invokeVirtual(ownerType, method);
+								}
 
-								});
+							});
 						break;
 					}
 
@@ -634,12 +634,12 @@ public final class Specializer {
 							g.loadLocal(paramLocal);
 						}
 						String name = lookupMethod(
-								loadClass(classLoader, getType(internalizeClassName(insnMethod.owner))),
-								method);
+							loadClass(classLoader, getType(internalizeClassName(insnMethod.owner))),
+							method);
 						g.invokeStatic(specializedType,
-								new Method(
-										name,
-										method.getDescriptor()));
+							new Method(
+								name,
+								method.getDescriptor()));
 						break;
 					}
 
@@ -690,17 +690,16 @@ public final class Specializer {
 			for (int i = 0; i < methodNode.tryCatchBlocks.size(); i++) {
 				TryCatchBlockNode tryCatchBlock = methodNode.tryCatchBlocks.get(i);
 				g.visitTryCatchBlock(tryCatchBlock.start.getLabel(), tryCatchBlock.end.getLabel(), tryCatchBlock.handler.getLabel(),
-						tryCatchBlock.type);
+					tryCatchBlock.type);
 			}
 
 			g.endMethod();
 		}
 
-		private void doCall(GeneratorAdapter g,
-				Type ownerType, Type[] paramTypes,
-				Function<Specialization, Optional<Runnable>> staticCallSupplier,
-				Runnable defaultCall) {
-
+		private void doCall(
+			GeneratorAdapter g, Type ownerType, Type[] paramTypes,
+			Function<Specialization, Optional<Runnable>> staticCallSupplier, Runnable defaultCall
+		) {
 			Class<?> ownerClazz = loadClass(classLoader, ownerType);
 
 			int[] paramLocals = new int[paramTypes.length];
@@ -744,10 +743,9 @@ public final class Specializer {
 			g.mark(labelExit);
 		}
 
-		private void doCallStatic(Type ownerType,
-				Function<Specialization, Optional<Runnable>> staticCallSupplier,
-				Runnable defaultCall) {
-
+		private void doCallStatic(
+			Type ownerType, Function<Specialization, Optional<Runnable>> staticCallSupplier, Runnable defaultCall
+		) {
 			Class<?> ownerClazz = loadClass(classLoader, ownerType);
 
 			for (Specialization s : relatedSpecializations) {
@@ -766,10 +764,10 @@ public final class Specializer {
 			Field result = null;
 			for (Field originalField : specializedFields.keySet()) {
 				if (true &&
-						Objects.equals(originalField.getName(), field) &&
-						originalField.getDeclaringClass().isAssignableFrom(owner) &&
-						(result == null ||
-								result.getDeclaringClass().isAssignableFrom(originalField.getDeclaringClass()))) {
+					Objects.equals(originalField.getName(), field) &&
+					originalField.getDeclaringClass().isAssignableFrom(owner) &&
+					(result == null ||
+						result.getDeclaringClass().isAssignableFrom(originalField.getDeclaringClass()))) {
 					result = originalField;
 				}
 			}
@@ -780,13 +778,13 @@ public final class Specializer {
 			java.lang.reflect.Method result = null;
 			for (java.lang.reflect.Method originalMethod : specializedMethods.keySet()) {
 				if (true &&
-						Objects.equals(originalMethod.getName(), method.getName()) &&
-						Objects.equals(
-								Arrays.stream(originalMethod.getParameters()).map(p -> getType(p.getType())).collect(toList()),
-								List.of(method.getArgumentTypes())) &&
-						originalMethod.getDeclaringClass().isAssignableFrom(owner) &&
-						(result == null ||
-								result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass()))) {
+					Objects.equals(originalMethod.getName(), method.getName()) &&
+					Objects.equals(
+						Arrays.stream(originalMethod.getParameters()).map(p -> getType(p.getType())).collect(toList()),
+						List.of(method.getArgumentTypes())) &&
+					originalMethod.getDeclaringClass().isAssignableFrom(owner) &&
+					(result == null ||
+						result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass()))) {
 					result = originalMethod;
 				}
 			}

@@ -34,10 +34,10 @@ public final class RoutingServletTest {
 		if (promise.isResult()) {
 			HttpResponse result = promise.getResult();
 			result.loadBody()
-					.whenComplete(assertCompleteFn($ -> {
-						assertEquals(expectedBody, result.getBody().asString(UTF_8));
-						assertEquals(expectedCode, result.getCode());
-					}));
+				.whenComplete(assertCompleteFn($ -> {
+					assertEquals(expectedBody, result.getBody().asString(UTF_8));
+					assertEquals(expectedCode, result.getCode());
+				}));
 		} else {
 			assertEquals(expectedCode, ((HttpError) promise.getException()).getCode());
 		}
@@ -53,12 +53,12 @@ public final class RoutingServletTest {
 		Reactor reactor = getCurrentReactor();
 
 		AsyncServlet subservlet = request -> HttpResponse.ofCode(200)
-				.withBody("".getBytes(UTF_8))
-				.toPromise();
+			.withBody("".getBytes(UTF_8))
+			.toPromise();
 
 		RoutingServlet servlet1 = RoutingServlet.builder(reactor)
-				.with(GET, "/a/b/c", subservlet)
-				.build();
+			.with(GET, "/a/b/c", subservlet)
+			.build();
 
 		check(servlet1.serve(HttpRequest.get("http://some-test.com/a/b/c").build()), "", 200);
 		check(servlet1.serve(HttpRequest.get("http://some-test.com/a/b/c").build()), "", 200);
@@ -66,8 +66,8 @@ public final class RoutingServletTest {
 		check(servlet1.serve(HttpRequest.post("http://some-test.com/a/b/c").build()), "", 404);
 
 		RoutingServlet servlet2 = RoutingServlet.builder(reactor)
-				.with(HEAD, "/a/b/c", subservlet)
-				.build();
+			.with(HEAD, "/a/b/c", subservlet)
+			.build();
 
 		check(servlet2.serve(HttpRequest.post("http://some-test.com/a/b/c").build()), "", 404);
 		check(servlet2.serve(HttpRequest.post("http://some-test.com/a/b/c/d").build()), "", 404);
@@ -77,10 +77,10 @@ public final class RoutingServletTest {
 	@Test
 	public void testProcessWildCardRequest() throws Exception {
 		RoutingServlet servlet = RoutingServlet.builder(getCurrentReactor())
-				.with("/a/b/c/d", request -> HttpResponse.ofCode(200)
-						.withBody("".getBytes(UTF_8))
-						.toPromise())
-				.build();
+			.with("/a/b/c/d", request -> HttpResponse.ofCode(200)
+				.withBody("".getBytes(UTF_8))
+				.toPromise())
+			.build();
 
 		check(servlet.serve(HttpRequest.get("http://some-test.com/a/b/c/d").build()), "", 200);
 		check(servlet.serve(HttpRequest.post("http://some-test.com/a/b/c/d").build()), "", 200);
@@ -105,21 +105,21 @@ public final class RoutingServletTest {
 
 		Reactor reactor = getCurrentReactor();
 		RoutingServlet a = RoutingServlet.builder(reactor)
-				.with(GET, "/c", action)
-				.with(GET, "/d", action)
-				.with(GET, "/", action)
-				.build();
+			.with(GET, "/c", action)
+			.with(GET, "/d", action)
+			.with(GET, "/", action)
+			.build();
 
 		RoutingServlet b = RoutingServlet.builder(reactor)
-				.with(GET, "/f", action)
-				.with(GET, "/g", action)
-				.build();
+			.with(GET, "/f", action)
+			.with(GET, "/g", action)
+			.build();
 
 		RoutingServlet main = RoutingServlet.builder(reactor)
-				.with(GET, "/", action)
-				.with(GET, "/a/*", a)
-				.with(GET, "/b/*", b)
-				.build();
+			.with(GET, "/", action)
+			.with(GET, "/a/*", a)
+			.with(GET, "/b/*", b)
+			.build();
 
 		System.out.println("Micro mapping" + DELIM);
 		check(main.serve(request1), "Executed: /", 200);
@@ -153,13 +153,13 @@ public final class RoutingServletTest {
 		};
 
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/", action)
-				.with(GET, "/a", action)
-				.with(GET, "/a/c", action)
-				.with(GET, "/a/d", action)
-				.with(GET, "/b/f", action)
-				.with(GET, "/b/g", action)
-				.build();
+			.with(GET, "/", action)
+			.with(GET, "/a", action)
+			.with(GET, "/a/c", action)
+			.with(GET, "/a/d", action)
+			.with(GET, "/b/f", action)
+			.with(GET, "/b/g", action)
+			.build();
 
 		System.out.println("Long mapping " + DELIM);
 		check(main.serve(request1), "Executed: /", 200);
@@ -193,16 +193,16 @@ public final class RoutingServletTest {
 
 		Reactor reactor = getCurrentReactor();
 		RoutingServlet main = RoutingServlet.builder(reactor)
-				.with(GET, "/a", action)
-				.with(GET, "/a/c", action)
-				.with(GET, "/a/d", action)
-				.with(GET, "/b", action)
-				.merge(RoutingServlet.builder(reactor)
-						.with(GET, "/", action)
-						.with(GET, "/a/e", action)
-						.with(GET, "/a/c/f", action)
-						.build())
-				.build();
+			.with(GET, "/a", action)
+			.with(GET, "/a/c", action)
+			.with(GET, "/a/d", action)
+			.with(GET, "/b", action)
+			.merge(RoutingServlet.builder(reactor)
+				.with(GET, "/", action)
+				.with(GET, "/a/e", action)
+				.with(GET, "/a/c/f", action)
+				.build())
+			.build();
 
 		System.out.println("Merge   " + DELIM);
 		check(main.serve(request1), "Executed: /", 200);
@@ -233,13 +233,13 @@ public final class RoutingServletTest {
 		try {
 			Reactor reactor = getCurrentReactor();
 			main = RoutingServlet.builder(reactor)
-					.with(GET, "/", action)
-					.with(GET, "/a/e", action)
-					.with(GET, "/a/c/f", action)
-					.with(GET, "/", RoutingServlet.builder(reactor)
-							.with(GET, "/a/c/f", anotherAction)
-							.build())
-					.build();
+				.with(GET, "/", action)
+				.with(GET, "/a/e", action)
+				.with(GET, "/a/c/f", action)
+				.with(GET, "/", RoutingServlet.builder(reactor)
+					.with(GET, "/a/c/f", anotherAction)
+					.build())
+				.build();
 		} catch (IllegalArgumentException e) {
 			assertEquals("Already mapped", e.getMessage());
 			return;
@@ -252,15 +252,15 @@ public final class RoutingServletTest {
 	public void testParameter() throws Exception {
 		AsyncServlet printParameters = request -> {
 			String body = request.getPathParameter("id")
-					+ " " + request.getPathParameter("uid");
+				+ " " + request.getPathParameter("uid");
 			ByteBuf bodyByteBuf = wrapUtf8(body);
 			return HttpResponse.ofCode(200).withBody(bodyByteBuf).toPromise();
 		};
 
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/:id/a/:uid/b/:eid", printParameters)
-				.with(GET, "/:id/a/:uid", printParameters)
-				.build();
+			.with(GET, "/:id/a/:uid/b/:eid", printParameters)
+			.with(GET, "/:id/a/:uid", printParameters)
+			.build();
 
 		System.out.println("Parameter test " + DELIM);
 		check(main.serve(HttpRequest.get("http://example.com/123/a/456/b/789").build()), "123 456", 200);
@@ -272,15 +272,15 @@ public final class RoutingServletTest {
 	@Test
 	public void testMultiParameters() throws Exception {
 		RoutingServlet ms = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/serve/:cid/wash", request -> {
-					ByteBuf body = wrapUtf8("served car: " + request.getPathParameter("cid"));
-					return HttpResponse.ofCode(200).withBody(body).toPromise();
-				})
-				.with(GET, "/serve/:mid/feed", request -> {
-					ByteBuf body = wrapUtf8("served man: " + request.getPathParameter("mid"));
-					return HttpResponse.ofCode(200).withBody(body).toPromise();
-				})
-				.build();
+			.with(GET, "/serve/:cid/wash", request -> {
+				ByteBuf body = wrapUtf8("served car: " + request.getPathParameter("cid"));
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.with(GET, "/serve/:mid/feed", request -> {
+				ByteBuf body = wrapUtf8("served man: " + request.getPathParameter("mid"));
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.build();
 
 		System.out.println("Multi parameters " + DELIM);
 		check(ms.serve(HttpRequest.get(TEMPLATE + "/serve/1/wash").build()), "served car: 1", 200);
@@ -295,13 +295,13 @@ public final class RoutingServletTest {
 		HttpRequest request3 = HttpRequest.builder(CONNECT, TEMPLATE + "/a/b/c/action").build();
 
 		RoutingServlet servlet = RoutingServlet.builder(getCurrentReactor())
-				.with("/a/b/c/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("WILDCARD")).toPromise())
-				.with(POST, "/a/b/c/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("POST")).toPromise())
-				.with(GET, "/a/b/c/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("GET")).toPromise())
-				.build();
+			.with("/a/b/c/action", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("WILDCARD")).toPromise())
+			.with(POST, "/a/b/c/action", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("POST")).toPromise())
+			.with(GET, "/a/b/c/action", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("GET")).toPromise())
+			.build();
 
 		System.out.println("Different methods " + DELIM);
 		check(servlet.serve(request1), "GET", 200);
@@ -316,13 +316,13 @@ public final class RoutingServletTest {
 		HttpRequest request2 = HttpRequest.get(TEMPLATE + "/html/admin/action/ban").build();
 
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/html/admin/action", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Action executed")).toPromise())
-				.with("/html/admin/*", request ->
-						HttpResponse.ofCode(200)
-								.withBody(wrapUtf8("Stopped at admin: " + request.getRelativePath()))
-								.toPromise())
-				.build();
+			.with(GET, "/html/admin/action", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("Action executed")).toPromise())
+			.with("/html/admin/*", request ->
+				HttpResponse.ofCode(200)
+					.withBody(wrapUtf8("Stopped at admin: " + request.getRelativePath()))
+					.toPromise())
+			.build();
 
 		System.out.println("Default stop " + DELIM);
 		check(main.serve(request1), "Action executed", 200);
@@ -333,9 +333,9 @@ public final class RoutingServletTest {
 	@Test
 	public void test404() throws Exception {
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with("/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("All OK")).toPromise())
-				.build();
+			.with("/a/:id/b/d", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("All OK")).toPromise())
+			.build();
 
 		System.out.println("404 " + DELIM);
 		HttpRequest request = HttpRequest.get(TEMPLATE + "/a/123/b/c").build();
@@ -346,9 +346,9 @@ public final class RoutingServletTest {
 	@Test
 	public void test405() throws Exception {
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")).toPromise())
-				.build();
+			.with(GET, "/a/:id/b/d", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")).toPromise())
+			.build();
 
 		HttpRequest request = HttpRequest.post(TEMPLATE + "/a/123/b/d").build();
 		check(main.serve(request), "", 404);
@@ -357,22 +357,22 @@ public final class RoutingServletTest {
 	@Test
 	public void test405WithFallback() throws Exception {
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")).toPromise())
-				.with("/a/:id/b/d", request ->
-						HttpResponse.ofCode(200).withBody(wrapUtf8("Fallback executed")).toPromise())
-				.build();
+			.with(GET, "/a/:id/b/d", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")).toPromise())
+			.with("/a/:id/b/d", request ->
+				HttpResponse.ofCode(200).withBody(wrapUtf8("Fallback executed")).toPromise())
+			.build();
 		check(main.serve(HttpRequest.post(TEMPLATE + "/a/123/b/d").build()), "Fallback executed", 200);
 	}
 
 	@Test
 	public void testTail() throws Exception {
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/method/:var/*", request -> {
-					ByteBuf body = wrapUtf8("Success: " + request.getRelativePath());
-					return HttpResponse.ofCode(200).withBody(body).toPromise();
-				})
-				.build();
+			.with(GET, "/method/:var/*", request -> {
+				ByteBuf body = wrapUtf8("Success: " + request.getRelativePath());
+				return HttpResponse.ofCode(200).withBody(body).toPromise();
+			})
+			.build();
 
 		check(main.serve(HttpRequest.get(TEMPLATE + "/method/dfbdb/oneArg").build()), "Success: oneArg", 200);
 		check(main.serve(HttpRequest.get(TEMPLATE + "/method/srfethj/first/second").build()), "Success: first/second", 200);
@@ -386,12 +386,12 @@ public final class RoutingServletTest {
 	public void testWebSocket() throws Exception {
 		String wsPath = "/web/socket";
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.withWebSocket(wsPath, request -> {})
-				.with(POST, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("post")).toPromise())
-				.with(GET, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("get")).toPromise())
-				.with(wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("all")).toPromise())
-				.with(wsPath + "/inside", request -> HttpResponse.ok200().withBody(wrapUtf8("inner")).toPromise())
-				.build();
+			.withWebSocket(wsPath, request -> {})
+			.with(POST, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("post")).toPromise())
+			.with(GET, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("get")).toPromise())
+			.with(wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("all")).toPromise())
+			.with(wsPath + "/inside", request -> HttpResponse.ok200().withBody(wrapUtf8("inner")).toPromise())
+			.build();
 
 		checkWebSocket(main.serve(HttpRequest.get(TEMPLATE_WS + wsPath).build()));
 		check(main.serve(HttpRequest.post(TEMPLATE + wsPath).build()), "post", 200);
@@ -404,8 +404,8 @@ public final class RoutingServletTest {
 	public void testWebSocketSingle() throws Exception {
 		String wsPath = "/web/socket";
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.withWebSocket(wsPath, request -> HttpResponse.ok200().build())
-				.build();
+			.withWebSocket(wsPath, request -> HttpResponse.ok200().build())
+			.build();
 
 		checkWebSocket(main.serve(HttpRequest.get(TEMPLATE_WS + wsPath).build()));
 		check(main.serve(HttpRequest.get(TEMPLATE + wsPath).build()), "", 404);
@@ -417,16 +417,16 @@ public final class RoutingServletTest {
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8)).toPromise();
 
 		RoutingServlet router = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/a%2fb", servlet)
-				.initialize(builder -> {
-					try {
-						builder.with(GET, "/a%2Fb", servlet);
-						fail();
-					} catch (IllegalArgumentException e) {
-						assertEquals("Already mapped", e.getMessage());
-					}
-				})
-				.build();
+			.with(GET, "/a%2fb", servlet)
+			.initialize(builder -> {
+				try {
+					builder.with(GET, "/a%2Fb", servlet);
+					fail();
+				} catch (IllegalArgumentException e) {
+					assertEquals("Already mapped", e.getMessage());
+				}
+			})
+			.build();
 
 		check(router.serve(HttpRequest.get("http://some-test.com/a%2fb").build()), "", 200);
 		check(router.serve(HttpRequest.get("http://some-test.com/a%2Fb").build()), "", 200);
@@ -438,16 +438,16 @@ public final class RoutingServletTest {
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8)).toPromise();
 
 		RoutingServlet router = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/абв", servlet)
-				.initialize(builder -> {
-					try {
-						builder.with(GET, "/%D0%B0%D0%B1%D0%B2", servlet);
-						fail();
-					} catch (IllegalArgumentException e) {
-						assertEquals("Already mapped", e.getMessage());
-					}
-				})
-				.build();
+			.with(GET, "/абв", servlet)
+			.initialize(builder -> {
+				try {
+					builder.with(GET, "/%D0%B0%D0%B1%D0%B2", servlet);
+					fail();
+				} catch (IllegalArgumentException e) {
+					assertEquals("Already mapped", e.getMessage());
+				}
+			})
+			.build();
 
 		check(router.serve(HttpRequest.get("http://some-test.com/%d0%b0%d0%b1%d0%b2").build()), "", 200);
 		check(router.serve(HttpRequest.get("http://some-test.com/%D0%b0%d0%b1%d0%b2").build()), "", 200);
@@ -468,8 +468,8 @@ public final class RoutingServletTest {
 		};
 
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/a/:val", printParameters)
-				.build();
+			.with(GET, "/a/:val", printParameters)
+			.build();
 
 		check(main.serve(HttpRequest.get("http://example.com/a/1%2f").build()), "{val=1/}", 200);
 		check(main.serve(HttpRequest.get("http://example.com/a/1%2F").build()), "{val=1/}", 200);
@@ -486,8 +486,8 @@ public final class RoutingServletTest {
 		};
 
 		RoutingServlet main = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/a/:%2f", printParameters)
-				.build();
+			.with(GET, "/a/:%2f", printParameters)
+			.build();
 
 		check(main.serve(HttpRequest.get("http://example.com/a/23").build()), "{%2f=23}", 200);
 	}
@@ -496,16 +496,16 @@ public final class RoutingServletTest {
 	public void testBadPercentEncoding() throws Exception {
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody(new byte[0]).toPromise();
 		RoutingServlet router = RoutingServlet.builder(getCurrentReactor())
-				.with(GET, "/a", servlet)
-				.initialize(builder -> {
-					try {
-						builder.with(GET, "/a%2", servlet);
-						fail();
-					} catch (IllegalArgumentException e) {
-						assertEquals("Pattern contains bad percent encoding", e.getMessage());
-					}
-				})
-				.build();
+			.with(GET, "/a", servlet)
+			.initialize(builder -> {
+				try {
+					builder.with(GET, "/a%2", servlet);
+					fail();
+				} catch (IllegalArgumentException e) {
+					assertEquals("Pattern contains bad percent encoding", e.getMessage());
+				}
+			})
+			.build();
 
 		try {
 			router.serve(HttpRequest.get("http://example.com/a%2").build());

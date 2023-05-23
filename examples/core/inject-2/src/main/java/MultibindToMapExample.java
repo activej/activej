@@ -12,30 +12,30 @@ public final class MultibindToMapExample {
 		Key<Map<Integer, String>> mapKey = new Key<>() {};
 
 		Module module1 = ModuleBuilder.create()
-				.bind(mapKey).to(() -> {
-					Map<Integer, String> map = new HashMap<>();
-					map.put(1, "one");
-					map.put(2, "two");
-					map.put(3, "three");
-					return map;
-				})
-				.build();
+			.bind(mapKey).to(() -> {
+				Map<Integer, String> map = new HashMap<>();
+				map.put(1, "one");
+				map.put(2, "two");
+				map.put(3, "three");
+				return map;
+			})
+			.build();
 
 		Module module2 = ModuleBuilder.create()
-				.bind(mapKey).to(() -> {
-					Map<Integer, String> map = new HashMap<>();
-					map.put(4, "four");
-					map.put(5, "five");
-					map.put(6, "six");
-					return map;
-				})
-				.build();
+			.bind(mapKey).to(() -> {
+				Map<Integer, String> map = new HashMap<>();
+				map.put(4, "four");
+				map.put(5, "five");
+				map.put(6, "six");
+				return map;
+			})
+			.build();
 		//[END MODULES]
 
 		//[START MULTIBINDER]
 		Module multibinderModule = ModuleBuilder.create()
-				.multibindToMap(Integer.class, String.class)
-				.build();
+			.multibindToMap(Integer.class, String.class)
+			.build();
 		//[END MULTIBINDER]
 
 		//[START INJECTOR]

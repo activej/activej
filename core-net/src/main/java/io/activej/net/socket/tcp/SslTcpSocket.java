@@ -65,8 +65,9 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 	private @Nullable SettablePromise<Void> write;
 	private @Nullable Promise<Void> pendingUpstreamWrite;
 
-	private SslTcpSocket(NioReactor reactor, ITcpSocket socket,
-						 SSLEngine engine, Executor executor) {
+	private SslTcpSocket(
+		NioReactor reactor, ITcpSocket socket, SSLEngine engine, Executor executor
+	) {
 		super(reactor);
 		this.engine = engine;
 		this.executor = executor;
@@ -74,30 +75,33 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 		startHandShake();
 	}
 
-	public static SslTcpSocket wrapClientSocket(NioReactor reactor, ITcpSocket socket,
-												String host, int port,
-												SSLContext sslContext, Executor executor) {
+	public static SslTcpSocket wrapClientSocket(
+		NioReactor reactor, ITcpSocket socket, String host, int port, SSLContext sslContext, Executor executor
+	) {
 		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
 		sslEngine.setUseClientMode(true);
 		return create(reactor, socket, sslEngine, executor);
 	}
 
-	public static SslTcpSocket wrapClientSocket(NioReactor reactor, ITcpSocket socket,
-												SSLContext sslContext, Executor executor) {
+	public static SslTcpSocket wrapClientSocket(
+		NioReactor reactor, ITcpSocket socket, SSLContext sslContext, Executor executor
+	) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(true);
 		return create(reactor, socket, sslEngine, executor);
 	}
 
-	public static SslTcpSocket wrapServerSocket(NioReactor reactor, ITcpSocket socket,
-												SSLContext sslContext, Executor executor) {
+	public static SslTcpSocket wrapServerSocket(
+		NioReactor reactor, ITcpSocket socket, SSLContext sslContext, Executor executor
+	) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(false);
 		return create(reactor, socket, sslEngine, executor);
 	}
 
-	public static SslTcpSocket create(NioReactor reactor, ITcpSocket socket,
-									  SSLEngine engine, Executor executor) {
+	public static SslTcpSocket create(
+		NioReactor reactor, ITcpSocket socket, SSLEngine engine, Executor executor
+	) {
 		return new SslTcpSocket(reactor, socket, engine, executor);
 	}
 
@@ -152,30 +156,30 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 
 	private void doRead() {
 		upstream.read()
-				.whenException(this::closeEx)
-				.whenResult(buf -> {
-					if (isClosed()) {
-						assert pendingUpstreamWrite != null;
-						Recyclers.recycle(buf);
-						return;
-					}
-					if (buf != null) {
-						net2engine = ByteBufPool.append(net2engine, buf);
-						sync();
-					} else {
-						if (engine.isInboundDone()) return;
-						try {
-							engine.closeInbound();
-						} catch (SSLException e) {
-							if (!ERROR_ON_CLOSE_WITHOUT_NOTIFY && read != null) {
-								SettablePromise<ByteBuf> read = this.read;
-								this.read = null;
-								read.set(null);
-							}
-							closeEx(new CloseWithoutNotifyException("Peer closed without sending close_notify", e));
+			.whenException(this::closeEx)
+			.whenResult(buf -> {
+				if (isClosed()) {
+					assert pendingUpstreamWrite != null;
+					Recyclers.recycle(buf);
+					return;
+				}
+				if (buf != null) {
+					net2engine = ByteBufPool.append(net2engine, buf);
+					sync();
+				} else {
+					if (engine.isInboundDone()) return;
+					try {
+						engine.closeInbound();
+					} catch (SSLException e) {
+						if (!ERROR_ON_CLOSE_WITHOUT_NOTIFY && read != null) {
+							SettablePromise<ByteBuf> read = this.read;
+							this.read = null;
+							read.set(null);
 						}
+						closeEx(new CloseWithoutNotifyException("Peer closed without sending close_notify", e));
 					}
-				});
+				}
+			});
 	}
 
 	private void doWrite(ByteBuf dstBuf) {
@@ -187,20 +191,20 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 			this.pendingUpstreamWrite = writePromise;
 		}
 		writePromise
-				.whenException(this::closeEx)
-				.whenComplete(() -> this.pendingUpstreamWrite = null)
-				.whenResult(() -> {
-					if (isClosed()) return;
-					if (engine.isOutboundDone()) {
-						close();
-						return;
-					}
-					if (!app2engine.canRead() && engine.getHandshakeStatus() == NOT_HANDSHAKING && write != null) {
-						SettablePromise<Void> write = this.write;
-						this.write = null;
-						write.set(null);
-					}
-				});
+			.whenException(this::closeEx)
+			.whenComplete(() -> this.pendingUpstreamWrite = null)
+			.whenResult(() -> {
+				if (isClosed()) return;
+				if (engine.isOutboundDone()) {
+					close();
+					return;
+				}
+				if (!app2engine.canRead() && engine.getHandshakeStatus() == NOT_HANDSHAKING && write != null) {
+					SettablePromise<Void> write = this.write;
+					this.write = null;
+					write.set(null);
+				}
+			});
 	}
 
 	private SSLEngineResult tryToUnwrap() throws SSLException {
@@ -297,14 +301,14 @@ public final class SslTcpSocket extends AbstractNioReactive implements ITcpSocke
 			Runnable task = engine.getDelegatedTask();
 			if (task == null) break;
 			Promise.ofBlocking(executor, task::run)
-					.whenResult(() -> {
-						if (isClosed()) return;
-						try {
-							doHandshake();
-						} catch (SSLException e) {
-							closeEx(e);
-						}
-					});
+				.whenResult(() -> {
+					if (isClosed()) return;
+					try {
+						doHandshake();
+					} catch (SSLException e) {
+						closeEx(e);
+					}
+				});
 		}
 	}
 

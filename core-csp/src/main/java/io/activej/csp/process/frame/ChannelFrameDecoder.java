@@ -35,7 +35,8 @@ import static io.activej.csp.process.frame.BlockDecoder.END_OF_STREAM;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
+	implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder> {
+
 	private static final boolean CHECKS = Checks.isEnabled(ChannelFrameDecoder.class);
 
 	private final BlockDecoder decoder;
@@ -109,33 +110,33 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	protected void doProcess() {
 		decode()
-				.subscribe((result, e) -> {
-					if (e instanceof TruncatedDataException) {
-						if (bufs.isEmpty()) {
-							if (decoder.ignoreMissingEndOfStreamBlock()) {
-								output.acceptEndOfStream()
-										.whenResult(this::completeProcess);
-							} else {
-								closeEx(new MissingEndOfStreamBlockException(e));
-							}
+			.subscribe((result, e) -> {
+				if (e instanceof TruncatedDataException) {
+					if (bufs.isEmpty()) {
+						if (decoder.ignoreMissingEndOfStreamBlock()) {
+							output.acceptEndOfStream()
+								.whenResult(this::completeProcess);
 						} else {
-							closeEx(new TruncatedBlockException(e));
+							closeEx(new MissingEndOfStreamBlockException(e));
 						}
 					} else {
-						doSanitize(result, e)
-								.whenResult(buf -> {
-									if (buf != END_OF_STREAM) {
-										output.accept(buf)
-												.whenResult(this::doProcess);
-									} else {
-										input.endOfStream()
-												.then(this::doSanitize)
-												.then(() -> output.acceptEndOfStream())
-												.whenResult(this::completeProcess);
-									}
-								});
+						closeEx(new TruncatedBlockException(e));
 					}
-				});
+				} else {
+					doSanitize(result, e)
+						.whenResult(buf -> {
+							if (buf != END_OF_STREAM) {
+								output.accept(buf)
+									.whenResult(this::doProcess);
+							} else {
+								input.endOfStream()
+									.then(this::doSanitize)
+									.then(() -> output.acceptEndOfStream())
+									.whenResult(this::completeProcess);
+							}
+						});
+				}
+			});
 	}
 
 	private Promise<ByteBuf> decode() {
@@ -155,7 +156,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 			Promise<Void> moreDataPromise = input.needMoreData();
 			if (moreDataPromise.isResult()) continue;
 			return moreDataPromise
-					.then(this::decode);
+				.then(this::decode);
 		}
 	}
 

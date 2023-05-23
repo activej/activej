@@ -45,7 +45,6 @@ public final class RecordField implements Operand<RecordField> {
 
 	@Override
 	public String toString() {
-		return "RecordField[" +
-				"index=" + index + ']';
+		return "RecordField[index=" + index + ']';
 	}
 }

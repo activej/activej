@@ -34,7 +34,8 @@ import java.util.function.BinaryOperator;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
-		implements ICrdtMap<K, S>, ReactiveService {
+	implements ICrdtMap<K, S>, ReactiveService {
+
 	private static final boolean CHECKS = Checks.isEnabled(JavaCrdtMap.class);
 
 	private final Map<K, S> map = new TreeMap<>();
@@ -88,6 +89,6 @@ public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 	private Promise<Void> doRefresh(ICrdtStorage<K, S> storage) {
 		assert storage != null;
 		return storage.download()
-				.then(supplier -> supplier.streamTo(StreamConsumers.ofConsumer(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));
+			.then(supplier -> supplier.streamTo(StreamConsumers.ofConsumer(crdtData -> map.put(crdtData.getKey(), crdtData.getState()))));
 	}
 }

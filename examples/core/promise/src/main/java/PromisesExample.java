@@ -21,11 +21,11 @@ public final class PromisesExample {
 		System.out.println("Looping with condition:");
 		//[START REGION_2]
 		Promises.loop(0,
-				i -> i < 5,
-				i -> {
-					System.out.println("This is iteration #" + i);
-					return Promise.of(i + 1);
-				});
+			i -> i < 5,
+			i -> {
+				System.out.println("This is iteration #" + i);
+				return Promise.of(i + 1);
+			});
 		//[END REGION_2]
 		System.out.println();
 	}
@@ -34,7 +34,7 @@ public final class PromisesExample {
 		System.out.println("Collecting group of Promises to list of Promises' results:");
 		//[START REGION_3]
 		Promises.toList(Promise.of(1), Promise.of(2), Promise.of(3), Promise.of(4), Promise.of(5), Promise.of(6))
-				.whenResult(list -> System.out.println("Size of collected list: " + list.size() + "\nList: " + list));
+			.whenResult(list -> System.out.println("Size of collected list: " + list.size() + "\nList: " + list));
 		//[END REGION_3]
 		System.out.println();
 	}
@@ -43,7 +43,7 @@ public final class PromisesExample {
 		System.out.println("Collecting group of Promises to array of Promises' results:");
 		//[START REGION_4]
 		Promises.toArray(Integer.class, Promise.of(1), Promise.of(2), Promise.of(3), Promise.of(4), Promise.of(5), Promise.of(6))
-				.whenResult(array -> System.out.println("Size of collected array: " + array.length + "\nArray: " + Arrays.toString(array)));
+			.whenResult(array -> System.out.println("Size of collected array: " + array.length + "\nArray: " + Arrays.toString(array)));
 		//[END REGION_4]
 		System.out.println();
 	}

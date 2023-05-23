@@ -20,8 +20,8 @@ public final class DataSourcePooledModule extends AbstractModule {
 	@Provides
 	DataSource dataSource(Config config) {
 		HikariConfigConverter converter = HikariConfigConverter.builder()
-				.withAllowMultiQueries()
-				.build();
+			.withAllowMultiQueries()
+			.build();
 		return new HikariDataSource(config.get(converter, "hikari"));
 	}
 }

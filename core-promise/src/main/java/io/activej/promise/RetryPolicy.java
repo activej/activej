@@ -99,15 +99,15 @@ public interface RetryPolicy<S> {
 
 	static RetryPolicy<?> exponentialBackoff(long initialDelay, long maxDelay, double exponent) {
 		checkArgument(maxDelay > initialDelay && exponent > 1.0,
-				"Max delay should be greater than initial delay and exponent should be greater than 1.0");
+			"Max delay should be greater than initial delay and exponent should be greater than 1.0");
 		int maxRetryCount = (int) ceil(log((double) maxDelay / initialDelay) / log(exponent));
 		return new SimpleRetryPolicy() {
 			@Override
 			public long nextRetryTimestamp(long now, Exception lastError, int retryCount, long firstRetryTimestamp) {
 				return now + (
-						retryCount > maxRetryCount ?
-								maxDelay :
-								min(maxDelay, (long) (initialDelay * pow(exponent, retryCount))));
+					retryCount > maxRetryCount ?
+						maxDelay :
+						min(maxDelay, (long) (initialDelay * pow(exponent, retryCount))));
 			}
 		};
 	}

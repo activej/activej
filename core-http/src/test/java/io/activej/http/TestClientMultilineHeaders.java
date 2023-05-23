@@ -31,17 +31,17 @@ public final class TestClientMultilineHeaders {
 	@Test
 	public void testMultilineHeaders() throws IOException {
 		HttpServer.builder(Reactor.getCurrentReactor(),
-						request -> HttpResponse.ok200()
-								.withHeader(ALLOW, "GET,\r\n HEAD")
-								.toPromise())
-				.withListenPort(port)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				request -> HttpResponse.ok200()
+					.withHeader(ALLOW, "GET,\r\n HEAD")
+					.toPromise())
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		IHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		String allowHeader = await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
-				.map(response -> response.getHeader(ALLOW)));
+			.map(response -> response.getHeader(ALLOW)));
 
 		assertEquals("GET,   HEAD", allowHeader);
 	}

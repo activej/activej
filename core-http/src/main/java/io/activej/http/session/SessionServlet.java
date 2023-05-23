@@ -38,7 +38,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * could then receive and use it.
  */
 public final class SessionServlet<T> extends AbstractReactive
-		implements AsyncServlet {
+	implements AsyncServlet {
 	private static final boolean CHECKS = Checks.isEnabled(SessionServlet.class);
 
 	private final ISessionStore<T> store;
@@ -54,15 +54,17 @@ public final class SessionServlet<T> extends AbstractReactive
 		this.privateServlet = privateServlet;
 	}
 
-	public static <T> SessionServlet<T> create(Reactor reactor, ISessionStore<T> store, String sessionIdCookie,
-			AsyncServlet publicServlet,
-			AsyncServlet privateServlet) {
+	public static <T> SessionServlet<T> create(
+		Reactor reactor, ISessionStore<T> store, String sessionIdCookie,
+		AsyncServlet publicServlet, AsyncServlet privateServlet
+	) {
 		return new SessionServlet<>(reactor, store, request -> request.getCookie(sessionIdCookie), publicServlet, privateServlet);
 	}
 
-	public static <T> SessionServlet<T> create(Reactor reactor, ISessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
-			AsyncServlet publicServlet,
-			AsyncServlet privateServlet) {
+	public static <T> SessionServlet<T> create(
+		Reactor reactor, ISessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
+		AsyncServlet publicServlet, AsyncServlet privateServlet
+	) {
 		return new SessionServlet<>(reactor, store, sessionIdExtractor, publicServlet, privateServlet);
 	}
 
@@ -76,13 +78,13 @@ public final class SessionServlet<T> extends AbstractReactive
 		}
 
 		return store.get(id)
-				.then(sessionObject -> {
-					if (sessionObject != null) {
-						request.attach(sessionObject);
-						return privateServlet.serve(request);
-					} else {
-						return publicServlet.serve(request);
-					}
-				});
+			.then(sessionObject -> {
+				if (sessionObject != null) {
+					request.attach(sessionObject);
+					return privateServlet.serve(request);
+				} else {
+					return publicServlet.serve(request);
+				}
+			});
 	}
 }

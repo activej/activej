@@ -63,10 +63,10 @@ public final class WebSocketIntegrationTest {
 		byte[] bytesCopy = Arrays.copyOf(bytes, bytes.length);
 		ByteBuf buf = wrapForReading(bytesCopy);
 		List<Frame> result = await(ChannelSuppliers.ofValue(Frame.binary(buf))
-				.transformWith(WebSocketFramesToBufs.create(mask))
-				.transformWith(chunked ? chunker() : identity())
-				.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), mask))
-				.toCollector(toList()));
+			.transformWith(WebSocketFramesToBufs.create(mask))
+			.transformWith(chunked ? chunker() : identity())
+			.transformWith(WebSocketBufsToFrames.create(MAX_MESSAGE_SIZE, failOnItem(), failOnItem(), mask))
+			.toCollector(toList()));
 
 		assertEquals(1, result.size());
 		Frame frame = result.get(0);

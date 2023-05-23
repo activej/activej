@@ -15,19 +15,19 @@ public final class RedisSimpleExample {
 
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 
 		RedisClient client = RedisClient.create(eventloop, ADDRESS);
 
 		client.connect()
-				.then(connection -> connection.cmd(RedisRequest.of("SET", KEY, VALUE), RedisResponse.OK)
-						.then(() -> connection.cmd(RedisRequest.of("GET", KEY), RedisResponse.BYTES_UTF8))
-						.whenResult(result -> System.out.println("Key: '" + KEY + "', value: '" + result + '\''))
-						.then(result -> connection.cmd(RedisRequest.of("DEL", KEY), RedisResponse.SKIP))
-						.then(connection::quit)
-				)
-				.whenException(Exception::printStackTrace);
+			.then(connection -> connection.cmd(RedisRequest.of("SET", KEY, VALUE), RedisResponse.OK)
+				.then(() -> connection.cmd(RedisRequest.of("GET", KEY), RedisResponse.BYTES_UTF8))
+				.whenResult(result -> System.out.println("Key: '" + KEY + "', value: '" + result + '\''))
+				.then(result -> connection.cmd(RedisRequest.of("DEL", KEY), RedisResponse.SKIP))
+				.then(connection::quit)
+			)
+			.whenException(Exception::printStackTrace);
 
 		eventloop.run();
 	}

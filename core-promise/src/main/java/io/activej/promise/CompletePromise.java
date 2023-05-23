@@ -98,8 +98,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <E extends Exception> Promise<T> mapException(Class<E> clazz,
-			FunctionEx<? super E, ? extends Exception> exceptionFn) {
+	public <E extends Exception> Promise<T> mapException(
+		Class<E> clazz, FunctionEx<? super E, ? extends Exception> exceptionFn
+	) {
 		return this;
 	}
 
@@ -164,9 +165,7 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> Promise<U> then(
-			AsyncFunctionEx<? super T, U> fn,
-			AsyncFunctionEx<Exception, U> exceptionFn) {
+	public <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn, AsyncFunctionEx<Exception, U> exceptionFn) {
 		try {
 			return fn.apply(getResult());
 		} catch (Exception ex) {
@@ -263,8 +262,8 @@ public abstract class CompletePromise<T> implements Promise<T> {
 	@Override
 	public final <U, V> Promise<V> combine(Promise<? extends U> other, BiFunctionEx<? super T, ? super U, ? extends V> fn) {
 		return (Promise<V>) other
-				.map(otherResult -> fn.apply(this.getResult(), otherResult))
-				.whenException(() -> Recyclers.recycle(this.getResult()));
+			.map(otherResult -> fn.apply(this.getResult(), otherResult))
+			.whenException(() -> Recyclers.recycle(this.getResult()));
 	}
 
 	@Override

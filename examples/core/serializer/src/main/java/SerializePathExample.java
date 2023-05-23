@@ -1,4 +1,3 @@
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.annotations.Deserialize;
@@ -41,9 +40,9 @@ public class SerializePathExample {
 	public static void main(String[] args) {
 		//[START Serializer]
 		BinarySerializer<Storage> serializer = SerializerFactory.builder()
-				.withAnnotationCompatibilityMode() // Compatibility mode has to be enabled
-				.build()
-				.create(Storage.class);
+			.withAnnotationCompatibilityMode() // Compatibility mode has to be enabled
+			.build()
+			.create(Storage.class);
 		//[END Serializer]
 
 		Storage storage = new Storage();

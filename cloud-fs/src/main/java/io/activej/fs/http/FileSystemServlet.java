@@ -65,95 +65,95 @@ public final class FileSystemServlet {
 
 	public static RoutingServlet create(Reactor reactor, IFileSystem fs, boolean inline) {
 		return RoutingServlet.builder(reactor)
-				.with(POST, "/" + UPLOAD + "/*", request -> {
-					String contentLength = request.getHeader(CONTENT_LENGTH);
-					Long size = contentLength == null ? null : Long.valueOf(contentLength);
-					return (size == null ?
-							fs.upload(decodePath(request)) :
-							fs.upload(decodePath(request), size))
-							.then(uploadAcknowledgeFn(request), errorResponseFn());
-				})
-				.with(POST, "/" + UPLOAD, request -> request.handleMultipart(AsyncMultipartDataHandler.file(fs::upload))
-						.then(voidResponseFn(), errorResponseFn()))
-				.with(POST, "/" + APPEND + "/*", request -> {
-					long offset = getNumberParameterOr(request, "offset", 0);
-					return fs.append(decodePath(request), offset)
-							.then(uploadAcknowledgeFn(request), errorResponseFn());
-				})
-				.with(GET, "/" + DOWNLOAD + "/*", request -> {
-					String name = decodePath(request);
-					String rangeHeader = request.getHeader(HttpHeaders.RANGE);
-					if (rangeHeader != null) {
-						//noinspection ConstantConditions
-						return fs.info(name)
-								.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
-								.then(meta -> rangeDownload(fs, name, meta.getSize(), inline, rangeHeader))
-								.then(Promise::of, errorResponseFn());
-					}
-					long offset = getNumberParameterOr(request, "offset", 0);
-					long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
-					return fs.download(name, offset, limit)
-							.then(res -> HttpResponse.ok200()
-											.withHeader(ACCEPT_RANGES, "bytes")
-											.withBodyStream(res)
-											.toPromise(),
-									errorResponseFn());
-				})
-				.with(GET, "/" + LIST, request -> {
-					String glob = request.getQueryParameter("glob");
-					glob = glob != null ? glob : "**";
-					return fs.list(glob)
-							.then(list -> HttpResponse.ok200()
-											.withBody(toJson(list))
-											.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-											.toPromise(),
-									errorResponseFn());
-				})
-				.with(GET, "/" + INFO + "/*", request ->
-						fs.info(decodePath(request))
-								.then(meta -> HttpResponse.ok200()
-												.withBody(toJson(meta))
-												.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-												.toPromise(),
-										errorResponseFn()))
-				.with(GET, "/" + INFO_ALL, request -> request.loadBody()
-						.map(body -> fromJson(STRING_SET_TYPE, body))
-						.then(fs::infoAll)
-						.then(map -> HttpResponse.ok200()
-										.withBody(toJson(map))
-										.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-										.toPromise(),
-								errorResponseFn()))
-				.with(GET, "/" + PING, request -> fs.ping()
-						.then(voidResponseFn(), errorResponseFn()))
-				.with(POST, "/" + MOVE, request -> {
-					String name = getQueryParameter(request, "name");
-					String target = getQueryParameter(request, "target");
-					return fs.move(name, target)
-							.then(voidResponseFn(), errorResponseFn());
-				})
-				.with(POST, "/" + MOVE_ALL, request -> request.loadBody()
-						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
-						.then(fs::moveAll)
-						.then(voidResponseFn(), errorResponseFn()))
-				.with(POST, "/" + COPY, request -> {
-					String name = getQueryParameter(request, "name");
-					String target = getQueryParameter(request, "target");
-					return fs.copy(name, target)
-							.then(voidResponseFn(), errorResponseFn());
-				})
-				.with(POST, "/" + COPY_ALL, request -> request.loadBody()
-						.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
-						.then(fs::copyAll)
-						.then(voidResponseFn(), errorResponseFn()))
-				.with(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
-						fs.delete(decodePath(request))
-								.then(voidResponseFn(), errorResponseFn()))
-				.with(POST, "/" + DELETE_ALL, request -> request.loadBody()
-						.map(body -> fromJson(STRING_SET_TYPE, body))
-						.then(fs::deleteAll)
-						.then(voidResponseFn(), errorResponseFn()))
-				.build();
+			.with(POST, "/" + UPLOAD + "/*", request -> {
+				String contentLength = request.getHeader(CONTENT_LENGTH);
+				Long size = contentLength == null ? null : Long.valueOf(contentLength);
+				return (size == null ?
+					fs.upload(decodePath(request)) :
+					fs.upload(decodePath(request), size))
+					.then(uploadAcknowledgeFn(request), errorResponseFn());
+			})
+			.with(POST, "/" + UPLOAD, request -> request.handleMultipart(AsyncMultipartDataHandler.file(fs::upload))
+				.then(voidResponseFn(), errorResponseFn()))
+			.with(POST, "/" + APPEND + "/*", request -> {
+				long offset = getNumberParameterOr(request, "offset", 0);
+				return fs.append(decodePath(request), offset)
+					.then(uploadAcknowledgeFn(request), errorResponseFn());
+			})
+			.with(GET, "/" + DOWNLOAD + "/*", request -> {
+				String name = decodePath(request);
+				String rangeHeader = request.getHeader(HttpHeaders.RANGE);
+				if (rangeHeader != null) {
+					//noinspection ConstantConditions
+					return fs.info(name)
+						.whenResult(meta -> {if (meta == null) throw new FileNotFoundException();})
+						.then(meta -> rangeDownload(fs, name, meta.getSize(), inline, rangeHeader))
+						.then(Promise::of, errorResponseFn());
+				}
+				long offset = getNumberParameterOr(request, "offset", 0);
+				long limit = getNumberParameterOr(request, "limit", Long.MAX_VALUE);
+				return fs.download(name, offset, limit)
+					.then(res -> HttpResponse.ok200()
+							.withHeader(ACCEPT_RANGES, "bytes")
+							.withBodyStream(res)
+							.toPromise(),
+						errorResponseFn());
+			})
+			.with(GET, "/" + LIST, request -> {
+				String glob = request.getQueryParameter("glob");
+				glob = glob != null ? glob : "**";
+				return fs.list(glob)
+					.then(list -> HttpResponse.ok200()
+							.withBody(toJson(list))
+							.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+							.toPromise(),
+						errorResponseFn());
+			})
+			.with(GET, "/" + INFO + "/*", request ->
+				fs.info(decodePath(request))
+					.then(meta -> HttpResponse.ok200()
+							.withBody(toJson(meta))
+							.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+							.toPromise(),
+						errorResponseFn()))
+			.with(GET, "/" + INFO_ALL, request -> request.loadBody()
+				.map(body -> fromJson(STRING_SET_TYPE, body))
+				.then(fs::infoAll)
+				.then(map -> HttpResponse.ok200()
+						.withBody(toJson(map))
+						.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+						.toPromise(),
+					errorResponseFn()))
+			.with(GET, "/" + PING, request -> fs.ping()
+				.then(voidResponseFn(), errorResponseFn()))
+			.with(POST, "/" + MOVE, request -> {
+				String name = getQueryParameter(request, "name");
+				String target = getQueryParameter(request, "target");
+				return fs.move(name, target)
+					.then(voidResponseFn(), errorResponseFn());
+			})
+			.with(POST, "/" + MOVE_ALL, request -> request.loadBody()
+				.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
+				.then(fs::moveAll)
+				.then(voidResponseFn(), errorResponseFn()))
+			.with(POST, "/" + COPY, request -> {
+				String name = getQueryParameter(request, "name");
+				String target = getQueryParameter(request, "target");
+				return fs.copy(name, target)
+					.then(voidResponseFn(), errorResponseFn());
+			})
+			.with(POST, "/" + COPY_ALL, request -> request.loadBody()
+				.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
+				.then(fs::copyAll)
+				.then(voidResponseFn(), errorResponseFn()))
+			.with(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
+				fs.delete(decodePath(request))
+					.then(voidResponseFn(), errorResponseFn()))
+			.with(POST, "/" + DELETE_ALL, request -> request.loadBody()
+				.map(body -> fromJson(STRING_SET_TYPE, body))
+				.then(fs::deleteAll)
+				.then(voidResponseFn(), errorResponseFn()))
+			.build();
 	}
 
 	private static Promise<HttpResponse> rangeDownload(IFileSystem fs, String name, long size, boolean inline, @Nullable String rangeHeader) {
@@ -243,25 +243,25 @@ public final class FileSystemServlet {
 
 	private static AsyncFunction<Exception, HttpResponse> errorResponseFn() {
 		return e -> HttpResponse.ofCode(500)
-				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBody(toJson(FileSystemException.class, castError(e)))
-				.toPromise();
+			.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+			.withBody(toJson(FileSystemException.class, castError(e)))
+			.toPromise();
 	}
 
 	private static <T> AsyncFunction<T, HttpResponse> voidResponseFn() {
 		return $ -> HttpResponse.ok200()
-				.withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
-				.toPromise();
+			.withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8))
+			.toPromise();
 	}
 
 	private static AsyncFunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
 		return consumer -> HttpResponse.ok200()
-				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
-						.streamTo(consumer)
-						.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
-						.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))))
-				.toPromise();
+			.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+			.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
+				.streamTo(consumer)
+				.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
+				.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))))
+			.toPromise();
 	}
 
 }

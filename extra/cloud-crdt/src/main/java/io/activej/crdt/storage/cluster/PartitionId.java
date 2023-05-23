@@ -85,8 +85,8 @@ public final class PartitionId {
 
 	private static String addressToString(@Nullable InetSocketAddress address) {
 		return address == null ?
-				"" :
-				address.getAddress().getHostAddress() + ":" + address.getPort();
+			"" :
+			address.getAddress().getHostAddress() + ":" + address.getPort();
 	}
 
 	@Override

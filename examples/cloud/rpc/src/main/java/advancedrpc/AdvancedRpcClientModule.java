@@ -30,27 +30,27 @@ public class AdvancedRpcClientModule extends AbstractModule {
 	@Provides
 	IRpcClient rpcClient(NioReactor reactor, RpcStrategy strategy) {
 		return RpcClient.builder(reactor)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.withMessageTypes(Integer.class)
-				.withStrategy(strategy)
-				.build();
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.withMessageTypes(Integer.class)
+			.withStrategy(strategy)
+			.build();
 	}
 
 	@Provides
 	RpcStrategy rpcStrategy(Config config) {
 		List<InetSocketAddress> inetAddresses = config.get(ConfigConverters.ofList(
-				ConfigConverters.ofInetSocketAddress(), ","), "client.addresses");
+			ConfigConverters.ofInetSocketAddress(), ","), "client.addresses");
 		checkState(inetAddresses.size() == 4);
 
 		return RpcStrategies.firstAvailable(
-				RendezvousHashing.builder(Object::hashCode)
-						.withShard(1, server(inetAddresses.get(0)))
-						.withShard(2, server(inetAddresses.get(1)))
-						.build(),
-				RendezvousHashing.builder(Object::hashCode)
-						.withShard(1, server(inetAddresses.get(2)))
-						.withShard(2, server(inetAddresses.get(3)))
-						.build());
+			RendezvousHashing.builder(Object::hashCode)
+				.withShard(1, server(inetAddresses.get(0)))
+				.withShard(2, server(inetAddresses.get(1)))
+				.build(),
+			RendezvousHashing.builder(Object::hashCode)
+				.withShard(1, server(inetAddresses.get(2)))
+				.withShard(2, server(inetAddresses.get(3)))
+				.build());
 	}
 
 	@Provides
@@ -61,8 +61,8 @@ public class AdvancedRpcClientModule extends AbstractModule {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("protocol.compression", "false")
-				.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002, localhost:9003")
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("protocol.compression", "false")
+			.with("client.addresses", "localhost:9000, localhost:9001, localhost:9002, localhost:9003")
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 }

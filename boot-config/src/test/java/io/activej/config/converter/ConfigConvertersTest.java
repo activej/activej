@@ -38,8 +38,8 @@ public class ConfigConvertersTest {
 	@Test
 	public void testTransform() {
 		Config test = Config.create()
-				.with("durationToLong", "228 millis")
-				.with("periodToInt", "1 days");
+			.with("durationToLong", "228 millis")
+			.with("periodToInt", "1 days");
 		// Basic test
 		assertEquals(228L, (long) test.get(ofDuration().transform(Duration::toMillis, Duration::ofMillis), "durationToLong"));
 		assertEquals(1, (int) test.get(ofPeriod().transform(Period::getDays, Period::ofDays), "periodToInt"));
@@ -158,11 +158,11 @@ public class ConfigConvertersTest {
 	@Test
 	public void testDatagraphSocketSettingsConverter() {
 		DatagramSocketSettings expected = DatagramSocketSettings.builder()
-				.withReceiveBufferSize(MemSize.bytes(256))
-				.withSendBufferSize(MemSize.kilobytes(1))
-				.withReuseAddress(false)
-				.withBroadcast(true)
-				.build();
+			.withReceiveBufferSize(MemSize.bytes(256))
+			.withSendBufferSize(MemSize.kilobytes(1))
+			.withReuseAddress(false)
+			.withBroadcast(true)
+			.build();
 
 		DatagramSocketSettings actual = Config.EMPTY.get(ofDatagramSocketSettings(), THIS, expected);
 
@@ -175,10 +175,10 @@ public class ConfigConvertersTest {
 	@Test
 	public void testServerSocketSettings() {
 		ServerSocketSettings expected = ServerSocketSettings.builder()
-				.withBacklog(1)
-				.withReceiveBufferSize(MemSize.of(64))
-				.withReuseAddress(true)
-				.build();
+			.withBacklog(1)
+			.withReceiveBufferSize(MemSize.of(64))
+			.withReuseAddress(true)
+			.build();
 
 		ServerSocketSettings actual = Config.EMPTY.get(ofServerSocketSettings(), THIS, expected);
 		assertEquals(expected.getBacklog(), actual.getBacklog());
@@ -189,12 +189,12 @@ public class ConfigConvertersTest {
 	@Test
 	public void testSocketSettings() {
 		SocketSettings expected = SocketSettings.builder()
-				.withTcpNoDelay(true)
-				.withReuseAddress(false)
-				.withReceiveBufferSize(MemSize.of(256))
-				.withSendBufferSize(MemSize.of(512))
-				.withKeepAlive(true)
-				.build();
+			.withTcpNoDelay(true)
+			.withReuseAddress(false)
+			.withReceiveBufferSize(MemSize.of(256))
+			.withSendBufferSize(MemSize.of(512))
+			.withKeepAlive(true)
+			.build();
 
 		SocketSettings actual = Config.EMPTY.get(ofSocketSettings(), THIS, expected);
 
@@ -280,10 +280,10 @@ public class ConfigConvertersTest {
 	public void testXAsY() {
 		Instant now = Instant.now();
 		Config testConfig = Config.create()
-				.with("ofDurationAsMillis", "228 millis")
-				.with("ofPeriodAsDays", "3 days")
-				.with("ofMemSizeAsBytesLong", "2gb")
-				.with("ofInstantAsEpochMillis", Config.ofValue(ofInstant(), now));
+			.with("ofDurationAsMillis", "228 millis")
+			.with("ofPeriodAsDays", "3 days")
+			.with("ofMemSizeAsBytesLong", "2gb")
+			.with("ofInstantAsEpochMillis", Config.ofValue(ofInstant(), now));
 
 		assertEquals(228L, (long) testConfig.get(ofDurationAsMillis(), "ofDurationAsMillis"));
 		assertEquals(3, (int) testConfig.get(ofPeriodAsDays(), "ofPeriodAsDays"));
@@ -301,8 +301,8 @@ public class ConfigConvertersTest {
 		String nonPresentPath = "nonpresent";
 
 		Config config = Config.create()
-				.with(emptyPath, "")
-				.with(presentPath, stringValue);
+			.with(emptyPath, "")
+			.with(presentPath, stringValue);
 
 		// no default
 		assertEquals(stringValue, config.get(ofString(), presentPath));

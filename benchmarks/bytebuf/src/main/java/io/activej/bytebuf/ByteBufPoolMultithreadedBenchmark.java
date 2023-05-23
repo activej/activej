@@ -44,7 +44,7 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.overrideWith(Config.ofSystemProperties("config"));
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	private int allocationSize;
@@ -75,7 +75,7 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 			long rps = iterations * 1000L * THREADS / Math.round(roundTime);
 			System.out.println();
 			System.out.println("Round: " + (i + 1) + "; ROUND TIME: " + Math.round(roundTime) + " ms; " +
-					"RPS : " + rps);
+				"RPS : " + rps);
 			System.out.println();
 		}
 
@@ -95,14 +95,14 @@ public class ByteBufPoolMultithreadedBenchmark extends Launcher {
 			long rps = iterations * 1000L * threads / Math.round(roundTime);
 			System.out.println();
 			System.out.println("Round: " + (i + 1) + "; ROUND TIME: " + Math.round(roundTime) + " ms; " +
-					"RPS : " + rps);
+				"RPS : " + rps);
 			System.out.println();
 		}
 
 		double avgTime = (double) timeAllRounds / measureRounds;
 		long avgRps = Math.round((iterations / avgTime * 1000L * threads));
 		System.out.println("Time: " + timeAllRounds + "ms; Average time: " + avgTime + " ms; Best time: " +
-				bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + avgRps);
+			bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + avgRps);
 	}
 
 	private long round() throws InterruptedException {

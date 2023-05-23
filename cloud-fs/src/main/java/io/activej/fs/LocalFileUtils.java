@@ -46,12 +46,12 @@ public final class LocalFileUtils {
 
 	static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	static final Function<String, String> TO_LOCAL_NAME = File.separatorChar == SEPARATOR_CHAR ?
-			Function.identity() :
-			s -> s.replace(SEPARATOR_CHAR, File.separatorChar);
+		Function.identity() :
+		s -> s.replace(SEPARATOR_CHAR, File.separatorChar);
 
 	static final Function<String, String> TO_REMOTE_NAME = File.separatorChar == SEPARATOR_CHAR ?
-			Function.identity() :
-			s -> s.replace(File.separatorChar, SEPARATOR_CHAR);
+		Function.identity() :
+		s -> s.replace(File.separatorChar, SEPARATOR_CHAR);
 
 	static void init(Path storage, Path tempDir, boolean fsyncDirectories) throws IOException {
 		createDirectories(tempDir, fsyncDirectories);
@@ -177,8 +177,8 @@ public final class LocalFileUtils {
 		// optimization for single-file requests
 		if (subglob.isEmpty()) {
 			return Files.isRegularFile(subdirectory) ?
-					List.of(subdirectory) :
-					List.of();
+				List.of(subdirectory) :
+				List.of();
 		}
 
 		// common route

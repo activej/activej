@@ -29,12 +29,12 @@ public class DataItemResultString {
 	}
 
 	public static final Map<String, Class<?>> DIMENSIONS =
-			Stream.of("key1", "key2")
-					.collect(toLinkedHashMap(k -> k.equals("key1") ? String.class : int.class));
+		Stream.of("key1", "key2")
+			.collect(toLinkedHashMap(k -> k.equals("key1") ? String.class : int.class));
 
 	public static final Map<String, Measure> METRICS =
-			Stream.of("metric1", "metric2", "metric3")
-					.collect(toLinkedHashMap(k -> sum(ofLong())));
+		Stream.of("metric1", "metric2", "metric3")
+			.collect(toLinkedHashMap(k -> sum(ofLong())));
 
 	@Override
 	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})
@@ -53,11 +53,11 @@ public class DataItemResultString {
 	@Override
 	public String toString() {
 		return "DataItemResultString{" +
-				"key1='" + key1 + '\'' +
-				", key2=" + key2 +
-				", metric1=" + metric1 +
-				", metric2=" + metric2 +
-				", metric3=" + metric3 +
-				'}';
+			"key1='" + key1 + '\'' +
+			", key2=" + key2 +
+			", metric1=" + metric1 +
+			", metric2=" + metric2 +
+			", metric3=" + metric3 +
+			'}';
 	}
 }

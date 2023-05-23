@@ -18,16 +18,16 @@ public final class ReducerCodecModule extends AbstractModule {
 	@Subtype(6)
 	StreamCodec<NamedReducer> namedReducer(DataflowSchema dataflowSchema) {
 		return StreamCodec.create(tableName -> {
-					AbstractDataflowTable<?> dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
-					if (dataflowTable == null) {
-						throw new CorruptedDataException("Unknown table: " + tableName);
-					}
-					if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) {
-						throw new CorruptedDataException("Not a partitioned table: " + tableName);
-					}
-					//noinspection unchecked
-					return new NamedReducer(tableName, (Reducer<Record, Record, Record, Object>) dataflowPartitionedTable.getReducer());
-				},
-				NamedReducer::getTableName, StreamCodecs.ofString());
+				AbstractDataflowTable<?> dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
+				if (dataflowTable == null) {
+					throw new CorruptedDataException("Unknown table: " + tableName);
+				}
+				if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) {
+					throw new CorruptedDataException("Not a partitioned table: " + tableName);
+				}
+				//noinspection unchecked
+				return new NamedReducer(tableName, (Reducer<Record, Record, Record, Object>) dataflowPartitionedTable.getReducer());
+			},
+			NamedReducer::getTableName, StreamCodecs.ofString());
 	}
 }

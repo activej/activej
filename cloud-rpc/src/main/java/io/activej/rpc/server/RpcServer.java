@@ -97,8 +97,8 @@ public final class RpcServer extends AbstractReactiveServer {
 	private final EventStats successfulRequests = EventStats.create(SMOOTHING_WINDOW);
 	private final EventStats failedRequests = EventStats.create(SMOOTHING_WINDOW);
 	private final ValueStats requestHandlingTime = ValueStats.builder(SMOOTHING_WINDOW)
-			.withUnit("milliseconds")
-			.build();
+		.withUnit("milliseconds")
+		.build();
 	private final ExceptionStats lastRequestHandlingException = ExceptionStats.create();
 	private final ExceptionStats lastProtocolError = ExceptionStats.create();
 	private boolean monitoring;
@@ -142,9 +142,9 @@ public final class RpcServer extends AbstractReactiveServer {
 		 */
 		public Builder withMessageTypes(List<Class<?>> messageTypes) {
 			return withSerializer(SerializerFactory.builder()
-					.withSubclasses(RpcMessage.SUBCLASSES_ID, messageTypes)
-					.build()
-					.create(RpcMessage.class));
+				.withSubclasses(RpcMessage.SUBCLASSES_ID, messageTypes)
+				.build()
+				.create(RpcMessage.class));
 		}
 
 		/**
@@ -269,7 +269,7 @@ public final class RpcServer extends AbstractReactiveServer {
 	@Override
 	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		RpcStream stream = new RpcStream(socket, requestSerializer, responseSerializer, initialBufferSize,
-				autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
+			autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 		RpcServerConnection connection = new RpcServerConnection(reactor, this, remoteAddress, handlers, stream);
 		stream.setListener(connection);
 		add(connection);
@@ -314,7 +314,7 @@ public final class RpcServer extends AbstractReactiveServer {
 
 		if (closeCallback != null) {
 			logger.info("RpcServer is closing. One more connection was closed. " +
-					"Active connections count: {}", connections.size());
+				"Active connections count: {}", connections.size());
 
 			if (connections.isEmpty()) {
 				closeCallback.set(null);
@@ -325,8 +325,8 @@ public final class RpcServer extends AbstractReactiveServer {
 
 	// region JMX
 	@JmxOperation(description = "enable monitoring " +
-			"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-			"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
 	public void startMonitoring() {
 		monitoring = true;
 		for (RpcServerConnection connection : connections) {
@@ -335,8 +335,8 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	@JmxOperation(description = "disable monitoring " +
-			"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-			"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
 	public void stopMonitoring() {
 		monitoring = false;
 		for (RpcServerConnection connection : connections) {
@@ -345,7 +345,7 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	@JmxAttribute(description = "when monitoring is enabled more stats are collected, but it causes more overhead " +
-			"(for example, requestHandlingTime stats are collected only when monitoring is enabled)")
+		"(for example, requestHandlingTime stats are collected only when monitoring is enabled)")
 	public boolean isMonitoring() {
 		return monitoring;
 	}
@@ -390,13 +390,13 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	@JmxAttribute(description = "exception that occurred because of business logic error " +
-			"(in RpcRequestHandler implementation)")
+		"(in RpcRequestHandler implementation)")
 	public ExceptionStats getLastRequestHandlingException() {
 		return lastRequestHandlingException;
 	}
 
 	@JmxAttribute(description = "exception that occurred because of protocol error " +
-			"(serialization, deserialization, compression, decompression, etc)")
+		"(serialization, deserialization, compression, decompression, etc)")
 	public ExceptionStats getLastProtocolError() {
 		return lastProtocolError;
 	}

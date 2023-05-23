@@ -33,16 +33,16 @@ public final class NotEq implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new NotEq(
-				left.materialize(params),
-				right.materialize(params)
+			left.materialize(params),
+			right.materialize(params)
 		);
 	}
 
 	@Override
 	public String toString() {
 		return "NotEq[" +
-				"left=" + left + ", " +
-				"right=" + right + ']';
+			"left=" + left + ", " +
+			"right=" + right + ']';
 	}
 
 }

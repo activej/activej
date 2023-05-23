@@ -42,12 +42,12 @@ public class UiKernelServlets {
 
 	public static <K, R extends AbstractRecord<K>> RoutingServlet apiServlet(Reactor reactor, IGridModel<K, R> model, Gson gson) {
 		return RoutingServlet.builder(reactor)
-				.with(POST, "/", create(model, gson))
-				.with(GET, "/", read(model, gson))
-				.with(PUT, "/", update(model, gson))
-				.with(DELETE, "/:" + ID_PARAMETER_NAME, delete(model, gson))
-				.with(GET, "/:" + ID_PARAMETER_NAME, get(model, gson))
-				.build();
+			.with(POST, "/", create(model, gson))
+			.with(GET, "/", read(model, gson))
+			.with(PUT, "/", update(model, gson))
+			.with(DELETE, "/:" + ID_PARAMETER_NAME, delete(model, gson))
+			.with(GET, "/:" + ID_PARAMETER_NAME, get(model, gson))
+			.build();
 	}
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet read(IGridModel<K, R> model, Gson gson) {
@@ -55,8 +55,8 @@ public class UiKernelServlets {
 			try {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
 				return model.read(settings)
-						.then(response ->
-								createResponse(response.toJson(gson, model.getRecordType(), model.getIdType())));
+					.then(response ->
+						createResponse(response.toJson(gson, model.getRecordType(), model.getIdType())));
 			} catch (MalformedDataException | MalformedHttpException e) {
 				throw HttpError.ofCode(400, e);
 			}
@@ -69,8 +69,8 @@ public class UiKernelServlets {
 				ReadSettings<K> settings = ReadSettings.from(gson, request);
 				K id = fromJson(gson, request.getPathParameter(ID_PARAMETER_NAME), model.getIdType());
 				return model.read(id, settings)
-						.then(obj ->
-								createResponse(gson.toJson(obj, model.getRecordType())));
+					.then(obj ->
+						createResponse(gson.toJson(obj, model.getRecordType())));
 			} catch (MalformedDataException | MalformedHttpException e) {
 				throw HttpError.ofCode(400, e);
 			}
@@ -79,32 +79,32 @@ public class UiKernelServlets {
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet create(IGridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
-				.then(body -> {
-					try {
-						String json = body.getString(UTF_8);
-						R obj = fromJson(gson, json, model.getRecordType());
-						return model.create(obj)
-								.then(response ->
-										createResponse(response.toJson(gson, model.getIdType())));
-					} catch (MalformedDataException e) {
-						throw HttpError.ofCode(400, e);
-					}
-				});
+			.then(body -> {
+				try {
+					String json = body.getString(UTF_8);
+					R obj = fromJson(gson, json, model.getRecordType());
+					return model.create(obj)
+						.then(response ->
+							createResponse(response.toJson(gson, model.getIdType())));
+				} catch (MalformedDataException e) {
+					throw HttpError.ofCode(400, e);
+				}
+			});
 	}
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet update(IGridModel<K, R> model, Gson gson) {
 		return request -> request.loadBody()
-				.then(body -> {
-					try {
-						String json = body.getString(UTF_8);
-						List<R> list = deserializeUpdateRequest(gson, json, model.getRecordType(), model.getIdType());
-						return model.update(list)
-								.then(result ->
-										createResponse(result.toJson(gson, model.getRecordType(), model.getIdType())));
-					} catch (MalformedDataException e) {
-						throw HttpError.ofCode(400, e);
-					}
-				});
+			.then(body -> {
+				try {
+					String json = body.getString(UTF_8);
+					List<R> list = deserializeUpdateRequest(gson, json, model.getRecordType(), model.getIdType());
+					return model.update(list)
+						.then(result ->
+							createResponse(result.toJson(gson, model.getRecordType(), model.getIdType())));
+				} catch (MalformedDataException e) {
+					throw HttpError.ofCode(400, e);
+				}
+			});
 	}
 
 	public static <K, R extends AbstractRecord<K>> AsyncServlet delete(IGridModel<K, R> model, Gson gson) {
@@ -112,16 +112,16 @@ public class UiKernelServlets {
 			try {
 				K id = fromJson(gson, request.getPathParameter("id"), model.getIdType());
 				return model.delete(id)
-						.then(response ->
-								HttpResponse.ok200()
-										.initialize(builder -> {
-											if (response.hasErrors()) {
-												String json = gson.toJson(response.getErrors());
-												builder.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
-												builder.withBody(ByteBufStrings.wrapUtf8(json));
-											}
-										})
-										.toPromise());
+					.then(response ->
+						HttpResponse.ok200()
+							.initialize(builder -> {
+								if (response.hasErrors()) {
+									String json = gson.toJson(response.getErrors());
+									builder.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8));
+									builder.withBody(ByteBufStrings.wrapUtf8(json));
+								}
+							})
+							.toPromise());
 			} catch (MalformedDataException e) {
 				throw HttpError.ofCode(400, e);
 			}
@@ -130,8 +130,8 @@ public class UiKernelServlets {
 
 	private static Promise<HttpResponse> createResponse(String body) {
 		return HttpResponse.ok200()
-				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8))
-				.withBody(ByteBufStrings.wrapUtf8(body))
-				.toPromise();
+			.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF8))
+			.withBody(ByteBufStrings.wrapUtf8(body))
+			.toPromise();
 	}
 }

@@ -46,28 +46,28 @@ public class MemcacheServerModule extends AbstractModule {
 	@Provides
 	RingBuffer ringBuffer(Config config) {
 		return RingBuffer.create(
-				config.get(ofInteger(), "memcache.buffers"),
-				config.get(ofMemSize(), "memcache.bufferCapacity").toInt());
+			config.get(ofInteger(), "memcache.buffers"),
+			config.get(ofMemSize(), "memcache.bufferCapacity").toInt());
 	}
 
 	@Provides
 	RpcServer server(NioReactor reactor, Config config, RingBuffer storage) {
 		return RpcServer.builder(reactor)
-				.withHandler(GetRequest.class,
-						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
-				.withHandler(PutRequest.class,
-						request -> {
-							Slice slice = request.getData();
-							storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
-							return Promise.of(PutResponse.INSTANCE);
-						})
-				.withMessageTypes(MESSAGE_TYPES)
-				.withStreamProtocol(
-						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
-						config.get(ofFrameFormat(), "protocol.frameFormat", null))
-				.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", ServerSocketSettings.defaultInstance()))
-				.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", SocketSettings.defaultInstance()))
-				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"))
-				.build();
+			.withHandler(GetRequest.class,
+				request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
+			.withHandler(PutRequest.class,
+				request -> {
+					Slice slice = request.getData();
+					storage.put(request.getKey(), slice.array(), slice.offset(), slice.length());
+					return Promise.of(PutResponse.INSTANCE);
+				})
+			.withMessageTypes(MESSAGE_TYPES)
+			.withStreamProtocol(
+				config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
+				config.get(ofFrameFormat(), "protocol.frameFormat", null))
+			.withServerSocketSettings(config.get(ofServerSocketSettings(), "server.serverSocketSettings", ServerSocketSettings.defaultInstance()))
+			.withSocketSettings(config.get(ofSocketSettings(), "server.socketSettings", SocketSettings.defaultInstance()))
+			.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "server.listenAddresses"))
+			.build();
 	}
 }

@@ -18,22 +18,22 @@ public class TypeScannerRegistryTest {
 	@SuppressWarnings("rawtypes")
 	public void test1() {
 		TypeScannerRegistry<String> registry = TypeScannerRegistry.<String>create()
-				.with(int.class, ctx -> "int")
-				.with(Integer.class, ctx -> "Integer")
-				.with(CharSequence.class, ctx -> "CharSequence")
-				.with(String.class, ctx -> "String")
-				.with(List.class, ctx -> "List<" + ctx.scanTypeArgument(0) + ">")
-				.with(Map.class, ctx -> "Map<" + ctx.scanTypeArgument(0) + ", " + ctx.scanTypeArgument(1) + ">")
-				.with(Optional.class, ctx -> "Optional0<" + (ctx.hasTypeArguments() ? ctx.scanTypeArgument(0) : "") + ">")
-				.with(new TypeT<Optional<CharSequence>>() {}, ctx -> "Optional1<" + ctx.scanTypeArgument(0) + ">")
-				.with(new TypeT<Optional<? extends CharSequence>>() {}, ctx -> "Optional2<" + ctx.scanTypeArgument(0) + ">")
-				.with(Object.class, ctx -> {
-					scan(ctx.getAnnotatedType());
-					return "*";
-				})
-				.with(Enum.class, ctx -> ctx.getRawType().getSimpleName())
-				.with(new TypeT<Object[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]")
-				.with(new TypeT<int[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]");
+			.with(int.class, ctx -> "int")
+			.with(Integer.class, ctx -> "Integer")
+			.with(CharSequence.class, ctx -> "CharSequence")
+			.with(String.class, ctx -> "String")
+			.with(List.class, ctx -> "List<" + ctx.scanTypeArgument(0) + ">")
+			.with(Map.class, ctx -> "Map<" + ctx.scanTypeArgument(0) + ", " + ctx.scanTypeArgument(1) + ">")
+			.with(Optional.class, ctx -> "Optional0<" + (ctx.hasTypeArguments() ? ctx.scanTypeArgument(0) : "") + ">")
+			.with(new TypeT<Optional<CharSequence>>() {}, ctx -> "Optional1<" + ctx.scanTypeArgument(0) + ">")
+			.with(new TypeT<Optional<? extends CharSequence>>() {}, ctx -> "Optional2<" + ctx.scanTypeArgument(0) + ">")
+			.with(Object.class, ctx -> {
+				scan(ctx.getAnnotatedType());
+				return "*";
+			})
+			.with(Enum.class, ctx -> ctx.getRawType().getSimpleName())
+			.with(new TypeT<Object[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]")
+			.with(new TypeT<int[]>() {}, ctx -> ctx.scanTypeArgument(0) + "[]");
 
 		TypeScanner<String> scanner = registry.scanner();
 		assertEquals("List<String>", scanner.scan(new TypeT<List<String>>() {}));

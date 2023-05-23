@@ -61,9 +61,9 @@ public final class WebSocketEchoClientExample extends Launcher {
 				break;
 			}
 			CompletableFuture<?> future = reactor.submit(() ->
-					webSocket.writeMessage(Message.text(line))
-							.then(webSocket::readMessage)
-							.whenResult(message -> System.out.println("Response: " + message.getText())));
+				webSocket.writeMessage(Message.text(line))
+					.then(webSocket::readMessage)
+					.whenResult(message -> System.out.println("Response: " + message.getText())));
 			future.get();
 		}
 	}

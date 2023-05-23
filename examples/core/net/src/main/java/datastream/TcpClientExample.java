@@ -27,8 +27,8 @@ public final class TcpClientExample {
 
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		eventloop.connect(new InetSocketAddress("localhost", PORT), (socketChannel, e) -> {
 			if (e == null) {
@@ -40,13 +40,13 @@ public final class TcpClientExample {
 				}
 
 				StreamSuppliers.ofValues(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-						.transformWith(ChannelSerializer.create(INT_SERIALIZER))
-						.streamTo(ChannelConsumers.ofSocket(socket));
+					.transformWith(ChannelSerializer.create(INT_SERIALIZER))
+					.streamTo(ChannelConsumers.ofSocket(socket));
 
 				ChannelSuppliers.ofSocket(socket)
-						.transformWith(ChannelDeserializer.create(UTF8_SERIALIZER))
-						.toList()
-						.whenResult(list -> list.forEach(System.out::println));
+					.transformWith(ChannelDeserializer.create(UTF8_SERIALIZER))
+					.toList()
+					.whenResult(list -> list.forEach(System.out::println));
 			} else {
 				System.out.printf("Could not connect to server, make sure it is started: %s%n", e);
 			}

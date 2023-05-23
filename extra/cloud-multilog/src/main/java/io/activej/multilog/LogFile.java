@@ -47,7 +47,7 @@ public final class LogFile implements Comparable<LogFile> {
 		if (o == null || getClass() != o.getClass()) return false;
 		LogFile that = (LogFile) o;
 		return this.remainder == that.remainder &&
-				this.name.equals(that.name);
+			this.name.equals(that.name);
 	}
 
 	@Override

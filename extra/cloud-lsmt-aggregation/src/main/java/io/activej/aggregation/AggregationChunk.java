@@ -26,10 +26,9 @@ import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableList;
 
 public class AggregationChunk {
-	public static AggregationChunk create(Object chunkId,
-			List<String> fields,
-			PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey,
-			int count) {
+	public static AggregationChunk create(
+		Object chunkId, List<String> fields, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count
+	) {
 		return new AggregationChunk(chunkId, fields, minPrimaryKey, maxPrimaryKey, count);
 	}
 
@@ -39,10 +38,9 @@ public class AggregationChunk {
 	private final PrimaryKey maxPrimaryKey;
 	private final int count;
 
-	private AggregationChunk(Object chunkId,
-			List<String> measures,
-			PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey,
-			int count) {
+	private AggregationChunk(
+		Object chunkId, List<String> measures, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count
+	) {
 		this.chunkId = chunkId;
 		this.measures = measures;
 		this.minPrimaryKey = minPrimaryKey;
@@ -101,11 +99,11 @@ public class AggregationChunk {
 	@Override
 	public String toString() {
 		return "{" +
-				"id=" + chunkId +
-				", measures=" + measures +
-				", minKey=" + minPrimaryKey +
-				", maxKey=" + maxPrimaryKey +
-				", count=" + count +
-				'}';
+			"id=" + chunkId +
+			", measures=" + measures +
+			", minKey=" + minPrimaryKey +
+			", maxKey=" + maxPrimaryKey +
+			", count=" + count +
+			'}';
 	}
 }

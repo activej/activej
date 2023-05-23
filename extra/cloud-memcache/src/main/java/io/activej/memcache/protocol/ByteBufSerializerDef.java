@@ -63,16 +63,16 @@ public class ByteBufSerializerDef extends AbstractSerializerDef implements Seria
 	@Override
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos,
-				staticCall(ByteBufSerializerDef.class,
-						"write" + (writeWithRecycle ? "Recycle" : "") + (nullable ? "Nullable" : ""),
-						buf, pos, cast(value, ByteBuf.class)));
+			staticCall(ByteBufSerializerDef.class,
+				"write" + (writeWithRecycle ? "Recycle" : "") + (nullable ? "Nullable" : ""),
+				buf, pos, cast(value, ByteBuf.class)));
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return staticCall(ByteBufSerializerDef.class,
-				"read" + (wrap ? "Slice" : "") + (nullable ? "Nullable" : ""),
-				in);
+			"read" + (wrap ? "Slice" : "") + (nullable ? "Nullable" : ""),
+			in);
 	}
 
 	public static int write(byte[] output, int offset, ByteBuf buf) {

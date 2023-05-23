@@ -128,8 +128,8 @@ public class BindingGeneratorExample {
 				generate(Optional.class, (bindings, scope, key) -> {
 					Binding<Object> binding = bindings.get(key.getTypeParameter(0));
 					return binding != null ?
-							binding.mapInstance(Optional::of) :
-							Binding.toInstance(Optional.empty());
+						binding.mapInstance(Optional::of) :
+						Binding.toInstance(Optional.empty());
 				});
 
 				bind(new Key<Cookie<Pastry>>() {});

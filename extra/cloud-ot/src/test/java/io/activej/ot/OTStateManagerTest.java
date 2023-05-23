@@ -62,7 +62,7 @@ public class OTStateManagerTest {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> fetch(Integer currentCommitId) {
 				return super.fetch(currentCommitId)
-						.then(fetchData -> Promises.delay(100L, fetchData));
+					.then(fetchData -> Promises.delay(100L, fetchData));
 			}
 		};
 		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
@@ -437,7 +437,8 @@ public class OTStateManagerTest {
 	}
 
 	abstract static class OTUplinkDecorator extends ImplicitlyReactive
-			implements AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
+		implements AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
+
 		private final AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 
 		OTUplinkDecorator(AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node) {

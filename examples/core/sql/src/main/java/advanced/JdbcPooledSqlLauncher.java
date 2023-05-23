@@ -31,7 +31,7 @@ public final class JdbcPooledSqlLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.ofClassPathProperties(DATASOURCE_PROPERTIES, true)
-				.overrideWith(Config.ofSystemProperties("config"));
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
@@ -50,9 +50,9 @@ public final class JdbcPooledSqlLauncher extends Launcher {
 			 Statement statement = connection.createStatement()
 		) {
 			statement.executeUpdate("" +
-					"INSERT INTO " + TABLE_TO + " " +
-					"SELECT * " +
-					"FROM " + TABLE_FROM);
+				"INSERT INTO " + TABLE_TO + " " +
+				"SELECT * " +
+				"FROM " + TABLE_FROM);
 		}
 	}
 
@@ -65,8 +65,8 @@ public final class JdbcPooledSqlLauncher extends Launcher {
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				ConfigModule.create(),
-				DataSourcePooledModule.create()
+			ConfigModule.create(),
+			DataSourcePooledModule.create()
 		);
 	}
 

@@ -46,9 +46,9 @@ public class AggregationGroupReducerTest {
 	public void test() {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-				.withKey("word", FieldTypes.ofString())
-				.withMeasure("documents", union(ofInt()))
-				.build();
+			.withKey("word", FieldTypes.ofString())
+			.withMeasure("documents", union(ofInt()))
+			.build();
 
 		List<StreamConsumer> listConsumers = new ArrayList<>();
 		List items = new ArrayList();
@@ -80,33 +80,33 @@ public class AggregationGroupReducerTest {
 
 		Class<InvertedIndexRecord> inputClass = InvertedIndexRecord.class;
 		Class<Comparable> keyClass = createKeyClass(
-				Stream.of("word")
-						.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
-				classLoader);
+			Stream.of("word")
+				.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
+			classLoader);
 		Class<InvertedIndexRecord> aggregationClass = createRecordClass(structure, List.of("word"), List.of("documents"), classLoader);
 
 		Function<InvertedIndexRecord, Comparable> keyFunction = createKeyFunction(inputClass, keyClass,
-				List.of("word"), classLoader);
+			List.of("word"), classLoader);
 
 		Aggregate<InvertedIndexRecord, Object> aggregate = createPreaggregator(structure, inputClass, aggregationClass,
-				Map.of("word", "word"), Map.of("documents", "documentId"), classLoader);
+			Map.of("word", "word"), Map.of("documents", "documentId"), classLoader);
 
 		int aggregationChunkSize = 2;
 
 		StreamSupplier<InvertedIndexRecord> supplier = StreamSuppliers.ofValues(
-				new InvertedIndexRecord("fox", 1),
-				new InvertedIndexRecord("brown", 2),
-				new InvertedIndexRecord("fox", 3),
-				new InvertedIndexRecord("brown", 3),
-				new InvertedIndexRecord("lazy", 4),
-				new InvertedIndexRecord("dog", 1),
-				new InvertedIndexRecord("quick", 1),
-				new InvertedIndexRecord("fox", 4),
-				new InvertedIndexRecord("brown", 10));
+			new InvertedIndexRecord("fox", 1),
+			new InvertedIndexRecord("brown", 2),
+			new InvertedIndexRecord("fox", 3),
+			new InvertedIndexRecord("brown", 3),
+			new InvertedIndexRecord("lazy", 4),
+			new InvertedIndexRecord("dog", 1),
+			new InvertedIndexRecord("quick", 1),
+			new InvertedIndexRecord("fox", 4),
+			new InvertedIndexRecord("brown", 10));
 
 		AggregationGroupReducer<Long, InvertedIndexRecord, Comparable> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
-				structure, List.of("documents"),
-				aggregationClass, singlePartition(), keyFunction, aggregate, aggregationChunkSize, classLoader);
+			structure, List.of("documents"),
+			aggregationClass, singlePartition(), keyFunction, aggregate, aggregationChunkSize, classLoader);
 
 		await(supplier.streamTo(groupReducer));
 		List<AggregationChunk> list = await(groupReducer.getResult());

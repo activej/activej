@@ -30,9 +30,9 @@ public final class ConsumerExample<T> extends AbstractStreamConsumer<T> {
 
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withCurrentThread()
+			.withFatalErrorHandler(rethrow())
+			.build();
 
 		StreamConsumer<Integer> consumer = new ConsumerExample<>();
 		StreamSupplier<Integer> supplier = StreamSuppliers.ofValues(1, 2, 3);

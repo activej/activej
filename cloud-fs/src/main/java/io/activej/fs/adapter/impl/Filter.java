@@ -113,9 +113,9 @@ public final class Filter implements IFileSystem {
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return parent.list(glob)
-				.map(map -> map.entrySet().stream()
-						.filter(entry -> predicate.test(entry.getKey()))
-						.collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+			.map(map -> map.entrySet().stream()
+				.filter(entry -> predicate.test(entry.getKey()))
+				.collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 	}
 
 	@Override
@@ -131,8 +131,8 @@ public final class Filter implements IFileSystem {
 		Map<Boolean, Set<String>> partitioned = names.stream().collect(partitioningBy(predicate, toSet()));
 		Set<String> query = partitioned.get(TRUE);
 		return query.isEmpty() ?
-				Promise.of(Map.of()) :
-				parent.infoAll(query);
+			Promise.of(Map.of()) :
+			parent.infoAll(query);
 	}
 
 	@Override
@@ -151,8 +151,8 @@ public final class Filter implements IFileSystem {
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		return parent.deleteAll(toDelete.stream()
-				.filter(predicate)
-				.collect(toSet()));
+			.filter(predicate)
+			.collect(toSet()));
 	}
 
 	private Promise<Void> filteringOp(String source, String target, AsyncBiConsumer<String, String> original) {

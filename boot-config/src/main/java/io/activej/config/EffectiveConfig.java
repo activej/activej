@@ -61,7 +61,7 @@ public final class EffectiveConfig implements Config {
 		this.children = new LinkedHashMap<>();
 		for (Map.Entry<String, Config> entry : config.getChildren().entrySet()) {
 			this.children.put(entry.getKey(),
-					new EffectiveConfig(concatPath(this.path, entry.getKey()), entry.getValue(), this.callsRegistry));
+				new EffectiveConfig(concatPath(this.path, entry.getKey()), entry.getValue(), this.callsRegistry));
 		}
 	}
 

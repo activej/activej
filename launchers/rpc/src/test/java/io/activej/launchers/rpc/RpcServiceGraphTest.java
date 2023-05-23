@@ -53,39 +53,39 @@ public class RpcServiceGraphTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		port = getFreePort();
 		RpcServer.builder(eventloop)
-				.withMessageTypes(String.class)
-				.withHandler(String.class, string -> Promise.of("Response: " + string))
-				.withListenPort(port)
-				.build()
-				.listen();
+			.withMessageTypes(String.class)
+			.withHandler(String.class, string -> Promise.of("Response: " + string))
+			.withListenPort(port)
+			.build()
+			.listen();
 		new Thread(eventloop).start();
 	}
 
 	@Test(timeout = 5_000)
 	public void testPartialConnectionOnStart() throws InterruptedException {
 		Injector injector = Injector.of(
-				ServiceGraphModule.create(),
-				new AbstractModule() {
-					@Provides
-					NioReactor reactor() {
-						return Eventloop.create();
-					}
-
-					@Provides
-					@Eager
-					IRpcClient client(NioReactor reactor) {
-						return RpcClient.builder(reactor)
-								.withMessageTypes(String.class)
-								.withStrategy(RoundRobin.builder(
-												servers(
-														new InetSocketAddress(port),
-														new InetSocketAddress(getFreePort())
-												))
-										.withMinActiveSubStrategies(2)
-										.build())
-								.build();
-					}
+			ServiceGraphModule.create(),
+			new AbstractModule() {
+				@Provides
+				NioReactor reactor() {
+					return Eventloop.create();
 				}
+
+				@Provides
+				@Eager
+				IRpcClient client(NioReactor reactor) {
+					return RpcClient.builder(reactor)
+						.withMessageTypes(String.class)
+						.withStrategy(RoundRobin.builder(
+								servers(
+									new InetSocketAddress(port),
+									new InetSocketAddress(getFreePort())
+								))
+							.withMinActiveSubStrategies(2)
+							.build())
+						.build();
+				}
+			}
 		);
 
 		injector.createEagerInstances();

@@ -53,9 +53,9 @@ public class Utils {
 	static List<Ordering> parseOrderings(String string) throws MalformedDataException {
 		List<Ordering> result = new ArrayList<>();
 		List<String> tokens = splitter.splitAsStream(string)
-				.map(String::trim)
-				.filter(not(String::isEmpty))
-				.toList();
+			.map(String::trim)
+			.filter(not(String::isEmpty))
+			.toList();
 		for (String s : tokens) {
 			int i = s.indexOf(':');
 			if (i == -1) {

@@ -41,8 +41,9 @@ public final class RendezvousHashSharder<K> implements Sharder<K> {
 	}
 
 	public static <K extends Comparable<K>, P> RendezvousHashSharder<K> create(
-			ToIntFunction<K> keyHashFn, ToIntFunction<P> partitionIdHashCode,
-			Set<P> partitions, List<P> partitionsAlive, int shards, boolean repartition) {
+		ToIntFunction<K> keyHashFn, ToIntFunction<P> partitionIdHashCode, Set<P> partitions, List<P> partitionsAlive,
+		int shards, boolean repartition
+	) {
 		Map<P, Integer> partitionsAliveMap = new HashMap<>();
 		for (P partitionId : partitionsAlive) {
 			partitionsAliveMap.put(partitionId, partitionsAliveMap.size());

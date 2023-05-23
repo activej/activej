@@ -37,22 +37,22 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	@Override
 	protected Module getAdditionalServerModule() {
 		return ModuleBuilder.create()
-				.install(CalciteClientModule.create())
-				.bind(int.class).to(TestUtils::getFreePort)
-				.bind(HttpServer.class).to((reactor, port, calciteSqlDataflow) -> HttpServer.builder(
-										reactor,
-										AvaticaJdbcServlet.create(
-												Executors.newCachedThreadPool(),
-												new JsonHandler(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow)), NoopMetricsSystem.getInstance())
-										))
-								.withListenPort(port)
-								.build(),
-						NioReactor.class, int.class, SqlDataflow.class)
-				.bind(Eventloop.class).to(() -> Eventloop.builder()
-						.withFatalErrorHandler(rethrow())
-						.build())
-				.bind(NioReactor.class).to(Eventloop.class)
-				.build();
+			.install(CalciteClientModule.create())
+			.bind(int.class).to(TestUtils::getFreePort)
+			.bind(HttpServer.class).to((reactor, port, calciteSqlDataflow) -> HttpServer.builder(
+						reactor,
+						AvaticaJdbcServlet.create(
+							Executors.newCachedThreadPool(),
+							new JsonHandler(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow)), NoopMetricsSystem.getInstance())
+						))
+					.withListenPort(port)
+					.build(),
+				NioReactor.class, int.class, SqlDataflow.class)
+			.bind(Eventloop.class).to(() -> Eventloop.builder()
+				.withFatalErrorHandler(rethrow())
+				.build())
+			.bind(NioReactor.class).to(Eventloop.class)
+			.build();
 	}
 
 	@Override
@@ -84,9 +84,9 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	@Override
 	protected QueryResult query(String sql) {
 		try (
-				Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port);
-				Statement statement = connection.createStatement();
-				ResultSet resultSet = statement.executeQuery(sql)
+			Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port);
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery(sql)
 		) {
 			return toQueryResult(resultSet);
 		} catch (Exception e) {

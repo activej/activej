@@ -67,8 +67,8 @@ public final class TestDyingPartitions {
 			MapCrdtStorage<String, Integer> storage = MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
 			InetSocketAddress address = new InetSocketAddress(port);
 			CrdtServer<String, Integer> server = CrdtServer.builder(eventloop, storage, SERIALIZER)
-					.withListenAddresses(address)
-					.build();
+				.withListenAddresses(address)
+				.build();
 			server.listen();
 			assertNull(servers.put(port, server));
 			new Thread(eventloop).start();
@@ -77,15 +77,15 @@ public final class TestDyingPartitions {
 		}
 
 		cluster = ClusterCrdtStorage.create(getCurrentReactor(),
-				IDiscoveryService.of(
-						RendezvousPartitionScheme.<String>builder()
-								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
-										.withReplicas(REPLICATION_COUNT)
-										.withRepartition(true)
-										.build())
-								.withCrdtProvider(clients::get)
-								.build()),
-				CRDT_FUNCTION);
+			IDiscoveryService.of(
+				RendezvousPartitionScheme.<String>builder()
+					.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+						.withReplicas(REPLICATION_COUNT)
+						.withRepartition(true)
+						.build())
+					.withCrdtProvider(clients::get)
+					.build()),
+			CRDT_FUNCTION);
 		await(cluster.start());
 	}
 
@@ -103,8 +103,8 @@ public final class TestDyingPartitions {
 		}
 
 		Exception exception = awaitException(StreamSuppliers.ofIterator(data.iterator())
-				.streamTo(StreamConsumers.ofPromise(cluster.upload()
-						.whenResult(this::shutdown2Servers))));
+			.streamTo(StreamConsumers.ofPromise(cluster.upload()
+				.whenResult(this::shutdown2Servers))));
 
 		assertThat(exception, instanceOf(CrdtException.class));
 		assertEquals("Upload failed", exception.getMessage());
@@ -119,11 +119,11 @@ public final class TestDyingPartitions {
 		}
 
 		await(StreamSuppliers.ofIterator(data.iterator())
-				.streamTo(StreamConsumers.ofPromise(cluster.upload())));
+			.streamTo(StreamConsumers.ofPromise(cluster.upload())));
 
 		Exception exception = awaitException(cluster.download()
-				.whenResult(this::shutdown2Servers)
-				.then(StreamSupplier::toList));
+			.whenResult(this::shutdown2Servers)
+			.then(StreamSupplier::toList));
 
 		assertThat(exception, instanceOf(CrdtException.class));
 		assertEquals("Download failed", exception.getMessage());

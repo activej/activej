@@ -46,6 +46,6 @@ public final class PartitionedCollector<T> implements ICollector<T> {
 			streamingPromises.add(supplier.streamTo(ToListStreamConsumer.create(partitionItems)));
 		}
 		return StreamSuppliers.ofPromise(Promises.all(streamingPromises)
-				.map($ -> StreamSuppliers.empty()));
+			.map($ -> StreamSuppliers.empty()));
 	}
 }

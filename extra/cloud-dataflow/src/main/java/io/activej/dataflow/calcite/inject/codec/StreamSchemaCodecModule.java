@@ -12,7 +12,7 @@ public final class StreamSchemaCodecModule extends AbstractModule {
 	@Subtype(1)
 	StreamCodec<RecordStreamSchema> recordStreamSchema(StreamCodec<RecordScheme> recordSchemeStreamCodec) {
 		return StreamCodec.create(RecordStreamSchema::create,
-				RecordStreamSchema::getRecordScheme, recordSchemeStreamCodec
+			RecordStreamSchema::getRecordScheme, recordSchemeStreamCodec
 		);
 	}
 }

@@ -546,18 +546,18 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		int right = IntStream.iterate(levels.length, i -> i - 1).filter(i -> counts[i] != 0).findFirst().getAsInt();
 
 		int maxLevelStrLen = max(max(NEG_INF.length(), POS_INF.length()),
-				IntStream.range(left, right).map(i -> Integer.toString(levels[i]).length()).max().orElse(0));
+			IntStream.range(left, right).map(i -> Integer.toString(levels[i]).length()).max().orElse(0));
 		int maxValueStrLen = IntStream.rangeClosed(left, right).map(i -> Long.toString(counts[i]).length()).max().orElse(0);
 
 		return IntStream.rangeClosed(left, right)
-				.mapToObj(i ->
-						String.format("%c%" + maxLevelStrLen + "s, %" + maxLevelStrLen + "s%c" + "  :  %" + maxValueStrLen + "s",
-								i == 0 ? '(' : '[',
-								i == 0 ? NEG_INF : levels[i - 1],
-								i == levels.length ? POS_INF : levels[i],
-								')',
-								counts[i]))
-				.collect(toList());
+			.mapToObj(i ->
+				String.format("%c%" + maxLevelStrLen + "s, %" + maxLevelStrLen + "s%c" + "  :  %" + maxValueStrLen + "s",
+					i == 0 ? '(' : '[',
+					i == 0 ? NEG_INF : levels[i - 1],
+					i == levels.length ? POS_INF : levels[i],
+					')',
+					counts[i]))
+			.collect(toList());
 	}
 
 	@JmxAttribute
@@ -592,13 +592,13 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		// average and deviation
 		if (useAvgAndDeviaton) {
 			constructorTemplate
-					.append(decimalFormat.format(getSmoothedAverage()))
-					.append('±')
-					.append(decimalFormat.format(getSmoothedStandardDeviation()))
-					.append(' ');
+				.append(decimalFormat.format(getSmoothedAverage()))
+				.append('±')
+				.append(decimalFormat.format(getSmoothedStandardDeviation()))
+				.append(' ');
 			if (unit != null) {
 				constructorTemplate.append(unit)
-						.append("  ");
+					.append("  ");
 			} else {
 				constructorTemplate.append(' ');
 			}
@@ -607,34 +607,34 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		// min and max
 		if (useMinMax) {
 			constructorTemplate
-					.append('[')
-					.append(decimalFormat.format(min))
-					.append("...")
-					.append(decimalFormat.format(max))
-					.append("]  ");
+				.append('[')
+				.append(decimalFormat.format(min))
+				.append("...")
+				.append(decimalFormat.format(max))
+				.append("]  ");
 		}
 
 		// last value
 		if (useLastValue) {
 			constructorTemplate
-					.append("last: ")
-					.append(decimalFormat.format(getLastValue()))
-					.append("  ");
+				.append("last: ")
+				.append(decimalFormat.format(getLastValue()))
+				.append("  ");
 		}
 
 		// rate
 		if (rateUnit != null) {
 			constructorTemplate
-					.append("calls: ")
-					.append(EventStats.format(totalCount, getSmoothedRate(), rateUnit, decimalFormat))
-					.append("  ");
+				.append("calls: ")
+				.append(EventStats.format(totalCount, getSmoothedRate(), rateUnit, decimalFormat))
+				.append("  ");
 		}
 
 		if (addedStats != 0) {
 			constructorTemplate
-					.append('[')
-					.append(addedStats)
-					.append(']');
+				.append('[')
+				.append(addedStats)
+				.append(']');
 		}
 
 		return constructorTemplate.toString().trim();

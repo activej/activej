@@ -62,8 +62,8 @@ public final class Utils {
 
 	static IChunksBackupService backupServiceOfStorage(AggregationChunkStorage<Long> storage) {
 		return (revisionId, chunkIds) ->
-				execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
-						"Failed to backup chunks on storage ");
+			execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
+				"Failed to backup chunks on storage ");
 	}
 
 	static IChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage<Long> storage) {
@@ -71,13 +71,13 @@ public final class Utils {
 			@Override
 			public void checkRequiredChunks(Set<Long> chunkIds) throws IOException {
 				execute(storage, () -> storage.checkRequiredChunks(chunkIds),
-						"Required chunks check failed");
+					"Required chunks check failed");
 			}
 
 			@Override
 			public void cleanup(Set<Long> chunkIds, Instant safePoint) throws IOException {
 				execute(storage, () -> storage.cleanup(chunkIds, safePoint),
-						"Failed to cleanup chunks");
+					"Failed to cleanup chunks");
 			}
 		};
 	}

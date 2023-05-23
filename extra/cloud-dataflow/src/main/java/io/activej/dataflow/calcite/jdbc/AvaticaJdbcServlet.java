@@ -25,12 +25,12 @@ public final class AvaticaJdbcServlet implements AsyncServlet {
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
 		return request.loadBody()
-				.then(body -> {
-					String bodyString = body.getString(StandardCharsets.UTF_8);
-					return Promise.ofBlocking(executor, () -> handler.apply(bodyString));
-				})
-				.map(responseString -> HttpResponse.ok200()
-						.withJson(responseString.getResponse())
-						.build());
+			.then(body -> {
+				String bodyString = body.getString(StandardCharsets.UTF_8);
+				return Promise.ofBlocking(executor, () -> handler.apply(bodyString));
+			})
+			.map(responseString -> HttpResponse.ok200()
+				.withJson(responseString.getResponse())
+				.build());
 	}
 }

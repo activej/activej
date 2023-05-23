@@ -72,9 +72,9 @@ public final class AsyncSuppliers {
 
 	@Contract(pure = true)
 	@SuppressWarnings("unchecked")
-	public static <T> AsyncSupplier<T> prefetch(int count,
-			AsyncSupplier<? extends T> actualSupplier,
-			AsyncSupplier<? extends T> prefetchSupplier) {
+	public static <T> AsyncSupplier<T> prefetch(
+		int count, AsyncSupplier<? extends T> actualSupplier, AsyncSupplier<? extends T> prefetchSupplier
+	) {
 		if (count == 0) return (AsyncSupplier<T>) actualSupplier;
 		return new AsyncSupplier<T>() {
 			final ArrayDeque<T> prefetched = new ArrayDeque<>();
@@ -92,13 +92,13 @@ public final class AsyncSuppliers {
 				for (int i = 0; i < count - (prefetched.size() + prefetchCalls); i++) {
 					prefetchCalls++;
 					prefetchSupplier.get()
-							.async()
-							.subscribe((value, e) -> {
-								prefetchCalls--;
-								if (e == null) {
-									prefetched.addLast(value);
-								}
-							});
+						.async()
+						.subscribe((value, e) -> {
+							prefetchCalls--;
+							if (e == null) {
+								prefetched.addLast(value);
+							}
+						});
 				}
 			}
 		};

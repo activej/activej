@@ -64,7 +64,8 @@ import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
 public final class WalUploader<K extends Comparable<K>, S> extends AbstractReactive
-		implements ReactiveJmxBeanWithStats {
+	implements ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(WalUploader.class);
 
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);
@@ -81,8 +82,8 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	private final PromiseStats uploadPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final ValueStats totalFilesUploaded = ValueStats.create(SMOOTHING_WINDOW);
 	private final ValueStats totalFilesUploadedSize = ValueStats.builder(SMOOTHING_WINDOW)
-			.withUnit("bytes")
-			.build();
+		.withUnit("bytes")
+		.build();
 	private boolean detailedMonitoring;
 
 	private @Nullable Path sortDir;
@@ -137,12 +138,12 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	public Promise<Void> uploadToStorage() {
 		checkInReactorThread(this);
 		return uploadToStorage.run()
-				.whenComplete(uploadPromise.recordStats());
+			.whenComplete(uploadPromise.recordStats());
 	}
 
 	private Promise<Void> doUploadToStorage() {
 		return getWalFiles(executor, path)
-				.then(this::uploadWaLFiles);
+			.then(this::uploadWaLFiles);
 	}
 
 	private Promise<Void> uploadWaLFiles(List<Path> walFiles) throws IOException {
@@ -164,23 +165,23 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 		}
 
 		return createReducer(walFiles)
-				.getOutput()
-				.transformWith(createSorter(sortDir))
-				.streamTo(storage.upload())
-				.whenComplete(() -> cleanup(sortDir))
-				.whenResult(() -> {
-					totalFilesUploaded.recordValue(walFiles.size());
-					if (detailedMonitoring) {
-						for (Path walFile : walFiles) {
-							try {
-								totalFilesUploadedSize.recordValue(Files.size(walFile));
-							} catch (IOException e) {
-								logger.warn("Could not get the size of uploaded file {}", walFile);
-							}
+			.getOutput()
+			.transformWith(createSorter(sortDir))
+			.streamTo(storage.upload())
+			.whenComplete(() -> cleanup(sortDir))
+			.whenResult(() -> {
+				totalFilesUploaded.recordValue(walFiles.size());
+				if (detailedMonitoring) {
+					for (Path walFile : walFiles) {
+						try {
+							totalFilesUploadedSize.recordValue(Files.size(walFile));
+						} catch (IOException e) {
+							logger.warn("Could not get the size of uploaded file {}", walFile);
 						}
 					}
-				})
-				.then(() -> deleteWalFiles(executor, walFiles));
+				}
+			})
+			.then(() -> deleteWalFiles(executor, walFiles));
 	}
 
 	private Path createSortDir() throws IOException {
@@ -211,18 +212,18 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 
 		for (Path file : files) {
 			ChannelSuppliers.ofPromise(ChannelFileReader.open(executor, file))
-					.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
-					.withEndOfStream(eos -> eos
-							.map(identity(),
-									e -> {
-										if (e instanceof TruncatedDataException) {
-											logger.warn("Write ahead log {} was truncated", file);
-											return null;
-										}
-										throw e;
-									}))
-					.transformWith(ChannelDeserializer.create(serializer))
-					.streamTo(reducer.newInput(CrdtData::getKey, new WalReducer()));
+				.transformWith(ChannelFrameDecoder.create(FRAME_FORMAT))
+				.withEndOfStream(eos -> eos
+					.map(identity(),
+						e -> {
+							if (e instanceof TruncatedDataException) {
+								logger.warn("Write ahead log {} was truncated", file);
+								return null;
+							}
+							throw e;
+						}))
+				.transformWith(ChannelDeserializer.create(serializer))
+				.streamTo(reducer.newInput(CrdtData::getKey, new WalReducer()));
 		}
 
 		return reducer;

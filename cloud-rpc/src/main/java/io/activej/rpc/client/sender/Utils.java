@@ -32,22 +32,22 @@ public final class Utils {
 
 	public static List<RpcSender> listOfSenders(List<? extends RpcStrategy> strategies, RpcClientConnectionPool pool) {
 		return strategies.stream()
-				.map(strategy -> strategy.createSender(pool))
-				.filter(Objects::nonNull)
-				.collect(toList());
+			.map(strategy -> strategy.createSender(pool))
+			.filter(Objects::nonNull)
+			.collect(toList());
 	}
 
 	public static List<RpcSender> listOfNullableSenders(List<? extends RpcStrategy> strategies, RpcClientConnectionPool pool) {
 		return strategies.stream()
-				.map(strategy -> strategy.createSender(pool))
-				.toList();
+			.map(strategy -> strategy.createSender(pool))
+			.toList();
 	}
 
 	public static Set<InetSocketAddress> getAddresses(Collection<? extends RpcStrategy> strategies) {
 		return strategies.stream()
-				.map(RpcStrategy::getAddresses)
-				.flatMap(Collection::stream)
-				.collect(toSet());
+			.map(RpcStrategy::getAddresses)
+			.flatMap(Collection::stream)
+			.collect(toSet());
 	}
 
 }

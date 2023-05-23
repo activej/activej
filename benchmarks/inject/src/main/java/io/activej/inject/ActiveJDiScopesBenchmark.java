@@ -256,7 +256,7 @@ public class ActiveJDiScopesBenchmark {
 			@Override
 			protected void configure() {
 				bind(CookieBucket.class).to(CookieBucket::new, Cookie1.class, Cookie2.class,
-						Cookie3.class, Cookie4.class, Cookie5.class, Cookie6.class).in(OrderScope.class);
+					Cookie3.class, Cookie4.class, Cookie5.class, Cookie6.class).in(OrderScope.class);
 			}
 
 			@Provides
@@ -336,15 +336,15 @@ public class ActiveJDiScopesBenchmark {
 	public static void main(String[] args) throws RunnerException {
 
 		Options opt = new OptionsBuilder()
-				.include(ActiveJDiScopesBenchmark.class.getSimpleName())
-				.forks(2)
-				.warmupIterations(3)
-				.warmupTime(TimeValue.seconds(1L))
-				.measurementIterations(10)
-				.measurementTime(TimeValue.seconds(2L))
-				.mode(Mode.AverageTime)
-				.timeUnit(TimeUnit.NANOSECONDS)
-				.build();
+			.include(ActiveJDiScopesBenchmark.class.getSimpleName())
+			.forks(2)
+			.warmupIterations(3)
+			.warmupTime(TimeValue.seconds(1L))
+			.measurementIterations(10)
+			.measurementTime(TimeValue.seconds(2L))
+			.mode(Mode.AverageTime)
+			.timeUnit(TimeUnit.NANOSECONDS)
+			.build();
 
 		new Runner(opt).run();
 	}

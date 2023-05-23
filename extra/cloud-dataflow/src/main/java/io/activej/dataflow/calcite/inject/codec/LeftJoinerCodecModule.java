@@ -14,10 +14,10 @@ public final class LeftJoinerCodecModule extends AbstractModule {
 	@Subtype(0)
 	StreamCodec<RecordLeftJoiner> leftJoinerStreamCodec(StreamCodec<RecordScheme> recordSchemeStreamCodec) {
 		return StreamCodec.create(RecordLeftJoiner::create,
-				RecordLeftJoiner::getJoinRelType, StreamCodecs.ofEnum(JoinRelType.class),
-				RecordLeftJoiner::getScheme, recordSchemeStreamCodec,
-				RecordLeftJoiner::getLeft, recordSchemeStreamCodec,
-				RecordLeftJoiner::getRight, recordSchemeStreamCodec
+			RecordLeftJoiner::getJoinRelType, StreamCodecs.ofEnum(JoinRelType.class),
+			RecordLeftJoiner::getScheme, recordSchemeStreamCodec,
+			RecordLeftJoiner::getLeft, recordSchemeStreamCodec,
+			RecordLeftJoiner::getRight, recordSchemeStreamCodec
 		);
 	}
 }

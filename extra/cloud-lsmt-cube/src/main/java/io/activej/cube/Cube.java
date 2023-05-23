@@ -105,7 +105,8 @@ import static java.util.stream.Collectors.toList;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class Cube extends AbstractReactive
-		implements ICube, OTState<CubeDiff>, ReactiveJmxBeanWithStats {
+	implements ICube, OTState<CubeDiff>, ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
@@ -255,16 +256,20 @@ public final class Cube extends AbstractReactive
 	private long queryErrors;
 	private Exception queryLastError;
 
-	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			IAggregationChunkStorage aggregationChunkStorage) {
+	Cube(
+		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+		IAggregationChunkStorage aggregationChunkStorage
+	) {
 		super(reactor);
 		this.executor = executor;
 		this.classLoader = classLoader;
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
-	public static Builder builder(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			IAggregationChunkStorage aggregationChunkStorage) {
+	public static Builder builder(
+		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+		IAggregationChunkStorage aggregationChunkStorage
+	) {
 		return new Cube(reactor, executor, classLoader, aggregationChunkStorage).new Builder(new LinkedHashMap<>());
 	}
 
@@ -412,32 +417,32 @@ public final class Cube extends AbstractReactive
 
 		private void addAggregation(AggregationConfig aggregationConfig) {
 			Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat)
-					.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-							.initialize(s -> {
-								for (String dimensionId : aggregationConfig.dimensions) {
-									s.withKey(dimensionId, dimensionTypes.get(dimensionId));
-								}
-								for (String measureId1 : aggregationConfig.measures) {
-									s.withMeasure(measureId1, measures.get(measureId1));
-								}
-								for (Entry<String, Measure> entry : measures.entrySet()) {
-									String measureId = entry.getKey();
-									Measure measure = entry.getValue();
-									if (!aggregationConfig.measures.contains(measureId)) {
-										s.withIgnoredMeasure(measureId, measure.getFieldType());
-									}
-								}
-							})
-							.withPartitioningKey(aggregationConfig.partitioningKey)
-							.build())
-					.withTemporarySortDir(temporarySortDir)
-					.withChunkSize(aggregationConfig.chunkSize != 0 ? aggregationConfig.chunkSize : aggregationsChunkSize)
-					.withReducerBufferSize(aggregationConfig.reducerBufferSize != 0 ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize)
-					.withSorterItemsInMemory(aggregationConfig.sorterItemsInMemory != 0 ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory)
-					.withMaxChunksToConsolidate(aggregationConfig.maxChunksToConsolidate != 0 ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
-					.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
-					.withStats(aggregationStats)
-					.build();
+				.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+					.initialize(s -> {
+						for (String dimensionId : aggregationConfig.dimensions) {
+							s.withKey(dimensionId, dimensionTypes.get(dimensionId));
+						}
+						for (String measureId1 : aggregationConfig.measures) {
+							s.withMeasure(measureId1, measures.get(measureId1));
+						}
+						for (Entry<String, Measure> entry : measures.entrySet()) {
+							String measureId = entry.getKey();
+							Measure measure = entry.getValue();
+							if (!aggregationConfig.measures.contains(measureId)) {
+								s.withIgnoredMeasure(measureId, measure.getFieldType());
+							}
+						}
+					})
+					.withPartitioningKey(aggregationConfig.partitioningKey)
+					.build())
+				.withTemporarySortDir(temporarySortDir)
+				.withChunkSize(aggregationConfig.chunkSize != 0 ? aggregationConfig.chunkSize : aggregationsChunkSize)
+				.withReducerBufferSize(aggregationConfig.reducerBufferSize != 0 ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize)
+				.withSorterItemsInMemory(aggregationConfig.sorterItemsInMemory != 0 ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory)
+				.withMaxChunksToConsolidate(aggregationConfig.maxChunksToConsolidate != 0 ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
+				.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
+				.withStats(aggregationStats)
+				.build();
 
 			aggregations.put(aggregationConfig.id, new AggregationContainer(aggregation, aggregationConfig.measures, aggregationConfig.predicate));
 			logger.info("Added aggregation {} for id '{}'", aggregation, aggregationConfig.id);
@@ -562,19 +567,22 @@ public final class Cube extends AbstractReactive
 		return logStreamConsumer(inputClass, AggregationPredicates.alwaysTrue());
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass,
-			AggregationPredicate predicate) {
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, AggregationPredicate predicate) {
 		return logStreamConsumer(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass), predicate);
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields) {
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(
+		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields
+	) {
 		return logStreamConsumer(inputClass, dimensionFields, measureFields, AggregationPredicates.alwaysTrue());
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
-			AggregationPredicate predicate) {
+	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(
+		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
+		AggregationPredicate predicate
+	) {
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
-				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
+			.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
 
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass) {
@@ -593,8 +601,10 @@ public final class Cube extends AbstractReactive
 	 * @param <T>        data records type
 	 * @return consumer for streaming data to cube
 	 */
-	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
-			AggregationPredicate dataPredicate) {
+	public <T> StreamConsumerWithResult<T, CubeDiff> consume(
+		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
+		AggregationPredicate dataPredicate
+	) {
 		checkInReactorThread(this);
 		logger.info("Started consuming data. Dimensions: {}. Measures: {}", dimensionFields.keySet(), measureFields.keySet());
 
@@ -608,7 +618,7 @@ public final class Cube extends AbstractReactive
 		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.size() == 0) {
 			throw new IllegalArgumentException(format("No compatible aggregation for " +
-					"dimensions fields: %s, measureFields: %s", dimensionFields, measureFields));
+				"dimensions fields: %s, measureFields: %s", dimensionFields, measureFields));
 		}
 
 		for (Entry<String, AggregationPredicate> aggregationToDataInputFilterPredicate : compatibleAggregations.entrySet()) {
@@ -618,16 +628,16 @@ public final class Cube extends AbstractReactive
 
 			List<String> keys = aggregation.getKeys();
 			Map<String, String> aggregationKeyFields = filterEntryKeys(dimensionFields.entrySet().stream(), keys::contains)
-					.collect(entriesToLinkedHashMap());
+				.collect(entriesToLinkedHashMap());
 			Map<String, String> aggregationMeasureFields = filterEntryKeys(measureFields.entrySet().stream(), aggregationContainer.measures::contains)
-					.collect(entriesToLinkedHashMap());
+				.collect(entriesToLinkedHashMap());
 
 			AggregationPredicate dataInputFilterPredicate = aggregationToDataInputFilterPredicate.getValue();
 			StreamSupplier<T> output = streamSplitter.newOutput();
 			if (!dataInputFilterPredicate.equals(AggregationPredicates.alwaysTrue())) {
 				Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate, classLoader, fieldTypes);
 				output = output
-						.transformWith(StreamTransformers.filter(filterPredicate));
+					.transformWith(StreamTransformers.filter(filterPredicate));
 			}
 			Promise<AggregationDiff> consume = output.streamTo(aggregation.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
 			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
@@ -635,9 +645,9 @@ public final class Cube extends AbstractReactive
 		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().map(CubeDiff::of));
 	}
 
-	Map<String, AggregationPredicate> getCompatibleAggregationsForDataInput(Map<String, String> dimensionFields,
-			Map<String, String> measureFields,
-			AggregationPredicate predicate) {
+	Map<String, AggregationPredicate> getCompatibleAggregationsForDataInput(
+		Map<String, String> dimensionFields, Map<String, String> measureFields, AggregationPredicate predicate
+	) {
 		AggregationPredicate dataPredicate = predicate.simplify();
 		Map<String, AggregationPredicate> aggregationToDataInputFilterPredicate = new HashMap<>();
 		for (Entry<String, AggregationContainer> aggregationContainer : aggregations.entrySet()) {
@@ -648,7 +658,7 @@ public final class Cube extends AbstractReactive
 			if (!dimensions.containsAll(aggregation.getKeys())) continue;
 
 			Map<String, String> aggregationMeasureFields = filterEntryKeys(measureFields.entrySet().stream(), container.measures::contains)
-					.collect(entriesToLinkedHashMap());
+				.collect(entriesToLinkedHashMap());
 			if (aggregationMeasureFields.isEmpty()) continue;
 
 			AggregationPredicate containerPredicate = container.predicate.simplify();
@@ -666,16 +676,16 @@ public final class Cube extends AbstractReactive
 		return aggregationToDataInputFilterPredicate;
 	}
 
-	static Predicate createFilterPredicate(Class<?> inputClass,
-			AggregationPredicate predicate,
-			DefiningClassLoader classLoader,
-			Map<String, FieldType> keyTypes) {
+	static Predicate createFilterPredicate(
+		Class<?> inputClass, AggregationPredicate predicate, DefiningClassLoader classLoader,
+		Map<String, FieldType> keyTypes
+	) {
 		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(Predicate.class, inputClass, predicate),
-				() -> ClassGenerator.builder(Predicate.class)
-						.withMethod("test", boolean.class, List.of(Object.class),
-								predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
-						.build()
+			ClassKey.of(Predicate.class, inputClass, predicate),
+			() -> ClassGenerator.builder(Predicate.class)
+				.withMethod("test", boolean.class, List.of(Object.class),
+					predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
+				.build()
 		);
 	}
 
@@ -686,39 +696,42 @@ public final class Cube extends AbstractReactive
 	 * @param resultClass class of output records
 	 * @return supplier that streams query results
 	 */
-	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
-			Class<T> resultClass) {
+	public <T> StreamSupplier<T> queryRawStream(
+		List<String> dimensions, List<String> storedMeasures, AggregationPredicate where, Class<T> resultClass
+	) {
 		return queryRawStream(dimensions, storedMeasures, where, resultClass, classLoader);
 	}
 
-	public <T> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
-			Class<T> resultClass, DefiningClassLoader queryClassLoader) {
-
+	public <T> StreamSupplier<T> queryRawStream(
+		List<String> dimensions, List<String> storedMeasures, AggregationPredicate where, Class<T> resultClass,
+		DefiningClassLoader queryClassLoader
+	) {
 		List<AggregationContainer> compatibleAggregations = getCompatibleAggregationsForQuery(dimensions, storedMeasures, where);
 
 		return queryRawStream(dimensions, storedMeasures, where, resultClass, queryClassLoader, compatibleAggregations);
 	}
 
-	private <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
-			Class<T> resultClass, DefiningClassLoader queryClassLoader,
-			List<AggregationContainer> compatibleAggregations) {
+	private <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(
+		List<String> dimensions, List<String> storedMeasures, AggregationPredicate where, Class<T> resultClass,
+		DefiningClassLoader queryClassLoader, List<AggregationContainer> compatibleAggregations
+	) {
 		checkInReactorThread(this);
 		List<AggregationContainerWithScore> containerWithScores = new ArrayList<>();
 		for (AggregationContainer compatibleAggregation : compatibleAggregations) {
 			AggregationQuery aggregationQuery = AggregationQuery.builder()
-					.withKeys(dimensions)
-					.withMeasures(storedMeasures)
-					.withPredicate(where)
-					.build();
+				.withKeys(dimensions)
+				.withMeasures(storedMeasures)
+				.withPredicate(where)
+				.build();
 			double score = compatibleAggregation.aggregation.estimateCost(aggregationQuery);
 			containerWithScores.add(new AggregationContainerWithScore(compatibleAggregation, score));
 		}
 		sort(containerWithScores);
 
 		Class<K> resultKeyClass = createKeyClass(
-				dimensions.stream()
-						.collect(toLinkedHashMap(dimensionTypes::get)),
-				queryClassLoader);
+			dimensions.stream()
+				.collect(toLinkedHashMap(dimensionTypes::get)),
+			queryClassLoader);
 
 		StreamReducer<K, T, A> streamReducer = StreamReducer.create();
 		StreamSupplier<T> queryResultSupplier = streamReducer.getOutput();
@@ -733,19 +746,19 @@ public final class Cube extends AbstractReactive
 			storedMeasures.removeAll(compatibleMeasures);
 
 			Class<S> aggregationClass = createRecordClass(
-					dimensions.stream()
-							.collect(toLinkedHashMap(dimensionTypes::get)),
-					compatibleMeasures.stream()
-							.collect(toLinkedHashMap(m -> measures.get(m).getFieldType())),
-					queryClassLoader);
+				dimensions.stream()
+					.collect(toLinkedHashMap(dimensionTypes::get)),
+				compatibleMeasures.stream()
+					.collect(toLinkedHashMap(m -> measures.get(m).getFieldType())),
+				queryClassLoader);
 
 			StreamSupplier<S> aggregationSupplier = aggregationContainer.aggregation.query(
-					AggregationQuery.builder()
-							.withKeys(dimensions)
-							.withMeasures(compatibleMeasures)
-							.withPredicate(where)
-							.build(),
-					aggregationClass, queryClassLoader);
+				AggregationQuery.builder()
+					.withKeys(dimensions)
+					.withMeasures(compatibleMeasures)
+					.withPredicate(where)
+					.build(),
+				aggregationClass, queryClassLoader);
 
 			if (storedMeasures.isEmpty() && streamReducer.getInputs().isEmpty()) {
 				/*
@@ -753,19 +766,19 @@ public final class Cube extends AbstractReactive
 				just use mapper instead of reducer to copy requested fields.
 				 */
 				Function<S, T> mapper = createMapper(aggregationClass, resultClass, dimensions,
-						compatibleMeasures, queryClassLoader);
+					compatibleMeasures, queryClassLoader);
 				queryResultSupplier = aggregationSupplier
-						.transformWith(StreamTransformers.mapper(mapper));
+					.transformWith(StreamTransformers.mapper(mapper));
 				break;
 			}
 
 			Function<S, K> keyFunction = io.activej.aggregation.util.Utils.createKeyFunction(aggregationClass, resultKeyClass, dimensions, queryClassLoader);
 
 			Map<String, Measure> extraFields = allMeasures.stream()
-					.filter(io.activej.common.Utils.not(compatibleMeasures::contains))
-					.collect(toLinkedHashMap(measures::get));
+				.filter(io.activej.common.Utils.not(compatibleMeasures::contains))
+				.collect(toLinkedHashMap(measures::get));
 			Reducer<K, S, T, A> reducer = aggregationReducer(aggregationContainer.aggregation.getStructure(), aggregationClass, resultClass,
-					dimensions, compatibleMeasures, extraFields, queryClassLoader);
+				dimensions, compatibleMeasures, extraFields, queryClassLoader);
 
 			StreamConsumer<S> streamReducerInput = streamReducer.newInput(keyFunction, reducer);
 
@@ -776,9 +789,9 @@ public final class Cube extends AbstractReactive
 	}
 
 	@VisibleForTesting
-	List<AggregationContainer> getCompatibleAggregationsForQuery(Collection<String> dimensions,
-			Collection<String> storedMeasures,
-			AggregationPredicate where) {
+	List<AggregationContainer> getCompatibleAggregationsForQuery(
+		Collection<String> dimensions, Collection<String> storedMeasures, AggregationPredicate where
+	) {
 		where = where.simplify();
 		List<String> allDimensions = Stream.concat(dimensions.stream(), where.getDimensions().stream()).toList();
 
@@ -846,9 +859,9 @@ public final class Cube extends AbstractReactive
 			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
-					.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
-					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
-					.toVoid());
+				.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
+				.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
+				.toVoid());
 		}
 
 		return Promises.sequence(runnables).map($ -> CubeDiff.of(map));
@@ -891,20 +904,20 @@ public final class Cube extends AbstractReactive
 	public Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException {
 		checkInReactorThread(this);
 		DefiningClassLoader queryClassLoader = getQueryClassLoader(new CubeClassLoaderCache.Key(
-				new LinkedHashSet<>(cubeQuery.getAttributes()),
-				new LinkedHashSet<>(cubeQuery.getMeasures()),
-				cubeQuery.getWhere().getDimensions()));
+			new LinkedHashSet<>(cubeQuery.getAttributes()),
+			new LinkedHashSet<>(cubeQuery.getMeasures()),
+			cubeQuery.getWhere().getDimensions()));
 		long queryStarted = reactor.currentTimeMillis();
 		return new RequestContext<>().execute(queryClassLoader, cubeQuery)
-				.whenResult(() -> queryTimes.recordValue((int) (reactor.currentTimeMillis() - queryStarted)))
-				.whenException(e -> {
-					queryErrors++;
-					queryLastError = e;
+			.whenResult(() -> queryTimes.recordValue((int) (reactor.currentTimeMillis() - queryStarted)))
+			.whenException(e -> {
+				queryErrors++;
+				queryLastError = e;
 
-					if (e instanceof FileNotFoundException) {
-						logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
-					}
-				});
+				if (e instanceof FileNotFoundException) {
+					logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
+				}
+			});
 	}
 	// endregion
 
@@ -966,9 +979,9 @@ public final class Cube extends AbstractReactive
 			recordFunction = createRecordFunction();
 
 			return queryRawStream(new ArrayList<>(resultDimensions), new ArrayList<>(resultStoredMeasures),
-					queryPredicate, resultClass, queryClassLoader, compatibleAggregations)
-					.toList()
-					.then(this::processResults);
+				queryPredicate, resultClass, queryClassLoader, compatibleAggregations)
+				.toList()
+				.then(this::processResults);
 		}
 
 		void prepareDimensions() throws QueryException {
@@ -1043,55 +1056,55 @@ public final class Cube extends AbstractReactive
 
 		RecordFunction createRecordFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
-					ClassKey.of(RecordFunction.class, resultClass, recordScheme.getFields()),
-					() -> ClassGenerator.builder(RecordFunction.class)
-							.withMethod("copyAttributes",
-									sequence(seq -> {
-										for (String field : recordScheme.getFields()) {
-											int fieldIndex = recordScheme.getFieldIndex(field);
-											if (dimensionTypes.containsKey(field)) {
-												seq.add(call(arg(1), "set", value(fieldIndex),
-														cast(dimensionTypes.get(field).toValue(
-																property(cast(arg(0), resultClass), field)), Object.class)));
-											}
-										}
-									}))
-							.withMethod("copyMeasures",
-									sequence(seq -> {
-										for (String field : recordScheme.getFields()) {
-											int fieldIndex = recordScheme.getFieldIndex(field);
-											if (!dimensionTypes.containsKey(field)) {
-												if (measures.containsKey(field)) {
-													Variable fieldValue = property(cast(arg(0), resultClass), field);
-													seq.add(call(arg(1), "set", value(fieldIndex),
-															cast(measures.get(field).getFieldType().toValue(
-																	measures.get(field).valueOfAccumulator(fieldValue)), Object.class)));
-												} else {
-													seq.add(call(arg(1), "set", value(fieldIndex),
-															cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
-												}
-											}
-										}
-									}))
-							.build()
+				ClassKey.of(RecordFunction.class, resultClass, recordScheme.getFields()),
+				() -> ClassGenerator.builder(RecordFunction.class)
+					.withMethod("copyAttributes",
+						sequence(seq -> {
+							for (String field : recordScheme.getFields()) {
+								int fieldIndex = recordScheme.getFieldIndex(field);
+								if (dimensionTypes.containsKey(field)) {
+									seq.add(call(arg(1), "set", value(fieldIndex),
+										cast(dimensionTypes.get(field).toValue(
+											property(cast(arg(0), resultClass), field)), Object.class)));
+								}
+							}
+						}))
+					.withMethod("copyMeasures",
+						sequence(seq -> {
+							for (String field : recordScheme.getFields()) {
+								int fieldIndex = recordScheme.getFieldIndex(field);
+								if (!dimensionTypes.containsKey(field)) {
+									if (measures.containsKey(field)) {
+										Variable fieldValue = property(cast(arg(0), resultClass), field);
+										seq.add(call(arg(1), "set", value(fieldIndex),
+											cast(measures.get(field).getFieldType().toValue(
+												measures.get(field).valueOfAccumulator(fieldValue)), Object.class)));
+									} else {
+										seq.add(call(arg(1), "set", value(fieldIndex),
+											cast(property(cast(arg(0), resultClass), field.replace('.', '$')), Object.class)));
+									}
+								}
+							}
+						}))
+					.build()
 			);
 		}
 
 		MeasuresFunction<R> createMeasuresFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
-					ClassKey.of(MeasuresFunction.class, resultClass, resultComputedMeasures),
-					() -> ClassGenerator.builder(MeasuresFunction.class)
-							.initialize(b ->
-									resultComputedMeasures.forEach(computedMeasure ->
-											b.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
-							.withMethod("computeMeasures", sequence(seq -> {
-								for (String computedMeasure : resultComputedMeasures) {
-									Expression record = cast(arg(0), resultClass);
-									seq.add(set(property(record, computedMeasure),
-											computedMeasures.get(computedMeasure).getExpression(record, measures)));
-								}
-							}))
-							.build()
+				ClassKey.of(MeasuresFunction.class, resultClass, resultComputedMeasures),
+				() -> ClassGenerator.builder(MeasuresFunction.class)
+					.initialize(b ->
+						resultComputedMeasures.forEach(computedMeasure ->
+							b.withField(computedMeasure, computedMeasures.get(computedMeasure).getType(measures))))
+					.withMethod("computeMeasures", sequence(seq -> {
+						for (String computedMeasure : resultComputedMeasures) {
+							Expression record = cast(arg(0), resultClass);
+							seq.add(set(property(record, computedMeasure),
+								computedMeasures.get(computedMeasure).getExpression(record, measures)));
+						}
+					}))
+					.build()
 			);
 		}
 
@@ -1100,11 +1113,11 @@ public final class Cube extends AbstractReactive
 			if (queryHaving == AggregationPredicates.alwaysFalse()) return o -> false;
 
 			return queryClassLoader.ensureClassAndCreateInstance(
-					ClassKey.of(Predicate.class, resultClass, queryHaving),
-					() -> ClassGenerator.builder(Predicate.class)
-							.withMethod("test",
-									queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
-							.build()
+				ClassKey.of(Predicate.class, resultClass, queryHaving),
+				() -> ClassGenerator.builder(Predicate.class)
+					.withMethod("test",
+						queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
+					.build()
 			);
 		}
 
@@ -1121,23 +1134,23 @@ public final class Cube extends AbstractReactive
 			}
 
 			return queryClassLoader.ensureClassAndCreateInstance(
-					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
-					() -> ClassGenerator.builder(Comparator.class)
-							.withMethod("compare", get(() -> {
-								Compare.Builder compareBuilder = Compare.builder();
-								for (Ordering ordering : query.getOrderings()) {
-									String field = ordering.getField();
-									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
-										String property = field.replace('.', '$');
-										compareBuilder.with(
-												ordering.isAsc() ? leftProperty(resultClass, property) : rightProperty(resultClass, property),
-												ordering.isAsc() ? rightProperty(resultClass, property) : leftProperty(resultClass, property),
-												true);
-									}
-								}
-								return compareBuilder.build();
-							}))
-							.build()
+				ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
+				() -> ClassGenerator.builder(Comparator.class)
+					.withMethod("compare", get(() -> {
+						Compare.Builder compareBuilder = Compare.builder();
+						for (Ordering ordering : query.getOrderings()) {
+							String field = ordering.getField();
+							if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
+								String property = field.replace('.', '$');
+								compareBuilder.with(
+									ordering.isAsc() ? leftProperty(resultClass, property) : rightProperty(resultClass, property),
+									ordering.isAsc() ? rightProperty(resultClass, property) : leftProperty(resultClass, property),
+									true);
+							}
+						}
+						return compareBuilder.build();
+					}))
+					.build()
 			);
 		}
 
@@ -1175,8 +1188,8 @@ public final class Cube extends AbstractReactive
 				attributes.retainAll(resultAttributes);
 				if (!attributes.isEmpty()) {
 					tasks.add(Utils.resolveAttributes(results, resolverContainer.resolver,
-							resolverContainer.dimensions, attributes,
-							fullySpecifiedDimensions, resultClass, queryClassLoader));
+						resolverContainer.dimensions, attributes,
+						fullySpecifiedDimensions, resultClass, queryClassLoader));
 				}
 			}
 
@@ -1186,7 +1199,7 @@ public final class Cube extends AbstractReactive
 				}
 			}
 			return Promises.all(tasks)
-					.map($ -> processResults2(results, totals, filterAttributes));
+				.map($ -> processResults2(results, totals, filterAttributes));
 		}
 
 		QueryResult processResults2(List<R> results, R totals, Map<String, Object> filterAttributes) {
@@ -1206,31 +1219,32 @@ public final class Cube extends AbstractReactive
 
 			if (query.getReportType() == ReportType.DATA) {
 				return QueryResult.createForData(recordScheme,
-						resultRecords,
-						recordAttributes,
-						recordMeasures,
-						resultOrderings,
-						filterAttributes);
+					resultRecords,
+					recordAttributes,
+					recordMeasures,
+					resultOrderings,
+					filterAttributes);
 			}
 
 			if (query.getReportType() == ReportType.DATA_WITH_TOTALS) {
 				Record totalRecord = recordScheme.record();
 				recordFunction.copyMeasures(totals, totalRecord);
 				return QueryResult.createForDataWithTotals(recordScheme,
-						resultRecords,
-						totalRecord,
-						totalCount,
-						recordAttributes,
-						recordMeasures,
-						resultOrderings,
-						filterAttributes);
+					resultRecords,
+					totalRecord,
+					totalCount,
+					recordAttributes,
+					recordMeasures,
+					resultOrderings,
+					filterAttributes);
 			}
 
 			throw new AssertionError();
 		}
 
-		private Promise<Void> resolveSpecifiedDimensions(AttributeResolverContainer resolverContainer,
-				Map<String, Object> result) {
+		private Promise<Void> resolveSpecifiedDimensions(
+			AttributeResolverContainer resolverContainer, Map<String, Object> result
+		) {
 			Object[] key = new Object[resolverContainer.dimensions.size()];
 			for (int i = 0; i < resolverContainer.dimensions.size(); i++) {
 				String dimension = resolverContainer.dimensions.get(i);
@@ -1239,14 +1253,14 @@ public final class Cube extends AbstractReactive
 
 			Ref<Object> attributesRef = new Ref<>();
 			return resolverContainer.resolver.resolveAttributes(List.of((Object) key),
-							result1 -> (Object[]) result1,
-							(result12, attributes) -> attributesRef.value = attributes)
-					.whenResult(() -> {
-						for (int i = 0; i < resolverContainer.attributes.size(); i++) {
-							String attribute = resolverContainer.attributes.get(i);
-							result.put(attribute, attributesRef.value != null ? ((Object[]) attributesRef.value)[i] : null);
-						}
-					});
+					result1 -> (Object[]) result1,
+					(result12, attributes) -> attributesRef.value = attributes)
+				.whenResult(() -> {
+					for (int i = 0; i < resolverContainer.attributes.size(); i++) {
+						String attribute = resolverContainer.attributes.get(i);
+						result.put(attribute, attributesRef.value != null ? ((Object[]) attributesRef.value)[i] : null);
+					}
+				});
 		}
 
 		List<R> applyLimitAndOffset(List<R> results) {
@@ -1273,10 +1287,10 @@ public final class Cube extends AbstractReactive
 
 			if (comparator != null) {
 				return results.stream()
-						.sorted(comparator)
-						.skip(offset)
-						.limit(limit)
-						.collect(toList());
+					.sorted(comparator)
+					.skip(offset)
+					.limit(limit)
+					.collect(toList());
 			}
 
 			return results.subList(start, end);
@@ -1284,43 +1298,43 @@ public final class Cube extends AbstractReactive
 
 		TotalsFunction<R, R> createTotalsFunction() {
 			return queryClassLoader.ensureClassAndCreateInstance(
-					ClassKey.of(TotalsFunction.class, resultClass, resultStoredMeasures, resultComputedMeasures),
-					() -> ClassGenerator.builder(TotalsFunction.class)
-							.withMethod("zero",
-									sequence(seq -> {
-										for (String field : resultStoredMeasures) {
-											Measure measure = measures.get(field);
-											seq.add(measure.zeroAccumulator(
-													property(cast(arg(0), resultClass), field)));
-										}
-									}))
-							.withMethod("init",
-									sequence(seq -> {
-										for (String field : resultStoredMeasures) {
-											Measure measure = measures.get(field);
-											seq.add(measure.initAccumulatorWithAccumulator(
-													property(cast(arg(0), resultClass), field),
-													property(cast(arg(1), resultClass), field)));
-										}
-									}))
-							.withMethod("accumulate",
-									sequence(seq -> {
-										for (String field : resultStoredMeasures) {
-											Measure measure = measures.get(field);
-											seq.add(measure.reduce(
-													property(cast(arg(0), resultClass), field),
-													property(cast(arg(1), resultClass), field)));
-										}
-									}))
-							.withMethod("computeMeasures",
-									sequence(seq -> {
-										for (String computedMeasure : resultComputedMeasures) {
-											Expression result = cast(arg(0), resultClass);
-											seq.add(set(property(result, computedMeasure),
-													computedMeasures.get(computedMeasure).getExpression(result, measures)));
-										}
-									}))
-							.build()
+				ClassKey.of(TotalsFunction.class, resultClass, resultStoredMeasures, resultComputedMeasures),
+				() -> ClassGenerator.builder(TotalsFunction.class)
+					.withMethod("zero",
+						sequence(seq -> {
+							for (String field : resultStoredMeasures) {
+								Measure measure = measures.get(field);
+								seq.add(measure.zeroAccumulator(
+									property(cast(arg(0), resultClass), field)));
+							}
+						}))
+					.withMethod("init",
+						sequence(seq -> {
+							for (String field : resultStoredMeasures) {
+								Measure measure = measures.get(field);
+								seq.add(measure.initAccumulatorWithAccumulator(
+									property(cast(arg(0), resultClass), field),
+									property(cast(arg(1), resultClass), field)));
+							}
+						}))
+					.withMethod("accumulate",
+						sequence(seq -> {
+							for (String field : resultStoredMeasures) {
+								Measure measure = measures.get(field);
+								seq.add(measure.reduce(
+									property(cast(arg(0), resultClass), field),
+									property(cast(arg(1), resultClass), field)));
+							}
+						}))
+					.withMethod("computeMeasures",
+						sequence(seq -> {
+							for (String computedMeasure : resultComputedMeasures) {
+								Expression result = cast(arg(0), resultClass);
+								seq.add(set(property(result, computedMeasure),
+									computedMeasures.get(computedMeasure).getExpression(result, measures)));
+							}
+						}))
+					.build()
 			);
 		}
 
@@ -1329,8 +1343,8 @@ public final class Cube extends AbstractReactive
 	@Override
 	public String toString() {
 		return "Cube{" +
-				"aggregations=" + aggregations +
-				'}';
+			"aggregations=" + aggregations +
+			'}';
 	}
 
 	// jmx
@@ -1429,8 +1443,8 @@ public final class Cube extends AbstractReactive
 	@JmxOperation
 	public Map<String, String> getIrrelevantChunksIds() {
 		return getIrrelevantChunks().entrySet().stream()
-				.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
-						.map(chunk -> String.valueOf(chunk.getChunkId()))
-						.collect(Collectors.joining(", "))));
+			.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
+				.map(chunk -> String.valueOf(chunk.getChunkId()))
+				.collect(Collectors.joining(", "))));
 	}
 }

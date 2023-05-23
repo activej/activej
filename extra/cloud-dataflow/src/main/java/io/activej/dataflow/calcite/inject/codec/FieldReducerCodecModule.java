@@ -53,8 +53,8 @@ public final class FieldReducerCodecModule extends AbstractModule {
 
 	private static <R extends FieldReducer<?, ?, ?>> StreamCodec<R> fieldReducerCodec(TupleConstructor2<Integer, String, R> constructor) {
 		return StreamCodec.create(constructor,
-				R::getFieldIndex, StreamCodecs.ofVarInt(),
-				R::getFieldAlias, StreamCodecs.ofNullable(StreamCodecs.ofString())
+			R::getFieldIndex, StreamCodecs.ofVarInt(),
+			R::getFieldAlias, StreamCodecs.ofNullable(StreamCodecs.ofString())
 		);
 	}
 }

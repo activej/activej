@@ -28,28 +28,28 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	private static final String CRLF = "\r\n";
 	private static final String BOUNDARY = "-----------------------------4336597275426690519140415448";
 	private static final String MULTIPART_REQUEST = BOUNDARY + CRLF +
-			"Content-Disposition: form-data; name=\"id\"" + CRLF +
-			CRLF +
-			"12345" + CRLF +
-			BOUNDARY + CRLF +
-			"Content-Disposition: form-data; name=\"file1\"; filename=\"data.txt\"" + CRLF +
-			"Content-Type: text/plain" + CRLF +
-			CRLF +
-			"Contet of data.txt" + CRLF +
-			BOUNDARY + CRLF +
-			"Content-Disposition: form-data; name=\"first name\"" + CRLF +
-			CRLF +
-			"Alice" + CRLF +
-			BOUNDARY + CRLF +
-			"Content-Disposition: form-data; name=\"file2\"; filename=\"key.txt\"" + CRLF +
-			"Content-Type: text/html" + CRLF +
-			CRLF +
-			"Content of key.txt" + CRLF +
-			BOUNDARY + CRLF +
-			"Content-Disposition: form-data; name=\"last name\"" + CRLF +
-			CRLF +
-			"Johnson" + CRLF +
-			BOUNDARY + "--" + CRLF;
+		"Content-Disposition: form-data; name=\"id\"" + CRLF +
+		CRLF +
+		"12345" + CRLF +
+		BOUNDARY + CRLF +
+		"Content-Disposition: form-data; name=\"file1\"; filename=\"data.txt\"" + CRLF +
+		"Content-Type: text/plain" + CRLF +
+		CRLF +
+		"Contet of data.txt" + CRLF +
+		BOUNDARY + CRLF +
+		"Content-Disposition: form-data; name=\"first name\"" + CRLF +
+		CRLF +
+		"Alice" + CRLF +
+		BOUNDARY + CRLF +
+		"Content-Disposition: form-data; name=\"file2\"; filename=\"key.txt\"" + CRLF +
+		"Content-Type: text/html" + CRLF +
+		CRLF +
+		"Content of key.txt" + CRLF +
+		BOUNDARY + CRLF +
+		"Content-Disposition: form-data; name=\"last name\"" + CRLF +
+		CRLF +
+		"Johnson" + CRLF +
+		BOUNDARY + "--" + CRLF;
 
 	private Path path;
 	private int fileUploadsCount;
@@ -82,28 +82,28 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	@Provides
 	AsyncServlet servlet(Reactor reactor) {
 		return RoutingServlet.builder(reactor)
-				.with(POST, "/handleMultipart", request -> {
-					Map<String, String> fields = new HashMap<>();
+			.with(POST, "/handleMultipart", request -> {
+				Map<String, String> fields = new HashMap<>();
 
-					return request.handleMultipart(AsyncMultipartDataHandler.fieldsToMap(fields, this::upload))
-							.then($ -> {
-								logger.info("Received fields: {}", fields);
-								logger.info("Uploaded {} files total", fileUploadsCount);
-								return HttpResponse.ok200().toPromise();
-							});
-				})
-				.build();
+				return request.handleMultipart(AsyncMultipartDataHandler.fieldsToMap(fields, this::upload))
+					.then($ -> {
+						logger.info("Received fields: {}", fields);
+						logger.info("Uploaded {} files total", fileUploadsCount);
+						return HttpResponse.ok200().toPromise();
+					});
+			})
+			.build();
 	}
 	//[END SERVLET]
 
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
 		CompletableFuture<Integer> future = reactor.submit(() ->
-				client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
-								.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
-								.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST))
-								.build())
-						.map(HttpResponse::getCode));
+			client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
+					.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
+					.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST))
+					.build())
+				.map(HttpResponse::getCode));
 
 		int code = future.get();
 
@@ -116,11 +116,11 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	private Promise<ChannelConsumer<ByteBuf>> upload(String filename) {
 		logger.info("Uploading file '{}' to {}", filename, path);
 		return ChannelFileWriter.open(executor, path.resolve(filename))
-				.map(writer -> writer.withAcknowledgement(ack ->
-						ack.whenResult(() -> {
-							logger.info("Upload of file '{}' finished", filename);
-							fileUploadsCount++;
-						})));
+			.map(writer -> writer.withAcknowledgement(ack ->
+				ack.whenResult(() -> {
+					logger.info("Upload of file '{}' finished", filename);
+					fileUploadsCount++;
+				})));
 	}
 	//[END UPLOAD]
 

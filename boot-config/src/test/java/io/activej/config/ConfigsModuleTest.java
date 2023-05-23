@@ -35,8 +35,8 @@ public class ConfigsModuleTest {
 		public boolean equals(Object o) {
 			TestClass testClass = (TestClass) o;
 			return field1 == testClass.field1
-					&& Double.compare(testClass.field2, field2) == 0
-					&& field3 == testClass.field3;
+				&& Double.compare(testClass.field2, field2) == 0
+				&& field3 == testClass.field3;
 		}
 
 		@Override
@@ -114,24 +114,24 @@ public class ConfigsModuleTest {
 		CompletableFuture<Void> onStart = new CompletableFuture<>();
 
 		Injector injector = Injector.of(
-				new AbstractModule() {
-					@Provides
-					@OnStart
-					CompletionStage<Void> onStart() {
-						return onStart;
-					}
+			new AbstractModule() {
+				@Provides
+				@OnStart
+				CompletionStage<Void> onStart() {
+					return onStart;
+				}
 
-					@Provides
-					Config config() {
-						return Config.create()
-								.overrideWith(Config.ofProperties(properties1))
-								.overrideWith(Config.ofProperties(properties2))
-								.overrideWith(Config.ofProperties("not-existing.properties", true));
-					}
-				},
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build()
+				@Provides
+				Config config() {
+					return Config.create()
+						.overrideWith(Config.ofProperties(properties1))
+						.overrideWith(Config.ofProperties(properties2))
+						.overrideWith(Config.ofProperties("not-existing.properties", true));
+				}
+			},
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build()
 		);
 
 		Config config = injector.getInstance(Config.class);

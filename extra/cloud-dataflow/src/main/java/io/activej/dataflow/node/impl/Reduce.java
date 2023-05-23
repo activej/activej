@@ -45,7 +45,7 @@ public final class Reduce<K, O, A> extends AbstractNode {
 		@Override
 		public String toString() {
 			return "Input{reducer=" + reducer.getClass().getSimpleName() +
-					", keyFunction=" + keyFunction.getClass().getSimpleName() + '}';
+				", keyFunction=" + keyFunction.getClass().getSimpleName() + '}';
 		}
 	}
 
@@ -53,9 +53,9 @@ public final class Reduce<K, O, A> extends AbstractNode {
 	public final Map<StreamId, Input<K, O, A>> inputs;
 	public final StreamId output;
 
-	public Reduce(int index, Comparator<K> keyComparator,
-			Map<StreamId, Input<K, O, A>> inputs,
-			StreamId output) {
+	public Reduce(
+		int index, Comparator<K> keyComparator, Map<StreamId, Input<K, O, A>> inputs, StreamId output
+	) {
 		super(index);
 		this.keyComparator = keyComparator;
 		this.inputs = inputs;
@@ -98,8 +98,8 @@ public final class Reduce<K, O, A> extends AbstractNode {
 		for (Map.Entry<StreamId, Input<K, O, A>> entry : inputs.entrySet()) {
 			Input<K, O, A> koaInput = entry.getValue();
 			StreamConsumer<Object> input = streamReducer.newInput(
-					((Function<Object, K>) koaInput.keyFunction),
-					(Reducer<K, Object, O, A>) koaInput.reducer);
+				((Function<Object, K>) koaInput.keyFunction),
+				(Reducer<K, Object, O, A>) koaInput.reducer);
 			task.bindChannel(entry.getKey(), input);
 		}
 		task.export(output, streamReducer.getOutput());
@@ -113,8 +113,8 @@ public final class Reduce<K, O, A> extends AbstractNode {
 	@Override
 	public String toString() {
 		return "Reduce{keyComparator=" + keyComparator.getClass().getSimpleName() +
-				", inputs=" + inputs +
-				", output=" + output + '}';
+			", inputs=" + inputs +
+			", output=" + output + '}';
 	}
 }
 

@@ -89,7 +89,7 @@ public class StreamConsumers {
 		StreamConsumer<T> result = forwarder.getInput();
 		if (extraAcknowledge == Promise.complete()) return result;
 		return result
-				.withAcknowledgement(ack -> ack.both(extraAcknowledge));
+			.withAcknowledgement(ack -> ack.both(extraAcknowledge));
 	}
 
 	public static <T> StreamConsumer<T> ofAnotherReactor(Reactor anotherReactor, StreamConsumer<T> anotherReactorConsumer) {

@@ -266,11 +266,11 @@ public interface Config {
 	static Config ofSystemProperties(String prefix) {
 		//noinspection unchecked - properties are expected to have String keys and values
 		return ofMap(System.getProperties().entrySet().stream()
-				.map(e -> (Map.Entry<String, String>) (Map.Entry<?, ?>) e)
-				.filter(entry -> entry.getKey().startsWith(prefix))
-				.collect(Collectors.toMap(
-						e -> e.getKey().length() == prefix.length() ? "" : e.getKey().substring(prefix.length() + 1),
-						Map.Entry::getValue)));
+			.map(e -> (Map.Entry<String, String>) (Map.Entry<?, ?>) e)
+			.filter(entry -> entry.getKey().startsWith(prefix))
+			.collect(Collectors.toMap(
+				e -> e.getKey().length() == prefix.length() ? "" : e.getKey().substring(prefix.length() + 1),
+				Map.Entry::getValue)));
 	}
 
 	/**
@@ -565,9 +565,9 @@ public interface Config {
 		Map<String, Config> children = new LinkedHashMap<>(getChildren());
 		other.getChildren().forEach((key, otherChild) -> children.merge(key, otherChild, Config::combineWith));
 		return Config.EMPTY
-				.overrideWith(thisValue != null ? Config.ofValue(thisValue) : Config.EMPTY)
-				.overrideWith(otherValue != null ? Config.ofValue(otherValue) : Config.EMPTY)
-				.overrideWith(Config.ofConfigs(children));
+			.overrideWith(thisValue != null ? Config.ofValue(thisValue) : Config.EMPTY)
+			.overrideWith(otherValue != null ? Config.ofValue(otherValue) : Config.EMPTY)
+			.overrideWith(Config.ofConfigs(children));
 	}
 
 	/**
@@ -584,7 +584,7 @@ public interface Config {
 		for (Map.Entry<String, Config> entry : children.entrySet()) {
 			Map<String, String> childMap = entry.getValue().toMap();
 			result.putAll(childMap.entrySet().stream()
-					.collect(Collectors.toMap(e -> concatPath(entry.getKey(), e.getKey()), Map.Entry::getValue)));
+				.collect(Collectors.toMap(e -> concatPath(entry.getKey(), e.getKey()), Map.Entry::getValue)));
 		}
 		return result;
 	}

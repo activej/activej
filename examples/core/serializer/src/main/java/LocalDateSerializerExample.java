@@ -1,4 +1,3 @@
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.*;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
@@ -24,10 +23,10 @@ public final class LocalDateSerializerExample {
 	public static void main(String[] args) {
 		//[START SERIALIZER_CREATE]
 		BinarySerializer<LocalDateHolder> serializer =
-				SerializerFactory.builder()
-						.with(LocalDate.class, ctx -> new LocalDateSerializerDef())
-						.build()
-						.create(LocalDateHolder.class);
+			SerializerFactory.builder()
+				.with(LocalDate.class, ctx -> new LocalDateSerializerDef())
+				.build()
+				.create(LocalDateHolder.class);
 		//[END SERIALIZER_CREATE]
 
 		byte[] array = new byte[1024];

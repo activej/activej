@@ -37,8 +37,10 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 	private final TabularType tabularType;
 	private final boolean isMapOfJmxRefreshable;
 
-	public AttributeNodeForMap(String name, @Nullable String description, boolean visible,
-			ValueFetcher fetcher, AttributeNode subNode, boolean isMapOfJmxRefreshable) {
+	public AttributeNodeForMap(
+		String name, @Nullable String description, boolean visible, ValueFetcher fetcher, AttributeNode subNode,
+		boolean isMapOfJmxRefreshable
+	) {
 		super(name, description, fetcher, visible);
 		checkArgument(!name.isEmpty(), "Map attribute cannot have empty name");
 		this.tabularType = createTabularType(subNode, name);
@@ -70,7 +72,7 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 
 				if (attrNameToType.containsKey(adjustedAttrName)) {
 					throw new IllegalArgumentException("In case of empty attribute name there must not be another " +
-							"empty attribute and attribute with name \"default\"." + nodeName);
+						"empty attribute and attribute with name \"default\"." + nodeName);
 				}
 
 				attrNameToType.put(attrName, attrType);
@@ -88,10 +90,10 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 
 		try {
 			return new TabularType(
-					TABULAR_TYPE_NAME,
-					TABULAR_TYPE_NAME,
-					new CompositeType(ROW_TYPE_NAME, ROW_TYPE_NAME, columnNamesArr, columnNamesArr, columnTypesArr),
-					new String[]{KEY_COLUMN_NAME}
+				TABULAR_TYPE_NAME,
+				TABULAR_TYPE_NAME,
+				new CompositeType(ROW_TYPE_NAME, ROW_TYPE_NAME, columnNamesArr, columnNamesArr, columnTypesArr),
+				new String[]{KEY_COLUMN_NAME}
 			);
 		} catch (OpenDataException e) {
 			throw new IllegalArgumentException("Cannot create TabularType. " + nodeName, e);
@@ -115,7 +117,7 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 		Set<String> visibleSubAttrs = subNode.getVisibleAttributes();
 		for (Map.Entry<Object, List<Object>> entry : groupedByKey.entrySet()) {
 			Map<String, Object> aggregatedGroup =
-					subNode.aggregateAttributes(visibleSubAttrs, entry.getValue());
+				subNode.aggregateAttributes(visibleSubAttrs, entry.getValue());
 			try {
 				tdSupport.put(createTabularDataRow(entry.getKey().toString(), aggregatedGroup));
 			} catch (OpenDataException e) {
@@ -155,8 +157,8 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 		}
 
 		return listOfMaps.stream()
-				.flatMap(map -> map.entrySet().stream())
-				.collect(groupingBy(Map.Entry::getKey, mapping(e -> (Object) e.getValue(), toList())));
+			.flatMap(map -> map.entrySet().stream())
+			.collect(groupingBy(Map.Entry::getKey, mapping(e -> (Object) e.getValue(), toList())));
 	}
 
 	@Override

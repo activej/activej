@@ -43,7 +43,7 @@ public class BasicStreamStats<T> implements StreamStats<T> {
 
 	@SuppressWarnings("unchecked")
 	public abstract class AbstractStatsBuilder<Self extends AbstractStatsBuilder<Self, S>, S extends BasicStreamStats<T>>
-			extends AbstractBuilder<Self, S> {
+		extends AbstractBuilder<Self, S> {
 		protected AbstractStatsBuilder() {
 		}
 

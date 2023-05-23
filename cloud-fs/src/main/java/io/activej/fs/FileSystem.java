@@ -76,7 +76,8 @@ import static java.nio.file.StandardOpenOption.*;
  * This implementation does not define new limitations, other than those defined in {@link IFileSystem} interface.
  */
 public final class FileSystem extends AbstractReactive
-		implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(FileSystem.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -226,7 +227,7 @@ public final class FileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkStarted();
 		return uploadImpl(name, identity())
-				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
+			.whenComplete(toLogger(logger, TRACE, "upload", name, this));
 	}
 
 	@Override
@@ -234,7 +235,7 @@ public final class FileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkStarted();
 		return uploadImpl(name, ofFixedSize(size))
-				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
+			.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
 	}
 
 	@Override
@@ -243,35 +244,35 @@ public final class FileSystem extends AbstractReactive
 		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		return execute(
-				() -> {
-					Path path = resolve(name);
-					FileChannel channel;
-					if (offset == 0) {
-						channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
-						if (fsyncDirectories) {
-							tryFsync(path.getParent());
-						}
-					} else {
-						channel = FileChannel.open(path, appendOptions);
+			() -> {
+				Path path = resolve(name);
+				FileChannel channel;
+				if (offset == 0) {
+					channel = ensureTarget(null, path, () -> FileChannel.open(path, appendNewOptions));
+					if (fsyncDirectories) {
+						tryFsync(path.getParent());
 					}
-					long size = channel.size();
-					if (size < offset) {
-						throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
-					}
-					return channel;
-				})
-				.then(translateScalarErrorsFn(name))
-				.whenComplete(appendBeginPromise.recordStats())
-				.map(channel -> ChannelFileWriter.builder(reactor, executor, channel)
-						.withOffset(offset)
-						.setIf(ChannelFileWriter.Builder::withForceOnClose, true, $ ->
-								fsyncUploads && !appendOptions.contains(SYNC))
-						.build()
-						.withAcknowledgement(ack -> ack
-								.then(translateScalarErrorsFn())
-								.whenComplete(appendFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this))))
-				.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
+				} else {
+					channel = FileChannel.open(path, appendOptions);
+				}
+				long size = channel.size();
+				if (size < offset) {
+					throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
+				}
+				return channel;
+			})
+			.then(translateScalarErrorsFn(name))
+			.whenComplete(appendBeginPromise.recordStats())
+			.map(channel -> ChannelFileWriter.builder(reactor, executor, channel)
+				.withOffset(offset)
+				.setIf(ChannelFileWriter.Builder::withForceOnClose, true, $ ->
+					fsyncUploads && !appendOptions.contains(SYNC))
+				.build()
+				.withAcknowledgement(ack -> ack
+					.then(translateScalarErrorsFn())
+					.whenComplete(appendFinishPromise.recordStats())
+					.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this))))
+			.whenComplete(toLogger(logger, TRACE, "append", name, offset, this));
 	}
 
 	@Override
@@ -281,27 +282,27 @@ public final class FileSystem extends AbstractReactive
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
 		return execute(
-				() -> {
-					Path path = resolve(name);
-					FileChannel channel = FileChannel.open(path, READ);
-					long size = channel.size();
-					if (size < offset) {
-						throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
-					}
-					return channel;
-				})
-				.map(channel -> ChannelFileReader.builder(reactor, executor, channel)
-						.withBufferSize(readerBufferSize)
-						.withOffset(offset)
-						.withLimit(limit)
-						.build()
-						.withEndOfStream(eos -> eos
-								.then(translateScalarErrorsFn(name))
-								.whenComplete(downloadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", name, offset, limit))))
-				.then(translateScalarErrorsFn(name))
-				.whenComplete(toLogger(logger, TRACE, "download", name, offset, limit, this))
-				.whenComplete(downloadBeginPromise.recordStats());
+			() -> {
+				Path path = resolve(name);
+				FileChannel channel = FileChannel.open(path, READ);
+				long size = channel.size();
+				if (size < offset) {
+					throw new IllegalOffsetException("Offset " + offset + " exceeds file size " + size);
+				}
+				return channel;
+			})
+			.map(channel -> ChannelFileReader.builder(reactor, executor, channel)
+				.withBufferSize(readerBufferSize)
+				.withOffset(offset)
+				.withLimit(limit)
+				.build()
+				.withEndOfStream(eos -> eos
+					.then(translateScalarErrorsFn(name))
+					.whenComplete(downloadFinishPromise.recordStats())
+					.whenComplete(toLogger(logger, TRACE, "onDownloadComplete", name, offset, limit))))
+			.then(translateScalarErrorsFn(name))
+			.whenComplete(toLogger(logger, TRACE, "download", name, offset, limit, this))
+			.whenComplete(downloadBeginPromise.recordStats());
 	}
 
 	@Override
@@ -311,27 +312,27 @@ public final class FileSystem extends AbstractReactive
 		if (glob.isEmpty()) return Promise.of(Map.of());
 
 		return execute(
-				() -> {
-					String subdir = extractSubDir(glob);
-					Path subdirectory = resolve(subdir);
-					String subglob = glob.substring(subdir.length());
+			() -> {
+				String subdir = extractSubDir(glob);
+				Path subdirectory = resolve(subdir);
+				String subglob = glob.substring(subdir.length());
 
-					return LocalFileUtils.findMatching(tempDir, subglob, subdirectory).stream()
-							.collect(Collector.of(
-									(Supplier<Map<String, FileMetadata>>) HashMap::new,
-									uncheckedOf((map, path) -> {
-										FileMetadata metadata = toFileMetadata(path);
-										if (metadata != null) {
-											String filename = TO_REMOTE_NAME.apply(storage.relativize(path).toString());
-											map.put(filename, metadata);
-										}
-									}),
-									noMergeFunction())
-							);
-				})
-				.then(translateScalarErrorsFn())
-				.whenComplete(toLogger(logger, TRACE, "list", glob, this))
-				.whenComplete(listPromise.recordStats());
+				return LocalFileUtils.findMatching(tempDir, subglob, subdirectory).stream()
+					.collect(Collector.of(
+						(Supplier<Map<String, FileMetadata>>) HashMap::new,
+						uncheckedOf((map, path) -> {
+							FileMetadata metadata = toFileMetadata(path);
+							if (metadata != null) {
+								String filename = TO_REMOTE_NAME.apply(storage.relativize(path).toString());
+								map.put(filename, metadata);
+							}
+						}),
+						noMergeFunction())
+					);
+			})
+			.then(translateScalarErrorsFn())
+			.whenComplete(toLogger(logger, TRACE, "list", glob, this))
+			.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
@@ -339,9 +340,9 @@ public final class FileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doCopy))
-				.then(translateScalarErrorsFn())
-				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
-				.whenComplete(copyPromise.recordStats());
+			.then(translateScalarErrorsFn())
+			.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
+			.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
@@ -352,8 +353,8 @@ public final class FileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return execute(() -> forEachPair(sourceToTarget, this::doCopy))
-				.whenComplete(toLogger(logger, TRACE, "copyAll", sourceToTarget, this))
-				.whenComplete(copyAllPromise.recordStats());
+			.whenComplete(toLogger(logger, TRACE, "copyAll", sourceToTarget, this))
+			.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
@@ -361,9 +362,9 @@ public final class FileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doMove))
-				.then(translateScalarErrorsFn())
-				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
-				.whenComplete(movePromise.recordStats());
+			.then(translateScalarErrorsFn())
+			.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
+			.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
@@ -374,8 +375,8 @@ public final class FileSystem extends AbstractReactive
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
 		return execute(() -> forEachPair(sourceToTarget, this::doMove))
-				.whenComplete(toLogger(logger, TRACE, "moveAll", sourceToTarget, this))
-				.whenComplete(moveAllPromise.recordStats());
+			.whenComplete(toLogger(logger, TRACE, "moveAll", sourceToTarget, this))
+			.whenComplete(moveAllPromise.recordStats());
 	}
 
 	@Override
@@ -383,9 +384,9 @@ public final class FileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> deleteImpl(Set.of(name)))
-				.then(translateScalarErrorsFn(name))
-				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
-				.whenComplete(deletePromise.recordStats());
+			.then(translateScalarErrorsFn(name))
+			.whenComplete(toLogger(logger, TRACE, "delete", name, this))
+			.whenComplete(deletePromise.recordStats());
 	}
 
 	@Override
@@ -395,8 +396,8 @@ public final class FileSystem extends AbstractReactive
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return execute(() -> deleteImpl(toDelete))
-				.whenComplete(toLogger(logger, TRACE, "deleteAll", toDelete, this))
-				.whenComplete(deleteAllPromise.recordStats());
+			.whenComplete(toLogger(logger, TRACE, "deleteAll", toDelete, this))
+			.whenComplete(deleteAllPromise.recordStats());
 	}
 
 	@Override
@@ -411,8 +412,8 @@ public final class FileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> toFileMetadata(resolve(name)))
-				.whenComplete(toLogger(logger, TRACE, "info", name, this))
-				.whenComplete(infoPromise.recordStats());
+			.whenComplete(toLogger(logger, TRACE, "info", name, this))
+			.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
@@ -422,25 +423,25 @@ public final class FileSystem extends AbstractReactive
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return execute(
-				() -> {
-					Map<String, FileMetadata> result = new HashMap<>();
-					for (String name : names) {
-						FileMetadata metadata = toFileMetadata(resolve(name));
-						if (metadata != null) {
-							result.put(name, metadata);
-						}
+			() -> {
+				Map<String, FileMetadata> result = new HashMap<>();
+				for (String name : names) {
+					FileMetadata metadata = toFileMetadata(resolve(name));
+					if (metadata != null) {
+						result.put(name, metadata);
 					}
-					return result;
-				})
-				.whenComplete(toLogger(logger, TRACE, "infoAll", names, this))
-				.whenComplete(infoAllPromise.recordStats());
+				}
+				return result;
+			})
+			.whenComplete(toLogger(logger, TRACE, "infoAll", names, this))
+			.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> start() {
 		checkInReactorThread(this);
 		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories))
-				.whenResult(() -> started = true);
+			.whenResult(() -> started = true);
 	}
 
 	@Override
@@ -464,28 +465,28 @@ public final class FileSystem extends AbstractReactive
 
 	private Promise<ChannelConsumer<ByteBuf>> uploadImpl(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
-				() -> {
-					Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
-					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
-				})
-				.map(pathAndChannel -> ChannelFileWriter.builder(reactor, executor, pathAndChannel.value2())
-						.setIf(ChannelFileWriter.Builder::withForceOnClose, true, $ -> fsyncUploads)
-						.build()
-						.transformWith(transformer)
-						.withAcknowledgement(ack -> ack
-								.then(() -> execute(() -> {
-									Path target = resolve(name);
-									doMove(pathAndChannel.value1(), target);
-									if (fsyncDirectories) {
-										tryFsync(target.getParent());
-									}
-								}))
-								.then(translateScalarErrorsFn())
-								.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.value1())))
-								.whenComplete(uploadFinishPromise.recordStats())
-								.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this))))
-				.then(translateScalarErrorsFn(name))
-				.whenComplete(uploadBeginPromise.recordStats());
+			() -> {
+				Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
+				return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
+			})
+			.map(pathAndChannel -> ChannelFileWriter.builder(reactor, executor, pathAndChannel.value2())
+				.setIf(ChannelFileWriter.Builder::withForceOnClose, true, $ -> fsyncUploads)
+				.build()
+				.transformWith(transformer)
+				.withAcknowledgement(ack -> ack
+					.then(() -> execute(() -> {
+						Path target = resolve(name);
+						doMove(pathAndChannel.value1(), target);
+						if (fsyncDirectories) {
+							tryFsync(target.getParent());
+						}
+					}))
+					.then(translateScalarErrorsFn())
+					.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.value1())))
+					.whenComplete(uploadFinishPromise.recordStats())
+					.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this))))
+			.then(translateScalarErrorsFn(name))
+			.whenComplete(uploadBeginPromise.recordStats());
 	}
 
 	private void forEachPair(Map<String, String> sourceToTargetMap, IOScalarBiConsumer consumer) throws FileSystemBatchException, FileSystemIOException {

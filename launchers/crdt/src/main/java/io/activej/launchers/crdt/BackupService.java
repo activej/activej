@@ -44,8 +44,8 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 	public Promise<Void> restore() {
 		checkInReactorThread(this);
 		return localFiles.download()
-				.then(supplierWithResult ->
-						supplierWithResult.streamTo(StreamConsumers.ofPromise(inMemory.upload())));
+			.then(supplierWithResult ->
+				supplierWithResult.streamTo(StreamConsumers.ofPromise(inMemory.upload())));
 	}
 
 	public Promise<Void> backup() {
@@ -56,9 +56,9 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 		long lastTimestamp = this.lastTimestamp;
 		this.lastTimestamp = reactor.currentTimeMillis();
 		return backupPromise = inMemory.download(lastTimestamp)
-				.then(supplierWithResult -> supplierWithResult
-						.streamTo(StreamConsumers.ofPromise(localFiles.upload()))
-						.whenComplete(() -> backupPromise = null));
+			.then(supplierWithResult -> supplierWithResult
+				.streamTo(StreamConsumers.ofPromise(localFiles.upload()))
+				.whenComplete(() -> backupPromise = null));
 	}
 
 	public boolean backupInProgress() {

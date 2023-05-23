@@ -21,16 +21,16 @@ public final class CustomHttpServerExample extends Launcher {
 	@Provides
 	AsyncServlet servlet() {
 		return request -> HttpResponse.ok200()
-				.withPlainText("Hello from HTTP server")
-				.toPromise();
+			.withPlainText("Hello from HTTP server")
+			.toPromise();
 	}
 
 	@Provides
 	@Eager
 	HttpServer server(NioReactor reactor, AsyncServlet servlet) {
 		return HttpServer.builder(reactor, servlet)
-				.withListenPort(PORT)
-				.build();
+			.withListenPort(PORT)
+			.build();
 	}
 
 	@Override

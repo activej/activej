@@ -36,9 +36,10 @@ public final class AttributeNodeForPojo implements AttributeNode {
 	private final List<? extends AttributeNode> subNodes;
 	private boolean visible;
 
-	public AttributeNodeForPojo(String name, @Nullable String description, boolean visible,
-			ValueFetcher fetcher, @Nullable JmxReducer reducer,
-			List<? extends AttributeNode> subNodes) {
+	public AttributeNodeForPojo(
+		String name, @Nullable String description, boolean visible, ValueFetcher fetcher, @Nullable JmxReducer reducer,
+		List<? extends AttributeNode> subNodes
+	) {
 		this.name = name;
 		this.description = description;
 		this.visible = visible;
@@ -48,8 +49,9 @@ public final class AttributeNodeForPojo implements AttributeNode {
 		this.subNodes = subNodes;
 	}
 
-	private static Map<String, AttributeNode> createFullNameToNodeMapping(String name,
-			List<? extends AttributeNode> subNodes) {
+	private static Map<String, AttributeNode> createFullNameToNodeMapping(
+		String name, List<? extends AttributeNode> subNodes
+	) {
 		Map<String, AttributeNode> fullNameToNodeMapping = new HashMap<>();
 		for (AttributeNode subNode : subNodes) {
 			Set<String> currentSubAttrNames = subNode.getAllAttributes();
@@ -57,7 +59,7 @@ public final class AttributeNodeForPojo implements AttributeNode {
 				String currentAttrFullName = addPrefix(currentSubAttrName, name);
 				if (fullNameToNodeMapping.containsKey(currentAttrFullName)) {
 					throw new IllegalArgumentException(
-							"There are several attributes with same name: " + currentSubAttrName);
+						"There are several attributes with same name: " + currentSubAttrName);
 				}
 				fullNameToNodeMapping.put(currentAttrFullName, subNode);
 			}
@@ -317,8 +319,8 @@ public final class AttributeNodeForPojo implements AttributeNode {
 
 	private static boolean flattenedAttrNameContainsNode(String flattenedAttrName, String nodeName) {
 		return flattenedAttrName.startsWith(nodeName) &&
-				(flattenedAttrName.length() == nodeName.length() ||
-						flattenedAttrName.charAt(nodeName.length()) == ATTRIBUTE_NAME_SEPARATOR);
+			(flattenedAttrName.length() == nodeName.length() ||
+				flattenedAttrName.charAt(nodeName.length()) == ATTRIBUTE_NAME_SEPARATOR);
 
 	}
 }

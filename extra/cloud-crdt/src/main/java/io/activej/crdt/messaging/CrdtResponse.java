@@ -3,13 +3,13 @@ package io.activej.crdt.messaging;
 import org.jetbrains.annotations.Nullable;
 
 public sealed interface CrdtResponse permits
-		CrdtResponse.DownloadStarted,
-		CrdtResponse.Handshake,
-		CrdtResponse.Pong,
-		CrdtResponse.RemoveAck,
-		CrdtResponse.ServerError,
-		CrdtResponse.TakeStarted,
-		CrdtResponse.UploadAck {
+	CrdtResponse.DownloadStarted,
+	CrdtResponse.Handshake,
+	CrdtResponse.Pong,
+	CrdtResponse.RemoveAck,
+	CrdtResponse.ServerError,
+	CrdtResponse.TakeStarted,
+	CrdtResponse.UploadAck {
 
 	record UploadAck() implements CrdtResponse {
 	}

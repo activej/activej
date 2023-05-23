@@ -45,15 +45,15 @@ public final class CubeUplinkMigrationService {
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
 	private final Eventloop eventloop = Eventloop.builder()
-			.withCurrentThread()
-			.withFatalErrorHandler(rethrow())
-			.build();
+		.withCurrentThread()
+		.withFatalErrorHandler(rethrow())
+		.build();
 	private final Executor executor = newSingleThreadExecutor();
 
 	@VisibleForTesting
 	Cube cube = builderOfEmptyCube(eventloop, executor)
-			// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
-			.build();
+		// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
+		.build();
 
 	public void migrate(DataSource repoDataSource, DataSource uplinkDataSource) throws ExecutionException, InterruptedException {
 		doMigrate(repoDataSource, uplinkDataSource, null);
@@ -68,26 +68,26 @@ public final class CubeUplinkMigrationService {
 		CubeMySqlOTUplink uplink = createUplink(uplinkDataSource);
 
 		CompletableFuture<AsyncOTUplink.FetchData<Long, LogDiff<CubeDiff>>> future = eventloop.submit(() ->
-				uplink.checkout()
-						.then(checkoutData -> {
-							if (checkoutData.level() != 0 ||
-									checkoutData.commitId() != 0 ||
-									!checkoutData.diffs().isEmpty()) {
-								throw new IllegalStateException("Uplink repository is not empty");
-							}
-							//noinspection Convert2MethodRef
-							return startRevision == null ?
-									repo.getHeads().map(iterable -> Utils.first(iterable)) :
-									Promise.of(startRevision);
-						})
-						.then(head -> {
-							logger.info("Migrating starting from commit {}", head);
-							return OTAlgorithms.checkout(repo, OT_SYSTEM, head);
-						})
-						.whenResult(diffs -> logger.info("Found {} diffs to be migrated", diffs.size()))
-						.map(OT_SYSTEM::squash)
-						.then(diffs -> uplink.push(new UplinkProtoCommit(0, diffs)))
-						.whenResult(fetchData -> logger.info("Successfully migrated to uplink revision {}", fetchData.commitId()))
+			uplink.checkout()
+				.then(checkoutData -> {
+					if (checkoutData.level() != 0 ||
+						checkoutData.commitId() != 0 ||
+						!checkoutData.diffs().isEmpty()) {
+						throw new IllegalStateException("Uplink repository is not empty");
+					}
+					//noinspection Convert2MethodRef
+					return startRevision == null ?
+						repo.getHeads().map(iterable -> Utils.first(iterable)) :
+						Promise.of(startRevision);
+				})
+				.then(head -> {
+					logger.info("Migrating starting from commit {}", head);
+					return OTAlgorithms.checkout(repo, OT_SYSTEM, head);
+				})
+				.whenResult(diffs -> logger.info("Found {} diffs to be migrated", diffs.size()))
+				.map(OT_SYSTEM::squash)
+				.then(diffs -> uplink.push(new UplinkProtoCommit(0, diffs)))
+				.whenResult(fetchData -> logger.info("Successfully migrated to uplink revision {}", fetchData.commitId()))
 		);
 
 		eventloop.run();
@@ -97,7 +97,7 @@ public final class CubeUplinkMigrationService {
 	public static void main(String[] args) throws Exception {
 		if (args.length < 2) {
 			throw new IllegalArgumentException("2 program arguments required: " +
-					"<path to repository data source config>, <path to uplink data source config>");
+				"<path to repository data source config>, <path to uplink data source config>");
 		}
 
 		DataSource repoDataSource = dataSource(args[0]);

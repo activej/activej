@@ -94,21 +94,22 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 	}
 
 	public static class DataflowJdbc41Statement extends AvaticaStatement {
-		private DataflowJdbc41Statement(AvaticaConnection connection,
-				StatementHandle h, int resultSetType, int resultSetConcurrency,
-				int resultSetHoldability) {
+		private DataflowJdbc41Statement(
+			AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency,
+			int resultSetHoldability
+		) {
 			super(connection, h, resultSetType, resultSetConcurrency,
-					resultSetHoldability);
+				resultSetHoldability);
 		}
 	}
 
 	public static class DataflowJdbc41PreparedStatement extends AvaticaPreparedStatement {
 		DataflowJdbc41PreparedStatement(AvaticaConnection connection,
-				@Nullable StatementHandle h, Meta.Signature signature,
-				int resultSetType, int resultSetConcurrency, int resultSetHoldability)
-				throws SQLException {
+			@Nullable StatementHandle h, Meta.Signature signature,
+			int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+			throws SQLException {
 			super(connection, h, signature, resultSetType, resultSetConcurrency,
-					resultSetHoldability);
+				resultSetHoldability);
 		}
 
 		@Override
@@ -154,8 +155,8 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 		if (timeout == null) return;
 		SocketConfig config = pool.getDefaultSocketConfig();
 		SocketConfig socketConfig = (config == null ? SocketConfig.custom() : SocketConfig.copy(config))
-				.setSoTimeout(timeout)
-				.build();
+			.setSoTimeout(timeout)
+			.build();
 		pool.setDefaultSocketConfig(socketConfig);
 	}
 }

@@ -15,8 +15,8 @@ public class BindingTransformationExample extends Launcher {
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				new PersonModule(),
-				new PersonTransformModule()
+			new PersonModule(),
+			new PersonTransformModule()
 		);
 	}
 	//[END REGION_2]
@@ -55,13 +55,13 @@ public class BindingTransformationExample extends Launcher {
 		@Override
 		protected void configure() {
 			transform(Person.class, (bindings, scope, key, binding) ->
-					binding.mapInstance(person ->
-							() -> {
-								System.out.println("Start of greeting");
-								person.greet();
-								System.out.println("End of greeting");
-							}
-					));
+				binding.mapInstance(person ->
+					() -> {
+						System.out.println("Start of greeting");
+						person.greet();
+						System.out.println("End of greeting");
+					}
+				));
 		}
 	}
 	//[END REGION_7]

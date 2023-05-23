@@ -47,11 +47,11 @@ public class ConfigConverters {
 				Duration hardExpirationDelta = config.get(ofDuration(), "hardExpirationDelta", DEFAULT_HARD_EXPIRATION_DELTA);
 				Duration maxTtl = config.get(ofDuration(), "maxTtl", DEFAULT_MAX_TTL);
 				return DnsCache.builder(reactor)
-						.withErrorCacheExpiration(errorCacheExpiration)
-						.withTimedOutExpiration(timedOutExceptionTtl)
-						.withHardExpirationDelta(hardExpirationDelta)
-						.withMaxTtl(maxTtl)
-						.build();
+					.withErrorCacheExpiration(errorCacheExpiration)
+					.withTimedOutExpiration(timedOutExceptionTtl)
+					.withHardExpirationDelta(hardExpirationDelta)
+					.withMaxTtl(maxTtl)
+					.build();
 			}
 
 			@Override
@@ -108,7 +108,7 @@ public class ConfigConverters {
 						yield FrameFormats.compound(formats.get(0), formats.subList(1, formats.size()).toArray(new FrameFormat[0]));
 					}
 					default ->
-							throw new IllegalArgumentException("No frame format named " + config.getValue() + " exists");
+						throw new IllegalArgumentException("No frame format named " + config.getValue() + " exists");
 				};
 			}
 

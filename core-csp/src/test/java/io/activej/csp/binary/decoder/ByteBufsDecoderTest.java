@@ -130,7 +130,7 @@ public final class ByteBufsDecoderTest {
 			fail();
 		} catch (MalformedDataException e) {
 			assertEquals("Array of bytes differs at index " + 4 +
-					"[Expected: " + 5 + ", actual: " + 6 + ']', e.getMessage());
+				"[Expected: " + 5 + ", actual: " + 6 + ']', e.getMessage());
 		}
 	}
 

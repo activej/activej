@@ -73,18 +73,18 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("redis.address", Config.ofValue(ofInetSocketAddress(), RedisClient.DEFAULT_ADDRESS))
-				.overrideWith(configOverride())
-				.overrideWith(Config.ofSystemProperties("config"));
+			.with("redis.address", Config.ofValue(ofInetSocketAddress(), RedisClient.DEFAULT_ADDRESS))
+			.overrideWith(configOverride())
+			.overrideWith(Config.ofSystemProperties("config"));
 	}
 
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				ConfigModule.builder()
-						.withEffectiveConfigLogger()
-						.build());
+			ServiceGraphModule.create(),
+			ConfigModule.builder()
+				.withEffectiveConfigLogger()
+				.build());
 	}
 
 	protected int warmupRounds;
@@ -158,7 +158,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 		double avgTime = (double) time / benchmarkRounds;
 		long requestsPerSecond = (long) (totalRequests / avgTime * 1000);
 		System.out.printf("Time: %dms; Average time: %sms; Best time: %dms; Worst time: %dms; Requests per second: %d%n",
-				time, avgTime, bestTime, worstTime, requestsPerSecond);
+			time, avgTime, bestTime, worstTime, requestsPerSecond);
 	}
 
 	private long round() throws Exception {
@@ -167,40 +167,40 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 
 	private Promise<Long> roundCall() {
 		return redisClient.connect()
-				.then(connection -> beforeRound(connection)
-						.thenCallback(cb -> {
-							long start = System.currentTimeMillis();
+			.then(connection -> beforeRound(connection)
+				.thenCallback(cb -> {
+					long start = System.currentTimeMillis();
 
-							sent = 0;
-							completed = 0;
+					sent = 0;
+					completed = 0;
 
-							Callback<Object> callback = new Callback<>() {
-								@Override
-								public void accept(Object $, @Nullable Exception e) {
-									if (e != null) {
-										cb.setException(e);
-										return;
-									}
-									completed++;
+					Callback<Object> callback = new Callback<>() {
+						@Override
+						public void accept(Object $, @Nullable Exception e) {
+							if (e != null) {
+								cb.setException(e);
+								return;
+							}
+							completed++;
 
-									int active = sent - completed;
+							int active = sent - completed;
 
-									// Stop round
-									if (completed == totalRequests) {
-										long elapsed = System.currentTimeMillis() - start;
-										afterRound(connection)
-												.whenComplete(connection::close)
-												.whenResult(() -> cb.set(elapsed))
-												.whenException(cb::setException);
-										return;
-									}
+							// Stop round
+							if (completed == totalRequests) {
+								long elapsed = System.currentTimeMillis() - start;
+								afterRound(connection)
+									.whenComplete(connection::close)
+									.whenResult(() -> cb.set(elapsed))
+									.whenException(cb::setException);
+								return;
+							}
 
-									onResponse(connection, this, active);
-								}
-							};
+							onResponse(connection, this, active);
+						}
+					};
 
-							onStart(connection, callback);
-						}));
+					onStart(connection, callback);
+				}));
 	}
 
 	private static String getString(int length) {

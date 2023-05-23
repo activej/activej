@@ -61,7 +61,7 @@ public class RpcStrategiesTest {
 		}
 
 		List<RpcSenderStub> connections =
-				List.of(connection1, connection2, connection3, connection4, connection5);
+			List.of(connection1, connection2, connection3, connection4, connection5);
 		for (int i = 0; i < 5; i++) {
 			assertEquals(iterations / 5, connections.get(i).getRequests());
 		}
@@ -82,8 +82,8 @@ public class RpcStrategiesTest {
 		pool.put(address4, connection4);
 		int iterations = 20;
 		RpcStrategy strategy = RpcStrategies.roundRobin(
-				firstAvailable(servers(address1, address2)),
-				firstAvailable(servers(address3, address4)));
+			firstAvailable(servers(address1, address2)),
+			firstAvailable(servers(address3, address4)));
 
 		RpcSender sender = strategy.createSender(pool);
 		for (int i = 0; i < iterations; i++) {
@@ -113,9 +113,9 @@ public class RpcStrategiesTest {
 		pool.put(address5, connection5);
 		int shardsCount = 2;
 		RpcStrategy strategy = sharding(
-				item -> (Integer) item % shardsCount,
-				firstValidResult(servers(address1, address2)),
-				firstValidResult(servers(address3, address4, address5)));
+			item -> (Integer) item % shardsCount,
+			firstValidResult(servers(address1, address2)),
+			firstValidResult(servers(address3, address4, address5)));
 
 		RpcSender sender = strategy.createSender(pool);
 		sender.sendRequest(0, 50, assertNoCalls());
@@ -144,10 +144,10 @@ public class RpcStrategiesTest {
 		RpcSenderStub connection4 = new RpcSenderStub();
 		RpcSenderStub connection5 = new RpcSenderStub();
 		RpcStrategy strategy = RendezvousHashing.builder((Integer item) -> item)
-				.withShard(1, firstAvailable(servers(address1, address2)))
-				.withShard(2, firstAvailable(servers(address3, address4)))
-				.withShard(3, server(address5))
-				.build();
+			.withShard(1, firstAvailable(servers(address1, address2)))
+			.withShard(2, firstAvailable(servers(address3, address4)))
+			.withShard(3, server(address5))
+			.build();
 		int iterationsPerLoop = 1000;
 		RpcSender sender;
 
@@ -197,11 +197,11 @@ public class RpcStrategiesTest {
 		int iterationsPerDataStubWithKey = 35;
 		RpcSender sender;
 		RpcStrategy strategy = TypeDispatching.builder()
-				.with(String.class,
-						firstValidResult(servers(address1, address2)))
-				.withDefault(
-						firstAvailable(servers(address3, address4, address5)))
-				.build();
+			.with(String.class,
+				firstValidResult(servers(address1, address2)))
+			.withDefault(
+				firstAvailable(servers(address3, address4, address5)))
+			.build();
 
 		sender = strategy.createSender(pool);
 		for (int i = 0; i < iterationsPerDataStub; i++) {

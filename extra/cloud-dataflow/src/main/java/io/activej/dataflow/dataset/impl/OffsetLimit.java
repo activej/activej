@@ -52,11 +52,11 @@ public final class OffsetLimit<T, K> extends Dataset<T> {
 		List<StreamId> streamIds = input.channels(next);
 
 		return DatasetUtils.offsetLimit(next, streamIds, offset, limit,
-				(inputs, partition) -> {
-					List<StreamId> repartitioned = DatasetUtils.repartition(next, inputs, input.streamSchema(), keyFunction, List.of(partition));
-					assert repartitioned.size() == 1;
-					return repartitioned.get(0);
-				});
+			(inputs, partition) -> {
+				List<StreamId> repartitioned = DatasetUtils.repartition(next, inputs, input.streamSchema(), keyFunction, List.of(partition));
+				assert repartitioned.size() == 1;
+				return repartitioned.get(0);
+			});
 	}
 
 	@Override

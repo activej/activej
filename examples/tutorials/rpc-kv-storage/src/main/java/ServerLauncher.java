@@ -14,8 +14,8 @@ public class ServerLauncher extends Launcher {
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				new ServerModule());
+			ServiceGraphModule.create(),
+			new ServerModule());
 	}
 
 	@Override

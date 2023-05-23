@@ -40,16 +40,16 @@ public class StreamUnionTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(
-				source0.streamTo(streamUnion.newInput()),
-				source1.streamTo(streamUnion.newInput()),
-				source2.streamTo(streamUnion.newInput()),
-				source3.streamTo(streamUnion.newInput()),
-				source4.streamTo(streamUnion.newInput()),
-				source5.streamTo(streamUnion.newInput()),
-				source6.streamTo(streamUnion.newInput()),
+			source0.streamTo(streamUnion.newInput()),
+			source1.streamTo(streamUnion.newInput()),
+			source2.streamTo(streamUnion.newInput()),
+			source3.streamTo(streamUnion.newInput()),
+			source4.streamTo(streamUnion.newInput()),
+			source5.streamTo(streamUnion.newInput()),
+			source6.streamTo(streamUnion.newInput()),
 
-				streamUnion.getOutput()
-						.streamTo(consumer.transformWith(randomlySuspending()))
+			streamUnion.getOutput()
+				.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
 		List<Integer> result = consumer.getList();
@@ -80,14 +80,14 @@ public class StreamUnionTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
-				source0.streamTo(streamUnion.newInput()),
-				source1.streamTo(streamUnion.newInput()),
-				source2.streamTo(streamUnion.newInput()),
+			source0.streamTo(streamUnion.newInput()),
+			source1.streamTo(streamUnion.newInput()),
+			source2.streamTo(streamUnion.newInput()),
 
-				streamUnion.getOutput()
-						.streamTo(consumer
-								.transformWith(decorate(promise ->
-										promise.then(item -> item == 3 ? Promise.ofException(exception) : Promise.of(item)))))
+			streamUnion.getOutput()
+				.streamTo(consumer
+					.transformWith(decorate(promise ->
+						promise.then(item -> item == 3 ? Promise.ofException(exception) : Promise.of(item)))))
 		);
 
 		assertSame(exception, e);
@@ -108,21 +108,21 @@ public class StreamUnionTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		StreamSupplier<Integer> source0 = StreamSuppliers.concat(
-				StreamSuppliers.ofIterable(List.of(1, 2)),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofIterable(List.of(1, 2)),
+			StreamSuppliers.closingWithError(exception)
 		);
 		StreamSupplier<Integer> source1 = StreamSuppliers.concat(
-				StreamSuppliers.ofIterable(List.of(7, 8, 9)),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofIterable(List.of(7, 8, 9)),
+			StreamSuppliers.closingWithError(exception)
 		);
 
 		StreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		Exception e = awaitException(
-				source0.streamTo(streamUnion.newInput()),
-				source1.streamTo(streamUnion.newInput()),
-				streamUnion.getOutput()
-						.streamTo(consumer.transformWith(oneByOne()))
+			source0.streamTo(streamUnion.newInput()),
+			source1.streamTo(streamUnion.newInput()),
+			streamUnion.getOutput()
+				.streamTo(consumer.transformWith(oneByOne()))
 		);
 
 		assertSame(exception, e);

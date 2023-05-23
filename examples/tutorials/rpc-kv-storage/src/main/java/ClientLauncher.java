@@ -22,8 +22,8 @@ public class ClientLauncher extends Launcher {
 	@Override
 	protected Module getModule() {
 		return combine(
-				ServiceGraphModule.create(),
-				new ClientModule());
+			ServiceGraphModule.create(),
+			new ClientModule());
 	}
 
 	@Override
@@ -36,14 +36,14 @@ public class ClientLauncher extends Launcher {
 		switch (args[0]) {
 			case "--put" -> {
 				CompletableFuture<PutResponse> future1 = reactor.submit(() ->
-						client.sendRequest(new PutRequest(args[1], args[2]), TIMEOUT)
+					client.sendRequest(new PutRequest(args[1], args[2]), TIMEOUT)
 				);
 				PutResponse putResponse = future1.get();
 				System.out.println("PutResponse: " + putResponse);
 			}
 			case "--get" -> {
 				CompletableFuture<GetResponse> future2 = reactor.submit(() ->
-						client.sendRequest(new GetRequest(args[1]), TIMEOUT)
+					client.sendRequest(new GetRequest(args[1]), TIMEOUT)
 				);
 				GetResponse getResponse = future2.get();
 				System.out.println("GetResponse: " + getResponse);

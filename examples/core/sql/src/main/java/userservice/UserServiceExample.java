@@ -54,8 +54,8 @@ public class UserServiceExample extends Launcher {
 	@Override
 	protected Module getModule() {
 		return Modules.combine(
-				ServiceGraphModule.create(),
-				new H2Module()
+			ServiceGraphModule.create(),
+			new H2Module()
 		);
 	}
 
@@ -63,32 +63,32 @@ public class UserServiceExample extends Launcher {
 	protected void run() throws ExecutionException, InterruptedException {
 		System.out.println();
 		CompletableFuture<?> future = reactor.submit(() ->
-				Promises.all(
-								userDao.addUser(new User("Kory", "Holloway")),
-								userDao.addUser(new User("Abraham", "Ventura")),
-								userDao.addUser(new User("Emile", "Weiss")),
-								userDao.addUser(new User("Torin", "Browne")))
-						.then(() -> userDao.getAll())
-						.whenResult(UserServiceExample::printUsers)
-						.then(() -> {
-							System.out.println("Updating user with ID 2...");
-							return userDao.updateUser(2, new User("George", "Dawson"));
-						})
-						.whenResult(updated -> System.out.println("Updated: " + updated))
-						.then(() -> {
-							System.out.println("Retrieving user with ID 2...");
-							return userDao.get(2);
-						})
-						.whenResult(users -> System.out.println("User with ID 2: " + users))
-						.then(() -> {
-							System.out.println("Deleting user with ID 1...");
-							return userDao.deleteUser(1);
-						})
-						.then(deleted -> {
-							System.out.println("Deleted: " + deleted);
-							return userDao.getAll();
-						})
-						.whenResult(UserServiceExample::printUsers)
+			Promises.all(
+					userDao.addUser(new User("Kory", "Holloway")),
+					userDao.addUser(new User("Abraham", "Ventura")),
+					userDao.addUser(new User("Emile", "Weiss")),
+					userDao.addUser(new User("Torin", "Browne")))
+				.then(() -> userDao.getAll())
+				.whenResult(UserServiceExample::printUsers)
+				.then(() -> {
+					System.out.println("Updating user with ID 2...");
+					return userDao.updateUser(2, new User("George", "Dawson"));
+				})
+				.whenResult(updated -> System.out.println("Updated: " + updated))
+				.then(() -> {
+					System.out.println("Retrieving user with ID 2...");
+					return userDao.get(2);
+				})
+				.whenResult(users -> System.out.println("User with ID 2: " + users))
+				.then(() -> {
+					System.out.println("Deleting user with ID 1...");
+					return userDao.deleteUser(1);
+				})
+				.then(deleted -> {
+					System.out.println("Deleted: " + deleted);
+					return userDao.getAll();
+				})
+				.whenResult(UserServiceExample::printUsers)
 		);
 
 		future.get();
@@ -98,7 +98,7 @@ public class UserServiceExample extends Launcher {
 	private static void printUsers(Map<Long, User> users) {
 		System.out.println("All users: ");
 		users.forEach((id, user) ->
-				System.out.printf("\tID %d: %s %s%n", id, user.firstName(), user.lastName()));
+			System.out.printf("\tID %d: %s %s%n", id, user.firstName(), user.lastName()));
 	}
 
 	public static void main(String[] args) throws Exception {

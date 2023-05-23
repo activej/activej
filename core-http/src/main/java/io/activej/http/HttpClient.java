@@ -76,7 +76,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class HttpClient extends AbstractNioReactive
-		implements IHttpClient, IWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IHttpClient, IWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(HttpClient.class);
 	private static final boolean CHECKS = Checks.isEnabled(HttpClient.class);
 
@@ -267,7 +267,7 @@ public final class HttpClient extends AbstractNioReactive
 		@JmxAttribute(reducer = JmxReducerSum.class)
 		public long getActiveRequests() {
 			return totalRequests.getTotalCount() -
-					(httpTimeouts.getTotalCount() + resolveErrors.getTotal() + connectErrors.getTotal() + responsesErrors + responses);
+				(httpTimeouts.getTotalCount() + resolveErrors.getTotal() + connectErrors.getTotal() + responsesErrors + responses);
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
@@ -422,7 +422,7 @@ public final class HttpClient extends AbstractNioReactive
 			boolean isClosing = shutdownPromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(reactor.currentTimeMillis() -
-						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
+					(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();
@@ -507,23 +507,23 @@ public final class HttpClient extends AbstractNioReactive
 
 		++pendingResolves;
 		return dnsClient.resolve4(host)
-				.then((v, e) -> handleShutdown(v, e, --pendingResolves))
-				.thenCallback(
-						(dnsResponse, cb) -> {
-							if (inspector != null) inspector.onResolve(request, dnsResponse);
-							if (!dnsResponse.isSuccessful()) {
-								request.recycleBody();
-								cb.setException(new HttpException(new DnsQueryException(dnsResponse)));
-								return;
-							}
-							//noinspection ConstantConditions - dnsResponse is successful (not null)
-							doSend(request, dnsResponse.getRecord().getIps(), isWebSocket).subscribe(cb);
-						},
-						(e, cb) -> {
-							if (inspector != null) inspector.onResolveError(request, e);
-							request.recycleBody();
-							cb.setException(translateToHttpException(e));
-						});
+			.then((v, e) -> handleShutdown(v, e, --pendingResolves))
+			.thenCallback(
+				(dnsResponse, cb) -> {
+					if (inspector != null) inspector.onResolve(request, dnsResponse);
+					if (!dnsResponse.isSuccessful()) {
+						request.recycleBody();
+						cb.setException(new HttpException(new DnsQueryException(dnsResponse)));
+						return;
+					}
+					//noinspection ConstantConditions - dnsResponse is successful (not null)
+					doSend(request, dnsResponse.getRecord().getIps(), isWebSocket).subscribe(cb);
+				},
+				(e, cb) -> {
+					if (inspector != null) inspector.onResolveError(request, e);
+					request.recycleBody();
+					cb.setException(translateToHttpException(e));
+				});
 	}
 
 	private Promise<?> doSend(HttpRequest request, InetAddress[] inetAddresses, boolean isWebSocket) {
@@ -548,42 +548,42 @@ public final class HttpClient extends AbstractNioReactive
 		if (inspector != null) inspector.onConnecting(request, address);
 		++pendingConnects;
 		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.then((v, e) -> handleShutdown(v, e, --pendingConnects))
-				.then(
-						tcpSocket -> {
-							TcpSocket.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
-							if (socketInspector != null) {
-								socketInspector.onConnect(tcpSocket);
-								tcpSocket.setInspector(socketInspector);
-							}
+			.then((v, e) -> handleShutdown(v, e, --pendingConnects))
+			.then(
+				tcpSocket -> {
+					TcpSocket.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+					if (socketInspector != null) {
+						socketInspector.onConnect(tcpSocket);
+						tcpSocket.setInspector(socketInspector);
+					}
 
-							String host = request.getUrl().getHost();
-							assert host != null;
+					String host = request.getUrl().getHost();
+					assert host != null;
 
-							ITcpSocket socket = isSecure ?
-									wrapClientSocket(reactor, tcpSocket,
-											host, request.getUrl().getPort(),
-											sslContext, sslExecutor) :
-									tcpSocket;
+					ITcpSocket socket = isSecure ?
+						wrapClientSocket(reactor, tcpSocket,
+							host, request.getUrl().getPort(),
+							sslContext, sslExecutor) :
+						tcpSocket;
 
-							HttpClientConnection connection = new HttpClientConnection(reactor, this, socket, address);
+					HttpClientConnection connection = new HttpClientConnection(reactor, this, socket, address);
 
-							if (inspector != null) inspector.onConnect(request, connection);
+					if (inspector != null) inspector.onConnect(request, connection);
 
-							if (expiredConnectionsCheck == null)
-								scheduleExpiredConnectionsCheck();
+					if (expiredConnectionsCheck == null)
+						scheduleExpiredConnectionsCheck();
 
-							if (isWebSocket) {
-								return connection.sendWebSocketRequest(request).cast();
-							} else {
-								return connection.send(request).cast();
-							}
-						},
-						e -> {
-							if (inspector != null) inspector.onConnectError(request, address, e);
-							request.recycleBody();
-							return Promise.ofException(translateToHttpException(e));
-						});
+					if (isWebSocket) {
+						return connection.sendWebSocketRequest(request).cast();
+					} else {
+						return connection.send(request).cast();
+					}
+				},
+				e -> {
+					if (inspector != null) inspector.onConnectError(request, address, e);
+					request.recycleBody();
+					return Promise.ofException(translateToHttpException(e));
+				});
 	}
 
 	private <T> Promise<T> handleShutdown(T value, Exception e, int countdown) {

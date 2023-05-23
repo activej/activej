@@ -42,7 +42,7 @@ import static io.activej.http.WebSocketConstants.OpCode.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
+	implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
 
 	private static final byte OP_CODE_MASK = 0b00001111;
 	private static final byte RSV_MASK = 0b01110000;
@@ -120,91 +120,91 @@ public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 
 	private void processOpCode() {
 		input.decode(SINGLE_BYTE_DECODER)
-				.whenResult(firstByte -> {
-					if ((firstByte & RSV_MASK) != 0) {
-						onProtocolError(RESERVED_BITS_SET);
-						return;
-					}
+			.whenResult(firstByte -> {
+				if ((firstByte & RSV_MASK) != 0) {
+					onProtocolError(RESERVED_BITS_SET);
+					return;
+				}
 
-					byte opCodeByte = (byte) (firstByte & OP_CODE_MASK);
-					currentOpCode = fromOpCodeByte(opCodeByte);
-					if (currentOpCode == null) {
-						onProtocolError(UNKNOWN_OP_CODE);
-						return;
-					}
+				byte opCodeByte = (byte) (firstByte & OP_CODE_MASK);
+				currentOpCode = fromOpCodeByte(opCodeByte);
+				if (currentOpCode == null) {
+					onProtocolError(UNKNOWN_OP_CODE);
+					return;
+				}
 
-					isFin = firstByte < 0;
-					if (currentOpCode.isControlCode()) {
-						if (!isFin) {
-							onProtocolError(FRAGMENTED_CONTROL_MESSAGE);
-						} else {
-							processLength();
-						}
-						return;
-					}
-
-					if (waitingForFin) {
-						if (currentOpCode != OP_CONTINUATION) {
-							onProtocolError(WAITING_FOR_LAST_FRAME);
-							return;
-						}
+				isFin = firstByte < 0;
+				if (currentOpCode.isControlCode()) {
+					if (!isFin) {
+						onProtocolError(FRAGMENTED_CONTROL_MESSAGE);
 					} else {
-						if (currentOpCode == OP_CONTINUATION) {
-							onProtocolError(UNEXPECTED_CONTINUATION);
-							return;
-						}
-
+						processLength();
 					}
-					waitingForFin = !isFin;
+					return;
+				}
 
-					processLength();
-				});
+				if (waitingForFin) {
+					if (currentOpCode != OP_CONTINUATION) {
+						onProtocolError(WAITING_FOR_LAST_FRAME);
+						return;
+					}
+				} else {
+					if (currentOpCode == OP_CONTINUATION) {
+						onProtocolError(UNEXPECTED_CONTINUATION);
+						return;
+					}
+
+				}
+				waitingForFin = !isFin;
+
+				processLength();
+			});
 	}
 
 	private void processLength() {
 		assert currentOpCode != null;
 
 		input.decode(SINGLE_BYTE_DECODER)
-				.whenResult(maskAndLen -> {
-					boolean msgMasked = maskAndLen < 0;
-					if (this.masked && !msgMasked) {
-						onProtocolError(MASK_REQUIRED);
-					}
-					if (!this.masked && msgMasked) {
-						onProtocolError(MASK_SHOULD_NOT_BE_PRESENT);
-					}
-					maskIndex = msgMasked ? 0 : -1;
-					byte length = (byte) (maskAndLen & LAST_7_BITS_MASK);
-					if (currentOpCode.isControlCode() && length > 125) {
-						onProtocolError(INVALID_PAYLOAD_LENGTH);
-						return;
-					}
-					if (length == 126) {
-						processLength2(2);
-					} else if (length == 127) {
-						processLength2(8);
-					} else {
-						processMask(length);
-					}
-				});
+			.whenResult(maskAndLen -> {
+				boolean msgMasked = maskAndLen < 0;
+				if (this.masked && !msgMasked) {
+					onProtocolError(MASK_REQUIRED);
+				}
+				if (!this.masked && msgMasked) {
+					onProtocolError(MASK_SHOULD_NOT_BE_PRESENT);
+				}
+				maskIndex = msgMasked ? 0 : -1;
+				byte length = (byte) (maskAndLen & LAST_7_BITS_MASK);
+				if (currentOpCode.isControlCode() && length > 125) {
+					onProtocolError(INVALID_PAYLOAD_LENGTH);
+					return;
+				}
+				if (length == 126) {
+					processLength2(2);
+				} else if (length == 127) {
+					processLength2(8);
+				} else {
+					processMask(length);
+				}
+			});
 	}
 
 	private void processLength2(int numberOfBytes) {
 		assert numberOfBytes == 2 || numberOfBytes == 8;
 		input.decode(ofFixedSize(numberOfBytes))
-				.whenResult(lenBuf -> {
-					long len;
-					if (numberOfBytes == 2) {
-						len = Short.toUnsignedLong(lenBuf.readShort());
-					} else {
-						len = lenBuf.readLong();
-						if (len < 0) {
-							onProtocolError(INVALID_PAYLOAD_LENGTH);
-						}
+			.whenResult(lenBuf -> {
+				long len;
+				if (numberOfBytes == 2) {
+					len = Short.toUnsignedLong(lenBuf.readShort());
+				} else {
+					len = lenBuf.readLong();
+					if (len < 0) {
+						onProtocolError(INVALID_PAYLOAD_LENGTH);
 					}
-					lenBuf.recycle();
-					processMask(len);
-				});
+				}
+				lenBuf.recycle();
+				processMask(len);
+			});
 	}
 
 	private void processMask(long length) {
@@ -217,10 +217,10 @@ public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 			processPayload(length);
 		} else {
 			input.decode(bufs -> !bufs.hasRemainingBytes(4) ? null : bufs)
-					.whenResult(bufs -> {
-						bufs.drainTo(mask, 0, 4);
-						processPayload(length);
-					});
+				.whenResult(bufs -> {
+					bufs.drainTo(mask, 0, 4);
+					processPayload(length);
+				});
 		}
 	}
 
@@ -234,8 +234,8 @@ public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		}
 		if (newLength != 0) {
 			Promise.complete()
-					.then(() -> bufs.isEmpty() ? input.needMoreData() : Promise.complete())
-					.whenResult(() -> processPayload(newLength));
+				.then(() -> bufs.isEmpty() ? input.needMoreData() : Promise.complete())
+				.whenResult(() -> processPayload(newLength));
 			return;
 		}
 
@@ -243,7 +243,7 @@ public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 			processControlPayload();
 		} else {
 			output.accept(new Frame(opToFrameType(currentOpCode), frameBufs.takeRemaining(), isFin))
-					.whenResult(this::processOpCode);
+				.whenResult(this::processOpCode);
 		}
 	}
 
@@ -273,8 +273,8 @@ public final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 				}
 				if (statusCode == 1000) {
 					output.acceptEndOfStream()
-							.whenComplete(() -> closeReceivedPromise.trySet(REGULAR_CLOSE))
-							.whenResult(this::completeProcess);
+						.whenComplete(() -> closeReceivedPromise.trySet(REGULAR_CLOSE))
+						.whenResult(this::completeProcess);
 				} else {
 					WebSocketException exception = new WebSocketException(statusCode, payload);
 					onCloseReceived(exception);

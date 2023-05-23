@@ -54,9 +54,9 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_PORT)))
-				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
-				.overrideWith(ofSystemProperties("config"));
+			.with("listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_PORT)))
+			.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
+			.overrideWith(ofSystemProperties("config"));
 	}
 
 	@Provides
@@ -64,8 +64,8 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@SuppressWarnings("unchecked")
 	RpcServer server(NioReactor reactor, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
 		RpcServer.Builder builder = RpcServer.builder(reactor)
-				.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
-				.withMessageTypes(getMessageTypes());
+			.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
+			.withMessageTypes(getMessageTypes());
 		for (Map.Entry<Class<?>, RpcRequestHandler<?, ?>> entry : handlers.entrySet()) {
 			builder.withHandler((Class<Object>) entry.getKey(), (RpcRequestHandler<Object, Object>) entry.getValue());
 		}
@@ -77,8 +77,8 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Named("WAL flush")
 	TaskScheduler walFlushScheduler(Reactor reactor, IWriteAheadLog<K, S> wal, Config config) {
 		return TaskScheduler.builder(reactor, wal::flush)
-				.withSchedule(config.get(ofReactorTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
-				.withInitialDelay(Duration.ofMinutes(1))
-				.build();
+			.withSchedule(config.get(ofReactorTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
+			.withInitialDelay(Duration.ofMinutes(1))
+			.build();
 	}
 }

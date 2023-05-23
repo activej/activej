@@ -61,16 +61,16 @@ public final class SslTcpSocketTest {
 	private static final String TEST_STRING = "Hello world";
 
 	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoders.ofFixedSize(TEST_STRING.length())
-			.andThen(ByteBuf::asArray)
-			.andThen(ByteBufStrings::decodeAscii);
+		.andThen(ByteBuf::asArray)
+		.andThen(ByteBufStrings::decodeAscii);
 
 	public static final int LARGE_STRING_SIZE = 10_000;
 	public static final int SMALL_STRING_SIZE = 1000;
 	private static final int LENGTH = LARGE_STRING_SIZE + TEST_STRING.length() * SMALL_STRING_SIZE;
 
 	private static final ByteBufsDecoder<String> DECODER_LARGE = ByteBufsDecoders.ofFixedSize(LENGTH)
-			.andThen(ByteBuf::asArray)
-			.andThen(ByteBufStrings::decodeAscii);
+		.andThen(ByteBuf::asArray)
+		.andThen(ByteBufStrings::decodeAscii);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -99,28 +99,28 @@ public final class SslTcpSocketTest {
 	@Test
 	public void testWrite() throws IOException {
 		startServer(sslContext, sslSocket -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
-				.decode(DECODER)
-				.whenComplete(sslSocket::close)
-				.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
+			.decode(DECODER)
+			.whenComplete(sslSocket::close)
+			.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
 
 		await(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.then(sslSocket ->
-						sslSocket.write(wrapAscii(TEST_STRING))
-								.whenComplete(sslSocket::close)));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.then(sslSocket ->
+				sslSocket.write(wrapAscii(TEST_STRING))
+					.whenComplete(sslSocket::close)));
 	}
 
 	@Test
 	public void testRead() throws IOException {
 		startServer(sslContext, sslSocket ->
-				sslSocket.write(wrapAscii(TEST_STRING))
-						.whenComplete(assertCompleteFn()));
+			sslSocket.write(wrapAscii(TEST_STRING))
+				.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
-						.decode(DECODER)
-						.whenComplete(sslSocket::close)));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.then(sslSocket -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
+				.decode(DECODER)
+				.whenComplete(sslSocket::close)));
 
 		assertEquals(TEST_STRING, result);
 	}
@@ -128,18 +128,18 @@ public final class SslTcpSocketTest {
 	@Test
 	public void testLoopBack() throws IOException {
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(serverSsl))
-				.decode(DECODER)
-				.then(result -> serverSsl.write(wrapAscii(result)))
-				.whenComplete(serverSsl::close)
-				.whenComplete(assertCompleteFn()));
+			.decode(DECODER)
+			.then(result -> serverSsl.write(wrapAscii(result)))
+			.whenComplete(serverSsl::close)
+			.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.then(sslSocket ->
-						sslSocket.write(wrapAscii(TEST_STRING))
-								.then(() -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
-										.decode(DECODER))
-								.whenComplete(sslSocket::close)));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.then(sslSocket ->
+				sslSocket.write(wrapAscii(TEST_STRING))
+					.then(() -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
+						.decode(DECODER))
+					.whenComplete(sslSocket::close)));
 
 		assertEquals(TEST_STRING, result);
 	}
@@ -150,20 +150,20 @@ public final class SslTcpSocketTest {
 		String TEST_STRING_PART_1 = TEST_STRING.substring(0, halfLength);
 		String TEST_STRING_PART_2 = TEST_STRING.substring(halfLength);
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(serverSsl))
-				.decode(DECODER)
-				.then(result -> serverSsl.write(wrapAscii(result)))
-				.whenComplete(serverSsl::close)
-				.whenComplete(assertCompleteFn()));
+			.decode(DECODER)
+			.then(result -> serverSsl.write(wrapAscii(result)))
+			.whenComplete(serverSsl::close)
+			.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.then(sslSocket ->
-						sslSocket.write(wrapAscii(TEST_STRING_PART_1))
-								.then(() -> sslSocket.write(ByteBuf.empty()))
-								.then(() -> sslSocket.write(wrapAscii(TEST_STRING_PART_2)))
-								.then(() -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
-										.decode(DECODER))
-								.whenComplete(sslSocket::close)));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.then(sslSocket ->
+				sslSocket.write(wrapAscii(TEST_STRING_PART_1))
+					.then(() -> sslSocket.write(ByteBuf.empty()))
+					.then(() -> sslSocket.write(wrapAscii(TEST_STRING_PART_2)))
+					.then(() -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
+						.decode(DECODER))
+					.whenComplete(sslSocket::close)));
 
 		assertEquals(TEST_STRING, result);
 	}
@@ -171,29 +171,29 @@ public final class SslTcpSocketTest {
 	@Test
 	public void sendsLargeAmountOfDataFromClientToServer() throws IOException {
 		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(serverSsl))
-				.decode(DECODER_LARGE)
-				.whenComplete(serverSsl::close)
-				.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
+			.decode(DECODER_LARGE)
+			.whenComplete(serverSsl::close)
+			.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
 
 		await(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.whenResult(sslSocket ->
-						sendData(sslSocket)
-								.whenComplete(sslSocket::close)));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.whenResult(sslSocket ->
+				sendData(sslSocket)
+					.whenComplete(sslSocket::close)));
 	}
 
 	@Test
 	public void sendsLargeAmountOfDataFromServerToClient() throws IOException {
 		startServer(sslContext, serverSsl ->
-				sendData(serverSsl)
-						.whenComplete(serverSsl::close)
-						.whenComplete(assertCompleteFn()));
+			sendData(serverSsl)
+				.whenComplete(serverSsl::close)
+				.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
-						.decode(DECODER_LARGE)
-						.whenComplete(sslSocket::close)));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.then(sslSocket -> BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket))
+				.decode(DECODER_LARGE)
+				.whenComplete(sslSocket::close)));
 
 		assertEquals(sentData.toString(), result);
 	}
@@ -201,18 +201,18 @@ public final class SslTcpSocketTest {
 	@Test
 	public void testCloseAndOperationAfterClose() throws IOException {
 		startServer(sslContext, socket ->
-				socket.write(wrapAscii("He"))
-						.whenComplete(socket::close)
-						.then(() -> socket.write(wrapAscii("ello")))
-						.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
+			socket.write(wrapAscii("He"))
+				.whenComplete(socket::close)
+				.then(() -> socket.write(wrapAscii("ello")))
+				.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
 
 		Exception e = awaitException(TcpSocket.connect(reactor, address)
-				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
-				.then(sslSocket -> {
-					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket));
-					return supplier.decode(DECODER)
-							.whenException(supplier::closeEx);
-				}));
+			.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
+			.then(sslSocket -> {
+				BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSuppliers.ofSocket(sslSocket));
+				return supplier.decode(DECODER)
+					.whenException(supplier::closeEx);
+			}));
 
 		assertThat(e, instanceOf(TruncatedDataException.class));
 	}
@@ -231,25 +231,25 @@ public final class SslTcpSocketTest {
 		serverThread.start();
 
 		Exception exception = awaitException(TcpSocket.connect(reactor, address)
-				.whenResult(tcpSocket -> {
-					try {
-						// noinspection ConstantConditions - Imitating a suddenly closed channel
-						tcpSocket.getSocketChannel().close();
-					} catch (IOException e) {
-						throw new AssertionError();
-					}
-				})
-				.map(tcpSocket -> SslTcpSocket.wrapClientSocket(reactor, tcpSocket, sslContext, executor))
-				.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
+			.whenResult(tcpSocket -> {
+				try {
+					// noinspection ConstantConditions - Imitating a suddenly closed channel
+					tcpSocket.getSocketChannel().close();
+				} catch (IOException e) {
+					throw new AssertionError();
+				}
+			})
+			.map(tcpSocket -> SslTcpSocket.wrapClientSocket(reactor, tcpSocket, sslContext, executor))
+			.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}
 
 	void startServer(SSLContext sslContext, Consumer<ITcpSocket> logic) throws IOException {
 		SimpleServer.builder(Reactor.getCurrentReactor(), logic)
-				.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), address)
-				.withAcceptOnce()
-				.build()
-				.listen();
+			.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), address)
+			.withAcceptOnce()
+			.build()
+			.listen();
 	}
 
 	static SSLContext createSslContext() throws Exception {
@@ -295,13 +295,13 @@ public final class SslTcpSocketTest {
 		sentData.append(largeData);
 
 		return socket.write(largeBuf)
-				.then(() -> Promises.loop(SMALL_STRING_SIZE,
-						i -> i != 0,
-						i -> {
-							sentData.append(TEST_STRING);
-							return socket.write(wrapAscii(TEST_STRING))
-									.async()
-									.map($2 -> i - 1);
-						}));
+			.then(() -> Promises.loop(SMALL_STRING_SIZE,
+				i -> i != 0,
+				i -> {
+					sentData.append(TEST_STRING);
+					return socket.write(wrapAscii(TEST_STRING))
+						.async()
+						.map($2 -> i - 1);
+				}));
 	}
 }

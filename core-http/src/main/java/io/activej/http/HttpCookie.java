@@ -290,7 +290,7 @@ public final class HttpCookie {
 				}
 			}
 			AvHandler handler = getCookieHandler(hashCodeLowerCaseAscii
-					(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
+				(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
 			if (equalSign == -1 && handler == null) {
 				cookie.setExtension(decodeAscii(bytes, keyStart, valueEnd - keyStart));
 			} else if (handler == null) {
@@ -495,7 +495,7 @@ public final class HttpCookie {
 						case SAME_SITE_STRICT_HC -> cookie.setSameSite(SameSite.STRICT);
 						case SAME_SITE_NONE_HC -> cookie.setSameSite(SameSite.NONE);
 						default ->
-								throw new MalformedHttpException("Unknown SameSite value: " + new String(bytes, start, end - start, ISO_8859_1));
+							throw new MalformedHttpException("Unknown SameSite value: " + new String(bytes, start, end - start, ISO_8859_1));
 					}
 				}
 			};
@@ -528,14 +528,14 @@ public final class HttpCookie {
 		}
 		HttpCookie that = (HttpCookie) o;
 		return maxAge == that.maxAge &&
-				secure == that.secure &&
-				httpOnly == that.httpOnly &&
-				expirationDate == that.expirationDate &&
-				Objects.equals(name, that.name) &&
-				Objects.equals(value, that.value) &&
-				Objects.equals(domain, that.domain) &&
-				Objects.equals(path, that.path) &&
-				Objects.equals(extension, that.extension);
+			secure == that.secure &&
+			httpOnly == that.httpOnly &&
+			expirationDate == that.expirationDate &&
+			Objects.equals(name, that.name) &&
+			Objects.equals(value, that.value) &&
+			Objects.equals(domain, that.domain) &&
+			Objects.equals(path, that.path) &&
+			Objects.equals(extension, that.extension);
 	}
 
 	@Override
@@ -546,8 +546,8 @@ public final class HttpCookie {
 	@Override
 	public String toString() {
 		return "HttpCookie{" +
-				"name='" + name + '\'' +
-				", value='" + value + '\'' + '}';
+			"name='" + name + '\'' +
+			", value='" + value + '\'' + '}';
 	}
 
 	public enum SameSite {

@@ -51,11 +51,11 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 
 	private final HashMap<K, Object> map = new HashMap<>();
 
-	public AggregationGroupReducer(IAggregationChunkStorage<C> storage,
-			AggregationStructure aggregation, List<String> measures,
-			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			Function<T, K> keyFunction, Aggregate<T, Object> aggregate,
-			int chunkSize, DefiningClassLoader classLoader) {
+	public AggregationGroupReducer(
+		IAggregationChunkStorage<C> storage, AggregationStructure aggregation, List<String> measures,
+		Class<T> recordClass, PartitionPredicate<T> partitionPredicate, Function<T, K> keyFunction,
+		Aggregate<T, Object> aggregate, int chunkSize, DefiningClassLoader classLoader
+	) {
 		this.storage = storage;
 		this.measures = measures;
 		this.partitionPredicate = partitionPredicate;
@@ -116,13 +116,13 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 
 		StreamSupplier<T> supplier = StreamSuppliers.ofIterable(list);
 		AggregationChunker<C, T> chunker = AggregationChunker.create(aggregation, measures, recordClass,
-				partitionPredicate, storage, classLoader, chunkSize);
+			partitionPredicate, storage, classLoader, chunkSize);
 
 		chunksAccumulator.addPromise(
-				supplier.streamTo(chunker)
-						.then(chunker::getResult)
-						.whenResult(this::suspendOrResume),
-				List::addAll);
+			supplier.streamTo(chunker)
+				.then(chunker::getResult)
+				.whenResult(this::suspendOrResume),
+			List::addAll);
 	}
 
 	private void suspendOrResume() {
@@ -139,8 +139,8 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	protected void onEndOfStream() {
 		doFlush();
 		chunksAccumulator.run().toVoid()
-				.whenResult(this::acknowledge)
-				.whenException(this::closeEx);
+			.whenResult(this::acknowledge)
+			.whenException(this::closeEx);
 	}
 
 	@Override
@@ -160,10 +160,10 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	@Override
 	public String toString() {
 		return "AggregationGroupReducer{" +
-				"keys=" + aggregation.getKeys() +
-				", measures=" + measures +
-				", chunkSize=" + chunkSize +
-				", map.size=" + map.size() +
-				'}';
+			"keys=" + aggregation.getKeys() +
+			", measures=" + measures +
+			", chunkSize=" + chunkSize +
+			", map.size=" + map.size() +
+			'}';
 	}
 }

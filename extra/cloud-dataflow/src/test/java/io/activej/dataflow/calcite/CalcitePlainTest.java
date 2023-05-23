@@ -21,10 +21,10 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 		ToListStreamConsumer<Record> resultConsumer = ToListStreamConsumer.create();
 
 		List<Record> records = await(sqlDataflow.query(sql)
-				.then(supplier -> supplier.streamTo(resultConsumer))
-				.whenComplete(server1::close)
-				.whenComplete(server2::close)
-				.map($ -> resultConsumer.getList()));
+			.then(supplier -> supplier.streamTo(resultConsumer))
+			.whenComplete(server1::close)
+			.whenComplete(server2::close)
+			.map($ -> resultConsumer.getList()));
 
 		return toQueryResult(records);
 	}
@@ -43,10 +43,10 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 		if (records.isEmpty()) return QueryResult.empty();
 
 		return new QueryResult(
-				records.get(0).getScheme().getFields(),
-				records.stream()
-						.map(Record::toArray)
-						.toList());
+			records.get(0).getScheme().getFields(),
+			records.stream()
+				.map(Record::toArray)
+				.toList());
 	}
 
 	private <T> T denyPreparedRequests() {

@@ -48,45 +48,45 @@ public final class SimpleProxyServerTest {
 	@Test
 	public void testSimpleProxyServer() throws Exception {
 		Eventloop eventloop1 = Eventloop
-				.builder()
-				.withFatalErrorHandler(rethrow())
-				.withCurrentThread()
-				.build();
+			.builder()
+			.withFatalErrorHandler(rethrow())
+			.withCurrentThread()
+			.build();
 
 		HttpServer echoServer = HttpServer.builder(eventloop1,
-						request -> HttpResponse.ok200()
-								.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
-								.toPromise())
-				.withListenPort(echoServerPort)
-				.build();
+				request -> HttpResponse.ok200()
+					.withBody(encodeAscii(request.getUrl().getPathAndQuery()))
+					.toPromise())
+			.withListenPort(echoServerPort)
+			.build();
 		echoServer.listen();
 
 		Thread echoServerThread = new Thread(eventloop1);
 		echoServerThread.start();
 
 		Eventloop eventloop2 = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.withCurrentThread()
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.withCurrentThread()
+			.build();
 
 		IHttpClient httpClient = HttpClient.builder(eventloop2)
-				.withDnsClient(CachedDnsClient.create(eventloop2, DnsClient.builder(eventloop2)
-						.withDatagramSocketSetting(DatagramSocketSettings.create())
-						.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))
-						.build()))
-				.build();
+			.withDnsClient(CachedDnsClient.create(eventloop2, DnsClient.builder(eventloop2)
+				.withDatagramSocketSetting(DatagramSocketSettings.create())
+				.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))
+				.build()))
+			.build();
 
 		HttpServer proxyServer = HttpServer.builder(eventloop2,
-						request -> {
-							String path = echoServerPort + request.getUrl().getPath();
-							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path).build())
-									.then(result -> result.loadBody()
-											.then(body -> HttpResponse.ofCode(result.getCode())
-													.withBody(encodeAscii("FORWARDED: " + body.getString(UTF_8)))
-													.toPromise()));
-						})
-				.withListenPort(proxyServerPort)
-				.build();
+				request -> {
+					String path = echoServerPort + request.getUrl().getPath();
+					return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path).build())
+						.then(result -> result.loadBody()
+							.then(body -> HttpResponse.ofCode(result.getCode())
+								.withBody(encodeAscii("FORWARDED: " + body.getString(UTF_8)))
+								.toPromise()));
+				})
+			.withListenPort(proxyServerPort)
+			.build();
 		proxyServer.listen();
 
 		Thread proxyServerThread = new Thread(eventloop2);
@@ -97,29 +97,29 @@ public final class SimpleProxyServerTest {
 		OutputStream stream = socket.getOutputStream();
 
 		stream.write(encodeAscii("""
-				GET /abc HTTP/1.1\r
-				Host: localhost\r
-				Connection: keep-alive
-				\r
-				"""));
+			GET /abc HTTP/1.1\r
+			Host: localhost\r
+			Connection: keep-alive
+			\r
+			"""));
 		readAndAssert(socket.getInputStream(), """
-				HTTP/1.1 200 OK\r
-				Connection: keep-alive\r
-				Content-Length: 15\r
-				\r
-				FORWARDED: /abc""");
+			HTTP/1.1 200 OK\r
+			Connection: keep-alive\r
+			Content-Length: 15\r
+			\r
+			FORWARDED: /abc""");
 		stream.write(encodeAscii("""
-				GET /hello HTTP/1.1\r
-				Host: localhost\r
-				Connection: close
-				\r
-				"""));
+			GET /hello HTTP/1.1\r
+			Host: localhost\r
+			Connection: close
+			\r
+			"""));
 		readAndAssert(socket.getInputStream(), """
-				HTTP/1.1 200 OK\r
-				Connection: close\r
-				Content-Length: 17\r
-				\r
-				FORWARDED: /hello""");
+			HTTP/1.1 200 OK\r
+			Connection: close\r
+			Content-Length: 17\r
+			\r
+			FORWARDED: /hello""");
 
 		echoServer.closeFuture().get();
 		proxyServer.closeFuture().get();

@@ -116,8 +116,8 @@ public final class PartitionedStreamTest {
 		targetFileSystemServers = new ArrayList<>();
 		dataflowServers = new ArrayList<>();
 		serverEventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		serverEventloop.keepAlive(true);
 		new Thread(serverEventloop).start();
 	}
@@ -269,8 +269,8 @@ public final class PartitionedStreamTest {
 			IFileSystem fs = createClient(getCurrentReactor(), targetFileSystemServers.get(i));
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
-					.then(supplier -> supplier.transformWith(new CSVDecoder())
-							.streamTo(ToListStreamConsumer.create(items))));
+				.then(supplier -> supplier.transformWith(new CSVDecoder())
+					.streamTo(ToListStreamConsumer.create(items))));
 			for (String item : items) {
 				allTargetItems.add(item);
 				Integer value = KEY_FUNCTION.apply(item);
@@ -281,15 +281,15 @@ public final class PartitionedStreamTest {
 		}
 
 		Set<String> sourceFiltered = await(Promises.toList(sourceFileSystemServers.stream()
-						.map(server -> createClient(getCurrentReactor(), server))
-						.map(client -> client.download(SOURCE_FILENAME)
-								.then(supplier -> supplier
-										.transformWith(new CSVDecoder())
-										.toList())))
-				.map(lists -> lists.stream()
-						.flatMap(Collection::stream)
-						.filter(new IsEven())
-						.collect(toSet())));
+				.map(server -> createClient(getCurrentReactor(), server))
+				.map(client -> client.download(SOURCE_FILENAME)
+					.then(supplier -> supplier
+						.transformWith(new CSVDecoder())
+						.toList())))
+			.map(lists -> lists.stream()
+				.flatMap(Collection::stream)
+				.filter(new IsEven())
+				.collect(toSet())));
 
 		assertEquals(sourceFiltered, allTargetItems);
 	}
@@ -297,106 +297,106 @@ public final class PartitionedStreamTest {
 	// region modules
 	private Module createServerModule() {
 		return Modules.combine(
-				DataflowModule.create(),
-				DatasetIdModule.create(),
-				createSerializersModule(),
-				new AbstractModule() {
-					@Provides
-					NioReactor reactor() {
-						return serverEventloop;
-					}
-
-					@Provides
-					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
-						return DataflowServer.builder(reactor, codec, locator, injector)
-								.withListenPort(getFreePort())
-								.build();
-					}
-
-					@Provides
-					@Named("source")
-					List<IFileSystem> sourceFileSystems(NioReactor reactor) {
-						return createClients(reactor, sourceFileSystemServers);
-					}
-
-					@Provides
-					@Named("target")
-					List<IFileSystem> targetFileSystems(NioReactor reactor) {
-						return createClients(reactor, targetFileSystemServers);
-					}
-
-					@Provides
-					@DatasetId("data source")
-					PartitionedStreamSupplierFactory<String> data(@Named("source") List<IFileSystem> fileSystems) {
-						return (partitionIndex, maxPartitions) -> {
-							StreamUnion<String> union = StreamUnion.create();
-							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
-								ChannelSuppliers.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
-										.transformWith(new CSVDecoder())
-										.streamTo(union.newInput());
-							}
-							return union.getOutput();
-						};
-					}
-
-					@Provides
-					@DatasetId("sorted data source")
-					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<IFileSystem> fileSystems) {
-						return (partitionIndex, maxPartitions) -> {
-							StreamReducer<Integer, String, Void> merger = StreamReducer.create();
-
-							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
-								ChannelSuppliers.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
-										.transformWith(new CSVDecoder())
-										.streamTo(merger.newInput(KEY_FUNCTION, mergeReducer()));
-							}
-							return merger.getOutput();
-						};
-					}
-
-					@Provides
-					@DatasetId("data target")
-					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<IFileSystem> fileSystems) {
-						return (partitionIndex, maxPartitions) -> {
-							StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) ->
-									acceptors[item.hashCode() % acceptors.length].accept(item));
-
-							List<Promise<Void>> uploads = new ArrayList<>();
-							for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
-								uploads.add(splitter.newOutput()
-										.streamTo(ChannelConsumers.ofPromise(fileSystems.get(i).upload(TARGET_FILENAME))
-												.transformWith(new CSVEncoder())));
-							}
-
-							return splitter.getInput()
-									.withAcknowledgement(ack -> ack.both(Promises.all(uploads)));
-						};
-					}
-
+			DataflowModule.create(),
+			DatasetIdModule.create(),
+			createSerializersModule(),
+			new AbstractModule() {
+				@Provides
+				NioReactor reactor() {
+					return serverEventloop;
 				}
+
+				@Provides
+				DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
+					return DataflowServer.builder(reactor, codec, locator, injector)
+						.withListenPort(getFreePort())
+						.build();
+				}
+
+				@Provides
+				@Named("source")
+				List<IFileSystem> sourceFileSystems(NioReactor reactor) {
+					return createClients(reactor, sourceFileSystemServers);
+				}
+
+				@Provides
+				@Named("target")
+				List<IFileSystem> targetFileSystems(NioReactor reactor) {
+					return createClients(reactor, targetFileSystemServers);
+				}
+
+				@Provides
+				@DatasetId("data source")
+				PartitionedStreamSupplierFactory<String> data(@Named("source") List<IFileSystem> fileSystems) {
+					return (partitionIndex, maxPartitions) -> {
+						StreamUnion<String> union = StreamUnion.create();
+						for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
+							ChannelSuppliers.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
+								.transformWith(new CSVDecoder())
+								.streamTo(union.newInput());
+						}
+						return union.getOutput();
+					};
+				}
+
+				@Provides
+				@DatasetId("sorted data source")
+				PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<IFileSystem> fileSystems) {
+					return (partitionIndex, maxPartitions) -> {
+						StreamReducer<Integer, String, Void> merger = StreamReducer.create();
+
+						for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
+							ChannelSuppliers.ofPromise(fileSystems.get(i).download(SOURCE_FILENAME))
+								.transformWith(new CSVDecoder())
+								.streamTo(merger.newInput(KEY_FUNCTION, mergeReducer()));
+						}
+						return merger.getOutput();
+					};
+				}
+
+				@Provides
+				@DatasetId("data target")
+				PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<IFileSystem> fileSystems) {
+					return (partitionIndex, maxPartitions) -> {
+						StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) ->
+							acceptors[item.hashCode() % acceptors.length].accept(item));
+
+						List<Promise<Void>> uploads = new ArrayList<>();
+						for (int i = partitionIndex; i < fileSystems.size(); i += maxPartitions) {
+							uploads.add(splitter.newOutput()
+								.streamTo(ChannelConsumers.ofPromise(fileSystems.get(i).upload(TARGET_FILENAME))
+									.transformWith(new CSVEncoder())));
+						}
+
+						return splitter.getInput()
+							.withAcknowledgement(ack -> ack.both(Promises.all(uploads)));
+					};
+				}
+
+			}
 		);
 	}
 
 	private static Module createClientModule() {
 		return Modules.combine(
-				DataflowModule.create(),
-				createSerializersModule(),
-				new AbstractModule() {
-					@Provides
-					NioReactor reactor() {
-						return getCurrentReactor();
-					}
-
-					@Provides
-					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator) {
-						return DataflowClient.create(reactor, codec, locator);
-					}
-
-					@Provides
-					Executor executor() {
-						return newSingleThreadExecutor();
-					}
+			DataflowModule.create(),
+			createSerializersModule(),
+			new AbstractModule() {
+				@Provides
+				NioReactor reactor() {
+					return getCurrentReactor();
 				}
+
+				@Provides
+				DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator) {
+					return DataflowClient.create(reactor, codec, locator);
+				}
+
+				@Provides
+				Executor executor() {
+					return newSingleThreadExecutor();
+				}
+			}
 		);
 	}
 
@@ -413,8 +413,8 @@ public final class PartitionedStreamTest {
 	// region helpers
 	private static List<IFileSystem> createClients(NioReactor reactor, List<HttpServer> servers) {
 		return servers.stream()
-				.map(server -> createClient(reactor, server))
-				.collect(Collectors.toList());
+			.map(server -> createClient(reactor, server))
+			.collect(Collectors.toList());
 	}
 
 	private static IFileSystem createClient(NioReactor reactor, HttpServer server) {
@@ -493,8 +493,8 @@ public final class PartitionedStreamTest {
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
 			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient))
-					.withListenPort(getFreePort())
-					.build();
+				.withListenPort(getFreePort())
+				.build();
 			listen(server);
 			servers.add(server);
 		}
@@ -508,8 +508,8 @@ public final class PartitionedStreamTest {
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
 			HttpServer server = HttpServer.builder(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient))
-					.withListenPort(getFreePort())
-					.build();
+				.withListenPort(getFreePort())
+				.build();
 			listen(server);
 			servers.add(server);
 		}
@@ -578,10 +578,10 @@ public final class PartitionedStreamTest {
 
 	private static List<Partition> toPartitions(List<DataflowServer> servers) {
 		return servers.stream()
-				.map(AbstractReactiveServer::getListenAddresses)
-				.flatMap(Collection::stream)
-				.map(Partition::new)
-				.collect(toList());
+			.map(AbstractReactiveServer::getListenAddresses)
+			.flatMap(Collection::stream)
+			.map(Partition::new)
+			.collect(toList());
 	}
 	// endregion
 
@@ -591,26 +591,26 @@ public final class PartitionedStreamTest {
 		public StreamSupplier<String> transform(ChannelSupplier<ByteBuf> supplier) {
 			BinaryChannelSupplier binaryChannelSupplier = BinaryChannelSupplier.of(supplier);
 			return ofChannelSupplier(ChannelSuppliers.ofAsyncSupplier(
-					() -> binaryChannelSupplier.decode(
-									bufs -> {
-										for (int i = 0; i < bufs.remainingBytes(); i++) {
-											if (bufs.peekByte(i) == ',') {
-												ByteBuf buf = bufs.takeExactSize(i);
-												bufs.skip(1);
-												return buf.asString(UTF_8);
-											}
-										}
-										return null;
-									})
-							.map(FunctionEx.identity(),
-									e -> {
-										if (e instanceof TruncatedDataException) {
-											ByteBufs bufs = binaryChannelSupplier.getBufs();
-											return bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8);
-										}
-										throw e;
-									}),
-					binaryChannelSupplier));
+				() -> binaryChannelSupplier.decode(
+						bufs -> {
+							for (int i = 0; i < bufs.remainingBytes(); i++) {
+								if (bufs.peekByte(i) == ',') {
+									ByteBuf buf = bufs.takeExactSize(i);
+									bufs.skip(1);
+									return buf.asString(UTF_8);
+								}
+							}
+							return null;
+						})
+					.map(FunctionEx.identity(),
+						e -> {
+							if (e instanceof TruncatedDataException) {
+								ByteBufs bufs = binaryChannelSupplier.getBufs();
+								return bufs.isEmpty() ? null : bufs.takeRemaining().asString(UTF_8);
+							}
+							throw e;
+						}),
+				binaryChannelSupplier));
 		}
 	}
 
@@ -619,13 +619,13 @@ public final class PartitionedStreamTest {
 		public StreamConsumer<String> transform(ChannelConsumer<ByteBuf> consumer) {
 			RefBoolean first = new RefBoolean(true);
 			return StreamConsumers.ofChannelConsumer(consumer
-					.map(item -> {
-						if (first.get()) {
-							first.flip();
-							return wrapUtf8(item);
-						}
-						return wrapUtf8("," + item);
-					}));
+				.map(item -> {
+					if (first.get()) {
+						first.flip();
+						return wrapUtf8(item);
+					}
+					return wrapUtf8("," + item);
+				}));
 		}
 	}
 

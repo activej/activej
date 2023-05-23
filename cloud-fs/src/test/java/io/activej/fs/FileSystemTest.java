@@ -114,10 +114,10 @@ public final class FileSystemTest {
 		Path path = clientPath.resolve("c.txt");
 
 		await(client.upload("1/c.txt")
-				.then(consumer -> ChannelFileReader.builderOpen(newCachedThreadPool(), path)
-						.then(file -> file.withBufferSize(MemSize.of(2))
-								.build()
-								.streamTo(consumer))));
+			.then(consumer -> ChannelFileReader.builderOpen(newCachedThreadPool(), path)
+				.then(file -> file.withBufferSize(MemSize.of(2))
+					.build()
+					.streamTo(consumer))));
 
 		assertEquals(-1, Files.mismatch(path, storagePath.resolve("1/c.txt")));
 	}
@@ -159,7 +159,7 @@ public final class FileSystemTest {
 
 		ByteBuf value = wrapUtf8("appended");
 		Exception exception = awaitException(ChannelSuppliers.ofValue(value)
-				.streamTo(client.append(path, size * 2)));
+			.streamTo(client.append(path, size * 2)));
 
 		assertThat(exception, instanceOf(IllegalOffsetException.class));
 	}
@@ -174,9 +174,9 @@ public final class FileSystemTest {
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename));
 
 		Exception exception = awaitException(ChannelSuppliers.concat(
-						ChannelSuppliers.ofValues(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
-						ChannelSuppliers.ofException(expectedException))
-				.streamTo(consumer));
+				ChannelSuppliers.ofValues(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+				ChannelSuppliers.ofException(expectedException))
+			.streamTo(consumer));
 
 		assertSame(expectedException, exception);
 
@@ -232,7 +232,7 @@ public final class FileSystemTest {
 		await(ChannelSuppliers.ofValue(value).streamTo(client.upload(filename)));
 
 		String result = await(await(client.download(filename, 3, Long.MAX_VALUE))
-				.toCollector(ByteBufs.collector())).asString(UTF_8);
+			.toCollector(ByteBufs.collector())).asString(UTF_8);
 		assertEquals("defgh", result);
 	}
 
@@ -253,7 +253,7 @@ public final class FileSystemTest {
 		await(ChannelSuppliers.ofValue(value).streamTo(client.upload(filename)));
 
 		String result = await(await(client.download(filename, 3, 2))
-				.toCollector(ByteBufs.collector())).asString(UTF_8);
+			.toCollector(ByteBufs.collector())).asString(UTF_8);
 		assertEquals("de", result);
 	}
 
@@ -381,8 +381,8 @@ public final class FileSystemTest {
 	@Test
 	public void copyWithHardLinksDoesNotCreateNewFile() {
 		client = FileSystem.builder(client.getReactor(), newCachedThreadPool(), storagePath)
-				.withHardLinkOnCopy(true)
-				.build();
+			.withHardLinkOnCopy(true)
+			.build();
 		await(client.start());
 
 		ByteBuf value2 = wrapUtf8("test");
@@ -432,7 +432,7 @@ public final class FileSystemTest {
 		}
 
 		String fileContents = await(client.download(filename)
-				.then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
+			.then(supplier -> supplier.toCollector(ByteBufs.collector()))).asString(UTF_8);
 
 		assertTrue(fileContents.contains("first"));
 		assertTrue(fileContents.contains("second"));
@@ -511,12 +511,12 @@ public final class FileSystemTest {
 	public void testUploadToSameNewDir() {
 		String dir = "newDir";
 		Set<String> filenames = IntStream.range(0, 5)
-				.mapToObj(i -> dir + IFileSystem.SEPARATOR + i + ".txt")
-				.collect(toSet());
+			.mapToObj(i -> dir + IFileSystem.SEPARATOR + i + ".txt")
+			.collect(toSet());
 
 		await(Promises.all(filenames.stream()
-				.map(filename -> client.upload(filename)
-						.then(ChannelConsumer::acceptEndOfStream))));
+			.map(filename -> client.upload(filename)
+				.then(ChannelConsumer::acceptEndOfStream))));
 
 		Map<String, FileMetadata> files = await(client.list(dir + IFileSystem.SEPARATOR + '*'));
 		assertEquals(filenames, files.keySet());
@@ -546,7 +546,7 @@ public final class FileSystemTest {
 
 		ByteBuf value = wrapUtf8("Test content");
 		Exception e = awaitException(ChannelSuppliers.ofValue(value)
-				.streamTo(client.upload("test.txt")));
+			.streamTo(client.upload("test.txt")));
 
 		assertThat(e, instanceOf(FileSystemIOException.class));
 		assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
@@ -558,11 +558,11 @@ public final class FileSystemTest {
 		assumeTrue("This test is located on a different drive than temporary directory", current.getRoot().equals(storagePath.getRoot()));
 
 		Set<String> expected = Set.of(
-				"1/a.txt",
-				"1/b.txt",
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
+			"1/a.txt",
+			"1/b.txt",
+			"2/3/a.txt",
+			"2/b/d.txt",
+			"2/b/e.txt"
 		);
 
 		Path relativePath = current.relativize(storagePath);

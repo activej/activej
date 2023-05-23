@@ -45,27 +45,28 @@ public abstract class AbstractGraphReducer<K, D, A, R> implements GraphReducer<K
 		}
 	}
 
-	protected abstract Promise<Optional<R>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
-			Map<K, OTCommit<K, D>> headCommits);
+	protected abstract Promise<Optional<R>> tryGetResult(
+		OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits
+	);
 
 	@Override
 	public final Promise<Result<R>> onCommit(OTCommit<K, D> commit) {
 		return tryGetResult(commit, accumulators, headCommits)
-				.then(result -> {
-					if (result.isPresent()) return completePromise(result.get());
-					Map<K, A> toHeads = accumulators.remove(commit.getId());
-					for (K parent : commit.getParents().keySet()) {
-						Map<K, A> parentToHeads = accumulators.computeIfAbsent(parent, $2 -> new HashMap<>());
-						for (Map.Entry<K, A> entry : toHeads.entrySet()) {
-							A newAccumulatedDiffs = diffsReducer.accumulate(entry.getValue(), commit.getParents().get(parent));
-							A existingAccumulatedDiffs = parentToHeads.get(entry.getKey());
-							A combinedAccumulatedDiffs = existingAccumulatedDiffs == null ?
-									newAccumulatedDiffs :
-									diffsReducer.combine(existingAccumulatedDiffs, newAccumulatedDiffs);
-							parentToHeads.put(entry.getKey(), combinedAccumulatedDiffs);
-						}
+			.then(result -> {
+				if (result.isPresent()) return completePromise(result.get());
+				Map<K, A> toHeads = accumulators.remove(commit.getId());
+				for (K parent : commit.getParents().keySet()) {
+					Map<K, A> parentToHeads = accumulators.computeIfAbsent(parent, $2 -> new HashMap<>());
+					for (Map.Entry<K, A> entry : toHeads.entrySet()) {
+						A newAccumulatedDiffs = diffsReducer.accumulate(entry.getValue(), commit.getParents().get(parent));
+						A existingAccumulatedDiffs = parentToHeads.get(entry.getKey());
+						A combinedAccumulatedDiffs = existingAccumulatedDiffs == null ?
+							newAccumulatedDiffs :
+							diffsReducer.combine(existingAccumulatedDiffs, newAccumulatedDiffs);
+						parentToHeads.put(entry.getKey(), combinedAccumulatedDiffs);
 					}
-					return resumePromise();
-				});
+				}
+				return resumePromise();
+			});
 	}
 }

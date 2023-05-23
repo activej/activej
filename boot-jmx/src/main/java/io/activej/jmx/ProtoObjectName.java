@@ -21,7 +21,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public record ProtoObjectName(@Nullable String className, String packageName, @Nullable Object qualifier, @Nullable String scope, @Nullable String workerPoolQualifier, @Nullable String workerId, @Nullable List<String> genericParameters) {
+public record ProtoObjectName(
+	@Nullable String className, String packageName, @Nullable Object qualifier, @Nullable String scope,
+	@Nullable String workerPoolQualifier, @Nullable String workerId, @Nullable List<String> genericParameters
+) {
 
 	public static ProtoObjectName create(@Nullable String className, String packageName) {
 		return new ProtoObjectName(className, packageName, null, null, null, null, null);
@@ -59,13 +62,13 @@ public record ProtoObjectName(@Nullable String className, String packageName, @N
 	@Override
 	public String toString() {
 		return "ProtoObjectName{" +
-				"className='" + className + '\'' +
-				", packageName='" + packageName + '\'' +
-				(qualifier == null ? "" : (", qualifier='" + qualifier + '\'')) +
-				(scope == null ? "" : (", scope='" + scope + '\'')) +
-				(workerPoolQualifier == null ? "" : (", workerPoolQualifier='" + workerPoolQualifier + '\'')) +
-				(workerId == null ? "" : (", workerId='" + workerId + '\'')) +
-				(genericParameters == null ? "" : (", genericParameters=" + genericParameters)) +
-				'}';
+			"className='" + className + '\'' +
+			", packageName='" + packageName + '\'' +
+			(qualifier == null ? "" : (", qualifier='" + qualifier + '\'')) +
+			(scope == null ? "" : (", scope='" + scope + '\'')) +
+			(workerPoolQualifier == null ? "" : (", workerPoolQualifier='" + workerPoolQualifier + '\'')) +
+			(workerId == null ? "" : (", workerId='" + workerId + '\'')) +
+			(genericParameters == null ? "" : (", genericParameters=" + genericParameters)) +
+			'}';
 	}
 }

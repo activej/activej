@@ -62,43 +62,43 @@ public final class FileSystemGuiServlet {
 		assert uploadServlet != null && downloadServlet != null;
 
 		return RoutingServlet.builder(reactor)
-				.with("/api/upload", uploadServlet)
-				.with("/api/download/*", downloadServlet)
-				.with(POST, "/api/newDir", request -> request.loadBody()
-						.then(() -> {
-							String dir = request.getPostParameter("dir");
-							if (dir == null || dir.isEmpty())
-								return HttpResponse.ofCode(400)
-										.withPlainText("Dir should not be empty")
-										.toPromise();
-							return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
-									.then($ -> HttpResponse.ok200().toPromise());
-						}))
-				.with("/", request -> {
-					String dir = decodeDir(request);
-					return fs.list(dir + "**")
-							.then(
-									files -> !dir.isEmpty() && files.isEmpty() ?
-											HttpResponse.redirect302("/").toPromise() :
-											HttpResponse.ok200()
-													.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
-													.withBody(applyTemplate(mustache, Map.of(
-															"title", title,
-															"dirContents", filesToDirView(new HashMap<>(files), dir),
-															"breadcrumbs", dirToBreadcrumbs(dir))))
-													.toPromise(),
-									e -> {
-										if (e instanceof FileSystemException) {
-											return HttpResponse.ofCode(500)
-													.withPlainText("Service unavailable")
-													.toPromise();
-										} else {
-											throw e;
-										}
-									});
-				})
-				.with("/*", $ -> HttpResponse.notFound404().toPromise())
-				.build();
+			.with("/api/upload", uploadServlet)
+			.with("/api/download/*", downloadServlet)
+			.with(POST, "/api/newDir", request -> request.loadBody()
+				.then(() -> {
+					String dir = request.getPostParameter("dir");
+					if (dir == null || dir.isEmpty())
+						return HttpResponse.ofCode(400)
+							.withPlainText("Dir should not be empty")
+							.toPromise();
+					return ChannelSuppliers.<ByteBuf>empty().streamTo(fs.upload(dir + "/" + HIDDEN_FILE))
+						.then($ -> HttpResponse.ok200().toPromise());
+				}))
+			.with("/", request -> {
+				String dir = decodeDir(request);
+				return fs.list(dir + "**")
+					.then(
+						files -> !dir.isEmpty() && files.isEmpty() ?
+							HttpResponse.redirect302("/").toPromise() :
+							HttpResponse.ok200()
+								.withHeader(CONTENT_TYPE, ofContentType(HTML_UTF_8))
+								.withBody(applyTemplate(mustache, Map.of(
+									"title", title,
+									"dirContents", filesToDirView(new HashMap<>(files), dir),
+									"breadcrumbs", dirToBreadcrumbs(dir))))
+								.toPromise(),
+						e -> {
+							if (e instanceof FileSystemException) {
+								return HttpResponse.ofCode(500)
+									.withPlainText("Service unavailable")
+									.toPromise();
+							} else {
+								throw e;
+							}
+						});
+			})
+			.with("/*", $ -> HttpResponse.notFound404().toPromise())
+			.build();
 	}
 
 	private static ByteBuf applyTemplate(Mustache mustache, Map<String, Object> scopes) {
@@ -138,10 +138,10 @@ public final class FileSystemGuiServlet {
 	private static List<Dir> dirToBreadcrumbs(String dir) {
 		Ref<String> fullPath = new Ref<>("");
 		return Arrays.stream(dir.split("/+"))
-				.map(String::trim)
-				.filter(not(String::isEmpty))
-				.map(pathPart -> new Dir(pathPart, fullPath.value += (fullPath.value.isEmpty() ? "" : '/') + pathPart))
-				.collect(toList());
+			.map(String::trim)
+			.filter(not(String::isEmpty))
+			.map(pathPart -> new Dir(pathPart, fullPath.value += (fullPath.value.isEmpty() ? "" : '/') + pathPart))
+			.collect(toList());
 	}
 
 }

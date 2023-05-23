@@ -87,26 +87,26 @@ public final class DataflowClient extends AbstractNioReactive {
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		checkInReactorThread(this);
 		return StreamSuppliers.ofPromise(TcpSocket.connect(reactor, address, 0, socketSettings)
-				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
-				.then(socket -> {
-					IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
-					return performHandshake(messaging)
-							.then(() -> messaging.send(new Download(streamId))
-									.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
-							.map($ -> messaging.receiveBinaryStream()
-									.transformWith(transformer)
-									.transformWith(ChannelDeserializer.builder(streamSchema.createSerializer(serializers))
-											.withExplicitEndOfStream()
-											.build())
-									.transformWith(new StreamTraceCounter<>(streamId, address))
-									.withEndOfStream(eos -> eos
-											.mapException(e -> (e instanceof IOException ||
-													e instanceof UnknownFormatException ||
-													e instanceof TruncatedDataException) ?
-													new DataflowStacklessException("Error when downloading from " + address, e) :
-													new DataflowException("Error when downloading from " + address, e))
-											.whenComplete(messaging::close)));
-				}));
+			.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
+			.then(socket -> {
+				IMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+				return performHandshake(messaging)
+					.then(() -> messaging.send(new Download(streamId))
+						.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
+					.map($ -> messaging.receiveBinaryStream()
+						.transformWith(transformer)
+						.transformWith(ChannelDeserializer.builder(streamSchema.createSerializer(serializers))
+							.withExplicitEndOfStream()
+							.build())
+						.transformWith(new StreamTraceCounter<>(streamId, address))
+						.withEndOfStream(eos -> eos
+							.mapException(e -> (e instanceof IOException ||
+								e instanceof UnknownFormatException ||
+								e instanceof TruncatedDataException) ?
+								new DataflowStacklessException("Error when downloading from " + address, e) :
+								new DataflowException("Error when downloading from " + address, e))
+							.whenComplete(messaging::close)));
+			}));
 	}
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema) {
@@ -128,10 +128,10 @@ public final class DataflowClient extends AbstractNioReactive {
 			this.output = new Output();
 
 			input.getAcknowledgement()
-					.whenException(output::closeEx);
+				.whenException(output::closeEx);
 			output.getAcknowledgement()
-					.whenResult(input::acknowledge)
-					.whenException(input::closeEx);
+				.whenResult(input::acknowledge)
+				.whenException(input::closeEx);
 		}
 
 		@Override
@@ -184,20 +184,20 @@ public final class DataflowClient extends AbstractNioReactive {
 		public Promise<Void> execute(long taskId, List<Node> nodes) {
 			checkInReactorThread(this);
 			return performHandshake(messaging)
-					.then(() -> messaging.send(new Execute(taskId, nodes))
-							.mapException(IOException.class, e -> new DataflowStacklessException("Failed to send command to " + address, e)))
-					.then(() -> messaging.receive()
-							.mapException(IOException.class, e -> new DataflowStacklessException("Failed to receive response from " + address, e)))
-					.map(expectResponse(Result.class))
-					.whenException(messaging::closeEx)
-					.whenResult(response -> {
-						messaging.close();
-						String error = response.error();
-						if (error != null) {
-							throw new DataflowException("Error on remote server " + address + ": " + error);
-						}
-					})
-					.toVoid();
+				.then(() -> messaging.send(new Execute(taskId, nodes))
+					.mapException(IOException.class, e -> new DataflowStacklessException("Failed to send command to " + address, e)))
+				.then(() -> messaging.receive()
+					.mapException(IOException.class, e -> new DataflowStacklessException("Failed to receive response from " + address, e)))
+				.map(expectResponse(Result.class))
+				.whenException(messaging::closeEx)
+				.whenResult(response -> {
+					messaging.close();
+					String error = response.error();
+					if (error != null) {
+						throw new DataflowException("Error on remote server " + address + ": " + error);
+					}
+				})
+				.toVoid();
 		}
 
 		@Override
@@ -208,9 +208,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	}
 
-	private static <T extends DataflowResponse> FunctionEx<DataflowResponse, T> expectResponse(
-			Class<T> expectedClass
-	) {
+	private static <T extends DataflowResponse> FunctionEx<DataflowResponse, T> expectResponse(Class<T> expectedClass) {
 		return response -> {
 			if (!expectedClass.isAssignableFrom(response.getClass())) {
 				throw new DataflowException("Unexpected response: " + response);
@@ -223,22 +221,22 @@ public final class DataflowClient extends AbstractNioReactive {
 	public Promise<Session> connect(InetSocketAddress address) {
 		checkInReactorThread(this);
 		return TcpSocket.connect(reactor, address, 0, socketSettings)
-				.map(socket -> new Session(address, socket))
-				.mapException(e -> new DataflowException("Could not connect to " + address, e));
+			.map(socket -> new Session(address, socket))
+			.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}
 
 	public static Promise<Void> performHandshake(IMessaging<DataflowResponse, DataflowRequest> messaging) {
 		return messaging.send(new Handshake(DataflowServer.VERSION))
-				.then(messaging::receive)
-				.map(expectResponse(DataflowResponse.Handshake.class))
-				.mapException(IOException.class, DataflowStacklessException::new)
-				.whenResult(handshakeResponse -> {
-					HandshakeFailure handshakeFailure = handshakeResponse.handshakeFailure();
-					if (handshakeFailure != null) {
-						throw new DataflowException(String.format("Handshake failed: %s. Minimal allowed version: %s",
-								handshakeFailure.message(), handshakeFailure.minimalVersion()));
-					}
-				})
-				.toVoid();
+			.then(messaging::receive)
+			.map(expectResponse(DataflowResponse.Handshake.class))
+			.mapException(IOException.class, DataflowStacklessException::new)
+			.whenResult(handshakeResponse -> {
+				HandshakeFailure handshakeFailure = handshakeResponse.handshakeFailure();
+				if (handshakeFailure != null) {
+					throw new DataflowException(String.format("Handshake failed: %s. Minimal allowed version: %s",
+						handshakeFailure.message(), handshakeFailure.minimalVersion()));
+				}
+			})
+			.toVoid();
 	}
 }

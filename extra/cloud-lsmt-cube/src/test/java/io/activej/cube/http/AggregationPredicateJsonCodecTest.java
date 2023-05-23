@@ -13,13 +13,13 @@ import static io.activej.cube.Utils.toJson;
 
 public class AggregationPredicateJsonCodecTest {
 	private static final AggregationPredicateJsonCodec CODEC = AggregationPredicateJsonCodec.create(
-			Map.of(
-					"campaign", int.class,
-					"site", String.class,
-					"hourOfDay", int.class),
-			Map.of(
-					"eventCount", int.class,
-					"ctr", double.class)
+		Map.of(
+			"campaign", int.class,
+			"site", String.class,
+			"hourOfDay", int.class),
+		Map.of(
+			"eventCount", int.class,
+			"ctr", double.class)
 	);
 
 	@Test

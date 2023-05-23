@@ -36,8 +36,8 @@ public class SerializerFactory2Test {
 
 	private static SerializerFactory createBuilder() {
 		return SerializerFactory.builder()
-				.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class))
-				.build();
+			.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class))
+			.build();
 	}
 
 	public static class TestDataScalars {
@@ -105,7 +105,7 @@ public class SerializerFactory2Test {
 		}
 		{
 			int[] testData1 = new int[]{1, 2, 3};
-			int[] testData2 = doTest(new TypeT<@SerializeVarLength int []>() {}, testData1);
+			int[] testData2 = doTest(new TypeT<@SerializeVarLength int[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 		{
@@ -115,7 +115,7 @@ public class SerializerFactory2Test {
 		}
 		{
 			Integer[] testData1 = new Integer[]{1, 2, 3};
-			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer []>() {}, testData1);
+			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 		{
@@ -126,13 +126,13 @@ public class SerializerFactory2Test {
 
 		{
 			Integer[] testData1 = new Integer[]{1, 2, null, 3};
-			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer []>() {}, testData1);
+			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer[]>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 
 		{
 			Integer[][] testData1 = new Integer[][]{null, new Integer[]{null, 0}, new Integer[]{1, 2, 3}, new Integer[]{4, 5, 6}};
-			Integer[][] testData2 = doTest(new TypeT<@SerializeVarLength @SerializeNullable Integer [] @SerializeNullable []>() {}, testData1);
+			Integer[][] testData2 = doTest(new TypeT<@SerializeVarLength @SerializeNullable Integer[] @SerializeNullable []>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 	}

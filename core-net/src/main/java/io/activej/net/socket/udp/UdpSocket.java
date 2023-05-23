@@ -28,7 +28,6 @@ import io.activej.common.tuple.Tuple2;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ValueStats;
-import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettableCallback;
 import io.activej.reactor.AbstractNioReactive;
@@ -93,14 +92,14 @@ public final class UdpSocket extends AbstractNioReactive implements IUdpSocket, 
 		public JmxInspector(Duration smoothingWindow) {
 			this.creates = EventStats.create(smoothingWindow);
 			this.receives = ValueStats.builder(smoothingWindow)
-					.withUnit("bytes")
-					.withRate()
-					.build();
+				.withUnit("bytes")
+				.withRate()
+				.build();
 			this.receiveErrors = EventStats.create(smoothingWindow);
 			this.sends = ValueStats.builder(smoothingWindow)
-					.withUnit("bytes")
-					.withRate()
-					.build();
+				.withUnit("bytes")
+				.withRate()
+				.build();
 			this.sendErrors = EventStats.create(smoothingWindow);
 			this.closes = EventStats.create(smoothingWindow);
 		}

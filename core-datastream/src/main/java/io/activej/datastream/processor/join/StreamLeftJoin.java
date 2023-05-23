@@ -52,9 +52,10 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 
 	private final LeftJoiner<K, L, R, V> leftJoiner;
 
-	private StreamLeftJoin(Comparator<K> keyComparator,
-			Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
-			LeftJoiner<K, L, R, V> leftJoiner) {
+	private StreamLeftJoin(
+		Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
+		LeftJoiner<K, L, R, V> leftJoiner
+	) {
 		this.keyComparator = keyComparator;
 		this.leftJoiner = leftJoiner;
 		this.left = new Input<>(leftDeque);
@@ -72,9 +73,10 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 	 * @param rightKeyFunction function for counting keys of right stream
 	 * @param leftJoiner       joiner which will join streams
 	 */
-	public static <K, L, R, V> StreamLeftJoin<K, L, R, V> create(Comparator<K> keyComparator,
-			Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
-			LeftJoiner<K, L, R, V> leftJoiner) {
+	public static <K, L, R, V> StreamLeftJoin<K, L, R, V> create(
+		Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
+		LeftJoiner<K, L, R, V> leftJoiner
+	) {
 		return new StreamLeftJoin<>(keyComparator, leftKeyFunction, rightKeyFunction, leftJoiner);
 	}
 
@@ -103,8 +105,8 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 		protected void onEndOfStream() {
 			output.join();
 			output.getAcknowledgement()
-					.whenResult(this::acknowledge)
-					.whenException(this::closeEx);
+				.whenResult(this::acknowledge)
+				.whenException(this::closeEx);
 		}
 
 		@Override

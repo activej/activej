@@ -53,19 +53,19 @@ public final class SortedOffsetLimit<K, T> extends SortedDataset<K, T> {
 		List<StreamId> streamIds = input.channels(next);
 
 		return DatasetUtils.offsetLimit(next, streamIds, offset, limit,
-				(inputs, partition) -> {
-					List<StreamId> repartitioned = DatasetUtils.repartitionAndReduce(
-							context,
-							inputs,
-							streamSchema(),
-							keyFunction(),
-							keyComparator(),
-							mergeReducer(),
-							List.of(partition)
-					);
-					assert repartitioned.size() == 1;
-					return repartitioned.get(0);
-				});
+			(inputs, partition) -> {
+				List<StreamId> repartitioned = DatasetUtils.repartitionAndReduce(
+					context,
+					inputs,
+					streamSchema(),
+					keyFunction(),
+					keyComparator(),
+					mergeReducer(),
+					List.of(partition)
+				);
+				assert repartitioned.size() == 1;
+				return repartitioned.get(0);
+			});
 	}
 
 	@Override

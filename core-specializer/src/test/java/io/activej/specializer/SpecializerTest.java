@@ -68,13 +68,13 @@ public class SpecializerTest {
 	@Test
 	public void testIntUnaryOperator1() {
 		IntUnaryOperator instance =
-				new IntUnaryOperatorProduct(
-						new IntUnaryOperatorSum(
-								new IntUnaryOperatorSum(
-										new IntUnaryOperatorIdentity(),
-										new IntUnaryOperatorConst(5)),
-								new IntUnaryOperatorConst(-5)),
-						new IntUnaryOperatorConst(-1));
+			new IntUnaryOperatorProduct(
+				new IntUnaryOperatorSum(
+					new IntUnaryOperatorSum(
+						new IntUnaryOperatorIdentity(),
+						new IntUnaryOperatorConst(5)),
+					new IntUnaryOperatorConst(-5)),
+				new IntUnaryOperatorConst(-1));
 		int expected = instance.applyAsInt(5);
 		Specializer specializer = Specializer.create();
 //				.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath());

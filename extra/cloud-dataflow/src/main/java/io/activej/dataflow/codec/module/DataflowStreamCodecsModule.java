@@ -35,19 +35,19 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 		install(new DataflowResponseCodecsModule());
 
 		generate(new KeyPattern<StreamCodec<?>>() {}, (bindings, scope, key) ->
-				Binding.to(injector -> {
-							Set<Key<StreamCodec<?>>> generating = GENERATING.get();
-							try {
-								if (!generating.add(key)) {
-									return StreamCodecs.lazy(() -> doGenerate(key, injector));
-								}
-								return doGenerate(key, injector);
-							} finally {
-								generating.remove(key);
-							}
+			Binding.to(injector -> {
+					Set<Key<StreamCodec<?>>> generating = GENERATING.get();
+					try {
+						if (!generating.add(key)) {
+							return StreamCodecs.lazy(() -> doGenerate(key, injector));
+						}
+						return doGenerate(key, injector);
+					} finally {
+						generating.remove(key);
+					}
 
-						},
-						Injector.class));
+				},
+				Injector.class));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -81,8 +81,8 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 
 		for (Map.Entry<Integer, Class<?>> entry : subtypes.entrySet()) {
 			StreamCodec<?> codec = injector.getInstance(Key.ofType(
-					parameterizedType(StreamCodec.class, entry.getValue()),
-					SubtypeImpl.subtype(entry.getKey())));
+				parameterizedType(StreamCodec.class, entry.getValue()),
+				SubtypeImpl.subtype(entry.getKey())));
 
 			//noinspection rawtypes
 			codecSubtype.addSubtype(entry.getKey(), ((Class) entry.getValue()), codec);

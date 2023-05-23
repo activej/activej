@@ -1,13 +1,13 @@
 package io.activej.crdt.messaging;
 
 public sealed interface CrdtRequest permits
-		CrdtRequest.Download,
-		CrdtRequest.Handshake,
-		CrdtRequest.Ping,
-		CrdtRequest.Remove,
-		CrdtRequest.Take,
-		CrdtRequest.TakeAck,
-		CrdtRequest.Upload {
+	CrdtRequest.Download,
+	CrdtRequest.Handshake,
+	CrdtRequest.Ping,
+	CrdtRequest.Remove,
+	CrdtRequest.Take,
+	CrdtRequest.TakeAck,
+	CrdtRequest.Upload {
 
 	record Upload() implements CrdtRequest {
 	}

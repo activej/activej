@@ -25,22 +25,22 @@ public class BannerServerModule extends AbstractModule {
 
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
-			ICrdtMap<Long, GSet<Integer>> map,
-			IWriteAheadLog<Long, GSet<Integer>> writeAheadLog
+		ICrdtMap<Long, GSet<Integer>> map,
+		IWriteAheadLog<Long, GSet<Integer>> writeAheadLog
 	) {
 		return Map.of(
-				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
-					long userId = request.userId();
-					GSet<Integer> bannerIds = GSet.of(request.bannerIds());
-					return writeAheadLog.put(userId, bannerIds)
-							.then(() -> map.put(userId, bannerIds))
-							.map($ -> PutResponse.INSTANCE);
-				},
-				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request1 ->
-						map.get(request1.userId())
-								.map(GetResponse::new), IsBannerSeenRequest.class, (RpcRequestHandler<IsBannerSeenRequest, Boolean>) request2 ->
-						map.get(request2.userId())
-								.map(bannerIds1 -> bannerIds1 != null && bannerIds1.contains(request2.bannerId())));
+			PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
+				long userId = request.userId();
+				GSet<Integer> bannerIds = GSet.of(request.bannerIds());
+				return writeAheadLog.put(userId, bannerIds)
+					.then(() -> map.put(userId, bannerIds))
+					.map($ -> PutResponse.INSTANCE);
+			},
+			GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request1 ->
+				map.get(request1.userId())
+					.map(GetResponse::new), IsBannerSeenRequest.class, (RpcRequestHandler<IsBannerSeenRequest, Boolean>) request2 ->
+				map.get(request2.userId())
+					.map(bannerIds1 -> bannerIds1 != null && bannerIds1.contains(request2.bannerId())));
 	}
 
 	@Provides

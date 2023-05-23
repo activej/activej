@@ -14,27 +14,27 @@ import static io.activej.test.TestUtils.getFreePort;
 public final class GzipCompressingBehaviourExample {
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.withCurrentThread()
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.withCurrentThread()
+			.build();
 		RoutingServlet servlet = RoutingServlet.builder(eventloop)
-				// always responds in gzip
-				.with(GET, "/gzip/",
-						request -> HttpResponse.ok200()
-								.withBodyGzipCompression()
-								.withBody(encodeAscii("Hello!"))
-								.toPromise())
-				// never responds in gzip
-				.with(GET, "/nogzip/",
-						request -> HttpResponse.ok200()
-								.withBody(encodeAscii("Hello!"))
-								.toPromise())
-				.build();
+			// always responds in gzip
+			.with(GET, "/gzip/",
+				request -> HttpResponse.ok200()
+					.withBodyGzipCompression()
+					.withBody(encodeAscii("Hello!"))
+					.toPromise())
+			// never responds in gzip
+			.with(GET, "/nogzip/",
+				request -> HttpResponse.ok200()
+					.withBody(encodeAscii("Hello!"))
+					.toPromise())
+			.build();
 
 		HttpServer.builder(eventloop, servlet)
-				.withListenPort(getFreePort())
-				.build()
-				.listen();
+			.withListenPort(getFreePort())
+			.build()
+			.listen();
 
 		eventloop.run();
 
@@ -44,10 +44,10 @@ public final class GzipCompressingBehaviourExample {
 
 		// !sic, you should call withAcceptEncodingGzip for your request if you want to get the response gzipped
 		client.request(
-				HttpRequest.post("http://example.com")
-						.withBody(encodeAscii("Hello, world!"))
-						.withBodyGzipCompression()
-						.withHeader(ACCEPT_ENCODING, "gzip")
-						.build());
+			HttpRequest.post("http://example.com")
+				.withBody(encodeAscii("Hello, world!"))
+				.withBodyGzipCompression()
+				.withHeader(ACCEPT_ENCODING, "gzip")
+				.build());
 	}
 }

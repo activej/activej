@@ -68,24 +68,24 @@ public final class TestBlockingFileSystemInvariants {
 		second = new DefaultBlockingFileSystem(secondFileSystem);
 
 		initializeDirs(List.of(
-				"file",
-				"file2",
-				"directory/subdir/file3.txt",
-				"directory/file.txt",
-				"directory2/file2.txt"
+			"file",
+			"file2",
+			"directory/subdir/file3.txt",
+			"directory/file.txt",
+			"directory2/file2.txt"
 		));
 	}
 
 	@Parameterized.Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{
-						"Regular",
-						(UnaryOperator<BlockingFileSystem.Builder>) builder -> builder},
-				new Object[]{
-						"With Hard Link On Copy",
-						(UnaryOperator<BlockingFileSystem.Builder>) builder -> builder.withHardLinkOnCopy(true)
-				}
+			new Object[]{
+				"Regular",
+				(UnaryOperator<BlockingFileSystem.Builder>) builder -> builder},
+			new Object[]{
+				"With Hard Link On Copy",
+				(UnaryOperator<BlockingFileSystem.Builder>) builder -> builder.withHardLinkOnCopy(true)
+			}
 		);
 	}
 
@@ -487,8 +487,8 @@ public final class TestBlockingFileSystemInvariants {
 	@Test
 	public void copyAllMultipleFiles() {
 		both(client -> client.copyAll(Map.of(
-				"file", "newFile",
-				"file2", "newFile2"
+			"file", "newFile",
+			"file2", "newFile2"
 		)));
 
 		assertFileEquals(firstPath, secondPath, "file", "newFile");
@@ -518,10 +518,10 @@ public final class TestBlockingFileSystemInvariants {
 	public void copyAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.copyAll(Map.of(
-						"directory", "newDirectory",
-						"directory2", "newDirectory2"
-				))));
+			() -> client.copyAll(Map.of(
+				"directory", "newDirectory",
+				"directory2", "newDirectory2"
+			))));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -530,20 +530,20 @@ public final class TestBlockingFileSystemInvariants {
 	@Test
 	public void copyAllFilesAndDirectories() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.copyAll(Map.of(
-						"file", "newFile",
-						"directory", "newDirectory"
-				))));
+			() -> client.copyAll(Map.of(
+				"file", "newFile",
+				"directory", "newDirectory"
+			))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
 	public void copyAllWithFromNonExisting() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.copyAll(Map.of(
-						"file", "newFile",
-						"nonexistent", "newFile2"
-				))));
+			() -> client.copyAll(Map.of(
+				"file", "newFile",
+				"nonexistent", "newFile2"
+			))));
 
 		assertFilesAreSame(firstPath, secondPath);
 	}
@@ -551,10 +551,10 @@ public final class TestBlockingFileSystemInvariants {
 	@Test
 	public void copyAllFromRoot() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.copyAll(Map.of(
-						"file", "newFile",
-						"", "newRoot"
-				))));
+			() -> client.copyAll(Map.of(
+				"file", "newFile",
+				"", "newRoot"
+			))));
 
 		assertFilesAreSame(firstPath, secondPath);
 	}
@@ -562,10 +562,10 @@ public final class TestBlockingFileSystemInvariants {
 	@Test
 	public void copyAllToRoot() {
 		both(client -> assertException(DirectoryNotEmptyException.class,
-				() -> client.copyAll(Map.of(
-						"file", "newFile",
-						"file2", ""
-				))));
+			() -> client.copyAll(Map.of(
+				"file", "newFile",
+				"file2", ""
+			))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -574,8 +574,8 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> {
 			try {
 				client.copyAll(Map.of(
-						"file", "newFile",
-						"file2", "../new"
+					"file", "newFile",
+					"file2", "../new"
 				));
 				fail();
 			} catch (FileSystemException e) {
@@ -589,8 +589,8 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> {
 			try {
 				client.copyAll(Map.of(
-						"file", "newFile",
-						"../new", "newFile2"
+					"file", "newFile",
+					"../new", "newFile2"
 				));
 				fail();
 			} catch (FileSystemException e) {
@@ -604,12 +604,12 @@ public final class TestBlockingFileSystemInvariants {
 	public void copyAllIsIdempotent() {
 		both(client -> {
 			client.copyAll(Map.of(
-					"file", "newFile",
-					"file2", "newFile2"
+				"file", "newFile",
+				"file2", "newFile2"
 			));
 			client.copyAll(Map.of(
-					"file", "newFile",
-					"file2", "newFile2"
+				"file", "newFile",
+				"file2", "newFile2"
 			));
 		});
 
@@ -627,8 +627,8 @@ public final class TestBlockingFileSystemInvariants {
 			Thread.sleep(10);
 
 			client.copyAll(Map.of(
-					"file", "newFile",
-					"file2", "newFile2"
+				"file", "newFile",
+				"file2", "newFile2"
 			));
 
 			FileMetadata newMeta1 = client.info("newFile");
@@ -675,8 +675,8 @@ public final class TestBlockingFileSystemInvariants {
 		byte[] bytesBefore2 = Files.readAllBytes(firstPath.resolve("file2"));
 
 		both(client -> client.moveAll(Map.of(
-				"file", "newFile",
-				"file2", "newFile2"
+			"file", "newFile",
+			"file2", "newFile2"
 		)));
 
 		bothPaths(path -> {
@@ -710,10 +710,10 @@ public final class TestBlockingFileSystemInvariants {
 	public void moveAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll(Map.of(
-						"directory", "newDirectory",
-						"directory2", "newDirectory2"
-				))));
+			() -> client.moveAll(Map.of(
+				"directory", "newDirectory",
+				"directory2", "newDirectory2"
+			))));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -722,37 +722,37 @@ public final class TestBlockingFileSystemInvariants {
 	@Test
 	public void moveAllFilesAndDirectories() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll(Map.of(
-						"file", "newFile",
-						"directory", "newDirectory"
-				))));
+			() -> client.moveAll(Map.of(
+				"file", "newFile",
+				"directory", "newDirectory"
+			))));
 	}
 
 	@Test
 	public void moveAllWithFromNonExisting() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll(Map.of(
-						"file", "newFile",
-						"nonexistent", "newFile2"
-				))));
+			() -> client.moveAll(Map.of(
+				"file", "newFile",
+				"nonexistent", "newFile2"
+			))));
 	}
 
 	@Test
 	public void moveAllFromRoot() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll(Map.of(
-						"file", "newFile",
-						"", "newRoot"
-				))));
+			() -> client.moveAll(Map.of(
+				"file", "newFile",
+				"", "newRoot"
+			))));
 	}
 
 	@Test
 	public void moveAllToRoot() {
 		both(client -> assertException(DirectoryNotEmptyException.class,
-				() -> client.moveAll(Map.of(
-						"file", "newFile",
-						"file2", ""
-				))));
+			() -> client.moveAll(Map.of(
+				"file", "newFile",
+				"file2", ""
+			))));
 	}
 
 	@Test
@@ -760,8 +760,8 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> {
 			try {
 				client.moveAll(Map.of(
-						"file", "newFile",
-						"file2", "../new"
+					"file", "newFile",
+					"file2", "../new"
 				));
 				fail();
 			} catch (FileSystemException e) {
@@ -775,8 +775,8 @@ public final class TestBlockingFileSystemInvariants {
 		both(client -> {
 			try {
 				client.moveAll(Map.of(
-						"file", "newFile",
-						"../new", "newFile2"
+					"file", "newFile",
+					"../new", "newFile2"
 				));
 				fail();
 			} catch (FileSystemException e) {
@@ -789,14 +789,14 @@ public final class TestBlockingFileSystemInvariants {
 	public void moveAllNotIdempotent() {
 		both(client -> {
 			client.moveAll(Map.of(
-					"file", "newFile",
-					"file2", "newFile2"
+				"file", "newFile",
+				"file2", "newFile2"
 			));
 			assertException(FileNotFoundException.class,
-					() -> client.moveAll(Map.of(
-							"file", "newFile",
-							"file2", "newFile2"
-					)));
+				() -> client.moveAll(Map.of(
+					"file", "newFile",
+					"file2", "newFile2"
+				)));
 		});
 
 		assertFilesAreSame(firstPath, secondPath);
@@ -811,8 +811,8 @@ public final class TestBlockingFileSystemInvariants {
 			Thread.sleep(10);
 
 			client.moveAll(Map.of(
-					"file", "newFile",
-					"file2", "newFile2"
+				"file", "newFile",
+				"file2", "newFile2"
 			));
 
 			FileMetadata newMeta1 = client.info("newFile");
@@ -834,8 +834,8 @@ public final class TestBlockingFileSystemInvariants {
 		byte[] bytesBefore2 = Files.readAllBytes(firstPath.resolve("file2"));
 
 		both(client -> client.moveAll(Map.of(
-				"file", "file",
-				"file2", "newFile2"
+			"file", "file",
+			"file2", "newFile2"
 		)));
 
 		bothPaths(path -> {
@@ -849,19 +849,19 @@ public final class TestBlockingFileSystemInvariants {
 	@Test
 	public void moveAllWithSelfNonExistent() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll(Map.of(
-						"file", "newFile",
-						"nonexistent", "nonexistent"
-				))));
+			() -> client.moveAll(Map.of(
+				"file", "newFile",
+				"nonexistent", "nonexistent"
+			))));
 	}
 
 	@Test
 	public void moveAllWithSelfDirectory() {
 		both(client -> assertException(FileNotFoundException.class,
-				() -> client.moveAll(Map.of(
-						"file", "newFile",
-						"directory", "directory"
-				))));
+			() -> client.moveAll(Map.of(
+				"file", "newFile",
+				"directory", "directory"
+			))));
 	}
 	//endregion
 

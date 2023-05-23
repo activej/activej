@@ -6,8 +6,8 @@ import static java.lang.System.currentTimeMillis;
 public final class EventloopExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 		long startTime = currentTimeMillis();
 
 		// #2

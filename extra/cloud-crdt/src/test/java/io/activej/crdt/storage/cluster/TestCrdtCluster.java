@@ -55,22 +55,22 @@ public final class TestCrdtCluster {
 			MapCrdtStorage<String, Integer> storage = MapCrdtStorage.create(reactor, ignoringTimestamp(Math::max));
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, Integer> server = CrdtServer.builder(reactor, storage, serializer)
-					.withListenAddresses(address)
-					.build();
+				.withListenAddresses(address)
+				.build();
 			server.listen();
 			servers.add(server);
 			clients.put("server_" + i, RemoteCrdtStorage.create(reactor, address, serializer));
 			remoteStorages.put("server_" + i, storage);
 		}
 		clients.put("dead_one", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5555), serializer)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.build());
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.build());
 		clients.put("dead_two", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5556), serializer)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.build());
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.build());
 		clients.put("dead_three", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5557), serializer)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.build());
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.build());
 
 		List<CrdtData<String, Integer>> data = new ArrayList<>();
 		long now = reactor.currentTimeMillis();
@@ -82,28 +82,28 @@ public final class TestCrdtCluster {
 			localStorage.put(datum);
 		}
 		ClusterCrdtStorage<String, Integer, String> cluster = ClusterCrdtStorage.create(
-				reactor,
-				IDiscoveryService.of(
-						RendezvousPartitionScheme.<String>builder()
-								.withPartitionGroup(
-										RendezvousPartitionGroup.builder(clients.keySet())
-												.withReplicas(REPLICATION_COUNT)
-												.withRepartition(true)
-												.build())
-								.withCrdtProvider(clients::get)
-								.build()
-				),
-				ignoringTimestamp(Integer::max));
+			reactor,
+			IDiscoveryService.of(
+				RendezvousPartitionScheme.<String>builder()
+					.withPartitionGroup(
+						RendezvousPartitionGroup.builder(clients.keySet())
+							.withReplicas(REPLICATION_COUNT)
+							.withRepartition(true)
+							.build())
+					.withCrdtProvider(clients::get)
+					.build()
+			),
+			ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
-				.then(() -> StreamSuppliers.ofIterator(localStorage.iterator())
-						.streamTo(StreamConsumers.ofPromise(cluster.upload())))
-				.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
+			.then(() -> StreamSuppliers.ofIterator(localStorage.iterator())
+				.streamTo(StreamConsumers.ofPromise(cluster.upload())))
+			.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
 
 		Map<CrdtData<String, Integer>, Integer> result = new HashMap<>();
 
 		remoteStorages.values().forEach(v -> v.iterator()
-				.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
+			.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
 
 		assertEquals(Set.copyOf(data), result.keySet());
 		for (Integer count : result.values()) {
@@ -137,42 +137,42 @@ public final class TestCrdtCluster {
 
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, Set<Integer>> server = CrdtServer.builder(reactor, storage, serializer)
-					.withListenAddresses(address)
-					.build();
+				.withListenAddresses(address)
+				.build();
 			server.listen();
 			servers.add(server);
 			clients.put("server_" + i, RemoteCrdtStorage.builder(reactor, address, serializer)
-					.withConnectTimeout(Duration.ofSeconds(1))
-					.build());
+				.withConnectTimeout(Duration.ofSeconds(1))
+				.build());
 		}
 
 		clients.put("dead_one", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5555), serializer)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.build());
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.build());
 		clients.put("dead_two", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5556), serializer)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.build());
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.build());
 		clients.put("dead_three", RemoteCrdtStorage.builder(reactor, new InetSocketAddress(5557), serializer)
-				.withConnectTimeout(Duration.ofSeconds(1))
-				.build());
+			.withConnectTimeout(Duration.ofSeconds(1))
+			.build());
 
 		MapCrdtStorage<String, Set<Integer>> localStorage = MapCrdtStorage.create(reactor, union);
 		ClusterCrdtStorage<String, Set<Integer>, String> cluster = ClusterCrdtStorage.create(reactor,
-				IDiscoveryService.of(
-						RendezvousPartitionScheme.<String>builder()
-								.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
-										.withReplicas(REPLICATION_COUNT)
-										.withRepartition(true)
-										.build())
-								.withCrdtProvider(clients::get)
-								.build()),
-				union);
+			IDiscoveryService.of(
+				RendezvousPartitionScheme.<String>builder()
+					.withPartitionGroup(RendezvousPartitionGroup.builder(clients.keySet())
+						.withReplicas(REPLICATION_COUNT)
+						.withRepartition(true)
+						.build())
+					.withCrdtProvider(clients::get)
+					.build()),
+			union);
 
 		await(cluster.start()
-				.then(() -> cluster.download())
-				.then(supplier -> supplier
-						.streamTo(StreamConsumers.ofConsumer(localStorage::put)))
-				.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
+			.then(() -> cluster.download())
+			.then(supplier -> supplier
+				.streamTo(StreamConsumers.ofConsumer(localStorage::put)))
+			.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
 
 		assertEquals(Set.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));
 		assertEquals(Set.of(0, 1, 2, 3, 4), localStorage.get(key2));

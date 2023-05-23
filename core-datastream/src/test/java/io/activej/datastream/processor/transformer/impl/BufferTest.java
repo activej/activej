@@ -68,9 +68,9 @@ public class BufferTest {
 	public void testSupplierError() {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> supplier = StreamSuppliers.concat(
-				StreamSuppliers.ofValues(1, 2, 3, 4, 5),
-				StreamSuppliers.closingWithError(expectedException),
-				StreamSuppliers.ofValues(6, 7, 8, 9, 10)
+			StreamSuppliers.ofValues(1, 2, 3, 4, 5),
+			StreamSuppliers.closingWithError(expectedException),
+			StreamSuppliers.ofValues(6, 7, 8, 9, 10)
 		);
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
@@ -91,10 +91,10 @@ public class BufferTest {
 
 		Buffer<Integer> buffer = new Buffer<>(1, 2);
 		Exception exception = awaitException(supplier.streamTo(consumer
-				.transformWith(buffer)
-				.transformWith(decorate(promise -> promise.then(
-						item -> item == 5 ? Promise.ofException(expectedException) : Promise.of(item))))
-				.transformWith(randomlySuspending())));
+			.transformWith(buffer)
+			.transformWith(decorate(promise -> promise.then(
+				item -> item == 5 ? Promise.ofException(expectedException) : Promise.of(item))))
+			.transformWith(randomlySuspending())));
 		assertSame(expectedException, exception);
 
 		assertEquals(List.of(1, 2, 3, 4, 5), consumer.getList());

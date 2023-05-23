@@ -115,8 +115,8 @@ public final class CalciteClientModule extends AbstractModule {
 	@Provides
 	SqlParser.Config parserConfig() {
 		return SqlParser.config()
-				.withLex(Lex.JAVA)
-				.withQuoting(Quoting.DOUBLE_QUOTE);
+			.withLex(Lex.JAVA)
+			.withQuoting(Quoting.DOUBLE_QUOTE);
 	}
 
 	@Provides
@@ -125,8 +125,10 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlDataflow calciteSqlDataflow(Reactor reactor, DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
-			List<Partition> partitions, RelToDatasetConverter relToDatasetConverter) {
+	SqlDataflow calciteSqlDataflow(
+		Reactor reactor, DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter,
+		RelOptPlanner planner, List<Partition> partitions, RelToDatasetConverter relToDatasetConverter
+	) {
 		return SqlDataflow.create(reactor, client, partitions, parserConfig, sqlToRelConverter, planner, relToDatasetConverter);
 	}
 }

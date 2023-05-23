@@ -42,8 +42,8 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
 		RpcStrategy shardingStrategy = sharding(
-				(Integer item) -> item % shardsAmount,
-				servers(address1, address2, address3));
+			(Integer item) -> item % shardsAmount,
+			servers(address1, address2, address3));
 		RpcSender senderSharding;
 		int timeout = 50;
 
@@ -72,8 +72,8 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
 		RpcStrategy shardingStrategy = sharding(
-				(Integer item) -> item % shardsAmount,
-				servers(address1, address2, address3));
+			(Integer item) -> item % shardsAmount,
+			servers(address1, address2, address3));
 
 		// we don't add connection for ADDRESS_1
 		pool.put(address2, connection2);

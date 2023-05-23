@@ -23,17 +23,17 @@ public final class TaskSchedulerTest {
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
 		TaskScheduler scheduler = TaskScheduler.builder(eventloop, () -> settablePromise)
-				.withSchedule(TaskScheduler.Schedule.immediate())
-				.build();
+			.withSchedule(TaskScheduler.Schedule.immediate())
+			.build();
 		scheduler.start();
 
 		await(Promise.complete().async()
-				.then(() -> {
-					Promise<?> stopPromise = scheduler.stop();
-					assertFalse(stopPromise.isComplete());
-					settablePromise.set(null);
-					return stopPromise;
-				}));
+			.then(() -> {
+				Promise<?> stopPromise = scheduler.stop();
+				assertFalse(stopPromise.isComplete());
+				settablePromise.set(null);
+				return stopPromise;
+			}));
 
 		eventloop.run();
 	}
@@ -44,18 +44,18 @@ public final class TaskSchedulerTest {
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
 		TaskScheduler scheduler = TaskScheduler.builder(eventloop, () -> Promise.ofException(new Exception()))
-				.withRetryPolicy(RetryPolicy.immediateRetry())
-				.withSchedule(TaskScheduler.Schedule.immediate())
-				.build();
+			.withRetryPolicy(RetryPolicy.immediateRetry())
+			.withSchedule(TaskScheduler.Schedule.immediate())
+			.build();
 		scheduler.start();
 
 		await(Promise.complete().async()
-				.then(() -> {
-					Promise<?> stopPromise = scheduler.stop();
-					assertFalse(stopPromise.isComplete());
-					settablePromise.set(null);
-					return stopPromise;
-				}));
+			.then(() -> {
+				Promise<?> stopPromise = scheduler.stop();
+				assertFalse(stopPromise.isComplete());
+				settablePromise.set(null);
+				return stopPromise;
+			}));
 
 		eventloop.run();
 	}

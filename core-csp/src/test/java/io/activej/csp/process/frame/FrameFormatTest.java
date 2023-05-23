@@ -63,22 +63,22 @@ public class FrameFormatTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"LZ4 format", lz4(), false, true},
-				new Object[]{"Legacy LZ4 format", lz4Legacy(), false, true},
+			new Object[]{"LZ4 format", lz4(), false, true},
+			new Object[]{"Legacy LZ4 format", lz4Legacy(), false, true},
 
-				new Object[]{"Size prefixed", FrameFormats.sizePrefixed(), false, true},
-				new Object[]{"Identity", FrameFormats.identity(), true, true},
+			new Object[]{"Size prefixed", FrameFormats.sizePrefixed(), false, true},
+			new Object[]{"Identity", FrameFormats.identity(), true, true},
 
-				new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(lz4(), lz4Legacy()), false, true},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(lz4Legacy(), lz4()), false, true},
-				new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(lz4Legacy(), lz4Legacy()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(lz4(), lz4()), false, true},
-				new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(lz4(), FrameFormats.identity()), true, true},
+			new Object[]{"Compound: Encoded with LZ4, decoded with legacy LZ4", testCompound(lz4(), lz4Legacy()), false, true},
+			new Object[]{"Compound: Encoded with legacy LZ4, decoded with LZ4", testCompound(lz4Legacy(), lz4()), false, true},
+			new Object[]{"Compound: Encoded with legacy LZ4, decoded with two legacy LZ4s", testCompound(lz4Legacy(), lz4Legacy()), false, true},
+			new Object[]{"Compound: Encoded with LZ4, decoded with two LZ4s", testCompound(lz4(), lz4()), false, true},
+			new Object[]{"Compound: Encoded with LZ4, decoded with Identity", testCompound(lz4(), FrameFormats.identity()), true, true},
 
-				new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER), false, true},
-				new Object[]{"With random magic number: Identity", withMagicNumber(identity(), RANDOM_MAGIC_NUMBER), true, false},
-				new Object[]{"With random magic number: LZ4", withMagicNumber(lz4(), RANDOM_MAGIC_NUMBER), false, true},
-				new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(lz4Legacy(), RANDOM_MAGIC_NUMBER), false, true}
+			new Object[]{"With random magic number: Size prefixed", withMagicNumber(sizePrefixed(), RANDOM_MAGIC_NUMBER), false, true},
+			new Object[]{"With random magic number: Identity", withMagicNumber(identity(), RANDOM_MAGIC_NUMBER), true, false},
+			new Object[]{"With random magic number: LZ4", withMagicNumber(lz4(), RANDOM_MAGIC_NUMBER), false, true},
+			new Object[]{"With random magic number: Legacy LZ4", withMagicNumber(lz4Legacy(), RANDOM_MAGIC_NUMBER), false, true}
 		);
 	}
 
@@ -91,10 +91,10 @@ public class FrameFormatTest {
 		byte[] expected = buffers.stream().map(ByteBuf::slice).collect(ByteBufs.collector()).asArray();
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofList(buffers)
-				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(64), MemSize.of(128)))
-				.transformWith(ChannelFrameEncoder.create(frameFormat))
-				.transformWith(ChannelTransformers.chunkBytes(MemSize.of(64), MemSize.of(128)))
-				.transformWith(ChannelFrameDecoder.create(frameFormat));
+			.transformWith(ChannelTransformers.chunkBytes(MemSize.of(64), MemSize.of(128)))
+			.transformWith(ChannelFrameEncoder.create(frameFormat))
+			.transformWith(ChannelTransformers.chunkBytes(MemSize.of(64), MemSize.of(128)))
+			.transformWith(ChannelFrameDecoder.create(frameFormat));
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));
 		assertArrayEquals(expected, collected.asArray());
@@ -152,14 +152,14 @@ public class FrameFormatTest {
 		ByteBufs bufs = new ByteBufs();
 
 		await(ChannelSuppliers.ofValue(ByteBufStrings.wrapAscii("TestData")).transformWith(compressor)
-				.streamTo(ChannelConsumers.ofConsumer(bufs::add)));
+			.streamTo(ChannelConsumers.ofConsumer(bufs::add)));
 
 		// add trailing 0 - bytes
 		bufs.add(ByteBuf.wrapForReading(new byte[10]));
 
 		Exception e = awaitException(ChannelSuppliers.ofValue(bufs.takeRemaining())
-				.transformWith(decompressor)
-				.streamTo(ChannelConsumers.ofConsumer(ByteBuf::recycle)));
+			.transformWith(decompressor)
+			.streamTo(ChannelConsumers.ofConsumer(ByteBuf::recycle)));
 
 		assertThat(e, instanceOf(UnexpectedDataException.class));
 	}
@@ -198,7 +198,7 @@ public class FrameFormatTest {
 			encoderBuilder = encoderBuilder.withEncoderResets();
 		}
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSuppliers.ofValues(ByteBuf.wrapForReading(data1), ByteBuf.wrapForReading(data2))
-				.transformWith(encoderBuilder.build());
+			.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
@@ -211,7 +211,7 @@ public class FrameFormatTest {
 			ByteBufs bufs = new ByteBufs();
 			bufs.add(compressed.slice());
 			ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofValues(bufs.takeExactSize(i), bufs.takeRemaining())
-					.transformWith(decoderBuilder.build());
+				.transformWith(decoderBuilder.build());
 
 			ByteBuf resultBuf = await(supplier.toCollector(ByteBufs.collector()));
 			assertArrayEquals(expected, resultBuf.asArray());
@@ -221,8 +221,8 @@ public class FrameFormatTest {
 
 	private void doTest(byte[] data, boolean singleByteChunks, boolean resets) {
 		MemSize chunkSizeMin = singleByteChunks ?
-				MemSize.of(1) :
-				MemSize.bytes(ThreadLocalRandom.current().nextInt(1000) + 500);
+			MemSize.of(1) :
+			MemSize.bytes(ThreadLocalRandom.current().nextInt(1000) + 500);
 
 		ChannelFrameEncoder.Builder encoderBuilder = ChannelFrameEncoder.builder(frameFormat);
 		ChannelFrameDecoder.Builder decoderBuilder = ChannelFrameDecoder.builder(frameFormat);
@@ -233,14 +233,14 @@ public class FrameFormatTest {
 		}
 		ByteBuf value = ByteBuf.wrapForReading(data);
 		ChannelSupplier<ByteBuf> byteBufChannelSupplier = ChannelSuppliers.ofValue(value)
-				.transformWith(ChannelTransformers.chunkBytes(chunkSizeMin, chunkSizeMin))
-				.transformWith(encoderBuilder.build());
+			.transformWith(ChannelTransformers.chunkBytes(chunkSizeMin, chunkSizeMin))
+			.transformWith(encoderBuilder.build());
 
 		ByteBuf compressed = await(byteBufChannelSupplier.toCollector(ByteBufs.collector()));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSuppliers.ofValue(compressed)
-				.transformWith(ChannelTransformers.chunkBytes(chunkSizeMin, chunkSizeMin))
-				.transformWith(decoderBuilder.build());
+			.transformWith(ChannelTransformers.chunkBytes(chunkSizeMin, chunkSizeMin))
+			.transformWith(decoderBuilder.build());
 
 		ByteBuf collected = await(supplier.toCollector(ByteBufs.collector()));
 		assertArrayEquals(data, collected.asArray());

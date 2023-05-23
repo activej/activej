@@ -24,7 +24,7 @@ public final class DataflowRequestCodecsModule extends AbstractModule {
 	@Subtype(0)
 	StreamCodec<Handshake> handshake() {
 		return StreamCodec.create(Handshake::new,
-				Handshake::version, VERSION_STREAM_CODEC
+			Handshake::version, VERSION_STREAM_CODEC
 		);
 	}
 
@@ -32,18 +32,16 @@ public final class DataflowRequestCodecsModule extends AbstractModule {
 	@Subtype(1)
 	StreamCodec<Download> download() {
 		return StreamCodec.create(Download::new,
-				Download::streamId, STREAM_ID_STREAM_CODEC
+			Download::streamId, STREAM_ID_STREAM_CODEC
 		);
 	}
 
 	@Provides
 	@Subtype(2)
-	StreamCodec<Execute> execute(
-			StreamCodec<Node> nodeStreamCodec
-	) {
+	StreamCodec<Execute> execute(StreamCodec<Node> nodeStreamCodec) {
 		return StreamCodec.create(Execute::new,
-				Execute::taskId, StreamCodecs.ofVarLong(),
-				Execute::nodes, StreamCodecs.ofList(nodeStreamCodec)
+			Execute::taskId, StreamCodecs.ofVarLong(),
+			Execute::nodes, StreamCodecs.ofList(nodeStreamCodec)
 		);
 	}
 
@@ -51,7 +49,7 @@ public final class DataflowRequestCodecsModule extends AbstractModule {
 	@Subtype(3)
 	StreamCodec<GetTasks> getTasks() {
 		return StreamCodec.create(GetTasks::new,
-				GetTasks::taskId, StreamCodecs.ofNullable(StreamCodecs.ofVarLong())
+			GetTasks::taskId, StreamCodecs.ofNullable(StreamCodecs.ofVarLong())
 		);
 	}
 }

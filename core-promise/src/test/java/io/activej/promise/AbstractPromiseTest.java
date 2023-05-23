@@ -27,11 +27,11 @@ public final class AbstractPromiseTest {
 		SettablePromise<@Nullable Void> settablePromise = new SettablePromise<>();
 		StringBuilder sb = new StringBuilder();
 		settablePromise
-				.whenResult(() -> sb.append("1"))
-				.whenResult(() -> sb.append("2"))
-				.whenResult(() -> sb.append("3"))
-				.whenResult(() -> sb.append("4"))
-				.whenResult(() -> sb.append("5"));
+			.whenResult(() -> sb.append("1"))
+			.whenResult(() -> sb.append("2"))
+			.whenResult(() -> sb.append("3"))
+			.whenResult(() -> sb.append("4"))
+			.whenResult(() -> sb.append("5"));
 
 		settablePromise.set(null);
 

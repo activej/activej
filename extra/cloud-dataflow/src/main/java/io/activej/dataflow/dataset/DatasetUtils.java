@@ -38,13 +38,10 @@ import static io.activej.datastream.processor.reducer.Reducers.mergeReducer;
 
 public class DatasetUtils {
 
-	public static <K, I, O, A> List<StreamId> repartitionAndReduce(DataflowContext context,
-			List<StreamId> inputs,
-			StreamSchema<I> inputStreamSchema,
-			Function<I, K> keyFunction,
-			Comparator<K> keyComparator,
-			Reducer<K, I, O, A> reducer,
-			List<Partition> partitions) {
+	public static <K, I, O, A> List<StreamId> repartitionAndReduce(
+		DataflowContext context, List<StreamId> inputs, StreamSchema<I> inputStreamSchema, Function<I, K> keyFunction,
+		Comparator<K> keyComparator, Reducer<K, I, O, A> reducer, List<Partition> partitions
+	) {
 		DataflowGraph graph = context.getGraph();
 		int nonce = context.getNonce();
 		List<StreamId> outputStreamIds = new ArrayList<>();
@@ -80,24 +77,23 @@ public class DatasetUtils {
 		return outputStreamIds;
 	}
 
-	public static <K, I, O, A> List<StreamId> repartitionAndReduce(DataflowContext context,
-			LocallySortedDataset<K, I> input,
-			Reducer<K, I, O, A> reducer,
-			List<Partition> partitions) {
+	public static <K, I, O, A> List<StreamId> repartitionAndReduce(
+		DataflowContext context, LocallySortedDataset<K, I> input, Reducer<K, I, O, A> reducer,
+		List<Partition> partitions
+	) {
 		return repartitionAndReduce(context, input.channels(context.withoutFixedNonce()), input.streamSchema(), input.keyFunction(), input.keyComparator(), reducer, partitions);
 	}
 
-	public static <K, T> List<StreamId> repartitionAndSort(DataflowContext context, LocallySortedDataset<K, T> input,
-			List<Partition> partitions) {
+	public static <K, T> List<StreamId> repartitionAndSort(
+		DataflowContext context, LocallySortedDataset<K, T> input, List<Partition> partitions
+	) {
 		return repartitionAndReduce(context, input, mergeReducer(), partitions);
 	}
 
-	public static <T, K> List<StreamId> repartition(DataflowContext context,
-			List<StreamId> inputs,
-			StreamSchema<T> inputStreamSchema,
-			Function<T, K> keyFunction,
-			List<Partition> partitions) {
-
+	public static <T, K> List<StreamId> repartition(
+		DataflowContext context, List<StreamId> inputs, StreamSchema<T> inputStreamSchema, Function<T, K> keyFunction,
+		List<Partition> partitions
+	) {
 		DataflowGraph graph = context.getGraph();
 		int nonce = context.getNonce();
 		List<StreamId> outputStreamIds = new ArrayList<>();
@@ -133,15 +129,18 @@ public class DatasetUtils {
 		return outputStreamIds;
 	}
 
-	public static <T> StreamId forwardChannel(DataflowContext context, StreamSchema<T> streamSchema,
-			StreamId sourceStreamId, Partition targetPartition, int uploadIndex, int downloadIndex) {
+	public static <T> StreamId forwardChannel(
+		DataflowContext context, StreamSchema<T> streamSchema, StreamId sourceStreamId, Partition targetPartition,
+		int uploadIndex, int downloadIndex
+	) {
 		Partition sourcePartition = context.getGraph().getPartition(sourceStreamId);
 		return forwardChannel(context, streamSchema, sourcePartition, targetPartition, sourceStreamId, uploadIndex, downloadIndex);
 	}
 
-	private static <T> StreamId forwardChannel(DataflowContext context, StreamSchema<T> streamSchema,
-			Partition sourcePartition, Partition targetPartition,
-			StreamId sourceStreamId, int uploadIndex, int downloadIndex) {
+	private static <T> StreamId forwardChannel(
+		DataflowContext context, StreamSchema<T> streamSchema, Partition sourcePartition, Partition targetPartition,
+		StreamId sourceStreamId, int uploadIndex, int downloadIndex
+	) {
 		if (sourcePartition == targetPartition) {
 			return sourceStreamId;
 		}
@@ -163,13 +162,10 @@ public class DatasetUtils {
 		return node.getOutputs();
 	}
 
-	public static List<StreamId> offsetLimit(DataflowContext context,
-			List<StreamId> inputs,
-			long offset,
-			long limit,
-			BiFunction<List<StreamId>, Partition, StreamId> inputReducer
+	public static List<StreamId> offsetLimit(
+		DataflowContext context, List<StreamId> inputs, long offset, long limit,
+		BiFunction<List<StreamId>, Partition, StreamId> inputReducer
 	) {
-
 		if (offset == Skip.NO_SKIP && limit == Limiter.NO_LIMIT) return inputs;
 
 		DataflowGraph graph = context.getGraph();

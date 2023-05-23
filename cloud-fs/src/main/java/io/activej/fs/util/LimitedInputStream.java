@@ -43,7 +43,7 @@ public final class LimitedInputStream extends InputStream {
 	public int read(byte[] buf, int off, int len) throws IOException {
 		if (remaining > 0) {
 			int nRead = peer.read(
-					buf, off, (int) Math.min(len, remaining));
+				buf, off, (int) Math.min(len, remaining));
 
 			remaining -= nRead;
 

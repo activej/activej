@@ -23,9 +23,9 @@ public class RecordProjectionTest {
 	@Test
 	public void test1() {
 		RecordScheme schemeFrom = RecordScheme.builder()
-				.withField("int", int.class)
-				.withField("Integer", Integer.class)
-				.build();
+			.withField("int", int.class)
+			.withField("Integer", Integer.class)
+			.build();
 
 		RecordProjection projection = RecordProjection.projection(schemeFrom, "int", "Integer");
 
@@ -47,13 +47,13 @@ public class RecordProjectionTest {
 	@Test
 	public void test2() {
 		RecordScheme schemeFrom = RecordScheme.builder()
-				.withField("int", int.class)
-				.withField("Integer", Integer.class)
-				.build();
+			.withField("int", int.class)
+			.withField("Integer", Integer.class)
+			.build();
 
 		RecordScheme schemeTo = RecordScheme.builder(schemeFrom.getClassLoader())
-				.withField("x", int.class)
-				.build();
+			.withField("x", int.class)
+			.build();
 
 		Map<String, UnaryOperator<Expression>> mapping = new HashMap<>();
 		mapping.put("x", recordFrom -> add(schemeFrom.property(recordFrom, "int"), schemeFrom.property(recordFrom, "Integer")));

@@ -27,7 +27,7 @@ public final class HikariConfigConverter extends ComplexConfigConverter<HikariCo
 		return new HikariConfigConverter().new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, HikariConfigConverter>{
+	public final class Builder extends AbstractBuilder<Builder, HikariConfigConverter> {
 		private Builder() {}
 
 		public Builder withPoolName(String poolName) {

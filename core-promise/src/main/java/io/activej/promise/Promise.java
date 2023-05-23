@@ -123,9 +123,10 @@ public interface Promise<T> extends AsyncComputation<T> {
 		return cb;
 	}
 
-	static <T, R> Promise<R> ofCallback(T value, @Nullable Exception exception,
-			CallbackFunctionEx<? super T, R> fn,
-			CallbackFunctionEx<Exception, R> fnException) {
+	static <T, R> Promise<R> ofCallback(
+		T value, @Nullable Exception exception, CallbackFunctionEx<? super T, R> fn,
+		CallbackFunctionEx<Exception, R> fnException
+	) {
 		SettablePromise<R> cb = new SettablePromise<>();
 		try {
 			if (exception == null) fn.apply(value, cb);
@@ -444,8 +445,9 @@ public interface Promise<T> extends AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default <E extends Exception> Promise<T> mapException(Class<E> clazz,
-			FunctionEx<? super E, ? extends Exception> exceptionFn) {
+	default <E extends Exception> Promise<T> mapException(
+		Class<E> clazz, FunctionEx<? super E, ? extends Exception> exceptionFn
+	) {
 		return thenCallback((t, e, cb) -> {
 			if (e == null) cb.set(t);
 			else cb.setException(clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply((E) e) : e);
@@ -543,15 +545,14 @@ public interface Promise<T> extends AsyncComputation<T> {
 	 * @return new {@code Promise} which is a result of either first or second
 	 * function applied either to a result or an exception of {@code this} promise.
 	 */
-	default <U> Promise<U> then(
-			AsyncFunctionEx<? super T, U> fn,
-			AsyncFunctionEx<Exception, U> exceptionFn) {
+	default <U> Promise<U> then(AsyncFunctionEx<? super T, U> fn, AsyncFunctionEx<Exception, U> exceptionFn) {
 		return thenCallback((t, e, cb) -> (e == null ? fn.apply(t) : exceptionFn.apply(e)).subscribe(cb));
 	}
 
 	default <U> Promise<U> thenCallback(
-			CallbackFunctionEx<? super T, U> fn,
-			CallbackFunctionEx<Exception, U> exceptionFn) {
+		CallbackFunctionEx<? super T, U> fn,
+		CallbackFunctionEx<Exception, U> exceptionFn
+	) {
 		return thenCallback((t, e, cb) -> {
 			if (e == null) fn.apply(t, cb);
 			else exceptionFn.apply(e, cb);

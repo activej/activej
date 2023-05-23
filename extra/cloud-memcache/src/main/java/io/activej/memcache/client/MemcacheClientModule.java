@@ -43,20 +43,20 @@ public class MemcacheClientModule extends AbstractModule {
 	@Provides
 	IRpcClient rpcClient(NioReactor reactor, Config config) {
 		return RpcClient.builder(reactor)
-				.withStrategy(
-						RendezvousHashing.builder(HASH_FUNCTION)
-								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
-								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
-								.build())
-				.withMessageTypes(MESSAGE_TYPES)
-				.withStreamProtocol(
-						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
-						config.get(ofFrameFormat(), "protocol.frameFormat", null))
-				.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", SocketSettings.defaultInstance()))
-				.withConnectTimeout(config.get(ofDuration(), "client.connectSettings.connectTimeout", Duration.ofSeconds(10)))
-				.withReconnectInterval(config.get(ofDuration(), "client.connectSettings.reconnectInterval", Duration.ofSeconds(1)))
-				.withLogger(getLogger(IMemcacheClient.class))
-				.build();
+			.withStrategy(
+				RendezvousHashing.builder(HASH_FUNCTION)
+					.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
+					.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
+					.build())
+			.withMessageTypes(MESSAGE_TYPES)
+			.withStreamProtocol(
+				config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
+				config.get(ofFrameFormat(), "protocol.frameFormat", null))
+			.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", SocketSettings.defaultInstance()))
+			.withConnectTimeout(config.get(ofDuration(), "client.connectSettings.connectTimeout", Duration.ofSeconds(10)))
+			.withReconnectInterval(config.get(ofDuration(), "client.connectSettings.reconnectInterval", Duration.ofSeconds(1)))
+			.withLogger(getLogger(IMemcacheClient.class))
+			.build();
 	}
 
 	@Provides

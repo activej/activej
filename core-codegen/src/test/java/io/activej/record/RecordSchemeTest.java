@@ -21,9 +21,9 @@ public class RecordSchemeTest {
 	@Test
 	public void test() {
 		RecordScheme scheme1 = RecordScheme.builder()
-				.withField("id", int.class)
-				.withField("name", String.class)
-				.build();
+			.withField("id", int.class)
+			.withField("name", String.class)
+			.build();
 
 		Record record1 = scheme1.record();
 		RecordScheme scheme = record1.getScheme();
@@ -46,9 +46,9 @@ public class RecordSchemeTest {
 		assertEquals(record1.hashCode(), record2.hashCode());
 
 		RecordScheme scheme2 = RecordScheme.builder(scheme1.getClassLoader())
-				.withField("id", int.class)
-				.withField("name", String.class)
-				.build();
+			.withField("id", int.class)
+			.withField("name", String.class)
+			.build();
 
 		assertSame(scheme1.getRecordClass(), scheme2.getRecordClass());
 		assertStaticConstantsCleared();
@@ -57,8 +57,8 @@ public class RecordSchemeTest {
 	@Test
 	public void testInterfaceHashCode() {
 		RecordScheme scheme = RecordScheme.builder()
-				.withField("map", Map.class)
-				.build();
+			.withField("map", Map.class)
+			.build();
 
 		Record record = scheme.record();
 
@@ -73,24 +73,24 @@ public class RecordSchemeTest {
 	public void test2() {
 		Type listType = Types.parameterizedType(List.class, Integer.class);
 		RecordScheme scheme = RecordScheme.builder()
-				.withField("boolean", boolean.class)
-				.withField("char", char.class)
-				.withField("byte", byte.class)
-				.withField("short", short.class)
-				.withField("int", int.class)
-				.withField("long", long.class)
-				.withField("float", float.class)
-				.withField("double", double.class)
-				.withField("Boolean", Boolean.class)
-				.withField("Character", Character.class)
-				.withField("Byte", Byte.class)
-				.withField("Short", Short.class)
-				.withField("Integer", Integer.class)
-				.withField("Long", Long.class)
-				.withField("Float", Float.class)
-				.withField("Double", Double.class)
-				.withField("list", listType)
-				.build();
+			.withField("boolean", boolean.class)
+			.withField("char", char.class)
+			.withField("byte", byte.class)
+			.withField("short", short.class)
+			.withField("int", int.class)
+			.withField("long", long.class)
+			.withField("float", float.class)
+			.withField("double", double.class)
+			.withField("Boolean", Boolean.class)
+			.withField("Character", Character.class)
+			.withField("Byte", Byte.class)
+			.withField("Short", Short.class)
+			.withField("Integer", Integer.class)
+			.withField("Long", Long.class)
+			.withField("Float", Float.class)
+			.withField("Double", Double.class)
+			.withField("list", listType)
+			.build();
 
 		Record record = scheme.record();
 
@@ -139,11 +139,11 @@ public class RecordSchemeTest {
 	@Test
 	public void testHashCodeEqualsDefault() {
 		RecordScheme scheme = RecordScheme.builder()
-				.withField("id", int.class)
-				.withField("code", long.class)
-				.withField("name", String.class)
-				.withField("complex.name", String.class)
-				.build();
+			.withField("id", int.class)
+			.withField("code", long.class)
+			.withField("name", String.class)
+			.withField("complex.name", String.class)
+			.build();
 
 		Record record1 = scheme.record();
 		Record record2 = scheme.record();
@@ -172,12 +172,12 @@ public class RecordSchemeTest {
 	@Test
 	public void testHashCodeEquals() {
 		RecordScheme scheme = RecordScheme.builder()
-				.withField("id", int.class)
-				.withField("code", long.class)
-				.withField("name", String.class)
-				.withField("complex.name", String.class)
-				.withHashCodeEqualsFields("id", "code", "complex.name")
-				.build();
+			.withField("id", int.class)
+			.withField("code", long.class)
+			.withField("name", String.class)
+			.withField("complex.name", String.class)
+			.withHashCodeEqualsFields("id", "code", "complex.name")
+			.build();
 
 		Record record1 = scheme.record();
 		Record record2 = scheme.record();
@@ -214,12 +214,12 @@ public class RecordSchemeTest {
 	@Test
 	public void testComparator() {
 		RecordScheme scheme = RecordScheme.builder()
-				.withField("id", int.class)
-				.withField("code", long.class)
-				.withField("name", String.class)
-				.withField("complex.name", String.class)
-				.withComparatorFields("id", "code", "complex.name")
-				.build();
+			.withField("id", int.class)
+			.withField("code", long.class)
+			.withField("name", String.class)
+			.withField("complex.name", String.class)
+			.withComparatorFields("id", "code", "complex.name")
+			.build();
 
 		Comparator<Record> comparator = scheme.getRecordComparator();
 

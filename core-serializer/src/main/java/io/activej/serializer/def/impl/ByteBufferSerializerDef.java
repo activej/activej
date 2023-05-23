@@ -64,62 +64,62 @@ public final class ByteBufferSerializerDef extends AbstractSerializerDef impleme
 	@Override
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return let(
-				cast(value, ByteBuffer.class),
-				buffer -> {
-					if (!nullable) {
-						return let(call(buffer, "remaining"), remaining ->
-								sequence(
-										writeVarInt(buf, pos, remaining),
-										writeBytes(buf, pos, call(buffer, "array"), call(buffer, "position"), remaining)));
-					} else {
-						return ifNull(buffer,
-								writeByte(buf, pos, value((byte) 0)),
-								let(call(buffer, "remaining"), remaining ->
-										sequence(
-												writeVarInt(buf, pos, inc(remaining)),
-												writeBytes(buf, pos, call(buffer, "array"), call(buffer, "position"), remaining))));
-					}
-				});
+			cast(value, ByteBuffer.class),
+			buffer -> {
+				if (!nullable) {
+					return let(call(buffer, "remaining"), remaining ->
+						sequence(
+							writeVarInt(buf, pos, remaining),
+							writeBytes(buf, pos, call(buffer, "array"), call(buffer, "position"), remaining)));
+				} else {
+					return ifNull(buffer,
+						writeByte(buf, pos, value((byte) 0)),
+						let(call(buffer, "remaining"), remaining ->
+							sequence(
+								writeVarInt(buf, pos, inc(remaining)),
+								writeBytes(buf, pos, call(buffer, "array"), call(buffer, "position"), remaining))));
+				}
+			});
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return !wrapped ?
-				let(readVarInt(in),
-						length -> {
-							if (!nullable) {
-								return let(
-										arrayNew(byte[].class, length),
-										array ->
-												sequence(length,
-														readBytes(in, array),
-														staticCall(ByteBuffer.class, "wrap", array)));
-							} else {
-								return ifEq(length, value(0),
-										nullRef(ByteBuffer.class),
-										let(
-												arrayNew(byte[].class, dec(length)),
-												array -> sequence(
-														readBytes(in, array),
-														staticCall(ByteBuffer.class, "wrap", array))));
-							}
-						}) :
-				let(readVarInt(in),
-						length -> {
-							if (!nullable) {
-								return let(staticCall(ByteBuffer.class, "wrap", array(in), pos(in), length),
-										buf -> sequence(
-												move(in, length),
-												buf));
-							} else {
-								return ifEq(length, value(0),
-										nullRef(ByteBuffer.class),
-										let(staticCall(ByteBuffer.class, "wrap", array(in), pos(in), dec(length)),
-												result -> sequence(
-														move(in, length),
-														result)));
-							}
-						});
+			let(readVarInt(in),
+				length -> {
+					if (!nullable) {
+						return let(
+							arrayNew(byte[].class, length),
+							array ->
+								sequence(length,
+									readBytes(in, array),
+									staticCall(ByteBuffer.class, "wrap", array)));
+					} else {
+						return ifEq(length, value(0),
+							nullRef(ByteBuffer.class),
+							let(
+								arrayNew(byte[].class, dec(length)),
+								array -> sequence(
+									readBytes(in, array),
+									staticCall(ByteBuffer.class, "wrap", array))));
+					}
+				}) :
+			let(readVarInt(in),
+				length -> {
+					if (!nullable) {
+						return let(staticCall(ByteBuffer.class, "wrap", array(in), pos(in), length),
+							buf -> sequence(
+								move(in, length),
+								buf));
+					} else {
+						return ifEq(length, value(0),
+							nullRef(ByteBuffer.class),
+							let(staticCall(ByteBuffer.class, "wrap", array(in), pos(in), dec(length)),
+								result -> sequence(
+									move(in, length),
+									result)));
+					}
+				});
 	}
 
 	@Override

@@ -177,8 +177,9 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> T ensureClassAndCreateInstance(String className, Supplier<ClassGenerator<T>> classGenerator,
-			Object... arguments) {
+	public <T> T ensureClassAndCreateInstance(
+		String className, Supplier<ClassGenerator<T>> classGenerator, Object... arguments
+	) {
 		return createInstance(ensureClass(className, classGenerator), arguments);
 	}
 
@@ -187,8 +188,9 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassGenerator<T>> classGenerator,
-			Object... arguments) {
+	public <T> T ensureClassAndCreateInstance(
+		ClassKey<T> key, Supplier<ClassGenerator<T>> classGenerator, Object... arguments
+	) {
 		Class<T> aClass = ensureClass(key, classGenerator);
 		return createInstance(aClass, arguments);
 	}
@@ -273,8 +275,9 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(ClassKey, Function)
 	 */
-	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
-			Object... arguments) {
+	public <T> T ensureClassAndCreateInstance(
+		ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder, Object... arguments
+	) {
 		Class<T> aClass = ensureClass(key, bytecodeBuilder);
 		return createInstance(aClass, arguments);
 	}
@@ -282,8 +285,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	static <T> T createInstance(Class<T> aClass, Object[] arguments) {
 		try {
 			return aClass
-					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
-					.newInstance(arguments);
+				.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
+				.newInstance(arguments);
 		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 			throw new RuntimeException(e);
 		}
@@ -308,11 +311,11 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	@Override
 	public Map<String, Long> getDefinedClassesCountByType() {
 		return definedClasses.values().stream()
-				.map(aClass -> aClass.getSuperclass() == Object.class && aClass.getInterfaces().length != 0 ?
-						aClass.getInterfaces()[0] :
-						aClass.getSuperclass())
-				.map(Class::getName)
-				.collect(groupingBy(identity(), counting()));
+			.map(aClass -> aClass.getSuperclass() == Object.class && aClass.getInterfaces().length != 0 ?
+				aClass.getInterfaces()[0] :
+				aClass.getSuperclass())
+			.map(Class::getName)
+			.collect(groupingBy(identity(), counting()));
 	}
 
 	@Override
@@ -323,8 +326,8 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	@Override
 	public Map<String, Long> getCachedClassesCountByType() {
 		return cachedClasses.keySet().stream()
-				.map(key -> key.getKeyClass().getName())
-				.collect(groupingBy(identity(), counting()));
+			.map(key -> key.getKeyClass().getName())
+			.collect(groupingBy(identity(), counting()));
 	}
 	// endregion
 

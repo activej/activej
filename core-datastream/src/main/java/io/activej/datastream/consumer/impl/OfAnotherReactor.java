@@ -65,7 +65,7 @@ public final class OfAnotherReactor<T> extends AbstractStreamConsumer<T> {
 	@Override
 	protected void onStarted() {
 		internalSupplier.execute(() ->
-				internalSupplier.streamTo(anotherReactorConsumer));
+			internalSupplier.streamTo(anotherReactorConsumer));
 	}
 
 	@Override

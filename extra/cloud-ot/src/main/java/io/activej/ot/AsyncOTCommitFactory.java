@@ -38,7 +38,7 @@ public interface AsyncOTCommitFactory<K, D> {
 
 	default Promise<OTCommit<K, D>> createCommit(Set<K> parents, Function<K, List<D>> diffs, ToLongFunction<K> level) {
 		return createCommit(parents.stream()
-				.collect(toLinkedHashMap(parent -> new DiffsWithLevel<>(level.applyAsLong(parent), diffs.apply(parent)))));
+			.collect(toLinkedHashMap(parent -> new DiffsWithLevel<>(level.applyAsLong(parent), diffs.apply(parent)))));
 	}
 
 	default Promise<OTCommit<K, D>> createCommit(K parent, List<D> diffs, long level) {

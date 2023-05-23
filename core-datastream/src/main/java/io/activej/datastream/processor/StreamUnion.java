@@ -70,10 +70,10 @@ public final class StreamUnion<T> extends ImplicitlyReactive implements HasStrea
 		Input input = new Input();
 		inputs.add(input);
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		output.getAcknowledgement()
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 		return input;
 	}
 

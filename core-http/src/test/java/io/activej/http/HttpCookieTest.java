@@ -52,18 +52,18 @@ public class HttpCookieTest {
 	public void testRender() {
 		Instant date = Instant.ofEpochMilli(987654321098L); // "Thu, 19 Apr 2001 04:25:21 GMT";
 		HttpCookie cookie = HttpCookie.builder("name", "value")
-				.withExpirationDate(date)
-				.withMaxAge(Duration.ofSeconds(10))
-				.withPath("/test")
-				.withDomain("www.google.com")
-				.withSameSite(SameSite.NONE)
-				.withSecure(true)
-				.withHttpOnly(true)
-				.withExtension("Alhambra site")
-				.build();
+			.withExpirationDate(date)
+			.withMaxAge(Duration.ofSeconds(10))
+			.withPath("/test")
+			.withDomain("www.google.com")
+			.withSameSite(SameSite.NONE)
+			.withSecure(true)
+			.withHttpOnly(true)
+			.withExtension("Alhambra site")
+			.build();
 
 		String expected = "name=value; Expires=Thu, 19 Apr 2001 04:25:21 GMT; Max-Age=10; Domain=www.google.com; " +
-				"Path=/test; Secure; HttpOnly; SameSite=None; Alhambra site";
+			"Path=/test; Secure; HttpOnly; SameSite=None; Alhambra site";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);
 		cookie.renderFull(buf);
 		assertEquals(expected, ByteBufStrings.asAscii(buf));
@@ -73,18 +73,18 @@ public class HttpCookieTest {
 	public void testRenderMany() {
 		Instant date = Instant.ofEpochMilli(987654321098L); // "Thu, 19 Apr 2001 04:25:21 GMT";
 		HttpCookie cookie1 = HttpCookie.builder("name1", "value1")
-				.withExpirationDate(date)
-				.withMaxAge(Duration.ofSeconds(10))
-				.withPath("/test")
-				.withSameSite(SameSite.LAX)
-				.withDomain("www.google.com")
-				.withSecure(true)
-				.build();
+			.withExpirationDate(date)
+			.withMaxAge(Duration.ofSeconds(10))
+			.withPath("/test")
+			.withSameSite(SameSite.LAX)
+			.withDomain("www.google.com")
+			.withSecure(true)
+			.build();
 
 		HttpCookie cookie2 = HttpCookie.builder("name2", "value2")
-				.withHttpOnly(true)
-				.withExtension("Alhambra site")
-				.build();
+			.withHttpOnly(true)
+			.withExtension("Alhambra site")
+			.build();
 		HttpCookie cookie3 = HttpCookie.of("name3");
 
 		String expected = "name1=value1; name2=value2; name3";
@@ -114,8 +114,8 @@ public class HttpCookieTest {
 	@Test
 	public void testRenderPathSlash() {
 		HttpCookie cookie = HttpCookie.builder("name", "value")
-				.withPath("/")
-				.build();
+			.withPath("/")
+			.build();
 
 		String expected = "name=value; Path=/";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);
@@ -173,8 +173,8 @@ public class HttpCookieTest {
 	@Test
 	public void testCommaDelimiter() {
 		HttpResponse response = HttpResponse.ofCode(200)
-				.withCookies(List.of(HttpCookie.of("key1", "value1"), HttpCookie.of("key2", "value2")))
-				.build();
+			.withCookies(List.of(HttpCookie.of("key1", "value1"), HttpCookie.of("key2", "value2")))
+			.build();
 		assertEquals(2, response.getCookies().size());
 	}
 

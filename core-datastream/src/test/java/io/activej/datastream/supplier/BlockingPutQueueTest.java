@@ -44,13 +44,13 @@ public class BlockingPutQueueTest {
 	@Parameterized.Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"Slow put, single put thread", true, false, 1, 1_000},
-				new Object[]{"Slow take, single put thread", false, true, 1, 100_000},
-				new Object[]{"Equal, single put thread", false, false, 1, 1_000_000},
+			new Object[]{"Slow put, single put thread", true, false, 1, 1_000},
+			new Object[]{"Slow take, single put thread", false, true, 1, 100_000},
+			new Object[]{"Equal, single put thread", false, false, 1, 1_000_000},
 
-				new Object[]{"Slow put, ten put threads", true, false, 10, 10_000},
-				new Object[]{"Slow take, ten put threads", false, true, 10, 100_000},
-				new Object[]{"Equal, ten put threads", false, false, 10, 1_000_000}
+			new Object[]{"Slow put, ten put threads", true, false, 10, 10_000},
+			new Object[]{"Slow take, ten put threads", false, true, 10, 100_000},
+			new Object[]{"Equal, ten put threads", false, false, 10, 1_000_000}
 		);
 	}
 

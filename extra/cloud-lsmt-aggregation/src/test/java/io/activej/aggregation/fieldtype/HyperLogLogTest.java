@@ -68,7 +68,7 @@ public class HyperLogLogTest {
 			}
 			int estimatedItems = hyperLogLog.estimate();
 			double error = estimatedItems - actualItems == 0 ? 0 :
-					(double) (estimatedItems - actualItems) / actualItems;
+				(double) (estimatedItems - actualItems) / actualItems;
 			if (actualItems >= 100) {
 				System.out.println("> estimatedItems: " + estimatedItems + ", error: " + error);
 			}

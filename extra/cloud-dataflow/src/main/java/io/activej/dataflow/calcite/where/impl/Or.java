@@ -25,15 +25,14 @@ public final class Or implements WherePredicate {
 	@Override
 	public WherePredicate materialize(List<Object> params) {
 		return new Or(
-				predicates.stream()
-						.map(wherePredicate -> wherePredicate.materialize(params))
-						.toList()
+			predicates.stream()
+				.map(wherePredicate -> wherePredicate.materialize(params))
+				.toList()
 		);
 	}
 
 	@Override
 	public String toString() {
-		return "Or[" +
-				"predicates=" + predicates + ']';
+		return "Or[predicates=" + predicates + ']';
 	}
 }

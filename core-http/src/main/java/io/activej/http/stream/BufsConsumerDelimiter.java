@@ -34,7 +34,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * limiting the number of bytes that is sent/received by its peer.
  */
 public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
-		implements WithChannelTransformer<BufsConsumerDelimiter, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerDelimiter> {
+	implements WithChannelTransformer<BufsConsumerDelimiter, ByteBuf, ByteBuf>, WithBinaryChannelInput<BufsConsumerDelimiter> {
 
 	private ByteBufs bufs;
 	private BinaryChannelSupplier input;
@@ -84,23 +84,23 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 	protected void doProcess() {
 		if (remaining == 0) {
 			input.endOfStream()
-					.then(output::acceptEndOfStream)
-					.whenResult(this::completeProcess);
+				.then(output::acceptEndOfStream)
+				.whenResult(this::completeProcess);
 			return;
 		}
 		ByteBufs outputBufs = new ByteBufs();
 		remaining = remaining - bufs.drainTo(outputBufs, remaining > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) remaining);
 		output.acceptAll(outputBufs.asIterator())
-				.whenResult(() -> {
-					if (remaining != 0) {
-						input.needMoreData()
-								.whenResult(this::doProcess);
-					} else {
-						input.endOfStream()
-								.then(output::acceptEndOfStream)
-								.whenResult(this::completeProcess);
-					}
-				});
+			.whenResult(() -> {
+				if (remaining != 0) {
+					input.needMoreData()
+						.whenResult(this::doProcess);
+				} else {
+					input.endOfStream()
+						.then(output::acceptEndOfStream)
+						.whenResult(this::completeProcess);
+				}
+			});
 	}
 
 	@Override

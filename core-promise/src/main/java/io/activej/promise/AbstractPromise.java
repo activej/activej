@@ -318,13 +318,14 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <E extends Exception> Promise<T> mapException(Class<E> clazz,
-			FunctionEx<? super E, ? extends Exception> exceptionFn) {
+	public <E extends Exception> Promise<T> mapException(
+		Class<E> clazz, FunctionEx<? super E, ? extends Exception> exceptionFn
+	) {
 		if (isComplete()) {
 			try {
 				return exception == null ?
-						this :
-						clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply((E) exception)) : this;
+					this :
+					clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply((E) exception)) : this;
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -1011,8 +1012,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			SettablePromise<T> promise = new SettablePromise<>();
 			getCurrentReactor().post(exception == null ?
-					() -> promise.set(result) :
-					() -> promise.setException(exception));
+				() -> promise.set(result) :
+				() -> promise.setException(exception));
 			return promise;
 		}
 		return this;
@@ -1023,8 +1024,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		if (this.isComplete()) {
 			if (this.isResult()) {
 				return (Promise<V>) other
-						.map(otherResult -> fn.apply(this.getResult(), otherResult))
-						.whenException(() -> Recyclers.recycle(this.getResult()));
+					.map(otherResult -> fn.apply(this.getResult(), otherResult))
+					.whenException(() -> Recyclers.recycle(this.getResult()));
 			}
 			other.whenResult(Recyclers::recycle);
 			return (Promise<V>) this;
@@ -1032,8 +1033,8 @@ public abstract class AbstractPromise<T> implements Promise<T> {
 		if (other.isComplete()) {
 			if (other.isResult()) {
 				return (Promise<V>) this
-						.map(result -> fn.apply(result, other.getResult()))
-						.whenException(() -> Recyclers.recycle(other.getResult()));
+					.map(result -> fn.apply(result, other.getResult()))
+					.whenException(() -> Recyclers.recycle(other.getResult()));
 			}
 			this.whenResult(Recyclers::recycle);
 			return (Promise<V>) other;

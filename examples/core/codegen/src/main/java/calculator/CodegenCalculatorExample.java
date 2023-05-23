@@ -31,22 +31,22 @@ public final class CodegenCalculatorExample {
 	private static final Parser<Expression> PARENS = EXPRESSION_REF.lazy().between(DELIMITERS.token("("), DELIMITERS.token(")"));
 
 	private static final Parser<Expression> ATOM =
-			Parsers.or(
-					PARENS,
-					NUMBER,
-					UNKNOWN
-			);
+		Parsers.or(
+			PARENS,
+			NUMBER,
+			UNKNOWN
+		);
 
 	//[START REGION_1]
 	private static final Parser<Expression> EXPRESSION = new OperatorTable<Expression>()
-			.infixl(DELIMITERS.token("+").retn(Expressions::add), 10)
-			.infixl(DELIMITERS.token("-").retn(Expressions::sub), 10)
-			.infixl(DELIMITERS.token("*").retn(Expressions::mul), 20)
-			.infixl(DELIMITERS.token("/").retn(Expressions::div), 20)
-			.infixl(DELIMITERS.token("%").retn(Expressions::rem), 20)
-			.prefix(DELIMITERS.token("-").retn(Expressions::neg), 30)
-			.infixr(DELIMITERS.token("^").retn((left, right) -> Expressions.staticCall(Math.class, "pow", left, right)), 40)
-			.build(ATOM);
+		.infixl(DELIMITERS.token("+").retn(Expressions::add), 10)
+		.infixl(DELIMITERS.token("-").retn(Expressions::sub), 10)
+		.infixl(DELIMITERS.token("*").retn(Expressions::mul), 20)
+		.infixl(DELIMITERS.token("/").retn(Expressions::div), 20)
+		.infixl(DELIMITERS.token("%").retn(Expressions::rem), 20)
+		.prefix(DELIMITERS.token("-").retn(Expressions::neg), 30)
+		.infixr(DELIMITERS.token("^").retn((left, right) -> Expressions.staticCall(Math.class, "pow", left, right)), 40)
+		.build(ATOM);
 
 	//[END REGION_1]
 	static {
@@ -58,9 +58,9 @@ public final class CodegenCalculatorExample {
 	//[START REGION_2]
 	public static Class<DoubleUnaryOperator> compile(String expression) {
 		return ClassGenerator.builder(DoubleUnaryOperator.class)
-				.withMethod("applyAsDouble", PARSER.parse(expression))
-				.build()
-				.generateClass(CLASS_LOADER);
+			.withMethod("applyAsDouble", PARSER.parse(expression))
+			.build()
+			.generateClass(CLASS_LOADER);
 	}
 	//[END REGION_2]
 

@@ -29,9 +29,9 @@ public class DnsProtocolTest {
 	@Test
 	public void testMessageCompressedWithASequenceOfLabelsAndZeroOctet() throws MalformedDataException {
 		ByteBuf labels = ByteBuf.wrapForReading(new byte[]{
-				3, 'w', 'w', 'w',
-				4, 't', 'e', 's', 't',
-				3, 'c', 'o', 'm',
+			3, 'w', 'w', 'w',
+			4, 't', 'e', 's', 't',
+			3, 'c', 'o', 'm',
 		});
 		byte[] zeroOctet = {0};
 		doTestCompression(append(labels, zeroOctet));
@@ -40,9 +40,9 @@ public class DnsProtocolTest {
 	@Test
 	public void testMessageCompressedWithASequenceOfLabelsAndAPointer() throws MalformedDataException {
 		ByteBuf labels = ByteBuf.wrapForReading(new byte[]{
-				3, 'w', 'w', 'w',
-				4, 't', 'e', 's', 't',
-				3, 'c', 'o', 'm'
+			3, 'w', 'w', 'w',
+			4, 't', 'e', 's', 't',
+			3, 'c', 'o', 'm'
 		});
 		byte[] pointer = {(byte) 0b11000000, 12};
 		doTestCompression(append(labels, pointer));

@@ -33,9 +33,9 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	@Override
 	protected void run() throws Exception {
 		reactor.submit(() ->
-						StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(NUMBER_OF_ITEMS))
-								.streamTo(multilog.write(partitionId)))
-				.get();
+				StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(NUMBER_OF_ITEMS))
+					.streamTo(multilog.write(partitionId)))
+			.get();
 
 		super.run();
 	}

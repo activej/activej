@@ -113,16 +113,16 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 		private final EventStats connects = EventStats.create(SMOOTHING_WINDOW);
 		private final ValueStats reads = ValueStats.builder(SMOOTHING_WINDOW)
-				.withUnit("bytes")
-				.withRate()
-				.build();
+			.withUnit("bytes")
+			.withRate()
+			.build();
 		private final EventStats readEndOfStreams = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats readErrors = ExceptionStats.create();
 		private final EventStats readTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final ValueStats writes = ValueStats.builder(SMOOTHING_WINDOW)
-				.withUnit("bytes")
-				.withRate()
-				.build();
+			.withUnit("bytes")
+			.withRate()
+			.build();
 		private final ExceptionStats writeErrors = ExceptionStats.create();
 		private final EventStats writeTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats writeOverloaded = EventStats.create(SMOOTHING_WINDOW);
@@ -270,14 +270,14 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 
 	public static Promise<TcpSocket> connect(NioReactor reactor, InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
 		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb))
-				.map(channel -> {
-					try {
-						return wrapChannel(reactor, channel, address, socketSettings);
-					} catch (IOException e) {
-						reactor.closeChannel(channel, null);
-						throw e;
-					}
-				});
+			.map(channel -> {
+				try {
+					return wrapChannel(reactor, channel, address, socketSettings);
+				} catch (IOException e) {
+					reactor.closeChannel(channel, null);
+					throw e;
+				}
+			});
 	}
 
 	public void setInspector(@Nullable Inspector inspector) {
@@ -583,14 +583,14 @@ public final class TcpSocket extends AbstractNioReactive implements ITcpSocket, 
 	@Override
 	public String toString() {
 		return "TcpSocket{" +
-				"channel=" + (channel != null ? channel : "") +
-				", readBuf=" + readBuf +
-				", writeBuf=" + writeBuf +
-				", readEndOfStream=" + readEndOfStream +
-				", writeEndOfStream=" + writeEndOfStream +
-				", read=" + read +
-				", write=" + write +
-				", ops=" + ops +
-				"}";
+			"channel=" + (channel != null ? channel : "") +
+			", readBuf=" + readBuf +
+			", writeBuf=" + writeBuf +
+			", readEndOfStream=" + readEndOfStream +
+			", writeEndOfStream=" + writeEndOfStream +
+			", read=" + read +
+			", write=" + write +
+			", ops=" + ops +
+			"}";
 	}
 }

@@ -45,7 +45,7 @@ import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class OTUplink<K, D, PC> extends AbstractReactive
-		implements AsyncOTUplink<K, D, PC> {
+	implements AsyncOTUplink<K, D, PC> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplink.class);
 
 	private final OTSystem<D> otSystem;
@@ -53,8 +53,10 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 	private final FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder;
 	private final FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder;
 
-	private OTUplink(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
-			FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder) {
+	private OTUplink(
+		Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+		FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder, FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder
+	) {
 		super(reactor);
 		this.otSystem = otSystem;
 		this.repository = repository;
@@ -62,8 +64,10 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 		this.protoCommitDecoder = protoCommitDecoder;
 	}
 
-	public static <K, D, C> OTUplink<K, D, C> create(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
-			FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit) {
+	public static <K, D, C> OTUplink<K, D, C> create(
+		Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+		FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit
+	) {
 		return new OTUplink<>(reactor, repository, otSystem, commitToObject, objectToCommit);
 	}
 
@@ -79,8 +83,8 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 	public Promise<PC> createProtoCommit(K parent, List<D> diffs, long parentLevel) {
 		checkInReactorThread(this);
 		return repository.createCommit(parent, new DiffsWithLevel<>(parentLevel, diffs))
-				.map(protoCommitEncoder)
-				.whenComplete(toLogger(logger, thisMethod(), parent, diffs, parentLevel));
+			.map(protoCommitEncoder)
+			.whenComplete(toLogger(logger, thisMethod(), parent, diffs, parentLevel));
 	}
 
 	@Override
@@ -94,15 +98,15 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 			return Promise.ofException(ex);
 		}
 		return repository.push(commit)
-				.then(repository::getHeads)
-				.then(initialHeads -> excludeParents(repository, otSystem, union(initialHeads, Set.of(commit.getId())))
-						.then(heads -> mergeAndPush(repository, otSystem, heads))
-						.then(mergeHead -> {
-							Set<K> mergeHeadSet = Set.of(mergeHead);
-							return repository.updateHeads(mergeHeadSet, difference(initialHeads, mergeHeadSet))
-									.then(() -> doFetch(mergeHeadSet, commit.getId()));
-						}))
-				.whenComplete(toLogger(logger, thisMethod(), protoCommit));
+			.then(repository::getHeads)
+			.then(initialHeads -> excludeParents(repository, otSystem, union(initialHeads, Set.of(commit.getId())))
+				.then(heads -> mergeAndPush(repository, otSystem, heads))
+				.then(mergeHead -> {
+					Set<K> mergeHeadSet = Set.of(mergeHead);
+					return repository.updateHeads(mergeHeadSet, difference(initialHeads, mergeHeadSet))
+						.then(() -> doFetch(mergeHeadSet, commit.getId()));
+				}))
+			.whenComplete(toLogger(logger, thisMethod(), protoCommit));
 	}
 
 	@Override
@@ -110,57 +114,57 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 		checkInReactorThread(this);
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
-				.then(heads -> findParent(
-						repository,
-						otSystem,
-						heads,
-						DiffsReducer.toList(),
-						commit -> repository.loadSnapshot(commit.getId())
-								.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null)))
-				.then(findResult -> Promise.of(
-						new FetchData<>(
-								findResult.getChild(),
-								findResult.getChildLevel(),
-								concat(cachedSnapshotRef.value, findResult.getAccumulatedDiffs()))))
-				.then(checkoutData -> fetch(checkoutData.commitId())
-						.map(fetchData -> new FetchData<>(
-								fetchData.commitId(),
-								fetchData.level(),
-								otSystem.squash(concat(checkoutData.diffs(), fetchData.diffs()))
-						))
-				)
-				.whenComplete(toLogger(logger, thisMethod()));
+			.then(heads -> findParent(
+				repository,
+				otSystem,
+				heads,
+				DiffsReducer.toList(),
+				commit -> repository.loadSnapshot(commit.getId())
+					.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null)))
+			.then(findResult -> Promise.of(
+				new FetchData<>(
+					findResult.getChild(),
+					findResult.getChildLevel(),
+					concat(cachedSnapshotRef.value, findResult.getAccumulatedDiffs()))))
+			.then(checkoutData -> fetch(checkoutData.commitId())
+				.map(fetchData -> new FetchData<>(
+					fetchData.commitId(),
+					fetchData.level(),
+					otSystem.squash(concat(checkoutData.diffs(), fetchData.diffs()))
+				))
+			)
+			.whenComplete(toLogger(logger, thisMethod()));
 	}
 
 	@Override
 	public Promise<FetchData<K, D>> fetch(K currentCommitId) {
 		checkInReactorThread(this);
 		return repository.getHeads()
-				.then(heads -> doFetch(heads, currentCommitId))
-				.whenComplete(toLogger(logger, thisMethod(), currentCommitId));
+			.then(heads -> doFetch(heads, currentCommitId))
+			.whenComplete(toLogger(logger, thisMethod(), currentCommitId));
 	}
 
 	@Override
 	public Promise<FetchData<K, D>> poll(K currentCommitId) {
 		checkInReactorThread(this);
 		return retry(
-				isResultOrException((Set<K> polledHeads) -> !polledHeads.contains(currentCommitId)),
-				PollSanitizer.create(repository.pollHeads()))
-				.then(heads -> doFetch(heads, currentCommitId));
+			isResultOrException((Set<K> polledHeads) -> !polledHeads.contains(currentCommitId)),
+			PollSanitizer.create(repository.pollHeads()))
+			.then(heads -> doFetch(heads, currentCommitId));
 	}
 
 	private Promise<FetchData<K, D>> doFetch(Set<K> heads, K currentCommitId) {
 		return findParent(
-				repository,
-				otSystem,
-				heads,
-				toSquashedList(otSystem),
-				AsyncPredicate.of(commit -> commit.getId().equals(currentCommitId)))
-				.map(findResult -> new FetchData<>(
-						findResult.getChild(),
-						findResult.getChildLevel(),
-						otSystem.squash(findResult.getAccumulatedDiffs())
-				))
-				.whenComplete(toLogger(logger, thisMethod(), currentCommitId));
+			repository,
+			otSystem,
+			heads,
+			toSquashedList(otSystem),
+			AsyncPredicate.of(commit -> commit.getId().equals(currentCommitId)))
+			.map(findResult -> new FetchData<>(
+				findResult.getChild(),
+				findResult.getChildLevel(),
+				otSystem.squash(findResult.getAccumulatedDiffs())
+			))
+			.whenComplete(toLogger(logger, thisMethod(), currentCommitId));
 	}
 }

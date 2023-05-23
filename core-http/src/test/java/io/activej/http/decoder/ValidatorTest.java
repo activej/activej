@@ -11,7 +11,7 @@ public class ValidatorTest {
 	@Test
 	public void testAnd() {
 		Validator<String> validator =
-				Validator.of(s -> !s.isEmpty(), "test");
+			Validator.of(s -> !s.isEmpty(), "test");
 		validator = validator.and(Validator.of(s -> s.length() > 5, "Invalid length"));
 
 		List<DecodeError> errors = validator.validate("");
@@ -24,7 +24,7 @@ public class ValidatorTest {
 	@Test(expected = NullPointerException.class)
 	public void testAndNull() {
 		Validator<String> validator =
-				Validator.of(Objects::nonNull, "test");
+			Validator.of(Objects::nonNull, "test");
 		validator = validator.and(Validator.of(s -> s.length() > 5, "Invalid length"));
 
 		validator.validate(null);
@@ -33,7 +33,7 @@ public class ValidatorTest {
 	@Test
 	public void testThenNull() {
 		Validator<String> validator =
-				Validator.of(Objects::nonNull, "Cannot be null");
+			Validator.of(Objects::nonNull, "Cannot be null");
 		validator = validator.then(Validator.of(s -> s.length() > 5, "Invalid length"));
 
 		assertEquals("Cannot be null", validator.validate(null).get(0).getMessage());

@@ -235,9 +235,9 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 		if (postParameters != null) return postParameters;
 		if (body == null) throw new NullPointerException("Body must be loaded to decode post parameters");
 		return postParameters =
-				containsPostParameters() ?
-						UrlParser.parseQueryIntoMap(body.array(), body.head(), body.tail()) :
-						Map.of();
+			containsPostParameters() ?
+				UrlParser.parseQueryIntoMap(body.array(), body.head(), body.tail()) :
+				Map.of();
 	}
 
 	public boolean containsPostParameters() {
@@ -285,7 +285,7 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 			boundary = boundary.substring(1, boundary.length() - 1);
 		}
 		return MultipartByteBufsDecoder.create(boundary)
-				.split(takeBodyStream(), multipartDataHandler);
+			.split(takeBodyStream(), multipartDataHandler);
 	}
 
 	int getPos() {
@@ -325,9 +325,9 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 	@Override
 	protected int estimateSize() {
 		return estimateSize(LONGEST_HTTP_METHOD_SIZE
-				+ 1 // SPACE
-				+ url.getPathAndQueryLength())
-				+ HTTP_1_1_SIZE;
+			+ 1 // SPACE
+			+ url.getPathAndQueryLength())
+			+ HTTP_1_1_SIZE;
 	}
 
 	@Override

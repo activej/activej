@@ -76,14 +76,14 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 
 			if (!nullable) {
 				return sequence(
-						writeVarInt(buf, pos, length),
-						writeBytes(buf, pos, castedValue));
+					writeVarInt(buf, pos, length),
+					writeBytes(buf, pos, castedValue));
 			} else {
 				return ifNull(value,
-						writeByte(buf, pos, value((byte) 0)),
-						sequence(
-								writeVarInt(buf, pos, inc(length)),
-								writeBytes(buf, pos, castedValue))
+					writeByte(buf, pos, value((byte) 0)),
+					sequence(
+						writeVarInt(buf, pos, inc(length)),
+						writeBytes(buf, pos, castedValue))
 				);
 			}
 		} else {
@@ -91,18 +91,18 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 
 			Encoder encoder = valueSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 			Expression writeCollection = iterate(value(0), size,
-					i -> encoder.encode(buf, pos, arrayGet(cast(value, type), i)));
+				i -> encoder.encode(buf, pos, arrayGet(cast(value, type), i)));
 
 			if (!nullable) {
 				return sequence(
-						writeVarInt(buf, pos, size),
-						writeCollection);
+					writeVarInt(buf, pos, size),
+					writeCollection);
 			} else {
 				return ifNull(value,
-						writeByte(buf, pos, value((byte) 0)),
-						sequence(
-								writeVarInt(buf, pos, inc(size)),
-								writeCollection));
+					writeByte(buf, pos, value((byte) 0)),
+					sequence(
+						writeVarInt(buf, pos, inc(size)),
+						writeCollection));
 			}
 		}
 	}
@@ -111,36 +111,36 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		if (type.getComponentType() == Byte.TYPE) {
 			return let(readVarInt(in),
-					len -> !nullable ?
-							let(arrayNew(type, len),
-									array -> sequence(
-											readBytes(in, array),
-											array)) :
-							ifEq(len, value(0),
-									nullRef(type),
-									let(arrayNew(type, dec(len)),
-											array -> sequence(
-													readBytes(in, array, value(0), dec(len)),
-													array))));
+				len -> !nullable ?
+					let(arrayNew(type, len),
+						array -> sequence(
+							readBytes(in, array),
+							array)) :
+					ifEq(len, value(0),
+						nullRef(type),
+						let(arrayNew(type, dec(len)),
+							array -> sequence(
+								readBytes(in, array, value(0), dec(len)),
+								array))));
 		}
 
 		return let(readVarInt(in),
-				len -> !nullable ?
-						doDecode(staticDecoders, in, version, compatibilityLevel, len) :
-						ifEq(len, value(0),
-								nullRef(type),
-								let(dec(len),
-										len0 -> doDecode(staticDecoders, in, version, compatibilityLevel, len0))));
+			len -> !nullable ?
+				doDecode(staticDecoders, in, version, compatibilityLevel, len) :
+				ifEq(len, value(0),
+					nullRef(type),
+					let(dec(len),
+						len0 -> doDecode(staticDecoders, in, version, compatibilityLevel, len0))));
 	}
 
 	private Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression size) {
 		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
 		return let(arrayNew(type, size),
-				array -> sequence(
-						iterate(value(0), size,
-								i -> arraySet(array, i,
-										cast(decoder.decode(in), type.getComponentType()))),
-						array));
+			array -> sequence(
+				iterate(value(0), size,
+					i -> arraySet(array, i,
+						cast(decoder.decode(in), type.getComponentType()))),
+				array));
 	}
 
 }

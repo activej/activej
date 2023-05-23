@@ -98,7 +98,7 @@ public class ChannelConsumers {
 		ChannelConsumer<T> result = queue.getConsumer();
 		if (extraAcknowledge == Promise.complete()) return result;
 		return result
-				.withAcknowledgement(ack -> ack.both(extraAcknowledge));
+			.withAcknowledgement(ack -> ack.both(extraAcknowledge));
 	}
 
 	/**
@@ -143,8 +143,8 @@ public class ChannelConsumers {
 	 */
 	public static ChannelConsumer<ByteBuf> ofSocket(ITcpSocket socket) {
 		return ChannelConsumers.ofAsyncConsumer(socket::write, socket)
-				.withAcknowledgement(ack -> ack
-						.then(() -> socket.write(null)));
+			.withAcknowledgement(ack -> ack
+				.then(() -> socket.write(null)));
 	}
 
 	public static <T extends Recyclable> ChannelConsumer<T> recycling() {

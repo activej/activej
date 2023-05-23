@@ -99,16 +99,18 @@ public class LogUtils {
 
 	public static String thisMethod() {
 		return StackWalker.getInstance()
-				.walk(frames -> frames.skip(1)
-						.findFirst()
-						.orElseThrow()
-						.getMethodName());
+			.walk(frames -> frames.skip(1)
+				.findFirst()
+				.orElseThrow()
+				.getMethodName());
 	}
 
-	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
-			Level callLevel, Supplier<String> callMsg,
-			Level resultLevel, Function<T, String> resultMsg,
-			@Nullable Level errorLevel, Function<Exception, String> errorMsg) {
+	public static <T> BiConsumerEx<T, Exception> toLogger(
+		Logger logger,
+		Level callLevel, Supplier<String> callMsg,
+		Level resultLevel, Function<T, String> resultMsg,
+		@Nullable Level errorLevel, Function<Exception, String> errorMsg
+	) {
 		if (!logger.isErrorEnabled()) return ($, e) -> {};
 		callLevel.log(logger, callMsg);
 		return (result, e) -> {
@@ -126,35 +128,43 @@ public class LogUtils {
 		};
 	}
 
-	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
-			Level callLevel, Supplier<String> callMsg,
-			Level resultLevel, Function<T, String> resultMsg) {
+	public static <T> BiConsumerEx<T, Exception> toLogger(
+		Logger logger,
+		Level callLevel, Supplier<String> callMsg,
+		Level resultLevel, Function<T, String> resultMsg
+	) {
 		return toLogger(logger,
-				callLevel, callMsg,
-				resultLevel, resultMsg,
-				null, e -> callMsg.get());
+			callLevel, callMsg,
+			resultLevel, resultMsg,
+			null, e -> callMsg.get());
 	}
 
-	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
-			Level callLevel, Level resultLevel, Level errorLevel,
-			String methodName, Object... parameters) {
+	public static <T> BiConsumerEx<T, Exception> toLogger(
+		Logger logger,
+		Level callLevel, Level resultLevel, Level errorLevel,
+		String methodName, Object... parameters
+	) {
 		return toLogger(logger,
-				callLevel, () -> formatCall(methodName, parameters),
-				resultLevel, result -> formatResult(methodName, result, parameters),
-				errorLevel, errorLevel == null ?
-						e -> formatCall(methodName, parameters) :
-						e -> formatResult(methodName, e, parameters));
+			callLevel, () -> formatCall(methodName, parameters),
+			resultLevel, result -> formatResult(methodName, result, parameters),
+			errorLevel, errorLevel == null ?
+				e -> formatCall(methodName, parameters) :
+				e -> formatResult(methodName, e, parameters));
 	}
 
-	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
-			Level callLevel, Level resultLevel,
-			String methodName, Object... parameters) {
+	public static <T> BiConsumerEx<T, Exception> toLogger(
+		Logger logger,
+		Level callLevel, Level resultLevel,
+		String methodName, Object... parameters
+	) {
 		return toLogger(logger, callLevel, resultLevel, null, methodName, parameters);
 	}
 
-	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,
-			Level level,
-			String methodName, Object... parameters) {
+	public static <T> BiConsumerEx<T, Exception> toLogger(
+		Logger logger,
+		Level level,
+		String methodName, Object... parameters
+	) {
 		return toLogger(logger, level, level, methodName, parameters);
 	}
 
@@ -174,18 +184,18 @@ public class LogUtils {
 
 	public static String formatCall(String methodName, Object... parameters) {
 		return methodName +
-				(parameters.length != 0 ? " " + Arrays.stream(parameters)
-						.map(LogUtils::toString)
-						.collect(joining(", ")) : "") +
-				" …";
+			(parameters.length != 0 ? " " + Arrays.stream(parameters)
+				.map(LogUtils::toString)
+				.collect(joining(", ")) : "") +
+			" …";
 	}
 
 	public static String formatResult(String methodName, Object result, Object... parameters) {
 		return methodName +
-				(parameters.length != 0 ? " " + Arrays.stream(parameters)
-						.map(LogUtils::toString)
-						.collect(joining(", ")) : "") +
-				" → " + toString(result);
+			(parameters.length != 0 ? " " + Arrays.stream(parameters)
+				.map(LogUtils::toString)
+				.collect(joining(", ")) : "") +
+			" → " + toString(result);
 	}
 
 }

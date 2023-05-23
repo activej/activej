@@ -18,8 +18,8 @@ import static org.apache.calcite.sql.type.OperandTypes.family;
 public final class MapGetFunction extends ProjectionFunction {
 	public MapGetFunction() {
 		super("MAP_GET", SqlKind.OTHER_FUNCTION, ((SqlReturnTypeInference) (opBinding -> opBinding.getOperandType(0).getValueType()))
-						.andThen(SqlTypeTransforms.FORCE_NULLABLE),
-				InferTypes.ANY_NULLABLE, family(SqlTypeFamily.MAP, SqlTypeFamily.ANY), SqlFunctionCategory.USER_DEFINED_FUNCTION);
+				.andThen(SqlTypeTransforms.FORCE_NULLABLE),
+			InferTypes.ANY_NULLABLE, family(SqlTypeFamily.MAP, SqlTypeFamily.ANY), SqlFunctionCategory.USER_DEFINED_FUNCTION);
 	}
 
 	@Override

@@ -21,13 +21,13 @@ public class ByteBufsCodecs {
 
 	public static ByteBufsCodec<ByteBuf, ByteBuf> nullTerminated() {
 		return ByteBufsCodecs
-				.ofDelimiter(
-						ByteBufsDecoders.ofNullTerminatedBytes(),
-						buf -> {
-							ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
-							buf1.put((byte) 0);
-							return buf1;
-						});
+			.ofDelimiter(
+				ByteBufsDecoders.ofNullTerminatedBytes(),
+				buf -> {
+					ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
+					buf1.put((byte) 0);
+					return buf1;
+				});
 	}
 
 	public static <I, O> ByteBufsCodec<I, O> ofStreamCodecs(StreamDecoder<I> decoder, StreamEncoder<O> encoder) {

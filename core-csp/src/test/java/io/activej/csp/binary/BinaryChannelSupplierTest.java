@@ -28,16 +28,16 @@ public final class BinaryChannelSupplierTest {
 	@Test
 	public void testDecodeStream() {
 		ByteBuf buf = await(BinaryChannelSupplier.of(ChannelSuppliers.ofValue(wrapUtf8("Hello\r\n World\r\n")))
-				.decodeStream(ofCrlfTerminatedBytes())
-				.toCollector(ByteBufs.collector()));
+			.decodeStream(ofCrlfTerminatedBytes())
+			.toCollector(ByteBufs.collector()));
 		assertEquals("Hello World", buf.asString(UTF_8));
 	}
 
 	@Test
 	public void testDecodeStreamLessData() {
 		Exception exception = awaitException(BinaryChannelSupplier.of(ChannelSuppliers.ofValue(wrapUtf8("Hello\r\n Wo")))
-				.decodeStream(ofCrlfTerminatedBytes())
-				.toCollector(ByteBufs.collector()));
+			.decodeStream(ofCrlfTerminatedBytes())
+			.toCollector(ByteBufs.collector()));
 		assertThat(exception, instanceOf(TruncatedDataException.class));
 	}
 }

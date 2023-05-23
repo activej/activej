@@ -59,10 +59,11 @@ public final class StreamRegistry<V> implements Iterable<V> {
 	}
 
 	public final class RegisterTransformer<T> implements
-			ChannelSupplierTransformer<T, ChannelSupplier<T>>,
-			ChannelConsumerTransformer<T, ChannelConsumer<T>>,
-			StreamSupplierTransformer<T, StreamSupplier<T>>,
-			StreamConsumerTransformer<T, StreamConsumer<T>> {
+		ChannelSupplierTransformer<T, ChannelSupplier<T>>,
+		ChannelConsumerTransformer<T, ChannelConsumer<T>>,
+		StreamSupplierTransformer<T, StreamSupplier<T>>,
+		StreamConsumerTransformer<T, StreamConsumer<T>> {
+
 		private final V value;
 
 		private RegisterTransformer(V value) {
@@ -114,7 +115,7 @@ public final class StreamRegistry<V> implements Iterable<V> {
 		Entry<V> entry = new Entry<>(value);
 		Node<Entry<V>> node = list.addFirstValue(entry);
 		return promise -> promise
-				.whenComplete(() -> list.removeNode(node));
+			.whenComplete(() -> list.removeNode(node));
 	}
 
 	@SuppressWarnings("NullableProblems")

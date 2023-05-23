@@ -26,8 +26,8 @@ public final class CrdtExample {
 
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.builder()
-				.withCurrentThread()
-				.build();
+			.withCurrentThread()
+			.build();
 
 		//[START REGION_1]
 		// create the 'remote' storage
@@ -47,19 +47,19 @@ public final class CrdtExample {
 
 		// create and run a server for the 'remote' storage
 		CrdtServer<String, Integer> server = CrdtServer.builder(eventloop, remoteStorage, INTEGER_SERIALIZER)
-				.withListenAddress(ADDRESS)
-				.build();
+			.withListenAddress(ADDRESS)
+			.build();
 		server.listen();
 		//[END REGION_1]
 
 		//[START REGION_3]
 		// now crate the client for that 'remote' storage
 		ICrdtStorage<String, Integer> client =
-				RemoteCrdtStorage.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
+			RemoteCrdtStorage.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
 
 		// and also create the local storage
 		MapCrdtStorage<String, Integer> localStorage =
-				MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
+			MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
 
 		// and fill it with some other values
 		localStorage.put("mx", 22);
@@ -83,27 +83,27 @@ public final class CrdtExample {
 		//[START REGION_4]
 		// now stream the local storage into the remote one through the TCP client-server pair
 		StreamSuppliers.ofPromise(localStorage.download())
-				.streamTo(StreamConsumers.ofPromise(client.upload()))
-				.whenComplete(() -> {
+			.streamTo(StreamConsumers.ofPromise(client.upload()))
+			.whenComplete(() -> {
 
-					// check what is now at the 'remote' storage, the output should differ
-					System.out.println("Synced data at 'remote' storage:");
-					remoteStorage.iterator().forEachRemaining(System.out::println);
-					System.out.println();
+				// check what is now at the 'remote' storage, the output should differ
+				System.out.println("Synced data at 'remote' storage:");
+				remoteStorage.iterator().forEachRemaining(System.out::println);
+				System.out.println();
 
-					// and now do the reverse process
-					StreamSuppliers.ofPromise(client.download())
-							.streamTo(StreamConsumers.ofPromise(localStorage.upload()))
-							.whenComplete(() -> {
-								// now output the local storage, should be identical to the remote one
-								System.out.println("Synced data at the local storage:");
-								localStorage.iterator().forEachRemaining(System.out::println);
-								System.out.println();
+				// and now do the reverse process
+				StreamSuppliers.ofPromise(client.download())
+					.streamTo(StreamConsumers.ofPromise(localStorage.upload()))
+					.whenComplete(() -> {
+						// now output the local storage, should be identical to the remote one
+						System.out.println("Synced data at the local storage:");
+						localStorage.iterator().forEachRemaining(System.out::println);
+						System.out.println();
 
-								// also stop the server to let the program finish
-								server.close();
-							});
-				});
+						// also stop the server to let the program finish
+						server.close();
+					});
+			});
 
 		eventloop.run();
 		//[END REGION_4]

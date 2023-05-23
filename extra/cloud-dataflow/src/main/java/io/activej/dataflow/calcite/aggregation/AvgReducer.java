@@ -39,8 +39,8 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 	@Override
 	public AvgAccumulator combine(AvgAccumulator accumulator, AvgAccumulator anotherAccumulator) {
 		return new AvgAccumulator(
-				accumulator.sum + anotherAccumulator.sum,
-				accumulator.count + anotherAccumulator.count
+			accumulator.sum + anotherAccumulator.sum,
+			accumulator.count + anotherAccumulator.count
 		);
 	}
 

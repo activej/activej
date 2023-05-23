@@ -37,15 +37,15 @@ public final class BufsConsumerGzipInflaterTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	public final String[] plainText = {
-			"Suspendisse faucibus enim curabitur tempus leo viverra massa accumsan nisl nunc\n",
-			"Interdum sapien vehicula\nOrnare odio feugiat fringilla ",
-			"Auctor sodales elementum curabitur felis ut ",
-			"Ante sem orci rhoncus hendrerit commo",
-			"do, potenti cursus lorem ac pretium, netus\nSapien hendrerit leo ",
-			"Mollis volutpat nisi convallis accumsan eget praesent cursus urna ultricies nec habitasse nam\n",
-			"Inceptos nisl magna duis vel taciti volutpat nostra\n",
-			"Taciti sapien fringilla u\nVitae ",
-			"Etiam egestas ac augue dui dapibus, aliquam adipiscing porttitor magna at, libero elit faucibus purus"
+		"Suspendisse faucibus enim curabitur tempus leo viverra massa accumsan nisl nunc\n",
+		"Interdum sapien vehicula\nOrnare odio feugiat fringilla ",
+		"Auctor sodales elementum curabitur felis ut ",
+		"Ante sem orci rhoncus hendrerit commo",
+		"do, potenti cursus lorem ac pretium, netus\nSapien hendrerit leo ",
+		"Mollis volutpat nisi convallis accumsan eget praesent cursus urna ultricies nec habitasse nam\n",
+		"Inceptos nisl magna duis vel taciti volutpat nostra\n",
+		"Taciti sapien fringilla u\nVitae ",
+		"Etiam egestas ac augue dui dapibus, aliquam adipiscing porttitor magna at, libero elit faucibus purus"
 	};
 	public final List<ByteBuf> list = new ArrayList<>();
 	public final AssertingConsumer consumer = new AssertingConsumer();
@@ -102,14 +102,14 @@ public final class BufsConsumerGzipInflaterTest {
 		byte feXtra2 = (byte) fextraReversed;
 
 		byte[] header = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, flag, 0, 0, 0, 0, 0, (byte) 0xff,
-				// FEXTRA PART
-				feXtra1, feXtra2, 1, 2, 3, 4, 5,
-				// FNAME PART
-				1, 2, 3, 4, 5, 6, 7, 8, 0,
-				// COMMENT PART
-				1, 2, 3, 4, 5, 6, 7, 8, 0,
-				// FHCRC PART
-				123, 123
+			// FEXTRA PART
+			feXtra1, feXtra2, 1, 2, 3, 4, 5,
+			// FNAME PART
+			1, 2, 3, 4, 5, 6, 7, 8, 0,
+			// COMMENT PART
+			1, 2, 3, 4, 5, 6, 7, 8, 0,
+			// FHCRC PART
+			123, 123
 		};
 		byte[] bytes = {1, 2, 3};
 		ByteBuf gzipped = toGzip(wrapForReading(bytes));

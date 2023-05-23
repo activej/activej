@@ -374,7 +374,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 			contentLength = trimAndDecodePositiveLong(array, pos, len);
 		} else if (header == CONNECTION) {
 			flags = (byte) ((flags & ~KEEP_ALIVE) |
-					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
+				(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
 		} else if (IWebSocket.ENABLED && header == HttpHeaders.UPGRADE) {
 			flags |= equalsLowerCaseAscii(UPGRADE_WEBSOCKET, array, pos, len) ? WEB_SOCKET : 0;
 		} else if (header == TRANSFER_ENCODING) {
@@ -419,31 +419,31 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		ByteBufs readBufs = new ByteBufs();
 		readBufs.add(readBuf);
 		BinaryChannelSupplier encodedStream = BinaryChannelSupplier.ofProvidedBufs(
-				readBufs,
-				() -> socket.read()
-						.thenCallback(
-								(buf, cb) -> {
-									if (buf == null) {
-										cb.setException(new MalformedHttpException("Incomplete HTTP message"));
-										return;
-									}
-									readBufs.add(buf);
-									cb.set(null);
-								},
-								(e, cb) -> {
-									e = translateToHttpException(e);
-									closeEx(e);
-									cb.setException(e);
-								}),
-				Promise::complete,
-				AsyncCloseable.of(e -> {
-					Exception httpException = translateToHttpException(e);
-					if (e instanceof MalformedHttpException) {
-						onMalformedHttpException((MalformedHttpException) e);
-					} else {
-						closeEx(httpException);
-					}
-				}));
+			readBufs,
+			() -> socket.read()
+				.thenCallback(
+					(buf, cb) -> {
+						if (buf == null) {
+							cb.setException(new MalformedHttpException("Incomplete HTTP message"));
+							return;
+						}
+						readBufs.add(buf);
+						cb.set(null);
+					},
+					(e, cb) -> {
+						e = translateToHttpException(e);
+						closeEx(e);
+						cb.setException(e);
+					}),
+			Promise::complete,
+			AsyncCloseable.of(e -> {
+				Exception httpException = translateToHttpException(e);
+				if (e instanceof MalformedHttpException) {
+					onMalformedHttpException((MalformedHttpException) e);
+				} else {
+					closeEx(httpException);
+				}
+			}));
 
 		ChannelOutput<ByteBuf> bodyStream;
 		ReactiveProcess process;
@@ -474,16 +474,16 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		onHeadersReceived(null, supplier);
 
 		process.getProcessCompletion()
-				.subscribe(($, e) -> {
-					if (isClosed()) return;
-					if (e == null) {
-						assert this.readBuf == null;
-						this.readBuf = readBufs.hasRemaining() ? readBufs.takeRemaining() : null;
-						onBodyReceived();
-					} else {
-						closeEx(translateToHttpException(e));
-					}
-				});
+			.subscribe(($, e) -> {
+				if (isClosed()) return;
+				if (e == null) {
+					assert this.readBuf == null;
+					this.readBuf = readBufs.hasRemaining() ? readBufs.takeRemaining() : null;
+					onBodyReceived();
+				} else {
+					closeEx(translateToHttpException(e));
+				}
+			});
 	}
 
 	static ByteBuf renderHttpMessage(HttpMessage httpMessage) {
@@ -528,14 +528,14 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (!IWebSocket.ENABLED || !isWebSocket()) {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
-			httpMessage.headers.add(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.add(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
 				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
 				bodyStream.bindTo(deflater.getInput());
 				bodyStream = deflater.getOutput().getSupplier();
 			}
 
 			if (httpMessage.headers.get(CONTENT_LENGTH) == null) {
-			httpMessage.headers.add(TRANSFER_ENCODING, ofBytes(TRANSFER_ENCODING_CHUNKED));
+				httpMessage.headers.add(TRANSFER_ENCODING, ofBytes(TRANSFER_ENCODING_CHUNKED));
 				BufsConsumerChunkedEncoder chunker = BufsConsumerChunkedEncoder.create();
 				bodyStream.bindTo(chunker.getInput());
 				bodyStream = chunker.getOutput().getSupplier();
@@ -550,22 +550,22 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 	protected void writeBuf(ByteBuf buf) {
 		socket.write(buf)
-				.subscribe(($, e) -> {
-					if (isClosed()) return;
-					if (e == null) {
-						onBodySent();
-					} else {
-						closeEx(translateToHttpException(e));
-					}
-				});
+			.subscribe(($, e) -> {
+				if (isClosed()) return;
+				if (e == null) {
+					onBodySent();
+				} else {
+					closeEx(translateToHttpException(e));
+				}
+			});
 	}
 
 	private void writeStream(ChannelSupplier<ByteBuf> supplier) {
 		supplier.streamTo(ChannelConsumers.ofAsyncConsumer(
-						buf -> socket.write(buf)
-								.whenException(e -> closeEx(translateToHttpException(e))),
-						AsyncCloseable.of(e -> closeEx(translateToHttpException(e)))))
-				.whenResult(this::onBodySent);
+				buf -> socket.write(buf)
+					.whenException(e -> closeEx(translateToHttpException(e))),
+				AsyncCloseable.of(e -> closeEx(translateToHttpException(e)))))
+			.whenResult(this::onBodySent);
 	}
 
 	protected void switchPool(ConnectionsLinkedList newPool) {
@@ -646,17 +646,17 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 					return Promise.ofException(closeException);
 				}
 				return bodyStream.get()
-						.thenCallback((result, cb) -> {
-							if (closeException != null) {
-								if (result != null) {
-									result.recycle();
-								}
-								closeEx(closeException);
-								cb.setException(closeException);
-								return;
+					.thenCallback((result, cb) -> {
+						if (closeException != null) {
+							if (result != null) {
+								result.recycle();
 							}
-							cb.set(result);
-						});
+							closeEx(closeException);
+							cb.setException(closeException);
+							return;
+						}
+						cb.set(result);
+					});
 			}
 		};
 	}
@@ -664,14 +664,14 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	@Override
 	public String toString() {
 		return ", socket=" + socket +
-				", readBuf=" + readBuf +
-				", closed=" + isClosed() +
-				", keepAlive=" + isKeepAlive() +
-				", gzipped=" + isGzipped() +
-				", chunked=" + isChunked() +
-				", webSocket=" + (IWebSocket.ENABLED && isWebSocket()) +
-				", contentLengthRemaining=" + contentLength +
-				", poolTimestamp=" + poolTimestamp;
+			", readBuf=" + readBuf +
+			", closed=" + isClosed() +
+			", keepAlive=" + isKeepAlive() +
+			", gzipped=" + isGzipped() +
+			", chunked=" + isChunked() +
+			", webSocket=" + (IWebSocket.ENABLED && isWebSocket()) +
+			", contentLengthRemaining=" + contentLength +
+			", poolTimestamp=" + poolTimestamp;
 	}
 
 }

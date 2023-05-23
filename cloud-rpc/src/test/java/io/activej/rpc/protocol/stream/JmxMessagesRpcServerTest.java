@@ -44,50 +44,50 @@ public class JmxMessagesRpcServerTest {
 	public void setup() throws IOException {
 		listenPort = getFreePort();
 		server = RpcServer.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(String.class)
-				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
-				.withHandler(String.class, request ->
-						Promise.of("Hello, " + request + "!"))
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.build();
+			.withMessageTypes(String.class)
+			.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
+			.withHandler(String.class, request ->
+				Promise.of("Hello, " + request + "!"))
+			.withListenPort(listenPort)
+			.withAcceptOnce()
+			.build();
 		server.listen();
 	}
 
 	@Test
 	public void testWithoutProtocolError() {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(String.class)
-				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
-				.build();
+			.withMessageTypes(String.class)
+			.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
+			.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+			.build();
 		await(client.start().whenResult(() ->
-				client.sendRequest("msg", 1000)
-						.whenComplete(client::stop)));
+			client.sendRequest("msg", 1000)
+				.whenComplete(client::stop)));
 		assertEquals(0, server.getFailedRequests().getTotalCount());
 	}
 
 	@Test
 	public void testWithProtocolError() {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
-				.build();
+			.withMessageTypes(String.class)
+			.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+			.build();
 		await(client.start()
-				.whenResult(() -> client.sendRequest("msg", 10000)
-						.whenComplete(client::stop)));
+			.whenResult(() -> client.sendRequest("msg", 10000)
+				.whenComplete(client::stop)));
 		assertTrue(server.getLastProtocolError().getTotal() > 0);
 	}
 
 	@Test
 	public void testWithProtocolError2() {
 		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
-				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
-				.build();
+			.withMessageTypes(String.class)
+			.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+			.build();
 		await(client.start()
-				.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
-						.whenComplete(client::stop)));
+			.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
+				.whenComplete(client::stop)));
 		assertTrue(server.getLastProtocolError().getTotal() > 0);
 	}
 }

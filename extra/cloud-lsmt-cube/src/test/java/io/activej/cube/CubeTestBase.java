@@ -89,40 +89,40 @@ public abstract class CubeTestBase {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{
-						"OT graph",
-						new UplinkFactory<OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
-							@Override
-							public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
-								Reactor reactor = cube.getReactor();
-								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
-										LOG_OT, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
-								return OTUplink.create(reactor, repository, LOG_OT);
-							}
+			new Object[]{
+				"OT graph",
+				new UplinkFactory<OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
+					@Override
+					public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
+						Reactor reactor = cube.getReactor();
+						AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
+							LOG_OT, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
+						return OTUplink.create(reactor, repository, LOG_OT);
+					}
 
-							@Override
-							public void initialize(OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink) {
-								noFail(() -> initializeRepository((MySqlOTRepository<LogDiff<CubeDiff>>) uplink.getRepository()));
-							}
-						}},
+					@Override
+					public void initialize(OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink) {
+						noFail(() -> initializeRepository((MySqlOTRepository<LogDiff<CubeDiff>>) uplink.getRepository()));
+					}
+				}},
 
-				// Linear
-				new Object[]{
-						"Linear graph",
-						new UplinkFactory<CubeMySqlOTUplink>() {
-							@Override
-							public CubeMySqlOTUplink createUninitialized(Cube cube) {
-								return CubeMySqlOTUplink.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
-										.withMeasuresValidator(MeasuresValidator.ofCube(cube))
-										.build();
-							}
+			// Linear
+			new Object[]{
+				"Linear graph",
+				new UplinkFactory<CubeMySqlOTUplink>() {
+					@Override
+					public CubeMySqlOTUplink createUninitialized(Cube cube) {
+						return CubeMySqlOTUplink.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
+							.withMeasuresValidator(MeasuresValidator.ofCube(cube))
+							.build();
+					}
 
-							@Override
-							public void initialize(CubeMySqlOTUplink uplink) {
-								noFail(() -> initializeUplink(uplink));
-							}
-						}
+					@Override
+					public void initialize(CubeMySqlOTUplink uplink) {
+						noFail(() -> initializeUplink(uplink));
+					}
 				}
+			}
 		);
 	}
 

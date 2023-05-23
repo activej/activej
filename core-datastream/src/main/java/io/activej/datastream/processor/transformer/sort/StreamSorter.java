@@ -62,9 +62,10 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 
 	private Executor sortingExecutor = Runnable::run;
 
-	private StreamSorter(IStreamSorterStorage<T> storage,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate,
-			int itemsInMemory) {
+	private StreamSorter(
+		IStreamSorterStorage<T> storage, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate,
+		int itemsInMemory
+	) {
 		this.storage = storage;
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
@@ -79,29 +80,29 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 		List<Integer> partitionIds = new ArrayList<>();
 		this.input = new Input(partitionIds);
 		this.output = StreamSuppliers.ofPromise(
-				(this.temporaryStreamsAccumulator = AsyncAccumulator.create(partitionIds))
-						.get()
-						.then(streamIds -> {
-							ArrayList<T> sortedList = input.list;
-							input.list = null;
-							return Promise.ofBlocking(sortingExecutor, () -> sortedList.sort(itemComparator))
-									.map($ -> {
-										StreamSupplier<T> listSupplier = StreamSuppliers.ofIterator(deduplicate ?
-												new DistinctIterator<>(sortedList, keyFunction, keyComparator) :
-												sortedList.iterator());
-										logger.info("Items in memory: {}, files: {}", sortedList.size(), streamIds.size());
-										if (streamIds.isEmpty()) {
-											return listSupplier;
-										}
-										StreamReducer<K, T, Void> streamMerger = StreamReducer.create(keyComparator);
-										listSupplier.streamTo(streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
-										for (Integer streamId : streamIds) {
-											StreamSuppliers.ofPromise(storage.read(streamId))
-													.streamTo(streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
-										}
-										return streamMerger.getOutput();
-									});
-						}));
+			(this.temporaryStreamsAccumulator = AsyncAccumulator.create(partitionIds))
+				.get()
+				.then(streamIds -> {
+					ArrayList<T> sortedList = input.list;
+					input.list = null;
+					return Promise.ofBlocking(sortingExecutor, () -> sortedList.sort(itemComparator))
+						.map($ -> {
+							StreamSupplier<T> listSupplier = StreamSuppliers.ofIterator(deduplicate ?
+								new DistinctIterator<>(sortedList, keyFunction, keyComparator) :
+								sortedList.iterator());
+							logger.info("Items in memory: {}, files: {}", sortedList.size(), streamIds.size());
+							if (streamIds.isEmpty()) {
+								return listSupplier;
+							}
+							StreamReducer<K, T, Void> streamMerger = StreamReducer.create(keyComparator);
+							listSupplier.streamTo(streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
+							for (Integer streamId : streamIds) {
+								StreamSuppliers.ofPromise(storage.read(streamId))
+									.streamTo(streamMerger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
+							}
+							return streamMerger.getOutput();
+						});
+				}));
 	}
 
 	/**
@@ -116,9 +117,10 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 	 * @param itemsInMemorySize size of elements which can be saved in RAM
 	 *                          before sorting
 	 */
-	public static <K, T> StreamSorter<K, T> create(IStreamSorterStorage<T> storage,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
-			int itemsInMemorySize) {
+	public static <K, T> StreamSorter<K, T> create(
+		IStreamSorterStorage<T> storage, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
+		int itemsInMemorySize
+	) {
 		return StreamSorter.builder(storage, keyFunction, keyComparator, distinct, itemsInMemorySize).build();
 	}
 
@@ -134,13 +136,14 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 	 * @param itemsInMemorySize size of elements which can be saved in RAM
 	 *                          before sorting
 	 */
-	public static <K, T> StreamSorter<K, T>.Builder builder(IStreamSorterStorage<T> storage,
-			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
-			int itemsInMemorySize) {
+	public static <K, T> StreamSorter<K, T>.Builder builder(
+		IStreamSorterStorage<T> storage, Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
+		int itemsInMemorySize
+	) {
 		return new StreamSorter<>(storage, keyFunction, keyComparator, distinct, itemsInMemorySize).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, StreamSorter<K, T>>{
+	public final class Builder extends AbstractBuilder<Builder, StreamSorter<K, T>> {
 		private Builder() {}
 
 		public Builder withSortingExecutor(Executor executor) {
@@ -180,18 +183,18 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 			list = new ArrayList<>(itemsInMemory);
 
 			temporaryStreamsAccumulator.addPromise(
-					Promise.ofBlocking(sortingExecutor, () -> sortedList.sort(itemComparator))
-							.then($ -> {
-								Iterator<T> iterator = distinct ?
-										new DistinctIterator<>(sortedList, keyFunction, keyComparator) :
-										sortedList.iterator();
-								return storage.newPartitionId()
-										.then(partitionId -> storage.write(partitionId)
-												.then(consumer -> StreamSuppliers.ofIterator(iterator).streamTo(consumer))
-												.map($2 -> partitionId));
-							})
-							.whenResult(this::suspendOrResume)
-							.whenException(this::closeEx), List::add);
+				Promise.ofBlocking(sortingExecutor, () -> sortedList.sort(itemComparator))
+					.then($ -> {
+						Iterator<T> iterator = distinct ?
+							new DistinctIterator<>(sortedList, keyFunction, keyComparator) :
+							sortedList.iterator();
+						return storage.newPartitionId()
+							.then(partitionId -> storage.write(partitionId)
+								.then(consumer -> StreamSuppliers.ofIterator(iterator).streamTo(consumer))
+								.map($2 -> partitionId));
+					})
+					.whenResult(this::suspendOrResume)
+					.whenException(this::closeEx), List::add);
 
 			suspendOrResume();
 		}
@@ -208,10 +211,10 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
 			output.getAcknowledgement()
-					.then((ackRes, e) -> cleanup()
-							.then(($, e1) -> Promise.of(ackRes, e)))
-					.whenResult(this::acknowledge)
-					.whenException(this::closeEx);
+				.then((ackRes, e) -> cleanup()
+					.then(($, e1) -> Promise.of(ackRes, e)))
+				.whenResult(this::acknowledge)
+				.whenException(this::closeEx);
 		}
 
 		@Override
@@ -228,8 +231,8 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 		private Promise<Void> cleanup() {
 			if (cleanupPromise != null) return cleanupPromise;
 			return cleanupPromise = partitionIds.isEmpty() ?
-					Promise.complete() :
-					storage.cleanup(partitionIds);
+				Promise.complete() :
+				storage.cleanup(partitionIds);
 		}
 	}
 

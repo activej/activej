@@ -72,7 +72,8 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  */
 public final class ClusterFileSystem extends AbstractReactive
-		implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+	implements IFileSystem, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final Logger logger = LoggerFactory.getLogger(ClusterFileSystem.class);
 
 	private final FileSystemPartitions partitions;
@@ -169,7 +170,7 @@ public final class ClusterFileSystem extends AbstractReactive
 		@Override
 		protected ClusterFileSystem doBuild() {
 			checkArgument(minUploadTargets <= maxUploadTargets,
-					"Maximum number of upload targets should be not be less than minimum number of upload targets");
+				"Maximum number of upload targets should be not be less than minimum number of upload targets");
 			return ClusterFileSystem.this;
 		}
 	}
@@ -196,88 +197,88 @@ public final class ClusterFileSystem extends AbstractReactive
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		checkInReactorThread(this);
 		return broadcast(
-				(id, fs) -> {
-					logger.trace("downloading file {} from {}", name, id);
-					return fs.download(name, offset, limit)
-							.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
-							.map(supplier -> supplier
-									.withEndOfStream(eos -> eos
-											.whenException(partitions.wrapDeathFn(id))));
-				},
-				AsyncCloseable::close)
-				.map(filterErrorsFn(() -> {
-					throw new FileSystemIOException("Could not download file '" + name + "' from any server");
-				}))
-				.then(suppliers -> {
-					ChannelByteCombiner combiner = ChannelByteCombiner.create();
-					for (ChannelSupplier<ByteBuf> supplier : suppliers) {
-						combiner.addInput().set(supplier);
-					}
-					return Promise.of(combiner.getOutput().getSupplier());
-				})
-				.whenComplete(downloadStartPromise.recordStats());
+			(id, fs) -> {
+				logger.trace("downloading file {} from {}", name, id);
+				return fs.download(name, offset, limit)
+					.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
+					.map(supplier -> supplier
+						.withEndOfStream(eos -> eos
+							.whenException(partitions.wrapDeathFn(id))));
+			},
+			AsyncCloseable::close)
+			.map(filterErrorsFn(() -> {
+				throw new FileSystemIOException("Could not download file '" + name + "' from any server");
+			}))
+			.then(suppliers -> {
+				ChannelByteCombiner combiner = ChannelByteCombiner.create();
+				for (ChannelSupplier<ByteBuf> supplier : suppliers) {
+					combiner.addInput().set(supplier);
+				}
+				return Promise.of(combiner.getOutput().getSupplier());
+			})
+			.whenComplete(downloadStartPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
 		checkInReactorThread(this);
 		return IFileSystem.super.copy(name, target)
-				.whenComplete(copyPromise.recordStats());
+			.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
 		checkInReactorThread(this);
 		return IFileSystem.super.copyAll(sourceToTarget)
-				.whenComplete(copyAllPromise.recordStats());
+			.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(String name, String target) {
 		checkInReactorThread(this);
 		return IFileSystem.super.move(name, target)
-				.whenComplete(movePromise.recordStats());
+			.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
 		checkInReactorThread(this);
 		return IFileSystem.super.moveAll(sourceToTarget)
-				.whenComplete(moveAllPromise.recordStats());
+			.whenComplete(moveAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(String name) {
 		checkInReactorThread(this);
 		return broadcast(fs -> fs.delete(name))
-				.whenComplete(deletePromise.recordStats())
-				.toVoid();
+			.whenComplete(deletePromise.recordStats())
+			.toVoid();
 	}
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		checkInReactorThread(this);
 		return broadcast(fs -> fs.deleteAll(toDelete))
-				.whenComplete(deleteAllPromise.recordStats())
-				.toVoid();
+			.whenComplete(deleteAllPromise.recordStats())
+			.toVoid();
 	}
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
 		checkInReactorThread(this);
 		return broadcast(fs -> fs.list(glob))
-				.map(filterErrorsFn())
-				.map(maps -> FileMetadata.flatten(maps.stream()))
-				.whenComplete(listPromise.recordStats());
+			.map(filterErrorsFn())
+			.map(maps -> FileMetadata.flatten(maps.stream()))
+			.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
 		checkInReactorThread(this);
 		return broadcast(fs -> fs.info(name))
-				.map(filterErrorsFn())
-				.map(meta -> meta.stream().max(FileMetadata.COMPARATOR).orElse(null))
-				.whenComplete(infoPromise.recordStats());
+			.map(filterErrorsFn())
+			.map(meta -> meta.stream().max(FileMetadata.COMPARATOR).orElse(null))
+			.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
@@ -286,25 +287,25 @@ public final class ClusterFileSystem extends AbstractReactive
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return broadcast(fs -> fs.infoAll(names))
-				.map(filterErrorsFn())
-				.map(maps -> FileMetadata.flatten(maps.stream()))
-				.whenComplete(infoAllPromise.recordStats());
+			.map(filterErrorsFn())
+			.map(maps -> FileMetadata.flatten(maps.stream()))
+			.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		checkInReactorThread(this);
 		return partitions.checkAllPartitions()
-				.then(this::ensureIsAlive);
+			.then(this::ensureIsAlive);
 	}
 
 	@Override
 	public Promise<?> start() {
 		checkInReactorThread(this);
 		checkArgument(deadPartitionsThreshold < partitions.getPartitions().size(),
-				"Dead partitions threshold should be less than number of partitions");
+			"Dead partitions threshold should be less than number of partitions");
 		checkArgument(maxUploadTargets <= partitions.getPartitions().size(),
-				"Maximum number of upload targets should not exceed total number of partitions");
+			"Maximum number of upload targets should not exceed total number of partitions");
 
 		return ping();
 	}
@@ -326,63 +327,61 @@ public final class ClusterFileSystem extends AbstractReactive
 
 	private Promise<Void> ensureIsAlive() {
 		return isAlive() ?
-				Promise.complete() :
-				Promise.ofException(new FileSystemIOException("There are more dead partitions than allowed(" +
-						partitions.getDeadPartitions().size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting"));
+			Promise.complete() :
+			Promise.ofException(new FileSystemIOException("There are more dead partitions than allowed(" +
+				partitions.getDeadPartitions().size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting"));
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(
-			String name,
-			AsyncFunction<IFileSystem, ChannelConsumer<ByteBuf>> action,
-			ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer,
-			PromiseStats startStats,
-			PromiseStats finishStats) {
+		String name, AsyncFunction<IFileSystem, ChannelConsumer<ByteBuf>> action,
+		ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer, PromiseStats startStats,
+		PromiseStats finishStats
+	) {
 		return ensureIsAlive()
-				.then(() -> collect(name, action))
-				.then(containers -> {
-					ChannelByteSplitter splitter = ChannelByteSplitter.create(minUploadTargets);
-					for (Container<ChannelConsumer<ByteBuf>> container : containers) {
-						splitter.addOutput().set(container.value);
-					}
+			.then(() -> collect(name, action))
+			.then(containers -> {
+				ChannelByteSplitter splitter = ChannelByteSplitter.create(minUploadTargets);
+				for (Container<ChannelConsumer<ByteBuf>> container : containers) {
+					splitter.addOutput().set(container.value);
+				}
 
-					if (logger.isTraceEnabled()) {
-						logger.trace("uploading file {} to {}, {}", name, containers.stream()
-								.map(container -> container.id.toString())
-								.collect(joining(", ", "[", "]")), this);
-					}
+				if (logger.isTraceEnabled()) {
+					logger.trace("uploading file {} to {}, {}", name, containers.stream()
+						.map(container -> container.id.toString())
+						.collect(joining(", ", "[", "]")), this);
+				}
 
-					return Promise.of(splitter.getInput().getConsumer()
-									.transformWith(transformer))
-							.whenComplete(finishStats.recordStats());
-				})
-				.whenComplete(startStats.recordStats());
+				return Promise.of(splitter.getInput().getConsumer()
+						.transformWith(transformer))
+					.whenComplete(finishStats.recordStats());
+			})
+			.whenComplete(startStats.recordStats());
 	}
 
 	private Promise<List<Container<ChannelConsumer<ByteBuf>>>> collect(
-			String name,
-			AsyncFunction<IFileSystem, ChannelConsumer<ByteBuf>> action
+		String name, AsyncFunction<IFileSystem, ChannelConsumer<ByteBuf>> action
 	) {
 		Iterator<Object> idIterator = partitions.select(name).iterator();
 		Set<ChannelConsumer<ByteBuf>> consumers = new HashSet<>();
 		RefBoolean failed = new RefBoolean(false);
 		return Promises.toList(
-						Stream.generate(() -> first(
-										transformIterator(idIterator,
-												id -> call(id, action)
-														.whenResult(consumer -> {
-															if (failed.get()) {
-																consumer.close();
-															} else {
-																consumers.add(consumer);
-															}
-														})
-														.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenException(partitions.wrapDeathFn(id))))))))
-								.limit(maxUploadTargets))
-				.whenException(() -> {
-					consumers.forEach(AsyncCloseable::close);
-					failed.set(true);
-					throw new FileSystemIOException("Didn't connect to enough partitions to upload '" + name + '\'');
-				});
+				Stream.generate(() -> first(
+						transformIterator(idIterator,
+							id -> call(id, action)
+								.whenResult(consumer -> {
+									if (failed.get()) {
+										consumer.close();
+									} else {
+										consumers.add(consumer);
+									}
+								})
+								.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenException(partitions.wrapDeathFn(id))))))))
+					.limit(maxUploadTargets))
+			.whenException(() -> {
+				consumers.forEach(AsyncCloseable::close);
+				failed.set(true);
+				throw new FileSystemIOException("Didn't connect to enough partitions to upload '" + name + '\'');
+			});
 	}
 
 	private <T> Promise<T> call(Object id, AsyncFunction<IFileSystem, T> action) {
@@ -395,21 +394,21 @@ public final class ClusterFileSystem extends AbstractReactive
 			return Promise.ofException(new FileSystemIOException("Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
-				.whenException(partitions.wrapDeathFn(id));
+			.whenException(partitions.wrapDeathFn(id));
 	}
 
 	private <T> Promise<List<Try<T>>> broadcast(AsyncBiFunction<Object, IFileSystem, T> action, Consumer<T> cleanup) {
 		return ensureIsAlive()
-				.then(() -> Promise.ofCallback(cb ->
-						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
-										.map(entry -> action.apply(entry.getKey(), entry.getValue())
-												.whenException(partitions.wrapDeathFn(entry.getKey()))
-												.whenResult(v -> {if (cb.isComplete()) cleanup.accept(v);})
-												.toTry()
-												.then(aTry -> ensureIsAlive()
-														.map($ -> aTry)
-														.whenException(e -> aTry.ifSuccess(cleanup)))))
-								.subscribe(cb)));
+			.then(() -> Promise.ofCallback(cb ->
+				Promises.toList(partitions.getAlivePartitions().entrySet().stream()
+						.map(entry -> action.apply(entry.getKey(), entry.getValue())
+							.whenException(partitions.wrapDeathFn(entry.getKey()))
+							.whenResult(v -> {if (cb.isComplete()) cleanup.accept(v);})
+							.toTry()
+							.then(aTry -> ensureIsAlive()
+								.map($ -> aTry)
+								.whenException(e -> aTry.ifSuccess(cleanup)))))
+					.subscribe(cb)));
 	}
 
 	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn() {
@@ -467,21 +466,21 @@ public final class ClusterFileSystem extends AbstractReactive
 	@JmxAttribute
 	public void setDeadPartitionsThreshold(int deadPartitionsThreshold) {
 		checkArgument(0 <= deadPartitionsThreshold,
-				"Dead partitions threshold cannot be less than zero");
+			"Dead partitions threshold cannot be less than zero");
 		this.deadPartitionsThreshold = deadPartitionsThreshold;
 	}
 
 	@JmxAttribute
 	public void setMinUploadTargets(int minUploadTargets) {
 		checkArgument(0 <= minUploadTargets,
-				"Minimum number of upload targets should not be less than zero");
+			"Minimum number of upload targets should not be less than zero");
 		this.minUploadTargets = minUploadTargets;
 	}
 
 	@JmxAttribute
 	public void setMaxUploadTargets(int maxUploadTargets) {
 		checkArgument(0 < maxUploadTargets,
-				"Maximum number of upload targets should be greater than zero");
+			"Maximum number of upload targets should be greater than zero");
 		this.maxUploadTargets = maxUploadTargets;
 	}
 
@@ -498,15 +497,15 @@ public final class ClusterFileSystem extends AbstractReactive
 	@JmxAttribute
 	public String[] getAlivePartitions() {
 		return partitions.getAlivePartitions().keySet().stream()
-				.map(Object::toString)
-				.toArray(String[]::new);
+			.map(Object::toString)
+			.toArray(String[]::new);
 	}
 
 	@JmxAttribute
 	public String[] getDeadPartitions() {
 		return partitions.getDeadPartitions().keySet().stream()
-				.map(Object::toString)
-				.toArray(String[]::new);
+			.map(Object::toString)
+			.toArray(String[]::new);
 	}
 
 	@JmxAttribute

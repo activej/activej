@@ -32,7 +32,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("unchecked")
 public abstract class SplitterLogDataConsumer<T, D> extends AbstractReactive
-		implements ILogDataConsumer<T, D> {
+	implements ILogDataConsumer<T, D> {
 
 	public final class Context {
 		private final List<ILogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
@@ -70,8 +70,8 @@ public abstract class SplitterLogDataConsumer<T, D> extends AbstractReactive
 
 		for (ILogDataConsumer<?, D> logDataConsumer : ctx.logDataConsumers) {
 			diffsAccumulator.addPromise(
-					splitter.newOutput().streamTo(((ILogDataConsumer<Object, D>) logDataConsumer).consume()),
-					List::addAll);
+				splitter.newOutput().streamTo(((ILogDataConsumer<Object, D>) logDataConsumer).consume()),
+				List::addAll);
 		}
 
 		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run());

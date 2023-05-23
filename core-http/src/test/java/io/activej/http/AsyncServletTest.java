@@ -24,14 +24,14 @@ public class AsyncServletTest {
 	@Test
 	public void testEnsureRequestBody() throws Exception {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE)
-				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise());
+			.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise());
 
 		HttpRequest testRequest = HttpRequest.post("http://example.com")
-				.withBodyStream(ChannelSuppliers.ofValues(
-						ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
-						ByteBuf.wrapForReading("Test2".getBytes(UTF_8)))
-				)
-				.build();
+			.withBodyStream(ChannelSuppliers.ofValues(
+				ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
+				ByteBuf.wrapForReading("Test2".getBytes(UTF_8)))
+			)
+			.build();
 
 		HttpResponse response = await(servlet.serve(testRequest));
 		testRequest.recycle();
@@ -43,18 +43,18 @@ public class AsyncServletTest {
 	@Test
 	public void testEnsureRequestBodyWithException() throws Exception {
 		AsyncServlet servlet = request -> request.loadBody(Integer.MAX_VALUE)
-				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise());
+			.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise());
 		Exception exception = new Exception("TestException");
 
 		ByteBuf byteBuf = ByteBufPool.allocate(100);
 		byteBuf.put("Test1".getBytes(UTF_8));
 
 		HttpRequest testRequest = HttpRequest.post("http://example.com")
-				.withBodyStream(ChannelSuppliers.concat(
-						ChannelSuppliers.ofValue(byteBuf),
-						ChannelSuppliers.ofException(exception)
-				))
-				.build();
+			.withBodyStream(ChannelSuppliers.concat(
+				ChannelSuppliers.ofValue(byteBuf),
+				ChannelSuppliers.ofException(exception)
+			))
+			.build();
 
 		Exception e = awaitException(servlet.serve(testRequest));
 

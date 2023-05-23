@@ -64,11 +64,11 @@ public final class Eq implements AggregationPredicate {
 		Variable property = property(record, key.replace('.', '$'));
 		Object internalValue = toInternalValue(fields, key, this.value);
 		return internalValue == null ?
-				isNull(property, fields.get(key)) :
-				and(
-						isNotNull(property, fields.get(key)),
-						isEq(property, value(internalValue))
-				);
+			isNull(property, fields.get(key)) :
+			and(
+				isNotNull(property, fields.get(key)),
+				isEq(property, value(internalValue))
+			);
 	}
 
 	@Override

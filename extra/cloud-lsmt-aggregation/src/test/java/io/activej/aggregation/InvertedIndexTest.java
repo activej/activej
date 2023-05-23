@@ -82,9 +82,9 @@ public class InvertedIndexTest {
 		@Override
 		public String toString() {
 			return "InvertedIndexQueryResult{" +
-					"word='" + word + '\'' +
-					", documents=" + documents +
-					'}';
+				"word='" + word + '\'' +
+				", documents=" + documents +
+				'}';
 		}
 	}
 
@@ -100,48 +100,48 @@ public class InvertedIndexTest {
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
-				.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-						.withKey("word", ofString())
-						.withMeasure("documents", union(ofInt()))
-						.build())
-				.withTemporarySortDir(temporaryFolder.newFolder().toPath())
-				.build();
+			.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+				.withKey("word", ofString())
+				.withMeasure("documents", union(ofInt()))
+				.build())
+			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
+			.build();
 
 		StreamSupplier<InvertedIndexRecord> supplier = StreamSuppliers.ofValues(
-				new InvertedIndexRecord("fox", 1),
-				new InvertedIndexRecord("brown", 2),
-				new InvertedIndexRecord("fox", 3));
+			new InvertedIndexRecord("fox", 1),
+			new InvertedIndexRecord("brown", 2),
+			new InvertedIndexRecord("fox", 3));
 
 		doProcess(aggregationChunkStorage, aggregation, supplier);
 
 		supplier = StreamSuppliers.ofValues(
-				new InvertedIndexRecord("brown", 3),
-				new InvertedIndexRecord("lazy", 4),
-				new InvertedIndexRecord("dog", 1));
+			new InvertedIndexRecord("brown", 3),
+			new InvertedIndexRecord("lazy", 4),
+			new InvertedIndexRecord("dog", 1));
 
 		doProcess(aggregationChunkStorage, aggregation, supplier);
 
 		supplier = StreamSuppliers.ofValues(
-				new InvertedIndexRecord("quick", 1),
-				new InvertedIndexRecord("fox", 4),
-				new InvertedIndexRecord("brown", 10));
+			new InvertedIndexRecord("quick", 1),
+			new InvertedIndexRecord("fox", 4),
+			new InvertedIndexRecord("brown", 10));
 
 		doProcess(aggregationChunkStorage, aggregation, supplier);
 
 		AggregationQuery query = AggregationQuery.builder()
-				.withKeys("word")
-				.withMeasures("documents")
-				.build();
+			.withKeys("word")
+			.withMeasures("documents")
+			.build();
 
 		List<InvertedIndexQueryResult> list = await(aggregation.query(query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
-				.toList());
+			.toList());
 
 		List<InvertedIndexQueryResult> expectedResult = List.of(
-				new InvertedIndexQueryResult("brown", Set.of(2, 3, 10)),
-				new InvertedIndexQueryResult("dog", Set.of(1)),
-				new InvertedIndexQueryResult("fox", Set.of(1, 3, 4)),
-				new InvertedIndexQueryResult("lazy", Set.of(4)),
-				new InvertedIndexQueryResult("quick", Set.of(1)));
+			new InvertedIndexQueryResult("brown", Set.of(2, 3, 10)),
+			new InvertedIndexQueryResult("dog", Set.of(1)),
+			new InvertedIndexQueryResult("fox", Set.of(1, 3, 4)),
+			new InvertedIndexQueryResult("lazy", Set.of(4)),
+			new InvertedIndexQueryResult("quick", Set.of(1)));
 
 		assertEquals(expectedResult, list);
 	}

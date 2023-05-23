@@ -50,20 +50,20 @@ public abstract class AbstractModule implements Module {
 	protected AbstractModule() {
 		Class<?> cls = getClass();
 		this.location = StackWalker.getInstance().walk(frames -> frames.skip(1)
-				.filter(stackFrame -> {
-					try {
-						String className = stackFrame.getClassName();
-						Class<?> traceCls = Class.forName(className);
-						if (!traceCls.isAssignableFrom(cls) && !className.startsWith("sun.reflect") && !className.startsWith("java.lang")) {
-							return true;
-						}
-					} catch (ClassNotFoundException ignored) {
-						return false;
+			.filter(stackFrame -> {
+				try {
+					String className = stackFrame.getClassName();
+					Class<?> traceCls = Class.forName(className);
+					if (!traceCls.isAssignableFrom(cls) && !className.startsWith("sun.reflect") && !className.startsWith("java.lang")) {
+						return true;
 					}
+				} catch (ClassNotFoundException ignored) {
 					return false;
-				})
-				.findFirst()
-				.orElse(null));
+				}
+				return false;
+			})
+			.findFirst()
+			.orElse(null));
 		this.builder = new ModuleBuilderImpl<>(getName(), location);
 	}
 

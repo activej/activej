@@ -37,7 +37,8 @@ import java.util.List;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractCollector<T, A> extends AbstractReactive
-		implements ICollector<T> {
+	implements ICollector<T> {
+
 	protected final Dataset<T> input;
 	protected final DataflowClient client;
 
@@ -51,7 +52,7 @@ public abstract class AbstractCollector<T, A> extends AbstractReactive
 
 	@SuppressWarnings("unchecked")
 	public abstract class Builder<Self extends Builder<Self, C>, C extends AbstractCollector<T, A>>
-			extends AbstractBuilder<Self, C> {
+		extends AbstractBuilder<Self, C> {
 
 		public final Self withLimit(long limit) {
 			checkNotBuilt(this);

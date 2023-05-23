@@ -22,11 +22,11 @@ public final class OfAnotherReactor<T> extends AbstractChannelSupplier<T> {
 		SettablePromise<T> promise = new SettablePromise<>();
 		reactor.startExternalTask();
 		anotherReactor.execute(() ->
-				anotherReactorSupplier.get()
-						.subscribe((item, e) -> {
-							reactor.execute(() -> promise.set(item, e));
-							reactor.completeExternalTask();
-						}));
+			anotherReactorSupplier.get()
+				.subscribe((item, e) -> {
+					reactor.execute(() -> promise.set(item, e));
+					reactor.completeExternalTask();
+				}));
 		return promise;
 	}
 

@@ -14,7 +14,7 @@ public final class ThreadLocalReactor {
 //					2) try_with_resources Eventloop.useCurrentThread() ... {your code block}\s
 //					3) refactor application so it starts async operations within eventloop.run(),\s
 //					   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule""";
-			"No reactor in current thread";
+		"No reactor in current thread";
 
 	static Reactor getCurrentReactor() {
 		Reactor reactor = ThreadLocalReactor.CURRENT_REACTOR.get();

@@ -71,10 +71,10 @@ public class ReducerDeadlockTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(List.of(new Partition(address1), new Partition(address2)))
-				.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
-				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
-				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
-				.build();
+			.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
+			.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
+			.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, Merge.class)))
+			.build();
 
 		ToListStreamConsumer<TestItem> result1 = ToListStreamConsumer.create();
 		ToListStreamConsumer<TestItem> result2 = ToListStreamConsumer.create();
@@ -87,12 +87,12 @@ public class ReducerDeadlockTest {
 		}
 
 		Module serverModule1 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
-				.bind(datasetId("items")).toInstance(list1)
-				.bind(datasetId("result")).toInstance(result1)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address1.getPort())
+			.bind(datasetId("items")).toInstance(list1)
+			.bind(datasetId("result")).toInstance(result1)
+			.build();
 
 		List<TestItem> list2 = new ArrayList<>(20000);
 		for (int i = 0; i < 20000; i++) {
@@ -100,12 +100,12 @@ public class ReducerDeadlockTest {
 		}
 
 		Module serverModule2 = ModuleBuilder.create()
-				.install(serverCommon)
-				.install(DatasetIdModule.create())
-				.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
-				.bind(datasetId("items")).toInstance(list2)
-				.bind(datasetId("result")).toInstance(result2)
-				.build();
+			.install(serverCommon)
+			.install(DatasetIdModule.create())
+			.bind(Integer.class, "dataflowPort").toInstance(address2.getPort())
+			.bind(datasetId("items")).toInstance(list2)
+			.bind(datasetId("result")).toInstance(result2)
+			.build();
 
 		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class);
 		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class);
@@ -117,17 +117,17 @@ public class ReducerDeadlockTest {
 		DataflowGraph graph = Injector.of(clientCommon).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
-				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
+			simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
 
 		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 
 		consumerNode.channels(DataflowContext.of(graph));
 
 		await(graph.execute()
-				.whenComplete(assertCompleteFn($ -> {
-					server1.close();
-					server2.close();
-				})));
+			.whenComplete(assertCompleteFn($ -> {
+				server1.close();
+				server2.close();
+			})));
 
 		// the sharder nonce is random, so with an *effectively zero* chance these assertions may fail
 		assertNotEquals(result1.getList(), list1);

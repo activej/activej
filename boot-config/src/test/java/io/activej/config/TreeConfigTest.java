@@ -17,9 +17,9 @@ public class TreeConfigTest {
 	@Before
 	public void setUp() {
 		config = Config.create()
-				.with("key1", "value1")
-				.with("key2.key3", Config.create().with("key4", "value4"))
-				.with("key5.key6", "6");
+			.with("key1", "value1")
+			.with("key2.key3", Config.create().with("key4", "value4"))
+			.with("key5.key6", "6");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -30,10 +30,10 @@ public class TreeConfigTest {
 	@Test
 	public void testBase() {
 		Config config = Config.create()
-				.with("a.a.a", "1")
-				.with("a.a.b", "2")
-				.with("a.b", "3")
-				.with("b", "4");
+			.with("a.a.a", "1")
+			.with("a.a.b", "2")
+			.with("a.b", "3")
+			.with("b", "4");
 		testBaseConfig(config);
 	}
 
@@ -46,8 +46,8 @@ public class TreeConfigTest {
 		assertEquals(Set.of("key1", "key2", "key5"), config.getChildren().keySet());
 
 		assertEquals(
-				config.getChild("key2.key3.key4"),
-				config.getChild("key2").getChild("key3").getChild("key4")
+			config.getChild("key2.key3.key4"),
+			config.getChild("key2").getChild("key3").getChild("key4")
 		);
 	}
 

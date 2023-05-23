@@ -61,8 +61,8 @@ public class MultilogTest {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(
-				new Object[]{"LZ4 format", FrameFormats.lz4(), 8},
-				new Object[]{"Legacy LZ4 format", FrameFormats.lz4Legacy(), 21}
+			new Object[]{"LZ4 format", FrameFormats.lz4(), 8},
+			new Object[]{"Legacy LZ4 format", FrameFormats.lz4Legacy(), 21}
 		);
 	}
 
@@ -77,7 +77,7 @@ public class MultilogTest {
 		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSuppliers.ofIterable(values)
-				.streamTo(StreamConsumers.ofPromise(multilog.write(testPartition))));
+			.streamTo(StreamConsumers.ofPromise(multilog.write(testPartition))));
 
 		assertEquals(values, readLog(multilog, testPartition));
 	}
@@ -89,11 +89,11 @@ public class MultilogTest {
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		IMultilog<String> multilog = Multilog.builder(reactor, fs,
-						frameFormat,
-						BinarySerializers.UTF8_SERIALIZER,
-						NAME_PARTITION_REMAINDER_SEQ)
-				.withBufferSize(1)
-				.build();
+				frameFormat,
+				BinarySerializers.UTF8_SERIALIZER,
+				NAME_PARTITION_REMAINDER_SEQ)
+			.withBufferSize(1)
+			.build();
 
 		String partition = "partition";
 
@@ -103,13 +103,13 @@ public class MultilogTest {
 
 		// Truncated data
 		await(fs.list("*" + partition + "*")
-				.then(map -> {
-					Entry<String, FileMetadata> entry = first(map.entrySet());
-					return fs.download(entry.getKey())
-							.then(supplier -> supplier
-									.transformWith(ChannelTransformers.rangeBytes(0, entry.getValue().getSize() - endOfStreamBlockSize))
-									.streamTo(fs.upload(entry.getKey())));
-				}));
+			.then(map -> {
+				Entry<String, FileMetadata> entry = first(map.entrySet());
+				return fs.download(entry.getKey())
+					.then(supplier -> supplier
+						.transformWith(ChannelTransformers.rangeBytes(0, entry.getValue().getSize() - endOfStreamBlockSize))
+						.streamTo(fs.upload(entry.getKey())));
+			}));
 
 		assertEquals(values, readLog(multilog, partition));
 	}
@@ -121,11 +121,11 @@ public class MultilogTest {
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		IMultilog<String> multilog = Multilog.builder(reactor, fs,
-						frameFormat,
-						BinarySerializers.UTF8_SERIALIZER,
-						NAME_PARTITION_REMAINDER_SEQ)
-				.withIgnoreMalformedLogs(true)
-				.build();
+				frameFormat,
+				BinarySerializers.UTF8_SERIALIZER,
+				NAME_PARTITION_REMAINDER_SEQ)
+			.withIgnoreMalformedLogs(true)
+			.build();
 
 		String partition1 = "partition1";
 		String partition2 = "partition2";
@@ -137,23 +137,23 @@ public class MultilogTest {
 
 		// malformed data
 		await(fs.list("*" + partition1 + "*")
-				.then(map -> {
-					String filename = first(map.keySet());
-					ByteBuf value = wrapUtf8("MALFORMED");
-					return ChannelSuppliers.ofValue(value).streamTo(fs.upload(filename));
-				}));
+			.then(map -> {
+				String filename = first(map.keySet());
+				ByteBuf value = wrapUtf8("MALFORMED");
+				return ChannelSuppliers.ofValue(value).streamTo(fs.upload(filename));
+			}));
 
 		// Unexpected data
 		await(fs.list("*" + partition2 + "*")
-				.then(map -> {
-					String filename = first(map.keySet());
-					return fs.download(filename)
-							.then(supplier -> {
-								ByteBuf value = wrapUtf8("UNEXPECTED DATA");
-								return ChannelSuppliers.concat(supplier, ChannelSuppliers.ofValue(value))
-										.streamTo(fs.upload(filename));
-							});
-				}));
+			.then(map -> {
+				String filename = first(map.keySet());
+				return fs.download(filename)
+					.then(supplier -> {
+						ByteBuf value = wrapUtf8("UNEXPECTED DATA");
+						return ChannelSuppliers.concat(supplier, ChannelSuppliers.ofValue(value))
+							.streamTo(fs.upload(filename));
+					});
+			}));
 
 		assertTrue(readLog(multilog, partition1).isEmpty());
 		assertEquals(values, readLog(multilog, partition2));
@@ -166,10 +166,10 @@ public class MultilogTest {
 		FileSystem fs = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		IMultilog<String> multilog = Multilog.builder(reactor, fs,
-						frameFormat,
-						BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
-				.withIgnoreMalformedLogs(true)
-				.build();
+				frameFormat,
+				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
+			.withIgnoreMalformedLogs(true)
+			.build();
 
 		String partition = "partition";
 
@@ -179,15 +179,15 @@ public class MultilogTest {
 
 		ToListStreamConsumer<String> listConsumer = ToListStreamConsumer.create();
 		await(fs.list("*" + partition + "*")
-				.then(map -> {
-					PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
-					assert partitionAndFile != null;
-					LogFile logFile = partitionAndFile.logFile();
-					return StreamSupplierWithResult.ofPromise(
-									multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))
-							.getSupplier()
-							.streamTo(listConsumer);
-				}));
+			.then(map -> {
+				PartitionAndFile partitionAndFile = NAME_PARTITION_REMAINDER_SEQ.parse(first(map.keySet()));
+				assert partitionAndFile != null;
+				LogFile logFile = partitionAndFile.logFile();
+				return StreamSupplierWithResult.ofPromise(
+						multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))
+					.getSupplier()
+					.streamTo(listConsumer);
+			}));
 
 		assertTrue(listConsumer.getList().isEmpty());
 	}
@@ -197,28 +197,28 @@ public class MultilogTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 
 		FileSystem fs = FileSystem.builder(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
-				.withReaderBufferSize(MemSize.bytes(1))
-				.build();
+			.withReaderBufferSize(MemSize.bytes(1))
+			.build();
 
 		await(fs.start());
 
 		IMultilog<String> multilog = Multilog.builder(reactor,
-						fs,
-						frameFormat,
-						BinarySerializers.UTF8_SERIALIZER,
-						NAME_PARTITION_REMAINDER_SEQ)
-				.withBufferSize(MemSize.bytes(1))
-				.build();
+				fs,
+				frameFormat,
+				BinarySerializers.UTF8_SERIALIZER,
+				NAME_PARTITION_REMAINDER_SEQ)
+			.withBufferSize(MemSize.bytes(1))
+			.build();
 
 		String testPartition = "partition";
 
 		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSuppliers.ofIterable(values)
-				.streamTo(StreamConsumers.ofPromise(multilog.write(testPartition))));
+			.streamTo(StreamConsumers.ofPromise(multilog.write(testPartition))));
 
 		StreamSupplierWithResult<String, LogPosition> supplierWithResult = StreamSupplierWithResult.ofPromise(
-				multilog.read(testPartition, new LogFile("", 0), 0, null));
+			multilog.read(testPartition, new LogFile("", 0), 0, null));
 
 		ToListStreamConsumer<String> consumerToList = ToListStreamConsumer.create();
 		await(supplierWithResult.getSupplier().streamTo(consumerToList));
@@ -231,7 +231,7 @@ public class MultilogTest {
 
 		// check that position does not change on second call
 		supplierWithResult = StreamSupplierWithResult.ofPromise(
-				multilog.read(testPartition, pos.getLogFile(), position, null));
+			multilog.read(testPartition, pos.getLogFile(), position, null));
 
 		consumerToList = ToListStreamConsumer.create();
 		await(supplierWithResult.getSupplier().streamTo(consumerToList));
@@ -244,9 +244,9 @@ public class MultilogTest {
 	private static <T> List<T> readLog(IMultilog<T> multilog, String partition) {
 		ToListStreamConsumer<T> listConsumer = ToListStreamConsumer.create();
 		await(StreamSupplierWithResult.ofPromise(
-						multilog.read(partition, new LogFile("", 0), 0, null))
-				.getSupplier()
-				.streamTo(listConsumer));
+				multilog.read(partition, new LogFile("", 0), 0, null))
+			.getSupplier()
+			.streamTo(listConsumer));
 
 		return listConsumer.getList();
 	}

@@ -73,7 +73,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path, OpenOption... openOptions) {
 		return builderOpen(executor, path, openOptions)
-				.map(AbstractBuilder::build);
+			.map(AbstractBuilder::build);
 	}
 
 	public static ChannelFileWriter openBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
@@ -99,7 +99,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 	public static Promise<Builder> builderOpen(Executor executor, Path path, OpenOption... openOptions) {
 		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
 		return Promise.ofBlocking(executor, () -> FileChannel.open(path, openOptions))
-				.map(channel -> builder(Reactor.getCurrentReactor(), executor, channel));
+			.map(channel -> builder(Reactor.getCurrentReactor(), executor, channel));
 	}
 
 	public static Builder builderBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
@@ -163,13 +163,13 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> {
 
 		byte[] array = buf.asArray();
 		return fileService.write(channel, p, array, 0, array.length)
-				.then(($, e2) -> {
-					if (isClosed()) return Promise.ofException(getException());
-					if (e2 != null) {
-						closeEx(e2);
-					}
-					return Promise.of(null, e2);
-				});
+			.then(($, e2) -> {
+				if (isClosed()) return Promise.ofException(getException());
+				if (e2 != null) {
+					closeEx(e2);
+				}
+				return Promise.of(null, e2);
+			});
 	}
 
 	private void closeFile() throws IOException {

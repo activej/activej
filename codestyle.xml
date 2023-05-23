@@ -30,6 +30,7 @@
     <option name="KEEP_SIMPLE_CLASSES_IN_ONE_LINE" value="true"/>
     <indentOptions>
       <option name="USE_TAB_CHARACTER" value="true"/>
+      <option name="CONTINUATION_INDENT_SIZE" value="4"/>
     </indentOptions>
   </codeStyleSettings>
   <codeStyleSettings language="XML">

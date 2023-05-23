@@ -56,7 +56,7 @@ public final class OffsetLimit extends AbstractNode {
 		task.bindChannel(input, skip.getInput());
 
 		StreamSupplier<?> supplier = skip.getOutput()
-				.transformWith(StreamTransformers.limit(limit));
+			.transformWith(StreamTransformers.limit(limit));
 		task.export(output, supplier);
 	}
 
@@ -68,10 +68,10 @@ public final class OffsetLimit extends AbstractNode {
 	@Override
 	public String toString() {
 		return "OffsetLimit{" +
-				"input=" + input +
-				", output=" + output +
-				", offset=" + (offset == Skip.NO_SKIP ? "NONE" : offset) +
-				", limit=" + (limit == Limiter.NO_LIMIT ? "NONE" : limit) +
-				'}';
+			"input=" + input +
+			", output=" + output +
+			", offset=" + (offset == Skip.NO_SKIP ? "NONE" : offset) +
+			", limit=" + (limit == Limiter.NO_LIMIT ? "NONE" : limit) +
+			'}';
 	}
 }

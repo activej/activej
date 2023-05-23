@@ -55,7 +55,7 @@ import static java.lang.String.format;
  * @param <T> type of storing data
  */
 public final class StreamSorterStorage<T> extends AbstractReactive
-		implements IStreamSorterStorage<T> {
+	implements IStreamSorterStorage<T> {
 	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage.class);
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";
@@ -72,8 +72,9 @@ public final class StreamSorterStorage<T> extends AbstractReactive
 	private MemSize readBlockSize = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 	private MemSize writeBlockSize = DEFAULT_SORTER_BLOCK_SIZE;
 
-	private StreamSorterStorage(Reactor reactor, Executor executor, BinarySerializer<T> serializer,
-			FrameFormat frameFormat, Path path) {
+	private StreamSorterStorage(
+		Reactor reactor, Executor executor, BinarySerializer<T> serializer, FrameFormat frameFormat, Path path
+	) {
 		super(reactor);
 		this.executor = executor;
 		this.serializer = serializer;
@@ -89,8 +90,9 @@ public final class StreamSorterStorage<T> extends AbstractReactive
 	 * @param serializer for serialization to bytes
 	 * @param path       path in which will store received data
 	 */
-	public static <T> StreamSorterStorage<T> create(Reactor reactor, Executor executor,
-			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
+	public static <T> StreamSorterStorage<T> create(
+		Reactor reactor, Executor executor, BinarySerializer<T> serializer, FrameFormat frameFormat, Path path
+	) {
 		return StreamSorterStorage.builder(reactor, executor, serializer, frameFormat, path).build();
 	}
 
@@ -102,8 +104,9 @@ public final class StreamSorterStorage<T> extends AbstractReactive
 	 * @param serializer for serialization to bytes
 	 * @param path       path in which will store received data
 	 */
-	public static <T> StreamSorterStorage<T>.Builder builder(Reactor reactor, Executor executor,
-			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
+	public static <T> StreamSorterStorage<T>.Builder builder(
+		Reactor reactor, Executor executor, BinarySerializer<T> serializer, FrameFormat frameFormat, Path path
+	) {
 		checkArgument(!path.getFileName().toString().contains("%d"), "Filename should not contain '%d'");
 		try {
 			Files.createDirectories(path);
@@ -158,14 +161,14 @@ public final class StreamSorterStorage<T> extends AbstractReactive
 	public Promise<StreamConsumer<T>> write(int partition) {
 		Path path = partitionPath(partition);
 		return Promise.of(StreamConsumers.ofSupplier(
-				supplier -> supplier
-						.transformWith(ChannelSerializer.builder(serializer)
-								.withInitialBufferSize(readBlockSize)
-								.build())
-						.transformWith(ChannelTransformers.chunkBytes(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
-						.transformWith(ChannelFrameEncoder.create(frameFormat))
-						.transformWith(ChannelTransformers.chunkBytes(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
-						.streamTo(ChannelFileWriter.open(executor, path))));
+			supplier -> supplier
+				.transformWith(ChannelSerializer.builder(serializer)
+					.withInitialBufferSize(readBlockSize)
+					.build())
+				.transformWith(ChannelTransformers.chunkBytes(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
+				.transformWith(ChannelFrameEncoder.create(frameFormat))
+				.transformWith(ChannelTransformers.chunkBytes(writeBlockSize.map(bytes -> bytes / 2), writeBlockSize))
+				.streamTo(ChannelFileWriter.open(executor, path))));
 	}
 
 	/**
@@ -179,9 +182,9 @@ public final class StreamSorterStorage<T> extends AbstractReactive
 		Path path = partitionPath(partition);
 
 		return ChannelFileReader.open(executor, path)
-				.map(file -> file
-						.transformWith(ChannelFrameDecoder.create(frameFormat))
-						.transformWith(ChannelDeserializer.create(serializer)));
+			.map(file -> file
+				.transformWith(ChannelFrameDecoder.create(frameFormat))
+				.transformWith(ChannelDeserializer.create(serializer)));
 	}
 
 	/**

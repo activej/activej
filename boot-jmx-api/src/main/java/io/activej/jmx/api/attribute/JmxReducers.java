@@ -35,9 +35,9 @@ public final class JmxReducers {
 		@Override
 		public Object reduce(List<?> list) {
 			return list.stream()
-					.filter(Objects::nonNull)
-					.findAny()
-					.orElse(null);
+				.filter(Objects::nonNull)
+				.findAny()
+				.orElse(null);
 		}
 	}
 
@@ -83,8 +83,8 @@ public final class JmxReducers {
 			if (Number.class.isAssignableFrom(attributeClass)) {
 				//noinspection unchecked,OptionalGetWithoutIsPresent
 				return reduceNumbers((List<? extends Number>) list,
-						d -> d.average().getAsDouble(),
-						l -> (long) l.average().getAsDouble()
+					d -> d.average().getAsDouble(),
+					l -> (long) l.average().getAsDouble()
 				);
 			}
 
@@ -101,9 +101,9 @@ public final class JmxReducers {
 		@Override
 		public @Nullable C reduce(List<? extends C> list) {
 			return list.stream()
-					.filter(Objects::nonNull)
-					.min(Comparator.naturalOrder())
-					.orElse(null);
+				.filter(Objects::nonNull)
+				.min(Comparator.naturalOrder())
+				.orElse(null);
 		}
 	}
 
@@ -111,24 +111,25 @@ public final class JmxReducers {
 		@Override
 		public @Nullable C reduce(List<? extends C> list) {
 			return list.stream()
-					.filter(Objects::nonNull)
-					.max(Comparator.naturalOrder())
-					.orElse(null);
+				.filter(Objects::nonNull)
+				.max(Comparator.naturalOrder())
+				.orElse(null);
 		}
 	}
 
-	private static @Nullable Number reduceNumbers(List<? extends Number> list,
-			ToDoubleFunction<DoubleStream> opDouble, ToLongFunction<LongStream> opLong) {
+	private static @Nullable Number reduceNumbers(
+		List<? extends Number> list, ToDoubleFunction<DoubleStream> opDouble, ToLongFunction<LongStream> opLong
+	) {
 		Class<?> numberClass = list.get(0).getClass();
 		if (isFloatingPointNumber(numberClass)) {
 			return convert(numberClass,
-					opDouble.applyAsDouble(list.stream().mapToDouble(Number::doubleValue)));
+				opDouble.applyAsDouble(list.stream().mapToDouble(Number::doubleValue)));
 		} else if (isIntegerNumber(numberClass)) {
 			return convert(numberClass,
-					opLong.applyAsLong(list.stream().mapToLong(Number::longValue)));
+				opLong.applyAsLong(list.stream().mapToLong(Number::longValue)));
 		} else {
 			throw new IllegalArgumentException(
-					"Unsupported objects of type: " + numberClass.getName());
+				"Unsupported objects of type: " + numberClass.getName());
 		}
 	}
 
@@ -138,7 +139,7 @@ public final class JmxReducers {
 
 	private static boolean isIntegerNumber(Class<?> numberClass) {
 		return Byte.class.isAssignableFrom(numberClass) || Short.class.isAssignableFrom(numberClass)
-				|| Integer.class.isAssignableFrom(numberClass) || Long.class.isAssignableFrom(numberClass);
+			|| Integer.class.isAssignableFrom(numberClass) || Long.class.isAssignableFrom(numberClass);
 	}
 
 	private static Number convert(Class<?> targetClass, Number number) {

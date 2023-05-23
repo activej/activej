@@ -37,16 +37,16 @@ import static org.junit.Assert.assertEquals;
 
 public final class MessagingTest {
 	private static final ByteBufsCodec<String, String> STRING_SERIALIZER = ByteBufsCodecs
-			.ofDelimiter(
-					ofNullTerminatedBytes(),
-					buf -> {
-						ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
-						buf1.put((byte) 0);
-						return buf1;
-					})
-			.transform(
-					buf -> buf.asString(UTF_8),
-					str -> ByteBuf.wrapForReading(str.getBytes(UTF_8)));
+		.ofDelimiter(
+			ofNullTerminatedBytes(),
+			buf -> {
+				ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
+				buf1.put((byte) 0);
+				return buf1;
+			})
+		.transform(
+			buf -> buf.asString(UTF_8),
+			str -> ByteBuf.wrapForReading(str.getBytes(UTF_8)));
 	private static final ByteBufsCodec<Integer, Integer> INTEGER_SERIALIZER = STRING_SERIALIZER.transform(Integer::parseInt, n -> Integer.toString(n));
 
 	@ClassRule
@@ -63,29 +63,29 @@ public final class MessagingTest {
 
 	private static void pong(IMessaging<Integer, Integer> messaging) {
 		messaging.receive()
-				.then(msg -> {
-					if (msg == null) {
-						messaging.close();
-						return Promise.complete();
-					}
-					return messaging.send(msg).whenResult(() -> pong(messaging));
-				})
-				.whenException(e -> messaging.close());
+			.then(msg -> {
+				if (msg == null) {
+					messaging.close();
+					return Promise.complete();
+				}
+				return messaging.send(msg).whenResult(() -> pong(messaging));
+			})
+			.whenException(e -> messaging.close());
 	}
 
 	private static void ping(int n, IMessaging<Integer, Integer> messaging) {
 		messaging.send(n)
-				.then(messaging::receive)
-				.whenResult(msg -> {
-					if (msg != null) {
-						if (msg > 0) {
-							ping(msg - 1, messaging);
-						} else {
-							messaging.close();
-						}
+			.then(messaging::receive)
+			.whenResult(msg -> {
+				if (msg != null) {
+					if (msg > 0) {
+						ping(msg - 1, messaging);
+					} else {
+						messaging.close();
 					}
-				})
-				.whenException(e -> messaging.close());
+				}
+			})
+			.whenException(e -> messaging.close());
 	}
 
 	@Before
@@ -97,14 +97,14 @@ public final class MessagingTest {
 	@Test
 	public void testPing() throws IOException {
 		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
-						pong(Messaging.create(socket, INTEGER_SERIALIZER)))
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.build()
-				.listen();
+				pong(Messaging.create(socket, INTEGER_SERIALIZER)))
+			.withListenPort(listenPort)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
-				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, Messaging.create(socket, INTEGER_SERIALIZER)))));
+			.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, Messaging.create(socket, INTEGER_SERIALIZER)))));
 	}
 
 	@Test
@@ -112,37 +112,37 @@ public final class MessagingTest {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
 		SimpleServer.builder(
-						Reactor.getCurrentReactor(),
-						socket -> {
-							Messaging<String, String> messaging =
-									Messaging.create(socket, STRING_SERIALIZER);
+				Reactor.getCurrentReactor(),
+				socket -> {
+					Messaging<String, String> messaging =
+						Messaging.create(socket, STRING_SERIALIZER);
 
-							messaging.receive()
-									.whenResult(msg -> {
-										assertEquals("start", msg);
-										StreamSuppliers.ofIterable(source)
-												.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
-														.withInitialBufferSize(MemSize.of(1))
-														.build())
-												.streamTo(messaging.sendBinaryStream());
-									});
-						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.build()
-				.listen();
+					messaging.receive()
+						.whenResult(msg -> {
+							assertEquals("start", msg);
+							StreamSuppliers.ofIterable(source)
+								.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+									.withInitialBufferSize(MemSize.of(1))
+									.build())
+								.streamTo(messaging.sendBinaryStream());
+						});
+				})
+			.withListenPort(listenPort)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		List<Long> list = await(TcpSocket.connect(getCurrentReactor(), address)
-				.then(socket -> {
-					Messaging<String, String> messaging =
-							Messaging.create(socket, STRING_SERIALIZER);
+			.then(socket -> {
+				Messaging<String, String> messaging =
+					Messaging.create(socket, STRING_SERIALIZER);
 
-					return messaging.send("start")
-							.then(messaging::sendEndOfStream)
-							.then(() -> messaging.receiveBinaryStream()
-									.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-									.toList());
-				}));
+				return messaging.send("start")
+					.then(messaging::sendEndOfStream)
+					.then(() -> messaging.receiveBinaryStream()
+						.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+						.toList());
+			}));
 
 		assertEquals(source, list);
 	}
@@ -154,39 +154,39 @@ public final class MessagingTest {
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
 		SimpleServer.builder(
-						Reactor.getCurrentReactor(),
-						socket -> {
-							Messaging<String, String> messaging =
-									Messaging.create(socket, serializer);
+				Reactor.getCurrentReactor(),
+				socket -> {
+					Messaging<String, String> messaging =
+						Messaging.create(socket, serializer);
 
-							messaging.receive()
-									.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
-									.then(() ->
-											messaging.receiveBinaryStream()
-													.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-													.toList()
-													.then(list ->
-															messaging.sendEndOfStream().map($2 -> list)))
-									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
-						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.build()
-				.listen();
+					messaging.receive()
+						.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
+						.then(() ->
+							messaging.receiveBinaryStream()
+								.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+								.toList()
+								.then(list ->
+									messaging.sendEndOfStream().map($2 -> list)))
+						.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
+				})
+			.withListenPort(listenPort)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
-				.whenResult(socket -> {
-					Messaging<String, String> messaging =
-							Messaging.create(socket, serializer);
+			.whenResult(socket -> {
+				Messaging<String, String> messaging =
+					Messaging.create(socket, serializer);
 
-					messaging.send("start");
+				messaging.send("start");
 
-					StreamSuppliers.ofIterable(source)
-							.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
-									.withInitialBufferSize(MemSize.of(1))
-									.build())
-							.streamTo(messaging.sendBinaryStream());
-				}));
+				StreamSuppliers.ofIterable(source)
+					.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+						.withInitialBufferSize(MemSize.of(1))
+						.build())
+					.streamTo(messaging.sendBinaryStream());
+			}));
 	}
 
 	@Test
@@ -196,41 +196,41 @@ public final class MessagingTest {
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
 		SimpleServer.builder(
-						Reactor.getCurrentReactor(),
-						socket -> {
-							Messaging<String, String> messaging = Messaging.create(socket, serializer);
+				Reactor.getCurrentReactor(),
+				socket -> {
+					Messaging<String, String> messaging = Messaging.create(socket, serializer);
 
-							messaging.receive()
-									.whenResult(msg -> assertEquals("start", msg))
-									.then(msg ->
-											messaging.receiveBinaryStream()
-													.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-													.toList()
-													.then(list ->
-															messaging.send("ack")
-																	.then(messaging::sendEndOfStream)
-																	.map($ -> list)))
-									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
-						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.build()
-				.listen();
+					messaging.receive()
+						.whenResult(msg -> assertEquals("start", msg))
+						.then(msg ->
+							messaging.receiveBinaryStream()
+								.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+								.toList()
+								.then(list ->
+									messaging.send("ack")
+										.then(messaging::sendEndOfStream)
+										.map($ -> list)))
+						.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
+				})
+			.withListenPort(listenPort)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		String msg = await(TcpSocket.connect(getCurrentReactor(), address)
-				.then(socket -> {
-					Messaging<String, String> messaging =
-							Messaging.create(socket, serializer);
+			.then(socket -> {
+				Messaging<String, String> messaging =
+					Messaging.create(socket, serializer);
 
-					return messaging.send("start")
-							.then(() -> StreamSuppliers.ofIterable(source)
-									.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
-											.withInitialBufferSize(MemSize.of(1))
-											.build())
-									.streamTo(messaging.sendBinaryStream()))
-							.then(messaging::receive)
-							.whenComplete(messaging::close);
-				}));
+				return messaging.send("start")
+					.then(() -> StreamSuppliers.ofIterable(source)
+						.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+							.withInitialBufferSize(MemSize.of(1))
+							.build())
+						.streamTo(messaging.sendBinaryStream()))
+					.then(messaging::receive)
+					.whenComplete(messaging::close);
+			}));
 
 		assertEquals("ack", msg);
 	}
@@ -240,38 +240,38 @@ public final class MessagingTest {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
 		SimpleServer.builder(
-						Reactor.getCurrentReactor(),
-						socket -> {
-							Messaging<String, String> messaging =
-									Messaging.create(socket, STRING_SERIALIZER);
+				Reactor.getCurrentReactor(),
+				socket -> {
+					Messaging<String, String> messaging =
+						Messaging.create(socket, STRING_SERIALIZER);
 
-							messaging.receive()
-									.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
-									.then(msg -> messaging.sendEndOfStream())
-									.then(msg ->
-											messaging.receiveBinaryStream()
-													.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
-													.toList())
-									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
-						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.build()
-				.listen();
+					messaging.receive()
+						.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
+						.then(msg -> messaging.sendEndOfStream())
+						.then(msg ->
+							messaging.receiveBinaryStream()
+								.transformWith(ChannelDeserializer.create(LONG_SERIALIZER))
+								.toList())
+						.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
+				})
+			.withListenPort(listenPort)
+			.withAcceptOnce()
+			.build()
+			.listen();
 
 		await(TcpSocket.connect(getCurrentReactor(), address)
-				.whenResult(socket -> {
-					Messaging<String, String> messaging =
-							Messaging.create(socket, STRING_SERIALIZER);
+			.whenResult(socket -> {
+				Messaging<String, String> messaging =
+					Messaging.create(socket, STRING_SERIALIZER);
 
-					messaging.send("start");
+				messaging.send("start");
 
-					StreamSuppliers.ofIterable(source)
-							.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
-									.withInitialBufferSize(MemSize.of(1))
-									.build())
-							.streamTo(messaging.sendBinaryStream());
-				}));
+				StreamSuppliers.ofIterable(source)
+					.transformWith(ChannelSerializer.builder(LONG_SERIALIZER)
+						.withInitialBufferSize(MemSize.of(1))
+						.build())
+					.streamTo(messaging.sendBinaryStream());
+			}));
 	}
 
 }

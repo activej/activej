@@ -35,10 +35,10 @@ public final class StreamAckTransformer<T> extends ImplicitlyReactive implements
 		this.output = new Output();
 
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		ackFn.apply(output.getAcknowledgement())
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 	}
 
 	@Override

@@ -53,17 +53,17 @@ public final class RpcClientTest {
 		CountDownLatch latch = new CountDownLatch(NUMBER_OF_WORKING_SERVERS);
 		for (int i = 0; i < NUMBER_OF_WORKING_SERVERS + NUMBER_OF_FAILING_SERVERS; i++) {
 			Eventloop serverEventloop = Eventloop.builder()
-					.withFatalErrorHandler(rethrow())
-					.build();
+				.withFatalErrorHandler(rethrow())
+				.build();
 			serverEventloop.keepAlive(true);
 			new Thread(serverEventloop).start();
 
 			int finalI = i;
 			RpcServer rpcServer = RpcServer.builder(serverEventloop)
-					.withMessageTypes(Request.class, Integer.class)
-					.withHandler(Request.class, $ -> Promise.of(finalI))
-					.withListenPort(getFreePort())
-					.build();
+				.withMessageTypes(Request.class, Integer.class)
+				.withHandler(Request.class, $ -> Promise.of(finalI))
+				.withListenPort(getFreePort())
+				.build();
 
 			if (i < NUMBER_OF_WORKING_SERVERS) {
 				serverEventloop.submit(() -> {
@@ -81,8 +81,8 @@ public final class RpcClientTest {
 		latch.await();
 
 		clientEventloop = Eventloop.builder()
-				.withFatalErrorHandler(rethrow())
-				.build();
+			.withFatalErrorHandler(rethrow())
+			.build();
 		clientEventloop.keepAlive(true);
 		new Thread(clientEventloop).start();
 	}
@@ -195,11 +195,11 @@ public final class RpcClientTest {
 		await(() -> {
 			RefBoolean changed = new RefBoolean(false);
 			rpcClient.changeStrategy(roundRobin(getAddresses(0, 3)), false)
-					.whenResult(() -> changed.set(true));
+				.whenResult(() -> changed.set(true));
 
 			RefInt counter = new RefInt(100);
 			return sendAndExpect(0, 1, changed::get)
-					.then(() -> sendAndExpect(0, 3, () -> counter.dec() == 0));
+				.then(() -> sendAndExpect(0, 3, () -> counter.dec() == 0));
 		});
 	}
 
@@ -296,18 +296,18 @@ public final class RpcClientTest {
 		assertEquals(1, response2);
 
 		await(() -> rpcClient.changeStrategy(roundRobin(getAddresses(6, 7)), false)
-				.then(($, e) -> {
-					assertTrue(e instanceof RpcException);
-					assertEquals("Could not establish connection", e.getMessage());
+			.then(($, e) -> {
+				assertTrue(e instanceof RpcException);
+				assertEquals("Could not establish connection", e.getMessage());
 
-					return rpcClient.changeStrategy(roundRobin(getAddresses(8, 9)), false);
-				})
-				.then(($, e) -> {
-					assertTrue(e instanceof RpcException);
-					assertEquals("Could not establish connection", e.getMessage());
+				return rpcClient.changeStrategy(roundRobin(getAddresses(8, 9)), false);
+			})
+			.then(($, e) -> {
+				assertTrue(e instanceof RpcException);
+				assertEquals("Could not establish connection", e.getMessage());
 
-					return rpcClient.changeStrategy(roundRobin(getAddresses(3, 4)), false);
-				}));
+				return rpcClient.changeStrategy(roundRobin(getAddresses(3, 4)), false);
+			}));
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -339,7 +339,7 @@ public final class RpcClientTest {
 			});
 
 			return changeStrategy
-					.whenResult(() -> assertTrue(serversListen.get()));
+				.whenResult(() -> assertTrue(serversListen.get()));
 		});
 
 		boolean server6Response = false;
@@ -373,7 +373,7 @@ public final class RpcClientTest {
 			});
 
 			return changeStrategy
-					.whenException(() -> assertTrue(clientStopped.get()));
+				.whenException(() -> assertTrue(clientStopped.get()));
 		});
 
 		assertTrue(exception instanceof RpcException);
@@ -396,7 +396,7 @@ public final class RpcClientTest {
 			});
 
 			return changeStrategy
-					.whenException(() -> assertTrue(strategyChanged.get()));
+				.whenException(() -> assertTrue(strategyChanged.get()));
 		});
 
 		assertTrue(exception instanceof RpcException);
@@ -405,30 +405,30 @@ public final class RpcClientTest {
 
 	private Promise<Void> sendAndExpect(int id1, int id2, Supplier<Boolean> stopCondition) {
 		return Promises.all(
-						rpcClient.sendRequest(REQUEST)
-								.whenComplete(assertCompleteFn(response -> assertEquals(id1, response))),
-						rpcClient.sendRequest(REQUEST)
-								.whenComplete(assertCompleteFn(response -> assertEquals(id2, response)))
-				)
-				.then(() -> {
-					if (stopCondition.get()) return Promise.complete();
-					return sendAndExpect(id1, id2, stopCondition);
-				});
+				rpcClient.sendRequest(REQUEST)
+					.whenComplete(assertCompleteFn(response -> assertEquals(id1, response))),
+				rpcClient.sendRequest(REQUEST)
+					.whenComplete(assertCompleteFn(response -> assertEquals(id2, response)))
+			)
+			.then(() -> {
+				if (stopCondition.get()) return Promise.complete();
+				return sendAndExpect(id1, id2, stopCondition);
+			});
 	}
 
 	private void initRpcClient(RpcStrategy strategy) {
 		this.rpcClient = RpcClient.builder(clientEventloop)
-				.withMessageTypes(Request.class, Integer.class)
-				.withStrategy(strategy)
-				.build();
+			.withMessageTypes(Request.class, Integer.class)
+			.withStrategy(strategy)
+			.build();
 		await(rpcClient::start);
 	}
 
 	private List<? extends RpcStrategy> getAddresses(int... indexes) {
 		return servers(Arrays.stream(indexes)
-				.mapToObj(servers::get)
-				.map(server -> server.getListenAddresses().get(0))
-				.toList());
+			.mapToObj(servers::get)
+			.map(server -> server.getListenAddresses().get(0))
+			.toList());
 	}
 
 	private void listen(int index) {

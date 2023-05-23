@@ -26,9 +26,10 @@ public class Nodes {
 		return new Filter<>(index, predicate, input, new StreamId());
 	}
 
-	public static <K, L, R, V> Node join(int index, StreamId left, StreamId right,
-			Comparator<K> keyComparator, Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
-			LeftJoiner<K, L, R, V> leftJoiner) {
+	public static <K, L, R, V> Node join(
+		int index, StreamId left, StreamId right, Comparator<K> keyComparator, Function<L, K> leftKeyFunction,
+		Function<R, K> rightKeyFunction, LeftJoiner<K, L, R, V> leftJoiner
+	) {
 		return new Join<>(index, left, right, new StreamId(), keyComparator, leftKeyFunction, rightKeyFunction, leftJoiner);
 	}
 
@@ -40,8 +41,10 @@ public class Nodes {
 		return new OffsetLimit(index, offset, limit, input, new StreamId());
 	}
 
-	public static <K, T> Node sort(int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
-			boolean deduplicate, int itemsInMemorySize, StreamId input) {
+	public static <K, T> Node sort(
+		int index, StreamSchema<T> streamSchema, Function<T, K> keyFunction, Comparator<K> keyComparator,
+		boolean deduplicate, int itemsInMemorySize, StreamId input
+	) {
 		return new Sort<>(index, streamSchema, keyFunction, keyComparator, deduplicate, itemsInMemorySize, input, new StreamId());
 	}
 

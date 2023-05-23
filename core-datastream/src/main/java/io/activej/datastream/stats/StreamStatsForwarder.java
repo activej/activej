@@ -35,10 +35,10 @@ public final class StreamStatsForwarder<T> extends ImplicitlyReactive implements
 		this.input = new Input();
 		this.output = new Output();
 		input.getAcknowledgement()
-				.whenException(output::closeEx);
+			.whenException(output::closeEx);
 		output.getAcknowledgement()
-				.whenResult(input::acknowledge)
-				.whenException(input::closeEx);
+			.whenResult(input::acknowledge)
+			.whenException(input::closeEx);
 	}
 
 	public static <T> StreamStatsForwarder<T> create(StreamStats<T> stats) {

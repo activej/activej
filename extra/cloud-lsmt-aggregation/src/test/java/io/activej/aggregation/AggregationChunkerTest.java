@@ -52,10 +52,10 @@ public final class AggregationChunkerTest {
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
 	private final AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-			.withKey("key", ofInt())
-			.withMeasure("value", sum(ofInt()))
-			.withMeasure("timestamp", sum(ofLong()))
-			.build();
+		.withKey("key", ofInt())
+		.withMeasure("value", sum(ofInt()))
+		.withMeasure("timestamp", sum(ofLong()))
+		.build();
 	private final AggregationOTState state = new AggregationOTState(structure);
 
 	@Test
@@ -101,13 +101,13 @@ public final class AggregationChunkerTest {
 		Class<?> recordClass = createRecordClass(structure, structure.getKeys(), fields, classLoader);
 
 		AggregationChunker<?, KeyValuePair> chunker = AggregationChunker.create(
-				structure, structure.getMeasures(), recordClass, (PartitionPredicate) singlePartition(),
-				aggregationChunkStorage, classLoader, 1);
+			structure, structure.getMeasures(), recordClass, (PartitionPredicate) singlePartition(),
+			aggregationChunkStorage, classLoader, 1);
 
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofValues(
-				new KeyValuePair(3, 4, 6),
-				new KeyValuePair(3, 6, 7),
-				new KeyValuePair(1, 2, 1)
+			new KeyValuePair(3, 4, 6),
+			new KeyValuePair(3, 6, 7),
+			new KeyValuePair(1, 2, 1)
 		);
 
 		await(supplier.streamTo(chunker));
@@ -164,27 +164,27 @@ public final class AggregationChunkerTest {
 
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.concat(
-				StreamSuppliers.ofValues(
-						new KeyValuePair(1, 1, 0),
-						new KeyValuePair(1, 2, 1),
-						new KeyValuePair(1, 1, 2)),
-				StreamSuppliers.ofValues(
-						new KeyValuePair(1, 1, 0),
-						new KeyValuePair(1, 2, 1),
-						new KeyValuePair(1, 1, 2)),
-				StreamSuppliers.ofValues(
-						new KeyValuePair(1, 1, 0),
-						new KeyValuePair(1, 2, 1),
-						new KeyValuePair(1, 1, 2)),
-				StreamSuppliers.ofValues(
-						new KeyValuePair(1, 1, 0),
-						new KeyValuePair(1, 2, 1),
-						new KeyValuePair(1, 1, 2)),
-				StreamSuppliers.closingWithError(exception)
+			StreamSuppliers.ofValues(
+				new KeyValuePair(1, 1, 0),
+				new KeyValuePair(1, 2, 1),
+				new KeyValuePair(1, 1, 2)),
+			StreamSuppliers.ofValues(
+				new KeyValuePair(1, 1, 0),
+				new KeyValuePair(1, 2, 1),
+				new KeyValuePair(1, 1, 2)),
+			StreamSuppliers.ofValues(
+				new KeyValuePair(1, 1, 0),
+				new KeyValuePair(1, 2, 1),
+				new KeyValuePair(1, 1, 2)),
+			StreamSuppliers.ofValues(
+				new KeyValuePair(1, 1, 0),
+				new KeyValuePair(1, 2, 1),
+				new KeyValuePair(1, 1, 2)),
+			StreamSuppliers.closingWithError(exception)
 		);
 		AggregationChunker chunker = AggregationChunker.create(
-				structure, structure.getMeasures(), recordClass, singlePartition(),
-				aggregationChunkStorage, classLoader, 1);
+			structure, structure.getMeasures(), recordClass, singlePartition(),
+			aggregationChunkStorage, classLoader, 1);
 
 		Exception e = awaitException(supplier.streamTo(chunker));
 		assertSame(exception, e);
@@ -246,14 +246,14 @@ public final class AggregationChunkerTest {
 		Class<?> recordClass = createRecordClass(structure, structure.getKeys(), fields, classLoader);
 
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofValues(
-				new KeyValuePair(1, 1, 0),
-				new KeyValuePair(1, 2, 1),
-				new KeyValuePair(1, 1, 2),
-				new KeyValuePair(1, 1, 2),
-				new KeyValuePair(1, 1, 2));
+			new KeyValuePair(1, 1, 0),
+			new KeyValuePair(1, 2, 1),
+			new KeyValuePair(1, 1, 2),
+			new KeyValuePair(1, 1, 2),
+			new KeyValuePair(1, 1, 2));
 		AggregationChunker chunker = AggregationChunker.create(
-				structure, structure.getMeasures(), recordClass, singlePartition(),
-				aggregationChunkStorage, classLoader, 1);
+			structure, structure.getMeasures(), recordClass, singlePartition(),
+			aggregationChunkStorage, classLoader, 1);
 
 		awaitException(supplier.streamTo(chunker));
 

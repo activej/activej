@@ -17,7 +17,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class StubOTRepository<K, D> extends ImplicitlyReactive
-		implements AsyncOTRepository<K, D> {
+	implements AsyncOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
 	private AsyncOTCommitFactory<K, D> commitFactory;
 
@@ -62,9 +62,9 @@ public final class StubOTRepository<K, D> extends ImplicitlyReactive
 
 	public void addGraph(Consumer<OTGraphBuilder<K, D>> builder) {
 		long initialLevel = 1L + commits.values().stream()
-				.mapToLong(OTCommit::getLevel)
-				.max()
-				.orElse(0L);
+			.mapToLong(OTCommit::getLevel)
+			.max()
+			.orElse(0L);
 		List<OTCommit<K, D>> commits = Utils.commits(builder, false, initialLevel);
 		doPushAndUpdateHeads(commits);
 	}
@@ -77,9 +77,9 @@ public final class StubOTRepository<K, D> extends ImplicitlyReactive
 	public Promise<OTCommit<K, D>> createCommit(Map<K, DiffsWithLevel<D>> parentDiffs) {
 		checkInReactorThread(this);
 		return commitFactory != null ?
-				commitFactory.createCommit(parentDiffs) :
-				createCommitId()
-						.map(newId -> OTCommit.of(0, newId, parentDiffs));
+			commitFactory.createCommit(parentDiffs) :
+			createCommitId()
+				.map(newId -> OTCommit.of(0, newId, parentDiffs));
 	}
 
 	@Override
@@ -153,12 +153,12 @@ public final class StubOTRepository<K, D> extends ImplicitlyReactive
 			doPush(commit);
 		}
 		Set<K> parents = commits.stream()
-				.flatMap(commit -> commit.getParents().keySet().stream())
-				.collect(toSet());
+			.flatMap(commit -> commit.getParents().keySet().stream())
+			.collect(toSet());
 		Set<K> heads = commits.stream()
-				.map(OTCommit::getId)
-				.filter(not(parents::contains))
-				.collect(toSet());
+			.map(OTCommit::getId)
+			.filter(not(parents::contains))
+			.collect(toSet());
 		updateHeads(heads, parents);
 	}
 
@@ -166,8 +166,8 @@ public final class StubOTRepository<K, D> extends ImplicitlyReactive
 		OTCommit<K, D> commit = commits.get(revisionId);
 		checkNotNull(commit);
 		return OTCommit.builder(0, commit.getId(), commit.getParentsWithLevels())
-				.withTimestamp(commit.getTimestamp())
-				.build();
+			.withTimestamp(commit.getTimestamp())
+			.build();
 	}
 
 	public void doSaveSnapshot(K revisionId, List<D> diffs) {

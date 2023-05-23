@@ -43,103 +43,103 @@ public class FileDiscoveryServiceTest {
 	private WatchService watchService;
 
 	private static final byte[] TEST_PARTITIONS_1 = ("[" +
-			"    {" +
-			"        \"ids\": [" +
-			"            {" +
-			"                \"id\": \"a\"," +
-			"                \"crdtAddress\": \"localhost:9001\"," +
-			"                \"rpcAddress\": \"localhost:9051\"" +
-			"            }," +
-			"            {" +
-			"                \"id\": \"b\"," +
-			"                \"crdtAddress\": \"localhost:9002\"," +
-			"                \"rpcAddress\": \"localhost:9052\"" +
-			"            }" +
-			"        ]," +
-			"        \"replicaCount\": 2," +
-			"        \"repartition\": true," +
-			"        \"active\": true" +
-			"    }," +
-			"    {" +
-			"        \"ids\": [" +
-			"            {" +
-			"                \"id\": \"c\"," +
-			"                \"crdtAddress\": \"localhost:9003\"," +
-			"                \"rpcAddress\": \"localhost:9053\"" +
-			"            }" +
-			"        ]," +
-			"        \"replicaCount\": 1," +
-			"        \"repartition\": false," +
-			"        \"active\": false" +
-			"    }" +
-			"]").getBytes(UTF_8);
+		"    {" +
+		"        \"ids\": [" +
+		"            {" +
+		"                \"id\": \"a\"," +
+		"                \"crdtAddress\": \"localhost:9001\"," +
+		"                \"rpcAddress\": \"localhost:9051\"" +
+		"            }," +
+		"            {" +
+		"                \"id\": \"b\"," +
+		"                \"crdtAddress\": \"localhost:9002\"," +
+		"                \"rpcAddress\": \"localhost:9052\"" +
+		"            }" +
+		"        ]," +
+		"        \"replicaCount\": 2," +
+		"        \"repartition\": true," +
+		"        \"active\": true" +
+		"    }," +
+		"    {" +
+		"        \"ids\": [" +
+		"            {" +
+		"                \"id\": \"c\"," +
+		"                \"crdtAddress\": \"localhost:9003\"," +
+		"                \"rpcAddress\": \"localhost:9053\"" +
+		"            }" +
+		"        ]," +
+		"        \"replicaCount\": 1," +
+		"        \"repartition\": false," +
+		"        \"active\": false" +
+		"    }" +
+		"]").getBytes(UTF_8);
 
 	private static final byte[] TEST_PARTITIONS_2 = ("[" +
-			"    {" +
-			"        \"ids\": [" +
-			"            {" +
-			"                \"id\": \"a\"," +
-			"                \"crdtAddress\": \"localhost:9001\"," +
-			"                \"rpcAddress\": \"localhost:9051\"" +
-			"            }" +
-			"        ]," +
-			"        \"replicaCount\": 1," +
-			"        \"repartition\": true," +
-			"        \"active\": true" +
-			"    }," +
-			"    {" +
-			"        \"ids\": [" +
-			"            {" +
-			"                \"id\": \"b\"," +
-			"                \"crdtAddress\": \"localhost:9002\"," +
-			"                \"rpcAddress\": \"localhost:9052\"" +
-			"            }" +
-			"        ]," +
-			"        \"replicaCount\": 1," +
-			"        \"repartition\": false," +
-			"        \"active\": false" +
-			"    }" +
-			"]").getBytes(UTF_8);
+		"    {" +
+		"        \"ids\": [" +
+		"            {" +
+		"                \"id\": \"a\"," +
+		"                \"crdtAddress\": \"localhost:9001\"," +
+		"                \"rpcAddress\": \"localhost:9051\"" +
+		"            }" +
+		"        ]," +
+		"        \"replicaCount\": 1," +
+		"        \"repartition\": true," +
+		"        \"active\": true" +
+		"    }," +
+		"    {" +
+		"        \"ids\": [" +
+		"            {" +
+		"                \"id\": \"b\"," +
+		"                \"crdtAddress\": \"localhost:9002\"," +
+		"                \"rpcAddress\": \"localhost:9052\"" +
+		"            }" +
+		"        ]," +
+		"        \"replicaCount\": 1," +
+		"        \"repartition\": false," +
+		"        \"active\": false" +
+		"    }" +
+		"]").getBytes(UTF_8);
 
 	private static final byte[] TEST_PARTITIONS_3 = ("[" +
-			"    {" +
-			"        \"ids\": [" +
-			"            {" +
-			"                \"id\": \"a\"," +
-			"                \"crdtAddress\": \"localhost:9001\"," +
-			"                \"rpcAddress\": \"localhost:9051\"" +
-			"            }," +
-			"            {" +
-			"                \"id\": \"b\"," +
-			"                \"crdtAddress\": \"localhost:9002\"," +
-			"                \"rpcAddress\": \"localhost:9052\"" +
-			"            }" +
-			"        ]," +
-			"        \"replicaCount\": 1," +
-			"        \"repartition\": false," +
-			"        \"active\": true" +
-			"    }" +
-			"]").getBytes(UTF_8);
+		"    {" +
+		"        \"ids\": [" +
+		"            {" +
+		"                \"id\": \"a\"," +
+		"                \"crdtAddress\": \"localhost:9001\"," +
+		"                \"rpcAddress\": \"localhost:9051\"" +
+		"            }," +
+		"            {" +
+		"                \"id\": \"b\"," +
+		"                \"crdtAddress\": \"localhost:9002\"," +
+		"                \"rpcAddress\": \"localhost:9052\"" +
+		"            }" +
+		"        ]," +
+		"        \"replicaCount\": 1," +
+		"        \"repartition\": false," +
+		"        \"active\": true" +
+		"    }" +
+		"]").getBytes(UTF_8);
 
 	private static final byte[] TEST_PARTITIONS_4 = ("[" +
-			"    {" +
-			"        \"ids\": [" +
-			"            {" +
-			"                \"id\": \"a\"," +
-			"                \"crdtAddress\": \"localhost:9001\"," +
-			"                \"rpcAddress\": \"localhost:9051\"" +
-			"            }," +
-			"            {" +
-			"                \"id\": \"d\"," +
-			"                \"crdtAddress\": \"localhost:9004\"," +
-			"                \"rpcAddress\": \"localhost:9054\"" +
-			"            }" +
-			"        ]," +
-			"        \"replicaCount\": 1," +
-			"        \"repartition\": false," +
-			"        \"active\": true" +
-			"    }" +
-			"]").getBytes(UTF_8);
+		"    {" +
+		"        \"ids\": [" +
+		"            {" +
+		"                \"id\": \"a\"," +
+		"                \"crdtAddress\": \"localhost:9001\"," +
+		"                \"rpcAddress\": \"localhost:9051\"" +
+		"            }," +
+		"            {" +
+		"                \"id\": \"d\"," +
+		"                \"crdtAddress\": \"localhost:9004\"," +
+		"                \"rpcAddress\": \"localhost:9054\"" +
+		"            }" +
+		"        ]," +
+		"        \"replicaCount\": 1," +
+		"        \"repartition\": false," +
+		"        \"active\": true" +
+		"    }" +
+		"]").getBytes(UTF_8);
 
 	@Before
 	public void setUp() throws Exception {
@@ -226,8 +226,8 @@ public class FileDiscoveryServiceTest {
 	@Test
 	public void testPartitionChange() throws IOException, CrdtException {
 		discoveryService = FileDiscoveryService.builder(getCurrentReactor(), watchService, file)
-				.withCrdtProvider(partitionId -> MapCrdtStorage.create(getCurrentReactor()))
-				.build();
+			.withCrdtProvider(partitionId -> MapCrdtStorage.create(getCurrentReactor()))
+			.build();
 
 		Files.write(file, TEST_PARTITIONS_1);
 
@@ -236,21 +236,21 @@ public class FileDiscoveryServiceTest {
 		ClusterCrdtStorage<String, Integer, PartitionId> cluster = ClusterCrdtStorage.create(getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
-				.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()
-						.stream()
-						.map(PartitionId::getId)
-						.collect(toSet())))
-				.whenResult(() -> Files.write(file, TEST_PARTITIONS_4))
-				.then(notifyingDiscoveryService::onChange)
-				.then(() -> Promise.complete().async())
-				.whenResult(() -> assertEquals(Set.of("a", "d"), cluster.getCrdtStorages().keySet()
-						.stream()
-						.map(PartitionId::getId)
-						.collect(toSet())))
-				.then(() -> {
-					watchService.close();
-					return cluster.stop();
-				}));
+			.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()
+				.stream()
+				.map(PartitionId::getId)
+				.collect(toSet())))
+			.whenResult(() -> Files.write(file, TEST_PARTITIONS_4))
+			.then(notifyingDiscoveryService::onChange)
+			.then(() -> Promise.complete().async())
+			.whenResult(() -> assertEquals(Set.of("a", "d"), cluster.getCrdtStorages().keySet()
+				.stream()
+				.map(PartitionId::getId)
+				.collect(toSet())))
+			.then(() -> {
+				watchService.close();
+				return cluster.stop();
+			}));
 	}
 
 	private void assertTestPartitions1(PartitionScheme<PartitionId> partitionScheme) {
@@ -261,8 +261,8 @@ public class FileDiscoveryServiceTest {
 		assertTrue(group1.isRepartition());
 		assertTrue(group1.isActive());
 		assertEquals(Set.of(
-				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
-				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
+			PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
+			PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group1.getPartitionIds());
 
 		RendezvousPartitionGroup<PartitionId> group2 = partitionGroups.get(1);
@@ -270,7 +270,7 @@ public class FileDiscoveryServiceTest {
 		assertFalse(group2.isRepartition());
 		assertFalse(group2.isActive());
 		assertEquals(Set.of(
-				PartitionId.of("c", new InetSocketAddress("localhost", 9003), new InetSocketAddress("localhost", 9053))
+			PartitionId.of("c", new InetSocketAddress("localhost", 9003), new InetSocketAddress("localhost", 9053))
 		), group2.getPartitionIds());
 	}
 
@@ -282,7 +282,7 @@ public class FileDiscoveryServiceTest {
 		assertTrue(group1.isRepartition());
 		assertTrue(group1.isActive());
 		assertEquals(Set.of(
-				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051))
+			PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051))
 		), group1.getPartitionIds());
 
 		RendezvousPartitionGroup<PartitionId> group2 = partitionGroups.get(1);
@@ -290,7 +290,7 @@ public class FileDiscoveryServiceTest {
 		assertFalse(group2.isRepartition());
 		assertFalse(group2.isActive());
 		assertEquals(Set.of(
-				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
+			PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group2.getPartitionIds());
 	}
 
@@ -302,13 +302,14 @@ public class FileDiscoveryServiceTest {
 		assertFalse(group1.isRepartition());
 		assertTrue(group1.isActive());
 		assertEquals(Set.of(
-				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
-				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
+			PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
+			PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group1.getPartitionIds());
 	}
 
 	private final class NotifyingDiscoveryService extends ImplicitlyReactive
-			implements IDiscoveryService<PartitionId> {
+		implements IDiscoveryService<PartitionId> {
+
 		private SettablePromise<Void> onChangePromise;
 
 		@Override
@@ -316,14 +317,14 @@ public class FileDiscoveryServiceTest {
 			checkInReactorThread(this);
 			AsyncSupplier<PartitionScheme<PartitionId>> discover = discoveryService.discover();
 			return () -> discover.get()
-					.whenComplete((scheme, e) -> {
-								if (onChangePromise != null) {
-									SettablePromise<Void> onChangePromise = this.onChangePromise;
-									this.onChangePromise = null;
-									onChangePromise.set(null, e);
-								}
-							}
-					);
+				.whenComplete((scheme, e) -> {
+						if (onChangePromise != null) {
+							SettablePromise<Void> onChangePromise = this.onChangePromise;
+							this.onChangePromise = null;
+							onChangePromise.set(null, e);
+						}
+					}
+				);
 		}
 
 		Promise<Void> onChange() {

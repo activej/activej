@@ -40,11 +40,11 @@ public final class Not implements AggregationPredicate {
 		if (predicate instanceof Not not)
 			return not.predicate.simplify();
 
-		if (predicate instanceof Eq eq) {
-			return new NotEq(eq.key, eq.value);}
+		if (predicate instanceof Eq eq)
+			return new NotEq(eq.key, eq.value);
 
-		if (predicate instanceof NotEq notEq) {
-			return new Eq(notEq.key, notEq.value);}
+		if (predicate instanceof NotEq notEq)
+			return new Eq(notEq.key, notEq.value);
 
 		if (predicate instanceof Gt gt)
 			return new Le(gt.key, gt.value);

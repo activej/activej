@@ -152,18 +152,18 @@ public final class Trie<K, V> {
 		String indentStr = new String(new char[indent]).replace('\0', '\t');
 
 		StringBuilder sb = new StringBuilder()
-				.append("(")
-				.append(payload)
-				.append(") {");
+			.append("(")
+			.append(payload)
+			.append(") {");
 
 		if (!children.isEmpty()) {
 			sb.append('\n' + indentStr);
 			children.forEach((key, child) -> sb
-					.append(indentStr)
-					.append('\t')
-					.append(key)
-					.append(" -> ")
-					.append(child.prettyPrint(indent + 1)));
+				.append(indentStr)
+				.append('\t')
+				.append(key)
+				.append(" -> ")
+				.append(child.prettyPrint(indent + 1)));
 		}
 		return sb.append("}\n").toString();
 	}

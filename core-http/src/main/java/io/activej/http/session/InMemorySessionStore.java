@@ -34,7 +34,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * A simple reference implementation of the session storage over a hash map.
  */
 public final class InMemorySessionStore<T> extends AbstractReactive
-		implements ISessionStore<T> {
+	implements ISessionStore<T> {
 	private static final boolean CHECKS = Checks.isEnabled(InMemorySessionStore.class);
 
 	private final Map<String, TWithTimestamp> store = new HashMap<>();

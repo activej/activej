@@ -354,8 +354,8 @@ public final class TestBlockingFileSystem {
 	@Test
 	public void copyWithHardLinksDoesNotCreateNewFile() throws IOException {
 		client = BlockingFileSystem.builder(storagePath)
-				.withHardLinkOnCopy(true)
-				.build();
+			.withHardLinkOnCopy(true)
+			.build();
 		client.start();
 
 		try (OutputStream outputStream = client.upload("first")) {
@@ -492,8 +492,8 @@ public final class TestBlockingFileSystem {
 	public void testUploadToSameNewDir() throws IOException {
 		String dir = "newDir";
 		Set<String> filenames = IntStream.range(0, 5)
-				.mapToObj(i -> dir + IBlockingFileSystem.SEPARATOR + i + ".txt")
-				.collect(toSet());
+			.mapToObj(i -> dir + IBlockingFileSystem.SEPARATOR + i + ".txt")
+			.collect(toSet());
 
 		for (String filename : filenames) {
 			client.upload(filename).close();
@@ -566,11 +566,11 @@ public final class TestBlockingFileSystem {
 		assumeTrue("This test is located on a different drive than temporary directory", current.getRoot().equals(storagePath.getRoot()));
 
 		Set<String> expected = Set.of(
-				"1/a.txt",
-				"1/b.txt",
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
+			"1/a.txt",
+			"1/b.txt",
+			"2/3/a.txt",
+			"2/b/d.txt",
+			"2/b/e.txt"
 		);
 
 		Path relativePath = current.relativize(storagePath);

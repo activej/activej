@@ -59,15 +59,16 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends AbstractNioReactive
-		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+	implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats {
+
 	private static final boolean CHECKS = Checks.isEnabled(RemoteCrdtStorage.class);
 
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(RemoteCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = ByteBufsCodecs.ofStreamCodecs(
-			Utils.CRDT_RESPONSE_CODEC,
-			Utils.CRDT_REQUEST_CODEC
+		Utils.CRDT_RESPONSE_CODEC,
+		Utils.CRDT_REQUEST_CODEC
 	);
 
 	private final InetSocketAddress address;
@@ -104,35 +105,27 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S> create(
-			NioReactor reactor,
-			InetSocketAddress address,
-			CrdtDataBinarySerializer<K, S> serializer
+		NioReactor reactor, InetSocketAddress address, CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return builder(reactor, address, serializer).build();
 	}
 
 	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S> create(
-			NioReactor reactor,
-			InetSocketAddress address,
-			BinarySerializer<K> keySerializer,
-			BinarySerializer<S> stateSerializer
+		NioReactor reactor, InetSocketAddress address, BinarySerializer<K> keySerializer,
+		BinarySerializer<S> stateSerializer
 	) {
 		return builder(reactor, address, keySerializer, stateSerializer).build();
 	}
 
 	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S>.Builder builder(
-			NioReactor reactor,
-			InetSocketAddress address,
-			CrdtDataBinarySerializer<K, S> serializer
+		NioReactor reactor, InetSocketAddress address, CrdtDataBinarySerializer<K, S> serializer
 	) {
 		return new RemoteCrdtStorage<>(reactor, address, serializer).new Builder();
 	}
 
 	public static <K extends Comparable<K>, S> RemoteCrdtStorage<K, S>.Builder builder(
-			NioReactor reactor,
-			InetSocketAddress address,
-			BinarySerializer<K> keySerializer,
-			BinarySerializer<S> stateSerializer
+		NioReactor reactor, InetSocketAddress address, BinarySerializer<K> keySerializer,
+		BinarySerializer<S> stateSerializer
 	) {
 		CrdtDataBinarySerializer<K, S> serializer = new CrdtDataBinarySerializer<>(keySerializer, stateSerializer);
 		return new RemoteCrdtStorage<>(reactor, address, serializer).new Builder();
@@ -167,106 +160,106 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		if (CHECKS) checkInReactorThread(this);
 		return connect()
-				.then(RemoteCrdtStorage::performHandshake)
-				.then(messaging -> messaging.send(new CrdtRequest.Upload())
-						.mapException(e -> new CrdtException("Failed to send 'Upload' request", e))
-						.map($ -> messaging.sendBinaryStream()
-								.withAcknowledgement(ack -> ack
-										.then(messaging::receive)
-										.whenResult(validateFn(CrdtResponse.UploadAck.class))
-										.toVoid()))
-						.map(consumer -> StreamConsumers.<CrdtData<K, S>>ofSupplier(supplier ->
-										supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-												.transformWith(onItem(uploadedItems::recordEvent))
-												.transformWith(ChannelSerializer.create(serializer))
-												.streamTo(consumer))
-								.withAcknowledgement(ack -> ack
-										.mapException(e -> new CrdtException("Upload failed", e)))));
+			.then(RemoteCrdtStorage::performHandshake)
+			.then(messaging -> messaging.send(new CrdtRequest.Upload())
+				.mapException(e -> new CrdtException("Failed to send 'Upload' request", e))
+				.map($ -> messaging.sendBinaryStream()
+					.withAcknowledgement(ack -> ack
+						.then(messaging::receive)
+						.whenResult(validateFn(CrdtResponse.UploadAck.class))
+						.toVoid()))
+				.map(consumer -> StreamConsumers.<CrdtData<K, S>>ofSupplier(supplier ->
+						supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+							.transformWith(onItem(uploadedItems::recordEvent))
+							.transformWith(ChannelSerializer.create(serializer))
+							.streamTo(consumer))
+					.withAcknowledgement(ack -> ack
+						.mapException(e -> new CrdtException("Upload failed", e)))));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		if (CHECKS) checkInReactorThread(this);
 		return connect()
-				.then(RemoteCrdtStorage::performHandshake)
-				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
-						.mapException(e -> new CrdtException("Failed to send 'Download' request", e))
-						.then(() -> messaging.receive()
-								.mapException(e -> new CrdtException("Failed to receive response", e)))
-						.whenResult(validateFn(CrdtResponse.DownloadStarted.class))
-						.map($ ->
-								messaging.receiveBinaryStream()
-										.transformWith(ChannelDeserializer.create(serializer))
-										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
-										.transformWith(onItem(downloadedItems::recordEvent))
-										.withEndOfStream(eos -> eos
-												.then(messaging::sendEndOfStream)
-												.mapException(e -> new CrdtException("Download failed", e))
-												.whenResult(messaging::close)
-												.whenException(messaging::closeEx))));
+			.then(RemoteCrdtStorage::performHandshake)
+			.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
+				.mapException(e -> new CrdtException("Failed to send 'Download' request", e))
+				.then(() -> messaging.receive()
+					.mapException(e -> new CrdtException("Failed to receive response", e)))
+				.whenResult(validateFn(CrdtResponse.DownloadStarted.class))
+				.map($ ->
+					messaging.receiveBinaryStream()
+						.transformWith(ChannelDeserializer.create(serializer))
+						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+						.transformWith(onItem(downloadedItems::recordEvent))
+						.withEndOfStream(eos -> eos
+							.then(messaging::sendEndOfStream)
+							.mapException(e -> new CrdtException("Download failed", e))
+							.whenResult(messaging::close)
+							.whenException(messaging::closeEx))));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		if (CHECKS) checkInReactorThread(this);
 		return connect()
-				.then(RemoteCrdtStorage::performHandshake)
-				.then(messaging -> messaging.send(new CrdtRequest.Take())
-						.mapException(e -> new CrdtException("Failed to send 'Take' request", e))
-						.then(() -> messaging.receive()
-								.mapException(e -> new CrdtException("Failed to receive response", e)))
-						.whenResult(validateFn(CrdtResponse.TakeStarted.class))
-						.map($ -> {
-							StreamSupplier<CrdtData<K, S>> supplier = messaging.receiveBinaryStream()
-									.transformWith(ChannelDeserializer.create(serializer))
-									.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-									.transformWith(onItem(takenItems::recordEvent));
-							supplier.getAcknowledgement()
-									.then(() -> messaging.send(new CrdtRequest.TakeAck()))
-									.then(messaging::sendEndOfStream)
-									.mapException(e -> new CrdtException("Take failed", e))
-									.whenResult(messaging::close)
-									.whenException(messaging::closeEx);
-							return supplier;
-						}));
+			.then(RemoteCrdtStorage::performHandshake)
+			.then(messaging -> messaging.send(new CrdtRequest.Take())
+				.mapException(e -> new CrdtException("Failed to send 'Take' request", e))
+				.then(() -> messaging.receive()
+					.mapException(e -> new CrdtException("Failed to receive response", e)))
+				.whenResult(validateFn(CrdtResponse.TakeStarted.class))
+				.map($ -> {
+					StreamSupplier<CrdtData<K, S>> supplier = messaging.receiveBinaryStream()
+						.transformWith(ChannelDeserializer.create(serializer))
+						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+						.transformWith(onItem(takenItems::recordEvent));
+					supplier.getAcknowledgement()
+						.then(() -> messaging.send(new CrdtRequest.TakeAck()))
+						.then(messaging::sendEndOfStream)
+						.mapException(e -> new CrdtException("Take failed", e))
+						.whenResult(messaging::close)
+						.whenException(messaging::closeEx);
+					return supplier;
+				}));
 	}
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		if (CHECKS) checkInReactorThread(this);
 		return connect()
-				.then(RemoteCrdtStorage::performHandshake)
-				.then(messaging -> messaging.send(new CrdtRequest.Remove())
-						.mapException(e -> new CrdtException("Failed to send 'Remove' request", e))
-						.map($ -> {
-							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
-									.withAcknowledgement(ack -> ack
-											.then(messaging::receive)
-											.whenResult(validateFn(CrdtResponse.RemoveAck.class))
-											.toVoid());
-							return StreamConsumers.<CrdtTombstone<K>>ofSupplier(supplier ->
-											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-													.transformWith(onItem(removedItems::recordEvent))
-													.transformWith(ChannelSerializer.create(tombstoneSerializer))
-													.streamTo(consumer))
-									.withAcknowledgement(ack -> ack
-											.mapException(e -> new CrdtException("Remove operation failed", e)));
-						}));
+			.then(RemoteCrdtStorage::performHandshake)
+			.then(messaging -> messaging.send(new CrdtRequest.Remove())
+				.mapException(e -> new CrdtException("Failed to send 'Remove' request", e))
+				.map($ -> {
+					ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
+						.withAcknowledgement(ack -> ack
+							.then(messaging::receive)
+							.whenResult(validateFn(CrdtResponse.RemoveAck.class))
+							.toVoid());
+					return StreamConsumers.<CrdtTombstone<K>>ofSupplier(supplier ->
+							supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+								.transformWith(onItem(removedItems::recordEvent))
+								.transformWith(ChannelSerializer.create(tombstoneSerializer))
+								.streamTo(consumer))
+						.withAcknowledgement(ack -> ack
+							.mapException(e -> new CrdtException("Remove operation failed", e)));
+				}));
 	}
 
 	@Override
 	public Promise<Void> ping() {
 		if (CHECKS) checkInReactorThread(this);
 		return connect()
-				.then(RemoteCrdtStorage::performHandshake)
-				.then(messaging -> messaging.send(new CrdtRequest.Ping())
-						.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
-						.then(() -> messaging.receive()
-								.mapException(e -> new CrdtException("Failed to receive 'Pong'", e)))
-						.whenResult(validateFn(CrdtResponse.Pong.class))
-						.toVoid()
-						.whenResult(messaging::close)
-						.whenException(messaging::closeEx));
+			.then(RemoteCrdtStorage::performHandshake)
+			.then(messaging -> messaging.send(new CrdtRequest.Ping())
+				.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
+				.then(() -> messaging.receive()
+					.mapException(e -> new CrdtException("Failed to receive 'Pong'", e)))
+				.whenResult(validateFn(CrdtResponse.Pong.class))
+				.toVoid()
+				.whenResult(messaging::close)
+				.whenException(messaging::closeEx));
 	}
 
 	@Override
@@ -300,22 +293,22 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	private Promise<Messaging<CrdtResponse, CrdtRequest>> connect() {
 		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.map(socket -> Messaging.create(socket, SERIALIZER))
-				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
+			.map(socket -> Messaging.create(socket, SERIALIZER))
+			.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}
 
 	private static Promise<Messaging<CrdtResponse, CrdtRequest>> performHandshake(Messaging<CrdtResponse, CrdtRequest> messaging) {
 		return messaging.send(new CrdtRequest.Handshake(CrdtServer.VERSION))
-				.then(messaging::receive)
-				.map(castFn(CrdtResponse.Handshake.class))
-				.map(handshake -> {
-					CrdtResponse.HandshakeFailure handshakeFailure = handshake.handshakeFailure();
-					if (handshakeFailure != null) {
-						throw new CrdtException(String.format("Handshake failed: %s. Minimal allowed version: %s",
-								handshakeFailure.message(), handshakeFailure.minimalVersion()));
-					}
-					return messaging;
-				});
+			.then(messaging::receive)
+			.map(castFn(CrdtResponse.Handshake.class))
+			.map(handshake -> {
+				CrdtResponse.HandshakeFailure handshakeFailure = handshake.handshakeFailure();
+				if (handshakeFailure != null) {
+					throw new CrdtException(String.format("Handshake failed: %s. Minimal allowed version: %s",
+						handshakeFailure.message(), handshakeFailure.minimalVersion()));
+				}
+				return messaging;
+			});
 	}
 
 	// region JMX

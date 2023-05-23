@@ -34,16 +34,16 @@ public class StreamReducerTest {
 		StreamSupplier<Integer> source = StreamSuppliers.empty();
 
 		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>builder()
-				.withBufferSize(1)
-				.build();
+			.withBufferSize(1)
+			.build();
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(
-				source.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				streamReducer.getOutput()
-						.streamTo(consumer
-								.transformWith(randomlySuspending()))
+			source.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			streamReducer.getOutput()
+				.streamTo(consumer
+					.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(), consumer.getList());
@@ -64,23 +64,23 @@ public class StreamReducerTest {
 		StreamSupplier<Integer> source7 = StreamSuppliers.empty();
 
 		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>builder()
-				.withBufferSize(1)
-				.build();
+			.withBufferSize(1)
+			.build();
 
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(
-				source0.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source1.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source2.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source3.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source4.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source5.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source6.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
-				source7.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source0.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source1.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source2.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source3.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source4.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source5.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source6.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source7.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
 
-				streamReducer.getOutput()
-						.streamTo(consumer.transformWith(randomlySuspending()))
+			streamReducer.getOutput()
+				.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), consumer.getList());
@@ -100,31 +100,31 @@ public class StreamReducerTest {
 	@Test
 	public void testWithError() {
 		StreamSupplier<KeyValue1> source1 = StreamSuppliers.ofValues(
-				new KeyValue1(1, 10.0),
-				new KeyValue1(3, 30.0));
+			new KeyValue1(1, 10.0),
+			new KeyValue1(3, 30.0));
 		StreamSupplier<KeyValue2> source2 = StreamSuppliers.ofValues(
-				new KeyValue2(1, 10.0),
-				new KeyValue2(3, 30.0));
+			new KeyValue2(1, 10.0),
+			new KeyValue2(3, 30.0));
 		StreamSupplier<KeyValue3> source3 = StreamSuppliers.ofValues(
-				new KeyValue3(2, 10.0, 20.0),
-				new KeyValue3(3, 10.0, 20.0));
+			new KeyValue3(2, 10.0, 20.0),
+			new KeyValue3(3, 10.0, 20.0));
 
 		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
-				.withBufferSize(1)
-				.build();
+			.withBufferSize(1)
+			.build();
 
 		ToListStreamConsumer<KeyValueResult> consumer = ToListStreamConsumer.create();
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(
-				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
-				source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
-				source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
+			source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
+			source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
+			source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
 
-				streamReducer.getOutput()
-						.streamTo(consumer
-								.transformWith(decorate(promise -> promise.then(
-										item -> Promise.ofException(exception)))))
+			streamReducer.getOutput()
+				.streamTo(consumer
+					.transformWith(decorate(promise -> promise.then(
+						item -> Promise.ofException(exception)))))
 		);
 //		assertEquals(1, list.size());
 
@@ -146,17 +146,17 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue3> source3 = StreamSuppliers.ofValues(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
 		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
-				.withBufferSize(1)
-				.build();
+			.withBufferSize(1)
+			.build();
 
 		ToListStreamConsumer<KeyValueResult> consumer = ToListStreamConsumer.create();
 
 		Exception e = awaitException(
-				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
-				source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
-				source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
+			source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
+			source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
+			source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
 
-				streamReducer.getOutput().streamTo(consumer)
+			streamReducer.getOutput().streamTo(consumer)
 		);
 
 		assertSame(exception, e);
@@ -330,11 +330,11 @@ public class StreamReducerTest {
 		@Override
 		public String toString() {
 			return "KeyValueResult{" +
-					"key=" + key +
-					", metric1=" + metric1 +
-					", metric2=" + metric2 +
-					", metric3=" + metric3 +
-					'}';
+				"key=" + key +
+				", metric1=" + metric1 +
+				", metric2=" + metric2 +
+				", metric3=" + metric3 +
+				'}';
 		}
 	}
 
@@ -345,24 +345,24 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue3> source3 = StreamSuppliers.ofValues(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
 		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
-				.withBufferSize(1)
-				.build();
+			.withBufferSize(1)
+			.build();
 
 		ToListStreamConsumer<KeyValueResult> consumer = ToListStreamConsumer.create();
 
 		await(
-				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER_TO_ACCUMULATOR.inputToOutput())),
-				source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER_TO_ACCUMULATOR.inputToOutput())),
-				source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER_TO_ACCUMULATOR.inputToOutput())),
+			source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER_TO_ACCUMULATOR.inputToOutput())),
+			source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER_TO_ACCUMULATOR.inputToOutput())),
+			source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER_TO_ACCUMULATOR.inputToOutput())),
 
-				streamReducer.getOutput().streamTo(consumer.transformWith(randomlySuspending()))
+			streamReducer.getOutput().streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(
-						new KeyValueResult(1, 10.0, 10.0, 0.0),
-						new KeyValueResult(2, 0.0, 10.0, 20.0),
-						new KeyValueResult(3, 30.0, 40.0, 20.0)),
-				consumer.getList());
+				new KeyValueResult(1, 10.0, 10.0, 0.0),
+				new KeyValueResult(2, 0.0, 10.0, 20.0),
+				new KeyValueResult(3, 30.0, 40.0, 20.0)),
+			consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
 		assertEndOfStream(source3);
@@ -375,25 +375,25 @@ public class StreamReducerTest {
 		StreamSupplier<KeyValue3> source3 = StreamSuppliers.ofValues(new KeyValue3(2, 10.0, 20.0), new KeyValue3(3, 10.0, 20.0));
 
 		StreamReducer<Integer, KeyValueResult, KeyValueResult> streamReducer = StreamReducer.<Integer, KeyValueResult, KeyValueResult>builder()
-				.withBufferSize(1)
-				.build();
+			.withBufferSize(1)
+			.build();
 
 		ToListStreamConsumer<KeyValueResult> consumer = ToListStreamConsumer.create();
 
 		await(
-				source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
-				source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
-				source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
+			source1.streamTo(streamReducer.newInput(input -> input.key, KeyValue1.REDUCER)),
+			source2.streamTo(streamReducer.newInput(input -> input.key, KeyValue2.REDUCER)),
+			source3.streamTo(streamReducer.newInput(input -> input.key, KeyValue3.REDUCER)),
 
-				streamReducer.getOutput()
-						.streamTo(consumer.transformWith(randomlySuspending()))
+			streamReducer.getOutput()
+				.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(
-						new KeyValueResult(1, 10.0, 10.0, 0.0),
-						new KeyValueResult(2, 0.0, 10.0, 20.0),
-						new KeyValueResult(3, 30.0, 40.0, 20.0)),
-				consumer.getList());
+				new KeyValueResult(1, 10.0, 10.0, 0.0),
+				new KeyValueResult(2, 0.0, 10.0, 20.0),
+				new KeyValueResult(3, 30.0, 40.0, 20.0)),
+			consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
 		assertEndOfStream(source3);
@@ -410,12 +410,12 @@ public class StreamReducerTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(
-				source0.streamTo(merger.newInput(identity(), deduplicateReducer())),
-				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
-				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			source0.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
 
-				merger.getOutput()
-						.streamTo(consumer.transformWith(randomlySuspending()))
+			merger.getOutput()
+				.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(3, 4, 6, 7), consumer.getList());
@@ -439,11 +439,11 @@ public class StreamReducerTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		await(
-				source0.streamTo(merger.newInput(identity(), mergeReducer())),
-				source1.streamTo(merger.newInput(identity(), mergeReducer())),
-				source2.streamTo(merger.newInput(identity(), mergeReducer())),
-				merger.getOutput()
-						.streamTo(consumer.transformWith(randomlySuspending()))
+			source0.streamTo(merger.newInput(identity(), mergeReducer())),
+			source1.streamTo(merger.newInput(identity(), mergeReducer())),
+			source2.streamTo(merger.newInput(identity(), mergeReducer())),
+			merger.getOutput()
+				.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
 		assertEquals(List.of(3, 3, 4, 6, 7), consumer.getList());
@@ -465,31 +465,31 @@ public class StreamReducerTest {
 		DataItem1 d4 = new DataItem1(1, 5, 1, 5);
 
 		StreamSupplier<DataItem1> source1 = StreamSuppliers.ofIterable(
-				List.of(d0, //DataItem1(0,1,1,1)
-						d1, //DataItem1(0,2,1,2)
-						d2  //DataItem1(0,6,1,3)
-				));
+			List.of(d0, //DataItem1(0,1,1,1)
+				d1, //DataItem1(0,2,1,2)
+				d2  //DataItem1(0,6,1,3)
+			));
 		StreamSupplier<DataItem1> source2 = StreamSuppliers.ofIterable(
-				List.of(d3,//DataItem1(1,1,1,4)
-						d4 //DataItem1(1,5,1,5)
-				));
+			List.of(d3,//DataItem1(1,1,1,4)
+				d4 //DataItem1(1,5,1,5)
+			));
 
 		StreamReducer<Integer, DataItem1, Void> merger = StreamReducer.create();
 
 		ToListStreamConsumer<DataItem1> consumer = ToListStreamConsumer.create();
 
 		await(
-				source1.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
-				source2.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
-				merger.getOutput()
-						.streamTo(consumer.transformWith(oneByOne()))
+			source1.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
+			source2.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
+			merger.getOutput()
+				.streamTo(consumer.transformWith(oneByOne()))
 		);
 
 		assertEquals(List.of(d0, //DataItem1(0,1,1,1)
-				d3, //DataItem1(1,1,1,4)
-				d1, //DataItem1(0,2,1,2)
-				d4, //DataItem1(1,5,1,5)
-				d2  //DataItem1(0,6,1,3)
+			d3, //DataItem1(1,1,1,4)
+			d1, //DataItem1(0,2,1,2)
+			d4, //DataItem1(1,5,1,5)
+			d2  //DataItem1(0,6,1,3)
 		), consumer.getList());
 
 		assertEndOfStream(source1);
@@ -510,12 +510,12 @@ public class StreamReducerTest {
 		Exception exception = new Exception("Test Exception");
 
 		Exception e = awaitException(
-				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
-				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
-				merger.getOutput()
-						.streamTo(consumer
-								.transformWith(decorate(promise -> promise.then(
-										item -> item == 8 ? Promise.ofException(exception) : Promise.of(item)))))
+			source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			merger.getOutput()
+				.streamTo(consumer
+					.transformWith(decorate(promise -> promise.then(
+						item -> item == 8 ? Promise.ofException(exception) : Promise.of(item)))))
 		);
 
 		assertSame(exception, e);
@@ -531,17 +531,17 @@ public class StreamReducerTest {
 	@Test
 	public void testSupplierDeduplicateWithError() {
 		StreamSupplier<Integer> source1 = StreamSuppliers.concat(
-				StreamSuppliers.ofValue(7),
-				StreamSuppliers.ofValue(8),
-				StreamSuppliers.closingWithError(new Exception("Test Exception")),
-				StreamSuppliers.ofValue(3),
-				StreamSuppliers.ofValue(9)
+			StreamSuppliers.ofValue(7),
+			StreamSuppliers.ofValue(8),
+			StreamSuppliers.closingWithError(new Exception("Test Exception")),
+			StreamSuppliers.ofValue(3),
+			StreamSuppliers.ofValue(9)
 		);
 		StreamSupplier<Integer> source2 = StreamSuppliers.concat(
-				StreamSuppliers.ofValue(3),
-				StreamSuppliers.ofValue(4),
-				StreamSuppliers.ofValue(6),
-				StreamSuppliers.ofValue(9)
+			StreamSuppliers.ofValue(3),
+			StreamSuppliers.ofValue(4),
+			StreamSuppliers.ofValue(6),
+			StreamSuppliers.ofValue(9)
 		);
 
 		StreamReducer<Integer, Integer, Void> merger = StreamReducer.create();
@@ -549,10 +549,10 @@ public class StreamReducerTest {
 		ToListStreamConsumer<Integer> consumer = ToListStreamConsumer.create();
 
 		awaitException(
-				source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
-				source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
-				merger.getOutput()
-						.streamTo(consumer.transformWith(oneByOne()))
+			source1.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			source2.streamTo(merger.newInput(identity(), deduplicateReducer())),
+			merger.getOutput()
+				.streamTo(consumer.transformWith(oneByOne()))
 		);
 
 		assertEquals(0, consumer.getList().size());

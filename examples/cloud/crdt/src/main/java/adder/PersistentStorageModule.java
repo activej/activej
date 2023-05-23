@@ -30,11 +30,11 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Provides
 	IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
-			Reactor reactor,
-			Executor executor,
-			CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
-			WalUploader<Long, DetailedSumsCrdtState> uploader,
-			Config config
+		Reactor reactor,
+		Executor executor,
+		CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
+		WalUploader<Long, DetailedSumsCrdtState> uploader,
+		Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
 		return FileWriteAheadLog.create(reactor, executor, walPath, serializer, uploader);
@@ -42,12 +42,12 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Provides
 	WalUploader<Long, DetailedSumsCrdtState> uploader(
-			Reactor reactor,
-			Executor executor,
-			CrdtFunction<DetailedSumsCrdtState> function,
-			CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
-			ICrdtStorage<Long, DetailedSumsCrdtState> storage,
-			Config config
+		Reactor reactor,
+		Executor executor,
+		CrdtFunction<DetailedSumsCrdtState> function,
+		CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
+		ICrdtStorage<Long, DetailedSumsCrdtState> storage,
+		Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
 		return WalUploader.create(reactor, executor, walPath, function, serializer, storage);
@@ -55,10 +55,10 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Provides
 	FileSystemCrdtStorage<Long, DetailedSumsCrdtState> storage(
-			Reactor reactor,
-			IFileSystem fs,
-			CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
-			CrdtFunction<DetailedSumsCrdtState> function
+		Reactor reactor,
+		IFileSystem fs,
+		CrdtDataBinarySerializer<Long, DetailedSumsCrdtState> serializer,
+		CrdtFunction<DetailedSumsCrdtState> function
 	) {
 		return FileSystemCrdtStorage.create(reactor, fs, serializer, function);
 	}
@@ -78,9 +78,9 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Eager
 	TaskScheduler consolidateScheduler(Reactor reactor, FileSystemCrdtStorage<Long, DetailedSumsCrdtState> storageFileSystem, Config config) {
 		return TaskScheduler.builder(reactor, storageFileSystem::consolidate)
-				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
-				.withInitialDelay(Duration.ofSeconds(10))
-				.build();
+			.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
+			.withInitialDelay(Duration.ofSeconds(10))
+			.build();
 	}
 
 }

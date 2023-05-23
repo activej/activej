@@ -36,7 +36,8 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
-		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
+	implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T> {
+
 	private final List<ChannelConsumer<T>> outputs = new ArrayList<>();
 
 	private ChannelSupplier<T> input;
@@ -125,26 +126,26 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 			return;
 		}
 		input.get()
-				.subscribe((item, e) -> {
-					if (e == null) {
-						if (item != null) {
-							Promises.all(outputs.stream().map(output -> output.accept(splitFn.apply(item))))
-									.subscribe(($, e2) -> {
-										if (e2 == null) {
-											doProcess();
-										} else {
-											closeEx(e2);
-										}
-									});
-							Recyclers.recycle(item);
-						} else {
-							Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
-									.subscribe(($, e1) -> completeProcessEx(e1));
-						}
+			.subscribe((item, e) -> {
+				if (e == null) {
+					if (item != null) {
+						Promises.all(outputs.stream().map(output -> output.accept(splitFn.apply(item))))
+							.subscribe(($, e2) -> {
+								if (e2 == null) {
+									doProcess();
+								} else {
+									closeEx(e2);
+								}
+							});
+						Recyclers.recycle(item);
 					} else {
-						closeEx(e);
+						Promises.all(outputs.stream().map(ChannelConsumer::acceptEndOfStream))
+							.subscribe(($, e1) -> completeProcessEx(e1));
 					}
-				});
+				} else {
+					closeEx(e);
+				}
+			});
 	}
 
 	@Override

@@ -39,17 +39,17 @@ public final class AggregationChunkJsonCodec implements JsonCodec<AggregationChu
 	private final Set<String> allowedMeasures;
 
 	@SuppressWarnings("unchecked")
-	private AggregationChunkJsonCodec(ChunkIdJsonCodec<?> chunkIdCodec,
-			JsonCodec<PrimaryKey> primaryKeyFormat,
-			Set<String> allowedMeasures) {
+	private AggregationChunkJsonCodec(
+		ChunkIdJsonCodec<?> chunkIdCodec, JsonCodec<PrimaryKey> primaryKeyFormat, Set<String> allowedMeasures
+	) {
 		this.chunkIdCodec = (ChunkIdJsonCodec<Object>) chunkIdCodec;
 		this.primaryKeyFormat = primaryKeyFormat;
 		this.allowedMeasures = allowedMeasures;
 	}
 
-	public static AggregationChunkJsonCodec create(ChunkIdJsonCodec<?> chunkIdCodec,
-			JsonCodec<PrimaryKey> primaryKeyCodec,
-			Set<String> allowedMeasures) {
+	public static AggregationChunkJsonCodec create(
+		ChunkIdJsonCodec<?> chunkIdCodec, JsonCodec<PrimaryKey> primaryKeyCodec, Set<String> allowedMeasures
+	) {
 		return new AggregationChunkJsonCodec(chunkIdCodec, primaryKeyCodec, allowedMeasures);
 	}
 
