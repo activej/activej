@@ -33,14 +33,14 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   // Promise chaining
   public static void main(String[] args) {
       Eventloop eventloop = Eventloop.builder()
-              .withCurrentThread()
-              .build();
+          .withCurrentThread()
+          .build();
   
       Promises.delay(Duration.ofSeconds(1), "world")
-              .map(string -> string.toUpperCase())
-              .then(string -> Promises.delay(Duration.ofSeconds(3))
-                      .map($ -> "HELLO " + string))
-              .whenResult(string -> System.out.println(string));
+          .map(string -> string.toUpperCase())
+          .then(string -> Promises.delay(Duration.ofSeconds(3))
+              .map($ -> "HELLO " + string))
+          .whenResult(string -> System.out.println(string));
   
       eventloop.run();
   }
@@ -49,17 +49,17 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   ```java
   // CSP workflow example
   ChannelSuppliers.ofValues(1, 2, 3, 4, 5, 6)
-          .filter(x -> x % 2 == 0)
-          .map(x -> 2 * x)
-          .streamTo(ChannelConsumers.ofConsumer(System.out::println));
+      .filter(x -> x % 2 == 0)
+      .map(x -> 2 * x)
+      .streamTo(ChannelConsumers.ofConsumer(System.out::println));
   ```
 
   ```java
   // Datastream workflow example
   StreamSuppliers.ofValues(1, 2, 3, 4, 5, 6)
-          .transformWith(StreamTransformers.filter(x -> x % 2 == 0))
-          .transformWith(StreamTransformers.mapper(x -> 2 * x))
-          .streamTo(StreamConsumers.ofConsumer(System.out::println));
+      .transformWith(StreamTransformers.filter(x -> x % 2 == 0))
+      .transformWith(StreamTransformers.mapper(x -> 2 * x))
+      .streamTo(StreamConsumers.ofConsumer(System.out::println));
   ```
 
 * **HTTP** - High-performance HTTP server and client with WebSocket support. It can be used as a simple web server or as an
@@ -71,12 +71,12 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       Eventloop eventloop = Eventloop.create();
   
       AsyncServlet servlet = request -> HttpResponse.ok200()
-              .withPlainText("Hello world")
-              .toPromise();
+          .withPlainText("Hello world")
+          .toPromise();
   
       HttpServer server = HttpServer.builder(eventloop, servlet)
-              .withListenPort(8080)
-              .build();
+          .withListenPort(8080)
+          .build();
   
       server.listen();
   
@@ -94,9 +94,9 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       HttpRequest request = HttpRequest.get("http://localhost:8080").build();
   
       client.request(request)
-              .then(response -> response.loadBody())
-              .map(body -> body.getString(StandardCharsets.UTF_8))
-              .whenResult(bodyString -> System.out.println(bodyString));
+          .then(response -> response.loadBody())
+          .map(body -> body.getString(StandardCharsets.UTF_8))
+          .whenResult(bodyString -> System.out.println(bodyString));
   
       eventloop.run();
   }
@@ -110,9 +110,9 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
   // Manual binding
   public static void main(String[] args) {
       Module module = ModuleBuilder.create()
-              .bind(int.class).toInstance(101)
-              .bind(String.class).to(number -> "Hello #" + number, int.class)
-              .build();
+          .bind(int.class).toInstance(101)
+          .bind(String.class).to(number -> "Hello #" + number, int.class)
+          .build();
   
       Injector injector = Injector.of(module);
   
@@ -197,17 +197,17 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
           DefiningClassLoader classLoader = DefiningClassLoader.create();
       
           Counter counter = ClassGenerator.builder(Counter.class)
-                  .withMethod("countSum",
-                          let(value(0), sum ->
-                                  sequence(
-                                          iterate(
-                                                  value(0),
-                                                  value(100),
-                                                  i -> set(sum, add(sum, i))),
-                                          sum
-                                  )))
-                  .build()
-                  .generateClassAndCreateInstance(classLoader);
+              .withMethod("countSum",
+                  let(value(0), sum ->
+                      sequence(
+                          iterate(
+                              value(0),
+                              value(100),
+                              i -> set(sum, add(sum, i))),
+                          sum
+                      )))
+              .build()
+              .generateClassAndCreateInstance(classLoader);
       
           System.out.println(counter.countSum()); // 4950
       }
@@ -243,7 +243,7 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       // Serialization and deserialization
       public static void main(String[] args) {
           BinarySerializer<User> userSerializer = SerializerFactory.defaultInstance()
-                  .create(User.class);
+              .create(User.class);
       
           User john = new User(1, "John");
       
@@ -268,14 +268,14 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       // StreamCodec usage example
       public static void main(String[] args) throws IOException {
           StreamCodec<User> userStreamCodec = StreamCodec.create(User::new,
-                  User::getId, StreamCodecs.ofVarInt(),
-                  User::getName, StreamCodecs.ofString()
+              User::getId, StreamCodecs.ofVarInt(),
+              User::getName, StreamCodecs.ofString()
           );
       
           List<User> users = List.of(
-                  new User(1, "John"),
-                  new User(2, "Sarah"),
-                  new User(3, "Ben")
+              new User(1, "John"),
+              new User(2, "Sarah"),
+              new User(3, "Ben")
           );
       
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -362,8 +362,8 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
       ```java
       public static void main(String[] args) throws IOException {
           Eventloop eventloop = Eventloop.builder()
-                  .withCurrentThread()
-                  .build();
+              .withCurrentThread()
+              .build();
       
           HttpClient httpClient = HttpClient.create(eventloop);
       
@@ -379,13 +379,13 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
                   // Upload
                   .then(() -> fileSystem.upload(filename))
                   .then(consumer -> httpClient.request(HttpRequest.get("http://localhost:8080").build())
-                          .then(response -> response.loadBody())
-                          .then(body -> ChannelSuppliers.ofValue(body).streamTo(consumer)))
+                      .then(response -> response.loadBody())
+                      .then(body -> ChannelSuppliers.ofValue(body).streamTo(consumer)))
       
                   // Download
                   .then(() -> fileSystem.download(filename))
                   .then(supplier -> supplier.streamTo(ChannelConsumers.ofConsumer(byteBuf ->
-                          System.out.println(byteBuf.asString(StandardCharsets.UTF_8)))))
+                      System.out.println(byteBuf.asString(StandardCharsets.UTF_8)))))
       
                   // Cleanup
                   .whenComplete(executor::shutdown);
@@ -403,10 +403,10 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
           Eventloop eventloop = Eventloop.create();
       
           RpcServer server = RpcServer.builder(eventloop)
-                  .withMessageTypes(String.class)
-                  .withHandler(String.class, name -> Promise.of("Hello, " + name))
-                  .withListenPort(9000)
-                  .build();
+              .withMessageTypes(String.class)
+              .withHandler(String.class, name -> Promise.of("Hello, " + name))
+              .withListenPort(9000)
+              .build();
       
           server.listen();
       
@@ -420,14 +420,14 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
           Eventloop eventloop = Eventloop.create();
       
           RpcClient client = RpcClient.builder(eventloop)
-                  .withStrategy(RpcStrategies.server(new InetSocketAddress(9000)))
-                  .withMessageTypes(String.class)
-                  .build();
+              .withStrategy(RpcStrategies.server(new InetSocketAddress(9000)))
+              .withMessageTypes(String.class)
+              .build();
       
           client.start()
-                  .then(() -> client.sendRequest("John"))
-                  .whenResult(response -> System.out.println(response)) // "Hello, John"
-                  .whenComplete(client::stop);
+              .then(() -> client.sendRequest("John"))
+              .whenResult(response -> System.out.println(response)) // "Hello, John"
+              .whenComplete(client::stop);
       
           eventloop.run();
       }
@@ -459,8 +459,8 @@ public final class HttpHelloWorldExample extends HttpServerLauncher {
     @Provides
     AsyncServlet servlet() {
         return request -> HttpResponse.ok200()
-                .withPlainText("Hello, World!")
-                .toPromise();
+            .withPlainText("Hello, World!")
+            .toPromise();
     }
 
     public static void main(String[] args) throws Exception {
