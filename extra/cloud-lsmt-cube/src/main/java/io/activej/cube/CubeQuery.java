@@ -223,13 +223,13 @@ public final class CubeQuery {
 	@Override
 	public String toString() {
 		return "CubeQuery{" +
-			"attributes=" + attributes +
-			", measures=" + measures +
-			", where=" + where +
-			", having=" + having +
-			", limit=" + limit +
-			", offset=" + offset +
-			", orderings=" + orderings +
-			", reportType=" + reportType + '}';
+			   "attributes=" + attributes +
+			   ", measures=" + measures +
+			   ", where=" + where +
+			   ", having=" + having +
+			   ", limit=" + limit +
+			   ", offset=" + offset +
+			   ", orderings=" + orderings +
+			   ", reportType=" + reportType + '}';
 	}
 }

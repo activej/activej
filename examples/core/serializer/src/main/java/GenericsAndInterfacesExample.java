@@ -26,7 +26,7 @@ public final class GenericsAndInterfacesExample {
 		//[START REGION_6]
 		for (int i = 0; i < developer.getSkills().size(); i++) {
 			System.out.println(developer.getSkills().get(i).getKey() + " - " + developer.getSkills().get(i).getValue() +
-				", " + developer2.getSkills().get(i).getKey() + " - " + developer2.getSkills().get(i).getValue());
+							   ", " + developer2.getSkills().get(i).getKey() + " - " + developer2.getSkills().get(i).getValue());
 		}
 		//[END REGION_6]
 	}

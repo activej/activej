@@ -404,10 +404,10 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	@Override
 	public String toString() {
 		return "{" +
-			"revision=" + commitId +
-			(originCommitId != commitId ? " origin revision=" + originCommitId : "") +
-			" workingDiffs:" + (workingDiffs != null ? workingDiffs.size() : null) +
-			" pendingCommits:" + (pendingProtoCommit != null) +
-			"}";
+			   "revision=" + commitId +
+			   (originCommitId != commitId ? " origin revision=" + originCommitId : "") +
+			   " workingDiffs:" + (workingDiffs != null ? workingDiffs.size() : null) +
+			   " pendingCommits:" + (pendingProtoCommit != null) +
+			   "}";
 	}
 }

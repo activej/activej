@@ -54,8 +54,8 @@ public final class RpcMessage {
 	@Override
 	public String toString() {
 		return "RpcMessage{" +
-			"index=" + index +
-			", message=" + message +
-			'}';
+			   "index=" + index +
+			   ", message=" + message +
+			   '}';
 	}
 }

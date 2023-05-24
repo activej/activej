@@ -207,8 +207,8 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> {
 	@Override
 	public String toString() {
 		return "ChannelFileReader{" +
-			"pos=" + position +
-			(limit == Long.MAX_VALUE ? "" : ", limit=" + limit) +
-			'}';
+			   "pos=" + position +
+			   (limit == Long.MAX_VALUE ? "" : ", limit=" + limit) +
+			   '}';
 	}
 }

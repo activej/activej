@@ -101,10 +101,10 @@ public final class ReduceSimple<K, I, O, A> extends AbstractNode {
 	@Override
 	public String toString() {
 		return "ReduceSimple{keyFunction=" + keyFunction.getClass().getSimpleName() +
-			", keyComparator=" + keyComparator.getClass().getSimpleName() +
-			", reducer=" + reducer.getClass().getSimpleName() +
-			", inputs=" + inputs +
-			", output=" + output + '}';
+			   ", keyComparator=" + keyComparator.getClass().getSimpleName() +
+			   ", reducer=" + reducer.getClass().getSimpleName() +
+			   ", inputs=" + inputs +
+			   ", output=" + output + '}';
 	}
 }
 

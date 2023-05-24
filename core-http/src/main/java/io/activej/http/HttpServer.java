@@ -167,7 +167,7 @@ public final class HttpServer extends AbstractReactiveServer {
 		}
 
 		@JmxAttribute(description = "Number of requests which were invalid according to http protocol. " +
-			"Responses were not sent for this requests")
+									"Responses were not sent for this requests")
 		public ExceptionStats getHttpErrors() {
 			return httpErrors;
 		}
@@ -178,8 +178,8 @@ public final class HttpServer extends AbstractReactiveServer {
 		}
 
 		@JmxAttribute(description = "Number of requests which were valid according to http protocol, " +
-			"but application produced error during handling this request " +
-			"(responses with 4xx and 5xx HTTP status codes)")
+									"but application produced error during handling this request " +
+									"(responses with 4xx and 5xx HTTP status codes)")
 		public ExceptionStats getServletExceptions() {
 			return servletExceptions;
 		}
@@ -287,9 +287,9 @@ public final class HttpServer extends AbstractReactiveServer {
 			boolean isClosing = closeCallback != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolNew.closeExpiredConnections(reactor.currentTimeMillis() -
-					(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown));
+																		(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown));
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(reactor.currentTimeMillis() -
-					(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
+																			  (!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(reactor.currentTimeMillis() - keepAliveTimeoutMillis);
 			if (getConnectionsCount() != 0) {

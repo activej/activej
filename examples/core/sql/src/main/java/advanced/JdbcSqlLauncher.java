@@ -50,9 +50,9 @@ public final class JdbcSqlLauncher extends Launcher {
 			 Statement statement = connection.createStatement()
 		) {
 			statement.executeUpdate("" +
-				"INSERT INTO " + TABLE_TO + " " +
-				"SELECT * " +
-				"FROM " + TABLE_FROM);
+									"INSERT INTO " + TABLE_TO + " " +
+									"SELECT * " +
+									"FROM " + TABLE_FROM);
 		}
 	}
 

@@ -220,10 +220,10 @@ public final class RpcServerConnection extends AbstractReactive implements RpcSt
 	@Override
 	public String toString() {
 		return "RpcServerConnection{" +
-			"address=" + remoteAddress +
-			", active=" + activeRequests +
-			", successes=" + successfulRequests.getTotalCount() +
-			", failures=" + failedRequests.getTotalCount() +
-			'}';
+			   "address=" + remoteAddress +
+			   ", active=" + activeRequests +
+			   ", successes=" + successfulRequests.getTotalCount() +
+			   ", failures=" + failedRequests.getTotalCount() +
+			   '}';
 	}
 }

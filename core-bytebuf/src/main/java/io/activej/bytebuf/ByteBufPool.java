@@ -150,11 +150,11 @@ public final class ByteBufPool {
 		@Override
 		public String toString() {
 			return "{" +
-				"size=" + size +
-				", timestamp=" + timestamp +
-				", thread=" + thread +
-				", stackTrace=" + stackTrace +
-				'}';
+				   "size=" + size +
+				   ", timestamp=" + timestamp +
+				   ", thread=" + thread +
+				   ", stackTrace=" + stackTrace +
+				   '}';
 		}
 	}
 
@@ -253,7 +253,7 @@ public final class ByteBufPool {
 		ByteBufConcurrentQueue queue = slabs[slab];
 		queue.clear();
 		return new AssertionError("Attempt to use recycled ByteBuf" +
-			(REGISTRY ? ByteBufPool.getByteBufTrace(buf) : ""));
+								  (REGISTRY ? ByteBufPool.getByteBufTrace(buf) : ""));
 	}
 
 	static String getByteBufTrace(ByteBuf buf) {
@@ -261,7 +261,7 @@ public final class ByteBufPool {
 		Entry recycled = recycleRegistry.get(buf);
 		if (allocated == null && recycled == null) return "";
 		return "\nAllocated: " + allocated +
-			"\nRecycled: " + recycled;
+			   "\nRecycled: " + recycled;
 	}
 
 	/**
@@ -538,16 +538,16 @@ public final class ByteBufPool {
 				ByteBufConcurrentQueue slab = slabs[idx];
 				int count = slab.size();
 				String slabInfo = slabSize + "," +
-					(STATS ? created[idx] : "-") + "," +
-					(STATS ? reused[idx] : "-") + "," +
-					count + "," +
-					slabSize * count / 1024;
+								  (STATS ? created[idx] : "-") + "," +
+								  (STATS ? reused[idx] : "-") + "," +
+								  count + "," +
+								  slabSize * count / 1024;
 				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
 					slabInfo += "," + slab.realMin.get() + "," +
-						String.format("%.1f", slabStat.estimatedMin) + "," +
-						String.format("%.1f", slabStat.estimatedError) + "," +
-						slabStat.evictedTotal;
+								String.format("%.1f", slabStat.estimatedMin) + "," +
+								String.format("%.1f", slabStat.estimatedError) + "," +
+								slabStat.evictedTotal;
 				}
 
 				result.add(slabInfo);
@@ -582,12 +582,12 @@ public final class ByteBufPool {
 		@Override
 		public String toString() {
 			return "SlabStats{" +
-				"estimatedMin=" + estimatedMin +
-				", estimatedError=" + estimatedError +
-				", evictedTotal=" + evictedTotal +
-				", evictedLast=" + evictedLast +
-				", evictedMax=" + evictedMax +
-				'}';
+				   "estimatedMin=" + estimatedMin +
+				   ", estimatedError=" + estimatedError +
+				   ", evictedTotal=" + evictedTotal +
+				   ", evictedLast=" + evictedLast +
+				   ", evictedMax=" + evictedMax +
+				   '}';
 		}
 	}
 

@@ -101,8 +101,8 @@ public final class DataflowClient extends AbstractNioReactive {
 						.transformWith(new StreamTraceCounter<>(streamId, address))
 						.withEndOfStream(eos -> eos
 							.mapException(e -> (e instanceof IOException ||
-								e instanceof UnknownFormatException ||
-								e instanceof TruncatedDataException) ?
+												e instanceof UnknownFormatException ||
+												e instanceof TruncatedDataException) ?
 								new DataflowStacklessException("Error when downloading from " + address, e) :
 								new DataflowException("Error when downloading from " + address, e))
 							.whenComplete(messaging::close)));

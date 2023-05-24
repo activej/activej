@@ -167,12 +167,12 @@ public final class ReadSettings<K> {
 	@Override
 	public String toString() {
 		return "ReadSettings{" +
-			"fields=" + fields +
-			", offset=" + offset +
-			", limit=" + limit +
-			", filters=" + filters +
-			", sort=" + sort +
-			", extra=" + extra +
-			'}';
+			   "fields=" + fields +
+			   ", offset=" + offset +
+			   ", limit=" + limit +
+			   ", filters=" + filters +
+			   ", sort=" + sort +
+			   ", extra=" + extra +
+			   '}';
 	}
 }

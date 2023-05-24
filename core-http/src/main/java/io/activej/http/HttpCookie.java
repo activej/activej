@@ -528,14 +528,14 @@ public final class HttpCookie {
 		}
 		HttpCookie that = (HttpCookie) o;
 		return maxAge == that.maxAge &&
-			secure == that.secure &&
-			httpOnly == that.httpOnly &&
-			expirationDate == that.expirationDate &&
-			Objects.equals(name, that.name) &&
-			Objects.equals(value, that.value) &&
-			Objects.equals(domain, that.domain) &&
-			Objects.equals(path, that.path) &&
-			Objects.equals(extension, that.extension);
+			   secure == that.secure &&
+			   httpOnly == that.httpOnly &&
+			   expirationDate == that.expirationDate &&
+			   Objects.equals(name, that.name) &&
+			   Objects.equals(value, that.value) &&
+			   Objects.equals(domain, that.domain) &&
+			   Objects.equals(path, that.path) &&
+			   Objects.equals(extension, that.extension);
 	}
 
 	@Override
@@ -546,8 +546,8 @@ public final class HttpCookie {
 	@Override
 	public String toString() {
 		return "HttpCookie{" +
-			"name='" + name + '\'' +
-			", value='" + value + '\'' + '}';
+			   "name='" + name + '\'' +
+			   ", value='" + value + '\'' + '}';
 	}
 
 	public enum SameSite {

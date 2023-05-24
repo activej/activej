@@ -47,9 +47,9 @@ public final class Between implements WherePredicate {
 	@Override
 	public String toString() {
 		return "Between[" +
-			"value=" + value + ", " +
-			"from=" + from + ", " +
-			"to=" + to + ']';
+			   "value=" + value + ", " +
+			   "from=" + from + ", " +
+			   "to=" + to + ']';
 	}
 
 }

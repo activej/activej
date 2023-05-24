@@ -325,9 +325,9 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 	@Override
 	protected int estimateSize() {
 		return estimateSize(LONGEST_HTTP_METHOD_SIZE
-			+ 1 // SPACE
-			+ url.getPathAndQueryLength())
-			+ HTTP_1_1_SIZE;
+							+ 1 // SPACE
+							+ url.getPathAndQueryLength())
+			   + HTTP_1_1_SIZE;
 	}
 
 	@Override

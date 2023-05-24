@@ -119,8 +119,8 @@ public class Initializers {
 			.with(Launcher.class, AVERAGE, "runDelay", launcher ->
 				TriggerResult.ofValue(launcher.getDurationOfStart(),
 					launcher.getInstantOfRun() == null &&
-						launcher.getDurationOfStart() != null &&
-						launcher.getDurationOfStart().toMillis() > maxRunDelay.toMillis()));
+					launcher.getDurationOfStart() != null &&
+					launcher.getDurationOfStart().toMillis() > maxRunDelay.toMillis()));
 	}
 
 	public static Initializer<TriggersModuleSettings> ofEventloopFatalErrorsTriggers() {

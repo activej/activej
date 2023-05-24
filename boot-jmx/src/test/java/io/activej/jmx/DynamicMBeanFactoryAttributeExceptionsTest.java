@@ -37,10 +37,10 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
-				"that implements JmxStats interface " +
-				"and contains static factory \"createAccumulator()\" method " +
-				"or static factory \"create()\" method " +
-				"or public no-arg constructor"));
+												 "that implements JmxStats interface " +
+												 "and contains static factory \"createAccumulator()\" method " +
+												 "or static factory \"create()\" method " +
+												 "or public no-arg constructor"));
 		}
 	}
 
@@ -54,10 +54,10 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
-				"that implements JmxStats interface " +
-				"and contains static factory \"createAccumulator()\" method " +
-				"or static factory \"create()\" method " +
-				"or public no-arg constructor"));
+												 "that implements JmxStats interface " +
+												 "and contains static factory \"createAccumulator()\" method " +
+												 "or static factory \"create()\" method " +
+												 "or public no-arg constructor"));
 		}
 	}
 
@@ -71,10 +71,10 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 			fail();
 		} catch (IllegalArgumentException e) {
 			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
-				"that implements JmxStats interface " +
-				"and contains static factory \"createAccumulator()\" method " +
-				"or static factory \"create()\" method " +
-				"or public no-arg constructor"));
+												 "that implements JmxStats interface " +
+												 "and contains static factory \"createAccumulator()\" method " +
+												 "or static factory \"create()\" method " +
+												 "or public no-arg constructor"));
 		}
 	}
 

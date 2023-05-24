@@ -159,15 +159,15 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 					try (PreparedStatement ps = connection.prepareStatement(sql("" +
-						"UPDATE {chunk} " +
-						"SET `locked_at`=NOW(), `locked_by`=?" +
-						"WHERE" +
-						" `removed_revision` IS NULL AND" +
-						" (`locked_at` IS NULL OR" +
-						" `locked_at` <= NOW() - INTERVAL ? SECOND) AND" +
-						" `id` IN " +
-						nCopies(chunkIds.size(), "?").stream()
-							.collect(joining(",", "(", ")"))
+																				"UPDATE {chunk} " +
+																				"SET `locked_at`=NOW(), `locked_by`=?" +
+																				"WHERE" +
+																				" `removed_revision` IS NULL AND" +
+																				" (`locked_at` IS NULL OR" +
+																				" `locked_at` <= NOW() - INTERVAL ? SECOND) AND" +
+																				" `id` IN " +
+																				nCopies(chunkIds.size(), "?").stream()
+																					.collect(joining(",", "(", ")"))
 					))) {
 						ps.setString(1, lockedBy);
 						ps.setLong(2, lockTtlSeconds);
@@ -197,15 +197,15 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 					try (PreparedStatement ps = connection.prepareStatement(sql("" +
-						"UPDATE {chunk} " +
-						"SET `locked_at`=NULL, `locked_by`=NULL " +
-						"WHERE" +
-						" `aggregation` = ? AND" +
-						" `removed_revision` IS NULL AND" +
-						" `locked_by`=? AND" +
-						" `id` IN " +
-						nCopies(chunkIds.size(), "?").stream()
-							.collect(joining(",", "(", ")")))
+																				"UPDATE {chunk} " +
+																				"SET `locked_at`=NULL, `locked_by`=NULL " +
+																				"WHERE" +
+																				" `aggregation` = ? AND" +
+																				" `removed_revision` IS NULL AND" +
+																				" `locked_by`=? AND" +
+																				" `id` IN " +
+																				nCopies(chunkIds.size(), "?").stream()
+																					.collect(joining(",", "(", ")")))
 					)) {
 						ps.setString(1, aggregationId);
 						ps.setString(2, lockedBy);
@@ -229,11 +229,11 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 					try (PreparedStatement ps = connection.prepareStatement(sql("" +
-						"SELECT `id` " +
-						"FROM {chunk} " +
-						"WHERE" +
-						" `aggregation` = ? AND" +
-						" (`removed_revision` IS NOT NULL OR `locked_at` > NOW() - INTERVAL ? SECOND)"
+																				"SELECT `id` " +
+																				"FROM {chunk} " +
+																				"WHERE" +
+																				" `aggregation` = ? AND" +
+																				" (`removed_revision` IS NOT NULL OR `locked_at` > NOW() - INTERVAL ? SECOND)"
 					))) {
 						ps.setString(1, aggregationId);
 						ps.setLong(2, lockTtlSeconds);

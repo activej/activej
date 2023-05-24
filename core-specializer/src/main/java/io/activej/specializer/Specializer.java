@@ -263,8 +263,8 @@ public final class Specializer {
 				transformMethod(
 					classNode.methods.stream()
 						.filter(methodNode -> true &&
-							methodNode.name.equals(javaMethod.getName()) &&
-							methodNode.desc.equals(methodDesc))
+											  methodNode.name.equals(javaMethod.getName()) &&
+											  methodNode.desc.equals(methodDesc))
 						.findFirst()
 						.get(),
 					new GeneratorAdapter(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
@@ -767,7 +767,7 @@ public final class Specializer {
 					Objects.equals(originalField.getName(), field) &&
 					originalField.getDeclaringClass().isAssignableFrom(owner) &&
 					(result == null ||
-						result.getDeclaringClass().isAssignableFrom(originalField.getDeclaringClass()))) {
+					 result.getDeclaringClass().isAssignableFrom(originalField.getDeclaringClass()))) {
 					result = originalField;
 				}
 			}
@@ -784,7 +784,7 @@ public final class Specializer {
 						List.of(method.getArgumentTypes())) &&
 					originalMethod.getDeclaringClass().isAssignableFrom(owner) &&
 					(result == null ||
-						result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass()))) {
+					 result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass()))) {
 					result = originalMethod;
 				}
 			}

@@ -360,9 +360,9 @@ public final class HttpUtils {
 	 */
 	public static String formatUrl(InetSocketAddress address, boolean ssl) {
 		return (ssl ? "https://" : "http://")
-			+ formatHost(address.getAddress())
-			+ (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
-			+ "/";
+			   + formatHost(address.getAddress())
+			   + (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
+			   + "/";
 	}
 
 	public static List<String> getHttpAddresses(AbstractReactiveServer server) {
@@ -408,8 +408,8 @@ public final class HttpUtils {
 
 	static boolean isReservedCloseCode(int closeCode) {
 		return closeCode < 1000 ||
-			(closeCode >= 1004 && closeCode < 1007) ||
-			(closeCode >= 1015 && closeCode < 3000);
+			   (closeCode >= 1004 && closeCode < 1007) ||
+			   (closeCode >= 1015 && closeCode < 3000);
 	}
 
 	static String getUTF8(ByteBuf buf) throws CharacterCodingException {

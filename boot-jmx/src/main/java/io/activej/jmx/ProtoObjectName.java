@@ -62,13 +62,13 @@ public record ProtoObjectName(
 	@Override
 	public String toString() {
 		return "ProtoObjectName{" +
-			"className='" + className + '\'' +
-			", packageName='" + packageName + '\'' +
-			(qualifier == null ? "" : (", qualifier='" + qualifier + '\'')) +
-			(scope == null ? "" : (", scope='" + scope + '\'')) +
-			(workerPoolQualifier == null ? "" : (", workerPoolQualifier='" + workerPoolQualifier + '\'')) +
-			(workerId == null ? "" : (", workerId='" + workerId + '\'')) +
-			(genericParameters == null ? "" : (", genericParameters=" + genericParameters)) +
-			'}';
+			   "className='" + className + '\'' +
+			   ", packageName='" + packageName + '\'' +
+			   (qualifier == null ? "" : (", qualifier='" + qualifier + '\'')) +
+			   (scope == null ? "" : (", scope='" + scope + '\'')) +
+			   (workerPoolQualifier == null ? "" : (", workerPoolQualifier='" + workerPoolQualifier + '\'')) +
+			   (workerId == null ? "" : (", workerId='" + workerId + '\'')) +
+			   (genericParameters == null ? "" : (", genericParameters=" + genericParameters)) +
+			   '}';
 	}
 }

@@ -81,7 +81,7 @@ public class RedisConnectionTestWithStub {
 	 */
 	private boolean canBeRun() {
 		return "\n".equals(System.lineSeparator())
-			||
-			getClass() != RedisConnectionTestWithStub.class;
+			   ||
+			   getClass() != RedisConnectionTestWithStub.class;
 	}
 }

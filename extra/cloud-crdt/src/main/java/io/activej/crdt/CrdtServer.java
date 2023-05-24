@@ -180,7 +180,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 						if (!(msg instanceof CrdtRequest.TakeAck)) {
 							cb.setException(new CrdtException(
 								"Received message " + msg +
-									" instead of " + CrdtRequest.TakeAck.class));
+								" instead of " + CrdtRequest.TakeAck.class));
 							return;
 						}
 						cb.set(null);

@@ -97,7 +97,7 @@ public final class CubeUplinkMigrationService {
 	public static void main(String[] args) throws Exception {
 		if (args.length < 2) {
 			throw new IllegalArgumentException("2 program arguments required: " +
-				"<path to repository data source config>, <path to uplink data source config>");
+											   "<path to repository data source config>, <path to uplink data source config>");
 		}
 
 		DataSource repoDataSource = dataSource(args[0]);

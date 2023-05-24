@@ -349,7 +349,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
 				Promise.complete() :
 				Promise.ofException(new AggregationException("Missed chunks from storage: " +
-					Utils.toString(difference(requiredChunks, actualChunks)))))
+															 Utils.toString(difference(requiredChunks, actualChunks)))))
 			.whenComplete(promiseCleanupCheckRequiredChunks.recordStats())
 			.whenComplete(toLogger(logger, thisMethod(), Utils.toString(requiredChunks)));
 	}
@@ -364,7 +364,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private String toBackupPath(String backupId, @Nullable C chunkId) {
 		return toDir(backupPath) + backupId + IFileSystem.SEPARATOR +
-			(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
+			   (chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
 	}
 
 	private String toDir(String path) {

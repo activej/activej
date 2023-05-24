@@ -142,7 +142,7 @@ public final class DnsProtocol {
 			if (recordType == null) {
 				// malformed response, we are sending query only with existing RecordType's
 				throw new UnknownFormatException("Received DNS response with unknown query record type (" +
-					Integer.toHexString(recordTypeCode & 0xFFFF) + ")");
+												 Integer.toHexString(recordTypeCode & 0xFFFF) + ")");
 			}
 
 			// read query class (only for sanity check)
@@ -150,7 +150,7 @@ public final class DnsProtocol {
 			QueryClass queryClass = QueryClass.fromCode(queryClassCode);
 			if (queryClass != QueryClass.INTERNET) {
 				throw new UnknownFormatException("Received DNS response with unknown query class (" +
-					Integer.toHexString(queryClassCode & 0xFFFF) + ")");
+												 Integer.toHexString(queryClassCode & 0xFFFF) + ")");
 			}
 
 			// at this point, we know the query of this response
@@ -193,7 +193,7 @@ public final class DnsProtocol {
 				short length = payload.readShort();
 				if (length != recordType.dataLength) {
 					throw new InvalidSizeException("Bad record length received. " + recordType +
-						"-record length should be " + recordType.dataLength + " bytes, it was " + length);
+												   "-record length should be " + recordType.dataLength + " bytes, it was " + length);
 				}
 				byte[] bytes = new byte[length];
 				payload.read(bytes);

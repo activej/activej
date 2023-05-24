@@ -59,7 +59,7 @@ public final class Triggers implements ConcurrentJmxBean {
 			TriggerResult triggerResult = triggerWithResult.triggerResult();
 
 			return triggerResult.getCount() > suppressedTriggerResult.getCount() ||
-				triggerResult.getTimestamp() > suppressedTriggerResult.getTimestamp();
+				   triggerResult.getTimestamp() > suppressedTriggerResult.getTimestamp();
 		}
 		return true;
 	};
@@ -146,7 +146,7 @@ public final class Triggers implements ConcurrentJmxBean {
 				if (oldTriggerWithResult == null ||
 					oldTriggerWithResult.trigger().getSeverity().ordinal() < trigger.getSeverity().ordinal() ||
 					oldTriggerWithResult.trigger().getSeverity() == trigger.getSeverity() &&
-						oldTriggerWithResult.triggerResult().getTimestamp() > triggerResult.getTimestamp()) {
+					oldTriggerWithResult.triggerResult().getTimestamp() > triggerResult.getTimestamp()) {
 					maxSeverityResults.put(trigger, new TriggerWithResult(trigger, triggerResult
 						.withCount(triggerResult.getCount())));
 				} else {
@@ -343,8 +343,8 @@ public final class Triggers implements ConcurrentJmxBean {
 
 		suppressBy(trigger ->
 			trigger.getSeverity().name().equalsIgnoreCase(values[0].trim()) &&
-				trigger.getComponent().equals(values[1].trim()) &&
-				trigger.getName().equals(values[2].trim()));
+			trigger.getComponent().equals(values[1].trim()) &&
+			trigger.getName().equals(values[2].trim()));
 	}
 
 	private void suppressBy(Predicate<Trigger> condition) {

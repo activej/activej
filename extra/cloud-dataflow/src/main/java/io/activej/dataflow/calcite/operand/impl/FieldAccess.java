@@ -101,7 +101,7 @@ public final class FieldAccess implements Operand<FieldAccess> {
 	@Override
 	public String toString() {
 		return "FieldAccess[" +
-			"objectOperand=" + objectOperand + ", " +
-			"fieldName=" + fieldName + ']';
+			   "objectOperand=" + objectOperand + ", " +
+			   "fieldName=" + fieldName + ']';
 	}
 }

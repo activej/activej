@@ -55,9 +55,9 @@ public class ChunkLockerMySqlTest {
 		try (Connection connection = dataSource.getConnection()) {
 			Set<Long> chunkIds = LongStream.range(0, 100).boxed().collect(toSet());
 			try (PreparedStatement ps = connection.prepareStatement("" +
-				"INSERT INTO " + CHUNK_TABLE +
-				" (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
-				"VALUES " + String.join(",", nCopies(100, "(?,?,?,?,?,?,?)")))) {
+																	"INSERT INTO " + CHUNK_TABLE +
+																	" (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
+																	"VALUES " + String.join(",", nCopies(100, "(?,?,?,?,?,?,?)")))) {
 				int index = 1;
 				for (Long chunkId : chunkIds) {
 					ps.setLong(index++, chunkId);
@@ -191,8 +191,8 @@ public class ChunkLockerMySqlTest {
 		try (Connection connection = dataSource.getConnection()) {
 			try (PreparedStatement ps = connection.prepareStatement(
 				"UPDATE `" + CHUNK_TABLE + "` " +
-					"SET `locked_at` = `locked_at` - INTERVAL ? SECOND " +
-					"WHERE `id` = ?"
+				"SET `locked_at` = `locked_at` - INTERVAL ? SECOND " +
+				"WHERE `id` = ?"
 			)) {
 				ps.setLong(1, DEFAULT_LOCK_TTL.getSeconds() + 1);
 				ps.setString(2, String.valueOf(chunkId));

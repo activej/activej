@@ -31,9 +31,9 @@ public final class TypeChecks {
 	public static void checkType(@Nullable Type type, Predicate<@Nullable Type> predicate) {
 		if (!predicate.test(type)) {
 			throw new IllegalArgumentException("Illegal type: " +
-				(type == null ?
-					"'throw' type" :
-					type.getClassName()));
+											   (type == null ?
+												   "'throw' type" :
+												   type.getClassName()));
 		}
 		assert type != null;
 	}

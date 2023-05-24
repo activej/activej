@@ -470,9 +470,9 @@ public final class ClusterRepartitionController extends AbstractReactive
 
 	private static final Comparator<InfoResults> INFO_RESULTS_COMPARATOR =
 		Comparator.<InfoResults>comparingLong(infoResults -> infoResults.remoteMetadata.stream()
-				.filter(Objects::isNull)
-				.count() +
-				(infoResults.isLocalMetaTheBest() ? 1 : 0))
+																 .filter(Objects::isNull)
+																 .count() +
+															 (infoResults.isLocalMetaTheBest() ? 1 : 0))
 			.thenComparingLong(infoResults -> infoResults.remoteMetadata.stream()
 				.filter(Objects::nonNull)
 				.findAny().orElse(infoResults.localMetadata)
@@ -500,14 +500,14 @@ public final class ClusterRepartitionController extends AbstractReactive
 		// and there are remote partitions that do not have this file or have not a full version
 		boolean shouldBeUploaded() {
 			return isLocalMetaTheBest() &&
-				remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
+				   remoteMetadata.stream().anyMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
 		// (local) file should be deleted in case all the remote partitions have a better
 		// version of a file
 		boolean shouldBeDeleted() {
 			return remoteMetadata.size() == replicationCount &&
-				remoteMetadata.stream().noneMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
+				   remoteMetadata.stream().noneMatch(metadata -> metadata == null || metadata.getSize() < localMetadata.getSize());
 		}
 
 		boolean isLocalMetaTheBest() {

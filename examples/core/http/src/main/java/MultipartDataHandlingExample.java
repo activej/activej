@@ -28,28 +28,28 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	private static final String CRLF = "\r\n";
 	private static final String BOUNDARY = "-----------------------------4336597275426690519140415448";
 	private static final String MULTIPART_REQUEST = BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"id\"" + CRLF +
-		CRLF +
-		"12345" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file1\"; filename=\"data.txt\"" + CRLF +
-		"Content-Type: text/plain" + CRLF +
-		CRLF +
-		"Contet of data.txt" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"first name\"" + CRLF +
-		CRLF +
-		"Alice" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file2\"; filename=\"key.txt\"" + CRLF +
-		"Content-Type: text/html" + CRLF +
-		CRLF +
-		"Content of key.txt" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"last name\"" + CRLF +
-		CRLF +
-		"Johnson" + CRLF +
-		BOUNDARY + "--" + CRLF;
+													"Content-Disposition: form-data; name=\"id\"" + CRLF +
+													CRLF +
+													"12345" + CRLF +
+													BOUNDARY + CRLF +
+													"Content-Disposition: form-data; name=\"file1\"; filename=\"data.txt\"" + CRLF +
+													"Content-Type: text/plain" + CRLF +
+													CRLF +
+													"Contet of data.txt" + CRLF +
+													BOUNDARY + CRLF +
+													"Content-Disposition: form-data; name=\"first name\"" + CRLF +
+													CRLF +
+													"Alice" + CRLF +
+													BOUNDARY + CRLF +
+													"Content-Disposition: form-data; name=\"file2\"; filename=\"key.txt\"" + CRLF +
+													"Content-Type: text/html" + CRLF +
+													CRLF +
+													"Content of key.txt" + CRLF +
+													BOUNDARY + CRLF +
+													"Content-Disposition: form-data; name=\"last name\"" + CRLF +
+													CRLF +
+													"Johnson" + CRLF +
+													BOUNDARY + "--" + CRLF;
 
 	private Path path;
 	private int fileUploadsCount;

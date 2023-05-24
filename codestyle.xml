@@ -28,6 +28,7 @@
     <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true"/>
     <option name="KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE" value="true"/>
     <option name="KEEP_SIMPLE_CLASSES_IN_ONE_LINE" value="true"/>
+    <option name="ALIGN_MULTILINE_BINARY_OPERATION" value="true" />
     <indentOptions>
       <option name="USE_TAB_CHARACTER" value="true"/>
       <option name="CONTINUATION_INDENT_SIZE" value="4"/>

@@ -41,8 +41,8 @@ public final class Eq implements WherePredicate {
 	@Override
 	public String toString() {
 		return "Eq[" +
-			"left=" + left + ", " +
-			"right=" + right + ']';
+			   "left=" + left + ", " +
+			   "right=" + right + ']';
 	}
 
 }

@@ -13,6 +13,7 @@ continuation_indent_size = 4
 ij_continuation_indent_size = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
+ij_java_align_multiline_binary_operation = true
 
 [*.{xml, sql, js, jsx, html, sass, scss, css}]
 indent_style = space

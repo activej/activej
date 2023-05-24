@@ -50,10 +50,10 @@ public class DataItemResult2 {
 	@Override
 	public String toString() {
 		return "DataItemResult2{" +
-			"key2=" + key2 +
-			", metric1=" + metric1 +
-			", metric2=" + metric2 +
-			", metric3=" + metric3 +
-			'}';
+			   "key2=" + key2 +
+			   ", metric1=" + metric1 +
+			   ", metric2=" + metric2 +
+			   ", metric3=" + metric3 +
+			   '}';
 	}
 }

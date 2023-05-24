@@ -76,8 +76,8 @@ public class TransformResult<D> {
 	@Override
 	public String toString() {
 		return "{" +
-			"left=" + left +
-			", right=" + right +
-			'}';
+			   "left=" + left +
+			   ", right=" + right +
+			   '}';
 	}
 }

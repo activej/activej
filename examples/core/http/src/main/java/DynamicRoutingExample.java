@@ -34,7 +34,7 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 		return request -> HttpResponse.ok200()
 			.withHtml(
 				"<h1>This page is served by first servlet</h1>" +
-					"<h3>Try to reload the page</h3>"
+				"<h3>Try to reload the page</h3>"
 			)
 			.toPromise();
 	}
@@ -45,7 +45,7 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 		return request -> HttpResponse.ok200()
 			.withHtml(
 				"<h1>This page is served by second servlet</h1>" +
-					"<h3>Try to reload the page</h3>"
+				"<h3>Try to reload the page</h3>"
 			)
 			.toPromise();
 	}

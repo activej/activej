@@ -91,11 +91,11 @@ public final class Sort<K, T> extends AbstractNode {
 	@Override
 	public String toString() {
 		return "Sort{type=" + streamSchema +
-			", keyFunction=" + keyFunction.getClass().getSimpleName() +
-			", keyComparator=" + keyComparator.getClass().getSimpleName() +
-			", deduplicate=" + deduplicate +
-			", itemsInMemorySize=" + itemsInMemorySize +
-			", input=" + input +
-			", output=" + output + '}';
+			   ", keyFunction=" + keyFunction.getClass().getSimpleName() +
+			   ", keyComparator=" + keyComparator.getClass().getSimpleName() +
+			   ", deduplicate=" + deduplicate +
+			   ", itemsInMemorySize=" + itemsInMemorySize +
+			   ", input=" + input +
+			   ", output=" + output + '}';
 	}
 }

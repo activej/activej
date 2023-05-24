@@ -41,8 +41,8 @@ public final class Ge implements WherePredicate {
 	@Override
 	public String toString() {
 		return "Ge[" +
-			"left=" + left + ", " +
-			"right=" + right + ']';
+			   "left=" + left + ", " +
+			   "right=" + right + ']';
 	}
 
 }

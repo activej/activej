@@ -546,7 +546,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 					int precision =
 						sqlTypeName.allowsPrec()
-							&& !(fieldType
+						&& !(fieldType
 							instanceof RelDataTypeFactoryImpl.JavaType)
 							? fieldType.getPrecision()
 							: -1;

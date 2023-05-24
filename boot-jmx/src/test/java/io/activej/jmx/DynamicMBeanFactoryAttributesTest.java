@@ -388,7 +388,7 @@ public class DynamicMBeanFactoryAttributesTest {
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString("A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +
-				"' annotated with @JmxAttribute should be declared public"));
+													  "' annotated with @JmxAttribute should be declared public"));
 		}
 	}
 

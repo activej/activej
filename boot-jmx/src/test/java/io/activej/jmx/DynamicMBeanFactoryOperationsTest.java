@@ -128,7 +128,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString("A method \"action\" in class '" + MBeanWithNonPublicOperation.class.getName() +
-				"' annotated with @JmxOperation should be declared public"));
+													  "' annotated with @JmxOperation should be declared public"));
 		}
 	}
 

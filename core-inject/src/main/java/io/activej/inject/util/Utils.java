@@ -153,7 +153,7 @@ public final class Utils {
 				.append('\t')
 				.append('"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
 				.append(" [label=" +
-					'"' + key.getDisplayString().replace("\"", "\\\"") + '"')
+						'"' + key.getDisplayString().replace("\"", "\\\"") + '"')
 				.append(
 					bindingInfo.getType() == TRANSIENT ? " style=dotted" :
 						bindingInfo.getType() == EAGER ? " style=bold" :
@@ -197,7 +197,7 @@ public final class Utils {
 						sb.append('\t')
 							.append(dep)
 							.append(" [label=" +
-								'"' + dependency.getDisplayString().replace("\"", "\\\"") + '"')
+									'"' + dependency.getDisplayString().replace("\"", "\\\"") + '"')
 							.append(" style=dashed, color=red];")
 							.append('\n');
 					}

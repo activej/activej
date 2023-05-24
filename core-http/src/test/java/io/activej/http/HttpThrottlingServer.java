@@ -47,8 +47,8 @@ public class HttpThrottlingServer {
 
 		public static void usage() {
 			System.err.println(HttpThrottlingServer.class.getSimpleName() + " [options]\n" +
-				"\t-l    - value of load server\n" +
-				"\t-h/-? - this help.");
+							   "\t-l    - value of load server\n" +
+							   "\t-h/-? - this help.");
 		}
 
 		@Override

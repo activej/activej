@@ -139,7 +139,7 @@ public final class JmxReducers {
 
 	private static boolean isIntegerNumber(Class<?> numberClass) {
 		return Byte.class.isAssignableFrom(numberClass) || Short.class.isAssignableFrom(numberClass)
-			|| Integer.class.isAssignableFrom(numberClass) || Long.class.isAssignableFrom(numberClass);
+			   || Integer.class.isAssignableFrom(numberClass) || Long.class.isAssignableFrom(numberClass);
 	}
 
 	private static Number convert(Class<?> targetClass, Number number) {

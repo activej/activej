@@ -212,8 +212,8 @@ public final class TriggerResult {
 	@Override
 	public String toString() {
 		return "@" + Instant.ofEpochMilli(timestamp) +
-			(count != 1 ? " #" + count : "") +
-			(value != null ? " : " + value : "") +
-			(throwable != null ? "\n" + formatExceptionMultiline(throwable) : "");
+			   (count != 1 ? " #" + count : "") +
+			   (value != null ? " : " + value : "") +
+			   (throwable != null ? "\n" + formatExceptionMultiline(throwable) : "");
 	}
 }

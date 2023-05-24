@@ -41,8 +41,8 @@ public final class NotEq implements WherePredicate {
 	@Override
 	public String toString() {
 		return "NotEq[" +
-			"left=" + left + ", " +
-			"right=" + right + ']';
+			   "left=" + left + ", " +
+			   "right=" + right + ']';
 	}
 
 }

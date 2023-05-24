@@ -47,7 +47,7 @@ public final class UploadAcknowledgement {
 	@Override
 	public String toString() {
 		return "UploadAcknowledgement{" +
-			(error == null ? "" : ("error=" + error)) +
-			'}';
+			   (error == null ? "" : ("error=" + error)) +
+			   '}';
 	}
 }

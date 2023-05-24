@@ -329,7 +329,7 @@ public final class ClusterFileSystem extends AbstractReactive
 		return isAlive() ?
 			Promise.complete() :
 			Promise.ofException(new FileSystemIOException("There are more dead partitions than allowed(" +
-				partitions.getDeadPartitions().size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting"));
+														  partitions.getDeadPartitions().size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting"));
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(

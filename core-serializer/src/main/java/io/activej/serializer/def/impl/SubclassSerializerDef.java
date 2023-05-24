@@ -64,7 +64,7 @@ public final class SubclassSerializerDef extends AbstractSerializerDef implement
 			checkNotBuilt(this);
 			checkArgument(!Modifier.isAbstract(subclass.getModifiers()),
 				"A subclass should not be an " +
-					(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
+				(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
 			checkArgument(parentType.isAssignableFrom(subclass));
 			SubclassSerializerDef.this.subclassSerializers.put(subclass, serializer);
 			return this;

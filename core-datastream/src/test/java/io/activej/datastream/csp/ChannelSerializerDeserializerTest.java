@@ -42,8 +42,8 @@ public final class ChannelSerializerDeserializerTest {
 	@Test
 	public void largeMessageSize() {
 		int nearMaxSize = (1 << 28) // ChannelSerializer.MAX_SIZE
-			- 4 // encoded size of an array
-			- 1;
+						  - 4 // encoded size of an array
+						  - 1;
 		List<byte[]> byteArrays = List.of(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize]);
 		for (byte[] byteArray : byteArrays) {
 			ThreadLocalRandom.current().nextBytes(byteArray);

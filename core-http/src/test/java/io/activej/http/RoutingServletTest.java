@@ -252,7 +252,7 @@ public final class RoutingServletTest {
 	public void testParameter() throws Exception {
 		AsyncServlet printParameters = request -> {
 			String body = request.getPathParameter("id")
-				+ " " + request.getPathParameter("uid");
+						  + " " + request.getPathParameter("uid");
 			ByteBuf bodyByteBuf = wrapUtf8(body);
 			return HttpResponse.ofCode(200).withBody(bodyByteBuf).toPromise();
 		};

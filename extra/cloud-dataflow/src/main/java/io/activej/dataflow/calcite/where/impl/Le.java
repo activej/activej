@@ -41,8 +41,8 @@ public final class Le implements WherePredicate {
 	@Override
 	public String toString() {
 		return "Le[" +
-			"left=" + left + ", " +
-			"right=" + right + ']';
+			   "left=" + left + ", " +
+			   "right=" + right + ']';
 	}
 
 }

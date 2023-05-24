@@ -139,7 +139,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 		double avgTime = (double) timeAllRounds / benchmarkRounds;
 		long requestsPerSecond = (long) (totalRequests / avgTime * 1000);
 		System.out.println("Time: " + timeAllRounds + "ms; Average time: " + avgTime + "ms; Best time: " +
-			bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
+						   bestTime + "ms; Worst time: " + worstTime + "ms; Requests per second: " + requestsPerSecond);
 	}
 
 	private long round(AsyncSupplier<Long> function) throws Exception {

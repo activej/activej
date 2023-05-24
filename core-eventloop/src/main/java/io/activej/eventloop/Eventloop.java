@@ -420,8 +420,8 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 			return false;
 		lastExternalTasksCount = externalTasksCount.get();
 		return !localTasks.isEmpty() || !scheduledTasks.isEmpty() || !concurrentTasks.isEmpty()
-			|| lastExternalTasksCount > 0
-			|| keepAlive || (selector != null && selector.isOpen() && selector.keys().size() - cancelledKeys > 0);
+			   || lastExternalTasksCount > 0
+			   || keepAlive || (selector != null && selector.isOpen() && selector.keys().size() - cancelledKeys > 0);
 	}
 
 	/**
@@ -770,7 +770,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 				cb.accept(channel, null);
 			} else {
 				cb.accept(null, new IOException("Connection key was received but the channel was not connected - " +
-					"this is not possible without some bug in Java NIO"));
+												"this is not possible without some bug in Java NIO"));
 			}
 		} catch (Throwable e) {
 			handleError(fatalErrorHandler, e, channel);
@@ -1084,21 +1084,21 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 
 	// JMX
 	@JmxOperation(description = "enable monitoring " +
-		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-		"(for example, most of the durationStats are collected only when monitoring is enabled) ]")
+								"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+								"(for example, most of the durationStats are collected only when monitoring is enabled) ]")
 	public void startExtendedMonitoring() {
 		monitoring = true;
 	}
 
 	@JmxOperation(description = "disable monitoring " +
-		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-		"(for example, most of the durationStats are collected only when monitoring is enabled) ]")
+								"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+								"(for example, most of the durationStats are collected only when monitoring is enabled) ]")
 	public void stopExtendedMonitoring() {
 		monitoring = false;
 	}
 
 	@JmxAttribute(description = "when monitoring is enabled more stats are collected, but it causes more overhead " +
-		"(for example, most of the durationStats are collected only when monitoring is enabled)")
+								"(for example, most of the durationStats are collected only when monitoring is enabled)")
 	public boolean isExtendedMonitoring() {
 		return monitoring;
 	}

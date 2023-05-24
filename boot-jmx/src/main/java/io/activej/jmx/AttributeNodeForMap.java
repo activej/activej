@@ -72,7 +72,7 @@ public final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 
 				if (attrNameToType.containsKey(adjustedAttrName)) {
 					throw new IllegalArgumentException("In case of empty attribute name there must not be another " +
-						"empty attribute and attribute with name \"default\"." + nodeName);
+													   "empty attribute and attribute with name \"default\"." + nodeName);
 				}
 
 				attrNameToType.put(attrName, attrType);

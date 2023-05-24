@@ -144,15 +144,15 @@ public final class HttpStreamTest {
 
 		String chunkedRequest =
 			"POST / HTTP/1.1" + CRLF +
-				"Host: localhost" + CRLF +
-				"Transfer-Encoding: chunked" + CRLF + CRLF +
-				"4" + CRLF + "Test" + CRLF + "0" + CRLF + CRLF;
+			"Host: localhost" + CRLF +
+			"Transfer-Encoding: chunked" + CRLF + CRLF +
+			"4" + CRLF + "Test" + CRLF + "0" + CRLF + CRLF;
 
 		String responseMessage =
 			"HTTP/1.1 200 OK" + CRLF +
-				"Connection: keep-alive" + CRLF +
-				"Content-Length: 4" + CRLF + CRLF +
-				"Test";
+			"Connection: keep-alive" + CRLF +
+			"Content-Length: 4" + CRLF + CRLF +
+			"Test";
 
 		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 			.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
@@ -173,9 +173,9 @@ public final class HttpStreamTest {
 
 		String chunkedRequest =
 			"POST / HTTP/1.1" + CRLF +
-				"Host: localhost" + CRLF +
-				"Transfer-Encoding: chunked" + CRLF + CRLF +
-				"ffffffffff";
+			"Host: localhost" + CRLF +
+			"Transfer-Encoding: chunked" + CRLF + CRLF +
+			"ffffffffff";
 
 		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 			.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
@@ -202,10 +202,10 @@ public final class HttpStreamTest {
 
 		String chunkedRequest =
 			"POST / HTTP/1.1" + CRLF +
-				"Host: localhost" + CRLF +
-				"Content-Length: 13" + CRLF +
-				"Transfer-Encoding: chunked" + CRLF + CRLF +
-				"3";
+			"Host: localhost" + CRLF +
+			"Content-Length: 13" + CRLF +
+			"Transfer-Encoding: chunked" + CRLF + CRLF +
+			"3";
 
 		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 			.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
@@ -215,9 +215,9 @@ public final class HttpStreamTest {
 
 		assertEquals(
 			"HTTP/1.1 400 Bad Request\r\n" +
-				"Connection: close\r\n" +
-				"Content-Length: 0\r\n" +
-				"\r\n",
+			"Connection: close\r\n" +
+			"Content-Length: 0\r\n" +
+			"\r\n",
 			body.asString(UTF_8));
 
 		assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());

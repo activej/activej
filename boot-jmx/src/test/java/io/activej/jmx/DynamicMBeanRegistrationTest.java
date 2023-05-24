@@ -66,7 +66,7 @@ public class DynamicMBeanRegistrationTest {
 			fail();
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage(), containsString("A class '" + NonPublicMBean.class.getName() +
-				"' containing methods annotated with @JmxAttribute should be declared public"));
+													  "' containing methods annotated with @JmxAttribute should be declared public"));
 		}
 	}
 

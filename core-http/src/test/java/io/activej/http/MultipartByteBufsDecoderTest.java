@@ -28,22 +28,22 @@ public final class MultipartByteBufsDecoderTest {
 	private static final String CRLF = "\r\n";
 
 	private static final String DATA = BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file\"; filename=\"test.txt\"" + CRLF +
-		"Content-Type: text/plain" + CRLF +
-		CRLF +
-		"This is some bytes of data to be extracted from the multipart form" + CRLF +
-		"Also here we had a wild CRLF se\r\nquence appear" +
-		CRLF + BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file\"; filename=\"test.txt\"" + CRLF +
-		"Content-Type: text/plain" + CRLF +
-		"Test-Extra-Header: one" + CRLF +
-		"Test-Extra-Header-2: two" + CRLF +
-		CRLF +
-		"\nAnd the second " +
-		CRLF + BOUNDARY + CRLF +
-		CRLF +
-		"line, huh\n" +
-		CRLF + BOUNDARY + "--" + CRLF;
+									   "Content-Disposition: form-data; name=\"file\"; filename=\"test.txt\"" + CRLF +
+									   "Content-Type: text/plain" + CRLF +
+									   CRLF +
+									   "This is some bytes of data to be extracted from the multipart form" + CRLF +
+									   "Also here we had a wild CRLF se\r\nquence appear" +
+									   CRLF + BOUNDARY + CRLF +
+									   "Content-Disposition: form-data; name=\"file\"; filename=\"test.txt\"" + CRLF +
+									   "Content-Type: text/plain" + CRLF +
+									   "Test-Extra-Header: one" + CRLF +
+									   "Test-Extra-Header-2: two" + CRLF +
+									   CRLF +
+									   "\nAnd the second " +
+									   CRLF + BOUNDARY + CRLF +
+									   CRLF +
+									   "line, huh\n" +
+									   CRLF + BOUNDARY + "--" + CRLF;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

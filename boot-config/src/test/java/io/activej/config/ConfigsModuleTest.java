@@ -35,8 +35,8 @@ public class ConfigsModuleTest {
 		public boolean equals(Object o) {
 			TestClass testClass = (TestClass) o;
 			return field1 == testClass.field1
-				&& Double.compare(testClass.field2, field2) == 0
-				&& field3 == testClass.field3;
+				   && Double.compare(testClass.field2, field2) == 0
+				   && field3 == testClass.field3;
 		}
 
 		@Override

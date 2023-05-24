@@ -348,7 +348,7 @@ public final class RecordScheme {
 
 	private static boolean isImplicitType(Type fieldType) {
 		return fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
-			fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class;
+			   fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class;
 	}
 
 	private static void checkUnique(List<String> fields) {
@@ -465,8 +465,8 @@ public final class RecordScheme {
 		if (o == null || getClass() != o.getClass()) return false;
 		RecordScheme scheme = (RecordScheme) o;
 		return Arrays.equals(fields, scheme.fields) &&
-			Arrays.equals(types, scheme.types) &&
-			Objects.equals(comparatorFields, scheme.comparatorFields);
+			   Arrays.equals(types, scheme.types) &&
+			   Objects.equals(comparatorFields, scheme.comparatorFields);
 	}
 
 	@Override
@@ -481,7 +481,7 @@ public final class RecordScheme {
 	public String toString() {
 		return fieldToType.entrySet().stream()
 			.map(entry -> entry.getKey() + "=" +
-				(entry.getValue() instanceof Class ? ((Class<?>) entry.getValue()).getSimpleName() : entry.getValue()))
+						  (entry.getValue() instanceof Class ? ((Class<?>) entry.getValue()).getSimpleName() : entry.getValue()))
 			.collect(joining(", ", "{", "}"));
 	}
 }

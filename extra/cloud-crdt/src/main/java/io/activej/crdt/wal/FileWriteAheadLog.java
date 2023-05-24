@@ -290,8 +290,8 @@ public final class FileWriteAheadLog<K extends Comparable<K>, S> extends Abstrac
 					try (Stream<Path> list = Files.list(path)) {
 						return list
 							.filter(file -> Files.isRegularFile(file) &&
-								file.toString().endsWith(EXT_CURRENT) &&
-								(consumer == null || !file.equals(consumer.getWalFile())))
+											file.toString().endsWith(EXT_CURRENT) &&
+											(consumer == null || !file.equals(consumer.getWalFile())))
 							.collect(toList());
 					}
 				})

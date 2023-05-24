@@ -63,8 +63,8 @@ public final class IfNull extends FunctionOperand<IfNull> {
 	@Override
 	public String toString() {
 		return "IfNull[" +
-			"checkedOperand=" + checkedOperand + ", " +
-			"defaultValueOperand=" + defaultValueOperand + ']';
+			   "checkedOperand=" + checkedOperand + ", " +
+			   "defaultValueOperand=" + defaultValueOperand + ']';
 	}
 
 }

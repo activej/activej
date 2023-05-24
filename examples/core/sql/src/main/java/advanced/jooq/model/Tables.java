@@ -3,24 +3,22 @@
  */
 package advanced.jooq.model;
 
-
 import advanced.jooq.model.tables.NewUser;
 import advanced.jooq.model.tables.User;
-
 
 /**
  * Convenience access to all tables in the default schema.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Tables {
 
-    /**
-     * The table <code>new_user</code>.
-     */
-    public static final NewUser NEW_USER = NewUser.NEW_USER;
+	/**
+	 * The table <code>new_user</code>.
+	 */
+	public static final NewUser NEW_USER = NewUser.NEW_USER;
 
-    /**
-     * The table <code>user</code>.
-     */
-    public static final User USER = User.USER;
+	/**
+	 * The table <code>user</code>.
+	 */
+	public static final User USER = User.USER;
 }

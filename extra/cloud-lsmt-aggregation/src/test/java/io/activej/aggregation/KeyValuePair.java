@@ -48,9 +48,9 @@ public class KeyValuePair {
 	@Override
 	public String toString() {
 		return "KeyValuePair{" +
-			"key=" + key +
-			", value=" + value +
-			", timestamp=" + timestamp +
-			'}';
+			   "key=" + key +
+			   ", value=" + value +
+			   ", timestamp=" + timestamp +
+			   '}';
 	}
 }

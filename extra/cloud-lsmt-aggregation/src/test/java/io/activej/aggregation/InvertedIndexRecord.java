@@ -49,9 +49,9 @@ public class InvertedIndexRecord {
 	@Override
 	public String toString() {
 		return "InvertedIndexRecord{" +
-			"word='" + word + '\'' +
-			", documentId=" + documentId +
-			'}';
+			   "word='" + word + '\'' +
+			   ", documentId=" + documentId +
+			   '}';
 	}
 }
 

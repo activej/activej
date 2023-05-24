@@ -407,10 +407,10 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	@Override
 	public String toString() {
 		return "RedisConnection{" +
-			"client=" + client +
-			", receiveQueue=" + receiveQueue.size() / 2 +
-			(transactionQueue != null ? (", transactionQueue=" + transactionQueue.size() / 2) : "") +
-			", closed=" + isClosed() +
-			'}';
+			   "client=" + client +
+			   ", receiveQueue=" + receiveQueue.size() / 2 +
+			   (transactionQueue != null ? (", transactionQueue=" + transactionQueue.size() / 2) : "") +
+			   ", closed=" + isClosed() +
+			   '}';
 	}
 }
