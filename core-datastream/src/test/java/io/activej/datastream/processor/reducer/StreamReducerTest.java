@@ -329,12 +329,13 @@ public class StreamReducerTest {
 
 		@Override
 		public String toString() {
-			return "KeyValueResult{" +
-				   "key=" + key +
-				   ", metric1=" + metric1 +
-				   ", metric2=" + metric2 +
-				   ", metric3=" + metric3 +
-				   '}';
+			return
+				"KeyValueResult{" +
+				"key=" + key +
+				", metric1=" + metric1 +
+				", metric2=" + metric2 +
+				", metric3=" + metric3 +
+				'}';
 		}
 	}
 

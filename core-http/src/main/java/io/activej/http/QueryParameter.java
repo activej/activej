@@ -45,8 +45,9 @@ public final class QueryParameter {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		QueryParameter queryParameter = (QueryParameter) o;
-		return Objects.equals(key, queryParameter.key) &&
-			   Objects.equals(value, queryParameter.value);
+		return
+			Objects.equals(key, queryParameter.key) &&
+			Objects.equals(value, queryParameter.value);
 	}
 
 	@Override

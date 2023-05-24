@@ -73,9 +73,10 @@ public final class Cast implements Operand<Cast> {
 
 	@Override
 	public String toString() {
-		return "Cast[" +
-			   "valueOperand=" + valueOperand +
-			   ", type='" + type + '\'' +
-			   ']';
+		return
+			"Cast[" +
+			"valueOperand=" + valueOperand +
+			", type='" + type + '\'' +
+			']';
 	}
 }

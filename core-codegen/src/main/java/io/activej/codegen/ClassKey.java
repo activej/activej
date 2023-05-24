@@ -50,8 +50,9 @@ public final class ClassKey<T> {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ClassKey<?> that = (ClassKey<?>) o;
-		return clazz.equals(that.clazz) &&
-			   Arrays.equals(this.parameters, that.parameters);
+		return
+			clazz.equals(that.clazz) &&
+			Arrays.equals(this.parameters, that.parameters);
 	}
 
 	@Override
@@ -61,7 +62,8 @@ public final class ClassKey<T> {
 
 	@Override
 	public String toString() {
-		return clazz.getName() +
-			   (parameters != null && parameters.length != 0 ? " " + Arrays.toString(parameters) : "");
+		return
+			clazz.getName() +
+			(parameters != null && parameters.length != 0 ? " " + Arrays.toString(parameters) : "");
 	}
 }

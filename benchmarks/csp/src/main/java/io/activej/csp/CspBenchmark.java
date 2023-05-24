@@ -125,8 +125,9 @@ public class CspBenchmark extends Launcher {
 		}
 		double avgTime = (double) time / benchmarkRounds;
 		long requestsPerSecond = (long) (totalElements / avgTime * 1000);
-		System.out.println("Time: " + time + "ms; Average time: " + avgTime + "ms; Best time: " +
-						   bestTime + "ms; Worst time: " + worstTime + "ms; Operations per second: " + requestsPerSecond);
+		System.out.println(
+			"Time: " + time + "ms; Average time: " + avgTime + "ms; Best time: " +
+			bestTime + "ms; Worst time: " + worstTime + "ms; Operations per second: " + requestsPerSecond);
 	}
 
 	private long round() throws Exception {

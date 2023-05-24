@@ -50,9 +50,10 @@ public final class Like implements WherePredicate {
 
 	@Override
 	public String toString() {
-		return "Like[" +
-			   "value=" + value +
-			   ", pattern=" + pattern +
-			   ']';
+		return
+			"Like[" +
+			"value=" + value +
+			", pattern=" + pattern +
+			']';
 	}
 }

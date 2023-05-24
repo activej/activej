@@ -87,10 +87,11 @@ public final class SupplierOfId extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "SupplierOfId{id='" + id +
-			   "', partitionIndex=" + partitionIndex +
-			   ", maxPartitions=" + maxPartitions +
-			   ", output=" + output +
-			   '}';
+		return
+			"SupplierOfId{id='" + id +
+			"', partitionIndex=" + partitionIndex +
+			", maxPartitions=" + maxPartitions +
+			", output=" + output +
+			'}';
 	}
 }

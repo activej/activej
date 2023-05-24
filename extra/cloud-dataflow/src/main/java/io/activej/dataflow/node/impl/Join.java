@@ -80,12 +80,13 @@ public final class Join<K, L, R, V> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "Join{left=" + left +
-			   ", right=" + right +
-			   ", output=" + output +
-			   ", keyComparator=" + keyComparator.getClass().getSimpleName() +
-			   ", leftKeyFunction=" + leftKeyFunction.getClass().getSimpleName() +
-			   ", rightKeyFunction=" + rightKeyFunction.getClass().getSimpleName() +
-			   ", joiner=" + leftJoiner.getClass().getSimpleName() + '}';
+		return
+			"Join{left=" + left +
+			", right=" + right +
+			", output=" + output +
+			", keyComparator=" + keyComparator.getClass().getSimpleName() +
+			", leftKeyFunction=" + leftKeyFunction.getClass().getSimpleName() +
+			", rightKeyFunction=" + rightKeyFunction.getClass().getSimpleName() +
+			", joiner=" + leftJoiner.getClass().getSimpleName() + '}';
 	}
 }

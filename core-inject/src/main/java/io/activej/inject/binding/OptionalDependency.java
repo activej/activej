@@ -80,8 +80,9 @@ public final class OptionalDependency<T> {
 
 	@Override
 	public String toString() {
-		return "OptionalDependency{" +
-			   (value == null ? "empty" : "value=" + value) +
-			   '}';
+		return
+			"OptionalDependency{" +
+			(value == null ? "empty" : "value=" + value) +
+			'}';
 	}
 }

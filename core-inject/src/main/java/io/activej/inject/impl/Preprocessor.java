@@ -512,9 +512,10 @@ public final class Preprocessor {
 			Type missingType = missing.getType();
 
 			Key<?> priv = Stream.concat(bindings.get().keySet().stream(), upperKnown.stream())
-				.filter(k -> k.getQualifier() instanceof UniqueQualifierImpl
-							 && k.getType().equals(missingType)
-							 && Objects.equals(missingQualifier, ((UniqueQualifierImpl) k.getQualifier()).getOriginalQualifier()))
+				.filter(k ->
+					k.getQualifier() instanceof UniqueQualifierImpl &&
+					k.getType().equals(missingType) &&
+					Objects.equals(missingQualifier, ((UniqueQualifierImpl) k.getQualifier()).getOriginalQualifier()))
 				.findAny()
 				.orElse(null);
 			if (priv == null) {

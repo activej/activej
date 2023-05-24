@@ -240,8 +240,9 @@ public final class LZ4 implements FrameFormat {
 			bufs.consumeBytes(4, intScanner);
 			int originalSize = intScanner.getValue();
 			if (originalSize < 0 || originalSize > MAX_BLOCK_SIZE.toInt()) {
-				throw new InvalidSizeException("Size (" + originalSize +
-											   ") of block is either negative or exceeds max block size (" + MAX_BLOCK_SIZE + ')');
+				throw new InvalidSizeException(
+					"Size (" + originalSize +
+					") of block is either negative or exceeds max block size (" + MAX_BLOCK_SIZE + ')');
 			}
 
 			ByteBuf firstBuf = bufs.peekBuf();

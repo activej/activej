@@ -46,9 +46,10 @@ public final class In implements WherePredicate {
 
 	@Override
 	public String toString() {
-		return "In[" +
-			   "value=" + value + ", " +
-			   "options=" + options + ']';
+		return
+			"In[" +
+			"value=" + value + ", " +
+			"options=" + options + ']';
 	}
 
 }

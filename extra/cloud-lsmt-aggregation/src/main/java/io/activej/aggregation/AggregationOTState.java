@@ -63,9 +63,10 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 	@Override
 	public void apply(AggregationDiff commit) {
 		checkArgument(intersection(commit.getAddedChunks(), commit.getRemovedChunks()), Set::isEmpty,
-			v -> "Non-empty intersection between added and removed chunks: " + v +
-				 "\n Added chunks " + Utils.toString(commit.getAddedChunks()) +
-				 "\n Removed chunks intersection: " + Utils.toString(commit.getRemovedChunks()));
+			v ->
+				"Non-empty intersection between added and removed chunks: " + v +
+				"\n Added chunks " + Utils.toString(commit.getAddedChunks()) +
+				"\n Removed chunks intersection: " + Utils.toString(commit.getRemovedChunks()));
 
 		for (AggregationChunk chunk : commit.getAddedChunks()) {
 			addToIndex(chunk);
@@ -78,10 +79,10 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 
 	public void addToIndex(AggregationChunk chunk) {
 		checkArgument(chunks.put(chunk.getChunkId(), chunk) == null,
-			() -> "" +
-				  "Trying to add existing chunk: " + chunk +
-				  "\n this: " + this +
-				  "\n chunks: " + Utils.toString(chunks.keySet()));
+			() ->
+				"Trying to add existing chunk: " + chunk +
+				"\n this: " + this +
+				"\n chunks: " + Utils.toString(chunks.keySet()));
 
 		for (int size = 0; size <= aggregation.getKeys().size(); size++) {
 			RangeTree<PrimaryKey, AggregationChunk> index = prefixRanges[size];
@@ -94,10 +95,10 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 
 	public void removeFromIndex(AggregationChunk chunk) {
 		checkArgument(chunks.remove(chunk.getChunkId()) != null,
-			() -> "" +
-				  "Trying to remove unknown chunk: " + chunk +
-				  "\n this: " + this +
-				  "\n chunks: " + Utils.toString(chunks.keySet()));
+			() ->
+				"Trying to remove unknown chunk: " + chunk +
+				"\n this: " + this +
+				"\n chunks: " + Utils.toString(chunks.keySet()));
 
 		for (int size = 0; size <= aggregation.getKeys().size(); size++) {
 			RangeTree<PrimaryKey, AggregationChunk> index = prefixRanges[size];

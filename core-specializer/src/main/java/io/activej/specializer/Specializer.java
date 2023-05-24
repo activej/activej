@@ -262,9 +262,9 @@ public final class Specializer {
 
 				transformMethod(
 					classNode.methods.stream()
-						.filter(methodNode -> true &&
-											  methodNode.name.equals(javaMethod.getName()) &&
-											  methodNode.desc.equals(methodDesc))
+						.filter(methodNode ->
+							methodNode.name.equals(javaMethod.getName()) &&
+							methodNode.desc.equals(methodDesc))
 						.findFirst()
 						.get(),
 					new GeneratorAdapter(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
@@ -763,11 +763,13 @@ public final class Specializer {
 		@Nullable String lookupField(Class<?> owner, String field) {
 			Field result = null;
 			for (Field originalField : specializedFields.keySet()) {
-				if (true &&
-					Objects.equals(originalField.getName(), field) &&
+				if (Objects.equals(originalField.getName(), field) &&
 					originalField.getDeclaringClass().isAssignableFrom(owner) &&
-					(result == null ||
-					 result.getDeclaringClass().isAssignableFrom(originalField.getDeclaringClass()))) {
+					(
+						result == null ||
+						result.getDeclaringClass().isAssignableFrom(originalField.getDeclaringClass())
+					)
+				) {
 					result = originalField;
 				}
 			}
@@ -777,14 +779,16 @@ public final class Specializer {
 		@Nullable String lookupMethod(Class<?> owner, Method method) {
 			java.lang.reflect.Method result = null;
 			for (java.lang.reflect.Method originalMethod : specializedMethods.keySet()) {
-				if (true &&
-					Objects.equals(originalMethod.getName(), method.getName()) &&
+				if (Objects.equals(originalMethod.getName(), method.getName()) &&
 					Objects.equals(
 						Arrays.stream(originalMethod.getParameters()).map(p -> getType(p.getType())).collect(toList()),
 						List.of(method.getArgumentTypes())) &&
 					originalMethod.getDeclaringClass().isAssignableFrom(owner) &&
-					(result == null ||
-					 result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass()))) {
+					(
+						result == null ||
+						result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass())
+					)
+				) {
 					result = originalMethod;
 				}
 			}

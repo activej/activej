@@ -283,10 +283,10 @@ public class AnnotatedTypes {
 
 		@Override
 		public String toString() {
-			return "" +
-				   (annotations.length == 0 ? "" :
-					   Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
-				   type;
+			return
+				(annotations.length == 0 ? "" :
+					Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
+				type;
 		}
 	}
 
@@ -319,12 +319,12 @@ public class AnnotatedTypes {
 
 		@Override
 		public String toString() {
-			return "" +
-				   (annotations.length == 0 ? "" :
-					   Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
-				   Types.getRawType(type).getCanonicalName() +
-				   (typeArguments.length == 0 ? "" :
-					   Arrays.stream(typeArguments).map(Objects::toString).collect(joining(", ", "<", ">")));
+			return
+				(annotations.length == 0 ? "" :
+					Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " "))) +
+				Types.getRawType(type).getCanonicalName() +
+				(typeArguments.length == 0 ? "" :
+					Arrays.stream(typeArguments).map(Objects::toString).collect(joining(", ", "<", ">")));
 		}
 	}
 
@@ -364,13 +364,13 @@ public class AnnotatedTypes {
 
 		@Override
 		public String toString() {
-			return "" +
-				   (annotations.length == 0 ? "" :
-					   Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " ")) + " ") +
-				   "?" +
-				   " extends " + Arrays.stream(upperBounds).map(Objects::toString).collect(joining(", ")) +
-				   (lowerBounds.length == 0 ? "" :
-					   " super " + Arrays.stream(lowerBounds).map(Objects::toString).collect(joining(", ")));
+			return
+				(annotations.length == 0 ? "" :
+					Arrays.stream(annotations).map(Objects::toString).collect(joining(", ", "", " ")) + " ") +
+				"?" +
+				" extends " + Arrays.stream(upperBounds).map(Objects::toString).collect(joining(", ")) +
+				(lowerBounds.length == 0 ? "" :
+					" super " + Arrays.stream(lowerBounds).map(Objects::toString).collect(joining(", ")));
 		}
 	}
 }

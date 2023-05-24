@@ -68,8 +68,9 @@ public final class Utils {
 	}
 
 	public static boolean isWrapperType(Type type) {
-		return type.getSort() == OBJECT &&
-			   WRAPPER_TO_PRIMITIVE.containsKey(type.getClassName());
+		return
+			type.getSort() == OBJECT &&
+			WRAPPER_TO_PRIMITIVE.containsKey(type.getClassName());
 	}
 
 	public static Method unwrapToPrimitive(Type primitiveType) {
@@ -150,8 +151,9 @@ public final class Utils {
 	}
 
 	public static boolean isValidCast(Type from, Type to) {
-		return from.getSort() != to.getSort() &&
-			   !(from.getSort() < BOOLEAN || from.getSort() > DOUBLE || to.getSort() < BOOLEAN || to.getSort() > DOUBLE);
+		return
+			from.getSort() != to.getSort() &&
+			!(from.getSort() < BOOLEAN || from.getSort() > DOUBLE || to.getSort() < BOOLEAN || to.getSort() > DOUBLE);
 	}
 
 	public static String getStringSetting(Class<?> cls, String key, String defaultValue) {

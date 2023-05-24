@@ -17,8 +17,9 @@ public class OfShortSizePrefixed implements ByteBufsDecoder<ByteBuf> {
 	@Override
 	public @Nullable ByteBuf tryDecode(ByteBufs bufs) throws MalformedDataException {
 		if (!bufs.hasRemainingBytes(2)) return null;
-		int size = (bufs.peekByte(0) & 0xFF) << 8
-				   | (bufs.peekByte(1) & 0xFF);
+		int size =
+			(bufs.peekByte(0) & 0xFF) << 8 |
+			(bufs.peekByte(1) & 0xFF);
 		if (size > maxSize) throw new InvalidSizeException("Size exceeds max size");
 		if (!bufs.hasRemainingBytes(2 + size)) return null;
 		bufs.skip(2);

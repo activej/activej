@@ -617,8 +617,9 @@ public final class Cube extends AbstractReactive
 		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.size() == 0) {
-			throw new IllegalArgumentException(format("No compatible aggregation for " +
-													  "dimensions fields: %s, measureFields: %s", dimensionFields, measureFields));
+			throw new IllegalArgumentException(format(
+				"No compatible aggregation for dimensions fields: %s, measureFields: %s",
+				dimensionFields, measureFields));
 		}
 
 		for (Entry<String, AggregationPredicate> aggregationToDataInputFilterPredicate : compatibleAggregations.entrySet()) {
@@ -1342,9 +1343,10 @@ public final class Cube extends AbstractReactive
 
 	@Override
 	public String toString() {
-		return "Cube{" +
-			   "aggregations=" + aggregations +
-			   '}';
+		return
+			"Cube{" +
+			"aggregations=" + aggregations +
+			'}';
 	}
 
 	// jmx

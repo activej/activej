@@ -139,10 +139,11 @@ public final class ByteBufConcurrentQueue {
 
 	@Override
 	public String toString() {
-		return "ByteBufConcurrentQueue{" +
-			   "size=" + size() +
-			   ", array=" + array.get().length() +
-			   ", map=" + map.size() +
-			   '}';
+		return
+			"ByteBufConcurrentQueue{" +
+			"size=" + size() +
+			", array=" + array.get().length() +
+			", map=" + map.size() +
+			'}';
 	}
 }

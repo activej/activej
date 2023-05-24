@@ -682,9 +682,10 @@ public final class SerializerFactory {
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
-						methodName = "encode_" +
-									 serializerDef.getEncodeType().getSimpleName().replace('[', 's').replace(']', '_') +
-									 (i == 1 ? "" : "_" + i);
+						methodName =
+							"encode_" +
+							serializerDef.getEncodeType().getSimpleName().replace('[', 's').replace(']', '_') +
+							(i == 1 ? "" : "_" + i);
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
@@ -708,10 +709,11 @@ public final class SerializerFactory {
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
-						methodName = "decode_" +
-									 serializerDef.getDecodeType().getSimpleName().replace('[', 's').replace(']', '_') +
-									 ("_V" + version) +
-									 (i == 1 ? "" : "_" + i);
+						methodName =
+							"decode_" +
+							serializerDef.getDecodeType().getSimpleName().replace('[', 's').replace(']', '_') +
+							("_V" + version) +
+							(i == 1 ? "" : "_" + i);
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
@@ -751,8 +753,9 @@ public final class SerializerFactory {
 		ClassSerializerDef.Builder classSerializerBuilder = ClassSerializerDef.builder(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
 			if (!rawClass.isRecord()) {
-				throw new IllegalArgumentException("Non-record type '" + rawClass.getName() +
-												   "' annotated with @SerializeRecord annotation");
+				throw new IllegalArgumentException(
+					"Non-record type '" + rawClass.getName() +
+					"' annotated with @SerializeRecord annotation");
 			}
 			scanRecord(ctx, classSerializerBuilder);
 		} else if (!rawClass.isInterface()) {

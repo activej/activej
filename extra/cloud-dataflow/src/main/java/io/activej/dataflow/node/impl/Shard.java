@@ -102,9 +102,10 @@ public final class Shard<K, T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "Shard{keyFunction=" + keyFunction.getClass().getSimpleName() +
-			   ", input=" + input +
-			   ", outputs=" + outputs +
-			   '}';
+		return
+			"Shard{keyFunction=" + keyFunction.getClass().getSimpleName() +
+			", input=" + input +
+			", outputs=" + outputs +
+			'}';
 	}
 }

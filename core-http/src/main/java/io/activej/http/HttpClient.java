@@ -266,8 +266,9 @@ public final class HttpClient extends AbstractNioReactive
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
 		public long getActiveRequests() {
-			return totalRequests.getTotalCount() -
-				   (httpTimeouts.getTotalCount() + resolveErrors.getTotal() + connectErrors.getTotal() + responsesErrors + responses);
+			return
+				totalRequests.getTotalCount() -
+				(httpTimeouts.getTotalCount() + resolveErrors.getTotal() + connectErrors.getTotal() + responsesErrors + responses);
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
@@ -421,8 +422,9 @@ public final class HttpClient extends AbstractNioReactive
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(reactor.currentTimeMillis() - keepAliveTimeoutMillis);
 			boolean isClosing = shutdownPromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
-				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(reactor.currentTimeMillis() -
-																			  (!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
+				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(
+					reactor.currentTimeMillis() - (!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown),
+					new AsyncTimeoutException("Read timeout"));
 			}
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();

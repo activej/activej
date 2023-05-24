@@ -54,8 +54,9 @@ public final class TriggersModule extends AbstractModule {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			TriggerConfig<?> that = (TriggerConfig<?>) o;
-			return severity == that.severity &&
-				   Objects.equals(name, that.name);
+			return
+				severity == that.severity &&
+				Objects.equals(name, that.name);
 		}
 
 		@Override

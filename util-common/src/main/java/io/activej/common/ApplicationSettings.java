@@ -250,9 +250,10 @@ public final class ApplicationSettings {
 
 	private static void ensureNotLookedUp() {
 		if (firstLookupDone) {
-			throw new IllegalStateException("Attempting to update application settings after some of them have been retrieved\n" +
-											"All updates should happen prior to any constant initialization via ApplicationSettings, " +
-											"preferably in static initialization block of 'main' class");
+			throw new IllegalStateException(
+				"Attempting to update application settings after some of them have been retrieved\n" +
+				"All updates should happen prior to any constant initialization via ApplicationSettings, " +
+				"preferably in static initialization block of 'main' class");
 		}
 	}
 }

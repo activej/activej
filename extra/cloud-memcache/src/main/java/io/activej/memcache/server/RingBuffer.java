@@ -79,21 +79,23 @@ public final class RingBuffer implements RingBufferMBean {
 		}
 
 		static int intValueOf(byte[] bytes) {
-			return ((bytes[0] << 24)) |
-				   (bytes[1] & 0xff) << 16 |
-				   (bytes[2] & 0xff) << 8 |
-				   (bytes[3] & 0xff);
+			return
+				((bytes[0] << 24)) |
+				(bytes[1] & 0xff) << 16 |
+				(bytes[2] & 0xff) << 8 |
+				(bytes[3] & 0xff);
 		}
 
 		static long longValueOf(byte[] bytes) {
-			return ((((long) bytes[0]) << 56) |
-					(((long) bytes[1] & 0xff) << 48) |
-					(((long) bytes[2] & 0xff) << 40) |
-					(((long) bytes[3] & 0xff) << 32) |
-					(((long) bytes[4] & 0xff) << 24) |
-					(((long) bytes[5] & 0xff) << 16) |
-					(((long) bytes[6] & 0xff) << 8) |
-					(((long) bytes[7] & 0xff)));
+			return
+				(long) bytes[0] << 56 |
+				((long) bytes[1] & 0xff) << 48 |
+				((long) bytes[2] & 0xff) << 40 |
+				((long) bytes[3] & 0xff) << 32 |
+				((long) bytes[4] & 0xff) << 24 |
+				((long) bytes[5] & 0xff) << 16 |
+				((long) bytes[6] & 0xff) << 8 |
+				(long) bytes[7] & 0xff;
 		}
 
 		Slice get(byte[] key) {
@@ -309,8 +311,9 @@ public final class RingBuffer implements RingBufferMBean {
 
 	@Override
 	public String getCurrentBuffer() {
-		return (currentBuffer + 1) + " / " + ringBuffers.length + " @ " +
-			   formatTimestamp(ringBuffers[currentBuffer].getTimestamp());
+		return
+			(currentBuffer + 1) + " / " + ringBuffers.length + " @ " +
+			formatTimestamp(ringBuffers[currentBuffer].getTimestamp());
 	}
 
 	@Override

@@ -373,8 +373,9 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		if (header == CONTENT_LENGTH) {
 			contentLength = trimAndDecodePositiveLong(array, pos, len);
 		} else if (header == CONNECTION) {
-			flags = (byte) ((flags & ~KEEP_ALIVE) |
-							(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
+			flags = (byte) (
+				(flags & ~KEEP_ALIVE) |
+				(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
 		} else if (IWebSocket.ENABLED && header == HttpHeaders.UPGRADE) {
 			flags |= equalsLowerCaseAscii(UPGRADE_WEBSOCKET, array, pos, len) ? WEB_SOCKET : 0;
 		} else if (header == TRANSFER_ENCODING) {
@@ -663,15 +664,16 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 	@Override
 	public String toString() {
-		return ", socket=" + socket +
-			   ", readBuf=" + readBuf +
-			   ", closed=" + isClosed() +
-			   ", keepAlive=" + isKeepAlive() +
-			   ", gzipped=" + isGzipped() +
-			   ", chunked=" + isChunked() +
-			   ", webSocket=" + (IWebSocket.ENABLED && isWebSocket()) +
-			   ", contentLengthRemaining=" + contentLength +
-			   ", poolTimestamp=" + poolTimestamp;
+		return
+			", socket=" + socket +
+			", readBuf=" + readBuf +
+			", closed=" + isClosed() +
+			", keepAlive=" + isKeepAlive() +
+			", gzipped=" + isGzipped() +
+			", chunked=" + isChunked() +
+			", webSocket=" + (IWebSocket.ENABLED && isWebSocket()) +
+			", contentLengthRemaining=" + contentLength +
+			", poolTimestamp=" + poolTimestamp;
 	}
 
 }

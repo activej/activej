@@ -318,9 +318,12 @@ public final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	private static boolean flattenedAttrNameContainsNode(String flattenedAttrName, String nodeName) {
-		return flattenedAttrName.startsWith(nodeName) &&
-			   (flattenedAttrName.length() == nodeName.length() ||
-				flattenedAttrName.charAt(nodeName.length()) == ATTRIBUTE_NAME_SEPARATOR);
+		return
+			flattenedAttrName.startsWith(nodeName) &&
+			(
+				flattenedAttrName.length() == nodeName.length() ||
+				flattenedAttrName.charAt(nodeName.length()) == ATTRIBUTE_NAME_SEPARATOR
+			);
 
 	}
 }

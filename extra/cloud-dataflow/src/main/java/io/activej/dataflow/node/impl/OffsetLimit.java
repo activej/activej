@@ -67,11 +67,12 @@ public final class OffsetLimit extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "OffsetLimit{" +
-			   "input=" + input +
-			   ", output=" + output +
-			   ", offset=" + (offset == Skip.NO_SKIP ? "NONE" : offset) +
-			   ", limit=" + (limit == Limiter.NO_LIMIT ? "NONE" : limit) +
-			   '}';
+		return
+			"OffsetLimit{" +
+			"input=" + input +
+			", output=" + output +
+			", offset=" + (offset == Skip.NO_SKIP ? "NONE" : offset) +
+			", limit=" + (limit == Limiter.NO_LIMIT ? "NONE" : limit) +
+			'}';
 	}
 }

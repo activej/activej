@@ -93,8 +93,9 @@ public class TcpDataBenchmarkClient extends Launcher {
 
 		long avgRoundTime = timeAllRounds / benchmarkRounds;
 		long avgRps = avgRoundTime != 0 ? (items * benchmarkRounds * 1000L / timeAllRounds) : 0;
-		System.out.println("Total time: " + timeAllRounds + "ms; Average round time: " + avgRoundTime + "ms; Best time: " +
-						   bestTime + "ms; Worst time: " + worstTime + "ms; Average RPS: " + avgRps);
+		System.out.println(
+			"Total time: " + timeAllRounds + "ms; Average round time: " + avgRoundTime + "ms; Best time: " +
+			bestTime + "ms; Worst time: " + worstTime + "ms; Average RPS: " + avgRps);
 	}
 
 	private long round() throws Exception {

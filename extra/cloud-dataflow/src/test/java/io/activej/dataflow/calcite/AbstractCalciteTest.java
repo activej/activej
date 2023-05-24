@@ -1055,8 +1055,9 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private void doTestWhereLike(String firstNamePattern, Student... expectedStudents) {
-		QueryResult result = query("SELECT * FROM student " +
-								   "WHERE firstName LIKE '" + firstNamePattern + '\'');
+		QueryResult result = query(
+			"SELECT * FROM student " +
+			"WHERE firstName LIKE '" + firstNamePattern + '\'');
 
 		QueryResult expected = studentsToQueryResult(Arrays.asList(expectedStudents));
 
@@ -1065,8 +1066,9 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testWhereNoMatch() {
-		QueryResult result = query("SELECT * FROM student " +
-								   "WHERE firstName LIKE '" + "A" + '\'');
+		QueryResult result = query(
+			"SELECT * FROM student " +
+			"WHERE firstName LIKE '" + "A" + '\'');
 
 		assertTrue(result.isEmpty());
 	}
@@ -2760,12 +2762,13 @@ public abstract class AbstractCalciteTest {
 
 		@Override
 		public String toString() {
-			return "QueryResult{" +
-				   "columnNames=" + columnNames +
-				   ", columnValues=" + columnValues.stream()
-					   .map(Arrays::toString)
-					   .toList() +
-				   '}';
+			return
+				"QueryResult{" +
+				"columnNames=" + columnNames +
+				", columnValues=" + columnValues.stream()
+					.map(Arrays::toString)
+					.toList() +
+				'}';
 		}
 	}
 

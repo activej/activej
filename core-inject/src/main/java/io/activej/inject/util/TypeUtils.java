@@ -62,8 +62,9 @@ public final class TypeUtils {
 		dejaVu.put(strict, pattern);
 		try {
 			if (pattern instanceof WildcardType wildcard) {
-				return Arrays.stream(wildcard.getUpperBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu))
-					   && Arrays.stream(wildcard.getLowerBounds()).allMatch(bound -> isInheritedFrom(bound, strict, dejaVu));
+				return
+					Arrays.stream(wildcard.getUpperBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu)) &&
+					Arrays.stream(wildcard.getLowerBounds()).allMatch(bound -> isInheritedFrom(bound, strict, dejaVu));
 			}
 			if (pattern instanceof TypeVariable<?> typevar) {
 				return Arrays.stream(typevar.getBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu));

@@ -83,8 +83,9 @@ public abstract class Dataset<T> {
 		HashMap<Dataset<?>, String> ids = new HashMap<>();
 		writeDatasets(sb, ids, new HashSet<>(), new RefInt(0), this);
 		sb.append('\n');
-		ids.forEach((dataset, id) -> sb.append("  " + id +
-											   " [label=" + '"' + dataset + '"' + "]\n"));
+		ids.forEach(
+			(dataset, id) ->
+				sb.append("  " + id + " [label=" + '"' + dataset + '"' + "]\n"));
 		return sb.append('}').toString();
 	}
 }

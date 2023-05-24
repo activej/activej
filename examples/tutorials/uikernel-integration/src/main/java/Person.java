@@ -51,12 +51,13 @@ public class Person extends AbstractRecord<Integer> {
 
 	@Override
 	public String toString() {
-		return "Person{" +
-			   "id=" + getId() +
-			   ", name='" + name + '\'' +
-			   ", phone='" + phone + '\'' +
-			   ", age=" + age +
-			   ", gender=" + gender +
-			   '}';
+		return
+			"Person{" +
+			"id=" + getId() +
+			", name='" + name + '\'' +
+			", phone='" + phone + '\'' +
+			", age=" + age +
+			", gender=" + gender +
+			'}';
 	}
 }

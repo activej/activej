@@ -78,9 +78,10 @@ public final class LogOTState<D> implements OTState<LogDiff<D>> {
 
 	@Override
 	public String toString() {
-		return "LogOTState{" +
-			   "positions=" + positions +
-			   ", dataState=" + dataState +
-			   '}';
+		return
+			"LogOTState{" +
+			"positions=" + positions +
+			", dataState=" + dataState +
+			'}';
 	}
 }

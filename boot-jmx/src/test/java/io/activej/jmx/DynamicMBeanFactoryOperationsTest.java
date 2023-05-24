@@ -127,8 +127,9 @@ public final class DynamicMBeanFactoryOperationsTest {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
 		} catch (IllegalStateException e) {
-			assertThat(e.getMessage(), containsString("A method \"action\" in class '" + MBeanWithNonPublicOperation.class.getName() +
-													  "' annotated with @JmxOperation should be declared public"));
+			assertThat(e.getMessage(), containsString(
+				"A method \"action\" in class '" + MBeanWithNonPublicOperation.class.getName() +
+				"' annotated with @JmxOperation should be declared public"));
 		}
 	}
 

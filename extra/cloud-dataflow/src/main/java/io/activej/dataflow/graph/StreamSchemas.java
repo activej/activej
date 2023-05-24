@@ -33,9 +33,10 @@ public class StreamSchemas {
 
 		@Override
 		public String toString() {
-			return "SimpleStreamSchema{" +
-				   "cls=" + cls +
-				   '}';
+			return
+				"SimpleStreamSchema{" +
+				"cls=" + cls +
+				'}';
 		}
 	}
 }

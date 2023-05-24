@@ -569,8 +569,9 @@ public class CubeMySqlOTUplinkTest {
 
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute("DELETE FROM " + CubeMySqlOTUplink.REVISION_TABLE +
-								  " WHERE `revision` IN (0,1,2)");
+				statement.execute(
+					"DELETE FROM " + CubeMySqlOTUplink.REVISION_TABLE +
+					" WHERE `revision` IN (0,1,2)");
 			}
 		}
 

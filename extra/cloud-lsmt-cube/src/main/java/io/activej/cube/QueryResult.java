@@ -121,13 +121,14 @@ public final class QueryResult {
 
 	@Override
 	public String toString() {
-		return "QueryResult{" +
-			   "attributes=" + attributes +
-			   ", measures=" + measures +
-			   ", records=" + Utils.toString(records) +
-			   ", totals=" + totals +
-			   ", count=" + totalCount +
-			   ", sortedBy=" + sortedBy +
-			   '}';
+		return
+			"QueryResult{" +
+			"attributes=" + attributes +
+			", measures=" + measures +
+			", records=" + Utils.toString(records) +
+			", totals=" + totals +
+			", count=" + totalCount +
+			", sortedBy=" + sortedBy +
+			'}';
 	}
 }

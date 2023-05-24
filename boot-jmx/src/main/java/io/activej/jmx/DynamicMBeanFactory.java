@@ -225,8 +225,8 @@ public final class DynamicMBeanFactory {
 
 		if (!includedOptionals.isEmpty()) {
 			assert getter != null; // in this case getter cannot be null
-			throw new RuntimeException(format("Error in \"extraSubAttributes\" parameter in @JmxAnnotation" +
-											  " on %s.%s(). There is no field \"%s\" in %s.",
+			throw new RuntimeException(format(
+				"Error in \"extraSubAttributes\" parameter in @JmxAnnotation on %s.%s(). There is no field \"%s\" in %s.",
 				getter.getDeclaringClass().getName(), getter.getName(),
 				first(includedOptionals), getter.getReturnType().getName()));
 		}
@@ -244,8 +244,9 @@ public final class DynamicMBeanFactory {
 				} else if (isSetter(method)) {
 					processSetter(nameToAttr, method, customTypes);
 				} else {
-					throw new RuntimeException(format("Method \"%s\" of class \"%s\" is annotated with @JmxAnnotation "
-													  + "but is neither getter nor setter", method.getName(), method.getClass().getName())
+					throw new RuntimeException(format(
+						"Method \"%s\" of class \"%s\" is annotated with @JmxAnnotation but is neither getter nor setter",
+						method.getName(), method.getClass().getName())
 					);
 				}
 			}
@@ -284,8 +285,8 @@ public final class DynamicMBeanFactory {
 	private void processSetter(Map<String, AttributeDescriptor> nameToAttr, Method setter, Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		Class<?> attrType = setter.getParameterTypes()[0];
 		checkArgument(ReflectionUtils.isSimpleType(attrType) || isStringWrappedType(customTypes, attrType),
-			"Setters are allowed only on attributes of simple, custom or Enum types. " +
-			"But setter \"%s\" is for neither of the above types", setter.getName());
+			"Setters are allowed only on attributes of simple, custom or Enum types. But setter \"%s\" is for neither of the above types",
+			setter.getName());
 
 		String name = extractFieldNameFromSetter(setter);
 
@@ -450,8 +451,9 @@ public final class DynamicMBeanFactory {
 		if (JmxRefreshableStats.class.isAssignableFrom(returnClass) &&
 			findAdapterClass(beanClass).filter(JmxBeanAdapterWithRefresh.class::isAssignableFrom).isEmpty()
 		) {
-			logger.warn("JmxRefreshableStats won't be refreshed when Bean adapter does not implement JmxBeanAdapterWithRefresh. " +
-						"MBean class: {}", beanClass.getName());
+			logger.warn(
+				"JmxRefreshableStats won't be refreshed when Bean adapter does not implement JmxBeanAdapterWithRefresh. MBean class: {}",
+				beanClass.getName());
 		}
 
 		if (returnClass.isInterface()) {
@@ -468,11 +470,12 @@ public final class DynamicMBeanFactory {
 	}
 
 	private static String createErrorMessageForInvalidJmxStatsAttribute(@Nullable Method getter) {
-		String msg = "Return type of JmxStats attribute must be a concrete class that implements" +
-					 " JmxStats interface and contains" +
-					 " static factory \"" + CREATE_ACCUMULATOR + "()\" method or" +
-					 " static factory \"" + CREATE + "()\" method or" +
-					 " public no-arg constructor";
+		String msg =
+			"Return type of JmxStats attribute must be a concrete class that implements" +
+			" JmxStats interface and contains" +
+			" static factory \"" + CREATE_ACCUMULATOR + "()\" method or" +
+			" static factory \"" + CREATE + "()\" method or" +
+			" public no-arg constructor";
 
 		if (getter != null) {
 			msg += format(". Error at %s.%s()", getter.getDeclaringClass().getName(), getter.getName());
@@ -943,8 +946,8 @@ public final class DynamicMBeanFactory {
 				throw new MBeanException((Exception) targetException);
 			} else {
 				throw new MBeanException(
-					new Exception(format("Throwable of type \"%s\" and message \"%s\" " +
-										 "was thrown during method invocation",
+					new Exception(format(
+						"Throwable of type \"%s\" and message \"%s\" was thrown during method invocation",
 						targetException.getClass().getName(), targetException.getMessage())
 					)
 				);
@@ -956,8 +959,8 @@ public final class DynamicMBeanFactory {
 			throw new MBeanException((Exception) e);
 		} else {
 			throw new MBeanException(
-				new Exception(format("Throwable of type \"%s\" and message \"%s\" " +
-									 "was thrown",
+				new Exception(format(
+					"Throwable of type \"%s\" and message \"%s\" was thrown",
 					e.getClass().getName(), e.getMessage())
 				)
 			);

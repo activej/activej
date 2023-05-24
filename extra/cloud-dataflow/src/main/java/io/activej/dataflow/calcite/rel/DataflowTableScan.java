@@ -98,16 +98,18 @@ public class DataflowTableScan extends TableScan {
 			return false;
 		}
 		DataflowTableScan other = (DataflowTableScan) obj;
-		return Objects.equals(condition, other.condition) &&
-			   Objects.equals(offset, other.offset) &&
-			   Objects.equals(limit, other.limit);
+		return
+			Objects.equals(condition, other.condition) &&
+			Objects.equals(offset, other.offset) &&
+			Objects.equals(limit, other.limit);
 	}
 
 	@Override
 	public int deepHashCode() {
-		return super.deepHashCode() +
-			   Objects.hashCode(condition) +
-			   Objects.hashCode(offset) +
-			   Objects.hashCode(limit);
+		return
+			super.deepHashCode() +
+			Objects.hashCode(condition) +
+			Objects.hashCode(offset) +
+			Objects.hashCode(limit);
 	}
 }

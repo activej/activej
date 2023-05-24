@@ -31,8 +31,8 @@ public class MySqlModule extends AbstractModule {
 		InputStream stream = getClass().getResourceAsStream(MYSQL_PROPERTIES_FILE);
 
 		if (stream == null) {
-			throw new RuntimeException("Create a 'mysql.properties' file out of 'mysql.properties.template' " +
-									   "and add it to resources directory");
+			throw new RuntimeException(
+				"Create a 'mysql.properties' file out of 'mysql.properties.template' and add it to resources directory");
 		}
 
 		properties.load(stream);

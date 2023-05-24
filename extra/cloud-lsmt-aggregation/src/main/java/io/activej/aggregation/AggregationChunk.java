@@ -98,12 +98,13 @@ public class AggregationChunk {
 
 	@Override
 	public String toString() {
-		return "{" +
-			   "id=" + chunkId +
-			   ", measures=" + measures +
-			   ", minKey=" + minPrimaryKey +
-			   ", maxKey=" + maxPrimaryKey +
-			   ", count=" + count +
-			   '}';
+		return
+			"{" +
+			"id=" + chunkId +
+			", measures=" + measures +
+			", minKey=" + minPrimaryKey +
+			", maxKey=" + maxPrimaryKey +
+			", count=" + count +
+			'}';
 	}
 }

@@ -497,8 +497,8 @@ public class RelToDatasetConverter {
 			}
 			for (RexNode operand : operands) {
 				if (operand.getKind() != SqlKind.INPUT_REF) {
-					throw new IllegalArgumentException("Unsupported join condition: " + operand +
-													   ". Only equi-joins are supported");
+					throw new IllegalArgumentException(
+						"Unsupported join condition: " + operand + ". Only equi-joins are supported");
 				}
 			}
 			return List.of(eqCondition);
@@ -512,8 +512,8 @@ public class RelToDatasetConverter {
 			return result;
 		}
 
-		throw new IllegalArgumentException("Unsupported join condition: " + condition +
-										   ". Only equi-joins are supported");
+		throw new IllegalArgumentException(
+			"Unsupported join condition: " + condition + ". Only equi-joins are supported");
 	}
 
 	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<RexDynamicParam> dynamicParams) {

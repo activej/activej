@@ -66,11 +66,11 @@ public final class LZ4Legacy implements FrameFormat {
 	}
 
 	static final int HEADER_LENGTH =
-		MAGIC.length    // magic bytes
-		+ 1     // token
-		+ 4     // compressed length
-		+ 4     // decompressed length
-		+ 4;    // checksum
+		MAGIC.length // magic bytes
+		+ 1 // token
+		+ 4 // compressed length
+		+ 4 // decompressed length
+		+ 4; // checksum
 
 	static final int DEFAULT_SEED = 0x9747b28c;
 

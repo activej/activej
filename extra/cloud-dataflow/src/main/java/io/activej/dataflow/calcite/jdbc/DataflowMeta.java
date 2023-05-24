@@ -545,11 +545,8 @@ public final class DataflowMeta extends LimitedMeta {
 					SqlTypeName sqlTypeName = fieldType.getSqlTypeName();
 
 					int precision =
-						sqlTypeName.allowsPrec()
-						&& !(fieldType
-							instanceof RelDataTypeFactoryImpl.JavaType)
-							? fieldType.getPrecision()
-							: -1;
+						sqlTypeName.allowsPrec() &&
+						!(fieldType instanceof RelDataTypeFactoryImpl.JavaType) ? fieldType.getPrecision() : -1;
 
 					row[0] = SCHEMA_NAME;
 					row[2] = tableName;

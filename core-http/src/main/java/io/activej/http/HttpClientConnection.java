@@ -448,14 +448,15 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	public String toString() {
-		return "HttpClientConnection{" +
-			   "pool=" + getCurrentPool() +
-			   ", promise=" + promise +
-			   ", response=" + response +
-			   ", httpClient=" + client +
-			   //				", lastRequestUrl='" + (request.getFullUrl() == null ? "" : request.getFullUrl()) + '\'' +
-			   ", remoteAddress=" + remoteAddress +
-			   ',' + super.toString() +
-			   '}';
+		return
+			"HttpClientConnection{" +
+			"pool=" + getCurrentPool() +
+			", promise=" + promise +
+			", response=" + response +
+			", httpClient=" + client +
+			//				", lastRequestUrl='" + (request.getFullUrl() == null ? "" : request.getFullUrl()) + '\'' +
+			", remoteAddress=" + remoteAddress +
+			',' + super.toString() +
+			'}';
 	}
 }

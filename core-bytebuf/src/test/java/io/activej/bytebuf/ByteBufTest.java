@@ -189,12 +189,14 @@ public class ByteBufTest {
 		buf = ByteBufPool.append(buf, secondBuf.slice());
 		buf = ByteBufPool.append(buf, secondBuf.slice());
 
-		assertEquals(new String(BYTES)
-					 + new String(BYTES)
-					 + new String(BYTES)
-					 + new String(BYTES)
-					 + new String(BYTES)
-					 + new String(BYTES), buf.toString());
+		assertEquals(
+			new String(BYTES) +
+			new String(BYTES) +
+			new String(BYTES) +
+			new String(BYTES) +
+			new String(BYTES) +
+			new String(BYTES),
+			buf.toString());
 
 		buf.recycle();
 		secondBuf.recycle();

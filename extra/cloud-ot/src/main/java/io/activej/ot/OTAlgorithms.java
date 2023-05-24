@@ -147,12 +147,13 @@ public final class OTAlgorithms {
 
 		@Override
 		public String toString() {
-			return "FindResult{" +
-				   "commit=" + commit +
-				   ", parents=" + commitParents +
-				   ", child=" + child +
-				   ", accumulator=" + accumulatedDiffs +
-				   '}';
+			return
+				"FindResult{" +
+				"commit=" + commit +
+				", parents=" + commitParents +
+				", child=" + child +
+				", accumulator=" + accumulatedDiffs +
+				'}';
 		}
 	}
 

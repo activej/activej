@@ -329,29 +329,31 @@ public class TriggersTest {
 			"CubeLogProcessorController, " +
 			"Launcher",
 			triggers.getTriggerComponents());
-		assertEquals("[" +
-					 "@CubeThread Eventloop : fatalErrors, " +
-					 "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay, " +
-					 "@Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error, " +
-					 "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler : delay, " +
-					 "@Named(\"LogProcessorScheduler\") EventloopTaskScheduler : error, " +
-					 "Cube : errors, " +
-					 "CubeLogProcessorController : errorProcessLogs, " +
-					 "Launcher : runDelay]",
+		assertEquals(
+			"[" +
+			"@CubeThread Eventloop : fatalErrors, " +
+			"@Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay, " +
+			"@Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error, " +
+			"@Named(\"LogProcessorScheduler\") EventloopTaskScheduler : delay, " +
+			"@Named(\"LogProcessorScheduler\") EventloopTaskScheduler : error, " +
+			"Cube : errors, " +
+			"CubeLogProcessorController : errorProcessLogs, " +
+			"Launcher : runDelay]",
 			triggers.getTriggerNames().toString());
-		assertEquals("[" +
-					 "HIGH : @CubeThread Eventloop : fatalErrors, " +
-					 "HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay, " +
-					 "HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error, " +
-					 "HIGH : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : delay, " +
-					 "HIGH : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : error, " +
-					 "HIGH : Cube : errors, " +
-					 "AVERAGE : CubeLogProcessorController : errorProcessLogs, " +
-					 "AVERAGE : Launcher : runDelay, " +
-					 "WARNING : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay, " +
-					 "WARNING : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error, " +
-					 "WARNING : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : delay, " +
-					 "WARNING : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : error]",
+		assertEquals(
+			"[" +
+			"HIGH : @CubeThread Eventloop : fatalErrors, " +
+			"HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay, " +
+			"HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error, " +
+			"HIGH : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : delay, " +
+			"HIGH : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : error, " +
+			"HIGH : Cube : errors, " +
+			"AVERAGE : CubeLogProcessorController : errorProcessLogs, " +
+			"AVERAGE : Launcher : runDelay, " +
+			"WARNING : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay, " +
+			"WARNING : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error, " +
+			"WARNING : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : delay, " +
+			"WARNING : @Named(\"LogProcessorScheduler\") EventloopTaskScheduler : error]",
 			triggers.getTriggers().toString());
 		assertEquals(8, triggers.getResults().size());
 	}

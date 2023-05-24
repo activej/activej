@@ -21,11 +21,14 @@ public final class JavaRecordType extends RelRecordType {
 	}
 
 	@Override
-	public boolean equals(@Nullable Object obj) {
-		return this == obj
-			   || obj instanceof JavaRecordType
-				  && Objects.equals(fieldList, ((JavaRecordType) obj).fieldList)
-				  && clazz == ((JavaRecordType) obj).clazz;
+	public boolean equals(@Nullable Object o) {
+		return
+			this == o ||
+			(
+				o instanceof JavaRecordType other &&
+				this.clazz == other.clazz &&
+				Objects.equals(this.fieldList, other.fieldList)
+			);
 	}
 
 	@Override

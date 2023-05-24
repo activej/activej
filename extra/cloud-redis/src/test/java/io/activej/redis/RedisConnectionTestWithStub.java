@@ -80,8 +80,8 @@ public class RedisConnectionTestWithStub {
 	 Redis-mock uses OS-specific line separator for response encoding
 	 */
 	private boolean canBeRun() {
-		return "\n".equals(System.lineSeparator())
-			   ||
-			   getClass() != RedisConnectionTestWithStub.class;
+		return
+			"\n".equals(System.lineSeparator()) ||
+			getClass() != RedisConnectionTestWithStub.class;
 	}
 }

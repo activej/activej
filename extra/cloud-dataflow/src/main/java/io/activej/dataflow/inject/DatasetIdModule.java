@@ -34,15 +34,19 @@ public final class DatasetIdModule extends AbstractModule {
 				Class<?> rawType = key.getRawType();
 
 				if (binding.getType() != BindingType.TRANSIENT &&
-					(rawType == Iterator.class ||
-					 rawType == Supplier.class ||
-					 rawType == SupplierEx.class ||
-					 rawType == Stream.class ||
-					 rawType == StreamSupplier.class ||
-					 rawType == ChannelSupplier.class ||
-					 rawType == Promise.class)) {
-					throw new IllegalStateException("Provided dataset '" + datasetId.value() + "' is a single use dataset. " +
-													"Maybe mark it as @Transient?");
+					(
+						rawType == Iterator.class ||
+						rawType == Supplier.class ||
+						rawType == SupplierEx.class ||
+						rawType == Stream.class ||
+						rawType == StreamSupplier.class ||
+						rawType == ChannelSupplier.class ||
+						rawType == Promise.class
+					)
+				) {
+					throw new IllegalStateException(
+						"Provided dataset '" + datasetId.value() + "' is a single use dataset. " +
+						"Maybe mark it as @Transient?");
 				}
 
 				Key<?> previousKey = datasetIds.keys.put(id, key);

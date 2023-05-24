@@ -44,8 +44,9 @@ public final class Reduce<K, O, A> extends AbstractNode {
 
 		@Override
 		public String toString() {
-			return "Input{reducer=" + reducer.getClass().getSimpleName() +
-				   ", keyFunction=" + keyFunction.getClass().getSimpleName() + '}';
+			return
+				"Input{reducer=" + reducer.getClass().getSimpleName() +
+				", keyFunction=" + keyFunction.getClass().getSimpleName() + '}';
 		}
 	}
 
@@ -112,9 +113,10 @@ public final class Reduce<K, O, A> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "Reduce{keyComparator=" + keyComparator.getClass().getSimpleName() +
-			   ", inputs=" + inputs +
-			   ", output=" + output + '}';
+		return
+			"Reduce{keyComparator=" + keyComparator.getClass().getSimpleName() +
+			", inputs=" + inputs +
+			", output=" + output + '}';
 	}
 }
 

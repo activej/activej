@@ -66,9 +66,10 @@ public class TestClass1 extends AbstractTestClass1 {
 		synchronized (this) {
 			setMutableField(getMutableField() + 1);
 			int y = 10;
-			return y + finalX + super.apply(100) +
-				   delegate.apply(arg) +
-				   testClass1.finalX + testStatic() + test() + mutableField;
+			return
+				y + finalX + super.apply(100) +
+				delegate.apply(arg) +
+				testClass1.finalX + testStatic() + test() + mutableField;
 		}
 	}
 }

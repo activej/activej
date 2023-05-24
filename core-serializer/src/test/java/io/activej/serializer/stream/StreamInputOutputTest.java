@@ -62,9 +62,10 @@ public final class StreamInputOutputTest {
 
 	@Test
 	public void largeItems() throws IOException {
-		int nearMaxSize = (1 << 28) // StreamOutput.MAX_SIZE
-						  - 4 // encoded size of an array
-						  - 1;
+		int nearMaxSize =
+			(1 << 28) // StreamOutput.MAX_SIZE
+			- 4 // encoded size of an array
+			- 1;
 		for (byte[] array : List.of(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize])) {
 			BinarySerializer<byte[]> serializer = BinarySerializers.BYTES_SERIALIZER;
 			StreamCodec<byte[]> codec = StreamCodec.ofBinarySerializer(serializer);

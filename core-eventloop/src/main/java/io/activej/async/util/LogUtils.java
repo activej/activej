@@ -183,19 +183,21 @@ public class LogUtils {
 	}
 
 	public static String formatCall(String methodName, Object... parameters) {
-		return methodName +
-			   (parameters.length != 0 ? " " + Arrays.stream(parameters)
-				   .map(LogUtils::toString)
-				   .collect(joining(", ")) : "") +
-			   " …";
+		return
+			methodName +
+			(parameters.length != 0 ? " " + Arrays.stream(parameters)
+				.map(LogUtils::toString)
+				.collect(joining(", ")) : "") +
+			" …";
 	}
 
 	public static String formatResult(String methodName, Object result, Object... parameters) {
-		return methodName +
-			   (parameters.length != 0 ? " " + Arrays.stream(parameters)
-				   .map(LogUtils::toString)
-				   .collect(joining(", ")) : "") +
-			   " → " + toString(result);
+		return
+			methodName +
+			(parameters.length != 0 ? " " + Arrays.stream(parameters)
+				.map(LogUtils::toString)
+				.collect(joining(", ")) : "") +
+			" → " + toString(result);
 	}
 
 }

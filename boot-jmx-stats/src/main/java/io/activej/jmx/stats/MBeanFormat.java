@@ -41,8 +41,9 @@ public final class MBeanFormat {
 		if (timestamp == 0L) return "";
 		Instant instant = Instant.ofEpochMilli(timestamp);
 		Duration ago = Duration.between(instant, Instant.ofEpochMilli(currentTimeMillis())).withNanos(0);
-		return StringFormatUtils.formatInstant(instant) +
-			   " (" + StringFormatUtils.formatDuration(ago) + " ago)";
+		return
+			StringFormatUtils.formatInstant(instant) +
+			" (" + StringFormatUtils.formatDuration(ago) + " ago)";
 	}
 
 	public static String formatListAsMultilineString(@Nullable List<?> list) {

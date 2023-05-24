@@ -65,8 +65,9 @@ public final class ListGet extends FunctionOperand<ListGet> {
 
 	@Override
 	public String toString() {
-		return "ListGet[" +
-			   "listOperand=" + listOperand + ", " +
-			   "indexOperand=" + indexOperand + ']';
+		return
+			"ListGet[" +
+			"listOperand=" + listOperand + ", " +
+			"indexOperand=" + indexOperand + ']';
 	}
 }

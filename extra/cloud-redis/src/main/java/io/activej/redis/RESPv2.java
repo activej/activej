@@ -400,9 +400,12 @@ public final class RESPv2 {
 
 		try {
 			if (ASSERT_PROTOCOL &&
-				(array[head] != STRING_MARKER ||
-				 array[head + 1] != 'O' || array[head + 2] != 'K' ||
-				 array[head + 3] != CR || array[head + 4] != LF)) {
+				(
+					array[head] != STRING_MARKER ||
+					array[head + 1] != 'O' || array[head + 2] != 'K' ||
+					array[head + 3] != CR || array[head + 4] != LF
+				)
+			) {
 				throw new MalformedDataException("Simple String 'OK' expected, got: " + new String(array, head, 5, ISO_8859_1));
 			}
 			head += 5;
@@ -416,14 +419,18 @@ public final class RESPv2 {
 
 		try {
 			if (ASSERT_PROTOCOL &&
-				(array[head] != STRING_MARKER ||
-				 array[head + 1] != 'Q' ||
-				 array[head + 2] != 'U' ||
-				 array[head + 3] != 'E' ||
-				 array[head + 4] != 'U' ||
-				 array[head + 5] != 'E' ||
-				 array[head + 6] != 'D' ||
-				 array[head + 7] != CR || array[head + 8] != LF)) {
+				(
+					array[head] != STRING_MARKER ||
+					array[head + 1] != 'Q' ||
+					array[head + 2] != 'U' ||
+					array[head + 3] != 'E' ||
+					array[head + 4] != 'U' ||
+					array[head + 5] != 'E' ||
+					array[head + 6] != 'D' ||
+					array[head + 7] != CR ||
+					array[head + 8] != LF
+				)
+			) {
 				throw new MalformedDataException("Simple String 'QUEUED' expected, got: " + new String(array, head, 9, ISO_8859_1));
 			}
 			head += 9;

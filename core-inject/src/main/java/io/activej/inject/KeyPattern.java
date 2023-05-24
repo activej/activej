@@ -102,8 +102,9 @@ public abstract class KeyPattern<T> {
 
 	public boolean match(Key<?> key) {
 		//noinspection unchecked
-		return isAssignable(this.type, key.getType()) &&
-			   (this.qualifier == null || ((Predicate<Object>) this.qualifier).test(key.getQualifier()));
+		return
+			isAssignable(this.type, key.getType()) &&
+			(this.qualifier == null || ((Predicate<Object>) this.qualifier).test(key.getQualifier()));
 	}
 
 	private Type getTypeParameter() {

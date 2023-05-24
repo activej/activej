@@ -45,12 +45,13 @@ public final class MediaType extends Token {
 	}
 
 	public boolean isTextType() {
-		return bytes.length > 5
-			   && bytes[0] == 't'
-			   && bytes[1] == 'e'
-			   && bytes[2] == 'x'
-			   && bytes[3] == 't'
-			   && bytes[4] == '/';
+		return
+			bytes.length > 5 &&
+			bytes[0] == 't' &&
+			bytes[1] == 'e' &&
+			bytes[2] == 'x' &&
+			bytes[3] == 't' &&
+			bytes[4] == '/';
 	}
 
 	@Override

@@ -1377,8 +1377,9 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Failed to generate implicit binding for MultipleConstructorsInject, " +
-						 "inject annotation on class with multiple constructors",
+			assertEquals(
+				"Failed to generate implicit binding for MultipleConstructorsInject, " +
+				"inject annotation on class with multiple constructors",
 				e.getMessage());
 		}
 	}
@@ -1393,8 +1394,9 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Failed to generate implicit binding for InjectInterface, " +
-						 "inject annotation on interface",
+			assertEquals(
+				"Failed to generate implicit binding for InjectInterface, " +
+				"inject annotation on interface",
 				e.getMessage());
 		}
 	}
@@ -1410,8 +1412,9 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Failed to generate implicit binding for ConstructorAndFactoryInject, " +
-						 "inject annotation on class with factory method",
+			assertEquals(
+				"Failed to generate implicit binding for ConstructorAndFactoryInject, " +
+				"inject annotation on class with factory method",
 				e.getMessage());
 		}
 	}

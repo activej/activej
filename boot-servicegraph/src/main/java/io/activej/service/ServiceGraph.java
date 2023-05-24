@@ -507,12 +507,13 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		Object qualifier = key.getQualifier();
 		String keySuffix = key.getSuffix();
 		String keyIndex = key.getIndex();
-		return (qualifier != null ? qualifier + " " : "") +
-			   key.getType().getTypeName() +
-			   (keySuffix == null ? "" :
-				   "[" + keySuffix + "]") +
-			   (keyIndex == null ? "" :
-				   keyIndex.isEmpty() ? "" : " #" + keyIndex);
+		return
+			(qualifier != null ? qualifier + " " : "") +
+			key.getType().getTypeName() +
+			(keySuffix == null ? "" :
+				"[" + keySuffix + "]") +
+			(keyIndex == null ? "" :
+				keyIndex.isEmpty() ? "" : " #" + keyIndex);
 	}
 
 	private String keyToNode(Key key) {
@@ -527,21 +528,22 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		String keySuffix = key.getSuffix();
 		String keyIndex = key.getIndex();
 		NodeStatus status = nodeStatuses.get(key);
-		String label = (qualifier != null ? getDisplayString(qualifier) + "\\n" : "") +
-					   getDisplayName(key.getType()) +
-					   (keySuffix == null ? "" :
-						   "[" + keySuffix + "]") +
-					   (keyIndex == null ? "" :
-						   keyIndex.isEmpty() ? "" : "#" + keyIndex) +
-					   (status != null && status.isStarted() ?
-						   "\\n" +
-						   formatDuration(Duration.ofMillis(status.getStartTime())) +
-						   (status.isStopped() ?
-							   " / " + formatDuration(Duration.ofMillis(status.getStopTime())) :
-							   "") :
-						   "") +
-					   (status != null && status.startException != null ? "\\n" + status.startException : "") +
-					   (status != null && status.stopException != null ? "\\n" + status.stopException : "");
+		String label =
+			(qualifier != null ? getDisplayString(qualifier) + "\\n" : "") +
+			getDisplayName(key.getType()) +
+			(keySuffix == null ? "" :
+				"[" + keySuffix + "]") +
+			(keyIndex == null ? "" :
+				keyIndex.isEmpty() ? "" : "#" + keyIndex) +
+			(status != null && status.isStarted() ?
+				"\\n" +
+				formatDuration(Duration.ofMillis(status.getStartTime())) +
+				(status.isStopped() ?
+					" / " + formatDuration(Duration.ofMillis(status.getStopTime())) :
+					"") :
+				"") +
+			(status != null && status.startException != null ? "\\n" + status.startException : "") +
+			(status != null && status.stopException != null ? "\\n" + status.stopException : "");
 		return label.replace("\"", "\\\"");
 	}
 
@@ -561,11 +563,12 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 			Key node = entry.getKey();
 			for (Key dependency : entry.getValue()) {
 				sb.append("\t" + keyToNode(node) + " -> " + keyToNode(dependency))
-					.append(slowestChain != null &&
-							slowestChain.path.contains(node) && slowestChain.path.contains(dependency) &&
-							slowestChain.path.indexOf(node) == slowestChain.path.indexOf(dependency) + 1 ?
-						" [" + graphvizSlowestEdge + "]" :
-						(!graphvizEdge.isEmpty() ? " [" + graphvizEdge + "]" : ""))
+					.append(
+						slowestChain != null &&
+						slowestChain.path.contains(node) && slowestChain.path.contains(dependency) &&
+						slowestChain.path.indexOf(node) == slowestChain.path.indexOf(dependency) + 1 ?
+							" [" + graphvizSlowestEdge + "]" :
+							(!graphvizEdge.isEmpty() ? " [" + graphvizEdge + "]" : ""))
 					.append("\n");
 			}
 		}
@@ -588,11 +591,12 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 				.append(" ]\n");
 		}
 
-		sb.append("\n\t{ rank=same; " +
-				  difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
-					  .stream()
-					  .map(this::keyToNode)
-					  .collect(joining(" ")))
+		sb.append(
+				"\n\t{ rank=same; " +
+				difference(union(services.keySet(), backwards.keySet()), forwards.keySet())
+					.stream()
+					.map(this::keyToNode)
+					.collect(joining(" ")))
 			.append(" }\n");
 
 		sb.append("}\n");
@@ -629,9 +633,10 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 				return nodeStatus != null && nodeStatus.isStarted();
 			})
 			.max(comparingLong(node -> nodeStatuses.get(node).getStartTime()))
-			.map(node -> keyToString(node) +
-						 " : " +
-						 formatDuration(Duration.ofMillis(nodeStatuses.get(node).getStartTime())))
+			.map(node ->
+				keyToString(node) +
+				" : " +
+				formatDuration(Duration.ofMillis(nodeStatuses.get(node).getStartTime())))
 			.orElse(null);
 	}
 
@@ -640,11 +645,12 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 		if (slowestChain == null) {
 			return null;
 		}
-		return slowestChain.path.stream()
-				   .map(this::keyToString)
-				   .collect(joining(", ", "[", "]")) +
-			   " : " +
-			   formatDuration(Duration.ofMillis(slowestChain.sum));
+		return
+			slowestChain.path.stream()
+				.map(this::keyToString)
+				.collect(joining(", ", "[", "]")) +
+			" : " +
+			formatDuration(Duration.ofMillis(slowestChain.sum));
 	}
 
 	@JmxAttribute

@@ -95,8 +95,9 @@ public final class RpcRequestStats implements JmxRefreshable {
 	}
 
 	@JmxAttribute(
-		description = "difference between due time and actual time of passing response to callback for " +
-					  "successful or failed requests",
+		description =
+			"difference between due time and actual time of passing response to callback for " +
+			"successful or failed requests",
 		extraSubAttributes = "histogram"
 	)
 	public ValueStats getOverdues() {

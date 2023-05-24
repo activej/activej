@@ -206,10 +206,11 @@ public final class RedisClient extends AbstractNioReactive {
 
 	@Override
 	public String toString() {
-		return "RedisClient{" +
-			   "address=" + address +
-			   ", secure=" + (sslContext != null) +
-			   '}';
+		return
+			"RedisClient{" +
+			"address=" + address +
+			", secure=" + (sslContext != null) +
+			'}';
 	}
 
 }

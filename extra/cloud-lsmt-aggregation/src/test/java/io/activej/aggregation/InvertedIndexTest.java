@@ -81,10 +81,11 @@ public class InvertedIndexTest {
 
 		@Override
 		public String toString() {
-			return "InvertedIndexQueryResult{" +
-				   "word='" + word + '\'' +
-				   ", documents=" + documents +
-				   '}';
+			return
+				"InvertedIndexQueryResult{" +
+				"word='" + word + '\'' +
+				", documents=" + documents +
+				'}';
 		}
 	}
 

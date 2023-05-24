@@ -131,11 +131,12 @@ public final class AggregationQuery {
 
 	@Override
 	public String toString() {
-		return "AggregationQuery{" +
-			   "keys=" + keys +
-			   ", fields=" + measures +
-			   ", predicate=" + predicate +
-			   '}';
+		return
+			"AggregationQuery{" +
+			"keys=" + keys +
+			", fields=" + measures +
+			", predicate=" + predicate +
+			'}';
 	}
 
 	@Override
@@ -143,9 +144,10 @@ public final class AggregationQuery {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		AggregationQuery query = (AggregationQuery) o;
-		return keys.equals(query.keys) &&
-			   measures.equals(query.measures) &&
-			   predicate.equals(query.predicate);
+		return
+			keys.equals(query.keys) &&
+			measures.equals(query.measures) &&
+			predicate.equals(query.predicate);
 	}
 
 	@Override

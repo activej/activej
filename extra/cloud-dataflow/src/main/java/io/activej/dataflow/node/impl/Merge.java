@@ -95,10 +95,11 @@ public final class Merge<K, T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "Merge{keyFunction=" + keyFunction.getClass().getSimpleName() +
-			   ", keyComparator=" + keyComparator.getClass().getSimpleName() +
-			   ", deduplicate=" + deduplicate +
-			   ", inputs=" + inputs +
-			   ", output=" + output + '}';
+		return
+			"Merge{keyFunction=" + keyFunction.getClass().getSimpleName() +
+			", keyComparator=" + keyComparator.getClass().getSimpleName() +
+			", deduplicate=" + deduplicate +
+			", inputs=" + inputs +
+			", output=" + output + '}';
 	}
 }

@@ -86,8 +86,9 @@ public final class MapGet extends FunctionOperand<MapGet> {
 
 	@Override
 	public String toString() {
-		return "MapGet[" +
-			   "mapOperand=" + mapOperand + ", " +
-			   "keyOperand=" + keyOperand + ']';
+		return
+			"MapGet[" +
+			"mapOperand=" + mapOperand + ", " +
+			"keyOperand=" + keyOperand + ']';
 	}
 }

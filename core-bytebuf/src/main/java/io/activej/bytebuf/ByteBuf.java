@@ -838,10 +838,11 @@ public class ByteBuf implements Recyclable {
 
 	public int readInt() {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
-		int result = ((array[head] & 0xFF) << 24)
-					 | ((array[head + 1] & 0xFF) << 16)
-					 | ((array[head + 2] & 0xFF) << 8)
-					 | (array[head + 3] & 0xFF);
+		int result =
+			(array[head] & 0xFF) << 24 |
+			(array[head + 1] & 0xFF) << 16 |
+			(array[head + 2] & 0xFF) << 8 |
+			(array[head + 3] & 0xFF);
 		head += 4;
 		return result;
 	}
@@ -885,22 +886,22 @@ public class ByteBuf implements Recyclable {
 
 	public long readLong() {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
-		long result = ((long) array[head] << 56)
-					  | ((long) (array[head + 1] & 0xFF) << 48)
-					  | ((long) (array[head + 2] & 0xFF) << 40)
-					  | ((long) (array[head + 3] & 0xFF) << 32)
-					  | ((long) (array[head + 4] & 0xFF) << 24)
-					  | ((array[head + 5] & 0xFF) << 16)
-					  | ((array[head + 6] & 0xFF) << 8)
-					  | (array[head + 7] & 0xFF);
+		long result =
+			(long) array[head] << 56 |
+			(long) (array[head + 1] & 0xFF) << 48 |
+			(long) (array[head + 2] & 0xFF) << 40 |
+			(long) (array[head + 3] & 0xFF) << 32 |
+			(long) (array[head + 4] & 0xFF) << 24 |
+			(long) (array[head + 5] & 0xFF) << 16 |
+			(long) (array[head + 6] & 0xFF) << 8 |
+			(long) (array[head + 7] & 0xFF);
 		head += 8;
 		return result;
 	}
 
 	public short readShort() {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
-		short result = (short) (((array[head] & 0xFF) << 8)
-								| (array[head + 1] & 0xFF));
+		short result = (short) (((array[head] & 0xFF) << 8) | (array[head + 1] & 0xFF));
 		head += 2;
 		return result;
 	}

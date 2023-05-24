@@ -182,8 +182,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		HttpMethod method = getHttpMethod(line, pos);
 		if (method == null) {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP method");
-			throw new MalformedHttpException("Unknown HTTP method. First line: " +
-											 new String(line, 0, limit, ISO_8859_1));
+			throw new MalformedHttpException(
+				"Unknown HTTP method. First line: " +
+				new String(line, 0, limit, ISO_8859_1));
 		}
 
 		int urlStart = pos + method.size + 1;
@@ -212,8 +213,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				version = HTTP_1_0;
 			} else {
 				if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unknown HTTP version");
-				throw new MalformedHttpException("Unknown HTTP version. First line: " +
-												 new String(line, 0, limit, ISO_8859_1));
+				throw new MalformedHttpException(
+					"Unknown HTTP version. First line: " +
+					new String(line, 0, limit, ISO_8859_1));
 			}
 		} else {
 			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Unsupported HTTP version");
@@ -488,10 +490,11 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	public String toString() {
-		return "HttpServerConnection{" +
-			   "pool=" + getCurrentPool() +
-			   ", remoteAddress=" + remoteAddress +
-			   ',' + super.toString() +
-			   '}';
+		return
+			"HttpServerConnection{" +
+			"pool=" + getCurrentPool() +
+			", remoteAddress=" + remoteAddress +
+			',' + super.toString() +
+			'}';
 	}
 }

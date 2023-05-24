@@ -63,10 +63,11 @@ public class ConfigConverterTest {
 	@Test
 	public void ofSimplePartitionGroupTest() {
 		Map<String, String> properties = Map.of(
-			"ids", "testA|101.101.101.101:9000|101.101.101.101:9001," +
-				   "testB|102.102.102.102:9000|102.102.102.102:9001," +
-				   "testC|103.103.103.103:9000|103.103.103.103:9001," +
-				   "testD|104.104.104.104:9000|104.104.104.104:9001",
+			"ids",
+			"testA|101.101.101.101:9000|101.101.101.101:9001," +
+			"testB|102.102.102.102:9000|102.102.102.102:9001," +
+			"testC|103.103.103.103:9000|103.103.103.103:9001," +
+			"testD|104.104.104.104:9000|104.104.104.104:9001",
 			"replicas", "2",
 			"repartition", "true",
 			"active", "true"
@@ -105,19 +106,19 @@ public class ConfigConverterTest {
 	public void ofSimplePartitionSchemeTest() {
 		Map<String, String> properties = new HashMap<>();
 
-		properties.put("partitionGroup.1.ids", "" +
-											   "testA|101.101.101.101:9000|101.101.101.101:9001," +
-											   "testB|102.102.102.102:9000|102.102.102.102:9001," +
-											   "testC|103.103.103.103:9000|103.103.103.103:9001," +
-											   "testD|104.104.104.104:9000|104.104.104.104:9001");
+		properties.put("partitionGroup.1.ids",
+			"testA|101.101.101.101:9000|101.101.101.101:9001," +
+			"testB|102.102.102.102:9000|102.102.102.102:9001," +
+			"testC|103.103.103.103:9000|103.103.103.103:9001," +
+			"testD|104.104.104.104:9000|104.104.104.104:9001");
 		properties.put("partitionGroup.1.replicas", "3");
 		properties.put("partitionGroup.1.repartition", "true");
 		properties.put("partitionGroup.1.active", "true");
 
-		properties.put("partitionGroup.2.ids", "" +
-											   "testE|105.105.105.105:9000|105.105.105.105:9001," +
-											   "testF|106.106.106.106:9000|106.106.106.106:9001," +
-											   "testG|107.107.107.107:9000|107.107.107.107:9001");
+		properties.put("partitionGroup.2.ids",
+			"testE|105.105.105.105:9000|105.105.105.105:9001," +
+			"testF|106.106.106.106:9000|106.106.106.106:9001," +
+			"testG|107.107.107.107:9000|107.107.107.107:9001");
 		properties.put("partitionGroup.2.replicas", "2");
 		properties.put("partitionGroup.2.repartition", "false");
 		properties.put("partitionGroup.2.active", "false");

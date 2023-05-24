@@ -313,8 +313,9 @@ public final class RpcServer extends AbstractReactiveServer {
 			logger.info("Client disconnected on {}", connection);
 
 		if (closeCallback != null) {
-			logger.info("RpcServer is closing. One more connection was closed. " +
-						"Active connections count: {}", connections.size());
+			logger.info(
+				"RpcServer is closing. One more connection was closed. Active connections count: {}",
+				connections.size());
 
 			if (connections.isEmpty()) {
 				closeCallback.set(null);
@@ -324,9 +325,10 @@ public final class RpcServer extends AbstractReactiveServer {
 	}
 
 	// region JMX
-	@JmxOperation(description = "enable monitoring " +
-								"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-								"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
+	@JmxOperation(description =
+		"enable monitoring " +
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
 	public void startMonitoring() {
 		monitoring = true;
 		for (RpcServerConnection connection : connections) {
@@ -334,9 +336,10 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 	}
 
-	@JmxOperation(description = "disable monitoring " +
-								"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-								"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
+	@JmxOperation(description =
+		"disable monitoring " +
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, requestHandlingTime stats are collected only when monitoring is enabled) ]")
 	public void stopMonitoring() {
 		monitoring = false;
 		for (RpcServerConnection connection : connections) {
@@ -344,8 +347,9 @@ public final class RpcServer extends AbstractReactiveServer {
 		}
 	}
 
-	@JmxAttribute(description = "when monitoring is enabled more stats are collected, but it causes more overhead " +
-								"(for example, requestHandlingTime stats are collected only when monitoring is enabled)")
+	@JmxAttribute(description =
+		"when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, requestHandlingTime stats are collected only when monitoring is enabled)")
 	public boolean isMonitoring() {
 		return monitoring;
 	}
@@ -389,14 +393,16 @@ public final class RpcServer extends AbstractReactiveServer {
 		return requestHandlingTime;
 	}
 
-	@JmxAttribute(description = "exception that occurred because of business logic error " +
-								"(in RpcRequestHandler implementation)")
+	@JmxAttribute(description =
+		"exception that occurred because of business logic error " +
+		"(in RpcRequestHandler implementation)")
 	public ExceptionStats getLastRequestHandlingException() {
 		return lastRequestHandlingException;
 	}
 
-	@JmxAttribute(description = "exception that occurred because of protocol error " +
-								"(serialization, deserialization, compression, decompression, etc)")
+	@JmxAttribute(description =
+		"exception that occurred because of protocol error " +
+		"(serialization, deserialization, compression, decompression, etc)")
 	public ExceptionStats getLastProtocolError() {
 		return lastProtocolError;
 	}

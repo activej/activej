@@ -73,11 +73,12 @@ public final class ConsumerOfId extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "ConsumerOfId{" +
-			   "id='" + id + '\'' +
-			   ", partitionIndex=" + partitionIndex +
-			   ", maxPartitions=" + maxPartitions +
-			   ", input=" + input +
-			   '}';
+		return
+			"ConsumerOfId{" +
+			"id='" + id + '\'' +
+			", partitionIndex=" + partitionIndex +
+			", maxPartitions=" + maxPartitions +
+			", input=" + input +
+			'}';
 	}
 }

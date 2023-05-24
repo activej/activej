@@ -109,9 +109,10 @@ public class CompatibilityLevelTest {
 		int length = serializer.encode(arr, 0, item);
 		T decoded = serializer.decode(arr, 0);
 
-		String filename = filePrefix + "_level_" +
-						  compatibilityLevel.getLevel() + (compatibilityLevel.isLittleEndian() ? "LE" : "") +
-						  ".dat";
+		String filename =
+			filePrefix + "_level_" +
+			compatibilityLevel.getLevel() + (compatibilityLevel.isLittleEndian() ? "LE" : "") +
+			".dat";
 		byte[] downloaded = download(filename);
 		assertArrayEquals(Arrays.copyOf(arr, length), downloaded);
 		T preload = serializer.decode(downloaded, 0);
@@ -151,10 +152,11 @@ public class CompatibilityLevelTest {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			TestStrings that = (TestStrings) o;
-			return stringIso.equals(that.stringIso) &&
-				   stringUtf8.equals(that.stringUtf8) &&
-				   stringUtf8Mb3.equals(that.stringUtf8Mb3) &&
-				   stringUtf16.equals(that.stringUtf16);
+			return
+				stringIso.equals(that.stringIso) &&
+				stringUtf8.equals(that.stringUtf8) &&
+				stringUtf8Mb3.equals(that.stringUtf8Mb3) &&
+				stringUtf16.equals(that.stringUtf16);
 		}
 
 		@Override
@@ -233,22 +235,23 @@ public class CompatibilityLevelTest {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			TestNullables that = (TestNullables) o;
-			return Arrays.equals(nullArray, that.nullArray) &&
-				   Arrays.equals(notNullArray, that.notNullArray) &&
-				   Objects.equals(nullByteBuffer, that.nullByteBuffer) &&
-				   Objects.equals(notNullByteBuffer, that.notNullByteBuffer) &&
-				   Objects.equals(nullCollection, that.nullCollection) &&
-				   Objects.equals(new ArrayList<>(notNullCollection), new ArrayList<>(that.notNullCollection)) &&
-				   nullEnum == that.nullEnum &&
-				   notNullEnum == that.notNullEnum &&
-				   Objects.equals(nullList, that.nullList) &&
-				   Objects.equals(notNullList, that.notNullList) &&
-				   Objects.equals(nullMap, that.nullMap) &&
-				   Objects.equals(notNullMap, that.notNullMap) &&
-				   Objects.equals(nullSet, that.nullSet) &&
-				   Objects.equals(notNullSet, that.notNullSet) &&
-				   Objects.equals(nullSubclass, that.nullSubclass) &&
-				   Objects.equals(notNullSubclass, that.notNullSubclass);
+			return
+				Arrays.equals(nullArray, that.nullArray) &&
+				Arrays.equals(notNullArray, that.notNullArray) &&
+				Objects.equals(nullByteBuffer, that.nullByteBuffer) &&
+				Objects.equals(notNullByteBuffer, that.notNullByteBuffer) &&
+				Objects.equals(nullCollection, that.nullCollection) &&
+				Objects.equals(new ArrayList<>(notNullCollection), new ArrayList<>(that.notNullCollection)) &&
+				nullEnum == that.nullEnum &&
+				notNullEnum == that.notNullEnum &&
+				Objects.equals(nullList, that.nullList) &&
+				Objects.equals(notNullList, that.notNullList) &&
+				Objects.equals(nullMap, that.nullMap) &&
+				Objects.equals(notNullMap, that.notNullMap) &&
+				Objects.equals(nullSet, that.nullSet) &&
+				Objects.equals(notNullSet, that.notNullSet) &&
+				Objects.equals(nullSubclass, that.nullSubclass) &&
+				Objects.equals(notNullSubclass, that.notNullSubclass);
 		}
 
 		@Override
@@ -284,9 +287,10 @@ public class CompatibilityLevelTest {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			TestBooleans that = (TestBooleans) o;
-			return Objects.equals(nullBoolean, that.nullBoolean) &&
-				   Objects.equals(trueBoolean, that.trueBoolean) &&
-				   Objects.equals(falseBoolean, that.falseBoolean);
+			return
+				Objects.equals(nullBoolean, that.nullBoolean) &&
+				Objects.equals(trueBoolean, that.trueBoolean) &&
+				Objects.equals(falseBoolean, that.falseBoolean);
 		}
 
 		@Override

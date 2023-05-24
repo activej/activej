@@ -72,9 +72,10 @@ public final class DnsResponse {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		DnsResponse that = (DnsResponse) o;
-		return transaction.equals(that.transaction) &&
-			   Objects.equals(record, that.record) &&
-			   errorCode == that.errorCode;
+		return
+			transaction.equals(that.transaction) &&
+			Objects.equals(record, that.record) &&
+			errorCode == that.errorCode;
 	}
 
 	@Override

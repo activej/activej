@@ -323,8 +323,9 @@ public final class Context {
 				methodName,
 				arguments);
 			if (foundMethod == null) {
-				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
-												   Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+				throw new IllegalArgumentException(
+					"Method not found: " + ownerType.getClassName() + '#' + methodName +
+					Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 			}
 			g.invokeVirtual(ownerType, foundMethod);
 		} else {
@@ -336,8 +337,9 @@ public final class Context {
 				methodName,
 				arguments);
 			if (foundMethod == null) {
-				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
-												   Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+				throw new IllegalArgumentException(
+					"Method not found: " + ownerType.getClassName() + '#' + methodName +
+					Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 			}
 			invokeVirtualOrInterface(this, ownerType, foundMethod);
 		}
@@ -370,8 +372,9 @@ public final class Context {
 				arguments);
 		}
 		if (foundMethod == null) {
-			throw new IllegalArgumentException("Static method not found: " + ownerType.getClassName() + '.' + methodName +
-											   Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+			throw new IllegalArgumentException(
+				"Static method not found: " + ownerType.getClassName() + '.' + methodName +
+				Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
 		g.invokeStatic(ownerType, foundMethod);
 		return foundMethod.getReturnType();
@@ -398,8 +401,9 @@ public final class Context {
 			"<init>",
 			arguments);
 		if (foundMethod == null) {
-			throw new IllegalArgumentException("Constructor not found:" + ownerType.getClassName() +
-											   Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+			throw new IllegalArgumentException(
+				"Constructor not found:" + ownerType.getClassName() +
+				Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
 		g.invokeConstructor(ownerType, foundMethod);
 		return ownerType;
@@ -414,8 +418,9 @@ public final class Context {
 			"<init>",
 			argumentClasses);
 		if (foundMethod == null) {
-			throw new IllegalArgumentException("Parent constructor not found: " + classGenerator.superclass.getSimpleName() +
-											   " with arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
+			throw new IllegalArgumentException(
+				"Parent constructor not found: " + classGenerator.superclass.getSimpleName() +
+				" with arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 		}
 		g.invokeConstructor(getType(classGenerator.superclass), foundMethod);
 
@@ -441,10 +446,11 @@ public final class Context {
 			methodName,
 			argumentClasses);
 		if (foundMethod == null) {
-			throw new IllegalArgumentException("Parent method of " + classGenerator.superclass.getSimpleName() +
-											   " with name'" + methodName +
-											   "' and arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")) +
-											   " not found");
+			throw new IllegalArgumentException(
+				"Parent method of " + classGenerator.superclass.getSimpleName() +
+				" with name'" + methodName +
+				"' and arguments " + Arrays.stream(argumentClasses).map(SelfOrClass::toString).collect(joining(",", "(", ")")) +
+				" not found");
 		}
 		String typeName = getType(classGenerator.superclass).getInternalName();
 		g.visitMethodInsn(Opcodes.INVOKESPECIAL, typeName, methodName, method.getDescriptor(), false);

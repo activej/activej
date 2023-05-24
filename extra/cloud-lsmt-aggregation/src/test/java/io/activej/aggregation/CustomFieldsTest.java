@@ -69,15 +69,16 @@ public class CustomFieldsTest {
 
 		@Override
 		public String toString() {
-			return "QueryResult{" +
-				   "siteId=" + siteId +
-				   ", eventCount=" + eventCount +
-				   ", sumRevenue=" + sumRevenue +
-				   ", minRevenue=" + minRevenue +
-				   ", maxRevenue=" + maxRevenue +
-				   ", uniqueUserIds=" + uniqueUserIds +
-				   ", estimatedUniqueUserIdCount=" + estimatedUniqueUserIdCount +
-				   '}';
+			return
+				"QueryResult{" +
+				"siteId=" + siteId +
+				", eventCount=" + eventCount +
+				", sumRevenue=" + sumRevenue +
+				", minRevenue=" + minRevenue +
+				", maxRevenue=" + maxRevenue +
+				", uniqueUserIds=" + uniqueUserIds +
+				", estimatedUniqueUserIdCount=" + estimatedUniqueUserIdCount +
+				'}';
 		}
 	}
 

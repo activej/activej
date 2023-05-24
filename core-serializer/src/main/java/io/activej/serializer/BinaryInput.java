@@ -102,85 +102,49 @@ public final class BinaryInput {
 	}
 
 	public int readInt() {
-		//noinspection PointlessBitwiseExpression
-		int result = 0 |
-					 (0 |
-					  (array[pos] & 0xFF) << 24 |
-					  (array[pos + 1] & 0xFF) << 16
-					 ) |
-					 (0 |
-					  (array[pos + 2] & 0xFF) << 8 |
-					  (array[pos + 3] & 0xFF)
-					 );
+		int result =
+			(array[pos] & 0xFF) << 24 |
+			(array[pos + 1] & 0xFF) << 16 |
+			(array[pos + 2] & 0xFF) << 8 |
+			array[pos + 3] & 0xFF;
 		pos += 4;
 		return result;
 	}
 
 	public int readIntLE() {
-		//noinspection PointlessBitwiseExpression
-		int result = 0 |
-					 (0 |
-					  (array[pos] & 0xFF) |
-					  (array[pos + 1] & 0xFF) << 8
-					 ) |
-					 (0 |
-					  (array[pos + 2] & 0xFF) << 16 |
-					  (array[pos + 3] & 0xFF) << 24
-					 );
+		int result =
+			(array[pos] & 0xFF) |
+			(array[pos + 1] & 0xFF) << 8 |
+			(array[pos + 2] & 0xFF) << 16 |
+			(array[pos + 3] & 0xFF) << 24;
 		pos += 4;
 		return result;
 	}
 
 	public long readLong() {
-		//noinspection PointlessBitwiseExpression
-		long result = 0 |
-					  (0 |
-					   (0 |
-						(long) (array[pos] & 0xFF) << 56 |
-						(long) (array[pos + 1] & 0xFF) << 48
-					   ) |
-					   (0 |
-						(long) (array[pos + 2] & 0xFF) << 40 |
-						(long) (array[pos + 3] & 0xFF) << 32
-					   )
-					  ) |
-					  (0 |
-					   (0 |
-						(long) (array[pos + 4] & 0xFF) << 24 |
-						(array[pos + 5] & 0xFF) << 16
-					   ) |
-					   (0 |
-						(array[pos + 6] & 0xFF) << 8 |
-						(array[pos + 7] & 0xFF)
-					   )
-					  );
+		long result =
+			(long) (array[pos] & 0xFF) << 56 |
+			(long) (array[pos + 1] & 0xFF) << 48 |
+			(long) (array[pos + 2] & 0xFF) << 40 |
+			(long) (array[pos + 3] & 0xFF) << 32 |
+			(long) (array[pos + 4] & 0xFF) << 24 |
+			(long) (array[pos + 5] & 0xFF) << 16 |
+			(long) (array[pos + 6] & 0xFF) << 8 |
+			(long) (array[pos + 7] & 0xFF);
 		pos += 8;
 		return result;
 	}
 
 	public long readLongLE() {
-		//noinspection PointlessBitwiseExpression
-		long result = 0 |
-					  (0 |
-					   (0 |
-						(array[pos] & 0xFF) |
-						(array[pos + 1] & 0xFF) << 8
-					   ) |
-					   (0 |
-						(array[pos + 2] & 0xFF) << 16 |
-						(long) (array[pos + 3] & 0xFF) << 24
-					   )
-					  ) |
-					  (0 |
-					   (0 |
-						(long) (array[pos + 4] & 0xFF) << 32 |
-						(long) (array[pos + 5] & 0xFF) << 40
-					   ) |
-					   (0 |
-						(long) (array[pos + 6] & 0xFF) << 48 |
-						(long) (array[pos + 7] & 0xFF) << 56
-					   )
-					  );
+		long result =
+			(long) (array[pos] & 0xFF) |
+			(long) (array[pos + 1] & 0xFF) << 8 |
+			(long) (array[pos + 2] & 0xFF) << 16 |
+			(long) (array[pos + 3] & 0xFF) << 24 |
+			(long) (array[pos + 4] & 0xFF) << 32 |
+			(long) (array[pos + 5] & 0xFF) << 40 |
+			(long) (array[pos + 6] & 0xFF) << 48 |
+			(long) (array[pos + 7] & 0xFF) << 56;
 		pos += 8;
 		return result;
 	}

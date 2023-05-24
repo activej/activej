@@ -40,9 +40,10 @@ public final class Lt implements WherePredicate {
 
 	@Override
 	public String toString() {
-		return "Lt[" +
-			   "left=" + left + ", " +
-			   "right=" + right + ']';
+		return
+			"Lt[" +
+			"left=" + left + ", " +
+			"right=" + right + ']';
 	}
 
 }

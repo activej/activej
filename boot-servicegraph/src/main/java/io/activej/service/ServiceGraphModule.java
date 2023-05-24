@@ -262,8 +262,9 @@ public final class ServiceGraphModule extends AbstractModule {
 				return false;
 			}
 			ServiceKey other = (ServiceKey) o;
-			return workerPool == other.workerPool &&
-				   key.equals(other.key);
+			return
+				workerPool == other.workerPool &&
+				key.equals(other.key);
 		}
 
 		@Override
@@ -613,8 +614,9 @@ public final class ServiceGraphModule extends AbstractModule {
 				serviceAdapter = (ServiceAdapter<T>) registeredServiceAdapters.get(foundRegisteredClasses.get(0));
 			}
 			if (foundRegisteredClasses.size() > 1) {
-				throw new IllegalArgumentException("Ambiguous services found for " + instanceClass +
-												   " : " + foundRegisteredClasses + ". Use register() methods to specify service.");
+				throw new IllegalArgumentException(
+					"Ambiguous services found for " + instanceClass +
+					" : " + foundRegisteredClasses + ". Use register() methods to specify service.");
 			}
 		}
 		return serviceAdapter;

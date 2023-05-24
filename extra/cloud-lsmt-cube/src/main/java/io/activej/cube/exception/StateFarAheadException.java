@@ -39,7 +39,8 @@ public final class StateFarAheadException extends Exception {
 
 	@Override
 	public String getMessage() {
-		return "State is far ahead of starting revision " + startingRevision +
-			   ", missing revisions: " + missingRevisions;
+		return
+			"State is far ahead of starting revision " + startingRevision +
+			", missing revisions: " + missingRevisions;
 	}
 }

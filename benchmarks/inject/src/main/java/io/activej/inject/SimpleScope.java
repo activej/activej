@@ -13,10 +13,11 @@ import static com.google.common.base.Preconditions.checkState;
 public class SimpleScope implements com.google.inject.Scope {
 	private static final Provider<Object> SEEDED_KEY_PROVIDER =
 		() -> {
-			throw new IllegalStateException("If you got here then it means that" +
-											" your code asked for scoped object which should have been" +
-											" explicitly seeded in this scope by calling" +
-											" SimpleScope.seed(), but was not.");
+			throw new IllegalStateException(
+				"If you got here then it means that" +
+				" your code asked for scoped object which should have been" +
+				" explicitly seeded in this scope by calling" +
+				" SimpleScope.seed(), but was not.");
 		};
 	private static final ThreadLocal<Map<Key<?>, Object>> THREAD_LOCAL = new ThreadLocal<>();
 
@@ -32,8 +33,9 @@ public class SimpleScope implements com.google.inject.Scope {
 
 	public <T> void seed(Key<T> key, T value) {
 		Map<Key<?>, Object> scopedObjects = getScopedObjectMap(key);
-		checkState(!scopedObjects.containsKey(key), "A value for the key %s was " +
-													"already seeded in this scope. Old value: %s New value: %s", key,
+		checkState(!scopedObjects.containsKey(key),
+			"A value for the key %s was " +
+			"already seeded in this scope. Old value: %s New value: %s", key,
 			scopedObjects.get(key), value);
 		scopedObjects.put(key, value);
 	}
@@ -66,8 +68,9 @@ public class SimpleScope implements com.google.inject.Scope {
 	private <T> Map<Key<?>, Object> getScopedObjectMap(Key<T> key) {
 		Map<Key<?>, Object> scopedObjects = THREAD_LOCAL.get();
 		if (scopedObjects == null) {
-			throw new OutOfScopeException("Cannot access " + key
-										  + " outside of a scoping block");
+			throw new OutOfScopeException(
+				"Cannot access " + key
+				+ " outside of a scoping block");
 		}
 		return scopedObjects;
 	}

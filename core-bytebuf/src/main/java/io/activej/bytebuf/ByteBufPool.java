@@ -149,12 +149,13 @@ public final class ByteBufPool {
 
 		@Override
 		public String toString() {
-			return "{" +
-				   "size=" + size +
-				   ", timestamp=" + timestamp +
-				   ", thread=" + thread +
-				   ", stackTrace=" + stackTrace +
-				   '}';
+			return
+				"{" +
+				"size=" + size +
+				", timestamp=" + timestamp +
+				", thread=" + thread +
+				", stackTrace=" + stackTrace +
+				'}';
 		}
 	}
 
@@ -252,16 +253,18 @@ public final class ByteBufPool {
 		int slab = 32 - numberOfLeadingZeros(buf.array.length - 1);
 		ByteBufConcurrentQueue queue = slabs[slab];
 		queue.clear();
-		return new AssertionError("Attempt to use recycled ByteBuf" +
-								  (REGISTRY ? ByteBufPool.getByteBufTrace(buf) : ""));
+		return new AssertionError(
+			"Attempt to use recycled ByteBuf" +
+			(REGISTRY ? ByteBufPool.getByteBufTrace(buf) : ""));
 	}
 
 	static String getByteBufTrace(ByteBuf buf) {
 		Entry allocated = allocateRegistry.get(buf);
 		Entry recycled = recycleRegistry.get(buf);
 		if (allocated == null && recycled == null) return "";
-		return "\nAllocated: " + allocated +
-			   "\nRecycled: " + recycled;
+		return
+			"\nAllocated: " + allocated +
+			"\nRecycled: " + recycled;
 	}
 
 	/**
@@ -537,17 +540,19 @@ public final class ByteBufPool {
 				long slabSize = idx == 32 ? 0 : 1L << idx;
 				ByteBufConcurrentQueue slab = slabs[idx];
 				int count = slab.size();
-				String slabInfo = slabSize + "," +
-								  (STATS ? created[idx] : "-") + "," +
-								  (STATS ? reused[idx] : "-") + "," +
-								  count + "," +
-								  slabSize * count / 1024;
+				String slabInfo =
+					slabSize + "," +
+					(STATS ? created[idx] : "-") + "," +
+					(STATS ? reused[idx] : "-") + "," +
+					count + "," +
+					slabSize * count / 1024;
 				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
-					slabInfo += "," + slab.realMin.get() + "," +
-								String.format("%.1f", slabStat.estimatedMin) + "," +
-								String.format("%.1f", slabStat.estimatedError) + "," +
-								slabStat.evictedTotal;
+					slabInfo +=
+						"," + slab.realMin.get() + "," +
+						String.format("%.1f", slabStat.estimatedMin) + "," +
+						String.format("%.1f", slabStat.estimatedError) + "," +
+						slabStat.evictedTotal;
 				}
 
 				result.add(slabInfo);
@@ -581,13 +586,14 @@ public final class ByteBufPool {
 
 		@Override
 		public String toString() {
-			return "SlabStats{" +
-				   "estimatedMin=" + estimatedMin +
-				   ", estimatedError=" + estimatedError +
-				   ", evictedTotal=" + evictedTotal +
-				   ", evictedLast=" + evictedLast +
-				   ", evictedMax=" + evictedMax +
-				   '}';
+			return
+				"SlabStats{" +
+				"estimatedMin=" + estimatedMin +
+				", estimatedError=" + estimatedError +
+				", evictedTotal=" + evictedTotal +
+				", evictedLast=" + evictedLast +
+				", evictedMax=" + evictedMax +
+				'}';
 		}
 	}
 

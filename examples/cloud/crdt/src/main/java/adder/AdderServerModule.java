@@ -54,10 +54,11 @@ public final class AdderServerModule extends AbstractModule {
 
 				return seqExecutor.execute(userId, () -> map.get(userId)
 					.then(state -> {
-						float newSum = request.delta() +
-									   (state == null ?
-										   0 :
-										   state.localSum());
+						float newSum =
+							request.delta() +
+							(state == null ?
+								0 :
+								state.localSum());
 
 						return writeAheadLog.put(userId, DetailedSumsCrdtState.of(partitionId.toString(), newSum))
 							.then(() -> map.put(userId, SimpleSumsCrdtState.of(newSum)))

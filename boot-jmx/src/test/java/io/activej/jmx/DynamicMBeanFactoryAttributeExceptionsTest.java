@@ -36,11 +36,12 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
-												 "that implements JmxStats interface " +
-												 "and contains static factory \"createAccumulator()\" method " +
-												 "or static factory \"create()\" method " +
-												 "or public no-arg constructor"));
+			assertTrue(e.getMessage().startsWith(
+				"Return type of JmxStats attribute must be a concrete class " +
+				"that implements JmxStats interface " +
+				"and contains static factory \"createAccumulator()\" method " +
+				"or static factory \"create()\" method " +
+				"or public no-arg constructor"));
 		}
 	}
 
@@ -53,11 +54,12 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
-												 "that implements JmxStats interface " +
-												 "and contains static factory \"createAccumulator()\" method " +
-												 "or static factory \"create()\" method " +
-												 "or public no-arg constructor"));
+			assertTrue(e.getMessage().startsWith(
+				"Return type of JmxStats attribute must be a concrete class " +
+				"that implements JmxStats interface " +
+				"and contains static factory \"createAccumulator()\" method " +
+				"or static factory \"create()\" method " +
+				"or public no-arg constructor"));
 		}
 	}
 
@@ -70,11 +72,12 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertTrue(e.getMessage().startsWith("Return type of JmxStats attribute must be a concrete class " +
-												 "that implements JmxStats interface " +
-												 "and contains static factory \"createAccumulator()\" method " +
-												 "or static factory \"create()\" method " +
-												 "or public no-arg constructor"));
+			assertTrue(e.getMessage().startsWith(
+				"Return type of JmxStats attribute must be a concrete class " +
+				"that implements JmxStats interface " +
+				"and contains static factory \"createAccumulator()\" method " +
+				"or static factory \"create()\" method " +
+				"or public no-arg constructor"));
 		}
 	}
 

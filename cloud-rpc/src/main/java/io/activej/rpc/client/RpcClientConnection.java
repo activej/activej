@@ -436,11 +436,12 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		int active = activeRequests.size();
 		long failed = connectionStats.getFailedRequests().getTotalCount();
 
-		return "RpcClientConnection{" +
-			   "address=" + address +
-			   ", active=" + active +
-			   ", successes=" + (connectionStats.getTotalRequests().getTotalCount() - failed - active) +
-			   ", failures=" + failed +
-			   '}';
+		return
+			"RpcClientConnection{" +
+			"address=" + address +
+			", active=" + active +
+			", successes=" + (connectionStats.getTotalRequests().getTotalCount() - failed - active) +
+			", failures=" + failed +
+			'}';
 	}
 }

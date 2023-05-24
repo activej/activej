@@ -33,8 +33,9 @@ public final class RedisTransactionExample {
 						for (int i = 0; i < N; i++) {
 							String element = String.valueOf(i);
 							connection.cmd(RedisRequest.of("RPUSH", LIST_KEY, element), RedisResponse.LONG)
-								.whenResult(size -> System.out.println("Added element '" +
-																	   element + "' to the list, total size of list is " + size));
+								.whenResult(size -> System.out.println(
+									"Added element '" +
+									element + "' to the list, total size of list is " + size));
 						}
 
 						System.out.println("Wait some time before committing transaction...");

@@ -796,9 +796,7 @@ public class ExpressionTest {
 
 		@Override
 		public String toString() {
-			return "TestInterfaceImpl{" +
-				   "value=" + value +
-				   '}';
+			return "TestInterfaceImpl{value=" + value + '}';
 		}
 	}
 

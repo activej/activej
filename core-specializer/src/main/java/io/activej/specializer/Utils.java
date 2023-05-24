@@ -101,8 +101,9 @@ public class Utils {
 				Class<?> compiledBindingClass = Class.forName("io.activej.inject.impl.CompiledBinding");
 				this.specializer = Specializer.create(Thread.currentThread().getContextClassLoader())
 //						.withBytecodeSaveDir(Paths.get("tmp").toAbsolutePath())
-					.withPredicate(cls -> compiledBindingClass.isAssignableFrom(cls) &&
-										  Arrays.stream(cls.getDeclaredFields()).map(Field::getType).noneMatch(Class::isAnonymousClass));
+					.withPredicate(cls ->
+						compiledBindingClass.isAssignableFrom(cls) &&
+						Arrays.stream(cls.getDeclaredFields()).map(Field::getType).noneMatch(Class::isAnonymousClass));
 			} catch (ClassNotFoundException e) {
 				throw new IllegalStateException("Can not access ActiveJ Inject", e);
 			}

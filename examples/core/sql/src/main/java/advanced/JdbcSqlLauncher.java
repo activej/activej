@@ -49,10 +49,10 @@ public final class JdbcSqlLauncher extends Launcher {
 		try (Connection connection = dataSource.getConnection();
 			 Statement statement = connection.createStatement()
 		) {
-			statement.executeUpdate("" +
-									"INSERT INTO " + TABLE_TO + " " +
-									"SELECT * " +
-									"FROM " + TABLE_FROM);
+			statement.executeUpdate(
+				"INSERT INTO " + TABLE_TO + " " +
+				"SELECT * " +
+				"FROM " + TABLE_FROM);
 		}
 	}
 

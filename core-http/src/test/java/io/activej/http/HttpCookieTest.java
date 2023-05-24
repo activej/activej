@@ -62,8 +62,9 @@ public class HttpCookieTest {
 			.withExtension("Alhambra site")
 			.build();
 
-		String expected = "name=value; Expires=Thu, 19 Apr 2001 04:25:21 GMT; Max-Age=10; Domain=www.google.com; " +
-						  "Path=/test; Secure; HttpOnly; SameSite=None; Alhambra site";
+		String expected =
+			"name=value; Expires=Thu, 19 Apr 2001 04:25:21 GMT; Max-Age=10; Domain=www.google.com; " +
+			"Path=/test; Secure; HttpOnly; SameSite=None; Alhambra site";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);
 		cookie.renderFull(buf);
 		assertEquals(expected, ByteBufStrings.asAscii(buf));

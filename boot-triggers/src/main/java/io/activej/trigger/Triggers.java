@@ -58,8 +58,9 @@ public final class Triggers implements ConcurrentJmxBean {
 			TriggerResult suppressedTriggerResult = suppressedResults.get(trigger);
 			TriggerResult triggerResult = triggerWithResult.triggerResult();
 
-			return triggerResult.getCount() > suppressedTriggerResult.getCount() ||
-				   triggerResult.getTimestamp() > suppressedTriggerResult.getTimestamp();
+			return
+				triggerResult.getCount() > suppressedTriggerResult.getCount() ||
+				triggerResult.getTimestamp() > suppressedTriggerResult.getTimestamp();
 		}
 		return true;
 	};

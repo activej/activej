@@ -42,104 +42,116 @@ public class FileDiscoveryServiceTest {
 	private FileDiscoveryService discoveryService;
 	private WatchService watchService;
 
-	private static final byte[] TEST_PARTITIONS_1 = ("[" +
-													 "    {" +
-													 "        \"ids\": [" +
-													 "            {" +
-													 "                \"id\": \"a\"," +
-													 "                \"crdtAddress\": \"localhost:9001\"," +
-													 "                \"rpcAddress\": \"localhost:9051\"" +
-													 "            }," +
-													 "            {" +
-													 "                \"id\": \"b\"," +
-													 "                \"crdtAddress\": \"localhost:9002\"," +
-													 "                \"rpcAddress\": \"localhost:9052\"" +
-													 "            }" +
-													 "        ]," +
-													 "        \"replicaCount\": 2," +
-													 "        \"repartition\": true," +
-													 "        \"active\": true" +
-													 "    }," +
-													 "    {" +
-													 "        \"ids\": [" +
-													 "            {" +
-													 "                \"id\": \"c\"," +
-													 "                \"crdtAddress\": \"localhost:9003\"," +
-													 "                \"rpcAddress\": \"localhost:9053\"" +
-													 "            }" +
-													 "        ]," +
-													 "        \"replicaCount\": 1," +
-													 "        \"repartition\": false," +
-													 "        \"active\": false" +
-													 "    }" +
-													 "]").getBytes(UTF_8);
+	private static final byte[] TEST_PARTITIONS_1 =
+		(
+			"[" +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"a\"," +
+			"                \"crdtAddress\": \"localhost:9001\"," +
+			"                \"rpcAddress\": \"localhost:9051\"" +
+			"            }," +
+			"            {" +
+			"                \"id\": \"b\"," +
+			"                \"crdtAddress\": \"localhost:9002\"," +
+			"                \"rpcAddress\": \"localhost:9052\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 2," +
+			"        \"repartition\": true," +
+			"        \"active\": true" +
+			"    }," +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"c\"," +
+			"                \"crdtAddress\": \"localhost:9003\"," +
+			"                \"rpcAddress\": \"localhost:9053\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 1," +
+			"        \"repartition\": false," +
+			"        \"active\": false" +
+			"    }" +
+			"]"
+		).getBytes(UTF_8);
 
-	private static final byte[] TEST_PARTITIONS_2 = ("[" +
-													 "    {" +
-													 "        \"ids\": [" +
-													 "            {" +
-													 "                \"id\": \"a\"," +
-													 "                \"crdtAddress\": \"localhost:9001\"," +
-													 "                \"rpcAddress\": \"localhost:9051\"" +
-													 "            }" +
-													 "        ]," +
-													 "        \"replicaCount\": 1," +
-													 "        \"repartition\": true," +
-													 "        \"active\": true" +
-													 "    }," +
-													 "    {" +
-													 "        \"ids\": [" +
-													 "            {" +
-													 "                \"id\": \"b\"," +
-													 "                \"crdtAddress\": \"localhost:9002\"," +
-													 "                \"rpcAddress\": \"localhost:9052\"" +
-													 "            }" +
-													 "        ]," +
-													 "        \"replicaCount\": 1," +
-													 "        \"repartition\": false," +
-													 "        \"active\": false" +
-													 "    }" +
-													 "]").getBytes(UTF_8);
+	private static final byte[] TEST_PARTITIONS_2 =
+		(
+			"[" +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"a\"," +
+			"                \"crdtAddress\": \"localhost:9001\"," +
+			"                \"rpcAddress\": \"localhost:9051\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 1," +
+			"        \"repartition\": true," +
+			"        \"active\": true" +
+			"    }," +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"b\"," +
+			"                \"crdtAddress\": \"localhost:9002\"," +
+			"                \"rpcAddress\": \"localhost:9052\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 1," +
+			"        \"repartition\": false," +
+			"        \"active\": false" +
+			"    }" +
+			"]"
+		).getBytes(UTF_8);
 
-	private static final byte[] TEST_PARTITIONS_3 = ("[" +
-													 "    {" +
-													 "        \"ids\": [" +
-													 "            {" +
-													 "                \"id\": \"a\"," +
-													 "                \"crdtAddress\": \"localhost:9001\"," +
-													 "                \"rpcAddress\": \"localhost:9051\"" +
-													 "            }," +
-													 "            {" +
-													 "                \"id\": \"b\"," +
-													 "                \"crdtAddress\": \"localhost:9002\"," +
-													 "                \"rpcAddress\": \"localhost:9052\"" +
-													 "            }" +
-													 "        ]," +
-													 "        \"replicaCount\": 1," +
-													 "        \"repartition\": false," +
-													 "        \"active\": true" +
-													 "    }" +
-													 "]").getBytes(UTF_8);
+	private static final byte[] TEST_PARTITIONS_3 =
+		(
+			"[" +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"a\"," +
+			"                \"crdtAddress\": \"localhost:9001\"," +
+			"                \"rpcAddress\": \"localhost:9051\"" +
+			"            }," +
+			"            {" +
+			"                \"id\": \"b\"," +
+			"                \"crdtAddress\": \"localhost:9002\"," +
+			"                \"rpcAddress\": \"localhost:9052\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 1," +
+			"        \"repartition\": false," +
+			"        \"active\": true" +
+			"    }" +
+			"]"
+		).getBytes(UTF_8);
 
-	private static final byte[] TEST_PARTITIONS_4 = ("[" +
-													 "    {" +
-													 "        \"ids\": [" +
-													 "            {" +
-													 "                \"id\": \"a\"," +
-													 "                \"crdtAddress\": \"localhost:9001\"," +
-													 "                \"rpcAddress\": \"localhost:9051\"" +
-													 "            }," +
-													 "            {" +
-													 "                \"id\": \"d\"," +
-													 "                \"crdtAddress\": \"localhost:9004\"," +
-													 "                \"rpcAddress\": \"localhost:9054\"" +
-													 "            }" +
-													 "        ]," +
-													 "        \"replicaCount\": 1," +
-													 "        \"repartition\": false," +
-													 "        \"active\": true" +
-													 "    }" +
-													 "]").getBytes(UTF_8);
+	private static final byte[] TEST_PARTITIONS_4 =
+		(
+			"[" +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"a\"," +
+			"                \"crdtAddress\": \"localhost:9001\"," +
+			"                \"rpcAddress\": \"localhost:9051\"" +
+			"            }," +
+			"            {" +
+			"                \"id\": \"d\"," +
+			"                \"crdtAddress\": \"localhost:9004\"," +
+			"                \"rpcAddress\": \"localhost:9054\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 1," +
+			"        \"repartition\": false," +
+			"        \"active\": true" +
+			"    }" +
+			"]"
+		).getBytes(UTF_8);
 
 	@Before
 	public void setUp() throws Exception {

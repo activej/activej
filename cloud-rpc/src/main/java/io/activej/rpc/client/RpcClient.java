@@ -647,9 +647,10 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	// jmx
-	@JmxOperation(description = "enable monitoring " +
-								"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-								"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
+	@JmxOperation(description =
+		"enable monitoring " +
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
 	public void startMonitoring() {
 		monitoring = true;
 		for (RpcClientConnection connection : connections.values()) {
@@ -657,9 +658,10 @@ public final class RpcClient extends AbstractNioReactive
 		}
 	}
 
-	@JmxOperation(description = "disable monitoring " +
-								"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
-								"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
+	@JmxOperation(description =
+		"disable monitoring " +
+		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
 	public void stopMonitoring() {
 		monitoring = false;
 		for (RpcClientConnection connection : connections.values()) {
@@ -667,8 +669,9 @@ public final class RpcClient extends AbstractNioReactive
 		}
 	}
 
-	@JmxAttribute(description = "when monitoring is enabled more stats are collected, but it causes more overhead " +
-								"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled)")
+	@JmxAttribute(description =
+		"when monitoring is enabled more stats are collected, but it causes more overhead " +
+		"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled)")
 	public boolean isMonitoring() {
 		return monitoring;
 	}
@@ -721,8 +724,9 @@ public final class RpcClient extends AbstractNioReactive
 		return count;
 	}
 
-	@JmxAttribute(description = "exception that occurred because of protocol error " +
-								"(serialization, deserialization, compression, decompression, etc)")
+	@JmxAttribute(description =
+		"exception that occurred because of protocol error " +
+		"(serialization, deserialization, compression, decompression, etc)")
 	public ExceptionStats getLastProtocolError() {
 		return lastProtocolError;
 	}

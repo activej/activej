@@ -363,8 +363,9 @@ public final class JmxModule extends AbstractModule {
 			for (Object workerInstance : workerInstances) {
 				OptionalDependency<?> optional = (OptionalDependency<?>) workerInstance;
 				if (!optional.isPresent()) {
-					JmxRegistry.logger.info("Pool of instances with key {} was not registered to jmx, " +
-											"because some instances were not present", key);
+					JmxRegistry.logger.info(
+						"Pool of instances with key {} was not registered to jmx, because some instances were not present",
+						key);
 					return;
 				}
 

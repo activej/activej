@@ -225,10 +225,11 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		getChunksToBackupLastStartTimestamp = 0;
 
 		Set<Long> chunkIds = new HashSet<>();
-		try (PreparedStatement stmt = connection.prepareStatement(sql("" +
-																	  "SELECT `id` " +
-																	  "FROM {chunk} " +
-																	  "WHERE `added_revision`<=? AND (`removed_revision` IS NULL OR `removed_revision`>?);"))) {
+		try (PreparedStatement stmt = connection.prepareStatement(sql(
+			"SELECT `id` " +
+			"FROM {chunk} " +
+			"WHERE `added_revision`<=? AND (`removed_revision` IS NULL OR `removed_revision`>?);"))
+		) {
 			stmt.setLong(1, revisionId);
 			stmt.setLong(2, revisionId);
 

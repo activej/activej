@@ -126,8 +126,9 @@ public final class ContentType {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ContentType that = (ContentType) o;
-		return mime.equals(that.mime) &&
-			   Objects.equals(charset, that.charset);
+		return
+			mime.equals(that.mime) &&
+			Objects.equals(charset, that.charset);
 	}
 
 	@Override
