@@ -567,14 +567,15 @@ public class CubeMySqlOTUplinkTest {
 		));
 		await(uplink.push(await(uplink.createProtoCommit(2L, diffs3, 2))));
 
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute("""
-					DELETE FROM $revisionTable
-					WHERE `revision` IN (0,1,2)
-					"""
-					.replace("$revisionTable", CubeMySqlOTUplink.REVISION_TABLE));
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute("""
+				DELETE FROM $revisionTable
+				WHERE `revision` IN (0,1,2)
+				"""
+				.replace("$revisionTable", CubeMySqlOTUplink.REVISION_TABLE));
 		}
 
 		Throwable exception = awaitException(uplink.fetch(1L));

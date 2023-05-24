@@ -16,35 +16,36 @@ public final class Utils {
 	public static void printTables(DataSource dataSource, String... tables) throws SQLException {
 		if (tables.length == 0) return;
 
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				for (String table : tables) {
-					ResultSet resultSet = statement.executeQuery("""
-						SELECT *
-						FROM $table
-						"""
-						.replace("$table", table));
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			for (String table : tables) {
+				ResultSet resultSet = statement.executeQuery("""
+					SELECT *
+					FROM $table
+					"""
+					.replace("$table", table));
 
-					System.out.println('\"' + table + "\":\n" + HORIZONTAL_BORDER);
-					ResultSetMetaData metaData = resultSet.getMetaData();
+				System.out.println('\"' + table + "\":\n" + HORIZONTAL_BORDER);
+				ResultSetMetaData metaData = resultSet.getMetaData();
+				System.out.printf("|%3s|%12s|%12s|%n",
+					metaData.getColumnName(1),
+					metaData.getColumnName(2),
+					metaData.getColumnName(3));
+
+				System.out.println(HORIZONTAL_BORDER);
+
+				boolean isEmpty = true;
+				while (resultSet.next()) {
+					isEmpty = false;
 					System.out.printf("|%3s|%12s|%12s|%n",
-						metaData.getColumnName(1),
-						metaData.getColumnName(2),
-						metaData.getColumnName(3));
-
-					System.out.println(HORIZONTAL_BORDER);
-
-					boolean isEmpty = true;
-					while (resultSet.next()) {
-						isEmpty = false;
-						System.out.printf("|%3s|%12s|%12s|%n",
-							resultSet.getInt(1),
-							resultSet.getString(2),
-							resultSet.getString(3));
-					}
-
-					System.out.println(isEmpty ? '\n' : HORIZONTAL_BORDER + '\n');
+						resultSet.getInt(1),
+						resultSet.getString(2),
+						resultSet.getString(3));
 				}
+
+				System.out.println(isEmpty ? '\n' : HORIZONTAL_BORDER + '\n');
 			}
 		}
 	}
@@ -58,10 +59,11 @@ public final class Utils {
 
 	public static void initialize(DataSource dataSource, String... initScripts) throws SQLException, IOException {
 		for (String initScript : initScripts) {
-			try (Connection connection = dataSource.getConnection()) {
-				try (Statement statement = connection.createStatement()) {
-					statement.execute(new String(loadResource(initScript), UTF_8));
-				}
+			try (
+				Connection connection = dataSource.getConnection();
+				Statement statement = connection.createStatement()
+			) {
+				statement.execute(new String(loadResource(initScript), UTF_8));
 			}
 		}
 	}
@@ -73,9 +75,10 @@ public final class Utils {
 	}
 
 	private static byte[] loadResource(String initScript) throws IOException {
-		try (InputStream stream = Thread.currentThread()
-			.getContextClassLoader()
-			.getResourceAsStream(initScript)
+		try (
+			InputStream stream = Thread.currentThread()
+				.getContextClassLoader()
+				.getResourceAsStream(initScript)
 		) {
 			assert stream != null;
 			return stream.readAllBytes();

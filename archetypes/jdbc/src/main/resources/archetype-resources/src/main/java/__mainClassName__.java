@@ -17,9 +17,10 @@ public final class ${mainClassName} extends Launcher {
 
     @Override
     protected void run() throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT 'Hello, world!'");
+        try (
+            Connection connection = dataSource.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT 'Hello, world!'");
         ) {
             resultSet.next();
             System.out.println(resultSet.getString(1));

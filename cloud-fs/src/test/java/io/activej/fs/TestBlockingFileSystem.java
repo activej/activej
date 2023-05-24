@@ -119,8 +119,10 @@ public final class TestBlockingFileSystem {
 	public void testDoUpload() throws IOException {
 		Path path = clientPath.resolve("c.txt");
 
-		try (InputStream inputStream = new FileInputStream(path.toFile());
-			 OutputStream outputStream = client.upload("1/c.txt")) {
+		try (
+			InputStream inputStream = new FileInputStream(path.toFile());
+			OutputStream outputStream = client.upload("1/c.txt")
+		) {
 			inputStream.transferTo(outputStream);
 		}
 
@@ -204,8 +206,10 @@ public final class TestBlockingFileSystem {
 	public void testDownload() throws IOException {
 		Path outputFile = clientPath.resolve("d.txt");
 
-		try (InputStream inputStream = client.download("2/b/d.txt");
-			 OutputStream outputStream = new FileOutputStream(outputFile.toFile())) {
+		try (
+			InputStream inputStream = client.download("2/b/d.txt");
+			OutputStream outputStream = new FileOutputStream(outputFile.toFile())
+		) {
 			inputStream.transferTo(outputStream);
 		}
 
@@ -365,8 +369,10 @@ public final class TestBlockingFileSystem {
 			outputStream.write("first".getBytes());
 		}
 
-		try (InputStream inputStreamFirst = client.download("first");
-			 InputStream inputStreamSecond = client.download("second")) {
+		try (
+			InputStream inputStreamFirst = client.download("first");
+			InputStream inputStreamSecond = client.download("second")
+		) {
 			assertEquals("testfirst", asString(inputStreamFirst));
 			assertEquals("test", asString(inputStreamSecond));
 		}
@@ -375,8 +381,10 @@ public final class TestBlockingFileSystem {
 			outputStream.write("second".getBytes());
 		}
 
-		try (InputStream inputStreamFirst = client.download("first");
-			 InputStream inputStreamSecond = client.download("second")) {
+		try (
+			InputStream inputStreamFirst = client.download("first");
+			InputStream inputStreamSecond = client.download("second")
+		) {
 			assertEquals("testfirst", asString(inputStreamFirst));
 			assertEquals("testsecond", asString(inputStreamSecond));
 		}
@@ -399,8 +407,10 @@ public final class TestBlockingFileSystem {
 			outputStream.write("first".getBytes());
 		}
 
-		try (InputStream inputStreamFirst = client.download("first");
-			 InputStream inputStreamSecond = client.download("second")) {
+		try (
+			InputStream inputStreamFirst = client.download("first");
+			InputStream inputStreamSecond = client.download("second")
+		) {
 			assertEquals("testfirst", asString(inputStreamFirst));
 			assertEquals("testfirst", asString(inputStreamSecond));
 		}
@@ -409,8 +419,10 @@ public final class TestBlockingFileSystem {
 			outputStream.write("second".getBytes());
 		}
 
-		try (InputStream inputStreamFirst = client.download("first");
-			 InputStream inputStreamSecond = client.download("second")) {
+		try (
+			InputStream inputStreamFirst = client.download("first");
+			InputStream inputStreamSecond = client.download("second")
+		) {
 			assertEquals("testfirstsecond", asString(inputStreamFirst));
 			assertEquals("testfirstsecond", asString(inputStreamSecond));
 		}
@@ -561,8 +573,10 @@ public final class TestBlockingFileSystem {
 
 	@Test
 	public void testCopyWithDeletedTempDir() throws IOException {
-		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
-			 OutputStream outputStream = client.upload("test.txt")) {
+		try (
+			InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
+			OutputStream outputStream = client.upload("test.txt")
+		) {
 			inputStream.transferTo(outputStream);
 		}
 
@@ -582,8 +596,10 @@ public final class TestBlockingFileSystem {
 		Path tempDir = storagePath.resolve(FileSystem.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
-		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
-			 OutputStream outputStream = client.upload("test.txt")) {
+		try (
+			InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
+			OutputStream outputStream = client.upload("test.txt")
+		) {
 			inputStream.transferTo(outputStream);
 			fail();
 		} catch (FileSystemStructureException e) {

@@ -52,9 +52,9 @@ public class ChunkLockerMySqlTest {
 		lockerA.initialize();
 		lockerA.truncateTables();
 
-		try (Connection connection = dataSource.getConnection()) {
-			Set<Long> chunkIds = LongStream.range(0, 100).boxed().collect(toSet());
-			try (PreparedStatement ps = connection.prepareStatement("""
+		try (
+			Connection connection = dataSource.getConnection();
+			PreparedStatement ps = connection.prepareStatement("""
 				INSERT INTO $chunkTable
 					(`id`,
 					`aggregation`,
@@ -66,20 +66,21 @@ public class ChunkLockerMySqlTest {
 				VALUES $values
 				"""
 				.replace("$chunkTable", CHUNK_TABLE)
-				.replace("$values", String.join(",", nCopies(100, "(?,?,?,?,?,?,?)")))
-			)) {
-				int index = 1;
-				for (Long chunkId : chunkIds) {
-					ps.setLong(index++, chunkId);
-					ps.setString(index++, AGGREGATION_ID);
-					ps.setString(index++, "measures");
-					ps.setString(index++, "min key");
-					ps.setString(index++, "max key");
-					ps.setInt(index++, 100);
-					ps.setLong(index++, 1);
-				}
-				ps.executeUpdate();
+				.replace("$values", String.join(",", nCopies(100, "(?,?,?,?,?,?,?)"))))
+		) {
+			Set<Long> chunkIds = LongStream.range(0, 100).boxed().collect(toSet());
+
+			int index = 1;
+			for (Long chunkId : chunkIds) {
+				ps.setLong(index++, chunkId);
+				ps.setString(index++, AGGREGATION_ID);
+				ps.setString(index++, "measures");
+				ps.setString(index++, "min key");
+				ps.setString(index++, "max key");
+				ps.setInt(index++, 100);
+				ps.setLong(index++, 1);
 			}
+			ps.executeUpdate();
 		}
 	}
 
@@ -198,19 +199,19 @@ public class ChunkLockerMySqlTest {
 	}
 
 	private void expireLockedChunk(long chunkId) {
-		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement ps = connection.prepareStatement("""
+		try (
+			Connection connection = dataSource.getConnection();
+			PreparedStatement ps = connection.prepareStatement("""
 				UPDATE `$chunkTable`
 				SET `locked_at` = `locked_at` - INTERVAL ? SECOND
 				WHERE `id` = ?
 				"""
 				.replace("$chunkTable", CHUNK_TABLE))
-			) {
-				ps.setLong(1, DEFAULT_LOCK_TTL.getSeconds() + 1);
-				ps.setString(2, String.valueOf(chunkId));
+		) {
+			ps.setLong(1, DEFAULT_LOCK_TTL.getSeconds() + 1);
+			ps.setString(2, String.valueOf(chunkId));
 
-				assertEquals(1, ps.executeUpdate());
-			}
+			assertEquals(1, ps.executeUpdate());
 		} catch (SQLException exceptions) {
 			throw new AssertionError(exceptions);
 		}

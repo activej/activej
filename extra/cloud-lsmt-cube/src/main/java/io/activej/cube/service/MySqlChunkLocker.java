@@ -124,10 +124,11 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 	public void initialize() throws IOException, SQLException {
 		logger.trace("Initializing tables");
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql(new String(loadInitScript(), UTF_8)));
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute(sql(new String(loadInitScript(), UTF_8)));
 		}
 	}
 
@@ -141,10 +142,11 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 	public void truncateTables() throws SQLException {
 		logger.trace("Truncate tables");
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql("TRUNCATE TABLE {chunk}"));
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute(sql("TRUNCATE TABLE {chunk}"));
 		}
 	}
 

@@ -74,7 +74,10 @@ public final class HttpReactiveWorkerServerTest {
 		injector.getInstance(PrimaryServer.class);
 
 		ServiceGraph serviceGraph = injector.getInstance(ServiceGraph.class);
-		try (Socket socket0 = new Socket(); Socket socket1 = new Socket()) {
+		try (
+			Socket socket0 = new Socket();
+			Socket socket1 = new Socket()
+		) {
 			serviceGraph.startFuture().get();
 
 			InetSocketAddress localhost = new InetSocketAddress("localhost", port);

@@ -237,21 +237,23 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 	}
 
 	private static void execute(DataSource dataSource, String sql) throws SQLException {
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql);
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute(sql);
 		}
 	}
 
 	public void truncateTables() throws SQLException {
 		checkInReactorThread(this);
 		logger.trace("Truncate tables");
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql("TRUNCATE TABLE {diffs}"));
-				statement.execute(sql("TRUNCATE TABLE {revisions}"));
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute(sql("TRUNCATE TABLE {diffs}"));
+			statement.execute(sql("TRUNCATE TABLE {revisions}"));
 		}
 	}
 
@@ -379,21 +381,22 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql("""
+					try (
+						Connection connection = dataSource.getConnection();
+						PreparedStatement ps = connection.prepareStatement(sql("""
 							SELECT `id`
 							FROM {revisions}
 							WHERE `type`='HEAD'
 							"""
-						))) {
-							ResultSet resultSet = ps.executeQuery();
-							Set<Long> result = new HashSet<>();
-							while (resultSet.next()) {
-								long id = resultSet.getLong(1);
-								result.add(id);
-							}
-							return result;
+						))
+					) {
+						ResultSet resultSet = ps.executeQuery();
+						Set<Long> result = new HashSet<>();
+						while (resultSet.next()) {
+							long id = resultSet.getLong(1);
+							result.add(id);
 						}
+						return result;
 					}
 				})
 			.whenComplete(promiseGetHeads.recordStats())
@@ -405,19 +408,19 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql("""
+					try (
+						Connection connection = dataSource.getConnection();
+						PreparedStatement ps = connection.prepareStatement(sql("""
 							SELECT 1
 							FROM {revisions}
 							WHERE {revisions}.`id`=?
 								AND {revisions}.`type` IN ('HEAD', 'INNER')
 							"""))
-						) {
-							ps.setLong(1, revisionId);
-							ResultSet resultSet = ps.executeQuery();
+					) {
+						ps.setLong(1, revisionId);
+						ResultSet resultSet = ps.executeQuery();
 
-							return resultSet.next();
-						}
+						return resultSet.next();
 					}
 				})
 			.whenComplete(promiseHasCommit.recordStats())
@@ -483,18 +486,18 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql("""
+					try (
+						Connection connection = dataSource.getConnection();
+						PreparedStatement ps = connection.prepareStatement(sql("""
 							SELECT `snapshot` IS NOT NULL
 							FROM {revisions}
 							WHERE `id` = ?
-							"""
-						))) {
-							ps.setLong(1, revisionId);
-							ResultSet resultSet = ps.executeQuery();
-							if (!resultSet.next()) return false;
-							return resultSet.getBoolean(1);
-						}
+							"""))
+					) {
+						ps.setLong(1, revisionId);
+						ResultSet resultSet = ps.executeQuery();
+						if (!resultSet.next()) return false;
+						return resultSet.getBoolean(1);
 					}
 				})
 			.whenComplete(promiseHasSnapshot.recordStats())
@@ -506,22 +509,22 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql("""
+					try (
+						Connection connection = dataSource.getConnection();
+						PreparedStatement ps = connection.prepareStatement(sql("""
 							SELECT `snapshot`
 							FROM {revisions} WHERE `id`=?
-							"""
-						))) {
-							ps.setLong(1, revisionId);
-							ResultSet resultSet = ps.executeQuery();
+							"""))
+					) {
+						ps.setLong(1, revisionId);
+						ResultSet resultSet = ps.executeQuery();
 
-							if (!resultSet.next()) return Optional.<List<D>>empty();
+						if (!resultSet.next()) return Optional.<List<D>>empty();
 
-							String str = resultSet.getString(1);
-							if (str == null) return Optional.<List<D>>empty();
-							List<? extends D> snapshot = fromJson(str);
-							return Optional.of(otSystem.squash(snapshot));
-						}
+						String str = resultSet.getString(1);
+						if (str == null) return Optional.<List<D>>empty();
+						List<? extends D> snapshot = fromJson(str);
+						return Optional.of(otSystem.squash(snapshot));
 					}
 				})
 			.whenComplete(promiseLoadSnapshot.recordStats())
@@ -613,18 +616,19 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		checkNotNull(tableBackup, "Cannot backup when backup table is null");
 		return Promise.ofBlocking(executor,
 				() -> {
-					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement statement = connection.prepareStatement(sql("""
+					try (
+						Connection connection = dataSource.getConnection();
+						PreparedStatement statement = connection.prepareStatement(sql("""
 							INSERT INTO {backup}(`id`, `epoch`, `level`, `snapshot`)
 							VALUES (?, ?, ?, ?)
 							"""
-						))) {
-							statement.setLong(1, commit.getId());
-							statement.setInt(2, commit.getEpoch());
-							statement.setLong(3, commit.getLevel());
-							statement.setString(4, toJson(snapshot));
-							statement.executeUpdate();
-						}
+						))
+					) {
+						statement.setLong(1, commit.getId());
+						statement.setInt(2, commit.getEpoch());
+						statement.setLong(3, commit.getLevel());
+						statement.setString(4, toJson(snapshot));
+						statement.executeUpdate();
 					}
 				})
 			.whenComplete(toLogger(logger, thisMethod(), commit.getId(), snapshot));

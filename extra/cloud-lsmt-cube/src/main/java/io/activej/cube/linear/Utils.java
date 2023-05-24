@@ -45,10 +45,11 @@ public final class Utils {
 	}
 
 	static void executeSqlScript(DataSource dataSource, String sql) throws SQLException {
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql);
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute(sql);
 		}
 	}
 

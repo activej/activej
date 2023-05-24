@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+import static io.activej.dataflow.jdbc.driver.Driver.CONNECT_STRING_PREFIX;
 import static org.junit.Assert.assertTrue;
 
 public class CalciteJDBCTest extends AbstractCalciteTest {
@@ -84,7 +85,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	@Override
 	protected QueryResult query(String sql) {
 		try (
-			Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port);
+			Connection connection = DriverManager.getConnection(CONNECT_STRING_PREFIX + "http://localhost:" + port);
 			Statement statement = connection.createStatement();
 			ResultSet resultSet = statement.executeQuery(sql)
 		) {
@@ -96,12 +97,13 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 
 	@Override
 	protected QueryResult queryPrepared(String sql, ParamsSetter setter) {
-		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port)) {
-			try (PreparedStatement statement = connection.prepareStatement(sql)) {
-				setter.setValues(statement);
-				try (ResultSet resultSet = statement.executeQuery()) {
-					return toQueryResult(resultSet);
-				}
+		try (
+			Connection connection = DriverManager.getConnection(CONNECT_STRING_PREFIX + "http://localhost:" + port);
+			PreparedStatement statement = connection.prepareStatement(sql)
+		) {
+			setter.setValues(statement);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				return toQueryResult(resultSet);
 			}
 		} catch (Exception e) {
 			throw new AssertionError(e);
@@ -111,13 +113,14 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	@Override
 	protected List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters) {
 		List<QueryResult> results = new ArrayList<>(paramsSetters.length);
-		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port)) {
-			try (PreparedStatement statement = connection.prepareStatement(sql)) {
-				for (ParamsSetter setter : paramsSetters) {
-					setter.setValues(statement);
-					try (ResultSet resultSet = statement.executeQuery()) {
-						results.add(toQueryResult(resultSet));
-					}
+		try (
+			Connection connection = DriverManager.getConnection(CONNECT_STRING_PREFIX + "http://localhost:" + port);
+			PreparedStatement statement = connection.prepareStatement(sql)
+		) {
+			for (ParamsSetter setter : paramsSetters) {
+				setter.setValues(statement);
+				try (ResultSet resultSet = statement.executeQuery()) {
+					results.add(toQueryResult(resultSet));
 				}
 			}
 		} catch (Exception e) {

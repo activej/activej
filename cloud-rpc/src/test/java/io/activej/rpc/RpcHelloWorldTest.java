@@ -156,8 +156,10 @@ public final class RpcHelloWorldTest {
 
 	@Test
 	public void testBlocking2Clients() throws Exception {
-		try (BlockingHelloClient client1 = new BlockingHelloClient(Reactor.getCurrentReactor());
-			 BlockingHelloClient client2 = new BlockingHelloClient(Reactor.getCurrentReactor())) {
+		try (
+			BlockingHelloClient client1 = new BlockingHelloClient(Reactor.getCurrentReactor());
+			BlockingHelloClient client2 = new BlockingHelloClient(Reactor.getCurrentReactor())
+		) {
 			assertEquals("Hello, John!", client2.hello("John"));
 			assertEquals("Hello, World!", client1.hello("World"));
 		} finally {
@@ -181,8 +183,10 @@ public final class RpcHelloWorldTest {
 	public void testAsync2Clients() throws Exception {
 		int requestCount = 10;
 
-		try (BlockingHelloClient client1 = new BlockingHelloClient(Reactor.getCurrentReactor());
-			 BlockingHelloClient client2 = new BlockingHelloClient(Reactor.getCurrentReactor())) {
+		try (
+			BlockingHelloClient client1 = new BlockingHelloClient(Reactor.getCurrentReactor());
+			BlockingHelloClient client2 = new BlockingHelloClient(Reactor.getCurrentReactor())
+		) {
 			CountDownLatch latch = new CountDownLatch(2 * requestCount);
 
 			for (int i = 0; i < requestCount; i++) {

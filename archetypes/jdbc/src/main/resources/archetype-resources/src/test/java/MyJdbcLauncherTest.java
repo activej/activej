@@ -4,7 +4,7 @@ import org.junit.Test;
 
 public class MyJdbcLauncherTest {
     @Test
-    public void testInjector(){
+    public void testInjector() {
         new MyJdbcLauncher().testInjector();
     }
 }

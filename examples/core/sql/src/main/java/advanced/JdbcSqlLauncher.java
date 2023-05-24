@@ -46,8 +46,9 @@ public final class JdbcSqlLauncher extends Launcher {
 	protected void run() throws SQLException {
 		logger.info("Copying data from table \"{}\" to table \"{}\"...", TABLE_FROM, TABLE_TO);
 
-		try (Connection connection = dataSource.getConnection();
-			 Statement statement = connection.createStatement()
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
 		) {
 			statement.executeUpdate("""
 				INSERT INTO $to

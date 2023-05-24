@@ -192,49 +192,49 @@ public class CubeBackupControllerTest {
 	}
 
 	private void assertBackups(long... backupIds) {
-		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement("""
+		try (
+			Connection connection = dataSource.getConnection();
+			PreparedStatement stmt = connection.prepareStatement("""
 				SELECT `revision`
 				FROM $backupRevisionTable
 				"""
 				.replace("$backupRevisionTable", CubeBackupController.BACKUP_REVISION_TABLE))
-			) {
-				ResultSet resultSet = stmt.executeQuery();
+		) {
+			ResultSet resultSet = stmt.executeQuery();
 
-				Set<Long> ids = new HashSet<>();
-				while (resultSet.next()) {
-					ids.add(resultSet.getLong(1));
-				}
-
-				assertEquals(Arrays.stream(backupIds).boxed().collect(toSet()), ids);
+			Set<Long> ids = new HashSet<>();
+			while (resultSet.next()) {
+				ids.add(resultSet.getLong(1));
 			}
+
+			assertEquals(Arrays.stream(backupIds).boxed().collect(toSet()), ids);
 		} catch (SQLException e) {
 			throw new AssertionError(e);
 		}
 	}
 
 	private void assertChunkIds(long backupId, Set<Long> chunkIds) {
-		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement("""
+		try (
+			Connection connection = dataSource.getConnection();
+			PreparedStatement stmt = connection.prepareStatement("""
 				SELECT `id`, `added_revision` <= `backup_id`
 				FROM $backupChunkTable
 				WHERE `backup_id` = ?\s
 				"""
 				.replace("$backupChunkTable", CubeBackupController.BACKUP_CHUNK_TABLE))
-			) {
-				stmt.setLong(1, backupId);
+		) {
+			stmt.setLong(1, backupId);
 
-				ResultSet resultSet = stmt.executeQuery();
+			ResultSet resultSet = stmt.executeQuery();
 
-				Set<Long> ids = new HashSet<>();
-				while (resultSet.next()) {
-					assertTrue(resultSet.getBoolean(2));
+			Set<Long> ids = new HashSet<>();
+			while (resultSet.next()) {
+				assertTrue(resultSet.getBoolean(2));
 
-					ids.add(resultSet.getLong(1));
-				}
-
-				assertEquals(chunkIds, ids);
+				ids.add(resultSet.getLong(1));
 			}
+
+			assertEquals(chunkIds, ids);
 		} catch (SQLException e) {
 			throw new AssertionError(e);
 		}
@@ -251,32 +251,32 @@ public class CubeBackupControllerTest {
 	}
 
 	private void assertPositions(long backupId, Map<String, LogPosition> positions) {
-		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement("""
+		try (
+			Connection connection = dataSource.getConnection();
+			PreparedStatement stmt = connection.prepareStatement("""
 				SELECT `partition_id`, `filename`, `remainder`, `position`
 				FROM $backupPositionTable
 				WHERE `backup_id` = ?
 				"""
 				.replace("$backupPositionTable", CubeBackupController.BACKUP_POSITION_TABLE))
-			) {
-				stmt.setLong(1, backupId);
+		) {
+			stmt.setLong(1, backupId);
 
-				ResultSet resultSet = stmt.executeQuery();
+			ResultSet resultSet = stmt.executeQuery();
 
-				Map<String, LogPosition> positionMap = new HashMap<>();
-				while (resultSet.next()) {
-					String partitionId = resultSet.getString(1);
-					String filename = resultSet.getString(2);
-					int remainder = resultSet.getInt(3);
-					long position = resultSet.getLong(4);
+			Map<String, LogPosition> positionMap = new HashMap<>();
+			while (resultSet.next()) {
+				String partitionId = resultSet.getString(1);
+				String filename = resultSet.getString(2);
+				int remainder = resultSet.getInt(3);
+				long position = resultSet.getLong(4);
 
-					LogFile logFile = new LogFile(filename, remainder);
-					LogPosition logPosition = LogPosition.create(logFile, position);
-					assertNull(positionMap.put(partitionId, logPosition));
-				}
-
-				assertEquals(positions, positionMap);
+				LogFile logFile = new LogFile(filename, remainder);
+				LogPosition logPosition = LogPosition.create(logFile, position);
+				assertNull(positionMap.put(partitionId, logPosition));
 			}
+
+			assertEquals(positions, positionMap);
 		} catch (SQLException e) {
 			throw new AssertionError(e);
 		}

@@ -33,21 +33,22 @@ public final class SqlUserDao extends AbstractReactive
 	public Promise<@Nullable User> get(long id) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
-			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement("""
+			try (
+				Connection connection = dataSource.getConnection();
+				PreparedStatement statement = connection.prepareStatement("""
 					SELECT first_name, last_name
 					FROM users WHERE id = ?
-					""")) {
-					statement.setLong(1, id);
-					try (ResultSet resultSet = statement.executeQuery()) {
-						if (!resultSet.next()) {
-							return null;
-						}
-
-						String firstName = resultSet.getString(1);
-						String lastName = resultSet.getString(2);
-						return new User(firstName, lastName);
+					""")
+			) {
+				statement.setLong(1, id);
+				try (ResultSet resultSet = statement.executeQuery()) {
+					if (!resultSet.next()) {
+						return null;
 					}
+
+					String firstName = resultSet.getString(1);
+					String lastName = resultSet.getString(2);
+					return new User(firstName, lastName);
 				}
 			}
 		});
@@ -57,23 +58,24 @@ public final class SqlUserDao extends AbstractReactive
 	public Promise<Map<Long, User>> getAll() {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
-			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement("""
+			try (
+				Connection connection = dataSource.getConnection();
+				PreparedStatement statement = connection.prepareStatement("""
 					SELECT *
 					FROM users
-					""")) {
-					try (ResultSet resultSet = statement.executeQuery()) {
-						Map<Long, User> result = new LinkedHashMap<>();
+					""")
+			) {
+				try (ResultSet resultSet = statement.executeQuery()) {
+					Map<Long, User> result = new LinkedHashMap<>();
 
-						while (resultSet.next()) {
-							long id = resultSet.getLong(1);
-							String firstName = resultSet.getString(2);
-							String lastName = resultSet.getString(3);
+					while (resultSet.next()) {
+						long id = resultSet.getLong(1);
+						String firstName = resultSet.getString(2);
+						String lastName = resultSet.getString(3);
 
-							result.put(id, new User(firstName, lastName));
-						}
-						return result;
+						result.put(id, new User(firstName, lastName));
 					}
+					return result;
 				}
 			}
 		});
@@ -83,16 +85,17 @@ public final class SqlUserDao extends AbstractReactive
 	public Promise<Void> addUser(User user) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
-			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement("""
+			try (
+				Connection connection = dataSource.getConnection();
+				PreparedStatement statement = connection.prepareStatement("""
 					INSERT INTO users(first_name, last_name)
 					VALUES(?, ?)
-					""")) {
-					statement.setString(1, user.firstName());
-					statement.setString(2, user.lastName());
+					""")
+			) {
+				statement.setString(1, user.firstName());
+				statement.setString(2, user.lastName());
 
-					statement.executeUpdate();
-				}
+				statement.executeUpdate();
 			}
 		});
 	}
@@ -101,18 +104,19 @@ public final class SqlUserDao extends AbstractReactive
 	public Promise<Boolean> updateUser(long id, User newUser) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
-			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement("""
+			try (
+				Connection connection = dataSource.getConnection();
+				PreparedStatement statement = connection.prepareStatement("""
 					UPDATE users
 					SET first_name=?, last_name= ?\s
 					WHERE id = ?
-					""")) {
-					statement.setString(1, newUser.firstName());
-					statement.setString(2, newUser.lastName());
-					statement.setLong(3, id);
+					""")
+			) {
+				statement.setString(1, newUser.firstName());
+				statement.setString(2, newUser.lastName());
+				statement.setLong(3, id);
 
-					return statement.executeUpdate() != 0;
-				}
+				return statement.executeUpdate() != 0;
 			}
 		});
 	}
@@ -121,15 +125,16 @@ public final class SqlUserDao extends AbstractReactive
 	public Promise<Boolean> deleteUser(long id) {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
-			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement("""
+			try (
+				Connection connection = dataSource.getConnection();
+				PreparedStatement statement = connection.prepareStatement("""
 					DELETE FROM users
 					WHERE id = ?
-					""")) {
-					statement.setLong(1, id);
+					""")
+			) {
+				statement.setLong(1, id);
 
-					return statement.executeUpdate() != 0;
-				}
+				return statement.executeUpdate() != 0;
 			}
 		});
 	}

@@ -12,13 +12,14 @@ public class TestUtilsTest {
 	@Test
 	public void dataSource() throws IOException, SQLException {
 		DataSource dataSource = TestUtils.dataSource("test.properties");
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute("""
-					SELECT 1;
-					SELECT 2;
-					""");
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute("""
+				SELECT 1;
+				SELECT 2;
+				""");
 		}
 	}
 }

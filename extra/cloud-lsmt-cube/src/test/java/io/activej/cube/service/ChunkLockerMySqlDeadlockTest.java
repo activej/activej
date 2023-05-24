@@ -53,9 +53,9 @@ public class ChunkLockerMySqlDeadlockTest {
 		lockerA.initialize();
 		lockerA.truncateTables();
 
-		try (Connection connection = dataSource.getConnection()) {
-			Set<Long> chunkIds = LongStream.range(0, MAX_CHUNK_ID).boxed().collect(toSet());
-			try (PreparedStatement ps = connection.prepareStatement("""
+		try (
+			Connection connection = dataSource.getConnection();
+			PreparedStatement ps = connection.prepareStatement("""
 				INSERT INTO $chunkTable
 					(`id`,
 					`aggregation`,
@@ -67,17 +67,17 @@ public class ChunkLockerMySqlDeadlockTest {
 				VALUES (?,?,?,?,?,?,?)
 				"""
 				.replace("$chunkTable", CHUNK_TABLE))
-			) {
-				for (Long chunkId : chunkIds) {
-					ps.setLong(1, chunkId);
-					ps.setString(2, AGGREGATION_ID);
-					ps.setString(3, "measures");
-					ps.setString(4, "min key");
-					ps.setString(5, "max key");
-					ps.setInt(6, 100);
-					ps.setLong(7, 1);
-					ps.executeUpdate();
-				}
+		) {
+			Set<Long> chunkIds = LongStream.range(0, MAX_CHUNK_ID).boxed().collect(toSet());
+			for (Long chunkId : chunkIds) {
+				ps.setLong(1, chunkId);
+				ps.setString(2, AGGREGATION_ID);
+				ps.setString(3, "measures");
+				ps.setString(4, "min key");
+				ps.setString(5, "max key");
+				ps.setInt(6, 100);
+				ps.setLong(7, 1);
+				ps.executeUpdate();
 			}
 		}
 	}

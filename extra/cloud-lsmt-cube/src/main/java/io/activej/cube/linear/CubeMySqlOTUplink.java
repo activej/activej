@@ -556,16 +556,17 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	public void truncateTables() throws SQLException {
 		logger.trace("Truncate tables");
-		try (Connection connection = dataSource.getConnection()) {
-			try (Statement statement = connection.createStatement()) {
-				statement.execute(sql("TRUNCATE TABLE {chunk}"));
-				statement.execute(sql("TRUNCATE TABLE {position}"));
-				statement.execute(sql("""
-					DELETE
-					FROM {revision}
-					WHERE `revision`!=0
-					"""));
-			}
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			statement.execute(sql("TRUNCATE TABLE {chunk}"));
+			statement.execute(sql("TRUNCATE TABLE {position}"));
+			statement.execute(sql("""
+				DELETE
+				FROM {revision}
+				WHERE `revision`!=0
+				"""));
 		}
 	}
 
