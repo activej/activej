@@ -40,6 +40,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.reactor.Reactive.checkInReactorThread;
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
@@ -158,16 +159,16 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 					connection.setAutoCommit(false);
 					connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-					try (PreparedStatement ps = connection.prepareStatement(sql(
-						"UPDATE {chunk} " +
-						"SET `locked_at`=NOW(), `locked_by`=?" +
-						"WHERE" +
-						" `removed_revision` IS NULL AND" +
-						" (`locked_at` IS NULL OR" +
-						" `locked_at` <= NOW() - INTERVAL ? SECOND) AND" +
-						" `id` IN " +
-						nCopies(chunkIds.size(), "?").stream()
-							.collect(joining(",", "(", ")"))))
+					try (PreparedStatement ps = connection.prepareStatement(sql("""
+						UPDATE {chunk}
+						SET `locked_at`=NOW(), `locked_by`=?
+						WHERE
+						    `removed_revision` IS NULL AND
+						    (`locked_at` IS NULL OR
+						     `locked_at` <= NOW() - INTERVAL ? SECOND) AND
+						     `id` IN ({ids}))
+						"""
+						.replace("{ids}", join(", ", nCopies(chunkIds.size(), "?")))))
 					) {
 						ps.setString(1, lockedBy);
 						ps.setLong(2, lockTtlSeconds);
