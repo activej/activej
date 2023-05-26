@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `{position}`
+CREATE TABLE IF NOT EXISTS {position}
 (
     `revision_id`  BIGINT       NOT NULL,
     `partition_id` VARCHAR(255) NOT NULL,

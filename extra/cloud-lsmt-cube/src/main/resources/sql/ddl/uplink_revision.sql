@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `{revision}`
+CREATE TABLE IF NOT EXISTS {revision}
 (
     `revision` BIGINT       NOT NULL,
     `created_at` TIMESTAMP    NOT NULL    DEFAULT CURRENT_TIMESTAMP,

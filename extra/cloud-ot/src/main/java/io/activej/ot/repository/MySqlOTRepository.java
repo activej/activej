@@ -440,16 +440,16 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("""
 							SELECT
-								{revisions}.`epoch`,
-								{revisions}.`level`,
-								UNIX_TIMESTAMP({revisions}.`timestamp`) AS `timestamp`,
-								{diffs}.`parent_id`,
-								{diffs}.`diff`
+							  {revisions}.`epoch`,
+							  {revisions}.`level`,
+							  UNIX_TIMESTAMP({revisions}.`timestamp`) AS `timestamp`,
+							  {diffs}.`parent_id`,
+							  {diffs}.`diff`
 							FROM {revisions}
 							LEFT JOIN {diffs}
-								ON {diffs}.`revision_id`={revisions}.`id`
+								   ON {diffs}.`revision_id`={revisions}.`id`
 							WHERE {revisions}.`id` = ?
-								AND {revisions}.`type` IN ('HEAD', 'INNER')
+							  AND {revisions}.`type` IN ('HEAD', 'INNER')
 							"""))
 						) {
 							ps.setLong(1, revisionId);

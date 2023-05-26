@@ -17,7 +17,6 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.common.ApplicationSettings;
 import io.activej.common.annotation.ComponentInterface;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.exception.CubeException;
@@ -44,28 +43,11 @@ import static java.util.stream.Collectors.joining;
 public final class CubeBackupController implements ConcurrentJmxBean {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "revisionTable", "cube_revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "positionTable", "cube_position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeBackupController.class, "chunkTable", "cube_chunk");
-
-	public static final String BACKUP_REVISION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupTable", "cube_revision_backup");
-	public static final String BACKUP_POSITION_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupPositionTable", "cube_position_backup");
-	public static final String BACKUP_CHUNK_TABLE = ApplicationSettings.getString(CubeBackupController.class, "backupChunkTable", "cube_chunk_backup");
-
 	private static final String SQL_BACKUP_SCRIPT = "sql/backup.sql";
 
 	private final DataSource dataSource;
 	private final IChunksBackupService chunksBackupService;
-
-	private String tableRevision = REVISION_TABLE;
-	private String tablePosition = POSITION_TABLE;
-	private String tableChunk = CHUNK_TABLE;
-
-	private String tableBackup = BACKUP_REVISION_TABLE;
-	private String tablePositionBackup = BACKUP_POSITION_TABLE;
-	private String tableChunkBackup = BACKUP_CHUNK_TABLE;
-
-	private String backupBy = "null";
+	private CubeSqlNaming sqlNaming = CubeSqlNaming.DEFAULT_SQL_NAMING;
 
 	// region JMX
 	private long backupLastStartTimestamp;
@@ -105,32 +87,9 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	public final class Builder extends AbstractBuilder<Builder, CubeBackupController> {
 		private Builder() {}
 
-		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
+		public Builder withSqlNaming(CubeSqlNaming sqlScheme) {
 			checkNotBuilt(this);
-			CubeBackupController.this.tableRevision = tableRevision;
-			CubeBackupController.this.tablePosition = tablePosition;
-			CubeBackupController.this.tableChunk = tableChunk;
-			return this;
-		}
-
-		public Builder withCustomTableNames(
-			String tableRevision, String tablePosition, String tableChunk, String tableBackup,
-			String tablePositionBackup, String tableChunkBackup
-		) {
-			checkNotBuilt(this);
-			CubeBackupController.this.tableRevision = tableRevision;
-			CubeBackupController.this.tablePosition = tablePosition;
-			CubeBackupController.this.tableChunk = tableChunk;
-
-			CubeBackupController.this.tableBackup = tableBackup;
-			CubeBackupController.this.tablePositionBackup = tablePositionBackup;
-			CubeBackupController.this.tableChunkBackup = tableChunkBackup;
-			return this;
-		}
-
-		public Builder withBackupBy(String backupBy) {
-			checkNotBuilt(this);
-			CubeBackupController.this.backupBy = backupBy == null ? "null" : ('\'' + backupBy + '\'');
+			CubeBackupController.this.sqlNaming = sqlScheme;
 			return this;
 		}
 
@@ -231,13 +190,8 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		try (PreparedStatement stmt = connection.prepareStatement(sql("""
 			SELECT `id`
 			FROM {chunk}
-			WHERE `added_revision` <= ?
-				AND
-					(
-					`removed_revision` IS NULL
-					OR
-					`removed_revision` > ?
-					);
+			WHERE `added_revision`<=?
+			  AND (`removed_revision` IS NULL OR `removed_revision`>?)
 			"""))
 		) {
 			stmt.setLong(1, revisionId);
@@ -284,14 +238,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	}
 
 	private String sql(String sql) {
-		return sql
-			.replace("{revision}", tableRevision)
-			.replace("{position}", tablePosition)
-			.replace("{chunk}", tableChunk)
-			.replace("{backup}", tableBackup)
-			.replace("{backup_position}", tablePositionBackup)
-			.replace("{backup_chunk}", tableChunkBackup)
-			.replace("{backup_by}", backupBy);
+		return sqlNaming.sql(sql);
 	}
 
 	public void initialize() throws IOException, SQLException {

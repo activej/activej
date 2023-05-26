@@ -44,6 +44,7 @@ import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
@@ -194,11 +195,10 @@ public class CubeBackupControllerTest {
 	private void assertBackups(long... backupIds) {
 		try (
 			Connection connection = dataSource.getConnection();
-			PreparedStatement stmt = connection.prepareStatement("""
+			PreparedStatement stmt = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
 				SELECT `revision`
-				FROM $backupRevisionTable
-				"""
-				.replace("$backupRevisionTable", CubeBackupController.BACKUP_REVISION_TABLE))
+				FROM {backup}
+				"""))
 		) {
 			ResultSet resultSet = stmt.executeQuery();
 
@@ -216,12 +216,11 @@ public class CubeBackupControllerTest {
 	private void assertChunkIds(long backupId, Set<Long> chunkIds) {
 		try (
 			Connection connection = dataSource.getConnection();
-			PreparedStatement stmt = connection.prepareStatement("""
-				SELECT `id`, `added_revision` <= `backup_id`
-				FROM $backupChunkTable
-				WHERE `backup_id` = ?\s
-				"""
-				.replace("$backupChunkTable", CubeBackupController.BACKUP_CHUNK_TABLE))
+			PreparedStatement stmt = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
+				SELECT `id`, `added_revision`<=`backup_id`
+				FROM {backup_chunk}
+				WHERE `backup_id`=?
+				"""))
 		) {
 			stmt.setLong(1, backupId);
 
@@ -253,12 +252,11 @@ public class CubeBackupControllerTest {
 	private void assertPositions(long backupId, Map<String, LogPosition> positions) {
 		try (
 			Connection connection = dataSource.getConnection();
-			PreparedStatement stmt = connection.prepareStatement("""
+			PreparedStatement stmt = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
 				SELECT `partition_id`, `filename`, `remainder`, `position`
-				FROM $backupPositionTable
-				WHERE `backup_id` = ?
-				"""
-				.replace("$backupPositionTable", CubeBackupController.BACKUP_POSITION_TABLE))
+				FROM {backup_position}
+				WHERE `backup_id`=?
+				"""))
 		) {
 			stmt.setLong(1, backupId);
 

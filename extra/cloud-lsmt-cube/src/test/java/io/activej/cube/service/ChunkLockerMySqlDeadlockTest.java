@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.LongStream;
 
 import static io.activej.common.exception.FatalErrorHandlers.haltOnError;
-import static io.activej.cube.service.MySqlChunkLocker.CHUNK_TABLE;
+import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 
@@ -55,18 +55,11 @@ public class ChunkLockerMySqlDeadlockTest {
 
 		try (
 			Connection connection = dataSource.getConnection();
-			PreparedStatement ps = connection.prepareStatement("""
-				INSERT INTO $chunkTable
-					(`id`,
-					`aggregation`,
-					`measures`,
-					`min_key`,
-					`max_key`,
-					`item_count`,
-					`added_revision`)
+			PreparedStatement ps = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
+				INSERT INTO {chunkTable}
+				(`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`)
 				VALUES (?,?,?,?,?,?,?)
-				"""
-				.replace("$chunkTable", CHUNK_TABLE))
+				"""))
 		) {
 			Set<Long> chunkIds = LongStream.range(0, MAX_CHUNK_ID).boxed().collect(toSet());
 			for (Long chunkId : chunkIds) {

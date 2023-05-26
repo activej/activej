@@ -38,6 +38,7 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.intersection;
 import static io.activej.cube.TestUtils.initializeUplink;
 import static io.activej.cube.linear.CubeMySqlOTUplinkTest.SimplePositionDiff.diff;
+import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
@@ -571,11 +572,10 @@ public class CubeMySqlOTUplinkTest {
 			Connection connection = dataSource.getConnection();
 			Statement statement = connection.createStatement()
 		) {
-			statement.execute("""
-				DELETE FROM $revisionTable
+			statement.execute(DEFAULT_SQL_NAMING.sql("""
+				DELETE FROM {revision}
 				WHERE `revision` IN (0,1,2)
-				"""
-				.replace("$revisionTable", CubeMySqlOTUplink.REVISION_TABLE));
+				"""));
 		}
 
 		Throwable exception = awaitException(uplink.fetch(1L));

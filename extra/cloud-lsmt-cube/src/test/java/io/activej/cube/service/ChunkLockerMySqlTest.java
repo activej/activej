@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
 import static io.activej.common.Utils.union;
-import static io.activej.cube.service.MySqlChunkLocker.CHUNK_TABLE;
+import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.cube.service.MySqlChunkLocker.DEFAULT_LOCK_TTL;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -54,18 +54,11 @@ public class ChunkLockerMySqlTest {
 
 		try (
 			Connection connection = dataSource.getConnection();
-			PreparedStatement ps = connection.prepareStatement("""
-				INSERT INTO $chunkTable
-					(`id`,
-					`aggregation`,
-					`measures`,
-					`min_key`,
-					`max_key`,
-					`item_count`,
-					`added_revision`)
-				VALUES $values
-				"""
-				.replace("$chunkTable", CHUNK_TABLE)
+			PreparedStatement ps = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
+					INSERT INTO {chunk}
+					(`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`)
+					VALUES $values
+					""")
 				.replace("$values", String.join(",", nCopies(100, "(?,?,?,?,?,?,?)"))))
 		) {
 			Set<Long> chunkIds = LongStream.range(0, 100).boxed().collect(toSet());
@@ -201,12 +194,11 @@ public class ChunkLockerMySqlTest {
 	private void expireLockedChunk(long chunkId) {
 		try (
 			Connection connection = dataSource.getConnection();
-			PreparedStatement ps = connection.prepareStatement("""
-				UPDATE `$chunkTable`
+			PreparedStatement ps = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
+				UPDATE {chunk}
 				SET `locked_at` = `locked_at` - INTERVAL ? SECOND
 				WHERE `id` = ?
-				"""
-				.replace("$chunkTable", CHUNK_TABLE))
+				"""))
 		) {
 			ps.setLong(1, DEFAULT_LOCK_TTL.getSeconds() + 1);
 			ps.setString(2, String.valueOf(chunkId));

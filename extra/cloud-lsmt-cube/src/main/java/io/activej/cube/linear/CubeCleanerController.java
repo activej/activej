@@ -47,9 +47,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	public static final Duration CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupOlderThan", Duration.ofMinutes(10));
 	public static final int MINIMAL_REVISIONS = ApplicationSettings.getInt(CubeCleanerController.class, "minimalRevisions", 1);
 
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "revisionTable", "cube_revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "positionTable", "cube_position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeCleanerController.class, "chunkTable", "cube_chunk");
+	private CubeSqlNaming sqlNaming = CubeSqlNaming.DEFAULT_SQL_NAMING;
 
 	private static final String SQL_CLEANUP_SCRIPT = "sql/cleanup.sql";
 
@@ -59,10 +57,6 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	private Duration chunksCleanupDelay = CHUNKS_CLEANUP_DELAY;
 	private Duration cleanupOlderThan = CLEANUP_OLDER_THAN;
 	private int minimalNumberOfRevisions = MINIMAL_REVISIONS;
-
-	private String tableRevision = REVISION_TABLE;
-	private String tablePosition = POSITION_TABLE;
-	private String tableChunk = CHUNK_TABLE;
 
 	// region JMX
 	private long cleanupLastStartTimestamp;
@@ -109,6 +103,12 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	public final class Builder extends AbstractBuilder<Builder, CubeCleanerController> {
 		private Builder() {}
 
+		public Builder withSqlNaming(CubeSqlNaming sqlScheme) {
+			checkNotBuilt(this);
+			CubeCleanerController.this.sqlNaming = sqlScheme;
+			return this;
+		}
+
 		public Builder withChunksCleanupDelay(Duration chunksCleanupDelay) {
 			checkNotBuilt(this);
 			CubeCleanerController.this.chunksCleanupDelay = chunksCleanupDelay;
@@ -118,14 +118,6 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
 			checkNotBuilt(this);
 			CubeCleanerController.this.now = now;
-			return this;
-		}
-
-		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
-			checkNotBuilt(this);
-			CubeCleanerController.this.tableRevision = tableRevision;
-			CubeCleanerController.this.tablePosition = tablePosition;
-			CubeCleanerController.this.tableChunk = tableChunk;
 			return this;
 		}
 
@@ -271,10 +263,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 	}
 
 	private String sql(String sql) {
-		return sql
-			.replace("{revision}", tableRevision)
-			.replace("{position}", tablePosition)
-			.replace("{chunk}", tableChunk)
+		return sqlNaming.sql(sql)
 			.replace("{min_revisions}", String.valueOf(minimalNumberOfRevisions))
 			.replace("{cleanup_from}", String.valueOf(cleanupOlderThan.getSeconds()));
 	}

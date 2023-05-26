@@ -21,6 +21,7 @@ import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.aggregation.IChunkLocker;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.cube.linear.CubeSqlNaming;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -44,14 +45,12 @@ import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
-import static java.util.stream.Collectors.joining;
 
 public final class MySqlChunkLocker<C> extends AbstractReactive
 	implements IChunkLocker<C> {
 
 	private static final Logger logger = LoggerFactory.getLogger(MySqlChunkLocker.class);
 
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(MySqlChunkLocker.class, "chunkTable", "cube_chunk");
 	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(MySqlChunkLocker.class, "lockTtl", Duration.ofMinutes(5));
 	public static final @Nullable String DEFAULT_LOCKED_BY = ApplicationSettings.getString(MySqlChunkLocker.class, "lockedBy", null);
 
@@ -62,7 +61,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
 
-	private String tableChunk = CHUNK_TABLE;
+	private CubeSqlNaming sqlNaming = CubeSqlNaming.DEFAULT_SQL_NAMING;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
 	private MySqlChunkLocker(
@@ -90,9 +89,9 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	public final class Builder extends AbstractBuilder<Builder, MySqlChunkLocker<C>> {
 		private Builder() {}
 
-		public Builder withLockTableName(String tableLock) {
+		public Builder withSqlNaming(CubeSqlNaming sqlScheme) {
 			checkNotBuilt(this);
-			MySqlChunkLocker.this.tableChunk = tableLock;
+			MySqlChunkLocker.this.sqlNaming = sqlScheme;
 			return this;
 		}
 
@@ -119,7 +118,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	}
 
 	private String sql(String sql) {
-		return sql.replace("{chunk}", tableChunk);
+		return sqlNaming.sql(sql);
 	}
 
 	public void initialize() throws IOException, SQLException {
@@ -168,7 +167,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 						    `removed_revision` IS NULL AND
 						    (`locked_at` IS NULL OR
 						     `locked_at` <= NOW() - INTERVAL ? SECOND) AND
-						     `id` IN ($ids))
+						     `id` IN ($ids)
 						"""
 						.replace("$ids", join(", ", nCopies(chunkIds.size(), "?")))))
 					) {
@@ -201,20 +200,13 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 					try (PreparedStatement ps = connection.prepareStatement(sql("""
 						UPDATE {chunk}
-						SET `locked_at` = NULL, `locked_by` = NULL
-						WHERE
-							`aggregation` = ?
-							AND
-							`removed_revision` IS NULL
-							AND
-							`locked_by`=?
-							AND
-							`id` IN $ids
+						SET `locked_at`=NULL, `locked_by`=NULL
+						WHERE `aggregation`=?
+						  AND `removed_revision` IS NULL
+						  AND `locked_by`=?
+						  AND `id` IN ($ids)
 						"""
-						.replace("$ids",
-							nCopies(chunkIds.size(), "?").stream()
-								.collect(joining(",", "(", ")")))
-					))
+						.replace("$ids", join(",", nCopies(chunkIds.size(), "?")))))
 					) {
 						ps.setString(1, aggregationId);
 						ps.setString(2, lockedBy);
@@ -240,13 +232,8 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 					try (PreparedStatement ps = connection.prepareStatement(sql("""
 						SELECT `id`
 						FROM {chunk}
-						WHERE `aggregation` = ?
-							AND
-							(
-								`removed_revision` IS NOT NULL
-								OR
-								`locked_at` > NOW() - INTERVAL ? SECOND
-							)
+						WHERE `aggregation`=?
+						  AND (`removed_revision` IS NOT NULL OR `locked_at`>NOW()-INTERVAL ? SECOND)
 						"""))
 					) {
 						ps.setString(1, aggregationId);

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `{chunk}`
+CREATE TABLE IF NOT EXISTS {chunk}
 (
     `id`               BIGINT       NOT NULL,
     `aggregation`      VARCHAR(255) NOT NULL,
@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS `{chunk}`
 ) ENGINE = InnoDB
    DEFAULT CHARSET = utf8;
 
-DROP TRIGGER IF EXISTS `{chunk}_remove_check`;
+DROP TRIGGER IF EXISTS `cube_chunk_remove_check`;
 
-CREATE TRIGGER `{chunk}_remove_check`
+CREATE TRIGGER `cube_chunk_remove_check`
    BEFORE UPDATE
    ON {chunk}
    FOR EACH ROW

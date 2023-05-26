@@ -60,7 +60,6 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeMySqlOTUplink extends AbstractReactive
@@ -69,9 +68,6 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	private static final Logger logger = LoggerFactory.getLogger(CubeMySqlOTUplink.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeMySqlOTUplink.class, "smoothingWindow", Duration.ofMinutes(5));
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "revisionTable", "cube_revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "positionTable", "cube_position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "chunkTable", "cube_chunk");
 
 	public static final long ROOT_REVISION = 0L;
 
@@ -82,9 +78,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	private final PrimaryKeyCodecs primaryKeyCodecs;
 
-	private String tableRevision = REVISION_TABLE;
-	private String tablePosition = POSITION_TABLE;
-	private String tableChunk = CHUNK_TABLE;
+	private CubeSqlNaming sqlNaming = CubeSqlNaming.DEFAULT_SQL_NAMING;
 
 	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 
@@ -120,11 +114,9 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			return this;
 		}
 
-		public Builder withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
+		public Builder withSqlNaming(CubeSqlNaming sqlScheme) {
 			checkNotBuilt(this);
-			CubeMySqlOTUplink.this.tableRevision = tableRevision;
-			CubeMySqlOTUplink.this.tablePosition = tablePosition;
-			CubeMySqlOTUplink.this.tableChunk = tableChunk;
+			CubeMySqlOTUplink.this.sqlNaming = sqlScheme;
 			return this;
 		}
 
@@ -158,9 +150,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 						try (PreparedStatement ps = connection.prepareStatement(sql("""
 							SELECT EXISTS
-								(SELECT *
-								FROM {revision}
-								WHERE `revision` = ?)
+							(SELECT * FROM {revision} WHERE `revision`=?)
 							"""))
 						) {
 							ps.setLong(1, revision);
@@ -288,31 +278,17 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 		CubeDiff cubeDiff;
 		try (PreparedStatement ps = connection.prepareStatement(sql("""
 			SELECT
-				`id`,
-				`aggregation`,
-				`measures`,
-				`min_key`,
-				`max_key`,
-				`item_count`,
-				ISNULL(`removed_revision`) OR `removed_revision` > ?
+			  `id`,
+			  `aggregation`,
+			  `measures`,
+			  `min_key`,
+			  `max_key`,
+			  `item_count`,
+			  ISNULL(`removed_revision`) OR `removed_revision`>?
 			FROM {chunk}
-			WHERE
-				(
-					`removed_revision` BETWEEN ? AND ?
-					AND
-					`added_revision` < ?
-				)
-				OR
-				(
-					`added_revision` BETWEEN ? AND ?
-					AND
-					(
-						`removed_revision` IS NULL
-						OR
-						`removed_revision` > ?
-					)
-				)
-				"""))
+			WHERE (`removed_revision` BETWEEN ? AND ? AND `added_revision`<?)
+			   OR (`added_revision` BETWEEN ? AND ? AND (`removed_revision` IS NULL OR `removed_revision`>?))
+			"""))
 		) {
 			from++;
 			ps.setLong(1, to);
@@ -363,16 +339,14 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 		try (PreparedStatement ps = connection.prepareStatement(sql("""
 			SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to`
 			FROM
-				(
-				SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id` > ? as `to`
-				FROM {position}
-				WHERE `revision_id`<=?
-				GROUP BY `partition_id`, `to`
-				) g
+			 (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id` > ? as `to`
+			 FROM {position}
+			 WHERE `revision_id`<=?
+			 GROUP BY `partition_id`, `to`) g
 			LEFT JOIN {position} p
-			ON p.`partition_id` = g.`partition_id`
-				AND p.`revision_id` = g.`max_revision`
-			ORDER BY p.`partition_id`, `to`"""))
+			ON p.`partition_id` = g.`partition_id` AND p.`revision_id` = g.`max_revision`
+			ORDER BY p.`partition_id`, `to`
+			"""))
 		) {
 			ps.setLong(1, from);
 			ps.setLong(2, to);
@@ -450,7 +424,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			INSERT INTO {chunk} (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`)
 			VALUES $values
 			"""
-			.replace("$values", String.join(",", nCopies(chunks.size(), "(?,?,?,?,?,?,?)")))))
+			.replace("$values", String.join(",\n", nCopies(chunks.size(), "(?,?,?,?,?,?,?)")))))
 		) {
 			int index = 1;
 			for (ChunkWithAggregationId chunk : chunks) {
@@ -482,12 +456,9 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 		try (PreparedStatement ps = connection.prepareStatement(sql("""
 			UPDATE {chunk}
 			SET `removed_revision` = ?
-			WHERE `id` IN $ids
+			WHERE `id` IN ($ids)
 			"""
-			.replace("$ids",
-				nCopies(chunks.size(), "?")
-					.stream()
-					.collect(joining(",", "(", ")")))))
+			.replace("$ids", String.join(",", nCopies(chunks.size(), "?")))))
 		) {
 			int index = 1;
 			ps.setLong(index++, newRevision);
@@ -508,7 +479,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			INSERT INTO {position} (`revision_id`, `partition_id`, `filename`, `remainder`, `position`)
 			VALUES $values
 			"""
-			.replace("$values", String.join(",", nCopies(positions.size(), "(?,?,?,?,?)")))))
+			.replace("$values", String.join(",\n", nCopies(positions.size(), "(?,?,?,?,?)")))))
 		) {
 			int index = 1;
 			for (Map.Entry<String, LogPosition> entry : positions.entrySet()) {
@@ -541,10 +512,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	}
 
 	private String sql(String sql) {
-		return sql
-			.replace("{revision}", tableRevision)
-			.replace("{position}", tablePosition)
-			.replace("{chunk}", tableChunk);
+		return sqlNaming.sql(sql);
 	}
 
 	public void initialize() throws IOException, SQLException {
