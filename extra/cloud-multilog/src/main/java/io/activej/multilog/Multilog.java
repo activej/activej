@@ -244,9 +244,13 @@ public final class Multilog<T> extends AbstractReactive
 							e -> {
 								if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
 									if (logger.isWarnEnabled()) {
-										logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
-											position, fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
-											sw, countingFormat.getCount(), e);
+										logger.warn(
+											"Ignoring log file whose size is less than log position {} {}:`{}` in {}, " +
+											"previous position: {}",
+											position, fileSystem,
+											namingScheme.path(logPartition, currentPosition.getLogFile()), sw,
+											countingFormat.getCount(),
+											e);
 									}
 									return Promise.of(ChannelSuppliers.<ByteBuf>empty());
 								}
@@ -256,7 +260,9 @@ public final class Multilog<T> extends AbstractReactive
 							countingFormat.resetCount();
 							sw.reset().start();
 							return fileStream
-								.transformWith(streamReads.register(logPartition + ":" + currentLogFile + "@" + position))
+								.transformWith(streamReads.register(
+									logPartition + ":" + currentLogFile +
+									"@" + position))
 								.transformWith(streamReadStats)
 								.transformWith(
 									ChannelFrameDecoder.builder(countingFormat)
@@ -270,11 +276,15 @@ public final class Multilog<T> extends AbstractReactive
 													return null;
 												}
 												if (ignoreMalformedLogs && e instanceof MalformedDataException) {
-													if (logger.isWarnEnabled()) {
-														logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
-															fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
-															sw, countingFormat.getCount(), e);
-													}
+													if (!logger.isWarnEnabled()) return null;
+
+													logger.warn(
+														"Ignoring malformed log file {}:`{}` in {}, " +
+														"previous position: {}",
+														fileSystem,
+														namingScheme.path(logPartition, currentPosition.getLogFile()),
+														sw, countingFormat.getCount(),
+														e);
 													return null;
 												} else {
 													throw e;

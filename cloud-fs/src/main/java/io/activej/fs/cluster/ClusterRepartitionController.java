@@ -201,7 +201,8 @@ public final class ClusterRepartitionController extends AbstractReactive
 			.whenComplete(repartitionPromiseStats.recordStats())
 			.then(($, e) -> {
 				if (e != null) {
-					logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched", ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles, e);
+					logger.warn("forced repartition finish, {} files ensured, {} errored, {} untouched",
+						ensuredFiles, failedFiles, allFiles - ensuredFiles - failedFiles, e);
 				} else {
 					logger.info("repartition finished, {} files ensured, {} errored", ensuredFiles, failedFiles);
 				}
@@ -248,7 +249,8 @@ public final class ClusterRepartitionController extends AbstractReactive
 						filteredMap.entrySet().stream()
 							.map(e -> new InfoResults(e.getKey(), e.getValue()))
 							.collect(toMap(InfoResults::getName, Function.identity())),
-						(result, metas) -> filteredMap.keySet().forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
+						(result, metas) -> filteredMap.keySet()
+							.forEach(name -> result.get(name).remoteMetadata.add(metas.get(name))),
 						Map::values,
 						groupedById.size(),
 						groupedById.entrySet().stream()
@@ -320,7 +322,9 @@ public final class ClusterRepartitionController extends AbstractReactive
 							// upload file to this partition
 							IFileSystem fs = partitions.get(partitionId);
 							if (fs == null) {
-								return Promise.ofException(new FileSystemIOException("File system '" + partitionId + "' is not alive"));
+								return Promise.ofException(new FileSystemIOException(
+									"File system '" + partitionId +
+									"' is not alive"));
 							}
 							return Promise.<Void>ofCallback(cb ->
 								splitter.addOutput()
@@ -328,7 +332,8 @@ public final class ClusterRepartitionController extends AbstractReactive
 											.then(() -> remoteMeta == null ?
 												fs.upload(name, meta.getSize()) :
 												fs.append(name, remoteMeta.getSize())
-													.map(consumer -> consumer.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
+													.map(consumer -> consumer
+														.transformWith(ChannelTransformers.dropBytes(remoteMeta.getSize() - offset))))
 											.whenException(PathContainsFileException.class, e -> logger.error("Cluster contains files with clashing paths", e)))
 										.withAcknowledgement(ack -> ack
 											.whenResult(() -> logger.trace("file {} uploaded to '{}'", meta, partitionId))

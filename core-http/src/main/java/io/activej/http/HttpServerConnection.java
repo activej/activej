@@ -212,8 +212,15 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 
 		HttpVersion version;
-		if (p + 7 < limit
-			&& line[p + 0] == 'H' && line[p + 1] == 'T' && line[p + 2] == 'T' && line[p + 3] == 'P' && line[p + 4] == '/' && line[p + 5] == '1' && line[p + 6] == '.') {
+		if (p + 7 < limit &&
+			line[p + 0] == 'H' &&
+			line[p + 1] == 'T' &&
+			line[p + 2] == 'T' &&
+			line[p + 3] == 'P' &&
+			line[p + 4] == '/' &&
+			line[p + 5] == '1' &&
+			line[p + 6] == '.'
+		) {
 			if (line[p + 7] == '1') {
 				flags |= KEEP_ALIVE; // keep-alive for HTTP/1.1
 				version = HTTP_1_1;

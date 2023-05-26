@@ -260,7 +260,9 @@ public abstract class Launcher {
 			service.stop().whenComplete(($, e) -> {
 				if (e != null) {
 					logger.error("Stop error in " + service,
-						(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
+						(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ?
+							e.getCause() :
+							e);
 				}
 				latch.countDown();
 			});

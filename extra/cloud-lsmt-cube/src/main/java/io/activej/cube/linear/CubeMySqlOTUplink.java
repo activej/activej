@@ -236,7 +236,10 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 								logger.trace("Successfully inserted revision {}", revision);
 								break;
 							} catch (SQLIntegrityConstraintViolationException ignored) {
-								logger.warn("Someone pushed to the same revision number {}, retry with the next revision", revision);
+								logger.warn(
+									"Someone pushed to the same revision number {}, " +
+									"retry with the next revision",
+									revision);
 							}
 						}
 

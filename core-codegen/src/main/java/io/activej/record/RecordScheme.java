@@ -484,7 +484,9 @@ public final class RecordScheme {
 		return fieldToType.entrySet().stream()
 			.map(entry ->
 				entry.getKey() + "=" +
-				(entry.getValue() instanceof Class ? ((Class<?>) entry.getValue()).getSimpleName() : entry.getValue()))
+				(entry.getValue() instanceof Class ?
+					((Class<?>) entry.getValue()).getSimpleName() :
+					entry.getValue()))
 			.collect(joining(", ", "{", "}"));
 	}
 }

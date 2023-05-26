@@ -202,7 +202,8 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 					if (len == -1) return null;
 
 					if (len != count) throw new MalformedDataException(
-						"Sent " + count + " requests in a transaction, got responses for " + len);
+						"Sent " + count +
+						" requests in a transaction, got responses for " + len);
 
 					Object[] results = new Object[count];
 

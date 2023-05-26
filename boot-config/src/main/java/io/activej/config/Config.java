@@ -269,7 +269,9 @@ public interface Config {
 			.map(e -> (Map.Entry<String, String>) (Map.Entry<?, ?>) e)
 			.filter(entry -> entry.getKey().startsWith(prefix))
 			.collect(Collectors.toMap(
-				e -> e.getKey().length() == prefix.length() ? "" : e.getKey().substring(prefix.length() + 1),
+				e -> e.getKey().length() == prefix.length() ?
+					"" :
+					e.getKey().substring(prefix.length() + 1),
 				Map.Entry::getValue)));
 	}
 

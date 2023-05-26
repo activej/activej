@@ -340,11 +340,18 @@ public class Types {
 		public String toString() {
 			return
 				"?" +
-				(upperBounds.length == 0 ? "" :
-					" extends " + Arrays.stream(upperBounds).map(Types::toString).collect(joining(" & "))) +
-				(lowerBounds.length == 0 ? "" :
-					" super " + Arrays.stream(lowerBounds).map(Types::toString).collect(joining(" & ")));
-
+				(upperBounds.length == 0 ?
+					"" :
+					" extends " +
+					Arrays.stream(upperBounds)
+						.map(Types::toString)
+						.collect(joining(" & "))) +
+				(lowerBounds.length == 0 ?
+					"" :
+					" super " +
+					Arrays.stream(lowerBounds)
+						.map(Types::toString)
+						.collect(joining(" & ")));
 		}
 	}
 
@@ -411,10 +418,18 @@ public class Types {
 			Type[] lowerBounds = wildcardType.getLowerBounds();
 			return
 				"?" +
-				(upperBounds.length == 0 ? "" :
-					" extends " + Arrays.stream(upperBounds).map(Types::getSimpleName).collect(joining(" & "))) +
-				(lowerBounds.length == 0 ? "" :
-					" super " + Arrays.stream(lowerBounds).map(Types::getSimpleName).collect(joining(" & ")));
+				(upperBounds.length == 0 ?
+					"" :
+					" extends " +
+					Arrays.stream(upperBounds)
+						.map(Types::getSimpleName)
+						.collect(joining(" & "))) +
+				(lowerBounds.length == 0 ?
+					"" :
+					" super " +
+					Arrays.stream(lowerBounds)
+						.map(Types::getSimpleName)
+						.collect(joining(" & ")));
 		} else if (type instanceof GenericArrayType) {
 			return Types.getSimpleName(((GenericArrayType) type).getGenericComponentType()) + "[]";
 		}

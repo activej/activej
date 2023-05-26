@@ -439,7 +439,9 @@ public final class ClassGenerator<T> {
 		}
 
 		for (String field : this.fields.keySet()) {
-			cw.visitField(ACC_PUBLIC + (fieldsStatic.contains(field) ? ACC_STATIC : 0) + (fieldsFinal.contains(field) ? ACC_FINAL : 0),
+			cw.visitField(
+				ACC_PUBLIC + (fieldsStatic.contains(field) ? ACC_STATIC : 0) +
+				(fieldsFinal.contains(field) ? ACC_FINAL : 0),
 				field, getType(this.fields.get(field)).getDescriptor(), null, null);
 		}
 

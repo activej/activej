@@ -368,7 +368,11 @@ public final class Preprocessor {
 						.collect(toList());
 
 					if (!mkhs.isEmpty()) {
-						String prefix = "\t" + new String(new char[getKeyDisplayCenter(missing) + 4]).replace('\0', ' ') + "^- ";
+						String prefix =
+							"\t" +
+							new String(new char[getKeyDisplayCenter(missing) + 4])
+								.replace('\0', ' ') +
+							"^- ";
 						header += prefix + String.join("\n" + prefix, mkhs) + "\n";
 					}
 
@@ -383,7 +387,11 @@ public final class Preprocessor {
 								.collect(toList());
 
 							if (!ehs.isEmpty()) {
-								String prefix = "\n\t\t" + new String(new char[Utils.getKeyDisplayCenter(key) + 2]).replace('\0', ' ') + "^- ";
+								String prefix =
+									"\n\t\t" +
+									new String(new char[Utils.getKeyDisplayCenter(key) + 2])
+										.replace('\0', ' ') +
+									"^- ";
 								missingDesc += prefix + String.join(prefix, ehs);
 							}
 
@@ -391,7 +399,13 @@ public final class Preprocessor {
 						})
 						.collect(joining("\n\t\t- ", header + "\t\t- ", ""));
 				})
-				.collect(joining("\n", "Unsatisfied dependencies detected" + (scope.length != 0 ? " in scope " + getScopeDisplayString(scope) : "") + ":\n", "\n")));
+				.collect(joining("\n",
+					"Unsatisfied dependencies detected" +
+					(scope.length != 0 ?
+						" in scope " +
+						getScopeDisplayString(scope) : "") +
+					":\n",
+					"\n")));
 		}
 
 		bindings.getChildren().forEach((subScope, subBindings) -> checkUnsatisfied(next(scope, subScope), known, subBindings));
@@ -491,14 +505,17 @@ public final class Preprocessor {
 			if (missing.getRawType() != InstanceProvider.class) {
 				return null;
 			}
-			return "it was not generated because there were no *exported* binding for key " + missing.getTypeParameter(0).getDisplayString();
+			return
+				"it was not generated because there were no *exported* binding for key " +
+				missing.getTypeParameter(0).getDisplayString();
 		}
 	);
 
 	private static final List<ErrorHint> errorHints = List.of(
 		(keybind, missing, upperKnown, bindings) -> {
 			Class<?> rawType = keybind.getKey().getRawType();
-			if (Modifier.isStatic(rawType.getModifiers()) || !missing.getRawType().equals(rawType.getEnclosingClass())) {
+			if (Modifier.isStatic(rawType.getModifiers()) ||
+				!missing.getRawType().equals(rawType.getEnclosingClass())) {
 				return null;
 			}
 			return "this is a non-static inner class with implicit dependency on its enclosing class";

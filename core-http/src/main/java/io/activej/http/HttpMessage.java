@@ -327,8 +327,7 @@ public abstract class HttpMessage {
 					if (maxBodySize != 0 && bufs.hasRemainingBytes(maxBodySize)) {
 						bufs.recycle();
 						buf.recycle();
-						throw new MalformedHttpException(
-							"HTTP body size exceeds load limit " + maxBodySize);
+						throw new MalformedHttpException("HTTP body size exceeds load limit " + maxBodySize);
 					}
 					bufs.add(buf);
 				},

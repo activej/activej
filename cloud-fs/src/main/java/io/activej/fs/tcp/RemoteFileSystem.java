@@ -389,7 +389,9 @@ public final class RemoteFileSystem extends AbstractNioReactive
 				throw serverError.exception();
 			}
 			if (msg.getClass() != responseClass) {
-				throw new FileSystemException("Received request " + msg.getClass().getName() + " instead of " + responseClass);
+				throw new FileSystemException(
+					"Received request " + msg.getClass().getName() +
+					" instead of " + responseClass);
 			}
 			//noinspection unchecked
 			return ((T) msg);

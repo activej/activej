@@ -407,7 +407,9 @@ public final class ThrottlingController
 
 	@Override
 	public String toString() {
-		return String.format("{throttling:%2d%% avgKps=%-4d avgThrottling=%2d%% requests=%-4d throttled=%-4d rounds=%-3d zero=%-3d >targetTime=%-3d}",
+		return String.format(
+			"{throttling:%2d%% avgKps=%-4d avgThrottling=%2d%% requests=%-4d " +
+			"throttled=%-4d rounds=%-3d zero=%-3d >targetTime=%-3d}",
 			(int) (throttling * 100),
 			(int) getAvgKeysPerSecond(),
 			(int) (smoothedThrottling * 100),

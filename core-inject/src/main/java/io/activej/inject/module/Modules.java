@@ -127,8 +127,15 @@ public class Modules {
 			localBindings.forEach((k, b) -> {
 				bindings.merge(k, b, ($, $2) -> {
 					Scope[] alreadyThere = scopes.get(k);
-					String where = alreadyThere.length == 0 ? "in root" : "in scope " + getScopeDisplayString(alreadyThere);
-					throw new IllegalStateException("Duplicate key " + k + ", already defined " + where + " and in scope " + getScopeDisplayString(scope));
+					String where =
+						alreadyThere.length == 0 ?
+							"in root" :
+							"in scope " +
+							getScopeDisplayString(alreadyThere);
+					throw new IllegalStateException(
+						"Duplicate key " + k +
+						", already defined " + where +
+						" and in scope " + getScopeDisplayString(scope));
 				});
 				scopes.put(k, scope);
 			}));

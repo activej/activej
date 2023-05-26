@@ -64,7 +64,8 @@ public final class StringSerializerDef extends AbstractSerializerDef implements 
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos, get(() -> {
 			Expression string = cast(value, String.class);
-			if (compatibilityLevel == LEVEL_1 && (format == ISO_8859_1 || format == UTF8)) {
+			if (compatibilityLevel == LEVEL_1 &&
+				(format == ISO_8859_1 || format == UTF8)) {
 				// UTF-MB3
 				return nullable ?
 					staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
@@ -84,11 +85,9 @@ public final class StringSerializerDef extends AbstractSerializerDef implements 
 						staticCall(BinaryOutputUtils.class, "writeUTF16" + LE, buf, pos, string);
 				}
 				//noinspection deprecation
-				case UTF8_MB3 -> {
-					yield nullable ?
-						staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
-						staticCall(BinaryOutputUtils.class, "writeUTF8mb3", buf, pos, string);
-				}
+				case UTF8_MB3 -> nullable ?
+					staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
+					staticCall(BinaryOutputUtils.class, "writeUTF8mb3", buf, pos, string);
 			};
 		}));
 	}

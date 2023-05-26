@@ -97,7 +97,9 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 		return new AbstractModule() {
 			@Provides
 			AsyncServlet guiServlet(IFileSystem fs, ClusterRepartitionController controller) {
-				return FileSystemGuiServlet.create(controller.getReactor(), fs, "Cluster server [" + controller.getLocalPartitionId() + ']');
+				return FileSystemGuiServlet.create(controller.getReactor(), fs,
+					"Cluster server [" +
+					controller.getLocalPartitionId() + ']');
 			}
 		};
 	}

@@ -244,7 +244,8 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 							bufferSize.map(bytes -> bytes * 2)))
 						.transformWith(writeFile)
 						.streamTo(consumer))
-				.withAcknowledgement(ack -> ack.mapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e))));
+				.withAcknowledgement(ack -> ack
+					.mapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e))));
 	}
 
 	@Override

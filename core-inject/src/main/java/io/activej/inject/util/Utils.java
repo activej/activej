@@ -132,7 +132,11 @@ public final class Utils {
 		if (scope != UNSCOPED) {
 			sb.append("\n" + indent)
 				.append("subgraph cluster_" + (scopeCount[0]++) + " {\n")
-				.append(indent + "\tlabel=\"" + scope[scope.length - 1].getDisplayString().replace("\"", "\\\"") + "\"\n");
+				.append(
+					indent + "\tlabel=\"" +
+					scope[scope.length - 1].getDisplayString()
+						.replace("\"", "\\\"") +
+					"\"\n");
 		}
 
 		for (Entry<Scope, Trie<Scope, Map<Key<?>, Binding<?>>>> entry : trie.getChildren().entrySet()) {
@@ -153,12 +157,17 @@ public final class Utils {
 				.append('\t')
 				.append('"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
 				.append(
-					" [label=" +
-					'"' + key.getDisplayString().replace("\"", "\\\"") + '"')
+					" [label=\"" +
+					key.getDisplayString()
+						.replace("\"", "\\\"") +
+					'"')
 				.append(
-					bindingInfo.getType() == TRANSIENT ? " style=dotted" :
-						bindingInfo.getType() == EAGER ? " style=bold" :
-							bindingInfo.getType() == SYNTHETIC ? " style=dashed" :
+					bindingInfo.getType() == TRANSIENT ?
+						" style=dotted" :
+						bindingInfo.getType() == EAGER ?
+							" style=bold" :
+							bindingInfo.getType() == SYNTHETIC ?
+								" style=dashed" :
 								"")
 				.append("];")
 				.append('\n');
@@ -166,7 +175,12 @@ public final class Utils {
 
 		if (!leafs.isEmpty()) {
 			sb.append(leafs.stream()
-				.map(key -> '"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
+				.map(key ->
+					'"' +
+					getScopeId(scope) +
+					key.toString()
+						.replace("\"", "\\\"") +
+					'"')
 				.collect(joining(" ",
 					'\n' + indent + '\t' + "{ rank=same; ",
 					" }\n")));
@@ -192,14 +206,20 @@ public final class Utils {
 					depScope = Arrays.copyOfRange(depScope, 0, depScope.length - 1);
 				}
 
-				String dep = '"' + getScopeId(depScope) + dependency.toString().replace("\"", "\\\"") + '"';
+				String dep =
+					'"' + getScopeId(depScope) +
+					dependency.toString()
+						.replace("\"", "\\\"") +
+					'"';
 				if (depScope.length == 0) {
 					if (known.add(ScopedKey.of(depScope, dependency))) {
 						sb.append('\t')
 							.append(dep)
 							.append(
-								" [label=" +
-								'"' + dependency.getDisplayString().replace("\"", "\\\"") + '"')
+								" [label=\"" +
+								dependency.getDisplayString()
+									.replace("\"", "\\\"") +
+								'"')
 							.append(" style=dashed, color=red];")
 							.append('\n');
 					}

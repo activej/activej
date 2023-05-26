@@ -126,7 +126,9 @@ public final class HttpClientCube implements ICube {
 				.map(body -> {
 					try {
 						if (response.getCode() != 200) {
-							throw new CubeException("CubeHTTP query failed. Response code: " + response.getCode() + " Body: " + body.getString(UTF_8));
+							throw new CubeException(
+								"CubeHTTP query failed. Response code: " + response.getCode() +
+								" Body: " + body.getString(UTF_8));
 						}
 						return fromJson(getQueryResultCodec(), body);
 					} catch (MalformedDataException e) {

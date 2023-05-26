@@ -34,7 +34,9 @@ public final class Multibinders {
 		stream.forEach(map ->
 			map.forEach((k, v) ->
 				result.merge(k, v, ($, $2) -> {
-					throw new DIException("Duplicate key " + k + " while merging maps for key " + key.getDisplayString());
+					throw new DIException(
+						"Duplicate key " + k +
+						" while merging maps for key " + key.getDisplayString());
 				})));
 		return result;
 	});

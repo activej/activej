@@ -104,8 +104,9 @@ public interface RetryPolicy<S> {
 		return new SimpleRetryPolicy() {
 			@Override
 			public long nextRetryTimestamp(long now, Exception lastError, int retryCount, long firstRetryTimestamp) {
-				return now + (
-					retryCount > maxRetryCount ?
+				return
+					now +
+					(retryCount > maxRetryCount ?
 						maxDelay :
 						min(maxDelay, (long) (initialDelay * pow(exponent, retryCount))));
 			}

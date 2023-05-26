@@ -288,7 +288,10 @@ public final class Triggers implements ConcurrentJmxBean {
 	@JmxAttribute
 	public synchronized List<String> getTriggers() {
 		return triggers.stream()
-			.sorted(comparing(Trigger::getSeverity).reversed().thenComparing(Trigger::getComponent).thenComparing(Trigger::getName))
+			.sorted(comparing(Trigger::getSeverity)
+				.reversed()
+				.thenComparing(Trigger::getComponent)
+				.thenComparing(Trigger::getName))
 			.map(t -> t.getSeverity() + " : " + t.getComponent() + " : " + t.getName())
 			.distinct()
 			.collect(toList());
@@ -297,7 +300,8 @@ public final class Triggers implements ConcurrentJmxBean {
 	@JmxAttribute
 	public synchronized List<String> getTriggerNames() {
 		return triggers.stream()
-			.sorted(comparing(Trigger::getComponent).thenComparing(Trigger::getName))
+			.sorted(comparing(Trigger::getComponent)
+				.thenComparing(Trigger::getName))
 			.map(t -> t.getComponent() + " : " + t.getName())
 			.distinct()
 			.collect(toList());

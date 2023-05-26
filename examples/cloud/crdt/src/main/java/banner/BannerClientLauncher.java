@@ -97,7 +97,9 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 			.orElseThrow(AssertionError::new);
 		CompletableFuture<Boolean> shouldNotBeSeenFuture = reactor.submit(() ->
 			client.sendRequest(new IsBannerSeenRequest(randomUserId, unseenBannerId)));
-		System.out.println("Should NOT be seen. Has banner with id '" + unseenBannerId + "' been seen? : " + shouldNotBeSeenFuture.get() + '\n');
+		System.out.println(
+			"Should NOT be seen. Has banner with id '" + unseenBannerId +
+			"' been seen? : " + shouldNotBeSeenFuture.get() + '\n');
 	}
 
 	public static void main(String[] args) throws Exception {

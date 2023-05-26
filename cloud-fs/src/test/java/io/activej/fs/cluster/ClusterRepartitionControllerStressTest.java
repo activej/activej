@@ -154,11 +154,15 @@ public final class ClusterRepartitionControllerStressTest {
 				scheduler.stop();
 				double ms = (System.nanoTime() - start2) / 1e6;
 				System.out.printf("Done repartitioning in %.2f ms%n", ms);
-				Promises.toList(partitions.getAlivePartitions().values().stream().map(fsClient -> fsClient.list("**").toTry()))
-					.map(lss -> lss.stream().mapToLong(ls -> {
-						Map<String, FileMetadata> mss = ls.get();
-						return mss == null ? 0 : mss.values().stream().mapToLong(FileMetadata::getSize).sum();
-					}).sum())
+				Promises.toList(partitions.getAlivePartitions().values().stream()
+						.map(fsClient -> fsClient.list("**").toTry()))
+					.map(lss -> lss.stream()
+						.mapToLong(ls -> {
+							Map<String, FileMetadata> mss = ls.get();
+							return mss == null ? 0 : mss.values().stream()
+								.mapToLong(FileMetadata::getSize)
+								.sum();
+						}).sum())
 					.whenComplete(TestUtils.assertCompleteFn(bytes -> {
 						System.out.printf("%d overall bytes%n", bytes);
 						System.out.printf("Average speed was %.2f mbit/second%n", bytes / (1 << 17) * (1000 / ms));

@@ -61,7 +61,7 @@ public class TriggersModuleTest {
 				@Provides
 				@Worker
 				String worker() {
-					return "" + counter++;
+					return String.valueOf(counter++);
 				}
 
 				@Provides

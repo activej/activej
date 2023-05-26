@@ -359,11 +359,20 @@ public final class ReflectionUtils {
 				try {
 					return constructor.newInstance(args);
 				} catch (InstantiationException e) {
-					throw new DIException("Cannot instantiate object from the constructor " + constructor + " to provide requested key " + key, e);
+					throw new DIException(
+						"Cannot instantiate object from the constructor " + constructor +
+						" to provide requested key " + key,
+						e);
 				} catch (IllegalAccessException e) {
-					throw new DIException("Not allowed to call constructor " + constructor + " to provide requested key " + key, e);
+					throw new DIException(
+						"Not allowed to call constructor " + constructor +
+						" to provide requested key " + key,
+						e);
 				} catch (InvocationTargetException e) {
-					throw new DIException("Failed to call constructor " + constructor + " to provide requested key " + key, e.getCause());
+					throw new DIException(
+						"Failed to call constructor " + constructor +
+						" to provide requested key " + key,
+						e.getCause());
 				}
 			},
 			dependencies);
@@ -511,12 +520,20 @@ public final class ReflectionUtils {
 					try {
 						Object result = method.invoke(module, args);
 						if (result == null)
-							throw new NullPointerException("@Provides method must return non-null result, method " + method);
+							throw new NullPointerException(
+								"@Provides method must return non-null result, method " +
+								method);
 						return result;
 					} catch (IllegalAccessException e) {
-						throw new DIException("Not allowed to call generic method " + method + " to provide requested key " + key, e);
+						throw new DIException(
+							"Not allowed to call generic method " + method +
+							" to provide requested key " + key,
+							e);
 					} catch (InvocationTargetException e) {
-						throw new DIException("Failed to call generic method " + method + " to provide requested key " + key, e.getCause());
+						throw new DIException(
+							"Failed to call generic method " + method +
+							" to provide requested key " + key,
+							e.getCause());
 					}
 				},
 				dependencies);

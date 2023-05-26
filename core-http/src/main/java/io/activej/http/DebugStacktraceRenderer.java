@@ -93,7 +93,9 @@ public final class DebugStacktraceRenderer {
 
 	static {
 		String ident = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
-		STACK_TRACE_ELEMENT = Pattern.compile("(at ((?:" + ident + "\\.)+)" + ident + "\\()(" + ident + "(\\." + ident + ")(:\\d+)?)\\)");
+		STACK_TRACE_ELEMENT = Pattern.compile(
+			"(at ((?:" + ident + "\\.)+)" + ident +
+			"\\()(" + ident + "(\\." + ident + ")(:\\d+)?)\\)");
 	}
 
 	public static HttpResponse.Builder render(Exception e, int code) {
@@ -103,8 +105,11 @@ public final class DebugStacktraceRenderer {
 		StringBuilder stacktrace = new StringBuilder();
 		while (matcher.find()) {
 			String cls = matcher.group(2);
-			String quotedFile = Matcher.quoteReplacement(cls.substring(0, cls.length() - 1).replace('.', '/').replaceAll("\\$.*(?:\\.|$)", ""));
-			matcher.appendReplacement(stacktrace, "$1<a data-target=\"api/file/" + quotedFile + "$4$5\">$3</a>)");
+			String quotedFile = Matcher.quoteReplacement(cls.substring(0, cls.length() - 1)
+				.replace('.', '/')
+				.replaceAll("\\$.*(?:\\.|$)", ""));
+			matcher.appendReplacement(stacktrace,
+				"$1<a data-target=\"api/file/" + quotedFile + "$4$5\">$3</a>)");
 		}
 		matcher.appendTail(stacktrace);
 		return HttpResponse.ofCode(code)

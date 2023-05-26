@@ -36,7 +36,13 @@ public interface LogNamingScheme {
 	LogNamingScheme NAME_PARTITION_REMAINDER = new LogNamingScheme() {
 		@Override
 		public String path(String logPartition, LogFile logFile) {
-			return logFile.getName() + "." + logPartition + (logFile.getRemainder() != 0 ? "-" + logFile.getRemainder() : "");
+			return
+				logFile.getName() +
+				"." +
+				logPartition +
+				(logFile.getRemainder() != 0 ?
+					"-" + logFile.getRemainder() :
+					"");
 		}
 
 		@Override

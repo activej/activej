@@ -406,7 +406,9 @@ public final class RESPv2 {
 					array[head + 3] != CR || array[head + 4] != LF
 				)
 			) {
-				throw new MalformedDataException("Simple String 'OK' expected, got: " + new String(array, head, 5, ISO_8859_1));
+				throw new MalformedDataException(
+					"Simple String 'OK' expected, got: " +
+					new String(array, head, 5, ISO_8859_1));
 			}
 			head += 5;
 		} catch (IndexOutOfBoundsException e) {
@@ -431,7 +433,9 @@ public final class RESPv2 {
 					array[head + 8] != LF
 				)
 			) {
-				throw new MalformedDataException("Simple String 'QUEUED' expected, got: " + new String(array, head, 9, ISO_8859_1));
+				throw new MalformedDataException(
+					"Simple String 'QUEUED' expected, got: " +
+					new String(array, head, 9, ISO_8859_1));
 			}
 			head += 9;
 		} catch (IndexOutOfBoundsException e) {

@@ -684,7 +684,9 @@ public final class SerializerFactory {
 					for (int i = 1; ; i++) {
 						methodName =
 							"encode_" +
-							serializerDef.getEncodeType().getSimpleName().replace('[', 's').replace(']', '_') +
+							serializerDef.getEncodeType().getSimpleName()
+								.replace('[', 's')
+								.replace(']', '_') +
 							(i == 1 ? "" : "_" + i);
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
@@ -711,7 +713,9 @@ public final class SerializerFactory {
 					for (int i = 1; ; i++) {
 						methodName =
 							"decode_" +
-							serializerDef.getDecodeType().getSimpleName().replace('[', 's').replace(']', '_') +
+							serializerDef.getDecodeType().getSimpleName()
+								.replace('[', 's')
+								.replace(']', '_') +
 							("_V" + version) +
 							(i == 1 ? "" : "_" + i);
 						if (defined.values().stream().noneMatch(methodName::equals)) break;

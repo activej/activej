@@ -200,7 +200,10 @@ public final class ClusterFileSystem extends AbstractReactive
 			(id, fs) -> {
 				logger.trace("downloading file {} from {}", name, id);
 				return fs.download(name, offset, limit)
-					.whenException(e -> logger.warn("Failed to connect to a server with key " + id + " to download file " + name, e))
+					.whenException(e -> logger.warn(
+						"Failed to connect to a server with key " + id +
+						" to download file " + name,
+						e))
 					.map(supplier -> supplier
 						.withEndOfStream(eos -> eos
 							.whenException(partitions.wrapDeathFn(id))));
@@ -376,7 +379,14 @@ public final class ClusterFileSystem extends AbstractReactive
 										consumers.add(consumer);
 									}
 								})
-								.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenException(partitions.wrapDeathFn(id))))))))
+								.map(consumer ->
+									new Container<>(
+										id,
+										consumer
+											.withAcknowledgement(ack -> ack
+												.whenException(partitions.wrapDeathFn(id)))
+									)
+								))))
 					.limit(maxUploadTargets))
 			.whenException(() -> {
 				consumers.forEach(AsyncCloseable::close);

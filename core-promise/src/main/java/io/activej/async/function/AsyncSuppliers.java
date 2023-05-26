@@ -83,7 +83,9 @@ public final class AsyncSuppliers {
 			@SuppressWarnings("unchecked")
 			@Override
 			public Promise<T> get() {
-				Promise<? extends T> result = prefetched.isEmpty() ? actualSupplier.get() : Promise.of(prefetched.pollFirst());
+				Promise<? extends T> result = prefetched.isEmpty() ?
+					actualSupplier.get() :
+					Promise.of(prefetched.pollFirst());
 				prefetch();
 				return (Promise<T>) result;
 			}

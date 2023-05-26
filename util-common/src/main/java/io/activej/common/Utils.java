@@ -495,6 +495,9 @@ public class Utils {
 		return map.entrySet().stream()
 			.limit(limit)
 			.map(element -> element.getKey() + "=" + element.getValue())
-			.collect(joining(",", "{", map.size() <= limit ? "}" : ", ..and " + (map.size() - limit) + " more}"));
+			.collect(joining(",", "{",
+				map.size() <= limit ?
+					"}" :
+					", ..and " + (map.size() - limit) + " more}"));
 	}
 }

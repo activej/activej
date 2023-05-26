@@ -42,7 +42,8 @@ public class Utils {
 			.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> of(add(right.getDelta()), add(left.getDelta())))
 			.withTransformFunction(TestAdd.class, TestSet.class, (left, right) -> left(set(right.getPrev() + left.getDelta(), right.getNext())))
 			.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
-				checkArgument(left.getPrev() == right.getPrev(), "Previous values of left and right set operation should be equal");
+				checkArgument(left.getPrev() == right.getPrev(),
+					"Previous values of left and right set operation should be equal");
 				if (left.getNext() > right.getNext()) return left(set(left.getNext(), right.getNext()));
 				if (left.getNext() < right.getNext()) return right(set(right.getNext(), left.getNext()));
 				return empty();
@@ -123,10 +124,12 @@ public class Utils {
 
 	public static <K> long calcLevels(K commitId, Map<K, Long> levels, Function<K, Collection<K>> getParents) {
 		if (!levels.containsKey(commitId)) {
-			levels.put(commitId, 1L + getParents.apply(commitId).stream()
-				.mapToLong(parentId -> calcLevels(parentId, levels, getParents))
-				.max()
-				.orElse(0L));
+			levels.put(commitId,
+				1L +
+				getParents.apply(commitId).stream()
+					.mapToLong(parentId -> calcLevels(parentId, levels, getParents))
+					.max()
+					.orElse(0L));
 		}
 		return levels.get(commitId);
 	}

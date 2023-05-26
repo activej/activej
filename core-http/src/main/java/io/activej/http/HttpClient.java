@@ -423,7 +423,10 @@ public final class HttpClient extends AbstractNioReactive
 			boolean isClosing = shutdownPromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(
-					reactor.currentTimeMillis() - (!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown),
+					reactor.currentTimeMillis() -
+					(!isClosing ?
+						readWriteTimeoutMillis :
+						readWriteTimeoutMillisShutdown),
 					new AsyncTimeoutException("Read timeout"));
 			}
 			if (getConnectionsCount() != 0) {

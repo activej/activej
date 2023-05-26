@@ -289,9 +289,15 @@ public final class HttpServer extends AbstractReactiveServer {
 			boolean isClosing = closeCallback != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
 				poolReadWriteExpired += poolNew.closeExpiredConnections(
-					reactor.currentTimeMillis() - (!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown));
+					reactor.currentTimeMillis() -
+					(!isClosing ?
+						readWriteTimeoutMillis :
+						readWriteTimeoutMillisShutdown));
 				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(
-					reactor.currentTimeMillis() - (!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
+					reactor.currentTimeMillis() -
+					(!isClosing ? readWriteTimeoutMillis :
+						readWriteTimeoutMillisShutdown),
+					new AsyncTimeoutException("Read timeout"));
 			}
 			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(reactor.currentTimeMillis() - keepAliveTimeoutMillis);
 			if (getConnectionsCount() != 0) {

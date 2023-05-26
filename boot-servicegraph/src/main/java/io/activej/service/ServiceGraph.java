@@ -394,10 +394,20 @@ public final class ServiceGraph implements ConcurrentJmxBean {
 
 						long elapsed = sw.elapsed(MILLISECONDS);
 						if (e == null) {
-							logger.info((start ? "Started " : "Stopped ") + keyToString(node) + (elapsed >= 1L ? (" in " + sw) : ""));
+							logger.info(
+								(start ?
+									"Started " :
+									"Stopped ") +
+								keyToString(node) +
+								(elapsed >= 1L ?
+									(" in " + sw) :
+									""));
 						} else {
 							logger.error((start ? "Start error " : "Stop error ") + keyToString(node),
-								(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ? e.getCause() : e);
+								(e instanceof CompletionException || e instanceof ExecutionException) &&
+								e.getCause() != null ?
+									e.getCause() :
+									e);
 						}
 					});
 			});

@@ -494,8 +494,9 @@ public final class HttpCookie {
 						case SAME_SITE_LAX_HC -> cookie.setSameSite(SameSite.LAX);
 						case SAME_SITE_STRICT_HC -> cookie.setSameSite(SameSite.STRICT);
 						case SAME_SITE_NONE_HC -> cookie.setSameSite(SameSite.NONE);
-						default ->
-							throw new MalformedHttpException("Unknown SameSite value: " + new String(bytes, start, end - start, ISO_8859_1));
+						default -> throw new MalformedHttpException(
+							"Unknown SameSite value: " +
+							new String(bytes, start, end - start, ISO_8859_1));
 					}
 				}
 			};
