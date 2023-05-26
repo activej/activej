@@ -5,6 +5,7 @@
     <option name="RECORD_COMPONENTS_WRAP" value="0"/>
     <option name="MULTI_CATCH_TYPES_WRAP" value="0"/>
     <option name="PREFER_LONGER_NAMES" value="false"/>
+    <option name="ALIGN_MULTILINE_RECORDS" value="false"/>
   </JavaCodeStyleSettings>
   <HTMLCodeStyleSettings>
     <option name="HTML_TEXT_WRAP" value="0"/>

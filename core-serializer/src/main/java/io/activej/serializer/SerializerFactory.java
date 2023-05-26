@@ -201,8 +201,12 @@ public final class SerializerFactory {
 					if (annotationClass.value() != SerializerDef.class) {
 						try {
 							serializerDef = annotationClass.value().getDeclaredConstructor().newInstance();
-						} catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-								 InvocationTargetException e) {
+						} catch (
+							InstantiationException |
+							IllegalAccessException |
+							NoSuchMethodException |
+							InvocationTargetException e
+						) {
 							throw new RuntimeException(e);
 						}
 					} else {

@@ -2348,11 +2348,13 @@ public abstract class AbstractCalciteTest {
 	public void testComplexQuery() {
 		QueryResult result = query("""
 			SELECT uname, SUM(nameCount) as totalNameCount
-			FROM (SELECT 'John' as uname, MAP_GET(counters, 'John') as nameCount
-			      FROM registry
-			      UNION
-			      SELECT 'Kevin', MAP_GET(counters, 'Kevin')
-			      FROM registry)
+			FROM (
+				SELECT 'John' as uname, MAP_GET(counters, 'John') as nameCount
+				FROM registry
+				UNION
+				SELECT 'Kevin', MAP_GET(counters, 'Kevin')
+				FROM registry
+				)
 			GROUP BY uname
 			""");
 

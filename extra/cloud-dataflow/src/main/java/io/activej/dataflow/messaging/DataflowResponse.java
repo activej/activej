@@ -26,11 +26,14 @@ public sealed interface DataflowResponse permits
 	record TaskDescription(long id, TaskStatus status) {
 	}
 
-	record PartitionData(int running, int succeeded, int failed, int cancelled,
-						 List<TaskDescription> lastTasks) implements DataflowResponse {
+	record PartitionData(
+		int running, int succeeded, int failed, int cancelled, List<TaskDescription> lastTasks
+	) implements DataflowResponse {
 	}
 
-	record TaskData(TaskStatus status, @Nullable Instant startTime, @Nullable Instant finishTime, @Nullable String error,
-					Map<Integer, NodeStat> nodes, String graphViz) implements DataflowResponse {
+	record TaskData(
+		TaskStatus status, @Nullable Instant startTime, @Nullable Instant finishTime, @Nullable String error,
+		Map<Integer, NodeStat> nodes, String graphViz
+	) implements DataflowResponse {
 	}
 }

@@ -44,35 +44,35 @@ public class FileDiscoveryServiceTest {
 
 	private static final byte[] TEST_PARTITIONS_1 = """
 		[
-		    {
-		        "ids": [
-		            {
-		                "id": "a",
-		                "crdtAddress": "localhost:9001",
-		                "rpcAddress": "localhost:9051"
-		            },
-		            {
-		                "id": "b",
-		                "crdtAddress": "localhost:9002",
-		                "rpcAddress": "localhost:9052"
-		            }
-		        ],
-		        "replicaCount": 2,
-		        "repartition": true,
-		        "active": true
-		    },
-		    {
-		        "ids": [
-		            {
-		                "id": "c",
-		                "crdtAddress": "localhost:9003",
-		                "rpcAddress": "localhost:9053"
-		            }
-		        ],
-		        "replicaCount": 1,
-		        "repartition": false,
-		        "active": false
-		    }
+			{
+				"ids": [
+					{
+						"id": "a",
+						"crdtAddress": "localhost:9001",
+						"rpcAddress": "localhost:9051"
+					},
+					{
+						"id": "b",
+						"crdtAddress": "localhost:9002",
+						"rpcAddress": "localhost:9052"
+					}
+				],
+				"replicaCount": 2,
+				"repartition": true,
+				"active": true
+			},
+			{
+				"ids": [
+					{
+						"id": "c",
+						"crdtAddress": "localhost:9003",
+						"rpcAddress": "localhost:9053"
+					}
+				],
+				"replicaCount": 1,
+				"repartition": false,
+				"active": false
+			}
 		]""".getBytes(UTF_8);
 
 	private static final byte[] TEST_PARTITIONS_2 = """

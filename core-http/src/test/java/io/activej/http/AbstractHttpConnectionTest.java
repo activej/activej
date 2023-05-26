@@ -85,10 +85,10 @@ public final class AbstractHttpConnectionTest {
 					.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 					.withHeader(CONTENT_TYPE, "text/\n          html")
 					.withBody(wrapAscii("""
-						  <html>
-						<body>
-						<h1>Hello, World!</h1>
-						</body>
+						<html>
+							<body>
+								<h1>Hello, World!</h1>
+							</body>
 						</html>"""))
 					.toPromise())
 			.withListenPort(port)
@@ -101,10 +101,10 @@ public final class AbstractHttpConnectionTest {
 				.whenComplete(TestUtils.assertCompleteFn(body -> {
 					assertEquals("text/           html", response.getHeader(CONTENT_TYPE));
 					assertEquals("""
-							  <html>
-							<body>
-							<h1>Hello, World!</h1>
-							</body>
+							<html>
+								<body>
+									<h1>Hello, World!</h1>
+								</body>
 							</html>""",
 						body.getString(UTF_8));
 				}))));
