@@ -119,7 +119,9 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 			}
 			last = item;
 			dataAcceptor.accept(item);
-			if (++count == chunkSize || (partitionPredicate != null && !partitionPredicate.isSamePartition(last, item))) {
+			if (++count == chunkSize ||
+				(partitionPredicate != null && !partitionPredicate.isSamePartition(last, item))
+			) {
 				startNewChunk();
 			}
 		}

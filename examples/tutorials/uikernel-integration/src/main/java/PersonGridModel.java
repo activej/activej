@@ -156,7 +156,10 @@ public class PersonGridModel extends AbstractReactive
 			}
 
 			String genderParam = filters.get("gender");
-			if (genderParam != null && !genderParam.isEmpty() && (genderParam.equals("MALE") || genderParam.equals("FEMALE"))) {
+			if (genderParam != null &&
+				!genderParam.isEmpty() &&
+				(genderParam.equals("MALE") || genderParam.equals("FEMALE"))
+			) {
 				Gender gender = Gender.valueOf(genderParam);
 				return person.getGender() == gender;
 			}

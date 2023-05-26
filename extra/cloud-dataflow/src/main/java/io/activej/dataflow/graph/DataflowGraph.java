@@ -211,7 +211,10 @@ public final class DataflowGraph extends AbstractReactive {
 				for (Node node : e.getValue()) {
 					// upload and download nodeStats have no common connections
 					// download nodeStats are never drawn, and upload only has an input
-					if ((node instanceof Download || (node instanceof Upload && network.containsKey(((Upload<?>) node).streamId)))) {
+					if (node instanceof Download ||
+						node instanceof Upload &&
+						network.containsKey(((Upload<?>) node).streamId)
+					) {
 						continue;
 					}
 					String nodeId = "n" + ++nodeCounter.value;

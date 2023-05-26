@@ -44,11 +44,18 @@ public final class Neg implements Expression {
 
 		int argSort = argType.getSort();
 
-		if (argSort == Type.DOUBLE || argSort == Type.FLOAT || argSort == Type.LONG || argSort == Type.INT) {
+		if (argSort == Type.DOUBLE ||
+			argSort == Type.FLOAT ||
+			argSort == Type.LONG ||
+			argSort == Type.INT
+		) {
 			g.math(GeneratorAdapter.NEG, argType);
 			return argType;
 		}
-		if (argSort == Type.BYTE || argSort == Type.SHORT || argSort == Type.CHAR) {
+		if (argSort == Type.BYTE ||
+			argSort == Type.SHORT ||
+			argSort == Type.CHAR
+		) {
 //			g.cast(argType, INT_TYPE);
 			g.math(GeneratorAdapter.NEG, INT_TYPE);
 			return argType;

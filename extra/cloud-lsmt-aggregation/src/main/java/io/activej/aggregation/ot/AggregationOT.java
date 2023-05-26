@@ -29,7 +29,9 @@ public class AggregationOT {
 	public static OTSystem<AggregationDiff> createAggregationOT() {
 		return OTSystemImpl.<AggregationDiff>builder()
 			.withTransformFunction(AggregationDiff.class, AggregationDiff.class, (left, right) -> {
-				if (!hasIntersection(left.getAddedChunks(), right.getAddedChunks()) && !hasIntersection(left.getRemovedChunks(), right.getRemovedChunks())) {
+				if (!hasIntersection(left.getAddedChunks(), right.getAddedChunks()) &&
+					!hasIntersection(left.getRemovedChunks(), right.getRemovedChunks())
+				) {
 					return TransformResult.of(right, left);
 				}
 

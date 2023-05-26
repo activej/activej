@@ -48,7 +48,11 @@ public final class ArithmeticOp implements Expression {
 		for (Class<?> dataType : dataTypes) {
 			Class<?> t;
 			int order;
-			if (dataType == Byte.TYPE || dataType == Short.TYPE || dataType == Character.TYPE || dataType == Integer.TYPE) {
+			if (dataType == Byte.TYPE ||
+				dataType == Short.TYPE ||
+				dataType == Character.TYPE ||
+				dataType == Integer.TYPE
+			) {
 				t = Integer.TYPE;
 				order = 1;
 			} else {

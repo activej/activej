@@ -447,7 +447,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	protected void onBodyReceived() {
 		assert !isClosed();
 		flags |= BODY_RECEIVED;
-		if ((flags & (READING_MESSAGES | BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT) && pool != server.poolServing) {
+		if ((flags & (READING_MESSAGES | BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT) &&
+			pool != server.poolServing
+		) {
 			onHttpMessageComplete();
 		}
 	}
@@ -456,7 +458,9 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	protected void onBodySent() {
 		assert !isClosed();
 		flags |= BODY_SENT;
-		if ((flags & (READING_MESSAGES | BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT) && pool != server.poolServing) {
+		if ((flags & (READING_MESSAGES | BODY_RECEIVED | BODY_SENT)) == (BODY_RECEIVED | BODY_SENT) &&
+			pool != server.poolServing
+		) {
 			onHttpMessageComplete();
 		}
 	}

@@ -598,7 +598,9 @@ public final class ClusterFileSystemTest {
 			int copies = 0;
 			for (Path path : paths) {
 				Path targetPath = path.resolve(entry.getKey());
-				if (Files.exists(targetPath) && Arrays.equals(entry.getValue().getBytes(), Files.readAllBytes(targetPath))) {
+				if (Files.exists(targetPath) &&
+					Arrays.equals(entry.getValue().getBytes(), Files.readAllBytes(targetPath))
+				) {
 					copies++;
 				}
 			}

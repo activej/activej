@@ -211,7 +211,10 @@ public final class ReflectionUtils {
 			Constructor<T> declaredConstructor = (Constructor<T>) constructors.iterator().next();
 
 			Class<?> enclosingClass = cls.getEnclosingClass();
-			if (enclosingClass != null && !Modifier.isStatic(cls.getModifiers()) && declaredConstructor.getParameterCount() != 1) {
+			if (enclosingClass != null &&
+				!Modifier.isStatic(cls.getModifiers()) &&
+				declaredConstructor.getParameterCount() != 1
+			) {
 				throw failedImplicitBinding(key, "inject annotation on local class that closes over outside variables and/or has no default constructor");
 			}
 			return bindingFromConstructor(key, declaredConstructor);
@@ -494,7 +497,10 @@ public final class ReflectionUtils {
 
 		@Override
 		public @Nullable Binding<Object> generate(BindingLocator bindings, Scope[] scope, Key<Object> key) {
-			if (scope.length < methodScope.length || (qualifier != null && !qualifier.equals(key.getQualifier())) || !TypeUtils.matches(key.getType(), returnType)) {
+			if (scope.length < methodScope.length ||
+				qualifier != null && !qualifier.equals(key.getQualifier()) ||
+				!TypeUtils.matches(key.getType(), returnType)
+			) {
 				return null;
 			}
 			for (int i = 0; i < methodScope.length; i++) {

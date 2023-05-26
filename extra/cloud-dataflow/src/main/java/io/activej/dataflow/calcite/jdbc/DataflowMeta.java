@@ -525,7 +525,9 @@ public final class DataflowMeta extends LimitedMeta {
 		CalciteSchema schema = sqlDataflow.getSchema();
 		RelDataTypeFactory typeFactory = sqlDataflow.getTypeFactory();
 
-		if ((catalog == null || catalog.equals(SCHEMA_NAME)) && (schemaPattern.s == null || schemaPattern.s.isEmpty())) {
+		if ((catalog == null || catalog.equals(SCHEMA_NAME)) &&
+			(schemaPattern.s == null || schemaPattern.s.isEmpty())
+		) {
 			Predicate<String> tableNamePredicate = patternToPredicate(tableNamePattern);
 			Predicate<String> columnNamePredicate = patternToPredicate(columnNamePattern);
 			for (String tableName : schema.getTableNames()) {

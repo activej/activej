@@ -289,10 +289,13 @@ public class RelToDatasetConverter {
 				case COUNT -> new CountReducer<>(fieldIndex, alias);
 				case SUM -> {
 					SqlTypeName sqlTypeName = aggregate.getInput().getRowType().getFieldList().get(fieldIndex).getValue().getSqlTypeName();
-					if (sqlTypeName == SqlTypeName.TINYINT || sqlTypeName == SqlTypeName.SMALLINT ||
-						sqlTypeName == SqlTypeName.INTEGER || sqlTypeName == SqlTypeName.BIGINT)
+					if (sqlTypeName == SqlTypeName.TINYINT ||
+						sqlTypeName == SqlTypeName.SMALLINT ||
+						sqlTypeName == SqlTypeName.INTEGER ||
+						sqlTypeName == SqlTypeName.BIGINT)
 						yield new SumReducerInteger<>(fieldIndex, alias);
-					if (sqlTypeName == SqlTypeName.FLOAT || sqlTypeName == SqlTypeName.DOUBLE ||
+					if (sqlTypeName == SqlTypeName.FLOAT ||
+						sqlTypeName == SqlTypeName.DOUBLE ||
 						sqlTypeName == SqlTypeName.REAL)
 						yield new SumReducerDecimal<>(fieldIndex, alias);
 					throw new AssertionError("SUM() is not supported for type: " + sqlTypeName);

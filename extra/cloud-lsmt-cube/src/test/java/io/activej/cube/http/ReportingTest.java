@@ -242,7 +242,10 @@ public final class ReportingTest extends CubeTestBase {
 
 				@Override
 				public void accept(LogItem item) {
-					if (item.advertiser != EXCLUDE_ADVERTISER && item.campaign != EXCLUDE_CAMPAIGN && item.banner != EXCLUDE_BANNER) {
+					if (item.advertiser != EXCLUDE_ADVERTISER &&
+						item.campaign != EXCLUDE_CAMPAIGN &&
+						item.banner != EXCLUDE_BANNER
+					) {
 						assert dateAggregator != null;
 						dateAggregator.accept(item);
 					} else if (item.affiliate != 0 && !EXCLUDE_SITE.equals(item.site)) {

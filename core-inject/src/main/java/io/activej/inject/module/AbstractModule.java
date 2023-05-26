@@ -54,7 +54,10 @@ public abstract class AbstractModule implements Module {
 				try {
 					String className = stackFrame.getClassName();
 					Class<?> traceCls = Class.forName(className);
-					if (!traceCls.isAssignableFrom(cls) && !className.startsWith("sun.reflect") && !className.startsWith("java.lang")) {
+					if (!traceCls.isAssignableFrom(cls) &&
+						!className.startsWith("sun.reflect") &&
+						!className.startsWith("java.lang")
+					) {
 						return true;
 					}
 				} catch (ClassNotFoundException ignored) {

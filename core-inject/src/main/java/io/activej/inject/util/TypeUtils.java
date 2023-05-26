@@ -72,7 +72,9 @@ public final class TypeUtils {
 			if (strict instanceof GenericArrayType && pattern instanceof GenericArrayType) {
 				return matches(((GenericArrayType) strict).getGenericComponentType(), ((GenericArrayType) pattern).getGenericComponentType(), dejaVu);
 			}
-			if (!(strict instanceof ParameterizedType parameterizedStrict) || !(pattern instanceof ParameterizedType parameterizedPattern)) {
+			if (!(strict instanceof ParameterizedType parameterizedStrict) ||
+				!(pattern instanceof ParameterizedType parameterizedPattern)
+			) {
 				return false;
 			}
 
@@ -146,7 +148,9 @@ public final class TypeUtils {
 			extractMatchingGenerics(((GenericArrayType) pattern).getGenericComponentType(), ((GenericArrayType) real).getGenericComponentType(), result);
 			return;
 		}
-		if (!(pattern instanceof ParameterizedType parameterizedPattern) || !(real instanceof ParameterizedType parameterizedReal)) {
+		if (!(pattern instanceof ParameterizedType parameterizedPattern) ||
+			!(real instanceof ParameterizedType parameterizedReal)
+		) {
 			return;
 		}
 		if (!parameterizedPattern.getRawType().equals(parameterizedReal.getRawType())) {

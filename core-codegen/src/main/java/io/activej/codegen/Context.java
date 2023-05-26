@@ -113,7 +113,9 @@ public final class Context {
 		while (superclass != null) {
 			for (java.lang.reflect.Method method : superclass.getDeclaredMethods()) {
 				int modifiers = method.getModifiers();
-				if (!Modifier.isStatic(modifiers) && (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))) {
+				if (!Modifier.isStatic(modifiers) &&
+					(Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))
+				) {
 					accessibleMethods.add(Method.getMethod(method));
 				}
 			}

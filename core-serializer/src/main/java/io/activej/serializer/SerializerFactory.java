@@ -981,7 +981,9 @@ public final class SerializerFactory {
 					fields.add(field);
 				}
 			}
-			if (constructor.getParameterTypes().length != 0 && fields.size() == constructor.getParameterTypes().length) {
+			if (constructor.getParameterTypes().length != 0 &&
+				fields.size() == constructor.getParameterTypes().length
+			) {
 				if (found)
 					throw new IllegalArgumentException(format("Duplicate @Deserialize constructor %s", constructor));
 				found = true;

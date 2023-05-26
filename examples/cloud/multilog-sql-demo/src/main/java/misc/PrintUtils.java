@@ -47,7 +47,9 @@ public final class PrintUtils {
 		if (columnCls == long.class || columnCls == Long.class) {
 			return new Format(20, x -> "%" + x + "d");
 		}
-		if (columnCls == float.class || columnCls == Float.class || columnCls == double.class || columnCls == Double.class) {
+		if (columnCls == float.class || columnCls == Float.class ||
+			columnCls == double.class || columnCls == Double.class
+		) {
 			return new Format(0, x -> "%" + x + ".3f");
 		}
 		if (columnCls == String.class) {
