@@ -176,7 +176,10 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 
 	private long getMaxRevisionId(Connection connection) throws CubeException {
 		try (Statement statement = connection.createStatement()) {
-			ResultSet resultSet = statement.executeQuery(sql("SELECT MAX(`revision`) FROM {revision}"));
+			ResultSet resultSet = statement.executeQuery(sql("""
+				SELECT MAX(`revision`)
+				FROM {revision}
+				"""));
 
 			if (!resultSet.next()) {
 				throw new CubeException("Cube is not initialized");
@@ -225,10 +228,17 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 		getChunksToBackupLastStartTimestamp = 0;
 
 		Set<Long> chunkIds = new HashSet<>();
-		try (PreparedStatement stmt = connection.prepareStatement(sql(
-			"SELECT `id` " +
-			"FROM {chunk} " +
-			"WHERE `added_revision`<=? AND (`removed_revision` IS NULL OR `removed_revision`>?);"))
+		try (PreparedStatement stmt = connection.prepareStatement(sql("""
+			SELECT `id`
+			FROM {chunk}
+			WHERE `added_revision` <= ?
+				AND
+					(
+					`removed_revision` IS NULL
+					OR
+					`removed_revision` > ?
+					);
+			"""))
 		) {
 			stmt.setLong(1, revisionId);
 			stmt.setLong(2, revisionId);
@@ -298,7 +308,11 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 			try (Statement statement = connection.createStatement()) {
 				statement.execute(sql("TRUNCATE TABLE {chunk}"));
 				statement.execute(sql("TRUNCATE TABLE {position}"));
-				statement.execute(sql("DELETE FROM {revision} WHERE `revision`!=0"));
+				statement.execute(sql("""
+					DELETE
+					FROM {revision}
+					WHERE `revision`!=0
+					"""));
 
 				statement.execute(sql("TRUNCATE TABLE {backup}"));
 				statement.execute(sql("TRUNCATE TABLE {backup_chunk}"));

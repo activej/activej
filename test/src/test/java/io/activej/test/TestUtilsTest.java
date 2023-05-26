@@ -14,7 +14,10 @@ public class TestUtilsTest {
 		DataSource dataSource = TestUtils.dataSource("test.properties");
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute("SELECT 1;SELECT 2;");
+				statement.execute("""
+					SELECT 1;
+					SELECT 2;
+					""");
 			}
 		}
 	}

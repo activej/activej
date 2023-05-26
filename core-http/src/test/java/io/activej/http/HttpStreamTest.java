@@ -142,17 +142,23 @@ public final class HttpStreamTest {
 		startTestServer(request -> request.loadBody()
 			.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()));
 
-		String chunkedRequest =
-			"POST / HTTP/1.1" + CRLF +
-			"Host: localhost" + CRLF +
-			"Transfer-Encoding: chunked" + CRLF + CRLF +
-			"4" + CRLF + "Test" + CRLF + "0" + CRLF + CRLF;
+		String chunkedRequest = """
+			POST / HTTP/1.1\r
+			Host: localhost\r
+			Transfer-Encoding: chunked\r
+			\r
+			4\r
+			Test\r
+			0\r
+			\r
+			""";
 
-		String responseMessage =
-			"HTTP/1.1 200 OK" + CRLF +
-			"Connection: keep-alive" + CRLF +
-			"Content-Length: 4" + CRLF + CRLF +
-			"Test";
+		String responseMessage = """
+			HTTP/1.1 200 OK\r
+			Connection: keep-alive\r
+			Content-Length: 4\r
+			\r
+			Test""";
 
 		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 			.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
@@ -171,11 +177,12 @@ public final class HttpStreamTest {
 		startTestServer(request -> request.loadBody()
 			.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()));
 
-		String chunkedRequest =
-			"POST / HTTP/1.1" + CRLF +
-			"Host: localhost" + CRLF +
-			"Transfer-Encoding: chunked" + CRLF + CRLF +
-			"ffffffffff";
+		String chunkedRequest = """
+			POST / HTTP/1.1\r
+			Host: localhost\r
+			Transfer-Encoding: chunked\r
+			\r
+			ffffffffff""";
 
 		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 			.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
@@ -200,12 +207,13 @@ public final class HttpStreamTest {
 				.then(body -> HttpResponse.ok200().withBody(body.slice()).toPromise()),
 			inspector);
 
-		String chunkedRequest =
-			"POST / HTTP/1.1" + CRLF +
-			"Host: localhost" + CRLF +
-			"Content-Length: 13" + CRLF +
-			"Transfer-Encoding: chunked" + CRLF + CRLF +
-			"3";
+		String chunkedRequest = """
+			POST / HTTP/1.1\r
+			Host: localhost\r
+			Content-Length: 13\r
+			Transfer-Encoding: chunked\r
+			\r
+			3""";
 
 		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 			.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
@@ -214,10 +222,12 @@ public final class HttpStreamTest {
 				.whenComplete(socket::close)));
 
 		assertEquals(
-			"HTTP/1.1 400 Bad Request\r\n" +
-			"Connection: close\r\n" +
-			"Content-Length: 0\r\n" +
-			"\r\n",
+			"""
+				HTTP/1.1 400 Bad Request\r
+				Connection: close\r
+				Content-Length: 0\r
+				\r
+				""",
 			body.asString(UTF_8));
 
 		assertEquals(1, inspector.getMalformedHttpExceptions().getTotal());

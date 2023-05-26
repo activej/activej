@@ -27,24 +27,29 @@ public final class MultipartByteBufsDecoderTest {
 	private static final String BOUNDARY = "--test-boundary-123";
 	private static final String CRLF = "\r\n";
 
-	private static final String DATA =
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file\"; filename=\"test.txt\"" + CRLF +
-		"Content-Type: text/plain" + CRLF +
-		CRLF +
-		"This is some bytes of data to be extracted from the multipart form" + CRLF +
-		"Also here we had a wild CRLF se\r\nquence appear" +
-		CRLF + BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file\"; filename=\"test.txt\"" + CRLF +
-		"Content-Type: text/plain" + CRLF +
-		"Test-Extra-Header: one" + CRLF +
-		"Test-Extra-Header-2: two" + CRLF +
-		CRLF +
-		"\nAnd the second " +
-		CRLF + BOUNDARY + CRLF +
-		CRLF +
-		"line, huh\n" +
-		CRLF + BOUNDARY + "--" + CRLF;
+	private static final String DATA = """
+		$boundary\r
+		Content-Disposition: form-data; name="file"; filename="test.txt"\r
+		Content-Type: text/plain\r
+		\r
+		This is some bytes of data to be extracted from the multipart form\r
+		Also here we had a wild CRLF se\r
+		quence appear\r
+		$boundary\r
+		Content-Disposition: form-data; name="file"; filename="test.txt"\r
+		Content-Type: text/plain\r
+		Test-Extra-Header: one\r
+		Test-Extra-Header-2: two\r
+		\r
+
+		And the second \r
+		$boundary\r
+		\r
+		line, huh
+		\r
+		$boundary--\r
+		"""
+		.replace("$boundary", BOUNDARY);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

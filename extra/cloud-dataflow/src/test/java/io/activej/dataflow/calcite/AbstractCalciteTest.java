@@ -419,7 +419,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllStudents() {
-		QueryResult result = query("SELECT * FROM student");
+		QueryResult result = query("""
+			SELECT *
+			FROM student
+			""");
 
 		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1, STUDENT_LIST_2));
 
@@ -428,7 +431,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllStudentsWithDuplicates() {
-		QueryResult result = query("SELECT * FROM student_duplicates");
+		QueryResult result = query("""
+			SELECT *
+			FROM student_duplicates
+			""");
 
 		QueryResult expected = studentsToQueryResult(new ArrayList<>(
 			Stream.concat(
@@ -446,7 +452,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllDepartments() {
-		QueryResult result = query("SELECT * FROM department");
+		QueryResult result = query("""
+			SELECT *
+			FROM department
+			""");
 
 		QueryResult expected = departmentsToQueryResult(concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2));
 
@@ -455,7 +464,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectDepartmentsFields() {
-		QueryResult result = query("SELECT departmentName FROM department");
+		QueryResult result = query("""
+			SELECT departmentName
+			FROM department
+			""");
 
 		List<Object[]> columnValues = new ArrayList<>();
 		for (Department department : concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2)) {
@@ -469,7 +481,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectStudentsFields() {
-		QueryResult result = query("SELECT dept, firstName FROM student");
+		QueryResult result = query("""
+			SELECT dept, firstName
+			FROM student
+			""");
 
 		List<Object[]> columnValues = new ArrayList<>();
 		for (Student student : concat(STUDENT_LIST_1, STUDENT_LIST_2)) {
@@ -483,7 +498,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectStudentFieldsRenamed() {
-		QueryResult result = query("SELECT dept as department, firstName as f_name, id as stud_id FROM student");
+		QueryResult result = query("""
+			SELECT dept as department, firstName as f_name, id as stud_id
+			FROM student
+			""");
 
 		List<Object[]> columnValues = new ArrayList<>();
 		for (Student student : concat(STUDENT_LIST_1, STUDENT_LIST_2)) {
@@ -497,7 +515,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectDepartmentFieldsAllRenamed() {
-		QueryResult result = query("SELECT id as dep_id, departmentName as dep_name FROM department");
+		QueryResult result = query("""
+			SELECT id as dep_id, departmentName as dep_name
+			FROM department
+			""");
 
 		List<Object[]> columnValues = new ArrayList<>();
 		for (Department department : concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2)) {
@@ -528,7 +549,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAdditionalColumns() {
-		QueryResult result = query("SELECT 123, 'test', id FROM department");
+		QueryResult result = query("""
+			SELECT 123, 'test', id
+			FROM department
+			""");
 
 		QueryResult expected = new QueryResult(
 			List.of("123", "'test'", "id"),
@@ -1055,9 +1079,11 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private void doTestWhereLike(String firstNamePattern, Student... expectedStudents) {
-		QueryResult result = query(
-			"SELECT * FROM student " +
-			"WHERE firstName LIKE '" + firstNamePattern + '\'');
+		QueryResult result = query("""
+			SELECT * FROM student
+			WHERE firstName LIKE '$pattern'
+			"""
+			.replace("$pattern", firstNamePattern));
 
 		QueryResult expected = studentsToQueryResult(Arrays.asList(expectedStudents));
 
@@ -1066,9 +1092,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testWhereNoMatch() {
-		QueryResult result = query(
-			"SELECT * FROM student " +
-			"WHERE firstName LIKE '" + "A" + '\'');
+		QueryResult result = query("""
+			SELECT * FROM student
+			WHERE firstName LIKE 'A'
+			""");
 
 		assertTrue(result.isEmpty());
 	}
@@ -1641,7 +1668,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testCountAllStudents() {
-		QueryResult result = query("SELECT COUNT(*) FROM student");
+		QueryResult result = query("""
+			SELECT COUNT(*)
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("COUNT(*)"), List.<Object[]>of(new Object[]{5L}));
 
@@ -1650,7 +1680,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testCountAllStudentsRenamed() {
-		QueryResult result = query("SELECT COUNT(*) as student_count FROM student");
+		QueryResult result = query("""
+			SELECT COUNT(*) as student_count
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("student_count"), List.<Object[]>of(new Object[]{5L}));
 
@@ -1659,7 +1692,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testCountSumAllStudents() {
-		QueryResult result = query("SELECT COUNT(*), SUM(id) FROM student");
+		QueryResult result = query("""
+			SELECT COUNT(*), SUM(id)
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("COUNT(*)", "SUM(id)"), List.<Object[]>of(new Object[]{5L, 15L}));
 
@@ -1669,14 +1705,20 @@ public abstract class AbstractCalciteTest {
 	// region CountMapGet
 	@Test
 	public void testCountMapGet() {
-		QueryResult result = query("SELECT COUNT(MAP_GET(counters, 'John')) FROM registry");
+		QueryResult result = query("""
+			SELECT COUNT(MAP_GET(counters, 'John'))
+			FROM registry
+			""");
 
 		assertCountMapGet(result, "'John'");
 	}
 
 	@Test
 	public void testCountMapGetPrepared() {
-		QueryResult result = queryPrepared("SELECT COUNT(MAP_GET(counters, ?)) FROM registry",
+		QueryResult result = queryPrepared("""
+				SELECT COUNT(MAP_GET(counters, ?))
+				FROM registry
+				""",
 			stmt -> stmt.setString(1, "John"));
 
 		assertCountMapGet(result, "?");
@@ -1691,7 +1733,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSumStudentsId() {
-		QueryResult result = query("SELECT SUM(id) FROM student");
+		QueryResult result = query("""
+			SELECT SUM(id)
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("SUM(id)"), List.<Object[]>of(new Object[]{15L}));
 
@@ -1701,14 +1746,20 @@ public abstract class AbstractCalciteTest {
 	// region SumPojoValues
 	@Test
 	public void testSumPojoValues() {
-		QueryResult result = query("SELECT SUM(MAP_GET(intents, 2).campaignId) FROM profiles");
+		QueryResult result = query("""
+			SELECT SUM(MAP_GET(intents, 2).campaignId)
+			FROM profiles
+			""");
 
 		assertSumPojoValues(result, "2");
 	}
 
 	@Test
 	public void testSumPojoValuesPrepared() {
-		QueryResult result = queryPrepared("SELECT SUM(MAP_GET(intents, ?).campaignId) FROM profiles",
+		QueryResult result = queryPrepared("""
+				SELECT SUM(MAP_GET(intents, ?).campaignId)
+				FROM profiles
+				""",
 			stmt -> stmt.setInt(1, 2));
 
 		assertSumPojoValues(result, "?");
@@ -1723,7 +1774,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testAvgStudentsDepts() {
-		QueryResult result = query("SELECT AVG(dept) FROM student");
+		QueryResult result = query("""
+			SELECT AVG(dept)
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("AVG(dept)"), List.<Object[]>of(new Object[]{3.6d}));
 
@@ -1732,7 +1786,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testMinStudentsId() {
-		QueryResult result = query("SELECT MIN(id) FROM student");
+		QueryResult result = query("""
+			SELECT MIN(id)
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("MIN(id)"), List.<Object[]>of(new Object[]{1}));
 
@@ -1741,7 +1798,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testMaxStudentsId() {
-		QueryResult result = query("SELECT MAX(id) FROM student");
+		QueryResult result = query("""
+			SELECT MAX(id)
+			FROM student
+			""");
 
 		QueryResult expected = new QueryResult(List.of("MAX(id)"), List.<Object[]>of(new Object[]{5}));
 
@@ -1799,7 +1859,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllLarge() {
-		QueryResult result = query("SELECT * FROM large_table");
+		QueryResult result = query("""
+			SELECT *
+			FROM large_table
+			""");
 
 		QueryResult expected = largeToQueryResult(concat(LARGE_LIST_1, LARGE_LIST_2));
 
@@ -2306,7 +2369,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllCustom() {
-		QueryResult result = query("SELECT * FROM custom");
+		QueryResult result = query("""
+			SELECT *
+			FROM custom
+			""");
 
 		QueryResult expected = new QueryResult(
 			List.of("id", "price", "description"),
@@ -2323,7 +2389,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllCustomPartitioned() {
-		QueryResult result = query("SELECT * FROM custom_partitioned");
+		QueryResult result = query("""
+			SELECT *
+			FROM custom_partitioned
+			""");
 
 		QueryResult expected = new QueryResult(
 			List.of("id", "price"),
@@ -2341,7 +2410,10 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testSelectAllTemporalValues() {
-		QueryResult result = query("SELECT * FROM temporal_values");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			""");
 
 		QueryResult expected = temporalValuesToQueryResult(concat(TEMPORAL_VALUES_LIST_1, TEMPORAL_VALUES_LIST_2));
 
@@ -2351,14 +2423,22 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByTimestamp
 	@Test
 	public void testSelectTemporalValuesByTimestamp() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE registeredAt > '2022-06-01 12:34:23'");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			WHERE registeredAt > '2022-06-01 12:34:23'
+			""");
 
 		assertSelectTemporalValuesByTimestamp(result);
 	}
 
 	@Test
 	public void testSelectTemporalValuesByTimestampPrepared() {
-		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE registeredAt > ?",
+		QueryResult result = queryPrepared("""
+				SELECT *
+				FROM temporal_values
+				WHERE registeredAt > ?
+				""",
 			stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-01 12:34:23")));
 
 		assertSelectTemporalValuesByTimestamp(result);
@@ -2374,14 +2454,22 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByTimestampEquals
 	@Test
 	public void testSelectTemporalValuesByTimestampEquals() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE registeredAt = '2022-06-15 12:00:00'");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			WHERE registeredAt = '2022-06-15 12:00:00'
+			""");
 
 		assertSelectTemporalValuesByTimestampEquals(result);
 	}
 
 	@Test
 	public void testSelectTemporalValuesByTimestampPreparedEquals() {
-		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE registeredAt = ?",
+		QueryResult result = queryPrepared("""
+				SELECT *
+				FROM temporal_values
+				WHERE registeredAt = ?
+				""",
 			stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-15 12:00:00")));
 
 		assertSelectTemporalValuesByTimestampEquals(result);
@@ -2397,14 +2485,22 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByTime
 	@Test
 	public void testSelectTemporalValuesByTime() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE timeOfBirth > '09:27:21'");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			WHERE timeOfBirth > '09:27:21'
+			""");
 
 		assertSelectTemporalValuesByTime(result);
 	}
 
 	@Test
 	public void testSelectTemporalValuesByTimePrepared() {
-		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE timeOfBirth > ?",
+		QueryResult result = queryPrepared("""
+				SELECT *
+				FROM temporal_values
+				WHERE timeOfBirth > ?
+				""",
 			stmt -> stmt.setTime(1, Time.valueOf("09:27:21")));
 
 		assertSelectTemporalValuesByTime(result);
@@ -2420,14 +2516,22 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByTimeEquals
 	@Test
 	public void testSelectTemporalValuesByTimeEquals() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE timeOfBirth = '12:00:00'");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			WHERE timeOfBirth = '12:00:00'
+			""");
 
 		assertSelectTemporalValuesByTimeEquals(result);
 	}
 
 	@Test
 	public void testSelectTemporalValuesByTimeEqualsPrepared() {
-		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE timeOfBirth = ?",
+		QueryResult result = queryPrepared("""
+				SELECT *
+				FROM temporal_values
+				WHERE timeOfBirth = ?
+				""",
 			stmt -> stmt.setTime(1, Time.valueOf("12:00:00")));
 
 		assertSelectTemporalValuesByTimeEquals(result);
@@ -2443,14 +2547,22 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByDate
 	@Test
 	public void testSelectTemporalValuesByDate() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE dateOfBirth > '1985-01-01'");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			WHERE dateOfBirth > '1985-01-01'
+			""");
 
 		assertSelectTemporalValuesByDate(result);
 	}
 
 	@Test
 	public void testSelectTemporalValuesByDatePrepared() {
-		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE dateOfBirth > ?",
+		QueryResult result = queryPrepared("""
+				SELECT *
+				FROM temporal_values
+				WHERE dateOfBirth > ?
+				""",
 			stmt -> stmt.setDate(1, Date.valueOf("1985-01-01")));
 
 		assertSelectTemporalValuesByDate(result);
@@ -2466,14 +2578,22 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByDateEquals
 	@Test
 	public void testSelectTemporalValuesByDateEquals() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE dateOfBirth = '2002-06-15'");
+		QueryResult result = query("""
+			SELECT *
+			FROM temporal_values
+			WHERE dateOfBirth = '2002-06-15'
+			""");
 
 		assertSelectTemporalValuesByDateEquals(result);
 	}
 
 	@Test
 	public void testSelectTemporalValuesByDateEqualsPrepared() {
-		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE dateOfBirth = ?",
+		QueryResult result = queryPrepared("""
+				SELECT *
+				FROM temporal_values
+				WHERE dateOfBirth = ?
+				""",
 			stmt -> stmt.setDate(1, Date.valueOf("2002-06-15")));
 
 		assertSelectTemporalValuesByDateEquals(result);

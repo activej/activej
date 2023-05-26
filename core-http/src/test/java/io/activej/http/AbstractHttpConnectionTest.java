@@ -84,7 +84,12 @@ public final class AbstractHttpConnectionTest {
 				request -> HttpResponse.ok200()
 					.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 					.withHeader(CONTENT_TYPE, "text/\n          html")
-					.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>"))
+					.withBody(wrapAscii("""
+						  <html>
+						<body>
+						<h1>Hello, World!</h1>
+						</body>
+						</html>"""))
 					.toPromise())
 			.withListenPort(port)
 			.withAcceptOnce()
@@ -95,7 +100,13 @@ public final class AbstractHttpConnectionTest {
 			.then(response -> response.loadBody()
 				.whenComplete(TestUtils.assertCompleteFn(body -> {
 					assertEquals("text/           html", response.getHeader(CONTENT_TYPE));
-					assertEquals("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>", body.getString(UTF_8));
+					assertEquals("""
+							  <html>
+							<body>
+							<h1>Hello, World!</h1>
+							</body>
+							</html>""",
+						body.getString(UTF_8));
 				}))));
 	}
 

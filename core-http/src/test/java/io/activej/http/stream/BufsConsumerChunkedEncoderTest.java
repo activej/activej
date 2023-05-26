@@ -44,7 +44,11 @@ public final class BufsConsumerChunkedEncoderTest {
 		list.add(buf);
 		expected.put((Integer.toHexString(100) + "\r\n").getBytes());
 		expected.put(chunkData);
-		expected.put("\r\n0\r\n\r\n".getBytes());
+		expected.put(("""
+			\r
+			0\r
+			\r
+			""").getBytes());
 		consumer.setExpectedBuf(expected);
 		doTest();
 	}
@@ -61,7 +65,11 @@ public final class BufsConsumerChunkedEncoderTest {
 		list.add(empty);
 		expected.put((Integer.toHexString(100) + "\r\n").getBytes());
 		expected.put(chunkData);
-		expected.put("\r\n0\r\n\r\n".getBytes());
+		expected.put(("""
+			\r
+			0\r
+			\r
+			""").getBytes());
 		consumer.setExpectedBuf(expected);
 
 		doTest();

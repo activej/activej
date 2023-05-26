@@ -89,8 +89,16 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private @Nullable ByteBuf writeBuf;
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
-	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
-	private static final byte[] MALFORMED_HTTP_RESPONSE = encodeAscii("HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
+	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("""
+		HTTP/1.1 100 Continue\r
+		\r
+		""");
+	private static final byte[] MALFORMED_HTTP_RESPONSE = encodeAscii("""
+		HTTP/1.1 400 Bad Request\r
+		Connection: close\r
+		Content-Length: 0\r
+		\r
+		""");
 
 	/**
 	 * Creates a new instance of HttpServerConnection

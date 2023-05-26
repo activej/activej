@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 /**
  * This is an util class, which provides a mean to render any exception into an {@link HttpResponse}
  * with the stacktrace rendered nicely.
- * It also generates a link to the IntelliJ IDEA REST API (http://localhost:63342 + port_offset) from the stacktrace,
+ * It also generates a link to the IntelliJ IDEA REST API (<a href="http://localhost:63342">...</a> + port_offset) from the stacktrace,
  * just like IDEA does in its log console.
  */
 public final class DebugStacktraceRenderer {
@@ -34,42 +34,60 @@ public final class DebugStacktraceRenderer {
 
 	@Language("HTML")
 	private static final String DEBUG_SERVER_ERROR_HTML =
-		"<!doctype html>" +
-		"<html lang=\"en\">" +
-		"<head>" +
-		"<meta charset=\"UTF-8\">" +
-		"<title>{title}</title>" +
-		"<style>" +
-		"html, body { height: 100%; margin: 0; padding: 0; }" +
-		"h1, p { font-family: sans-serif; }" +
-		".link { color: #00E; text-decoration: underline; cursor: pointer; }" +
-		"</style>" +
-		"</head>" +
-		"<body>" +
-		"<script>" +
-		"window.onload = () => {" +
-		"function check(portOffset) {" +
-		"if (portOffset > 10) return Promise.reject('no running intellij idea instance found');" +
-		"return fetch('http://localhost:' + (" + IDEA_REST_API_STARTING_PORT + " + portOffset))" +
-		".then(r => r.text())" +
-		".then(t => t.includes('IDEA') ? (" + IDEA_REST_API_STARTING_PORT + " + portOffset) : check(portOffset + 1), () => check(portOffset + 1));" +
-		"}" +
-		"check(0).then(port => document.querySelectorAll('[data-target]').forEach(a => {" +
-		"a.onclick = () => fetch('http://localhost:' + port + '/' + a.dataset.target);" +
-		"a.classList.add('link');" +
-		"}));};" +
-		"</script>" +
-		"<div style=\"position:relative;min-height:100%;\">" +
-		"<h1 style=\"text-align:center;margin-top:0;padding-top:0.5em;\">{title}</h1>" +
-		"<hr style=\"margin-left:10px;margin-right:10px;\">" +
-		"<pre style=\"color:#8B0000;font-size:1.5em;padding:10px 10px 4em;\">{stacktrace}</pre>" +
-		"<div style=\"position:absolute;bottom:1px;width:100%;height:4em\">" +
-		"<hr style=\"margin-left:10px;margin-right:10px\">" +
-		"<p style=\"text-align:center;\">ActiveJ " + HttpExceptionFormatter.ACTIVEJ_VERSION + "</p>" +
-		"</div>" +
-		"</div>" +
-		"</body>" +
-		"</html>";
+		"""
+			<!doctype html>
+			       <html lang="en">
+			       <head>
+			           <meta charset="UTF-8">
+			           <title>{title}</title>
+			           <style>
+			       			html, body {
+			                       height: 100%;
+			                       margin: 0;
+			                       padding: 0;
+			                   }
+
+			                   h1, p {
+			                       font-family: sans-serif;
+			                   }
+
+			                   .link {
+			                       color: #00E;
+			                       text-decoration: underline;
+			                       cursor: pointer;
+			                   }
+			       			</style>
+			       </head>
+			       <body>
+			       <script>
+			       			window.onload = () => {
+			                       function check(portOffset) {
+			                           if (portOffset > 10) return Promise.reject('no running intellij idea instance found');
+			                           return fetch('http://localhost:' + ($ideaRestApiPort + portOffset))
+			                               .then(r => r.text())
+			                               .then(t => t.includes('IDEA') ? ($ideaRestApiPort + portOffset) : check(portOffset + 1), () => check(portOffset + 1));
+			                       }
+
+			                       check(0).then(port => document.querySelectorAll('[data-target]').forEach(a => {
+			                           a.onclick = () => fetch('http://localhost:' + port + '/' + a.dataset.target);
+			                           a.classList.add('link');
+			                       }));
+			                   };
+			       			</script>
+			       <div style="position:relative;min-height:100%;">
+			           <h1 style="text-align:center;margin-top:0;padding-top:0.5em;">{title}</h1>
+			           <hr style="margin-left:10px;margin-right:10px;">
+			           <pre style="color:#8B0000;font-size:1.5em;padding:10px 10px 4em;">{stacktrace}</pre>
+			           <div style="position:absolute;bottom:1px;width:100%;height:4em">
+			               <hr style="margin-left:10px;margin-right:10px">
+			               <p style="text-align:center;">ActiveJ $activejVersion</p>
+			           </div>
+			       </div>
+			       </body>
+			       </html>
+			"""
+			.replace("$ideaRestApiPort", IDEA_REST_API_STARTING_PORT)
+			.replace("$activejVersion", HttpExceptionFormatter.ACTIVEJ_VERSION);
 
 	private static final Pattern STACK_TRACE_ELEMENT;
 

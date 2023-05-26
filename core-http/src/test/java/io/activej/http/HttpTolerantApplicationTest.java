@@ -116,7 +116,13 @@ public final class HttpTolerantApplicationTest {
 					//noinspection StatementWithEmptyBody
 					while (b != -1 && !(((b = in.read()) == CR || b == LF) && (b = in.read()) == LF)) ;
 					System.out.println("write: " + socket);
-					write(socket, "HTTP/1.1 200 OK\nContent-Type:  \t  text/html; charset=UTF-8\nContent-Length:  4\n\n" + text);
+					write(socket, """
+						HTTP/1.1 200 OK
+						Content-Type:  \t  text/html; charset=UTF-8
+						Content-Length:  4
+
+						$text"""
+						.replace("$text", text));
 				} catch (IOException ignored) {
 				}
 			}

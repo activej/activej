@@ -47,54 +47,108 @@ public final class BufsConsumerChunkedDecoderTest {
 	@Test
 	public void shouldIgnoreChunkExtAfterNotLastChunk() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message = "2\r\nab\r\n5;name=value\r\nabcde\r\n0\r\n\r\n";
+		String message = """
+			2\r
+			ab\r
+			5;name=value\r
+			abcde\r
+			0\r
+			\r
+			""";
 		decodeOneString(message, null);
 	}
 
 	@Test
 	public void shouldIgnoreChunkExtAfterLastChunk() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message = "2\r\nab\r\n5\r\nabcde\r\n0;name=value\r\n\r\n";
+		String message = """
+			2\r
+			ab\r
+			5\r
+			abcde\r
+			0;name=value\r
+			\r
+			""";
 		decodeOneString(message, null);
 	}
 
 	@Test
 	public void shouldIgnoreChunkExtAfterChunkInAnotherBuf() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5\r\nabcde\r\n0";
-		String message2 = ";name=value\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5\r
+			abcde\r
+			0""";
+		String message2 = """
+			;name=value\r
+			\r
+			""";
 		decodeTwoStrings(message1, message2);
 	}
 
 	@Test
 	public void shouldIgnoreChunkExtAfterChunkSemicolonInSameBuf() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5\r\nabcde\r\n0;";
-		String message2 = "name=value\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5\r
+			abcde\r
+			0;""";
+		String message2 = """
+			name=value\r
+			\r
+			""";
 		decodeTwoStrings(message1, message2);
 	}
 
 	@Test
 	public void shouldWorkWithSizeCRLFInNextBuf() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5";
-		String message2 = "\r\nabcde\r\n0;name=value\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5""";
+		String message2 = """
+			\r
+			abcde\r
+			0;name=value\r
+			\r
+			""";
 		decodeTwoStrings(message1, message2);
 	}
 
 	@Test
 	public void shouldWorkWithSizeCRLFInSameBuf() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5\r\n";
-		String message2 = "abcde\r\n0;name=value\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5\r
+			""";
+		String message2 = """
+			abcde\r
+			0;name=value\r
+			\r
+			""";
 		decodeTwoStrings(message1, message2);
 	}
 
 	@Test
 	public void shouldWorkWithCRLFInDifferentBufs() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5;abcd\r";
-		String message2 = "\nabcde\r\n0;name=value\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5;abcd\r""";
+		String message2 = """
+
+			abcde\r
+			0;name=value\r
+			\r
+			""";
 		decodeTwoStrings(message1, message2);
 	}
 
@@ -103,7 +157,11 @@ public final class BufsConsumerChunkedDecoderTest {
 		consumer.setExpectedByteArray("1234567890123456789".getBytes());
 		String message1 = "1";
 		String message2 = "3;asdasdasdasd\r\n";
-		String message3 = "1234567890123456789\r\n0\r\n\r\n";
+		String message3 = """
+			1234567890123456789\r
+			0\r
+			\r
+			""";
 		decodeThreeStrings(message1, message2, message3);
 	}
 
@@ -128,25 +186,58 @@ public final class BufsConsumerChunkedDecoderTest {
 	@Test
 	public void shouldIgnoreTrailerPart() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message = "2\r\nab\r\n5\r\nabcde\r\n0\r\ntrailer1\r\ntrailer2\r\n\r\n";
+		String message = """
+			2\r
+			ab\r
+			5\r
+			abcde\r
+			0\r
+			trailer1\r
+			trailer2\r
+			\r
+			""";
 		decodeOneString(message, null);
 	}
 
 	@Test
 	public void shouldIgnoreTrailerPartInMultipleBufs() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5\r\nabcde\r\n0\r\ntra";
-		String message2 = "iler1\r\ntra";
-		String message3 = "iler2\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5\r
+			abcde\r
+			0\r
+			tra""";
+		String message2 = """
+			iler1\r
+			tra
+			""";
+		String message3 = """
+			iler2\r
+			\r
+			""";
 		decodeThreeStrings(message1, message2, message3);
 	}
 
 	@Test
 	public void shouldIgnoreTrailerPartInDifferentBufs() {
 		consumer.setExpectedByteArray("ababcde".getBytes());
-		String message1 = "2\r\nab\r\n5\r\nabcde\r\n0\r\ntra";
-		String message2 = "iler1\r\ntrailer2\r\n";
-		String message3 = "trailer3\r\n\r\n";
+		String message1 = """
+			2\r
+			ab\r
+			5\r
+			abcde\r
+			0\r
+			tra""";
+		String message2 = """
+			iler1\r
+			trailer2\r
+			""";
+		String message3 = """
+			trailer3\r
+			\r
+			""";
 		decodeThreeStrings(message1, message2, message3);
 	}
 

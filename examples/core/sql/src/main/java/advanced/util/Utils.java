@@ -19,7 +19,11 @@ public final class Utils {
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
 				for (String table : tables) {
-					ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table);
+					ResultSet resultSet = statement.executeQuery("""
+						SELECT *
+						FROM $table
+						"""
+						.replace("$table", table));
 
 					System.out.println('\"' + table + "\":\n" + HORIZONTAL_BORDER);
 					ResultSetMetaData metaData = resultSet.getMetaData();

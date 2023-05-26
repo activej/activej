@@ -212,8 +212,10 @@ public final class CubeCleanerController implements ConcurrentJmxBean {
 
 		Set<Long> requiredChunks = new HashSet<>();
 
-		try (PreparedStatement ps = connection.prepareStatement((sql(
-			"SELECT `id` FROM {chunk}")))
+		try (PreparedStatement ps = connection.prepareStatement((sql("""
+			SELECT `id`
+			FROM {chunk}
+			""")))
 		) {
 			ResultSet resultSet = ps.executeQuery();
 

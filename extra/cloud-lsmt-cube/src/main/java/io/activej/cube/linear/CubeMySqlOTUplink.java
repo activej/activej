@@ -156,9 +156,12 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 						List<LogDiff<CubeDiff>> diffs = doFetch(connection, ROOT_REVISION, revision);
 
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"SELECT EXISTS " +
-							"(SELECT * FROM {revision} WHERE `revision`=?)"))
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							SELECT EXISTS
+								(SELECT *
+								FROM {revision}
+								WHERE `revision` = ?)
+							"""))
 						) {
 							ps.setLong(1, revision);
 							ResultSet resultSet = ps.executeQuery();
@@ -222,8 +225,10 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 							throw new IllegalArgumentException("Uplink revision is less than parent revision");
 						}
 						while (true) {
-							try (PreparedStatement ps = connection.prepareStatement(sql(
-								"INSERT INTO {revision} (`revision`, `created_by`) VALUES (?,?)"))
+							try (PreparedStatement ps = connection.prepareStatement(sql("""
+								INSERT INTO {revision} (`revision`, `created_by`)
+								VALUES (?,?)
+								"""))
 							) {
 								ps.setLong(1, ++revision);
 								ps.setString(2, createdBy);
@@ -278,14 +283,33 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	@VisibleForTesting
 	CubeDiff fetchChunkDiffs(Connection connection, long from, long to) throws SQLException, MalformedDataException {
 		CubeDiff cubeDiff;
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"SELECT `id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`," +
-			" ISNULL(`removed_revision`) OR `removed_revision`>? " +
-			"FROM {chunk} " +
-			"WHERE " +
-			"(`removed_revision` BETWEEN ? AND ? AND `added_revision`<?)" +
-			" OR " +
-			"(`added_revision` BETWEEN ? AND ? AND (`removed_revision` IS NULL OR `removed_revision`>?))"))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			SELECT
+				`id`,
+				`aggregation`,
+				`measures`,
+				`min_key`,
+				`max_key`,
+				`item_count`,
+				ISNULL(`removed_revision`) OR `removed_revision` > ?
+			FROM {chunk}
+			WHERE
+				(
+					`removed_revision` BETWEEN ? AND ?
+					AND
+					`added_revision` < ?
+				)
+				OR
+				(
+					`added_revision` BETWEEN ? AND ?
+					AND
+					(
+						`removed_revision` IS NULL
+						OR
+						`removed_revision` > ?
+					)
+				)
+				"""))
 		) {
 			from++;
 			ps.setLong(1, to);
@@ -333,17 +357,19 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	@VisibleForTesting
 	Map<String, LogPositionDiff> fetchPositionDiffs(Connection connection, long from, long to) throws SQLException {
 		Map<String, LogPositionDiff> positions = new HashMap<>();
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to` " +
-			"FROM (SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id`>? as `to`" +
-			" FROM {position}" +
-			" WHERE `revision_id`<=?" +
-			" GROUP BY `partition_id`, `to`) g " +
-			"LEFT JOIN" +
-			" {position} p " +
-			"ON p.`partition_id` = g.`partition_id` " +
-			"AND p.`revision_id` = g.`max_revision` " +
-			"ORDER BY p.`partition_id`, `to`"))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			SELECT p.`partition_id`, p.`filename`, p.`remainder`, p.`position`, g.`to`
+			FROM
+				(
+				SELECT `partition_id`, MAX(`revision_id`) AS `max_revision`, `revision_id` > ? as `to`
+				FROM {position}
+				WHERE `revision_id`<=?
+				GROUP BY `partition_id`, `to`
+				) g
+			LEFT JOIN {position} p
+			ON p.`partition_id` = g.`partition_id`
+				AND p.`revision_id` = g.`max_revision`
+			ORDER BY p.`partition_id`, `to`"""))
 		) {
 			ps.setLong(1, from);
 			ps.setLong(2, to);
@@ -392,10 +418,11 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	}
 
 	private void checkRevisions(Connection connection, long from, long to) throws SQLException, StateFarAheadException {
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"SELECT `revision` " +
-			"FROM {revision} " +
-			"WHERE `revision` BETWEEN ? AND ?"))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			SELECT `revision`
+			FROM {revision}
+			WHERE `revision` BETWEEN ? AND ?
+			"""))
 		) {
 			ps.setLong(1, from);
 			ps.setLong(2, to);
@@ -416,9 +443,11 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	}
 
 	private void addChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException {
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"INSERT INTO {chunk} (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
-			"VALUES " + String.join(",", nCopies(chunks.size(), "(?,?,?,?,?,?,?)"))))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			INSERT INTO {chunk} (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`)
+			VALUES $values
+			"""
+			.replace("$values", String.join(",", nCopies(chunks.size(), "(?,?,?,?,?,?,?)")))))
 		) {
 			int index = 1;
 			for (ChunkWithAggregationId chunk : chunks) {
@@ -447,13 +476,15 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	}
 
 	private void removeChunks(Connection connection, long newRevision, Set<ChunkWithAggregationId> chunks) throws SQLException, OTException {
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"UPDATE {chunk} " +
-			"SET `removed_revision`=? " +
-			"WHERE `id` IN " +
-			nCopies(chunks.size(), "?")
-				.stream()
-				.collect(joining(",", "(", ")"))))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			UPDATE {chunk}
+			SET `removed_revision` = ?
+			WHERE `id` IN $ids
+			"""
+			.replace("$ids",
+				nCopies(chunks.size(), "?")
+					.stream()
+					.collect(joining(",", "(", ")")))))
 		) {
 			int index = 1;
 			ps.setLong(index++, newRevision);
@@ -470,9 +501,11 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	}
 
 	private void updatePositions(Connection connection, long newRevision, Map<String, LogPosition> positions) throws SQLException {
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"INSERT INTO {position} (`revision_id`, `partition_id`, `filename`, `remainder`, `position`) " +
-			"VALUES " + String.join(",", nCopies(positions.size(), "(?,?,?,?,?)"))))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			INSERT INTO {position} (`revision_id`, `partition_id`, `filename`, `remainder`, `position`)
+			VALUES $values
+			"""
+			.replace("$values", String.join(",", nCopies(positions.size(), "(?,?,?,?,?)")))))
 		) {
 			int index = 1;
 			for (Map.Entry<String, LogPosition> entry : positions.entrySet()) {
@@ -524,14 +557,20 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			try (Statement statement = connection.createStatement()) {
 				statement.execute(sql("TRUNCATE TABLE {chunk}"));
 				statement.execute(sql("TRUNCATE TABLE {position}"));
-				statement.execute(sql("DELETE FROM {revision} WHERE `revision`!=0"));
+				statement.execute(sql("""
+					DELETE
+					FROM {revision}
+					WHERE `revision`!=0
+					"""));
 			}
 		}
 	}
 
 	private long getMaxRevision(Connection connection) throws SQLException, OTException {
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"SELECT MAX(`revision`) FROM {revision}"))
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			SELECT MAX(`revision`)
+			FROM {revision}
+			"""))
 		) {
 			ResultSet resultSet = ps.executeQuery();
 			if (!resultSet.next()) {

@@ -193,9 +193,11 @@ public class CubeBackupControllerTest {
 
 	private void assertBackups(long... backupIds) {
 		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement(
-				"SELECT `revision` " +
-				"FROM " + CubeBackupController.BACKUP_REVISION_TABLE)
+			try (PreparedStatement stmt = connection.prepareStatement("""
+				SELECT `revision`
+				FROM $backupRevisionTable
+				"""
+				.replace("$backupRevisionTable", CubeBackupController.BACKUP_REVISION_TABLE))
 			) {
 				ResultSet resultSet = stmt.executeQuery();
 
@@ -213,10 +215,12 @@ public class CubeBackupControllerTest {
 
 	private void assertChunkIds(long backupId, Set<Long> chunkIds) {
 		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement(
-				"SELECT `id`, `added_revision` <= `backup_id` " +
-				"FROM " + CubeBackupController.BACKUP_CHUNK_TABLE +
-				" WHERE `backup_id` = ? ")
+			try (PreparedStatement stmt = connection.prepareStatement("""
+				SELECT `id`, `added_revision` <= `backup_id`
+				FROM $backupChunkTable
+				WHERE `backup_id` = ?\s
+				"""
+				.replace("$backupChunkTable", CubeBackupController.BACKUP_CHUNK_TABLE))
 			) {
 				stmt.setLong(1, backupId);
 
@@ -248,10 +252,12 @@ public class CubeBackupControllerTest {
 
 	private void assertPositions(long backupId, Map<String, LogPosition> positions) {
 		try (Connection connection = dataSource.getConnection()) {
-			try (PreparedStatement stmt = connection.prepareStatement(
-				"SELECT `partition_id`, `filename`, `remainder`, `position` " +
-				"FROM " + CubeBackupController.BACKUP_POSITION_TABLE +
-				" WHERE `backup_id` = ? ")
+			try (PreparedStatement stmt = connection.prepareStatement("""
+				SELECT `partition_id`, `filename`, `remainder`, `position`
+				FROM $backupPositionTable
+				WHERE `backup_id` = ?
+				"""
+				.replace("$backupPositionTable", CubeBackupController.BACKUP_POSITION_TABLE))
 			) {
 				stmt.setLong(1, backupId);
 

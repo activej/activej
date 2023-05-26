@@ -317,8 +317,10 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						for (OTCommit<Long, D> commit : commits) {
-							try (PreparedStatement statement = connection.prepareStatement(sql(
-								"INSERT INTO {revisions}(`id`, `epoch`, `type`, `created_by`, `level`) VALUES (?, ?, 'INNER', ?, ?)")
+							try (PreparedStatement statement = connection.prepareStatement(sql("""
+								INSERT INTO {revisions}(`id`, `epoch`, `type`, `created_by`, `level`)
+								VALUES (?, ?, 'INNER', ?, ?)
+								""")
 							)) {
 								statement.setLong(1, commit.getId());
 								statement.setInt(2, commit.getEpoch());
@@ -329,8 +331,10 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 							for (Long parentId : commit.getParents().keySet()) {
 								List<D> diff = commit.getParents().get(parentId);
-								try (PreparedStatement ps = connection.prepareStatement(sql(
-									"INSERT INTO {diffs}(`revision_id`, `parent_id`, `diff`) VALUES (?, ?, ?)"
+								try (PreparedStatement ps = connection.prepareStatement(sql("""
+									INSERT INTO {diffs}(`revision_id`, `parent_id`, `diff`)
+									VALUES (?, ?, ?)
+									"""
 								))) {
 									ps.setLong(1, commit.getId());
 									ps.setLong(2, parentId);
@@ -376,8 +380,11 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"SELECT `id` FROM {revisions} WHERE `type`='HEAD'"
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							SELECT `id`
+							FROM {revisions}
+							WHERE `type`='HEAD'
+							"""
 						))) {
 							ResultSet resultSet = ps.executeQuery();
 							Set<Long> result = new HashSet<>();
@@ -399,10 +406,12 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"SELECT 1 " +
-							"FROM {revisions} " +
-							"WHERE {revisions}.`id`=? AND {revisions}.`type` IN ('HEAD', 'INNER')"))
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							SELECT 1
+							FROM {revisions}
+							WHERE {revisions}.`id`=?
+								AND {revisions}.`type` IN ('HEAD', 'INNER')
+							"""))
 						) {
 							ps.setLong(1, revisionId);
 							ResultSet resultSet = ps.executeQuery();
@@ -426,16 +435,19 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 						int epoch = 0;
 						long timestamp = 0;
 
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"SELECT " +
-							" {revisions}.`epoch`," +
-							" {revisions}.`level`," +
-							" UNIX_TIMESTAMP({revisions}.`timestamp`) AS `timestamp`, " +
-							" {diffs}.`parent_id`, " +
-							" {diffs}.`diff` " +
-							"FROM {revisions} " +
-							"LEFT JOIN {diffs} ON {diffs}.`revision_id`={revisions}.`id` " +
-							"WHERE {revisions}.`id`=? AND {revisions}.`type` IN ('HEAD', 'INNER')"))
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							SELECT
+								{revisions}.`epoch`,
+								{revisions}.`level`,
+								UNIX_TIMESTAMP({revisions}.`timestamp`) AS `timestamp`,
+								{diffs}.`parent_id`,
+								{diffs}.`diff`
+							FROM {revisions}
+							LEFT JOIN {diffs}
+								ON {diffs}.`revision_id`={revisions}.`id`
+							WHERE {revisions}.`id` = ?
+								AND {revisions}.`type` IN ('HEAD', 'INNER')
+							"""))
 						) {
 							ps.setLong(1, revisionId);
 							ResultSet resultSet = ps.executeQuery();
@@ -472,8 +484,11 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"SELECT `snapshot` IS NOT NULL FROM {revisions} WHERE `id`=?"
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							SELECT `snapshot` IS NOT NULL
+							FROM {revisions}
+							WHERE `id` = ?
+							"""
 						))) {
 							ps.setLong(1, revisionId);
 							ResultSet resultSet = ps.executeQuery();
@@ -492,8 +507,10 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"SELECT `snapshot` FROM {revisions} WHERE `id`=?"
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							SELECT `snapshot`
+							FROM {revisions} WHERE `id`=?
+							"""
 						))) {
 							ps.setLong(1, revisionId);
 							ResultSet resultSet = ps.executeQuery();
@@ -521,8 +538,11 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
 						String snapshot = toJson(otSystem.squash(diffs));
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"UPDATE {revisions} SET `snapshot`=? WHERE `id`=?"))
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							UPDATE {revisions}
+							SET `snapshot` = ?
+							WHERE `id` = ?
+							"""))
 						) {
 							ps.setString(1, snapshot);
 							ps.setLong(2, revisionId);
@@ -547,18 +567,36 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 						connection.setAutoCommit(false);
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"DELETE FROM {revisions} " +
-							"WHERE `type` in ('HEAD', 'INNER') AND `level` < " +
-							"  (SELECT t2.`level` FROM (SELECT t.`level` FROM {revisions} t WHERE t.`id`=?) AS t2)-1"))
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							DELETE FROM {revisions}
+							WHERE
+								`type` in ('HEAD', 'INNER')
+								AND
+								`level` <
+									(
+									SELECT t2.`level`
+									FROM
+										(
+										SELECT t.`level`
+										FROM {revisions} t
+										WHERE t.`id` = ?
+										) AS t2
+									) - 1
+							"""))
 						) {
 							ps.setLong(1, minId);
 							ps.executeUpdate();
 						}
 
-						try (PreparedStatement ps = connection.prepareStatement(sql(
-							"DELETE FROM {diffs} " +
-							"WHERE NOT EXISTS (SELECT * FROM {revisions} WHERE {revisions}.`id`={diffs}.`revision_id`)"))
+						try (PreparedStatement ps = connection.prepareStatement(sql("""
+							DELETE FROM {diffs}
+							WHERE NOT EXISTS
+								(
+								SELECT *
+								FROM {revisions}
+								WHERE {revisions}.`id`={diffs}.`revision_id`
+								)
+							"""))
 						) {
 							ps.executeUpdate();
 						}
@@ -576,8 +614,10 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {
-						try (PreparedStatement statement = connection.prepareStatement(sql(
-							"INSERT INTO {backup}(`id`, `epoch`, `level`, `snapshot`) VALUES (?, ?, ?, ?)"
+						try (PreparedStatement statement = connection.prepareStatement(sql("""
+							INSERT INTO {backup}(`id`, `epoch`, `level`, `snapshot`)
+							VALUES (?, ?, ?, ?)
+							"""
 						))) {
 							statement.setLong(1, commit.getId());
 							statement.setInt(2, commit.getEpoch());
@@ -592,11 +632,17 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private void updateRevisions(Collection<Long> heads, Connection connection, String type) throws SQLException {
 		if (heads.isEmpty()) return;
-		try (PreparedStatement ps = connection.prepareStatement(sql(
-			"UPDATE {revisions} " +
-			"SET `type`='" + type + "' " +
-			"WHERE `id` IN " + Stream.generate(() -> "?").limit(heads.size()).collect(joining(", ", "(", ")"))))
-		) {
+		try (PreparedStatement ps = connection.prepareStatement(sql("""
+			UPDATE {revisions}
+			SET `type` = '$type'
+			WHERE `id` IN $ids
+			"""
+			.replace("$type", type)
+			.replace("$ids",
+				Stream.generate(() -> "?")
+					.limit(heads.size())
+					.collect(joining(", ", "(", ")"))))
+		)) {
 			int pos = 1;
 			for (Long id : heads) {
 				ps.setLong(pos++, id);

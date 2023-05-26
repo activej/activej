@@ -199,7 +199,11 @@ public final class HttpClientTest {
 	@Test
 	public void testClientNoContentLength() throws Exception {
 		String text = "content";
-		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n\r\n" + text));
+		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("""
+			HTTP/1.1 200 OK\r
+			\r
+			$text"""
+			.replace("$text", text)));
 		String responseText = await(customResponse(req, false)
 			.then(response -> response.loadBody())
 			.map(byteBuf -> byteBuf.getString(UTF_8)));
@@ -209,7 +213,11 @@ public final class HttpClientTest {
 	@Test
 	public void testClientNoContentLengthSSL() throws Exception {
 		String text = "content";
-		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n\r\n" + text));
+		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("""
+			HTTP/1.1 200 OK\r
+			\r
+			$text"""
+			.replace("$text", text)));
 		String responseText = await(customResponse(req, false)
 			.then(response -> response.loadBody())
 			.map(byteBuf -> byteBuf.getString(UTF_8)));

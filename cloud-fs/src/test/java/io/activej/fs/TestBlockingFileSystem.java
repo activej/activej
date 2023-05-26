@@ -49,23 +49,54 @@ public final class TestBlockingFileSystem {
 		Files.createDirectories(clientPath);
 
 		Path f = clientPath.resolve("f.txt");
-		Files.writeString(f, "some text1\n\nmore text1\t\n\n\r", CREATE, TRUNCATE_EXISTING);
+		Files.writeString(f, """
+			some text1
+
+			more text1\t
+
+			\r""", CREATE, TRUNCATE_EXISTING);
 
 		Path c = clientPath.resolve("c.txt");
-		Files.writeString(c, "some text2\n\nmore text2\t\n\n\r", CREATE, TRUNCATE_EXISTING);
+		Files.writeString(c, """
+			some text2
+
+			more text2\t
+
+			\r""", CREATE, TRUNCATE_EXISTING);
 
 		Files.createDirectories(storagePath.resolve("1"));
 		Files.createDirectories(storagePath.resolve("2/3"));
 		Files.createDirectories(storagePath.resolve("2/b"));
 
 		Path a1 = storagePath.resolve("1/a.txt");
-		Files.writeString(a1, "1\n2\n3\n4\n5\n6\n", CREATE, TRUNCATE_EXISTING);
+		Files.writeString(a1, """
+			1
+			2
+			3
+			4
+			5
+			6
+			""", CREATE, TRUNCATE_EXISTING);
 
 		Path b = storagePath.resolve("1/b.txt");
-		Files.writeString(b, "7\n8\n9\n10\n11\n12\n", CREATE, TRUNCATE_EXISTING);
+		Files.writeString(b, """
+			7
+			8
+			9
+			10
+			11
+			12
+			""", CREATE, TRUNCATE_EXISTING);
 
 		Path a2 = storagePath.resolve("2/3/a.txt");
-		Files.writeString(a2, "6\n5\n4\n3\n2\n1\n", CREATE, TRUNCATE_EXISTING);
+		Files.writeString(a2, """
+			6
+			5
+			4
+			3
+			2
+			1
+			""", CREATE, TRUNCATE_EXISTING);
 
 		Path d = storagePath.resolve("2/b/d.txt");
 		StringBuilder sb = new StringBuilder();

@@ -55,10 +55,18 @@ public class ChunkLockerMySqlDeadlockTest {
 
 		try (Connection connection = dataSource.getConnection()) {
 			Set<Long> chunkIds = LongStream.range(0, MAX_CHUNK_ID).boxed().collect(toSet());
-			try (PreparedStatement ps = connection.prepareStatement(
-				"INSERT INTO " + CHUNK_TABLE +
-				" (`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`) " +
-				"VALUES (?,?,?,?,?,?,?)")
+			try (PreparedStatement ps = connection.prepareStatement("""
+				INSERT INTO $chunkTable
+					(`id`,
+					`aggregation`,
+					`measures`,
+					`min_key`,
+					`max_key`,
+					`item_count`,
+					`added_revision`)
+				VALUES (?,?,?,?,?,?,?)
+				"""
+				.replace("$chunkTable", CHUNK_TABLE))
 			) {
 				for (Long chunkId : chunkIds) {
 					ps.setLong(1, chunkId);

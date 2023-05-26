@@ -25,32 +25,33 @@ import java.util.concurrent.Executors;
 import static io.activej.http.HttpMethod.POST;
 
 public final class MultipartDataHandlingExample extends HttpServerLauncher {
-	private static final String CRLF = "\r\n";
 	private static final String BOUNDARY = "-----------------------------4336597275426690519140415448";
-	private static final String MULTIPART_REQUEST =
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"id\"" + CRLF +
-		CRLF +
-		"12345" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file1\"; filename=\"data.txt\"" + CRLF +
-		"Content-Type: text/plain" + CRLF +
-		CRLF +
-		"Contet of data.txt" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"first name\"" + CRLF +
-		CRLF +
-		"Alice" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"file2\"; filename=\"key.txt\"" + CRLF +
-		"Content-Type: text/html" + CRLF +
-		CRLF +
-		"Content of key.txt" + CRLF +
-		BOUNDARY + CRLF +
-		"Content-Disposition: form-data; name=\"last name\"" + CRLF +
-		CRLF +
-		"Johnson" + CRLF +
-		BOUNDARY + "--" + CRLF;
+	private static final String MULTIPART_REQUEST = """
+		$boundary\r
+		Content-Disposition: form-data; name="id"\r
+		\r
+		12345\r
+		$boundary\r
+		Content-Disposition: form-data; name="file1"; filename="data.txt"\r
+		Content-Type: text/plain\r
+		\r
+		Contet of data.txt\r
+		$boundary\r
+		Content-Disposition: form-data; name="first name"\r
+		\r
+		Alice\r
+		$boundary\r
+		Content-Disposition: form-data; name="file2"; filename="key.txt"\r
+		Content-Type: text/html\r
+		\r
+		Content of key.txt\r
+		$boundary\r
+		Content-Disposition: form-data; name="last name"\r
+		\r
+		Johnson\r
+		$boundary--\r
+		"""
+		.replace("$boundary", BOUNDARY);
 
 	private Path path;
 	private int fileUploadsCount;

@@ -34,8 +34,10 @@ public final class SqlUserDao extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement(
-					"SELECT first_name, last_name FROM users WHERE id=?")) {
+				try (PreparedStatement statement = connection.prepareStatement("""
+					SELECT first_name, last_name
+					FROM users WHERE id = ?
+					""")) {
 					statement.setLong(1, id);
 					try (ResultSet resultSet = statement.executeQuery()) {
 						if (!resultSet.next()) {
@@ -56,8 +58,10 @@ public final class SqlUserDao extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement(
-					"SELECT * FROM users")) {
+				try (PreparedStatement statement = connection.prepareStatement("""
+					SELECT *
+					FROM users
+					""")) {
 					try (ResultSet resultSet = statement.executeQuery()) {
 						Map<Long, User> result = new LinkedHashMap<>();
 
@@ -80,9 +84,10 @@ public final class SqlUserDao extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement(
-					"INSERT INTO users(first_name, last_name) VALUES(?, ?)")) {
-
+				try (PreparedStatement statement = connection.prepareStatement("""
+					INSERT INTO users(first_name, last_name)
+					VALUES(?, ?)
+					""")) {
 					statement.setString(1, user.firstName());
 					statement.setString(2, user.lastName());
 
@@ -97,9 +102,11 @@ public final class SqlUserDao extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement(
-					"UPDATE users SET first_name=?, last_name=? WHERE id=?")) {
-
+				try (PreparedStatement statement = connection.prepareStatement("""
+					UPDATE users
+					SET first_name=?, last_name= ?\s
+					WHERE id = ?
+					""")) {
 					statement.setString(1, newUser.firstName());
 					statement.setString(2, newUser.lastName());
 					statement.setLong(3, id);
@@ -115,9 +122,10 @@ public final class SqlUserDao extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
-				try (PreparedStatement statement = connection.prepareStatement(
-					"DELETE FROM users WHERE id=?")) {
-
+				try (PreparedStatement statement = connection.prepareStatement("""
+					DELETE FROM users
+					WHERE id = ?
+					""")) {
 					statement.setLong(1, id);
 
 					return statement.executeUpdate() != 0;
