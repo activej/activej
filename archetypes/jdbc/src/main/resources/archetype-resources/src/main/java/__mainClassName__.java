@@ -12,27 +12,27 @@ import java.sql.Statement;
 
 public final class ${mainClassName} extends Launcher {
 
-    @Inject
-    DataSource dataSource;
+	@Inject
+	DataSource dataSource;
 
-    @Override
-    protected void run() throws SQLException {
-        try (
-            Connection connection = dataSource.getConnection();
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT 'Hello, world!'");
-        ) {
-            resultSet.next();
-            System.out.println(resultSet.getString(1));
-        }
-    }
+	@Override
+	protected void run() throws SQLException {
+		try (
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("SELECT 'Hello, world!'");
+		) {
+			resultSet.next();
+			System.out.println(resultSet.getString(1));
+		}
+	}
 
-    @Override
-    protected Module getModule() {
-        return DataSourceModule.create();
-    }
+	@Override
+	protected Module getModule() {
+		return DataSourceModule.create();
+	}
 
-    public static void main(String[] args) throws Exception {
-        new ${mainClassName}().launch(args);
-    }
+	public static void main(String[] args) throws Exception {
+		new ${mainClassName}().launch(args);
+	}
 }

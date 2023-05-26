@@ -9,15 +9,15 @@ import io.activej.promise.Promise;
 
 public class ${mainClassName} extends HttpServerLauncher {
 
-    @Provides
-    AsyncServlet servlet() {
-        return request -> HttpResponse.ok200()
-            .withPlainText("Hello, World!")
-            .toPromise();
-    }
+	@Provides
+	AsyncServlet servlet() {
+		return request -> HttpResponse.ok200()
+			.withPlainText("Hello, World!")
+			.toPromise();
+	}
 
-    public static void main(String[] args) throws Exception {
-        Launcher launcher = new ${mainClassName}();
-        launcher.launch(args);
-    }
+	public static void main(String[] args) throws Exception {
+		Launcher launcher = new ${mainClassName}();
+		launcher.launch(args);
+	}
 }
