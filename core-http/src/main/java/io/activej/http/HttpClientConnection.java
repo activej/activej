@@ -364,7 +364,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 		if ((flags & KEEP_ALIVE) != 0 &&
 			client.keepAliveTimeoutMillis != 0 &&
-			((flags & CHUNKED) != 0 || contentLength != UNSET_CONTENT_LENGTH)) {
+			((flags & CHUNKED) != 0 || contentLength != UNSET_CONTENT_LENGTH)
+		) {
 			flags = 0;
 			socket.read()
 				.subscribe((buf, e) -> {

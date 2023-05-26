@@ -260,7 +260,8 @@ public final class Context {
 		}
 
 		if (!typeFrom.equals(getSelfType()) && !typeTo.equals(getSelfType()) &&
-			toJavaType(typeTo).isAssignableFrom(toJavaType(typeFrom))) {
+			toJavaType(typeTo).isAssignableFrom(toJavaType(typeFrom))
+		) {
 			return;
 		}
 
@@ -277,8 +278,8 @@ public final class Context {
 		}
 
 		if ((isPrimitiveType(typeFrom) || isWrapperType(typeFrom)) &&
-			(isPrimitiveType(typeTo) || isWrapperType(typeTo))) {
-
+			(isPrimitiveType(typeTo) || isWrapperType(typeTo))
+		) {
 			Type targetTypePrimitive = isPrimitiveType(typeTo) ? typeTo : unwrap(typeTo);
 
 			if (isWrapperType(typeFrom)) {

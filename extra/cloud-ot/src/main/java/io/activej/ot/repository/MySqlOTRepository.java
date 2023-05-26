@@ -322,8 +322,8 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 							try (PreparedStatement statement = connection.prepareStatement(sql("""
 								INSERT INTO {revisions}(`id`, `epoch`, `type`, `created_by`, `level`)
 								VALUES (?, ?, 'INNER', ?, ?)
-								""")
-							)) {
+								"""))
+							) {
 								statement.setLong(1, commit.getId());
 								statement.setInt(2, commit.getEpoch());
 								statement.setString(3, createdBy);
@@ -336,8 +336,8 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 								try (PreparedStatement ps = connection.prepareStatement(sql("""
 									INSERT INTO {diffs}(`revision_id`, `parent_id`, `diff`)
 									VALUES (?, ?, ?)
-									"""
-								))) {
+									"""))
+								) {
 									ps.setLong(1, commit.getId());
 									ps.setLong(2, parentId);
 									ps.setString(3, toJson(diff));
@@ -645,8 +645,8 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 			.replace("$ids",
 				Stream.generate(() -> "?")
 					.limit(heads.size())
-					.collect(joining(", ", "(", ")"))))
-		)) {
+					.collect(joining(", ", "(", ")")))))
+		) {
 			int pos = 1;
 			for (Long id : heads) {
 				ps.setLong(pos++, id);

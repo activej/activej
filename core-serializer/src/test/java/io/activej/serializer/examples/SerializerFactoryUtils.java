@@ -71,7 +71,8 @@ public class SerializerFactoryUtils {
 			for (Class<?> valueType : TYPES) {
 				String collectionImplKey = collectionImpl.getKey();
 				if (collectionImplKey.equals("Set") &&
-					(valueType == byte.class || valueType == float.class || valueType == double.class)) {
+					(valueType == byte.class || valueType == float.class || valueType == double.class)
+				) {
 					continue;
 				}
 				String valueTypeName = valueType.getSimpleName();

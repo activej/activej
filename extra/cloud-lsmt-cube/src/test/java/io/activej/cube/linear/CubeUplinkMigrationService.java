@@ -72,7 +72,8 @@ public final class CubeUplinkMigrationService {
 				.then(checkoutData -> {
 					if (checkoutData.level() != 0 ||
 						checkoutData.commitId() != 0 ||
-						!checkoutData.diffs().isEmpty()) {
+						!checkoutData.diffs().isEmpty()
+					) {
 						throw new IllegalStateException("Uplink repository is not empty");
 					}
 					//noinspection Convert2MethodRef

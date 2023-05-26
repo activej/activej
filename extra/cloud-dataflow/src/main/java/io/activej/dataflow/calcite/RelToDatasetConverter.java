@@ -122,7 +122,8 @@ public class RelToDatasetConverter {
 
 			if (!(projectOperand instanceof RecordField operandRecordField) ||
 				operandRecordField.index != i ||
-				!scheme.getField(i).equals(fieldName)) {
+				!scheme.getField(i).equals(fieldName)
+			) {
 				redundantProjection = false;
 			}
 		}
@@ -141,7 +142,8 @@ public class RelToDatasetConverter {
 				RecordProjectionFn materializedFn = projectionFn.materialize(params);
 
 				if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset) ||
-					!(locallySortedDataset.keyComparator() instanceof RecordSortComparator)) {
+					!(locallySortedDataset.keyComparator() instanceof RecordSortComparator)
+				) {
 					return Datasets.map(materialized, materializedFn, RecordStreamSchema.create(toScheme));
 				}
 

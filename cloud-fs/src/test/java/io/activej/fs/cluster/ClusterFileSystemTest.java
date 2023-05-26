@@ -365,7 +365,8 @@ public final class ClusterFileSystemTest {
 			for (Path path : paths) {
 				Path targetPath = path.resolve(entry.getValue());
 				if (Files.exists(targetPath) &&
-					Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
+					Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))
+				) {
 					copies.computeIfPresent(source, ($, count) -> ++count);
 				}
 			}
@@ -446,7 +447,8 @@ public final class ClusterFileSystemTest {
 			for (Path path : paths) {
 				Path targetPath = path.resolve(entry.getValue());
 				if (Files.exists(targetPath) &&
-					Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))) {
+					Arrays.equals((contentPrefix + source).getBytes(), Files.readAllBytes(targetPath))
+				) {
 					copies.computeIfPresent(source, ($, count) -> ++count);
 				}
 			}

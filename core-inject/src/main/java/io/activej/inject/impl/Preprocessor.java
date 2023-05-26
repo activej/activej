@@ -515,7 +515,8 @@ public final class Preprocessor {
 		(keybind, missing, upperKnown, bindings) -> {
 			Class<?> rawType = keybind.getKey().getRawType();
 			if (Modifier.isStatic(rawType.getModifiers()) ||
-				!missing.getRawType().equals(rawType.getEnclosingClass())) {
+				!missing.getRawType().equals(rawType.getEnclosingClass())
+			) {
 				return null;
 			}
 			return "this is a non-static inner class with implicit dependency on its enclosing class";

@@ -137,7 +137,8 @@ public abstract class WebSocketServlet extends AbstractReactive
 
 	private static Promise<Void> validateHeaders(HttpRequest request) {
 		if (isUpgradeHeaderMissing(request) ||
-			!Arrays.equals(WEB_SOCKET_VERSION, request.getHeader(SEC_WEBSOCKET_VERSION, ByteBuf::getArray))) {
+			!Arrays.equals(WEB_SOCKET_VERSION, request.getHeader(SEC_WEBSOCKET_VERSION, ByteBuf::getArray))
+		) {
 			return Promise.ofException(NOT_A_WEB_SOCKET_REQUEST);
 		}
 		return Promise.complete();

@@ -147,7 +147,8 @@ public final class Triggers implements ConcurrentJmxBean {
 				if (oldTriggerWithResult == null ||
 					oldTriggerWithResult.trigger().getSeverity().ordinal() < trigger.getSeverity().ordinal() ||
 					oldTriggerWithResult.trigger().getSeverity() == trigger.getSeverity() &&
-					oldTriggerWithResult.triggerResult().getTimestamp() > triggerResult.getTimestamp()) {
+					oldTriggerWithResult.triggerResult().getTimestamp() > triggerResult.getTimestamp()
+				) {
 					maxSeverityResults.put(trigger, new TriggerWithResult(trigger, triggerResult
 						.withCount(triggerResult.getCount())));
 				} else {

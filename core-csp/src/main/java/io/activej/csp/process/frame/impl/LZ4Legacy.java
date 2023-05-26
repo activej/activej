@@ -354,7 +354,8 @@ public final class LZ4Legacy implements FrameFormat {
 				|| (originalLen < 0 || compressedLen < 0)
 				|| (originalLen == 0 && compressedLen != 0)
 				|| (originalLen != 0 && compressedLen == 0)
-				|| (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)) {
+				|| (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)
+			) {
 				throw new MalformedDataException("Malformed header");
 			}
 			if (originalLen == 0) {

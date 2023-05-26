@@ -451,7 +451,8 @@ public final class OTAlgorithms {
 
 			if (head2roots.keySet()
 				.stream()
-				.anyMatch(head -> head2roots.get(head).equals(root2heads.keySet()))) {
+				.anyMatch(head -> head2roots.get(head).equals(root2heads.keySet()))
+			) {
 				return completePromise(graph);
 			}
 			return resumePromise();

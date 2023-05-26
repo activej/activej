@@ -65,7 +65,8 @@ public final class StringSerializerDef extends AbstractSerializerDef implements 
 		return set(pos, get(() -> {
 			Expression string = cast(value, String.class);
 			if (compatibilityLevel == LEVEL_1 &&
-				(format == ISO_8859_1 || format == UTF8)) {
+				(format == ISO_8859_1 || format == UTF8)
+			) {
 				// UTF-MB3
 				return nullable ?
 					staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
