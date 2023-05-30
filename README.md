@@ -5,9 +5,12 @@
 
 [ActiveJ](https://activej.io) is a modern Java platform built from the ground up.
 It is designed to be self-sufficient (no third-party dependencies), simple, lightweight and provides competitive performance.
-ActiveJ consists of a range of libraries, from dependency injection and high-performance
-asynchronous I/O (inspired by Node.js), to application servers and big data solutions. You can use ActiveJ to build scalable
-web applications, distributed systems and use it for high-load data processing.
+ActiveJ consists of a range of orthogonal libraries, from dependency injection and high-performance
+asynchronous I/O (inspired by Node.js), to application servers and big data solutions. 
+
+These libraries have as few dependencies as possible with respect to each other and can be used together or separately. 
+ActiveJ in not yet another framework that forces the user to use it on an all-or-nothing basis, but instead it gives 
+the user as much freedom as possible in terms of choosing library components for particular tasks.
 
 ## ActiveJ components
 
