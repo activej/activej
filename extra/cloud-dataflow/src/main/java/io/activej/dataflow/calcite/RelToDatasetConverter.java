@@ -316,11 +316,21 @@ public class RelToDatasetConverter {
 		RecordScheme outputScheme = recordReducer.getOutputScheme();
 		return UnmaterializedDataset.of(
 			outputScheme,
-			params -> Datasets.sortReduceRepartitionReduce(current.materialize(params), recordReducer,
-				Record.class, keyFunction, RecordKeyComparator.getInstance(),
-				RecordStreamSchema.create(accumulatorScheme),
-				keyFunction,
-				RecordStreamSchema.create(outputScheme)));
+			params -> {
+				Dataset<Record> dataset = current.materialize(params);
+
+				LocallySortedDataset<Record, Record> sorted;
+				if (groupSet.isEmpty()) {
+					sorted = Datasets.castToSorted(dataset, Record.class, keyFunction, RecordKeyComparator.getInstance());
+				} else {
+					sorted = Datasets.localSort(dataset, Record.class, keyFunction, RecordKeyComparator.getInstance());
+				}
+				LocallySortedDataset<Record, Record> localReduced = Datasets.localReduce(
+					sorted, recordReducer.inputToAccumulator(),
+					RecordStreamSchema.create(accumulatorScheme), keyFunction
+				);
+				return Datasets.repartitionReduce(localReduced, recordReducer.accumulatorToOutput(), RecordStreamSchema.create(outputScheme));
+			});
 	}
 
 	private static Function<Record, Record> getKeyFunction(List<Integer> indices) {
