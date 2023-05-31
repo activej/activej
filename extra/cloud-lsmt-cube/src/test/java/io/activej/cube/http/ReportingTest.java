@@ -777,6 +777,36 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	@Test
+	public void testQueryWithInNotEqNullPredicate() {
+		CubeQuery queryWithPredicateIn = CubeQuery.create()
+				.withAttributes("advertiser.name")
+				.withOrderings(CubeQuery.Ordering.asc("attribute.name"))
+				.withWhere(and(
+						notEq("advertiser", EXCLUDE_ADVERTISER),
+						notEq("campaign", EXCLUDE_CAMPAIGN),
+						notEq("banner", EXCLUDE_BANNER)
+				))
+				.withHaving(and(
+						in("advertiser.name", "first", "third"),
+						notEq("advertiser.name", null)
+				))
+				.withMeasures("clicks", "ctr", "conversions")
+				.withReportType(DATA_WITH_TOTALS);
+
+		QueryResult in = await(cubeHttpClient.query(queryWithPredicateIn));
+
+		List<String> expectedRecordFields = asList("advertiser.name", "clicks", "ctr", "conversions");
+		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
+		assertEquals(2, in.getTotalCount());
+
+		assertEquals("first", in.getRecords().get(0).get("advertiser.name"));
+		assertEquals(10, in.getRecords().get(0).getInt("clicks"));
+
+		assertEquals("third", in.getRecords().get(1).get("advertiser.name"));
+		assertEquals(5, in.getRecords().get(1).getInt("clicks"));
+	}
+
+	@Test
 	public void testMetaOnlyQueryHasEmptyMeasuresWhenNoAggregationsFound() {
 		CubeQuery queryAffectingNonCompatibleAggregations = CubeQuery.create()
 				.withAttributes("date", "advertiser", "affiliate")

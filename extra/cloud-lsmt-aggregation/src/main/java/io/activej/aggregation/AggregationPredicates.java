@@ -205,7 +205,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateIn.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (right.values.contains(left.value))
+			if (left.value != null && right.values.contains(left.value))
 				return left;
 			return alwaysFalse();
 		});
@@ -269,7 +269,7 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateIn.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (right.values.contains(left.value)) {
+			if (left.value != null && right.values.contains(left.value)) {
 				SortedSet newValues = new TreeSet<>(right.values);
 				newValues.remove(left.value);
 				return in(right.key, newValues);
@@ -1157,10 +1157,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.cmpNe(
-					E.value(false),
-					E.call(E.value(values), "contains",
-							E.cast(E.property(record, key.replace('.', '$')), Object.class)));
+			Variable property = E.property(record, key.replace('.', '$'));
+			return E.and(isNotNull(property, fields.get(key)),
+					E.cmpNe(E.value(false),
+							E.call(E.value(values), "contains",
+									E.cast(property, Object.class))));
+
 		}
 
 		@Override
