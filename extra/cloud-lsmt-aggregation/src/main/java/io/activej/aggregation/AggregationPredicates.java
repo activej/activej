@@ -269,8 +269,11 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateIn.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (right.values.contains(left.value))
-				return alwaysFalse();
+			if (right.values.contains(left.value)) {
+				SortedSet newValues = new TreeSet<>(right.values);
+				newValues.remove(left.value);
+				return in(right.key, newValues);
+			}
 			return right;
 		});
 

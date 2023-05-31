@@ -756,6 +756,27 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	@Test
+	public void testQueryWithInNotEqIntersectionPredicate() {
+		CubeQuery queryWithPredicateIn = CubeQuery.create()
+				.withWhere(and(
+						notEq("affiliate", EXCLUDE_AFFILIATE),
+						and(
+								in("site", "site1.com", "site2.com"),
+								notEq("site", "site2.com")
+						)))
+				.withMeasures("clicks", "ctr", "conversions")
+				.withReportType(DATA_WITH_TOTALS);
+
+		QueryResult in = await(cubeHttpClient.query(queryWithPredicateIn));
+
+		List<String> expectedRecordFields = asList("clicks", "ctr", "conversions");
+		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
+		assertEquals(1, in.getTotalCount());
+
+		assertEquals(11, in.getRecords().get(0).getInt("clicks"));
+	}
+
+	@Test
 	public void testMetaOnlyQueryHasEmptyMeasuresWhenNoAggregationsFound() {
 		CubeQuery queryAffectingNonCompatibleAggregations = CubeQuery.create()
 				.withAttributes("date", "advertiser", "affiliate")

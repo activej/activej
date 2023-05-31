@@ -447,7 +447,7 @@ public class PredicatesTest {
 		assertEquals(in("x", 1), predicate.simplify());
 
 		predicate = and(notEq("x", 0), in("x", 0, 1, 2, 3));
-		assertEquals(alwaysFalse(), predicate.simplify());
+		assertEquals(in("x", 1, 2, 3), predicate.simplify());
 
 		predicate = and(notEq("x", 0), has("x"));
 		assertEquals(notEq("x", 0), predicate.simplify());
