@@ -206,14 +206,13 @@ public class RelToDatasetConverter {
 				filtered = Datasets.localLimit(filtered, offset + limit);
 			}
 
-			List<Integer> indexes = new ArrayList<>(dataflowPartitionedTable.getPrimaryKeyIndexes());
-			if (indexes.isEmpty()) {
-				for (int i = 0; i < scheme.size(); i++) {
-					indexes.add(i);
-				}
-			}
+			Set<Integer> indexes = dataflowPartitionedTable.getPrimaryKeyIndexes();
 
-			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
+			Function<Record, Record> keyFunction = indexes.isEmpty() ?
+				IdentityFunction.getInstance() :
+				getKeyFunction(indexes);
+
+			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, keyFunction, RecordKeyComparator.getInstance());
 
 			Reducer<Record, Record, Record, ?> providedReducer = dataflowPartitionedTable.getReducer();
 			Reducer<Record, Record, Record, ?> reducer = new NamedReducer(id, (Reducer<Record, Record, Record, Object>) providedReducer);
@@ -333,7 +332,7 @@ public class RelToDatasetConverter {
 			});
 	}
 
-	private static Function<Record, Record> getKeyFunction(List<Integer> indices) {
+	private static Function<Record, Record> getKeyFunction(Collection<Integer> indices) {
 		List<FieldProjection> projections = new ArrayList<>(indices.size());
 		for (Integer index : indices) {
 			projections.add(new FieldProjection(recordField(index), String.valueOf(index)));

@@ -166,7 +166,6 @@ public class Datasets {
 	) {
 		return new SplitSortReduceRepartitionReduce<>(dataset, inputKeyFunction, accumulatorKeyFunction, keyComparator,
 			reducer, outputStreamSchema, accumulatorStreamSchema, sortBufferSize);
-
 	}
 
 	public static <K, I, A> Dataset<A> splitSortReduceRepartitionReduce(

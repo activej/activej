@@ -62,6 +62,7 @@ public abstract class CalciteTestBase {
 
 	public static final String STUDENT_TABLE_NAME = "student";
 	public static final String STUDENT_DUPLICATES_TABLE_NAME = "student_duplicates";
+	public static final String STUDENT_DUPLICATES_NO_PRIMARY_TABLE_NAME = "student_duplicates_no_primary";
 	public static final String DEPARTMENT_TABLE_NAME = "department";
 	public static final String REGISTRY_TABLE_NAME = "registry";
 	public static final String USER_PROFILE_TABLE_NAME = "profiles";
@@ -90,6 +91,14 @@ public abstract class CalciteTestBase {
 	protected static final List<Student> STUDENT_DUPLICATES_LIST_2 = List.of(
 		new Student(3, "John", "Truman", 2),
 		new Student(2, "Bob", "Black", 2),
+		new Student(5, "Jack", "Dawson", 3));
+
+	protected static final List<Student> STUDENT_DUPLICATES_NO_PRIMARY_LIST_1 = List.of(
+		new Student(4, "Mark", null, 3),
+		new Student(1, "John", "Doe", 1),
+		new Student(5, "Jack", "Dawson", 2));
+	protected static final List<Student> STUDENT_DUPLICATES_NO_PRIMARY_LIST_2 = List.of(
+		new Student(1, "John", "Doe", 1),
 		new Student(5, "Jack", "Dawson", 3));
 
 	protected static final List<Department> DEPARTMENT_LIST_1 = List.of(
@@ -260,6 +269,7 @@ public abstract class CalciteTestBase {
 			.bind(setTableKey).to(classLoader -> Set.of(createSubjectSelectionTable(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createFilterableTable(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createPartitionedStudentTable(classLoader)), DefiningClassLoader.class)
+			.bind(setTableKey).to(classLoader -> Set.of(createPartitionedStudentTableNoPrimary(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createCustomTable(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createPartitionedCustomTable(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createTemporalValuesTable(classLoader)), DefiningClassLoader.class)
@@ -294,6 +304,7 @@ public abstract class CalciteTestBase {
 				.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_1)
 				.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_1))
 				.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_1)
+				.bind(datasetId(STUDENT_DUPLICATES_NO_PRIMARY_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_NO_PRIMARY_LIST_1)
 				.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_1)
 				.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_1)
 				.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_1)
@@ -312,6 +323,7 @@ public abstract class CalciteTestBase {
 				.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_2)
 				.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_2))
 				.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_2)
+				.bind(datasetId(STUDENT_DUPLICATES_NO_PRIMARY_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_NO_PRIMARY_LIST_2)
 				.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_2)
 				.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_2)
 				.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_2)
@@ -424,6 +436,16 @@ public abstract class CalciteTestBase {
 	private static DataflowPartitionedTable<Student> createPartitionedStudentTable(DefiningClassLoader classLoader) {
 		return DataflowPartitionedTable.builder(classLoader, STUDENT_DUPLICATES_TABLE_NAME, Student.class)
 			.withKeyColumn("id", int.class, Student::id)
+			.withColumn("firstName", String.class, Student::firstName)
+			.withColumn("lastName", String.class, Student::lastName)
+			.withColumn("dept", int.class, Student::dept)
+			.withReducer(new StudentReducer())
+			.build();
+	}
+
+	private static DataflowPartitionedTable<Student> createPartitionedStudentTableNoPrimary(DefiningClassLoader classLoader) {
+		return DataflowPartitionedTable.builder(classLoader, STUDENT_DUPLICATES_NO_PRIMARY_TABLE_NAME, Student.class)
+			.withColumn("id", int.class, Student::id)
 			.withColumn("firstName", String.class, Student::firstName)
 			.withColumn("lastName", String.class, Student::lastName)
 			.withColumn("dept", int.class, Student::dept)

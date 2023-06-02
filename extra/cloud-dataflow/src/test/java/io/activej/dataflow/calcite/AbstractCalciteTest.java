@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.common.Utils;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -46,6 +47,21 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 					Function.identity(),
 					(student1, student2) -> student1.dept() > student2.dept() ? student1 : student2))
 				.values()));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectAllStudentsWithDuplicatesNoPrimary() {
+		QueryResult result = query("""
+			SELECT *
+			FROM student_duplicates_no_primary
+			""");
+
+		QueryResult expected = studentsToQueryResult(Utils.concat(
+			STUDENT_DUPLICATES_NO_PRIMARY_LIST_1,
+			STUDENT_DUPLICATES_NO_PRIMARY_LIST_2.subList(1, 2)
+		));
 
 		assertEquals(expected, result);
 	}
