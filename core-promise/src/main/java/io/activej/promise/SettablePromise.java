@@ -19,8 +19,6 @@ package io.activej.promise;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.reactor.Reactor.getCurrentReactor;
-
 /**
  * Represents a {@link Promise} which can be completed or completedExceptionally
  * manually at once or later in the future.
@@ -48,11 +46,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Sett
 	 */
 	@Override
 	public void set(T result, @Nullable Exception e) {
-		if (e == null) {
-			set(result);
-		} else {
-			setException(e);
-		}
+		complete(result, e);
 	}
 
 	/**
@@ -80,6 +74,16 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Sett
 	}
 
 	/**
+	 * Tries to set result or exception for this {@code SettablePromise}
+	 * if it is not completed yet. Otherwise, does nothing.
+	 */
+	@Override
+	@Async.Execute
+	public boolean trySet(T result, @Nullable Exception e) {
+		return tryComplete(result, e);
+	}
+
+	/**
 	 * Tries to set provided {@code result} for this
 	 * {@code SettablePromise} if it is not completed yet.
 	 * Otherwise, does nothing.
@@ -87,11 +91,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Sett
 	@Override
 	@Async.Execute
 	public boolean trySet(T result) {
-		if (!isComplete()) {
-			set(result);
-			return true;
-		}
-		return false;
+		return tryComplete(result);
 	}
 
 	/**
@@ -102,68 +102,11 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Sett
 	@Override
 	@Async.Execute
 	public boolean trySetException(Exception e) {
-		if (!isComplete()) {
-			setException(e);
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Tries to set result or exception for this {@code SettablePromise}
-	 * if it is not completed yet. Otherwise, does nothing.
-	 */
-	@Override
-	@Async.Execute
-	public boolean trySet(T result, @Nullable Exception e) {
-		if (!isComplete()) {
-			if (e == null) {
-				set(result);
-			} else {
-				setException(e);
-			}
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public void post(T result) {
-		getCurrentReactor().post(() -> set(result));
-	}
-
-	@Override
-	public void postException(Exception e) {
-		getCurrentReactor().post(() -> setException(e));
-	}
-
-	@Override
-	public void post(T result, @Nullable Exception e) {
-		getCurrentReactor().post(() -> set(result, e));
-	}
-
-	@Override
-	public void tryPost(T result) {
-		getCurrentReactor().post(() -> trySet(result));
-	}
-
-	@Override
-	public void tryPostException(Exception e) {
-		getCurrentReactor().post(() -> trySetException(e));
-	}
-
-	@Override
-	public void tryPost(T result, @Nullable Exception e) {
-		getCurrentReactor().post(() -> trySet(result, e));
+		return tryCompleteExceptionally(e);
 	}
 
 	@Override
 	public String describe() {
 		return "SettablePromise";
-	}
-
-	@Override
-	public void accept(T result, @Nullable Exception e) {
-		set(result, e);
 	}
 }

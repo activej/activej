@@ -27,11 +27,6 @@ public abstract class NextPromise<T, R> extends AbstractPromise<R> implements Se
 	public abstract void acceptNext(T result, @Nullable Exception e);
 
 	@Override
-	public void accept(R result, @Nullable Exception e) {
-		complete(result, e);
-	}
-
-	@Override
 	public void set(R result, @Nullable Exception e) {
 		complete(result, e);
 	}

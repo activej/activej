@@ -19,8 +19,6 @@ package io.activej.promise;
 import io.activej.async.callback.Callback;
 import org.jetbrains.annotations.Nullable;
 
-import static io.activej.reactor.Reactor.getCurrentReactor;
-
 public interface SettableCallback<T> extends Callback<T> {
 	default void set(T result, @Nullable Exception e) {
 		accept(result, e);
@@ -48,29 +46,10 @@ public interface SettableCallback<T> extends Callback<T> {
 		return trySet(null, e);
 	}
 
-	default void post(T result, @Nullable Exception e) {
-		getCurrentReactor().post(() -> set(result, e));
-	}
-
-	default void post(T result) {
-		getCurrentReactor().post(() -> set(result));
-	}
-
-	default void postException(Exception e) {
-		getCurrentReactor().post(() -> setException(e));
-	}
-
-	default void tryPost(T result, @Nullable Exception e) {
-		getCurrentReactor().post(() -> trySet(result, e));
-	}
-
-	default void tryPost(T result) {
-		getCurrentReactor().post(() -> trySet(result));
-	}
-
-	default void tryPostException(Exception e) {
-		getCurrentReactor().post(() -> trySetException(e));
-	}
-
 	boolean isComplete();
+
+	@Override
+	default void accept(T result, @Nullable Exception e) {
+		set(result, e);
+	}
 }
