@@ -28,6 +28,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.*;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.schedule.ReactorScheduler;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +54,7 @@ import static java.util.Arrays.asList;
 /**
  * Allows managing multiple {@link Promise}s.
  */
-@SuppressWarnings({"WeakerAccess", "unchecked"})
+@SuppressWarnings({"WeakerAccess", "unchecked", "RedundantCast"})
 @StaticFactories(Promise.class)
 public class Promises {
 	/**
@@ -61,7 +62,11 @@ public class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> Promise<T> timeout(Duration delay, Promise<T> promise) {
-		return timeout(delay.toMillis(), promise);
+		return timeout((ReactorScheduler) getCurrentReactor(), delay, promise);
+	}
+
+	public static <T> Promise<T> timeout(ReactorScheduler reactor, Duration delay, Promise<T> promise) {
+		return timeout(reactor, delay.toMillis(), promise);
 	}
 
 	/**
@@ -74,41 +79,77 @@ public class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> Promise<T> timeout(long delay, Promise<T> promise) {
+		return timeout((ReactorScheduler) getCurrentReactor(), delay, promise);
+	}
+
+	public static <T> Promise<T> timeout(ReactorScheduler reactor, long delay, Promise<T> promise) {
 		if (promise.isComplete()) return promise;
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
-		SettablePromise<T> settablePromise = new SettablePromise<>();
-		ScheduledRunnable schedule = getCurrentReactor().delay(delay,
-			() -> settablePromise.tryCompleteExceptionally(new AsyncTimeoutException("Promise timeout")));
-		promise.subscribe((result, e) -> {
-			schedule.cancel();
-			if (!settablePromise.trySet(result, e)) {
-				Recyclers.recycle(result);
-			}
+		return Promise.ofCallback(cb -> {
+			ScheduledRunnable scheduled = new ScheduledRunnable(reactor.currentTimeMillis() + delay) {
+				@Override
+				public void run() {
+					cb.trySetException(new AsyncTimeoutException("Promise timeout"));
+				}
+			};
+			reactor.schedule(scheduled);
+			promise.subscribe((result, e) -> {
+				scheduled.cancel();
+				if (!cb.trySet(result, e)) {
+					Recyclers.recycle(result);
+				}
+			});
 		});
-		return settablePromise;
 	}
 
 	@Contract(pure = true)
 	public static Promise<Void> delay(Duration delay) {
-		return delay(delay.toMillis(), (Void) null);
+		return delay((ReactorScheduler) getCurrentReactor(), delay);
+	}
+
+	public static Promise<Void> delay(ReactorScheduler reactor, Duration delay) {
+		return delay(reactor, delay.toMillis());
 	}
 
 	@Contract(pure = true)
 	public static Promise<Void> delay(long delayMillis) {
-		return delay(delayMillis, (Void) null);
+		return delay((ReactorScheduler) getCurrentReactor(), delayMillis);
+	}
+
+	public static Promise<Void> delay(ReactorScheduler reactor, long delayMillis) {
+		if (delayMillis <= 0) return Promise.of(null);
+		return Promise.ofCallback(cb ->
+			reactor.schedule(new ScheduledRunnable(reactor.currentTimeMillis() + delayMillis) {
+				@Override
+				public void run() {
+					cb.set(null);
+				}
+			}));
 	}
 
 	@Contract(pure = true)
 	public static <T> Promise<T> delay(Duration delay, T value) {
-		return delay(delay.toMillis(), value);
+		return delay((ReactorScheduler) getCurrentReactor(), delay, value);
+	}
+
+	public static <T> Promise<T> delay(ReactorScheduler reactor, Duration delay, T value) {
+		return delay(reactor, delay.toMillis(), value);
 	}
 
 	@Contract(pure = true)
 	public static <T> Promise<T> delay(long delayMillis, T value) {
+		return delay((ReactorScheduler) getCurrentReactor(), delayMillis, value);
+	}
+
+	public static <T> Promise<T> delay(ReactorScheduler reactor, long delayMillis, T value) {
 		if (delayMillis <= 0) return Promise.of(value);
-		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentReactor().delay(delayMillis, () -> cb.set(value));
-		return cb;
+		return Promise.ofCallback(cb ->
+			reactor.schedule(new ScheduledRunnable(reactor.currentTimeMillis() + delayMillis) {
+				@Override
+				public void run() {
+					cb.set(value);
+				}
+			}));
 	}
 
 	/**
@@ -116,7 +157,11 @@ public class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> Promise<T> delay(Duration delay, Promise<T> promise) {
-		return delay(delay.toMillis(), promise);
+		return delay((ReactorScheduler) getCurrentReactor(), delay, promise);
+	}
+
+	public static <T> Promise<T> delay(ReactorScheduler reactor, Duration delay, Promise<T> promise) {
+		return delay(reactor, delay.toMillis(), promise);
 	}
 
 	/**
@@ -129,63 +174,110 @@ public class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
+		return delay((ReactorScheduler) getCurrentReactor(), delayMillis, promise);
+	}
+
+	public static <T> Promise<T> delay(ReactorScheduler reactor, long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-			getCurrentReactor().delay(delayMillis, () -> promise.subscribe(cb)));
+			reactor.schedule(new ScheduledRunnable(reactor.currentTimeMillis() + delayMillis) {
+				@Override
+				public void run() {
+					promise.subscribe(cb);
+				}
+			}));
 	}
 
 	@Contract(pure = true)
 	public static <T> Promise<T> interval(Duration interval, Promise<T> promise) {
-		return interval(interval.toMillis(), promise);
+		return interval((ReactorScheduler) getCurrentReactor(), interval, promise);
+	}
+
+	public static <T> Promise<T> interval(ReactorScheduler reactor, Duration interval, Promise<T> promise) {
+		return interval(reactor, interval.toMillis(), promise);
 	}
 
 	@Contract(pure = true)
 	public static <T> Promise<T> interval(long intervalMillis, Promise<T> promise) {
+		return interval((ReactorScheduler) getCurrentReactor(), intervalMillis, promise);
+	}
+
+	public static <T> Promise<T> interval(ReactorScheduler reactor, long intervalMillis, Promise<T> promise) {
 		return intervalMillis <= 0 ?
 			promise :
-			promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, () -> cb.set(value))));
+			promise.then(value -> delay(reactor, intervalMillis, value));
 	}
 
 	/**
-	 * @see #schedule(Promise, long)
+	 * @see #schedule(long, Promise)
 	 */
 	@Contract(pure = true)
 	public static Promise<Void> schedule(Instant instant) {
-		return schedule((Void) null, instant.toEpochMilli());
+		return schedule((ReactorScheduler) getCurrentReactor(), instant);
+	}
+
+	public static Promise<Void> schedule(ReactorScheduler reactor, Instant instant) {
+		return schedule(reactor, instant.toEpochMilli());
 	}
 
 	/**
-	 * @see #schedule(Promise, long)
+	 * @see #schedule(long, Promise)
 	 */
 	@Contract(pure = true)
 	public static Promise<Void> schedule(long timestamp) {
-		return schedule((Void) null, timestamp);
+		return schedule((ReactorScheduler) getCurrentReactor(), timestamp);
+	}
+
+	public static Promise<Void> schedule(ReactorScheduler reactor, long timestamp) {
+		return Promise.ofCallback(cb ->
+			reactor.schedule(new ScheduledRunnable(timestamp) {
+				@Override
+				public void run() {
+					cb.set(null);
+				}
+			}));
 	}
 
 	/**
-	 * @see #schedule(Promise, long)
+	 * @see #schedule(long, Promise)
 	 */
 	@Contract(pure = true)
-	public static <T> Promise<T> schedule(T value, Instant instant) {
-		return schedule(value, instant.toEpochMilli());
+	public static <T> Promise<T> schedule(Instant instant, T value) {
+		return schedule((ReactorScheduler) getCurrentReactor(), instant.toEpochMilli(), value);
+	}
+
+	public static <T> Promise<T> schedule(ReactorScheduler reactor, Instant instant, T value) {
+		return schedule(reactor, instant.toEpochMilli(), value);
 	}
 
 	/**
-	 * @see #schedule(Promise, long)
+	 * @see #schedule(long, Promise)
 	 */
 	@Contract(pure = true)
-	public static <T> Promise<T> schedule(T value, long timestamp) {
-		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentReactor().schedule(timestamp, () -> cb.set(value));
-		return cb;
+	public static <T> Promise<T> schedule(long timestamp, T value) {
+		return schedule((ReactorScheduler) getCurrentReactor(), timestamp, value);
+	}
+
+	public static <T> Promise<T> schedule(ReactorScheduler reactor, long timestamp, T value) {
+		return Promise.ofCallback(cb ->
+			reactor.schedule(new ScheduledRunnable(timestamp) {
+				@Override
+				public void run() {
+					cb.set(value);
+				}
+			}));
 	}
 
 	/**
-	 * @see #schedule(Promise, long)
+	 * @see #schedule(long, Promise)
 	 */
 	@Contract(pure = true)
-	public static <T> Promise<T> schedule(Promise<T> promise, Instant instant) {
-		return schedule(promise, instant.toEpochMilli());
+	public static <T> Promise<T> schedule(Instant instant, Promise<T> promise) {
+		return schedule((ReactorScheduler) getCurrentReactor(), instant, promise);
+	}
+
+	public static <T> Promise<T> schedule(ReactorScheduler reactor, Instant instant, Promise<T> promise) {
+		return schedule(reactor, instant.toEpochMilli(), promise);
 	}
 
 	/**
@@ -194,9 +286,17 @@ public class Promises {
 	 * were completed earlier.
 	 */
 	@Contract(pure = true)
-	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
-		return Promise.ofCallback(cb ->
-			getCurrentReactor().schedule(timestamp, () -> promise.subscribe(cb)));
+	public static <T> Promise<T> schedule(long timestamp, Promise<T> promise) {
+		return schedule((ReactorScheduler) getCurrentReactor(), timestamp, promise);
+	}
+
+	public static <T> Promise<T> schedule(ReactorScheduler reactor, long timestamp, Promise<T> promise) {
+		return Promise.ofCallback(cb -> reactor.schedule(new ScheduledRunnable(timestamp) {
+			@Override
+			public void run() {
+				promise.subscribe(cb);
+			}
+		}));
 	}
 
 	/**

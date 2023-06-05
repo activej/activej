@@ -38,7 +38,7 @@ public class PromiseAdvancedExample {
 		int delay = 1000;     // in milliseconds
 		int interval = 2000;  // also in milliseconds
 		Promise<Integer> intervalPromise = Promises.interval(interval, Promise.of(someValue));
-		Promise<Integer> schedulePromise = Promises.schedule(someValue * 2, Instant.now());
+		Promise<Integer> schedulePromise = Promises.schedule(Instant.now(), someValue * 2);
 		Promise<Integer> delayPromise = Promises.delay(delay, someValue);
 
 		Promise<Integer> result = intervalPromise
