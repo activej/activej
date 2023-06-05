@@ -571,7 +571,7 @@ public final class Aggregation extends AbstractReactive
 			ClassKey.of(Predicate.class, chunkRecordClass, where),
 			() -> ClassGenerator.builder(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
-					where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
+					where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes(), $ -> AggregationPredicates.alwaysTrue()))
 				.build()
 		);
 	}

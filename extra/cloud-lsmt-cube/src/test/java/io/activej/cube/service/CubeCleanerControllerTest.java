@@ -75,8 +75,12 @@ public class CubeCleanerControllerTest {
 			.withDimension("adv", ofInt())
 			.withMeasure("pubRequests", sum(ofLong()))
 			.withMeasure("advRequests", sum(ofLong()))
-			.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-			.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+			.withAggregation(id("pub")
+				.withDimensions("pub")
+				.withMeasures("pubRequests"))
+			.withAggregation(id("adv")
+				.withDimensions("adv")
+				.withMeasures("advRequests"))
 			.build();
 
 		repository = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),

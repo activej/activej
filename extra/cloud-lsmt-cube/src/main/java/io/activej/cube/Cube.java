@@ -84,8 +84,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.between;
-import static io.activej.aggregation.predicate.AggregationPredicates.eq;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
@@ -121,6 +120,7 @@ public final class Cube extends AbstractReactive
 
 	private final Map<String, FieldType> fieldTypes = new LinkedHashMap<>();
 	private final Map<String, FieldType> dimensionTypes = new LinkedHashMap<>();
+	private final Map<String, AggregationPredicate> validityPredicates = new LinkedHashMap<>();
 	private final Map<String, Measure> measures = new LinkedHashMap<>();
 	private final Map<String, ComputedMeasure> computedMeasures = new LinkedHashMap<>();
 
@@ -316,6 +316,16 @@ public final class Cube extends AbstractReactive
 			return this;
 		}
 
+		public Builder withDimension(String dimensionId, FieldType type, AggregationPredicate validityPredicate) {
+			withDimension(dimensionId, type);
+
+			Set<String> predicateDimensions = validityPredicate.getDimensions();
+			checkArgument(predicateDimensions.isEmpty() || predicateDimensions.equals(Set.of(dimensionId)),
+				"Predicate refers to other dimensions");
+			validityPredicates.put(dimensionId, validityPredicate);
+			return this;
+		}
+
 		public Builder withDimension(String dimensionId, FieldType type) {
 			checkNotBuilt(this);
 			checkState(aggregations.isEmpty(), "Cannot add dimension while aggregations are present");
@@ -422,8 +432,8 @@ public final class Cube extends AbstractReactive
 						for (String dimensionId : aggregationConfig.dimensions) {
 							s.withKey(dimensionId, dimensionTypes.get(dimensionId));
 						}
-						for (String measureId1 : aggregationConfig.measures) {
-							s.withMeasure(measureId1, measures.get(measureId1));
+						for (String measureId : aggregationConfig.measures) {
+							s.withMeasure(measureId, measures.get(measureId));
 						}
 						for (Entry<String, Measure> entry : measures.entrySet()) {
 							String measureId = entry.getKey();
@@ -444,10 +454,10 @@ public final class Cube extends AbstractReactive
 				.withStats(aggregationStats)
 				.build();
 
+
 			aggregations.put(aggregationConfig.id, new AggregationContainer(aggregation, aggregationConfig.measures, aggregationConfig.predicate));
 			logger.info("Added aggregation {} for id '{}'", aggregation, aggregationConfig.id);
 		}
-
 	}
 
 	private static <K, V> Stream<Entry<K, V>> filterEntryKeys(Stream<Entry<K, V>> stream, Predicate<K> predicate) {
@@ -677,7 +687,7 @@ public final class Cube extends AbstractReactive
 		return aggregationToDataInputFilterPredicate;
 	}
 
-	static Predicate createFilterPredicate(
+	Predicate createFilterPredicate(
 		Class<?> inputClass, AggregationPredicate predicate, DefiningClassLoader classLoader,
 		Map<String, FieldType> keyTypes
 	) {
@@ -685,7 +695,13 @@ public final class Cube extends AbstractReactive
 			ClassKey.of(Predicate.class, inputClass, predicate),
 			() -> ClassGenerator.builder(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
-					predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
+					predicate.createPredicate(cast(arg(0), inputClass), keyTypes, key -> {
+						AggregationPredicate validityPredicate = validityPredicates.get(key);
+						if (validityPredicate == null) {
+							throw new IllegalStateException("No validity predicate for: " + key);
+						}
+						return validityPredicate;
+					}))
 				.build()
 		);
 	}
@@ -1117,7 +1133,7 @@ public final class Cube extends AbstractReactive
 				ClassKey.of(Predicate.class, resultClass, queryHaving),
 				() -> ClassGenerator.builder(Predicate.class)
 					.withMethod("test",
-						queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
+						queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes, $ -> alwaysTrue()))
 					.build()
 			);
 		}

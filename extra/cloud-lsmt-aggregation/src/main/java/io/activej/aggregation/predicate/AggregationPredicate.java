@@ -21,6 +21,7 @@ import io.activej.codegen.expression.Expression;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 public interface AggregationPredicate {
 
@@ -30,7 +31,9 @@ public interface AggregationPredicate {
 
 	Map<String, Object> getFullySpecifiedDimensions();
 
-	Expression createPredicate(Expression record, @SuppressWarnings("rawtypes") Map<String, FieldType> fields);
+	Expression createPredicate(
+		Expression record, @SuppressWarnings("rawtypes") Map<String, FieldType> fields,
+		Function<String, AggregationPredicate> predicateFactory);
 
 	@Override
 	boolean equals(Object o);

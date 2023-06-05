@@ -23,6 +23,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.common.Utils.first;
@@ -69,10 +70,12 @@ public final class Or implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(
+		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
+	) {
 		List<Expression> predicateDefs = new ArrayList<>();
 		for (AggregationPredicate predicate : predicates) {
-			predicateDefs.add(predicate.createPredicate(record, fields));
+			predicateDefs.add(predicate.createPredicate(record, fields, predicateFactory));
 		}
 		return or(predicateDefs);
 	}

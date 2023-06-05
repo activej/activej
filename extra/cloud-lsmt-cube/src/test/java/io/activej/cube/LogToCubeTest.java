@@ -3,7 +3,6 @@ package io.activej.cube;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
@@ -30,7 +29,7 @@ import java.util.List;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
@@ -51,14 +50,17 @@ public final class LogToCubeTest extends CubeTestBase {
 		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.withDimension("pub", ofInt())
 			.withDimension("adv", ofInt())
-			.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
+			.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class), notEq("testEnum", null))
 			.withMeasure("pubRequests", sum(ofLong()))
 			.withMeasure("advRequests", sum(ofLong()))
-			.withAggregation(id("pub").withDimensions("pub", "testEnum").withMeasures("pubRequests")
-//						.withPredicate(AggregationPredicates.notEq("testEnum", null)) // ok
-					.withPredicate(AggregationPredicates.has("testEnum")) // fail
+			.withAggregation(id("pub")
+				.withDimensions("pub", "testEnum")
+				.withMeasures("pubRequests")
+				.withPredicate(has("testEnum"))
 			)
-			.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+			.withAggregation(id("adv")
+				.withDimensions("adv")
+				.withMeasures("advRequests"))
 			.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);

@@ -24,6 +24,7 @@ import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.property;
@@ -54,11 +55,12 @@ public final class Has implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(
+		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
+	) {
 		if (!fields.containsKey(key)) return value(false);
-		Variable property = property(record, key.replace('.', '$'));
-		FieldType fieldType = fields.get(key);
-		return isNotNull(property, fieldType);
+		return predicateFactory.apply(key)
+			.createPredicate(record, fields, predicateFactory);
 	}
 
 	@Override

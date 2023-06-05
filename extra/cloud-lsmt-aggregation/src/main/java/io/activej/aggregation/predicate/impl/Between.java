@@ -24,6 +24,7 @@ import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
@@ -59,7 +60,9 @@ public final class Between implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(
+		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
+	) {
 		Variable property = property(record, key.replace('.', '$'));
 		return and(isNotNull(property, fields.get(key)),
 			isGe(property, value(toInternalValue(fields, key, from))),
@@ -89,6 +92,6 @@ public final class Between implements AggregationPredicate {
 
 	@Override
 	public String toString() {
-		return "" + key + " BETWEEN " + from + " AND " + to;
+		return key + " BETWEEN " + from + " AND " + to;
 	}
 }

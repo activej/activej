@@ -3,7 +3,6 @@ package io.activej.cube.http;
 import io.activej.aggregation.*;
 import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
-import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
@@ -50,15 +49,14 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
-import static io.activej.cube.http.ReportingTest.LogItem.*;
 import static io.activej.cube.measure.ComputedMeasures.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
-@SuppressWarnings("rawtypes")
 public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
@@ -67,31 +65,30 @@ public final class ReportingTest extends CubeTestBase {
 	private Cube cube;
 	private int serverPort;
 
-	private static final Map<String, FieldType> DIMENSIONS_CUBE = Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("advertiser", ofInt()),
-			Map.entry("campaign", ofInt()),
-			Map.entry("banner", ofInt()),
-			Map.entry("affiliate", ofInt()),
-			Map.entry("site", ofString()))
-		.collect(entriesToLinkedHashMap());
+	static final int EXCLUDE_AFFILIATE = 0;
+	static final String EXCLUDE_SITE = "--";
 
-	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION = Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))))
-		.collect(entriesToLinkedHashMap());
+	static final int EXCLUDE_ADVERTISER = 0;
+	static final int EXCLUDE_CAMPAIGN = 0;
+	static final int EXCLUDE_BANNER = 0;
 
-	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("advertiser", ofInt()),
-			Map.entry("campaign", ofInt()),
-			Map.entry("banner", ofInt()))
-		.collect(entriesToLinkedHashMap());
+	private static final Set<String> DIMENSIONS_DATE_AGGREGATION = Stream.of(
+			"date"
+		)
+		.collect(toCollection(LinkedHashSet::new));
 
-	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = Stream.of(
-			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			Map.entry("affiliate", ofInt()),
-			Map.entry("site", ofString()))
-		.collect(entriesToLinkedHashMap());
+	private static final Set<String> DIMENSIONS_ADVERTISERS_AGGREGATION = Stream.of(
+			"date",
+			"advertiser",
+			"campaign",
+			"banner")
+		.collect(toCollection(LinkedHashSet::new));
+
+	private static final Set<String> DIMENSIONS_AFFILIATES_AGGREGATION = Stream.of(
+			"date",
+			"affiliate",
+			"site")
+		.collect(toCollection(LinkedHashSet::new));
 
 	private static final Map<String, Measure> MEASURES = Stream.of(
 			Map.entry("impressions", sum(ofLong())),
@@ -142,13 +139,6 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Measures("eventCount")
 	public static class LogItem {
-		static final int EXCLUDE_AFFILIATE = 0;
-		static final String EXCLUDE_SITE = "--";
-
-		static final int EXCLUDE_ADVERTISER = 0;
-		static final int EXCLUDE_CAMPAIGN = 0;
-		static final int EXCLUDE_BANNER = 0;
-
 		@Key
 		@Serialize
 		public int date;
@@ -234,11 +224,11 @@ public final class ReportingTest extends CubeTestBase {
 				private final StreamDataAcceptor<LogItem> dateAggregator = ctx.addOutput(
 					cube.logStreamConsumer(
 						LogItem.class,
-						and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))));
+						and(has("advertiser"), has("campaign"), has("banner"))));
 				private final StreamDataAcceptor<LogItem> dateAggregator2 = ctx.addOutput(
 					cube.logStreamConsumer(
 						LogItem.class,
-						and(notEq("affiliate", EXCLUDE_AFFILIATE), notEq("site", EXCLUDE_SITE))));
+						and(has("affiliate"), has("site"))));
 
 				@Override
 				public void accept(LogItem item) {
@@ -269,7 +259,14 @@ public final class ReportingTest extends CubeTestBase {
 			ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
 		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
-			.initialize(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
+
+			.withDimension("date", ofLocalDate(LocalDate.parse("2000-01-01")))
+			.withDimension("advertiser", ofInt(), notEq("advertiser", EXCLUDE_ADVERTISER))
+			.withDimension("campaign", ofInt(), notEq("campaign", EXCLUDE_CAMPAIGN))
+			.withDimension("banner", ofInt(), notEq("banner", EXCLUDE_BANNER))
+			.withDimension("affiliate", ofInt(), notEq("affiliate", EXCLUDE_AFFILIATE))
+			.withDimension("site", ofString(), and(notEq("site", null), notEq("site", EXCLUDE_SITE)))
+
 			.initialize(cube -> MEASURES.forEach(cube::withMeasure))
 			.withRelation("campaign", "advertiser")
 			.withRelation("banner", "campaign")
@@ -280,17 +277,17 @@ public final class ReportingTest extends CubeTestBase {
 			.withComputedMeasure("errorsPercent", percent(div(measure("errors"), measure("impressions"))))
 
 			.withAggregation(id("advertisers")
-				.withDimensions(DIMENSIONS_ADVERTISERS_AGGREGATION.keySet())
+				.withDimensions(DIMENSIONS_ADVERTISERS_AGGREGATION)
 				.withMeasures(MEASURES.keySet())
-				.withPredicate(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))))
+				.withPredicate(and(has("advertiser"), has("campaign"), has("banner"))))
 
 			.withAggregation(id("affiliates")
-				.withDimensions(DIMENSIONS_AFFILIATES_AGGREGATION.keySet())
+				.withDimensions(DIMENSIONS_AFFILIATES_AGGREGATION)
 				.withMeasures(MEASURES.keySet())
-				.withPredicate(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE))))
+				.withPredicate(and(has("affiliate"), has("site"))))
 
 			.withAggregation(id("daily")
-				.withDimensions(DIMENSIONS_DATE_AGGREGATION.keySet())
+				.withDimensions(DIMENSIONS_DATE_AGGREGATION)
 				.withMeasures(MEASURES.keySet()))
 			.build();
 
@@ -515,7 +512,7 @@ public final class ReportingTest extends CubeTestBase {
 			.withWhere(and(
 				eq("banner", 1),
 				between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03")),
-				and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("banner", EXCLUDE_BANNER), notEq("campaign", EXCLUDE_CAMPAIGN))))
+				and(has("advertiser"), has("banner"), has("campaign"))))
 			.withOrderings(asc("ctr"))
 			.withReportType(DATA_WITH_TOTALS)
 			.build();
@@ -576,7 +573,7 @@ public final class ReportingTest extends CubeTestBase {
 			.withOrderings(asc("date"), asc("advertiser.name"))
 			.withWhere(and(
 				between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-04")),
-				and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER))))
+				and(has("advertiser"), has("campaign"), has("banner"))))
 			.withHaving(and(
 				or(eq("advertiser.name", null), eq("advertiser.name", "first")),
 				between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-03"))))
@@ -616,7 +613,7 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery query = CubeQuery.builder()
 			.withAttributes("advertiser.name")
 			.withMeasures("impressions")
-			.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withWhere(and(has("advertiser"), has("campaign"), has("banner")))
 			.withHaving(or(between("advertiser.name", "a", "z"), eq("advertiser.name", null)))
 			.withReportType(DATA)
 			.build();
@@ -635,7 +632,7 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery query = CubeQuery.builder()
 			.withAttributes("date", "advertiser.name")
 			.withMeasures("impressions")
-			.withWhere(and(eq("advertiser", 2), notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withWhere(and(eq("advertiser", 2), has("advertiser"), has("campaign"), has("banner")))
 			.withOrderings(asc("advertiser.name"))
 			.withHaving(eq("advertiser.name", null))
 			.build();
@@ -653,7 +650,7 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery query = CubeQuery.builder()
 			.withAttributes("date", "advertiser.name")
 			.withMeasures("impressions")
-			.withWhere(and(eq("advertiser", 1), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withWhere(and(eq("advertiser", 1), has("campaign"), has("banner")))
 			.build();
 
 		QueryResult queryResult = await(cubeHttp.query(query));
@@ -669,7 +666,7 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery query = CubeQuery.builder()
 			.withAttributes("advertiser.name")
 			.withMeasures("clicks")
-			.withWhere(and(not(eq("advertiser", EXCLUDE_ADVERTISER)), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)))
+			.withWhere(and(has("advertiser"), has("campaign"), has("banner")))
 			.withHaving(or(regexp("advertiser.name", ".*s.*"), eq("advertiser.name", null)))
 			.withReportType(DATA)
 			.build();
@@ -740,9 +737,9 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery onlyMetaQuery = CubeQuery.builder()
 			.withAttributes(attributes)
 			.withWhere(and(
-				notEq("advertiser", EXCLUDE_ADVERTISER),
-				notEq("banner", EXCLUDE_BANNER),
-				notEq("campaign", EXCLUDE_CAMPAIGN)))
+				has("advertiser"),
+				has("banner"),
+				has("campaign")))
 			.withMeasures("clicks", "ctr", "conversions")
 			.withOrderingDesc("date")
 			.withOrderingAsc("advertiser.name")
@@ -763,9 +760,9 @@ public final class ReportingTest extends CubeTestBase {
 			.withAttributes("advertiser")
 			.withWhere(and(
 				in("advertiser", List.of(1, 2)),
-				notEq("advertiser", EXCLUDE_ADVERTISER),
-				notEq("banner", EXCLUDE_BANNER),
-				notEq("campaign", EXCLUDE_CAMPAIGN)))
+				has("advertiser"),
+				has("banner"),
+				has("campaign")))
 			.withMeasures("clicks", "ctr", "conversions")
 			.withReportType(DATA_WITH_TOTALS)
 			.withHaving(in("advertiser", List.of(1, 2)))
@@ -799,9 +796,9 @@ public final class ReportingTest extends CubeTestBase {
 			.withAttributes("date", "advertiser")
 			.withMeasures("impressions", "incompatible_measure", "clicks")
 			.withWhere(and(
-				notEq("advertiser", EXCLUDE_ADVERTISER),
-				notEq("campaign", EXCLUDE_CAMPAIGN),
-				notEq("banner", EXCLUDE_BANNER)))
+				has("advertiser"),
+				has("campaign"),
+				has("banner")))
 			.withReportType(ReportType.METADATA)
 			.build();
 
@@ -833,7 +830,7 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery queryAdvertisers = CubeQuery.builder()
 			.withAttributes("date", "advertiser")
 			.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
-			.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER),
+			.withWhere(and(has("advertiser"), has("campaign"), has("banner"),
 				between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 			.withReportType(DATA_WITH_TOTALS)
 			.build();
@@ -856,7 +853,7 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery queryAffiliates = CubeQuery.builder()
 			.withAttributes("date", "affiliate")
 			.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
-			.withWhere(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE),
+			.withWhere(and(has("affiliate"), has("site"),
 				between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 			.withReportType(DATA_WITH_TOTALS)
 			.build();

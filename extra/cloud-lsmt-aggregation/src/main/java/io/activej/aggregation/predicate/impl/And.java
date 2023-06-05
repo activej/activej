@@ -27,6 +27,7 @@ import io.activej.common.annotation.ExposedInternals;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.predicate.AggregationPredicates.and;
@@ -111,10 +112,12 @@ public final class And implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(
+		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
+	) {
 		List<Expression> predicateDefs = new ArrayList<>();
 		for (AggregationPredicate predicate : predicates) {
-			predicateDefs.add(predicate.createPredicate(record, fields));
+			predicateDefs.add(predicate.createPredicate(record, fields, predicateFactory));
 		}
 		return E.and(predicateDefs);
 	}

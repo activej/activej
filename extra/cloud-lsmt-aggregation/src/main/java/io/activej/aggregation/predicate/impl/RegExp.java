@@ -24,6 +24,7 @@ import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
@@ -56,7 +57,9 @@ public final class RegExp implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(
+		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
+	) {
 		Variable value = property(record, key.replace('.', '$'));
 		return and(
 			isNotNull(value, fields.get(key)),

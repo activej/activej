@@ -30,8 +30,7 @@ import java.util.concurrent.Executors;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.and;
-import static io.activej.aggregation.predicate.AggregationPredicates.eq;
+import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
@@ -67,7 +66,9 @@ public class StringDimensionTest {
 			.withMeasure("metric1", sum(ofLong()))
 			.withMeasure("metric2", sum(ofLong()))
 			.withMeasure("metric3", sum(ofLong()))
-			.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"))
+			.withAggregation(id("detailedAggregation")
+				.withDimensions("key1", "key2")
+				.withMeasures("metric1", "metric2", "metric3"))
 			.build();
 
 		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(

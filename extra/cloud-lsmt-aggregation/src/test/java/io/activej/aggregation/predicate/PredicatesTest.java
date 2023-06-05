@@ -724,7 +724,7 @@ public class PredicatesTest {
 		AggregationPredicate predicate = AggregationPredicates.regexp(field, pattern);
 		return ClassGenerator.builder(Predicate.class)
 			.withMethod("test", boolean.class, List.of(Object.class),
-				predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
+				predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES, $ -> alwaysTrue()))
 			.build()
 			.generateClassAndCreateInstance(CLASS_LOADER)
 			.test(record);

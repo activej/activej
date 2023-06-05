@@ -23,6 +23,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -53,7 +54,9 @@ public final class In implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(
+		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
+	) {
 		return isNe(
 			value(false),
 			call(value(values), "contains",
