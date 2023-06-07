@@ -160,7 +160,14 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 		while (true) {
 			ByteBuf buf = OF_CRLF_DECODER.tryDecode(bufs);
 
-			if (buf == null) break;
+			if (buf == null) {
+				if (isLastBoundary(bufs)) {
+					bufs.skip(lastBoundary.length);
+					finished = true;
+				}
+
+				break;
+			}
 
 			if (sawCrlf) {
 				if (readingHeaders == null) {
@@ -236,6 +243,17 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 				return nextByte != boundary[index];
 			}
 		}) != 0;
+	}
+
+	private boolean isLastBoundary(ByteBufs bufs) throws MalformedDataException {
+		int bytes = bufs.scanBytes((index, nextByte) -> {
+			if (nextByte != lastBoundary[index]) {
+				return true;
+			}
+
+			return index == lastBoundary.length - 1;
+		});
+		return lastBoundary.length == bytes;
 	}
 
 	public static final class MultipartFrame implements Recyclable {

@@ -45,7 +45,7 @@ public final class MultipartDecoderTest {
 			CRLF + BOUNDARY + CRLF +
 			CRLF +
 			"line, huh\n" +
-			CRLF + BOUNDARY + "--" + CRLF;
+			CRLF + BOUNDARY + "--";
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -53,16 +53,25 @@ public final class MultipartDecoderTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	@SuppressWarnings("ConstantConditions")
 	@Test
 	public void test() {
+		doTest(DATA);
+	}
+
+	@Test
+	public void testWithLastCRLF() {
+		doTest(DATA + CRLF);
+	}
+
+	@SuppressWarnings("ConstantConditions")
+	private static void doTest(String data) {
 		List<ByteBuf> split = new ArrayList<>();
 		int i = 0;
-		while (i < DATA.length() / 5 - 1) {
-			split.add(ByteBuf.wrapForReading(DATA.substring(i * 5, ++i * 5).getBytes(UTF_8)));
+		while (i < data.length() / 5 - 1) {
+			split.add(ByteBuf.wrapForReading(data.substring(i * 5, ++i * 5).getBytes(UTF_8)));
 		}
-		if (DATA.length() != (i *= 5)) {
-			split.add(ByteBuf.wrapForReading(DATA.substring(i).getBytes(UTF_8)));
+		if (data.length() != (i *= 5)) {
+			split.add(ByteBuf.wrapForReading(data.substring(i).getBytes(UTF_8)));
 		}
 
 		List<Map<String, String>> headers = new ArrayList<>();
