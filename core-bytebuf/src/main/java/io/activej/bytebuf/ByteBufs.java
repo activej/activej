@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
@@ -45,7 +46,7 @@ import static java.lang.System.arraycopy;
  * the first and the last to be taken.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ByteBufs implements Recyclable {
+public final class ByteBufs implements Iterable<ByteBuf>, Supplier<ByteBuf>, Recyclable {
 	private static final boolean CHECKS = Checks.isEnabled(ByteBufs.class);
 
 	private static final int DEFAULT_CAPACITY = 8;
@@ -722,6 +723,17 @@ public final class ByteBufs implements Recyclable {
 		return 0;
 	}
 
+	@Override
+	public Iterator<ByteBuf> iterator() {
+		if (!hasRemaining()) return iteratorOf();
+		return new ByteBufIterator(this);
+	}
+
+	@Override
+	public ByteBuf get() {
+		return poll();
+	}
+
 	public Iterator<ByteBuf> asIterator() {
 		if (!hasRemaining()) return iteratorOf();
 		ByteBufIterator iterator = new ByteBufIterator(this);
@@ -730,15 +742,23 @@ public final class ByteBufs implements Recyclable {
 		return iterator;
 	}
 
-	public static class ByteBufIterator implements Iterator<ByteBuf> {
+	public Supplier<ByteBuf> asSupplier() {
+		if (!hasRemaining()) return () -> null;
+		ByteBufIterator iterator = new ByteBufIterator(this);
+		first = last = 0;
+		bufs = null;
+		return iterator;
+	}
+
+	public static class ByteBufIterator implements Iterator<ByteBuf>, Supplier<ByteBuf> {
 		private final ByteBuf[] bufs;
 		private int first;
 		private final int last;
 
 		private ByteBufIterator(ByteBufs bufs) {
 			this.bufs = bufs.bufs;
-			first = bufs.first;
-			last = bufs.last;
+			this.first = bufs.first;
+			this.last = bufs.last;
 		}
 
 		@Override
@@ -748,7 +768,14 @@ public final class ByteBufs implements Recyclable {
 
 		@Override
 		public ByteBuf next() {
-			if (first == last) throw new NoSuchElementException();
+			ByteBuf buf = get();
+			if (buf == null) throw new NoSuchElementException();
+			return buf;
+		}
+
+		@Override
+		public ByteBuf get() {
+			if (first == last) return null;
 			ByteBuf buf = bufs[first];
 			if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
 			first = (first + 1) % bufs.length;
