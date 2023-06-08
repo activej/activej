@@ -779,6 +779,59 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	@Test
+	public void testQueryWithInNotEqIntersectionPredicate() {
+		CubeQuery queryWithPredicateIn = CubeQuery.builder()
+				.withWhere(and(
+						notEq("affiliate", EXCLUDE_AFFILIATE),
+						and(
+								in("site", "site1.com", "site2.com"),
+								notEq("site", "site2.com")
+						)))
+				.withMeasures("clicks", "ctr", "conversions")
+				.withReportType(DATA_WITH_TOTALS)
+			.build();
+
+		QueryResult in = await(cubeHttp.query(queryWithPredicateIn));
+
+		List<String> expectedRecordFields = List.of("clicks", "ctr", "conversions");
+		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
+		assertEquals(1, in.getTotalCount());
+
+		assertEquals(11, in.getRecords().get(0).getInt("clicks"));
+	}
+
+	@Test
+	public void testQueryWithInNotEqNullPredicate() {
+		CubeQuery queryWithPredicateIn = CubeQuery.builder()
+				.withAttributes("advertiser.name")
+				.withOrderings(CubeQuery.Ordering.asc("attribute.name"))
+				.withWhere(and(
+						notEq("advertiser", EXCLUDE_ADVERTISER),
+						notEq("campaign", EXCLUDE_CAMPAIGN),
+						notEq("banner", EXCLUDE_BANNER)
+				))
+				.withHaving(and(
+						in("advertiser.name", "first", "third"),
+						notEq("advertiser.name", null)
+				))
+				.withMeasures("clicks", "ctr", "conversions")
+				.withReportType(DATA_WITH_TOTALS)
+			.build();
+
+		QueryResult in = await(cubeHttp.query(queryWithPredicateIn));
+
+		List<String> expectedRecordFields = List.of("advertiser.name", "clicks", "ctr", "conversions");
+		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
+		assertEquals(2, in.getTotalCount());
+
+		assertEquals("first", in.getRecords().get(0).get("advertiser.name"));
+		assertEquals(10, in.getRecords().get(0).getInt("clicks"));
+
+		assertEquals("third", in.getRecords().get(1).get("advertiser.name"));
+		assertEquals(5, in.getRecords().get(1).getInt("clicks"));
+	}
+
+	@Test
 	public void testMetaOnlyQueryHasEmptyMeasuresWhenNoAggregationsFound() {
 		CubeQuery queryAffectingNonCompatibleAggregations = CubeQuery.builder()
 			.withAttributes("date", "advertiser", "affiliate")

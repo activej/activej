@@ -20,11 +20,13 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
 import java.util.function.Function;
 
+import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.*;
 
 @ExposedInternals
@@ -57,10 +59,11 @@ public final class In implements AggregationPredicate {
 	public Expression createPredicate(
 		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
 	) {
-		return isNe(
-			value(false),
-			call(value(values), "contains",
-				cast(property(record, key.replace('.', '$')), Object.class)));
+		Variable property = property(record, key.replace('.', '$'));
+		return and(isNotNull(property, fields.get(key)),
+			isNe(value(false),
+				call(value(values), "contains",
+					cast(property, Object.class))));
 	}
 
 	@Override
@@ -85,6 +88,6 @@ public final class In implements AggregationPredicate {
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(", ");
 		for (Object value : values) joiner.add(value != null ? value.toString() : null);
-		return "" + key + " IN " + joiner;
+		return key + " IN " + joiner;
 	}
 }
