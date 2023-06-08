@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public final class OfAsyncSupplier<T> extends AbstractChannelSupplier<T> {
 	public final AsyncSupplier<T> supplier;
 
-	public OfAsyncSupplier(@Nullable AsyncCloseable closeable, AsyncSupplier<T> supplier) {
+	public OfAsyncSupplier(AsyncSupplier<T> supplier, @Nullable AsyncCloseable closeable) {
 		super(closeable);
 		this.supplier = supplier;
 	}

@@ -62,14 +62,18 @@ public class ChannelConsumers {
 	 * @return {@link ChannelConsumer} which wraps {@link AsyncConsumer}
 	 */
 	public static <T> ChannelConsumer<T> ofAsyncConsumer(AsyncConsumer<T> consumer, @Nullable AsyncCloseable closeable) {
-		return new OfAsyncConsumer<>(closeable, consumer);
+		return new OfAsyncConsumer<>(consumer, closeable);
 	}
 
 	/**
 	 * Wraps a {@link ConsumerEx} in {@link ChannelConsumer}.
 	 */
 	public static <T> ChannelConsumer<T> ofConsumer(ConsumerEx<T> consumer) {
-		return ofAsyncConsumer(AsyncConsumer.of(consumer));
+		return ofConsumer(consumer, null);
+	}
+
+	public static <T> ChannelConsumer<T> ofConsumer(ConsumerEx<T> consumer, @Nullable AsyncCloseable closeable) {
+		return new OfConsumer<>(consumer, closeable);
 	}
 
 	/**

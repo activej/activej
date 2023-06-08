@@ -21,6 +21,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.MemSize;
 import io.activej.common.annotation.StaticFactories;
+import io.activej.common.function.SupplierEx;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelQueue;
@@ -68,7 +69,21 @@ public class ChannelSuppliers {
 	 * @return ChannelSupplier which wraps {@code AsyncSupplier}
 	 */
 	public static <T> ChannelSupplier<T> ofAsyncSupplier(AsyncSupplier<T> supplier, @Nullable AsyncCloseable closeable) {
-		return new OfAsyncSupplier<>(closeable, supplier);
+		return new OfAsyncSupplier<>(supplier, closeable);
+	}
+
+	/**
+	 * Wraps provided default {@link Supplier} to ChannelSupplier.
+	 */
+	public static <T> ChannelSupplier<T> ofSupplier(SupplierEx<T> supplier) {
+		return ofSupplier(supplier, null);
+	}
+
+	/**
+	 * Wraps provided default {@link Supplier} to ChannelSupplier.
+	 */
+	public static <T> ChannelSupplier<T> ofSupplier(SupplierEx<T> supplier, @Nullable AsyncCloseable closeable) {
+		return new OfSupplier<>(supplier, closeable);
 	}
 
 	/**
@@ -77,13 +92,6 @@ public class ChannelSuppliers {
 	public static <T> ChannelSupplier<T> ofConsumer(Consumer<ChannelConsumer<T>> consumer, ChannelQueue<T> queue) {
 		consumer.accept(queue.getConsumer());
 		return queue.getSupplier();
-	}
-
-	/**
-	 * Wraps provided default {@link Supplier} to ChannelSupplier.
-	 */
-	public static <T> ChannelSupplier<T> ofSupplier(Supplier<Promise<T>> supplier) {
-		return ofAsyncSupplier(supplier::get);
 	}
 
 	/**

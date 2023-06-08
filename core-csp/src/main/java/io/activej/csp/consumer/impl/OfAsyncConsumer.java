@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public final class OfAsyncConsumer<T> extends AbstractChannelConsumer<T> {
 	public final AsyncConsumer<T> consumer;
 
-	public OfAsyncConsumer(@Nullable AsyncCloseable closeable, AsyncConsumer<T> consumer) {
+	public OfAsyncConsumer(AsyncConsumer<T> consumer, @Nullable AsyncCloseable closeable) {
 		super(closeable);
 		this.consumer = consumer;
 	}
