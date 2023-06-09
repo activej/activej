@@ -23,7 +23,7 @@ public class SqlDataflowTest extends CalciteTestBase {
 	private SqlDataflow sqlDataflow;
 
 	@Override
-	protected void onSetUp() throws Exception {
+	protected void onSetUp() {
 		Assume.assumeTrue(super.sqlDataflow instanceof SqlDataflow);
 		sqlDataflow = (SqlDataflow) super.sqlDataflow;
 	}

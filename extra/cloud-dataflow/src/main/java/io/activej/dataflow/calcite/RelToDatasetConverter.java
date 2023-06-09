@@ -707,6 +707,7 @@ public class RelToDatasetConverter {
 				case LIKE -> WherePredicates.like(toOperand(operands.get(0)), toOperand(operands.get(1)));
 				case IS_NULL -> WherePredicates.isNull(toOperand(operands.get(0)));
 				case IS_NOT_NULL -> WherePredicates.isNotNull(toOperand(operands.get(0)));
+				case NOT -> WherePredicates.not(toWherePredicate((RexCall) operands.get(0)));
 
 				default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 			};

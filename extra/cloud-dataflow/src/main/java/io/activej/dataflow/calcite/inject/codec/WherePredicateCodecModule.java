@@ -123,4 +123,12 @@ public final class WherePredicateCodecModule extends AbstractModule {
 			isNotNull -> isNotNull.value, operandStreamCodec
 		);
 	}
+
+	@Provides
+	@Subtype(13)
+	StreamCodec<Not> notPredicate(StreamCodec<WherePredicate> wherePredicateStreamCodec) {
+		return StreamCodec.create(Not::new,
+			not -> not.predicate, wherePredicateStreamCodec
+		);
+	}
 }

@@ -669,9 +669,54 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 	}
 	// endregion
 
+	// region WhereNotIn
+	@Test
+	public void testWhereNotIn() {
+		QueryResult result = query("""
+			SELECT * FROM student
+			WHERE id NOT IN (1, 3, 6)
+			""");
+
+		assertWhereNotIn(result);
+	}
+
+	@Test
+	public void testWhereNotInPrepared() {
+		QueryResult result = queryPrepared("""
+				SELECT * FROM student
+				WHERE id NOT IN (?, ?, ?)
+				""",
+			stmt -> {
+				stmt.setInt(1, 1);
+				stmt.setInt(2, 3);
+				stmt.setInt(3, 6);
+			});
+
+		assertWhereNotIn(result);
+	}
+
+	private static void assertWhereNotIn(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(0), STUDENT_LIST_1.get(2), STUDENT_LIST_2.get(1)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
 	@Test
 	public void testWhereLikeStartsWithJ() {
 		doTestWhereLike("J%", STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(0));
+	}
+
+	@Test
+	public void testWhereNotLikeStartsWithJ() {
+		QueryResult result = query("""
+			SELECT * FROM student
+			WHERE firstName NOT LIKE 'J%'
+			""");
+
+		QueryResult expected = studentsToQueryResult(Arrays.asList(STUDENT_LIST_1.get(0), STUDENT_LIST_1.get(2), STUDENT_LIST_2.get(1)));
+
+		assertEquals(expected, result);
 	}
 
 	@Test

@@ -25,6 +25,10 @@ public class WherePredicates {
 		return new Or(predicates);
 	}
 
+	public static WherePredicate not(WherePredicate predicate) {
+		return new Not(predicate);
+	}
+
 	public static WherePredicate between(Operand<?> value, Operand<?> from, Operand<?> to) {
 		return new Between(value, from, to);
 	}
