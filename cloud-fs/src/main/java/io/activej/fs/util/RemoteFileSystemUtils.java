@@ -32,6 +32,7 @@ import io.activej.fs.tcp.messaging.Version;
 import io.activej.promise.Promise;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StreamCodecs.SubtypeStreamCodec;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -150,95 +151,71 @@ public final class RemoteFileSystemUtils {
 	}
 
 	private static StreamCodec<FileSystemRequest> createFileSystemRequestStreamCodec() {
-		StreamCodecs.SubtypeBuilder<FileSystemRequest> builder = new StreamCodecs.SubtypeBuilder<>();
-
-		builder.add(FileSystemRequest.Append.class, StreamCodec.create(Append::new,
-			Append::name, StreamCodecs.ofString(),
-			Append::offset, StreamCodecs.ofVarLong())
-		);
-		builder.add(FileSystemRequest.Copy.class, StreamCodec.create(Copy::new,
-			Copy::name, StreamCodecs.ofString(),
-			Copy::target, StreamCodecs.ofString())
-		);
-		builder.add(FileSystemRequest.CopyAll.class, StreamCodec.create(CopyAll::new,
-			CopyAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
-		);
-		builder.add(FileSystemRequest.Delete.class, StreamCodec.create(Delete::new,
-			Delete::name, StreamCodecs.ofString())
-		);
-		builder.add(FileSystemRequest.DeleteAll.class, StreamCodec.create(DeleteAll::new,
-			DeleteAll::toDelete, StreamCodecs.ofSet(StreamCodecs.ofString()))
-		);
-		builder.add(FileSystemRequest.Download.class, StreamCodec.create(Download::new,
-			Download::name, StreamCodecs.ofString(),
-			Download::offset, StreamCodecs.ofVarLong(),
-			Download::limit, StreamCodecs.ofVarLong())
-		);
-		builder.add(FileSystemRequest.Handshake.class, StreamCodec.create(Handshake::new,
-			Handshake::version, VERSION_CODEC)
-		);
-		builder.add(FileSystemRequest.Info.class, StreamCodec.create(Info::new,
-			Info::name, StreamCodecs.ofString())
-		);
-		builder.add(FileSystemRequest.InfoAll.class, StreamCodec.create(InfoAll::new,
-			InfoAll::names, StreamCodecs.ofSet(StreamCodecs.ofString()))
-		);
-		builder.add(FileSystemRequest.List.class, StreamCodec.create(FileSystemRequest.List::new,
-			FileSystemRequest.List::glob, StreamCodecs.ofString())
-		);
-		builder.add(FileSystemRequest.Move.class, StreamCodec.create(Move::new,
-			Move::name, StreamCodecs.ofString(),
-			Move::target, StreamCodecs.ofString())
-		);
-		builder.add(FileSystemRequest.MoveAll.class, StreamCodec.create(MoveAll::new,
-			MoveAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
-		);
-		builder.add(FileSystemRequest.Ping.class, StreamCodecs.singleton(new Ping()));
-		builder.add(FileSystemRequest.Upload.class, StreamCodec.create(Upload::new,
-			Upload::name, StreamCodecs.ofString(),
-			Upload::size, StreamCodecs.ofVarLong())
-		);
-
-		return builder.build();
+		return SubtypeStreamCodec.<FileSystemRequest>builder()
+			.withSubtype(FileSystemRequest.Append.class, StreamCodec.create(Append::new,
+				Append::name, StreamCodecs.ofString(),
+				Append::offset, StreamCodecs.ofVarLong()))
+			.withSubtype(FileSystemRequest.Copy.class, StreamCodec.create(Copy::new,
+				Copy::name, StreamCodecs.ofString(),
+				Copy::target, StreamCodecs.ofString()))
+			.withSubtype(FileSystemRequest.CopyAll.class, StreamCodec.create(CopyAll::new,
+				CopyAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString())))
+			.withSubtype(FileSystemRequest.Delete.class, StreamCodec.create(Delete::new,
+				Delete::name, StreamCodecs.ofString()))
+			.withSubtype(FileSystemRequest.DeleteAll.class, StreamCodec.create(DeleteAll::new,
+				DeleteAll::toDelete, StreamCodecs.ofSet(StreamCodecs.ofString())))
+			.withSubtype(FileSystemRequest.Download.class, StreamCodec.create(Download::new,
+				Download::name, StreamCodecs.ofString(),
+				Download::offset, StreamCodecs.ofVarLong(),
+				Download::limit, StreamCodecs.ofVarLong()))
+			.withSubtype(FileSystemRequest.Handshake.class, StreamCodec.create(Handshake::new,
+				Handshake::version, VERSION_CODEC))
+			.withSubtype(FileSystemRequest.Info.class, StreamCodec.create(Info::new,
+				Info::name, StreamCodecs.ofString()))
+			.withSubtype(FileSystemRequest.InfoAll.class, StreamCodec.create(InfoAll::new,
+				InfoAll::names, StreamCodecs.ofSet(StreamCodecs.ofString())))
+			.withSubtype(FileSystemRequest.List.class, StreamCodec.create(FileSystemRequest.List::new,
+				FileSystemRequest.List::glob, StreamCodecs.ofString()))
+			.withSubtype(FileSystemRequest.Move.class, StreamCodec.create(Move::new,
+				Move::name, StreamCodecs.ofString(),
+				Move::target, StreamCodecs.ofString()))
+			.withSubtype(FileSystemRequest.MoveAll.class, StreamCodec.create(MoveAll::new,
+				MoveAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString())))
+			.withSubtype(FileSystemRequest.Ping.class, StreamCodecs.singleton(new Ping()))
+			.withSubtype(FileSystemRequest.Upload.class, StreamCodec.create(Upload::new,
+				Upload::name, StreamCodecs.ofString(),
+				Upload::size, StreamCodecs.ofVarLong()))
+			.build();
 	}
 
 	private static StreamCodec<FileSystemResponse> createFileSystemResponseStreamCodec() {
-		StreamCodecs.SubtypeBuilder<FileSystemResponse> builder = new StreamCodecs.SubtypeBuilder<>();
-
-		builder.add(FileSystemResponse.AppendAck.class, StreamCodecs.singleton(new FileSystemResponse.AppendAck()));
-		builder.add(FileSystemResponse.AppendFinished.class, StreamCodecs.singleton(new FileSystemResponse.AppendFinished()));
-		builder.add(FileSystemResponse.CopyAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.CopyAllFinished()));
-		builder.add(FileSystemResponse.CopyFinished.class, StreamCodecs.singleton(new FileSystemResponse.CopyFinished()));
-		builder.add(FileSystemResponse.DeleteAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.DeleteAllFinished()));
-		builder.add(FileSystemResponse.DeleteFinished.class, StreamCodecs.singleton(new FileSystemResponse.DeleteFinished()));
-		builder.add(FileSystemResponse.DownloadSize.class, StreamCodec.create(FileSystemResponse.DownloadSize::new,
-			FileSystemResponse.DownloadSize::size, StreamCodecs.ofVarLong())
-		);
-		builder.add(FileSystemResponse.Handshake.class, StreamCodec.create(FileSystemResponse.Handshake::new,
-				FileSystemResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
-					StreamCodec.create(FileSystemResponse.HandshakeFailure::new,
-						FileSystemResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
-						FileSystemResponse.HandshakeFailure::message, StreamCodecs.ofString())
-				)
-			)
-		);
-		builder.add(FileSystemResponse.InfoAllFinished.class, StreamCodec.create(FileSystemResponse.InfoAllFinished::new,
-			FileSystemResponse.InfoAllFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
-		);
-		builder.add(FileSystemResponse.InfoFinished.class, StreamCodec.create(FileSystemResponse.InfoFinished::new,
-			FileSystemResponse.InfoFinished::fileMetadata, StreamCodecs.ofNullable(FILE_METADATA_CODEC))
-		);
-		builder.add(FileSystemResponse.ListFinished.class, StreamCodec.create(FileSystemResponse.ListFinished::new,
-			FileSystemResponse.ListFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
-		);
-		builder.add(FileSystemResponse.MoveAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.MoveAllFinished()));
-		builder.add(FileSystemResponse.MoveFinished.class, StreamCodecs.singleton(new FileSystemResponse.MoveFinished()));
-		builder.add(FileSystemResponse.Pong.class, StreamCodecs.singleton(new FileSystemResponse.Pong()));
-		builder.add(FileSystemResponse.ServerError.class, StreamCodec.create(FileSystemResponse.ServerError::new,
-			FileSystemResponse.ServerError::exception, FileSystemExceptionStreamCodec.createFileSystemExceptionCodec()));
-		builder.add(FileSystemResponse.UploadAck.class, StreamCodecs.singleton(new FileSystemResponse.UploadAck()));
-		builder.add(FileSystemResponse.UploadFinished.class, StreamCodecs.singleton(new FileSystemResponse.UploadFinished()));
-
-		return builder.build();
+		return SubtypeStreamCodec.<FileSystemResponse>builder()
+			.withSubtype(FileSystemResponse.AppendAck.class, StreamCodecs.singleton(new FileSystemResponse.AppendAck()))
+			.withSubtype(FileSystemResponse.AppendFinished.class, StreamCodecs.singleton(new FileSystemResponse.AppendFinished()))
+			.withSubtype(FileSystemResponse.CopyAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.CopyAllFinished()))
+			.withSubtype(FileSystemResponse.CopyFinished.class, StreamCodecs.singleton(new FileSystemResponse.CopyFinished()))
+			.withSubtype(FileSystemResponse.DeleteAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.DeleteAllFinished()))
+			.withSubtype(FileSystemResponse.DeleteFinished.class, StreamCodecs.singleton(new FileSystemResponse.DeleteFinished()))
+			.withSubtype(FileSystemResponse.DownloadSize.class, StreamCodec.create(FileSystemResponse.DownloadSize::new,
+				FileSystemResponse.DownloadSize::size, StreamCodecs.ofVarLong()))
+			.withSubtype(FileSystemResponse.Handshake.class, StreamCodec.create(FileSystemResponse.Handshake::new,
+					FileSystemResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
+						StreamCodec.create(FileSystemResponse.HandshakeFailure::new,
+							FileSystemResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
+							FileSystemResponse.HandshakeFailure::message, StreamCodecs.ofString()))))
+			.withSubtype(FileSystemResponse.InfoAllFinished.class, StreamCodec.create(FileSystemResponse.InfoAllFinished::new,
+				FileSystemResponse.InfoAllFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC)))
+			.withSubtype(FileSystemResponse.InfoFinished.class, StreamCodec.create(FileSystemResponse.InfoFinished::new,
+				FileSystemResponse.InfoFinished::fileMetadata, StreamCodecs.ofNullable(FILE_METADATA_CODEC)))
+			.withSubtype(FileSystemResponse.ListFinished.class, StreamCodec.create(FileSystemResponse.ListFinished::new,
+				FileSystemResponse.ListFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC)))
+			.withSubtype(FileSystemResponse.MoveAllFinished.class, StreamCodecs.singleton(new FileSystemResponse.MoveAllFinished()))
+			.withSubtype(FileSystemResponse.MoveFinished.class, StreamCodecs.singleton(new FileSystemResponse.MoveFinished()))
+			.withSubtype(FileSystemResponse.Pong.class, StreamCodecs.singleton(new FileSystemResponse.Pong()))
+			.withSubtype(FileSystemResponse.ServerError.class, StreamCodec.create(FileSystemResponse.ServerError::new,
+				FileSystemResponse.ServerError::exception, FileSystemExceptionStreamCodec.createFileSystemExceptionCodec()))
+			.withSubtype(FileSystemResponse.UploadAck.class, StreamCodecs.singleton(new FileSystemResponse.UploadAck()))
+			.withSubtype(FileSystemResponse.UploadFinished.class, StreamCodecs.singleton(new FileSystemResponse.UploadFinished()))
+			.build();
 	}
 }

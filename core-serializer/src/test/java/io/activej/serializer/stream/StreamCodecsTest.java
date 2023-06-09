@@ -1,6 +1,6 @@
 package io.activej.serializer.stream;
 
-import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
+import io.activej.serializer.stream.StreamCodecs.SubtypeStreamCodec;
 import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
@@ -122,14 +122,12 @@ public class StreamCodecsTest {
 
 	@Theory
 	public void ofSubtypeBuilder(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
-		SubtypeBuilder<Number> subtypeBuilder = new SubtypeBuilder<>();
-		subtypeBuilder
-			.add(Integer.class, StreamCodecs.ofInt())
-			.add(Long.class, StreamCodecs.ofLong())
-			.add(Float.class, StreamCodecs.ofFloat())
-			.add(Byte.class, StreamCodecs.ofByte());
-
-		StreamCodec<Number> codec = subtypeBuilder.build();
+		StreamCodec<Number> codec = SubtypeStreamCodec.<Number>builder()
+			.withSubtype(Integer.class, StreamCodecs.ofInt())
+			.withSubtype(Long.class, StreamCodecs.ofLong())
+			.withSubtype(Float.class, StreamCodecs.ofFloat())
+			.withSubtype(Byte.class, StreamCodecs.ofByte())
+			.build();
 
 		byte b = Byte.MAX_VALUE;
 		byte bResult = (byte) doTest(codec, b, readBufferSize, writeBufferSize);

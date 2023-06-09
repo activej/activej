@@ -1,6 +1,7 @@
 package io.activej.serializer.stream;
 
 import io.activej.common.annotation.StaticFactories;
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -13,6 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+
+import static io.activej.common.Checks.checkState;
 
 @StaticFactories(StreamCodec.class)
 public class StreamCodecs {
@@ -682,48 +685,60 @@ public class StreamCodecs {
 		};
 	}
 
-	public static class SubtypeBuilder<T> {
+	public static class SubtypeStreamCodec<T> implements StreamCodec<T> {
 		public record SubclassEntry<T>(byte idx, StreamCodec<T> codec) {}
 
 		private final Map<Class<?>, SubclassEntry<? extends T>> encoders = new HashMap<>();
 		private final List<StreamDecoder<? extends T>> decoders = new ArrayList<>();
 
-		public <E extends T> SubtypeBuilder<T> add(Class<E> type, StreamCodec<E> codec) {
-			byte idx = (byte) encoders.size();
-			encoders.put(type, new SubclassEntry<>(idx, codec));
-			decoders.add(codec);
-			return this;
+		private SubtypeStreamCodec() {
 		}
 
-		public StreamCodec<T> build() {
-			if (encoders.isEmpty()) throw new IllegalStateException("No subtype codec has been specified");
+		public static <T> SubtypeStreamCodec<T>.Builder builder() {
+			return new SubtypeStreamCodec<T>().new Builder();
+		}
 
-			return new StreamCodec<>() {
-				@Override
-				public void encode(StreamOutput output, T item) throws IOException {
-					Class<?> type = item.getClass();
-					//noinspection unchecked
-					SubclassEntry<T> entry = (SubclassEntry<T>) encoders.get(type);
-					if (entry == null) throw new IllegalArgumentException("Unsupported type " + type);
-					output.writeByte(entry.idx);
-					entry.codec.encode(output, item);
-				}
+		public final class Builder extends AbstractBuilder<Builder, SubtypeStreamCodec<T>> {
+			private Builder() {}
 
-				@Override
-				public T decode(StreamInput input) throws IOException {
-					int idx = input.readByte();
-					if (idx < 0 || idx >= decoders.size()) throw new CorruptedDataException();
-					return decoders.get(idx).decode(input);
-				}
-			};
+			public <E extends T> Builder withSubtype(Class<E> type, StreamCodec<E> codec) {
+				checkNotBuilt(this);
+				byte idx = (byte) encoders.size();
+				encoders.put(type, new SubclassEntry<>(idx, codec));
+				decoders.add(codec);
+				return this;
+			}
+
+			@Override
+			protected SubtypeStreamCodec<T> doBuild() {
+				checkState(!encoders.isEmpty(), "No subtype codec has been specified");
+				return SubtypeStreamCodec.this;
+			}
+		}
+
+		@Override
+		public void encode(StreamOutput output, T item) throws IOException {
+			Class<?> type = item.getClass();
+			//noinspection unchecked
+			SubclassEntry<T> entry = (SubclassEntry<T>) encoders.get(type);
+			if (entry == null) throw new IllegalArgumentException("Unsupported type " + type);
+			output.writeByte(entry.idx);
+			entry.codec.encode(output, item);
+		}
+
+		@Override
+		public T decode(StreamInput input) throws IOException {
+			int idx = input.readByte();
+			if (idx < 0 || idx >= decoders.size()) throw new CorruptedDataException();
+			return decoders.get(idx).decode(input);
 		}
 	}
 
 	public static <T> StreamCodec<T> ofSubtype(LinkedHashMap<Class<? extends T>, StreamCodec<? extends T>> codecs) {
-		SubtypeBuilder<T> builder = new SubtypeBuilder<>();
+		SubtypeStreamCodec<T>.Builder builder = SubtypeStreamCodec.builder();
 		for (Map.Entry<Class<? extends T>, StreamCodec<? extends T>> e : codecs.entrySet()) {
 			//noinspection unchecked
-			builder.add((Class<T>) e.getKey(), (StreamCodec<T>) e.getValue());
+			builder.withSubtype((Class<T>) e.getKey(), (StreamCodec<T>) e.getValue());
 		}
 		return builder.build();
 	}

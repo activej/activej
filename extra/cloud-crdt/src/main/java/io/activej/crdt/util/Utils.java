@@ -25,7 +25,7 @@ import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.promise.Promise;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
+import io.activej.serializer.stream.StreamCodecs.SubtypeStreamCodec;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,42 +83,32 @@ public final class Utils {
 	}
 
 	private static StreamCodec<CrdtRequest> createCrdtRequestStreamCodec() {
-		SubtypeBuilder<CrdtRequest> builder = new SubtypeBuilder<>();
-
-		builder.add(CrdtRequest.Download.class, StreamCodec.create(CrdtRequest.Download::new,
-			CrdtRequest.Download::token, StreamCodecs.ofVarLong())
-		);
-		builder.add(CrdtRequest.Handshake.class, StreamCodec.create(CrdtRequest.Handshake::new,
-			CrdtRequest.Handshake::version, VERSION_CODEC)
-		);
-		builder.add(CrdtRequest.Ping.class, StreamCodecs.singleton(new CrdtRequest.Ping()));
-		builder.add(CrdtRequest.Take.class, StreamCodecs.singleton(new CrdtRequest.Take()));
-		builder.add(CrdtRequest.TakeAck.class, StreamCodecs.singleton(new CrdtRequest.TakeAck()));
-		builder.add(CrdtRequest.Upload.class, StreamCodecs.singleton(new CrdtRequest.Upload()));
-
-		return builder.build();
+		return SubtypeStreamCodec.<CrdtRequest>builder()
+			.withSubtype(CrdtRequest.Download.class, StreamCodec.create(CrdtRequest.Download::new,
+				CrdtRequest.Download::token, StreamCodecs.ofVarLong()))
+			.withSubtype(CrdtRequest.Handshake.class, StreamCodec.create(CrdtRequest.Handshake::new,
+				CrdtRequest.Handshake::version, VERSION_CODEC))
+			.withSubtype(CrdtRequest.Ping.class, StreamCodecs.singleton(new CrdtRequest.Ping()))
+			.withSubtype(CrdtRequest.Take.class, StreamCodecs.singleton(new CrdtRequest.Take()))
+			.withSubtype(CrdtRequest.TakeAck.class, StreamCodecs.singleton(new CrdtRequest.TakeAck()))
+			.withSubtype(CrdtRequest.Upload.class, StreamCodecs.singleton(new CrdtRequest.Upload()))
+			.build();
 	}
 
 	private static StreamCodec<CrdtResponse> createCrdtResponseStreamCodec() {
-		SubtypeBuilder<CrdtResponse> builder = new SubtypeBuilder<>();
-
-		builder.add(CrdtResponse.DownloadStarted.class, StreamCodecs.singleton(new CrdtResponse.DownloadStarted()));
-		builder.add(CrdtResponse.Handshake.class, StreamCodec.create(CrdtResponse.Handshake::new,
-			CrdtResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
-				StreamCodec.create(CrdtResponse.HandshakeFailure::new,
-					CrdtResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
-					CrdtResponse.HandshakeFailure::message, StreamCodecs.ofString())
-			))
-		);
-		builder.add(CrdtResponse.Pong.class, StreamCodecs.singleton(new CrdtResponse.Pong()));
-		builder.add(CrdtResponse.RemoveAck.class, StreamCodecs.singleton(new CrdtResponse.RemoveAck()));
-		builder.add(CrdtResponse.ServerError.class, StreamCodec.create(CrdtResponse.ServerError::new,
-				CrdtResponse.ServerError::message, StreamCodecs.ofString()
-			)
-		);
-		builder.add(CrdtResponse.TakeStarted.class, StreamCodecs.singleton(new CrdtResponse.TakeStarted()));
-		builder.add(CrdtResponse.UploadAck.class, StreamCodecs.singleton(new CrdtResponse.UploadAck()));
-
-		return builder.build();
+		return SubtypeStreamCodec.<CrdtResponse>builder()
+			.withSubtype(CrdtResponse.DownloadStarted.class, StreamCodecs.singleton(new CrdtResponse.DownloadStarted()))
+			.withSubtype(CrdtResponse.Handshake.class, StreamCodec.create(CrdtResponse.Handshake::new,
+				CrdtResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
+					StreamCodec.create(CrdtResponse.HandshakeFailure::new,
+						CrdtResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
+						CrdtResponse.HandshakeFailure::message, StreamCodecs.ofString()))))
+			.withSubtype(CrdtResponse.Pong.class, StreamCodecs.singleton(new CrdtResponse.Pong()))
+			.withSubtype(CrdtResponse.RemoveAck.class, StreamCodecs.singleton(new CrdtResponse.RemoveAck()))
+			.withSubtype(CrdtResponse.ServerError.class, StreamCodec.create(CrdtResponse.ServerError::new,
+				CrdtResponse.ServerError::message, StreamCodecs.ofString()))
+			.withSubtype(CrdtResponse.TakeStarted.class, StreamCodecs.singleton(new CrdtResponse.TakeStarted()))
+			.withSubtype(CrdtResponse.UploadAck.class, StreamCodecs.singleton(new CrdtResponse.UploadAck()))
+			.build();
 	}
 }
