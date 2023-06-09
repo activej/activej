@@ -155,11 +155,16 @@ public final class Cube extends AbstractReactive
 		private final Aggregation aggregation;
 		private final List<String> measures;
 		private final AggregationPredicate predicate;
+		private final AggregationPredicate precondition;
 
-		private AggregationContainer(Aggregation aggregation, List<String> measures, AggregationPredicate predicate) {
+		private AggregationContainer(
+			Aggregation aggregation, List<String> measures, AggregationPredicate predicate,
+			AggregationPredicate precondition
+		) {
 			this.aggregation = aggregation;
 			this.measures = measures;
 			this.predicate = predicate;
+			this.precondition = precondition;
 		}
 
 		@Override
@@ -172,7 +177,7 @@ public final class Cube extends AbstractReactive
 		private final String id;
 		private final List<String> dimensions = new ArrayList<>();
 		private final List<String> measures = new ArrayList<>();
-		private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
+		private AggregationPredicate predicate = alwaysTrue();
 		private final List<String> partitioningKey = new ArrayList<>();
 		private int chunkSize;
 		private int reducerBufferSize;
@@ -454,8 +459,13 @@ public final class Cube extends AbstractReactive
 				.withStats(aggregationStats)
 				.build();
 
+			AggregationPredicate precondition = and(aggregationConfig.dimensions.stream()
+				.map(validityPredicates::get)
+				.filter(Objects::nonNull)
+				.toList())
+				.simplify();
 
-			aggregations.put(aggregationConfig.id, new AggregationContainer(aggregation, aggregationConfig.measures, aggregationConfig.predicate));
+			aggregations.put(aggregationConfig.id, new AggregationContainer(aggregation, aggregationConfig.measures, aggregationConfig.predicate, precondition));
 			logger.info("Added aggregation {} for id '{}'", aggregation, aggregationConfig.id);
 		}
 	}
@@ -533,21 +543,21 @@ public final class Cube extends AbstractReactive
 			for (AggregationChunk chunk : aggregation.getState().getChunks().values()) {
 				PrimaryKey minPrimaryKey = chunk.getMinPrimaryKey();
 				PrimaryKey maxPrimaryKey = chunk.getMaxPrimaryKey();
-				AggregationPredicate chunkPredicate = AggregationPredicates.alwaysTrue();
+				AggregationPredicate chunkPredicate = alwaysTrue();
 				for (int i = 0; i < keys.size(); i++) {
 					String key = keys.get(i);
 					FieldType keyType = structure.getKeyType(key);
 					Object minKey = keyType.toInitialValue(minPrimaryKey.get(i));
 					Object maxKey = keyType.toInitialValue(maxPrimaryKey.get(i));
 					if (Objects.equals(minKey, maxKey)) {
-						chunkPredicate = AggregationPredicates.and(chunkPredicate, eq(key, minKey));
+						chunkPredicate = and(chunkPredicate, eq(key, minKey));
 					} else {
-						chunkPredicate = AggregationPredicates.and(chunkPredicate, between(key, (Comparable) minKey, (Comparable) maxKey));
+						chunkPredicate = and(chunkPredicate, between(key, (Comparable) minKey, (Comparable) maxKey));
 						break;
 					}
 				}
-				AggregationPredicate intersection = AggregationPredicates.and(chunkPredicate, containerPredicate).simplify();
-				if (intersection == AggregationPredicates.alwaysFalse()) {
+				AggregationPredicate intersection = and(chunkPredicate, containerPredicate).simplify();
+				if (intersection == alwaysFalse()) {
 					irrelevantChunks.computeIfAbsent(entry.getKey(), $ -> new HashSet<>()).add(chunk);
 				}
 			}
@@ -574,7 +584,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass) {
-		return logStreamConsumer(inputClass, AggregationPredicates.alwaysTrue());
+		return logStreamConsumer(inputClass, alwaysTrue());
 	}
 
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, AggregationPredicate predicate) {
@@ -584,7 +594,7 @@ public final class Cube extends AbstractReactive
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(
 		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields
 	) {
-		return logStreamConsumer(inputClass, dimensionFields, measureFields, AggregationPredicates.alwaysTrue());
+		return logStreamConsumer(inputClass, dimensionFields, measureFields, alwaysTrue());
 	}
 
 	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(
@@ -596,7 +606,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass) {
-		return consume(inputClass, AggregationPredicates.alwaysTrue());
+		return consume(inputClass, alwaysTrue());
 	}
 
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, AggregationPredicate predicate) {
@@ -645,11 +655,18 @@ public final class Cube extends AbstractReactive
 
 			AggregationPredicate dataInputFilterPredicate = aggregationToDataInputFilterPredicate.getValue();
 			StreamSupplier<T> output = streamSplitter.newOutput();
-			if (!dataInputFilterPredicate.equals(AggregationPredicates.alwaysTrue())) {
-				Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate, classLoader, fieldTypes);
-				output = output
-					.transformWith(StreamTransformers.filter(filterPredicate));
-			}
+
+			Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate, classLoader, fieldTypes);
+			Predicate<T> preconditionPredicate = createFilterPredicate(inputClass, aggregationContainer.precondition, classLoader, fieldTypes);
+
+			Predicate<T> finalPredicate = filterPredicate.and(item -> {
+				checkState(preconditionPredicate.test(item), () ->
+					"Precondition " + aggregationContainer.precondition + " fails for " + item);
+				return true;
+			});
+
+			output = output
+				.transformWith(StreamTransformers.filter(finalPredicate));
 			Promise<AggregationDiff> consume = output.streamTo(aggregation.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
 			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
 		}
@@ -674,11 +691,11 @@ public final class Cube extends AbstractReactive
 
 			AggregationPredicate containerPredicate = container.predicate.simplify();
 
-			AggregationPredicate intersection = AggregationPredicates.and(containerPredicate, dataPredicate).simplify();
-			if (AggregationPredicates.alwaysFalse().equals(intersection)) continue;
+			AggregationPredicate intersection = and(containerPredicate, dataPredicate).simplify();
+			if (alwaysFalse().equals(intersection)) continue;
 
 			if (intersection.equals(dataPredicate)) {
-				aggregationToDataInputFilterPredicate.put(aggregationContainer.getKey(), AggregationPredicates.alwaysTrue());
+				aggregationToDataInputFilterPredicate.put(aggregationContainer.getKey(), alwaysTrue());
 				continue;
 			}
 
@@ -687,10 +704,12 @@ public final class Cube extends AbstractReactive
 		return aggregationToDataInputFilterPredicate;
 	}
 
-	Predicate createFilterPredicate(
+	private Predicate createFilterPredicate(
 		Class<?> inputClass, AggregationPredicate predicate, DefiningClassLoader classLoader,
 		Map<String, FieldType> keyTypes
 	) {
+		if (predicate.equals(alwaysTrue())) return $ -> true;
+		if (predicate.equals(alwaysFalse())) return $ -> false;
 		return classLoader.ensureClassAndCreateInstance(
 			ClassKey.of(Predicate.class, inputClass, predicate),
 			() -> ClassGenerator.builder(Predicate.class)
@@ -739,6 +758,7 @@ public final class Cube extends AbstractReactive
 				.withKeys(dimensions)
 				.withMeasures(storedMeasures)
 				.withPredicate(where)
+				.withPrecondition(compatibleAggregation.precondition)
 				.build();
 			double score = compatibleAggregation.aggregation.estimateCost(aggregationQuery);
 			containerWithScores.add(new AggregationContainerWithScore(compatibleAggregation, score));
@@ -774,6 +794,7 @@ public final class Cube extends AbstractReactive
 					.withKeys(dimensions)
 					.withMeasures(compatibleMeasures)
 					.withPredicate(where)
+					.withPrecondition(aggregationContainer.precondition)
 					.build(),
 				aggregationClass, queryClassLoader);
 
@@ -819,7 +840,7 @@ public final class Cube extends AbstractReactive
 
 			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).toList();
 			if (compatibleMeasures.isEmpty()) continue;
-			AggregationPredicate intersection = AggregationPredicates.and(where, aggregationContainer.predicate).simplify();
+			AggregationPredicate intersection = and(where, aggregationContainer.predicate).simplify();
 
 			if (!intersection.equals(where)) continue;
 			compatibleAggregations.add(aggregationContainer);
@@ -1126,8 +1147,8 @@ public final class Cube extends AbstractReactive
 		}
 
 		private Predicate<R> createHavingPredicate() {
-			if (queryHaving == AggregationPredicates.alwaysTrue()) return o -> true;
-			if (queryHaving == AggregationPredicates.alwaysFalse()) return o -> false;
+			if (queryHaving == alwaysTrue()) return o -> true;
+			if (queryHaving == alwaysFalse()) return o -> false;
 
 			return queryClassLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, resultClass, queryHaving),

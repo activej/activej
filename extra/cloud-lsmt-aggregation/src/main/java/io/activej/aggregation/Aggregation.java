@@ -59,13 +59,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static io.activej.aggregation.predicate.AggregationPredicates.alwaysFalse;
+import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.*;
-import static io.activej.datastream.processor.transformer.StreamSupplierTransformer.identity;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
 import static java.util.Comparator.comparing;
@@ -337,7 +337,7 @@ public final class Aggregation extends AbstractReactive
 		List<String> fields = getMeasures().stream().filter(query.getMeasures()::contains).collect(toList());
 		List<AggregationChunk> allChunks = state.findChunks(query.getPredicate(), fields);
 		return consolidatedSupplier(query.getKeys(),
-			fields, outputClass, query.getPredicate(), allChunks, queryClassLoader)
+			fields, outputClass, query.getPredicate(), query.getPrecondition(), allChunks, queryClassLoader)
 			.withEndOfStream(eos -> eos
 				.mapException(e -> new AggregationException("Query " + query + " failed", e)));
 	}
@@ -385,7 +385,7 @@ public final class Aggregation extends AbstractReactive
 		Class<Object> resultClass = createRecordClass(structure, getKeys(), measures, classLoader);
 
 		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(getKeys(), measures, resultClass, AggregationPredicates.alwaysTrue(),
-			chunksToConsolidate, classLoader);
+			AggregationPredicates.alwaysTrue(), chunksToConsolidate, classLoader);
 		AggregationChunker chunker = AggregationChunker.create(
 			structure, measures, resultClass,
 			createPartitionPredicate(resultClass, getPartitioningKey(), classLoader),
@@ -437,7 +437,7 @@ public final class Aggregation extends AbstractReactive
 
 	private <R, S> StreamSupplier<R> consolidatedSupplier(
 		List<String> queryKeys, List<String> measures, Class<R> resultClass, AggregationPredicate where,
-		List<AggregationChunk> individualChunks, DefiningClassLoader queryClassLoader
+		AggregationPredicate precondition, List<AggregationChunk> individualChunks, DefiningClassLoader queryClassLoader
 	) {
 		QueryPlan plan = createPlan(individualChunks, measures);
 
@@ -453,7 +453,7 @@ public final class Aggregation extends AbstractReactive
 				sequence.getChunksFields(),
 				classLoader);
 
-			StreamSupplier<S> stream = sequenceStream(where, sequence.getChunks(), sequenceClass, queryClassLoader);
+			StreamSupplier<S> stream = sequenceStream(where, precondition, sequence.getChunks(), sequenceClass, queryClassLoader);
 			if (!alreadySorted) {
 				stream = sortStream(stream, sequenceClass, queryKeys, sequence.getQueryFields(), classLoader);
 			}
@@ -534,8 +534,8 @@ public final class Aggregation extends AbstractReactive
 	}
 
 	private <T> StreamSupplier<T> sequenceStream(
-		AggregationPredicate where, List<AggregationChunk> individualChunks, Class<T> sequenceClass,
-		DefiningClassLoader queryClassLoader
+		AggregationPredicate where, AggregationPredicate precondition,
+		List<AggregationChunk> individualChunks, Class<T> sequenceClass, DefiningClassLoader queryClassLoader
 	) {
 		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
 		return StreamSuppliers.concat(new Iterator<>() {
@@ -547,31 +547,45 @@ public final class Aggregation extends AbstractReactive
 			@Override
 			public StreamSupplier<T> next() {
 				AggregationChunk chunk = chunkIterator.next();
-				return chunkReaderWithFilter(where, chunk, sequenceClass, queryClassLoader);
+				return chunkReaderWithFilter(where, precondition, chunk, sequenceClass, queryClassLoader);
 			}
 		});
 	}
 
 	private <T> StreamSupplier<T> chunkReaderWithFilter(
-		AggregationPredicate where, AggregationChunk chunk, Class<T> chunkRecordClass,
+		AggregationPredicate where, AggregationPredicate precondition, AggregationChunk chunk, Class<T> chunkRecordClass,
 		DefiningClassLoader queryClassLoader
 	) {
-		return StreamSuppliers.ofPromise(
-				aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
-			.transformWith(where != AggregationPredicates.alwaysTrue() ?
-				StreamTransformers.filter(
-					createPredicate(chunkRecordClass, where, queryClassLoader)) :
-				identity());
+		StreamSupplier<T> supplier = StreamSuppliers.ofPromise(
+			aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader));
+
+		if (where.equals(alwaysTrue()) && precondition.equals(alwaysTrue())) {
+			return supplier;
+		}
+
+		Predicate<T> filterPredicate = createPredicate(chunkRecordClass, where, queryClassLoader);
+		Predicate<T> preconditionPredicate = createPredicate(chunkRecordClass, precondition, queryClassLoader);
+
+		Predicate<T> finalPredicate = filterPredicate.and(item -> {
+			checkState(preconditionPredicate.test(item), () ->
+				"Precondition " + precondition + " fails for " + item);
+			return true;
+		});
+
+		return supplier
+			.transformWith(StreamTransformers.filter(finalPredicate));
 	}
 
 	private <T> Predicate<T> createPredicate(
-		Class<T> chunkRecordClass, AggregationPredicate where, DefiningClassLoader classLoader
+		Class<T> chunkRecordClass, AggregationPredicate predicate, DefiningClassLoader classLoader
 	) {
+		if (predicate.equals(alwaysTrue())) return $ -> true;
+		if (predicate.equals(alwaysFalse())) return $ -> false;
 		return classLoader.ensureClassAndCreateInstance(
-			ClassKey.of(Predicate.class, chunkRecordClass, where),
+			ClassKey.of(Predicate.class, chunkRecordClass, predicate),
 			() -> ClassGenerator.builder(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
-					where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes(), $ -> AggregationPredicates.alwaysTrue()))
+					predicate.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes(), $ -> AggregationPredicates.alwaysTrue()))
 				.build()
 		);
 	}

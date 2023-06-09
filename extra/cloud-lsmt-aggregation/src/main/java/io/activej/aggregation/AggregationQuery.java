@@ -34,19 +34,9 @@ public final class AggregationQuery {
 	private final List<String> keys = new ArrayList<>();
 	private final List<String> measures = new ArrayList<>();
 	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
+	private AggregationPredicate precondition = AggregationPredicates.alwaysTrue();
 
 	private AggregationQuery() {
-	}
-
-	private AggregationQuery(List<String> keys, List<String> measures) {
-		this.keys.addAll(keys);
-		this.measures.addAll(measures);
-	}
-
-	private AggregationQuery(List<String> keys, List<String> measures, AggregationPredicate predicate) {
-		this.keys.addAll(keys);
-		this.measures.addAll(measures);
-		this.predicate = predicate;
 	}
 
 	public static Builder builder() {
@@ -104,6 +94,12 @@ public final class AggregationQuery {
 			return this;
 		}
 
+		public Builder withPrecondition(AggregationPredicate precondition) {
+			checkNotBuilt(this);
+			AggregationQuery.this.precondition = precondition;
+			return this;
+		}
+
 		@Override
 		protected AggregationQuery doBuild() {
 			return AggregationQuery.this;
@@ -129,6 +125,10 @@ public final class AggregationQuery {
 		return predicate;
 	}
 
+	public AggregationPredicate getPrecondition() {
+		return precondition;
+	}
+
 	@Override
 	public String toString() {
 		return
@@ -136,6 +136,7 @@ public final class AggregationQuery {
 			"keys=" + keys +
 			", fields=" + measures +
 			", predicate=" + predicate +
+			", precondition=" + precondition +
 			'}';
 	}
 
@@ -147,7 +148,8 @@ public final class AggregationQuery {
 		return
 			keys.equals(query.keys) &&
 			measures.equals(query.measures) &&
-			predicate.equals(query.predicate);
+			predicate.equals(query.predicate) &&
+			precondition.equals(query.precondition);
 	}
 
 	@Override
@@ -155,6 +157,7 @@ public final class AggregationQuery {
 		int result = keys.hashCode();
 		result = 31 * result + measures.hashCode();
 		result = 31 * result + predicate.hashCode();
+		result = 31 * result + precondition.hashCode();
 		return result;
 	}
 }
