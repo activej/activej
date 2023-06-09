@@ -1,5 +1,6 @@
 package io.activej.dataflow.codec;
 
+import io.activej.common.builder.AbstractBuilder;
 import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamInput;
@@ -12,22 +13,40 @@ import java.util.Map;
 
 import static io.activej.common.Checks.checkArgument;
 
-public final class StreamCodecSubtype<T> implements StreamCodec<T> {
+public final class SubtypeStreamCodec<T> implements StreamCodec<T> {
 	private final Map<Class<? extends T>, Integer> classToIndexMap = new HashMap<>();
 	private final Map<Integer, StreamCodec<? extends T>> indexToCodecMap = new HashMap<>();
 
-	public <S extends T> void addSubtype(int index, Class<S> subtypeClass, StreamCodec<S> subtypeCodec) {
-		for (Class<? extends T> aClass : classToIndexMap.keySet()) {
-			if (aClass.isAssignableFrom(subtypeClass) || subtypeClass.isAssignableFrom(aClass)) {
-				throw new IllegalArgumentException("Conflicting subtypes: " + subtypeClass.getName() + " and " + aClass.getName());
+	private SubtypeStreamCodec() {
+	}
+
+	public static <T> SubtypeStreamCodec<T>.Builder builder() {
+		return new SubtypeStreamCodec<T>().new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, SubtypeStreamCodec<T>> {
+		private Builder() {}
+
+		public <S extends T> Builder withSubtype(int index, Class<S> subtypeClass, StreamCodec<S> subtypeCodec) {
+			checkNotBuilt(this);
+			for (Class<? extends T> aClass : classToIndexMap.keySet()) {
+				if (aClass.isAssignableFrom(subtypeClass) || subtypeClass.isAssignableFrom(aClass)) {
+					throw new IllegalArgumentException("Conflicting subtypes: " + subtypeClass.getName() + " and " + aClass.getName());
+				}
 			}
+
+			Integer prevIndex = classToIndexMap.put(subtypeClass, index);
+			checkArgument(prevIndex == null, () -> "Subtype " + subtypeClass.getName() + " already added");
+
+			StreamCodec<? extends T> prevCodec = indexToCodecMap.put(index, subtypeCodec);
+			checkArgument(prevCodec == null, () -> "Subtype with index " + index + " already added");
+			return this;
 		}
 
-		Integer prevIndex = classToIndexMap.put(subtypeClass, index);
-		checkArgument(prevIndex == null, () -> "Subtype " + subtypeClass.getName() + " already added");
-
-		StreamCodec<? extends T> prevCodec = indexToCodecMap.put(index, subtypeCodec);
-		checkArgument(prevCodec == null, () -> "Subtype with index " + index + " already added");
+		@Override
+		protected SubtypeStreamCodec<T> doBuild() {
+			return SubtypeStreamCodec.this;
+		}
 	}
 
 	@Override

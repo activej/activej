@@ -1,6 +1,6 @@
 package io.activej.dataflow.codec.module;
 
-import io.activej.dataflow.codec.StreamCodecSubtype;
+import io.activej.dataflow.codec.SubtypeStreamCodec;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.dataflow.codec.SubtypeImpl;
 import io.activej.inject.Injector;
@@ -77,7 +77,7 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 			i = i.getParent();
 		}
 
-		StreamCodecSubtype<Object> codecSubtype = new StreamCodecSubtype<>();
+		SubtypeStreamCodec<Object>.Builder codecSubtypeBuilder = SubtypeStreamCodec.builder();
 
 		for (Map.Entry<Integer, Class<?>> entry : subtypes.entrySet()) {
 			StreamCodec<?> codec = injector.getInstance(Key.ofType(
@@ -85,9 +85,9 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 				SubtypeImpl.subtype(entry.getKey())));
 
 			//noinspection rawtypes
-			codecSubtype.addSubtype(entry.getKey(), ((Class) entry.getValue()), codec);
+			codecSubtypeBuilder.withSubtype(entry.getKey(), ((Class) entry.getValue()), codec);
 		}
 
-		return codecSubtype;
+		return codecSubtypeBuilder.build();
 	}
 }
