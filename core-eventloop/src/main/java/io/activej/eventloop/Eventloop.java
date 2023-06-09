@@ -60,6 +60,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.exception.FatalErrorHandler.handleError;
 import static io.activej.common.exception.FatalErrorHandler.setThreadFatalErrorHandler;
@@ -1090,6 +1091,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 		"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
 		"(for example, most of the durationStats are collected only when monitoring is enabled) ]")
 	public void startExtendedMonitoring() {
+		checkState(inspector != null, "No inspector is set in Eventloop");
 		monitoring = true;
 	}
 
