@@ -171,9 +171,8 @@ public final class DataflowMeta extends LimitedMeta {
 		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
 
 		if (firstFrame.done) {
+			fetchersMap.remove(h.id);
 			reactor.submit(frameFetcher::close);
-		} else {
-			fetchersMap.put(h.id, frameFetcher);
 		}
 
 		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
@@ -211,19 +210,33 @@ public final class DataflowMeta extends LimitedMeta {
 	}
 
 	private FrameFetcher createFrameFetcher(StatementHandle statement, Dataset<Record> dataset, long limit) {
+		FrameFetcher frameFetcher;
 		try {
-			return reactor.submit((AsyncComputation<FrameFetcher>) cb -> {
+			frameFetcher = reactor.submit((AsyncComputation<FrameFetcher>) cb -> {
 				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset, limit);
 				BlockingStreamConsumer<Record> recordConsumer = BlockingStreamConsumer.create();
 				supplier.streamTo(recordConsumer);
 				cb.accept(new FrameFetcher(recordConsumer, statement.signature.columns.size(), limit), null);
 			}).get();
+
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new RuntimeException(e);
 		} catch (ExecutionException e) {
 			throw new RuntimeException(e);
 		}
+
+		Map<Integer, FrameFetcher> result = fetchers.compute(statement.connectionId, ($, map) -> {
+			if (map == null) return null;
+			map.put(statement.id, frameFetcher);
+			return map;
+		});
+
+		if (result == null) {
+			reactor.submit(frameFetcher::close);
+		}
+
+		return frameFetcher;
 	}
 
 	private Signature createSignature(String sql, List<RelDataTypeField> fields, List<RexDynamicParam> dynamicParams, RecordScheme scheme) {
