@@ -216,7 +216,7 @@ public final class DataflowMeta extends LimitedMeta {
 				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset, limit);
 				BlockingStreamConsumer<Record> recordConsumer = BlockingStreamConsumer.create();
 				supplier.streamTo(recordConsumer);
-				cb.accept(new FrameFetcher(recordConsumer, statement.signature.columns.size()), null);
+				cb.accept(new FrameFetcher(recordConsumer, statement.signature.columns.size(), limit), null);
 			}).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();

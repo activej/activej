@@ -10,15 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import static io.activej.datastream.processor.transformer.impl.Limiter.NO_LIMIT;
+
 public final class FrameFetcher implements AsyncCloseable {
 	private final BlockingStreamConsumer<Record> blockingConsumer;
 	private final int columnSize;
 
-	private int taken;
+	private long taken;
+	private long limit;
 
-	FrameFetcher(BlockingStreamConsumer<Record> blockingConsumer, int columnSize) {
+	FrameFetcher(BlockingStreamConsumer<Record> blockingConsumer, int columnSize, long limit) {
 		this.blockingConsumer = blockingConsumer;
 		this.columnSize = columnSize;
+		this.limit = limit;
 	}
 
 	public Frame fetch(long offset, int fetchMaxRowCount) {
@@ -44,21 +48,25 @@ public final class FrameFetcher implements AsyncCloseable {
 				throw new RuntimeException(e.getCause());
 			}
 
-			if (maybeRecord == null) {
-				done = true;
-				try {
-					blockingConsumer.submitAcknowledgement().get();
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					throw new RuntimeException(e);
-				} catch (ExecutionException e) {
-					throw new RuntimeException(e);
+			if (maybeRecord != null) {
+				Object[] row = recordToRow(maybeRecord);
+				rows.add(row);
+				if (limit == NO_LIMIT || --limit != 0) {
+					continue;
 				}
-				break;
 			}
 
-			Object[] row = recordToRow(maybeRecord);
-			rows.add(row);
+			done = true;
+			try {
+				blockingConsumer.submitAcknowledgement().get();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new RuntimeException(e);
+			} catch (ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+			break;
+
 		}
 
 		taken += rows.size();

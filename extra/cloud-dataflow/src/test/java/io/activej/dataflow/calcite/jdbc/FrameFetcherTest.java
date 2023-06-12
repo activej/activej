@@ -89,7 +89,7 @@ public class FrameFetcherTest {
 			.limit(maxCount));
 
 		BlockingStreamConsumer<Record> blockingStreamConsumer = BlockingStreamConsumer.create();
-		FrameFetcher frameFetcher = new FrameFetcher(blockingStreamConsumer, SCHEME.size());
+		FrameFetcher frameFetcher = new FrameFetcher(blockingStreamConsumer, SCHEME.size(), -1);
 		Promise<Void> streamPromise = recordSupplier.streamTo(blockingStreamConsumer);
 
 		Eventloop eventloop = Reactor.getCurrentReactor();
