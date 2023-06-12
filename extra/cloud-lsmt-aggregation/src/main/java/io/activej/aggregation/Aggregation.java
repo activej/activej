@@ -24,8 +24,6 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.util.Utils;
-import io.activej.codegen.ClassGenerator;
-import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.process.frame.FrameFormat;
@@ -59,11 +57,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.alwaysFalse;
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.util.Utils.*;
-import static io.activej.codegen.expression.Expressions.arg;
-import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
@@ -563,31 +558,10 @@ public final class Aggregation extends AbstractReactive
 			return supplier;
 		}
 
-		Predicate<T> filterPredicate = createPredicate(chunkRecordClass, where, queryClassLoader);
-		Predicate<T> preconditionPredicate = createPredicate(chunkRecordClass, precondition, queryClassLoader);
+		Predicate<T> filterPredicate = createPredicateWithPrecondition(chunkRecordClass, where, precondition,
+			getKeyTypes(), queryClassLoader, $ -> AggregationPredicates.alwaysTrue());
 
-		Predicate<T> finalPredicate = filterPredicate.and(item -> {
-			checkState(preconditionPredicate.test(item), () ->
-				"Precondition " + precondition + " fails for " + item);
-			return true;
-		});
-
-		return supplier
-			.transformWith(StreamTransformers.filter(finalPredicate));
-	}
-
-	private <T> Predicate<T> createPredicate(
-		Class<T> chunkRecordClass, AggregationPredicate predicate, DefiningClassLoader classLoader
-	) {
-		if (predicate.equals(alwaysTrue())) return $ -> true;
-		if (predicate.equals(alwaysFalse())) return $ -> false;
-		return classLoader.ensureClassAndCreateInstance(
-			ClassKey.of(Predicate.class, chunkRecordClass, predicate),
-			() -> ClassGenerator.builder(Predicate.class)
-				.withMethod("test", boolean.class, List.of(Object.class),
-					predicate.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes(), $ -> AggregationPredicates.alwaysTrue()))
-				.build()
-		);
+		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
 
 	@JmxAttribute

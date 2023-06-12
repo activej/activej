@@ -23,7 +23,6 @@ import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
@@ -656,17 +655,15 @@ public final class Cube extends AbstractReactive
 			AggregationPredicate dataInputFilterPredicate = aggregationToDataInputFilterPredicate.getValue();
 			StreamSupplier<T> output = streamSplitter.newOutput();
 
-			Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate, classLoader, fieldTypes);
-			Predicate<T> preconditionPredicate = createFilterPredicate(inputClass, aggregationContainer.precondition, classLoader, fieldTypes);
+			if (!dataInputFilterPredicate.equals(alwaysTrue()) ||
+				!aggregationContainer.precondition.equals(alwaysTrue())
+			) {
+				Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate,
+					aggregationContainer.precondition, fieldTypes, classLoader);
 
-			Predicate<T> finalPredicate = filterPredicate.and(item -> {
-				checkState(preconditionPredicate.test(item), () ->
-					"Precondition " + aggregationContainer.precondition + " fails for " + item);
-				return true;
-			});
+				output = output.transformWith(StreamTransformers.filter(filterPredicate));
+			}
 
-			output = output
-				.transformWith(StreamTransformers.filter(finalPredicate));
 			Promise<AggregationDiff> consume = output.streamTo(aggregation.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
 			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
 		}
@@ -705,24 +702,16 @@ public final class Cube extends AbstractReactive
 	}
 
 	private Predicate createFilterPredicate(
-		Class<?> inputClass, AggregationPredicate predicate, DefiningClassLoader classLoader,
-		Map<String, FieldType> keyTypes
+		Class<?> inputClass, AggregationPredicate predicate, AggregationPredicate precondition,
+		Map<String, FieldType> keyTypes, DefiningClassLoader classLoader
 	) {
-		if (predicate.equals(alwaysTrue())) return $ -> true;
-		if (predicate.equals(alwaysFalse())) return $ -> false;
-		return classLoader.ensureClassAndCreateInstance(
-			ClassKey.of(Predicate.class, inputClass, predicate),
-			() -> ClassGenerator.builder(Predicate.class)
-				.withMethod("test", boolean.class, List.of(Object.class),
-					predicate.createPredicate(cast(arg(0), inputClass), keyTypes, key -> {
-						AggregationPredicate validityPredicate = validityPredicates.get(key);
-						if (validityPredicate == null) {
-							throw new IllegalStateException("No validity predicate for: " + key);
-						}
-						return validityPredicate;
-					}))
-				.build()
-		);
+		return createPredicateWithPrecondition(inputClass, predicate, precondition, keyTypes, classLoader, key -> {
+			AggregationPredicate validityPredicate = validityPredicates.get(key);
+			if (validityPredicate == null) {
+				throw new IllegalStateException("No validity predicate for: " + key);
+			}
+			return validityPredicate;
+		});
 	}
 
 	/**
