@@ -265,7 +265,6 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	public void onReceiverEndOfStream() {
 		if (isClosed()) return;
 		logger.info("Receiver EOS: {}", address);
-		stream.close();
 		doClose();
 	}
 
@@ -274,7 +273,6 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		if (isClosed()) return;
 		logger.error("Receiver error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
-		stream.close();
 		doClose();
 	}
 
@@ -283,7 +281,6 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		if (isClosed()) return;
 		logger.error("Sender error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
-		stream.close();
 		doClose();
 	}
 
@@ -316,6 +313,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	private void doClose() {
 		if (isClosed()) return;
+		stream.close();
 		downstreamDataAcceptor = null;
 		closed = true;
 		rpcClient.removeConnection(address);
@@ -337,6 +335,10 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	public void shutdown() {
 		if (isClosed()) return;
 		stream.sendEndOfStream();
+	}
+
+	public void forceShutdown() {
+		doClose();
 	}
 
 	// JMX

@@ -120,6 +120,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private long reconnectIntervalMillis = DEFAULT_RECONNECT_INTERVAL.toMillis();
 
 	private boolean forcedStart;
+	private boolean forcedShutdown;
 
 	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	private SerializerBuilder serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
@@ -276,6 +277,16 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		this.forcedStart = true;
 		return this;
 	}
+
+	/**
+	 * Forcefully shutdowns RPC client even if there are active connections
+	 *
+	 * @return the RPC client, which shutdowns regardless of active connections
+	 */
+	public RpcClient withForcedShutdown() {
+		this.forcedShutdown = true;
+		return this;
+	}
 	// endregion
 
 	public SocketSettings getSocketSettings() {
@@ -344,7 +355,11 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		}
 
 		for (RpcClientConnection connection : connections.values()) {
-			connection.shutdown();
+			if (forcedShutdown) {
+				connection.forceShutdown();
+			} else {
+				connection.shutdown();
+			}
 		}
 	}
 

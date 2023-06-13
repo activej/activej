@@ -1,6 +1,7 @@
 package io.activej.rpc;
 
 import io.activej.async.exception.AsyncCloseException;
+import io.activej.common.ref.RefInt;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -18,16 +19,19 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
 
 public final class TestRpcClientShutdown {
 	@ClassRule
@@ -85,6 +89,40 @@ public final class TestRpcClientShutdown {
 		);
 
 		assertThat(exception, instanceOf(AsyncCloseException.class));
+	}
+
+	@Test
+	public void testClientForcedShutdown() throws IOException {
+		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		List<Class<?>> messageTypes = asList(Request.class, Response.class);
+
+		RpcServer rpcServer = RpcServer.create(eventloop)
+				.withMessageTypes(messageTypes)
+				.withHandler(Request.class,
+						request -> Promises.delay(Duration.ofSeconds(Integer.MAX_VALUE), new Response()))
+				.withListenPort(port);
+
+		RpcClient rpcClient = RpcClient.create(eventloop)
+				.withForcedShutdown()
+				.withMessageTypes(messageTypes)
+				.withStrategy(server(new InetSocketAddress(port)));
+
+		rpcServer.listen();
+
+		int requests = 10;
+		Integer closed = await(rpcClient.start()
+				.then(() -> {
+					RefInt closedRef = new RefInt(0);
+					for (int i = 0; i < requests; i++) {
+						rpcClient.sendRequest(new Request())
+								.whenException(AsyncCloseException.class, e -> closedRef.inc());
+					}
+					return rpcClient.stop()
+							.map($ -> closedRef.get());
+				})
+				.whenComplete(rpcServer::close));
+
+		assertEquals(requests, closed.intValue());
 	}
 
 	public static final class Request {
