@@ -192,6 +192,13 @@
         <groupId>org.apache.calcite</groupId>
         <artifactId>calcite-core</artifactId>
         <version>1.34.0</version>
+        <exclusions>
+          <exclusion>
+            <!--This dependency has invulnerability-->
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
