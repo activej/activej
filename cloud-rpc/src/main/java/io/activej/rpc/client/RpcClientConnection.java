@@ -264,7 +264,6 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	public void onReceiverEndOfStream() {
 		if (isClosed()) return;
 		logger.info("Receiver EOS: {}", address);
-		stream.close();
 		doClose();
 	}
 
@@ -273,7 +272,6 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		if (isClosed()) return;
 		logger.error("Receiver error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
-		stream.close();
 		doClose();
 	}
 
@@ -282,7 +280,6 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		if (isClosed()) return;
 		logger.error("Sender error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
-		stream.close();
 		doClose();
 	}
 
@@ -315,6 +312,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	private void doClose() {
 		if (isClosed()) return;
+		stream.close();
 		downstreamDataAcceptor = null;
 		closed = true;
 		rpcClient.onClosedConnection(address);
@@ -336,6 +334,10 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	public void shutdown() {
 		if (isClosed()) return;
 		stream.sendEndOfStream();
+	}
+
+	public void forceShutdown() {
+		doClose();
 	}
 
 	// JMX

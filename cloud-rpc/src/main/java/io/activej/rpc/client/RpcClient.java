@@ -126,6 +126,8 @@ public final class RpcClient extends AbstractNioReactive
 	private BinarySerializer<RpcMessage> requestSerializer;
 	private BinarySerializer<RpcMessage> responseSerializer;
 
+	private boolean forcedShutdown;
+
 	private RpcSender requestSender = new NoSenderAvailable();
 
 	private @Nullable SettablePromise<Void> stopPromise;
@@ -360,6 +362,16 @@ public final class RpcClient extends AbstractNioReactive
 			return this;
 		}
 
+		/**
+		 * Makes RPC client forcefully shutdown even if there are active connections
+		 *
+		 * @return the builder for RPC client, which shutdowns regardless of active connections
+		 */
+		public Builder withForcedShutdown() {
+			RpcClient.this.forcedShutdown = true;
+			return this;
+		}
+
 		@Override
 		protected RpcClient doBuild() {
 			checkState(requestSerializer != null && responseSerializer != null);
@@ -426,7 +438,11 @@ public final class RpcClient extends AbstractNioReactive
 
 		pendingConnections.clear();
 		for (RpcClientConnection connection : new ArrayList<>(connections.values())) {
-			connection.shutdown();
+			if (forcedShutdown) {
+				connection.forceShutdown();
+			} else {
+				connection.shutdown();
+			}
 		}
 
 		return stopPromise;
