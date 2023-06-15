@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-auth</artifactId>
-  <version>5.5-SNAPSHOT</version>
+  <version>5.5</version>
 
   <name>Tutorials : Auth</name>
 
