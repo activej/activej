@@ -16,7 +16,11 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.serializer.stream.SizedCollectors.*;
+import static io.activej.serializer.stream.SizedCollectorsKV.*;
+import static io.activej.serializer.util.ZeroArrayUtils.*;
 
+@SuppressWarnings("unused")
 @StaticFactories(StreamCodec.class)
 public class StreamCodecs {
 	public static StreamCodec<Void> ofVoid() {
@@ -187,7 +191,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<boolean[]> ofBooleanArray() {
-		return new AbstractArrayStreamCodec<>(1) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_BOOLEANS, 1) {
 			@Override
 			protected int getArrayLength(boolean[] array) {
 				return array.length;
@@ -222,7 +226,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<char[]> ofCharArray() {
-		return new AbstractArrayStreamCodec<>(2) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_CHARS, 2) {
 			@Override
 			protected int getArrayLength(char[] array) {
 				return array.length;
@@ -266,7 +270,9 @@ public class StreamCodecs {
 
 			@Override
 			public byte[] decode(StreamInput input) throws IOException {
-				byte[] array = new byte[input.readVarInt()];
+				int size = input.readVarInt();
+				if (size == 0) return ZERO_ARRAY_BYTES;
+				byte[] array = new byte[size];
 				input.read(array);
 				return array;
 			}
@@ -274,7 +280,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<short[]> ofShortArray() {
-		return new AbstractArrayStreamCodec<>(2) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_SHORTS, 2) {
 			@Override
 			protected int getArrayLength(short[] array) {
 				return array.length;
@@ -309,7 +315,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<int[]> ofIntArray() {
-		return new AbstractArrayStreamCodec<>(4) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_INTS, 4) {
 			@Override
 			protected int getArrayLength(int[] array) {
 				return array.length;
@@ -344,7 +350,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<long[]> ofLongArray() {
-		return new AbstractArrayStreamCodec<>(8) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_LONGS, 8) {
 			@Override
 			protected int getArrayLength(long[] array) {
 				return array.length;
@@ -379,7 +385,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<float[]> ofFloatArray() {
-		return new AbstractArrayStreamCodec<>(4) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_FLOATS, 4) {
 			@Override
 			protected int getArrayLength(float[] array) {
 				return array.length;
@@ -414,7 +420,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<double[]> ofDoubleArray() {
-		return new AbstractArrayStreamCodec<>(8) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_DOUBLES, 8) {
 			@Override
 			protected int getArrayLength(double[] array) {
 				return array.length;
@@ -449,7 +455,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<int[]> ofVarIntArray() {
-		return new AbstractArrayStreamCodec<>(1, 5) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_INTS, 1, 5) {
 			@Override
 			protected int getArrayLength(int[] array) {
 				return array.length;
@@ -484,7 +490,7 @@ public class StreamCodecs {
 	}
 
 	public static StreamCodec<long[]> ofVarLongArray() {
-		return new AbstractArrayStreamCodec<>(1, 10) {
+		return new AbstractArrayStreamCodec<>(ZERO_ARRAY_LONGS, 1, 10) {
 			@Override
 			protected int getArrayLength(long[] array) {
 				return array.length;
@@ -580,85 +586,111 @@ public class StreamCodecs {
 		};
 	}
 
-	public static <T, C extends Collection<T>> StreamCodec<C> ofCollection(StreamCodec<T> itemCodec, IntFunction<C> factory) {
+	private static <T, C extends Collection<T>> StreamCodec<C> ofCollection(StreamCodec<T> itemCodec, SizedCollector<T, ?, C> collector) {
+		return ofCollection($ -> itemCodec, collector);
+	}
+
+	private static <T, C extends Collection<T>> StreamCodec<C> ofCollection(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn, SizedCollector<T, ?, C> collector) {
 		return new StreamCodec<>() {
 			@Override
-			public void encode(StreamOutput output, C c) throws IOException {
-				output.writeVarInt(c.size());
-				for (T e : c) {
-					itemCodec.encode(output, e);
+			public void encode(StreamOutput output, C collection) throws IOException {
+				output.writeVarInt(collection.size());
+				int i = 0;
+				for (T item : collection) {
+					//noinspection unchecked
+					StreamCodec<T> codec = (StreamCodec<T>) itemCodecFn.apply(i++);
+					codec.encode(output, item);
 				}
 			}
 
 			@Override
 			public C decode(StreamInput input) throws IOException {
 				int size = input.readVarInt();
-				C c = factory.apply(size);
-				for (int i = 0; i < size; i++) {
-					T e = itemCodec.decode(input);
-					c.add(e);
+				if (size == 0) {
+					return collector.create0();
+				} else if (size == 1) {
+					return collector.create1(itemCodecFn.apply(0).decode(input));
+				} else {
+					Object acc = collector.accumulator(size);
+					for (int i = 0; i < size; i++) {
+						T item = itemCodecFn.apply(i).decode(input);
+						//noinspection unchecked
+						((SizedCollector<T, Object, C>) collector).accumulate(acc, i, item);
+					}
+					//noinspection unchecked
+					return ((SizedCollector<T, Object, C>) collector).result(acc);
 				}
-				return c;
 			}
 		};
 	}
 
 	public static <T> StreamCodec<Collection<T>> ofCollection(StreamCodec<T> itemCodec) {
-		return ofCollection(itemCodec, ArrayList::new);
+		return ofCollection(itemCodec, toCollection());
 	}
 
-	public static <T> StreamCodec<Set<T>> ofSet(StreamCodec<T> itemCodec) {
-		return ofCollection(itemCodec, length -> new HashSet<>(hashInitialSize(length)));
-	}
-
-	public static <E extends Enum<E>> StreamCodec<Set<E>> ofEnumSet(Class<E> type) {
-		return ofCollection(StreamCodecs.ofEnum(type), $ -> EnumSet.noneOf(type));
+	public static <E extends Enum<E>> StreamCodec<EnumSet<E>> ofEnumSet(Class<E> type) {
+		return ofCollection(StreamCodecs.ofEnum(type), toEnumSet(type));
 	}
 
 	public static <T> StreamCodec<List<T>> ofList(StreamCodec<T> itemCodec) {
-		return ofList($ -> itemCodec);
+		return ofCollection(itemCodec, toList());
 	}
 
 	public static <T> StreamCodec<List<T>> ofList(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn) {
-		return new StreamCodec<>() {
-			@Override
-			public void encode(StreamOutput output, List<T> list) throws IOException {
-				output.writeVarInt(list.size());
-				for (int i = 0; i < list.size(); i++) {
-					//noinspection unchecked
-					StreamCodec<T> codec = (StreamCodec<T>) itemCodecFn.apply(i);
-					codec.encode(output, list.get(i));
-				}
-			}
+		return ofCollection(itemCodecFn, toList());
+	}
 
-			@Override
-			public List<T> decode(StreamInput input) throws IOException {
-				int length = input.readVarInt();
-				Object[] array = new Object[length];
-				for (int i = 0; i < length; i++) {
-					array[i] = itemCodecFn.apply(i).decode(input);
-				}
-				//noinspection unchecked
-				return (List<T>) List.of(array);
-			}
-		};
+	public static <T> StreamCodec<ArrayList<T>> ofArrayList(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, toArrayList());
+	}
+
+	public static <T> StreamCodec<LinkedList<T>> ofLinkedList(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, toLinkedList());
+	}
+
+	public static <T> StreamCodec<Set<T>> ofSet(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, toSet());
+	}
+
+	public static <T> StreamCodec<HashSet<T>> ofHashSet(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, toHashSet());
+	}
+
+	public static <T> StreamCodec<LinkedHashSet<T>> ofLinkedHashSet(StreamCodec<T> itemCodec) {
+		return ofCollection(itemCodec, toLinkedHashSet());
 	}
 
 	public static <K, V> StreamCodec<Map<K, V>> ofMap(StreamCodec<K> keyCodec, StreamCodec<V> valueCodec) {
-		return ofMap(keyCodec, $ -> valueCodec);
+		return ofMap(keyCodec, valueCodec, toMap());
 	}
 
-	public static <K, V> StreamCodec<Map<K, V>> ofMap(
-		StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn
-	) {
-		return ofMap(keyCodec, valueCodecFn, length -> new HashMap<>(hashInitialSize(length)));
+	public static <K, V> StreamCodec<Map<K, V>> ofMap(StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn) {
+		return ofMap(keyCodec, valueCodecFn, toMap());
 	}
 
-	public static <E extends Enum<E>, V> StreamCodec<Map<E, V>> ofEnumMap(Class<E> type, StreamCodec<V> valueCodec) {
-		return ofMap(StreamCodecs.ofEnum(type), $ -> valueCodec, $ -> new EnumMap<>(type));
+	public static <K, V> StreamCodec<HashMap<K, V>> ofHashMap(StreamCodec<K> keyCodec, StreamCodec<V> valueCodec) {
+		return ofMap(keyCodec, valueCodec, toHashMap());
 	}
 
-	public static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn, IntFunction<M> factory) {
+	public static <K, V> StreamCodec<LinkedHashMap<K, V>> ofLinkedHashMap(StreamCodec<K> keyCodec, StreamCodec<V> valueCodec) {
+		return ofMap(keyCodec, valueCodec, toLinkedHashMap());
+	}
+
+	public static <K extends Enum<K>, V> StreamCodec<EnumMap<K, V>> ofEnumMap(Class<K> type, StreamCodec<V> valueCodec) {
+		return ofMap(StreamCodecs.ofEnum(type), valueCodec, toEnumMap(type));
+	}
+
+	public static <K extends Enum<K>, V> StreamCodec<EnumMap<K, V>> ofEnumMap(Class<K> type, Function<K, StreamCodec<? extends V>> valueCodecFn) {
+		return ofMap(StreamCodecs.ofEnum(type), valueCodecFn, toEnumMap(type));
+	}
+
+	private static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(StreamCodec<K> keyCodec, StreamCodec<? extends V> valueCodec, SizedCollectorKV<K, V, ?, M> collector) {
+		return ofMap(keyCodec, $ -> valueCodec, collector);
+	}
+
+	private static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(
+			StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn,
+			SizedCollectorKV<K, V, ?, M> collector) {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, M map) throws IOException {
@@ -674,13 +706,23 @@ public class StreamCodecs {
 			@Override
 			public M decode(StreamInput input) throws IOException {
 				int length = input.readVarInt();
-				M map = factory.apply(length);
-				for (int i = 0; i < length; i++) {
+				if (length == 0) {
+					return collector.create0();
+				} else if (length == 1) {
 					K key = keyCodec.decode(input);
 					V value = valueCodecFn.apply(key).decode(input);
-					map.put(key, value);
+					return collector.create1(key, value);
+				} else {
+					Object acc = collector.accumulator(length);
+					for (int i = 0; i < length; i++) {
+						K key = keyCodec.decode(input);
+						V value = valueCodecFn.apply(key).decode(input);
+						//noinspection unchecked
+						((SizedCollectorKV<K, V, Object, M>) collector).accumulate(acc, i, key, value);
+					}
+					//noinspection unchecked
+					return ((SizedCollectorKV<K, V, Object, M>) collector).result(acc);
 				}
-				return map;
 			}
 		};
 	}
@@ -792,10 +834,6 @@ public class StreamCodecs {
 		};
 	}
 
-	private static int hashInitialSize(int length) {
-		return (length + 2) / 3 * 4;
-	}
-
 	public static class OfBinarySerializer<T> implements StreamCodec<T> {
 		private static final int MAX_SIZE = 1 << 28; // 256MB
 		public static final int DEFAULT_ESTIMATED_SIZE = 1;
@@ -864,7 +902,7 @@ public class StreamCodecs {
 		}
 
 		private void ensureHeaderSize(
-			StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize
+				StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize
 		) {
 			int previousHeaderSize = positionData - positionBegin;
 			if (previousHeaderSize == headerSize) return; // offset is enough for header
@@ -970,21 +1008,21 @@ public class StreamCodecs {
 			}
 			return result;
 		}
-
 	}
 
 	public static abstract class AbstractArrayStreamCodec<T> implements StreamCodec<T> {
 		protected final int minElementSize;
 		protected final int maxElementSize;
+		private final T array0;
 
-		protected AbstractArrayStreamCodec(int minElementSize, int maxElementSize) {
+		protected AbstractArrayStreamCodec(T array0, int minElementSize, int maxElementSize) {
+			this.array0 = array0;
 			this.minElementSize = minElementSize;
 			this.maxElementSize = maxElementSize;
 		}
 
-		protected AbstractArrayStreamCodec(int elementSize) {
-			this.minElementSize = elementSize;
-			this.maxElementSize = elementSize;
+		protected AbstractArrayStreamCodec(T array0, int elementSize) {
+			this(array0, elementSize, elementSize);
 		}
 
 		@Override
@@ -1012,6 +1050,7 @@ public class StreamCodecs {
 		@Override
 		public final T decode(StreamInput input) throws IOException {
 			int length = input.readVarInt();
+			if (length == 0) return array0;
 			T array = createArray(length);
 			int idx = 0;
 			while (idx < length) {
@@ -1028,7 +1067,9 @@ public class StreamCodecs {
 				doRead(input.in(), array, idx, safeReadCount);
 				idx += safeReadCount;
 			}
-			doReadRemaining(input, array, idx, length);
+			if (idx < length) {
+				doReadRemaining(input, array, idx, length);
+			}
 			return array;
 		}
 

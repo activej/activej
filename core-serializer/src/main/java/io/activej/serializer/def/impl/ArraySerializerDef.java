@@ -21,6 +21,7 @@ import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.*;
+import io.activej.serializer.util.ZeroArrayUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
@@ -112,13 +113,13 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 		if (type.getComponentType() == Byte.TYPE) {
 			return let(readVarInt(in),
 				len -> !nullable ?
-					let(arrayNew(type, len),
+					let(arrayNew0(len),
 						array -> sequence(
 							readBytes(in, array),
 							array)) :
 					ifEq(len, value(0),
 						nullRef(type),
-						let(arrayNew(type, dec(len)),
+						let(arrayNew0(dec(len)),
 							array -> sequence(
 								readBytes(in, array, value(0), dec(len)),
 								array))));
@@ -135,7 +136,7 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 
 	private Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression size) {
 		Decoder decoder = valueSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
-		return let(arrayNew(type, size),
+		return let(arrayNew0(size),
 			array -> sequence(
 				iterate(value(0), size,
 					i -> arraySet(array, i,
@@ -143,4 +144,12 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 				array));
 	}
 
+	private Expression arrayNew0(Expression len) {
+		Class<?> componentType = type.getComponentType();
+		if (!componentType.isPrimitive()) return arrayNew(type, len);
+		return ifEq(len, value(0),
+			staticField(ZeroArrayUtils.class, "ZERO_ARRAY_" + componentType.getSimpleName().toUpperCase() + "S"),
+			arrayNew(type, len));
+
+	}
 }
