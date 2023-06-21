@@ -23,11 +23,13 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.JsonWriter.WriteObject;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
+import io.activej.aggregation.fieldtype.JsonCodecs;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.attributes.AttributeResolver;
 import io.activej.cube.attributes.AttributeResolver.AttributesFunction;
@@ -40,6 +42,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -139,6 +142,28 @@ public final class Utils {
 	}
 
 	public static final DslJson<?> CUBE_DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
+
+	static {
+		registerCodec(byte.class, JsonCodecs.BYTE_CODEC);
+		registerCodec(short.class, JsonCodecs.SHORT_CODEC);
+		registerCodec(int.class, JsonCodecs.INTEGER_CODEC);
+		registerCodec(long.class, JsonCodecs.LONG_CODEC);
+		registerCodec(float.class, JsonCodecs.FLOAT_CODEC);
+		registerCodec(double.class, JsonCodecs.DOUBLE_CODEC);
+		registerCodec(boolean.class, JsonCodecs.BOOLEAN_CODEC);
+		registerCodec(char.class, JsonCodecs.CHARACTER_CODEC);
+		registerCodec(String.class, JsonCodecs.STRING_CODEC);
+		registerCodec(LocalDate.class, JsonCodecs.LOCAL_DATE_CODEC);
+	}
+
+	public static <T> void registerCodec(Class<T> cls, JsonCodec<T> codec) {
+		CUBE_DSL_JSON.registerReader(cls, codec);
+		CUBE_DSL_JSON.registerWriter(cls, codec);
+		if (cls.isPrimitive()){
+			registerCodec(Primitives.wrap(cls), codec);
+		}
+	}
+
 	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newWriter);
 	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newReader);
 

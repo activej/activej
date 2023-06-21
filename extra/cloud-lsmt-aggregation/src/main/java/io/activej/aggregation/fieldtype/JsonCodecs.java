@@ -29,16 +29,16 @@ import java.time.format.DateTimeParseException;
 import java.util.Set;
 
 @SuppressWarnings("ConstantConditions")
-class JsonCodecs {
-	static final JsonCodec<String> STRING_CODEC = JsonCodec.of(JsonReader::readString, JsonWriter::writeString);
-	static final JsonCodec<Short> SHORT_CODEC = JsonCodec.of(NumberConverter::deserializeShort, (writer, value) -> NumberConverter.serialize(value, writer));
-	static final JsonCodec<Integer> INTEGER_CODEC = JsonCodec.of(NumberConverter::deserializeInt, (writer, value) -> NumberConverter.serialize(value, writer));
-	static final JsonCodec<Long> LONG_CODEC = JsonCodec.of(NumberConverter::deserializeLong, (writer, value) -> NumberConverter.serialize(value, writer));
-	static final JsonCodec<Float> FLOAT_CODEC = JsonCodec.of(NumberConverter::deserializeFloat, (writer, value) -> NumberConverter.serialize(value, writer));
-	static final JsonCodec<Double> DOUBLE_CODEC = JsonCodec.of(NumberConverter::deserializeDouble, (writer, value) -> NumberConverter.serialize(value, writer));
-	static final JsonCodec<Boolean> BOOLEAN_CODEC = JsonCodec.of(BoolConverter::deserialize, (writer, value) -> BoolConverter.serialize(value, writer));
+public class JsonCodecs {
+	public static final JsonCodec<String> STRING_CODEC = JsonCodec.of(JsonReader::readString, JsonWriter::writeString);
+	public static final JsonCodec<Short> SHORT_CODEC = JsonCodec.of(NumberConverter::deserializeShort, (writer, value) -> NumberConverter.serialize(value, writer));
+	public static final JsonCodec<Integer> INTEGER_CODEC = JsonCodec.of(NumberConverter::deserializeInt, (writer, value) -> NumberConverter.serialize(value, writer));
+	public static final JsonCodec<Long> LONG_CODEC = JsonCodec.of(NumberConverter::deserializeLong, (writer, value) -> NumberConverter.serialize(value, writer));
+	public static final JsonCodec<Float> FLOAT_CODEC = JsonCodec.of(NumberConverter::deserializeFloat, (writer, value) -> NumberConverter.serialize(value, writer));
+	public static final JsonCodec<Double> DOUBLE_CODEC = JsonCodec.of(NumberConverter::deserializeDouble, (writer, value) -> NumberConverter.serialize(value, writer));
+	public static final JsonCodec<Boolean> BOOLEAN_CODEC = JsonCodec.of(BoolConverter::deserialize, (writer, value) -> BoolConverter.serialize(value, writer));
 
-	static final JsonCodec<Byte> BYTE_CODEC = JsonCodec.of(
+	public static final JsonCodec<Byte> BYTE_CODEC = JsonCodec.of(
 			reader -> {
 				int result = NumberConverter.deserializeInt(reader);
 				if (result >= 0 && result <= 255) {
@@ -48,7 +48,7 @@ class JsonCodecs {
 			},
 			(writer, value) -> NumberConverter.serialize(value & 0xFF, writer));
 
-	static final JsonCodec<Character> CHARACTER_CODEC = JsonCodec.of(
+	public static final JsonCodec<Character> CHARACTER_CODEC = JsonCodec.of(
 			reader -> {
 				String string = reader.readString();
 				if (string.length() == 1) {
@@ -59,7 +59,7 @@ class JsonCodecs {
 			},
 			(writer, value) -> writer.writeString(value.toString()));
 
-	static final JsonCodec<LocalDate> LOCAL_DATE_CODEC = JsonCodec.of(
+	public static final JsonCodec<LocalDate> LOCAL_DATE_CODEC = JsonCodec.of(
 			reader -> {
 				try {
 					return LocalDate.parse(reader.readString());
@@ -69,7 +69,7 @@ class JsonCodecs {
 			}, (writer, value) -> writer.writeString(value.toString())
 	);
 
-	static <T> JsonCodec<Set<T>> ofSet(JsonCodec<T> codec) {
+	public static <T> JsonCodec<Set<T>> ofSet(JsonCodec<T> codec) {
 		return new JsonCodec<Set<T>>() {
 			@Override
 			public Set<T> read(@NotNull JsonReader reader) throws IOException {
@@ -83,7 +83,13 @@ class JsonCodecs {
 		};
 	}
 
-	static <E extends Enum<E>> JsonCodec<E> ofEnum(Class<E> enumClass) {
-		return JsonCodec.of(reader -> Enum.valueOf(enumClass, reader.readString()), (writer, value) -> writer.writeString(value.name()));
+	public static <E extends Enum<E>> JsonCodec<E> ofEnum(Class<E> enumClass) {
+		return JsonCodec.of(reader -> {
+			try {
+				return Enum.valueOf(enumClass, reader.readString());
+			} catch (IllegalArgumentException e) {
+				throw reader.newParseError(e.getMessage());
+			}
+		}, (writer, value) -> writer.writeString(value.name()));
 	}
 }
