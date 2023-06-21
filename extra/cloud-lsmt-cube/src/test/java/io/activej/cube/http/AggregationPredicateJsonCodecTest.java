@@ -8,11 +8,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJson;
+import static io.activej.cube.Utils.*;
 
 public class AggregationPredicateJsonCodecTest {
-	private static final AggregationPredicateJsonCodec CODEC = AggregationPredicateJsonCodec.create(
+	private static final AggregationPredicateJsonCodec CODEC = AggregationPredicateJsonCodec.create(CUBE_DSL_JSON,
 		Map.of(
 			"campaign", int.class,
 			"site", String.class,

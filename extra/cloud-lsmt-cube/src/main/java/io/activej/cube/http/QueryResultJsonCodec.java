@@ -16,11 +16,8 @@
 
 package io.activej.cube.http;
 
-import com.dslplatform.json.JsonReader;
+import com.dslplatform.json.*;
 import com.dslplatform.json.JsonReader.ReadObject;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.NumberConverter;
-import com.dslplatform.json.StringConverter;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.QueryResult;
@@ -69,18 +66,19 @@ public final class QueryResultJsonCodec implements JsonCodec<QueryResult> {
 	}
 
 	public static QueryResultJsonCodec create(
-		DefiningClassLoader classLoader, Map<String, Type> attributeTypes, Map<String, Type> measureTypes
+		DslJson<?> dslJson, DefiningClassLoader classLoader, Map<String, Type> attributeTypes,
+		Map<String, Type> measureTypes
 	) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		Map<String, JsonCodec<Object>> measureCodecs = new LinkedHashMap<>();
 		Map<String, Class<?>> attributeRawTypes = new LinkedHashMap<>();
 		Map<String, Class<?>> measureRawTypes = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()).nullable());
+			attributeCodecs.put(entry.getKey(), getJsonCodec(dslJson, entry.getValue()).nullable());
 			attributeRawTypes.put(entry.getKey(), Types.getRawType(entry.getValue()));
 		}
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
-			measureCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
+			measureCodecs.put(entry.getKey(), getJsonCodec(dslJson, entry.getValue()));
 			measureRawTypes.put(entry.getKey(), Types.getRawType(entry.getValue()));
 		}
 		return new QueryResultJsonCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);

@@ -16,6 +16,7 @@
 
 package io.activej.cube.http;
 
+import com.dslplatform.json.DslJson;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
@@ -36,8 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJson;
+import static io.activej.cube.Utils.*;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -50,6 +50,8 @@ public final class HttpClientCube implements ICube {
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
+
+	private DslJson<?> dslJson = CUBE_DSL_JSON;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
@@ -87,6 +89,12 @@ public final class HttpClientCube implements ICube {
 			return this;
 		}
 
+		public Builder withDslJson(DslJson<?> dslJson) {
+			checkNotBuilt(this);
+			HttpClientCube.this.dslJson = dslJson;
+			return this;
+		}
+
 		@Override
 		protected HttpClientCube doBuild() {
 			return HttpClientCube.this;
@@ -95,14 +103,14 @@ public final class HttpClientCube implements ICube {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(attributeTypes, measureTypes);
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(dslJson, attributeTypes, measureTypes);
 		}
 		return aggregationPredicateCodec;
 	}
 
 	private QueryResultJsonCodec getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultJsonCodec.create(classLoader, attributeTypes, measureTypes);
+			queryResultCodec = QueryResultJsonCodec.create(dslJson, classLoader, attributeTypes, measureTypes);
 		}
 		return queryResultCodec;
 	}

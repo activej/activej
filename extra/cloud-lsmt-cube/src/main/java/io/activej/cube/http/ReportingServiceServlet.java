@@ -16,6 +16,7 @@
 
 package io.activej.cube.http;
 
+import com.dslplatform.json.DslJson;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
@@ -36,8 +37,7 @@ import java.util.regex.Pattern;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.not;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJsonBuf;
+import static io.activej.cube.Utils.*;
 import static io.activej.cube.http.Utils.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
@@ -53,6 +53,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
+	private DslJson<?> dslJson = CUBE_DSL_JSON;
 
 	private ReportingServiceServlet(Reactor reactor, ICube cube) {
 		super(reactor);
@@ -87,6 +88,12 @@ public final class ReportingServiceServlet extends ServletWithStats {
 			return this;
 		}
 
+		public Builder withDslJson(DslJson<?> dslJson){
+			checkNotBuilt(this);
+			ReportingServiceServlet.this.dslJson = dslJson;
+			return this;
+		}
+
 		@Override
 		protected ReportingServiceServlet doBuild() {
 			return ReportingServiceServlet.this;
@@ -95,14 +102,14 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(cube.getAttributeTypes(), cube.getMeasureTypes());
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(dslJson, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}
 
 	private QueryResultJsonCodec getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultJsonCodec.create(classLoader, cube.getAttributeTypes(), cube.getMeasureTypes());
+			queryResultCodec = QueryResultJsonCodec.create(dslJson, classLoader, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return queryResultCodec;
 	}

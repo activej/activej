@@ -11,15 +11,14 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJson;
+import static io.activej.cube.Utils.*;
 import static org.junit.Assert.assertEquals;
 
 public class QueryResultJsonCodecTest {
 
 	@Test
 	public void test() throws MalformedDataException {
-		QueryResultJsonCodec codec = QueryResultJsonCodec.create(DefiningClassLoader.create(),
+		QueryResultJsonCodec codec = QueryResultJsonCodec.create(CUBE_DSL_JSON, DefiningClassLoader.create(),
 			Map.of(
 				"campaign", int.class,
 				"site", String.class),

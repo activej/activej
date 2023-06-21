@@ -16,6 +16,7 @@
 
 package io.activej.cube.http;
 
+import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
@@ -65,13 +66,15 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 		this.attributeFormats = attributeFormats;
 	}
 
-	public static AggregationPredicateJsonCodec create(Map<String, Type> attributeTypes, Map<String, Type> measureTypes) {
+	public static AggregationPredicateJsonCodec create(
+		DslJson<?> dslJson, Map<String, Type> attributeTypes, Map<String, Type> measureTypes
+	) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()).nullable());
+			attributeCodecs.put(entry.getKey(), getJsonCodec(dslJson, entry.getValue()).nullable());
 		}
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), getJsonCodec(entry.getValue()));
+			attributeCodecs.put(entry.getKey(), getJsonCodec(dslJson, entry.getValue()));
 		}
 		return new AggregationPredicateJsonCodec(attributeCodecs);
 	}
