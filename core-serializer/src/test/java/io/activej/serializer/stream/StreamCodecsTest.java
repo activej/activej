@@ -11,10 +11,7 @@ import org.junit.runner.RunWith;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
@@ -27,7 +24,7 @@ public class StreamCodecsTest {
 	public static int[] BUFFER_SIZES = new int[]{1, 2, 3, 5, 10, 100, StreamOutput.DEFAULT_BUFFER_SIZE, 2 * StreamOutput.DEFAULT_BUFFER_SIZE};
 
 	@DataPoints("containerSizes")
-	public static int[] CONTAINER_SIZES = new int[]{1, 2, 3, 5, 10, 1_000, 1_000_000};
+	public static int[] CONTAINER_SIZES = new int[]{0, 1, 2, 3, 5, 10, 1_000, 1_000_000};
 
 	@Theory
 	public void ofString(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
@@ -454,4 +451,126 @@ public class StreamCodecsTest {
 			assertSame(s2, codec.decode(input));
 		}
 	}
+
+	@Theory
+	public void ofArrayList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int listSize) {
+		assumeTrue((listSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<ArrayList<String>> codec = StreamCodecs.ofArrayList(StreamCodecs.ofString());
+		ArrayList<String> strings = new ArrayList<>(listSize);
+		for (int i = 0; i < listSize; i++) {
+			strings.add(String.valueOf(i));
+		}
+		List<String> result = doTest(codec, strings, readBufferSize, writeBufferSize);
+
+		assertEquals(strings, result);
+	}
+
+	@Theory
+	public void ofLinkedList(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int listSize) {
+		assumeTrue((listSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<LinkedList<String>> codec = StreamCodecs.ofLinkedList(StreamCodecs.ofString());
+		LinkedList<String> strings = new LinkedList<>();
+		for (int i = 0; i < listSize; i++) {
+			strings.add(String.valueOf(i));
+		}
+		List<String> result = doTest(codec, strings, readBufferSize, writeBufferSize);
+
+		assertEquals(strings, result);
+	}
+
+	@Theory
+	public void ofSet(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int setSize) {
+		assumeTrue((setSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<Set<String>> codec = StreamCodecs.ofSet(StreamCodecs.ofString());
+		Set<String> strings = new HashSet<>();
+		for (int i = 0; i < setSize; i++) {
+			strings.add(String.valueOf(i));
+		}
+		Set<String> result = doTest(codec, strings, readBufferSize, writeBufferSize);
+
+		assertEquals(strings, result);
+	}
+
+	@Theory
+	public void ofHashSet(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int setSize) {
+		assumeTrue((setSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<HashSet<String>> codec = StreamCodecs.ofHashSet(StreamCodecs.ofString());
+		HashSet<String> strings = new HashSet<>();
+		for (int i = 0; i < setSize; i++) {
+			strings.add(String.valueOf(i));
+		}
+		Set<String> result = doTest(codec, strings, readBufferSize, writeBufferSize);
+
+		assertEquals(strings, result);
+	}
+
+	@Theory
+	public void ofLinkedHashSet(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int setSize) {
+		assumeTrue((setSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<LinkedHashSet<String>> codec = StreamCodecs.ofLinkedHashSet(StreamCodecs.ofString());
+		LinkedHashSet<String> strings = new LinkedHashSet<>();
+		for (int i = 0; i < setSize; i++) {
+			strings.add(String.valueOf(i));
+		}
+		Set<String> result = doTest(codec, strings, readBufferSize, writeBufferSize);
+
+		assertEquals(strings, result);
+	}
+
+	@Theory
+	public void ofMap(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int mapSize) {
+		assumeTrue((mapSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<Map<String, Integer>> codec = StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofInt());
+		Map<String, Integer> map = new HashMap<>(mapSize);
+		for (int i = 0; i < mapSize; i++) {
+			map.put(String.valueOf(i), i);
+		}
+		Map<String, Integer> result = doTest(codec, map, readBufferSize, writeBufferSize);
+
+		assertEquals(map, result);
+	}
+
+	@Theory
+	public void ofHashMap(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int mapSize) {
+		assumeTrue((mapSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<HashMap<String, Integer>> codec = StreamCodecs.ofHashMap(StreamCodecs.ofString(), StreamCodecs.ofInt());
+		HashMap<String, Integer> map = new HashMap<>(mapSize);
+		for (int i = 0; i < mapSize; i++) {
+			map.put(String.valueOf(i), i);
+		}
+		Map<String, Integer> result = doTest(codec, map, readBufferSize, writeBufferSize);
+
+		assertEquals(map, result);
+	}
+
+	@Theory
+	public void ofLinkedHashMap(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int mapSize) {
+		assumeTrue((mapSize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<LinkedHashMap<String, Integer>> codec = StreamCodecs.ofLinkedHashMap(StreamCodecs.ofString(), StreamCodecs.ofInt());
+		LinkedHashMap<String, Integer> map = new LinkedHashMap<>(mapSize);
+		for (int i = 0; i < mapSize; i++) {
+			map.put(String.valueOf(i), i);
+		}
+		Map<String, Integer> result = doTest(codec, map, readBufferSize, writeBufferSize);
+
+		assertEquals(map, result);
+	}
+
+
 }
