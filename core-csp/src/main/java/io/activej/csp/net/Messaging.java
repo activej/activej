@@ -98,7 +98,8 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 	@Override
 	public Promise<Void> send(O msg) {
 		if (CHECKS) checkInReactorThread(this);
-		return socket.write(codec.encode(msg));
+		return socket.write(codec.encode(msg))
+			.whenException(this::closeEx);
 	}
 
 	@Override
@@ -120,7 +121,8 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 				.whenResult(() -> {
 					writeDone = true;
 					closeIfDone();
-				}));
+				})
+				.whenException(this::closeEx));
 	}
 
 	@Override
@@ -131,7 +133,8 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements IMe
 				.whenResult(() -> {
 					readDone = true;
 					closeIfDone();
-				}));
+				})
+				.whenException(this::closeEx));
 	}
 
 	@Override

@@ -182,7 +182,11 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 				List<P> alive = new ArrayList<>(map.keySet());
 				Sharder<K> sharder = partitionScheme.createSharder(alive);
 				if (sharder == null) {
-					throw new CrdtException("Incomplete cluster");
+					CrdtException exception = new CrdtException("Incomplete cluster");
+					for (StreamConsumer<CrdtData<K, S>> consumer : map.values()) {
+						consumer.closeEx(exception);
+					}
+					throw exception;
 				}
 				StreamSplitter<CrdtData<K, S>, CrdtData<K, S>> splitter = StreamSplitter.create(
 					(item, acceptors) -> {
@@ -228,7 +232,11 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 				List<P> alive = new ArrayList<>(map.keySet());
 				Sharder<K> sharder = partitionScheme.createSharder(alive);
 				if (sharder == null) {
-					throw new CrdtException("Incomplete cluster");
+					CrdtException exception = new CrdtException("Incomplete cluster");
+					for (StreamConsumer<CrdtTombstone<K>> consumer : map.values()) {
+						consumer.closeEx(exception);
+					}
+					throw exception;
 				}
 				StreamSplitter<CrdtTombstone<K>, CrdtTombstone<K>> splitter = StreamSplitter.create(
 					(item, acceptors) -> {
@@ -345,7 +353,11 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 		return execute(partitionScheme, method)
 			.map(map -> {
 				if (!partitionScheme.isReadValid(map.keySet())) {
-					throw new CrdtException("Incomplete cluster");
+					CrdtException exception = new CrdtException("Incomplete cluster");
+					for (StreamSupplier<CrdtData<K, S>> streamSupplier : map.values()) {
+						streamSupplier.closeEx(exception);
+					}
+					throw exception;
 				}
 				StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
 				for (P partitionId : map.keySet()) {

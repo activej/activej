@@ -174,7 +174,8 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 							.transformWith(ChannelSerializer.create(serializer))
 							.streamTo(consumer))
 					.withAcknowledgement(ack -> ack
-						.mapException(e -> new CrdtException("Upload failed", e)))));
+						.mapException(e -> new CrdtException("Upload failed", e))))
+				.whenException(messaging::closeEx));
 	}
 
 	@Override
@@ -196,7 +197,8 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 							.then(messaging::sendEndOfStream)
 							.mapException(e -> new CrdtException("Download failed", e))
 							.whenResult(messaging::close)
-							.whenException(messaging::closeEx))));
+							.whenException(messaging::closeEx)))
+				.whenException(messaging::closeEx));
 	}
 
 	@Override
@@ -221,7 +223,8 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 						.whenResult(messaging::close)
 						.whenException(messaging::closeEx);
 					return supplier;
-				}));
+				})
+				.whenException(messaging::closeEx));
 	}
 
 	@Override
@@ -244,7 +247,8 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 								.streamTo(consumer))
 						.withAcknowledgement(ack -> ack
 							.mapException(e -> new CrdtException("Remove operation failed", e)));
-				}));
+				})
+				.whenException(messaging::closeEx));
 	}
 
 	@Override
@@ -308,7 +312,8 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 						handshakeFailure.message(), handshakeFailure.minimalVersion()));
 				}
 				return messaging;
-			});
+			})
+			.whenException(messaging::closeEx);
 	}
 
 	// region JMX
