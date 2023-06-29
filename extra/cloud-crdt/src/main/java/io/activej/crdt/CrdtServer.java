@@ -26,8 +26,6 @@ import io.activej.csp.binary.codec.ByteBufsCodecs;
 import io.activej.csp.net.IMessaging;
 import io.activej.csp.net.Messaging;
 import io.activej.datastream.consumer.StreamConsumers;
-import io.activej.datastream.csp.ChannelDeserializer;
-import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
@@ -186,7 +184,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 						cb.set(null);
 					})))
 				.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-				.transformWith(ChannelSerializer.create(serializer))
+				.transformWith(createSerializer(serializer))
 				.streamTo(messaging.sendBinaryStream()))
 			.whenComplete(takeFinishedPromise.recordStats())
 			.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, take, this));
@@ -202,7 +200,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 
 	private Promise<Void> handleRemove(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
 		return messaging.receiveBinaryStream()
-			.transformWith(ChannelDeserializer.create(tombstoneSerializer))
+			.transformWith(createDeserializer(tombstoneSerializer))
 			.streamTo(StreamConsumers.ofPromise(storage.remove()
 				.map(consumer -> consumer.transformWith(detailedStats ? removeStatsDetailed : removeStats))
 				.whenComplete(removeBeginPromise.recordStats())))
@@ -215,7 +213,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 
 	private Promise<Void> handleUpload(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
 		return messaging.receiveBinaryStream()
-			.transformWith(ChannelDeserializer.create(serializer))
+			.transformWith(createDeserializer(serializer))
 			.streamTo(StreamConsumers.ofPromise(storage.upload()
 				.map(consumer -> consumer.transformWith(detailedStats ? uploadStatsDetailed : uploadStats))
 				.whenComplete(uploadBeginPromise.recordStats())))
@@ -232,7 +230,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 			.whenComplete(downloadBeginPromise.recordStats())
 			.whenResult(() -> messaging.send(new CrdtResponse.DownloadStarted()))
 			.then(supplier -> supplier
-				.transformWith(ChannelSerializer.create(serializer))
+				.transformWith(createSerializer(serializer))
 				.streamTo(messaging.sendBinaryStream()))
 			.whenComplete(downloadFinishedPromise.recordStats())
 			.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, download, this));

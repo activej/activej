@@ -34,8 +34,6 @@ import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.net.Messaging;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.consumer.StreamConsumers;
-import io.activej.datastream.csp.ChannelDeserializer;
-import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.BasicStreamStats;
 import io.activej.datastream.stats.DetailedStreamStats;
 import io.activej.datastream.stats.StreamStats;
@@ -54,7 +52,7 @@ import io.activej.serializer.BinarySerializer;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 
-import static io.activej.crdt.util.Utils.onItem;
+import static io.activej.crdt.util.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
@@ -171,7 +169,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 				.map(consumer -> StreamConsumers.<CrdtData<K, S>>ofSupplier(supplier ->
 						supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
 							.transformWith(onItem(uploadedItems::recordEvent))
-							.transformWith(ChannelSerializer.create(serializer))
+							.transformWith(createSerializer(serializer))
 							.streamTo(consumer))
 					.withAcknowledgement(ack -> ack
 						.mapException(e -> new CrdtException("Upload failed", e))))
@@ -190,7 +188,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 				.whenResult(validateFn(CrdtResponse.DownloadStarted.class))
 				.map($ ->
 					messaging.receiveBinaryStream()
-						.transformWith(ChannelDeserializer.create(serializer))
+						.transformWith(createDeserializer(serializer))
 						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 						.transformWith(onItem(downloadedItems::recordEvent))
 						.withEndOfStream(eos -> eos
@@ -213,7 +211,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 				.whenResult(validateFn(CrdtResponse.TakeStarted.class))
 				.map($ -> {
 					StreamSupplier<CrdtData<K, S>> supplier = messaging.receiveBinaryStream()
-						.transformWith(ChannelDeserializer.create(serializer))
+						.transformWith(createDeserializer(serializer))
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 						.transformWith(onItem(takenItems::recordEvent));
 					supplier.getAcknowledgement()
@@ -243,7 +241,7 @@ public final class RemoteCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 					return StreamConsumers.<CrdtTombstone<K>>ofSupplier(supplier ->
 							supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
 								.transformWith(onItem(removedItems::recordEvent))
-								.transformWith(ChannelSerializer.create(tombstoneSerializer))
+								.transformWith(createSerializer(tombstoneSerializer))
 								.streamTo(consumer))
 						.withAcknowledgement(ack -> ack
 							.mapException(e -> new CrdtException("Remove operation failed", e)));

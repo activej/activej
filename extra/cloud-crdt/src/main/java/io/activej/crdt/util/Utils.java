@@ -19,10 +19,13 @@ package io.activej.crdt.util;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
+import io.activej.datastream.csp.ChannelDeserializer;
+import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.transformer.AbstractStreamTransformer;
 import io.activej.datastream.processor.transformer.StreamTransformer;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.promise.Promise;
+import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.serializer.stream.StreamCodecs.SubtypeStreamCodec;
@@ -111,4 +114,17 @@ public final class Utils {
 			.withSubtype(CrdtResponse.UploadAck.class, StreamCodecs.singleton(new CrdtResponse.UploadAck()))
 			.build();
 	}
+
+	public static <T> ChannelDeserializer<T> createDeserializer(BinarySerializer<T> serializer) {
+		return ChannelDeserializer.builder(serializer)
+			.withExplicitEndOfStream()
+			.build();
+	}
+
+	public static <T> ChannelSerializer<T> createSerializer(BinarySerializer<T> serializer) {
+		return ChannelSerializer.builder(serializer)
+			.withExplicitEndOfStream()
+			.build();
+	}
+
 }
