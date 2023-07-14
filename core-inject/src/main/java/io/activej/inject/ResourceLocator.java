@@ -18,16 +18,37 @@ package io.activej.inject;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Supplier;
+
 public interface ResourceLocator {
 	<T> T getInstance(Key<T> key);
 
-	<T> T getInstance(Class<T> type);
+	default <T> T getInstance(Class<T> type) {
+		return getInstance(Key.of(type));
+	}
 
 	<T> @Nullable T getInstanceOrNull(Key<T> key);
 
-	<T> @Nullable T getInstanceOrNull(Class<T> type);
+	default <T> @Nullable T getInstanceOrNull(Class<T> type) {
+		return getInstanceOrNull(Key.of(type));
+	}
 
-	<T> T getInstanceOr(Key<T> key, T defaultValue);
+	default <T> T getInstanceOr(Key<T> key, T defaultValue) {
+		T instance = getInstanceOrNull(key);
+		return instance != null ? instance : defaultValue;
+	}
 
-	<T> T getInstanceOr(Class<T> type, T defaultValue);
+	default <T> T getInstanceOr(Class<T> type, T defaultValue) {
+		return getInstanceOr(Key.of(type), defaultValue);
+	}
+
+	default <T> T getInstanceOrCreate(Key<T> key, Supplier<T> defaultValueFn) {
+		T result = getInstanceOrNull(key);
+		if (result != null) return result;
+		return defaultValueFn.get();
+	}
+
+	default <T> T getInstanceOrCreate(Class<T> type, Supplier<T> defaultValueFn) {
+		return getInstanceOrCreate(Key.of(type), defaultValueFn);
+	}
 }

@@ -242,9 +242,7 @@ public final class Injector implements ResourceLocator {
 
 		List<CompiledBinding<?>> eagerSingletons = new ArrayList<>();
 
-		for (Entry<Key<?>, Binding<?>> entry : bindings.entrySet()) {
-			Key<?> key = entry.getKey();
-			Binding<?> binding = entry.getValue();
+		bindings.forEach((key, binding) -> {
 			CompiledBinding<?> compiledBinding = compileBinding(
 				postprocessor,
 				scope, path, threadsafe,
@@ -255,7 +253,7 @@ public final class Injector implements ResourceLocator {
 			if (binding.getType() == EAGER) {
 				eagerSingletons.add(compiledBinding);
 			}
-		}
+		});
 
 		bindings.put(Key.of(Injector.class), Binding.to(
 				() -> {
@@ -360,14 +358,6 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
-	 * @see #getInstance(Key)
-	 */
-	@Override
-	public <T> T getInstance(Class<T> type) {
-		return getInstance(Key.ofType(type));
-	}
-
-	/**
 	 * Same as {@link #getInstance(Key)} except that it returns <code>null</code> instead of throwing an exception.
 	 */
 	@Override
@@ -375,31 +365,6 @@ public final class Injector implements ResourceLocator {
 	public <T> @Nullable T getInstanceOrNull(Key<T> key) {
 		CompiledBinding<?> binding = localCompiledBindings.get(key);
 		return binding != null ? (T) binding.getInstance(scopeCaches, -1) : null;
-	}
-
-	/**
-	 * @see #getInstanceOrNull(Key)
-	 */
-	@Override
-	public <T> @Nullable T getInstanceOrNull(Class<T> type) {
-		return getInstanceOrNull(Key.of(type));
-	}
-
-	/**
-	 * Same as {@link #getInstanceOrNull(Key)}, but replaces <code>null</code> with given default value.
-	 */
-	@Override
-	public <T> T getInstanceOr(Key<T> key, T defaultValue) {
-		T instance = getInstanceOrNull(key);
-		return instance != null ? instance : defaultValue;
-	}
-
-	/**
-	 * @see #getInstanceOr(Key, Object)
-	 */
-	@Override
-	public <T> T getInstanceOr(Class<T> type, T defaultValue) {
-		return getInstanceOr(Key.of(type), defaultValue);
 	}
 
 	/**
