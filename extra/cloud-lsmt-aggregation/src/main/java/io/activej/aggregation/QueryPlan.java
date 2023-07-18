@@ -70,14 +70,13 @@ public final class QueryPlan {
 		return unmodifiableList(sequences);
 	}
 
-	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb
 			.append("\nSequences (")
 			.append(sequences.size())
-			.append("): ");
+			.append("):");
 		for (int i = 0; i < sequences.size(); ++i) {
 			sb
 				.append('\n')
@@ -85,7 +84,7 @@ public final class QueryPlan {
 				.append(" (")
 				.append(sequences.get(i).chunks.size())
 				.append("). ")
-				.append(sequences.get(i) + " ");
+				.append(sequences.get(i));
 		}
 		return sb.toString();
 	}

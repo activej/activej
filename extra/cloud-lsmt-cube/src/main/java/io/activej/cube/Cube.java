@@ -83,6 +83,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.activej.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.*;
@@ -1479,4 +1480,12 @@ public final class Cube extends AbstractReactive
 				.map(chunk -> String.valueOf(chunk.getChunkId()))
 				.collect(Collectors.joining(", "))));
 	}
+
+	@JmxAttribute
+	public Map<String, Aggregation> getAggregations() {
+		return aggregations.entrySet().stream().collect(Collectors.toMap(
+				Entry::getKey, e -> e.getValue().aggregation
+		));
+	}
+
 }

@@ -214,7 +214,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 				.then(lockedChunkIds -> chunksFn.apply(aggregation, lockedChunkIds))
 				.then(chunks -> {
 					if (chunks.isEmpty()) {
-						logger.info("Nothing to consolidate in aggregation '{}", this);
+						logger.info("Nothing to consolidate in aggregation '{}'", aggregationId);
 						return Promise.of(chunks);
 					}
 					return locker.lockChunks(collectChunkIds(chunks))
