@@ -1,5 +1,6 @@
 package io.activej.datastream.processor;
 
+import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
@@ -11,7 +12,11 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
@@ -355,9 +360,9 @@ public class StreamReducerTest {
 		);
 
 		assertEquals(asList(
-				new KeyValueResult(1, 10.0, 10.0, 0.0),
-				new KeyValueResult(2, 0.0, 10.0, 20.0),
-				new KeyValueResult(3, 30.0, 40.0, 20.0)),
+						new KeyValueResult(1, 10.0, 10.0, 0.0),
+						new KeyValueResult(2, 0.0, 10.0, 20.0),
+						new KeyValueResult(3, 30.0, 40.0, 20.0)),
 				consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
@@ -385,13 +390,50 @@ public class StreamReducerTest {
 		);
 
 		assertEquals(asList(
-				new KeyValueResult(1, 10.0, 10.0, 0.0),
-				new KeyValueResult(2, 0.0, 10.0, 20.0),
-				new KeyValueResult(3, 30.0, 40.0, 20.0)),
+						new KeyValueResult(1, 10.0, 10.0, 0.0),
+						new KeyValueResult(2, 0.0, 10.0, 20.0),
+						new KeyValueResult(3, 30.0, 40.0, 20.0)),
 				consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
 		assertEndOfStream(source3);
+	}
+
+	@Test
+	public void testPreemptiveAcknowledge() {
+		StreamSupplier<Integer> source1 = StreamSupplier.ofStream(IntStream.range(1, 150).boxed());
+		StreamSupplier<Integer> source2 = StreamSupplier.ofStream(IntStream.range(100, 250).boxed());
+
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.create();
+		streamReducer.withBufferSize(1);
+
+		List<Integer> result = new ArrayList<>();
+
+		await(
+				source1.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+				source2.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+
+				streamReducer.getOutput()
+						.streamTo(new AbstractStreamConsumer<Integer>() {
+							@Override
+							protected void onStarted() {
+								resume(item -> {
+									result.add(item);
+									if (result.size() == 200) {
+										suspend();
+										acknowledge();
+									}
+								});
+							}
+						})
+		);
+
+		assertEquals(IntStream.range(1, 201).boxed().collect(Collectors.toList()), result);
+		assertEndOfStream(source1);
+		assertEndOfStream(source2);
+
+		assertEndOfStream(streamReducer.getOutput());
+		assertConsumersEndOfStream(streamReducer.getInputs());
 	}
 
 }
