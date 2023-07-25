@@ -167,6 +167,12 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T>, WithIn
 
 		@Override
 		protected void onStarted() {
+			output.getAcknowledgement()
+					.then((ackRes, e) -> cleanup()
+							.then(($, e1) -> Promise.of(ackRes, e)))
+					.whenResult(this::acknowledge)
+					.whenException(this::closeEx);
+
 			resume(this);
 		}
 
@@ -207,11 +213,6 @@ public final class StreamSorter<K, T> implements StreamTransformer<T, T>, WithIn
 		@Override
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
-			output.getAcknowledgement()
-					.then((ackRes, e) -> cleanup()
-							.then(($, e1) -> Promise.of(ackRes, e)))
-					.whenResult(this::acknowledge)
-					.whenException(this::closeEx);
 		}
 
 		@Override

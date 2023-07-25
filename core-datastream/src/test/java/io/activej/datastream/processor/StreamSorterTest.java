@@ -225,6 +225,19 @@ public final class StreamSorterTest {
 		});
 	}
 
+	@Test
+	public void testPreemptiveAcknowledge() throws IOException {
+		StreamSupplier<Integer> source = StreamSupplier.of(3, 1, 3, 2, 5, 1, 4, 3, 2);
+
+		Executor executor = Executors.newSingleThreadExecutor();
+		StreamSorterStorage<Integer> storage = StreamSorterStorageImpl.create(executor, INT_SERIALIZER, FRAME_FORMAT, tempFolder.newFolder().toPath());
+		StreamSorter<Integer, Integer> sorter = StreamSorter.create(storage, Function.identity(), Integer::compareTo, true, 2);
+
+		await(source.transformWith(sorter).streamTo(StreamConsumer.acknowledged()));
+
+		assertEndOfStream(sorter);
+	}
+
 	private void doTestFailingStorage(FailingStreamSorterStorageStub<Integer> failingStorage, StreamSorterValidator<Integer, Integer> validator) throws IOException {
 		StreamSupplier<Integer> source = StreamSupplier.of(3, 1, 3, 2, 5, 1, 4, 3, 2);
 
