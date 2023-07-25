@@ -20,10 +20,7 @@ import io.activej.async.function.AsyncConsumer;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
-import io.activej.datastream.StreamConsumers.ClosingWithError;
-import io.activej.datastream.StreamConsumers.Idle;
-import io.activej.datastream.StreamConsumers.OfChannelConsumer;
-import io.activej.datastream.StreamConsumers.Skip;
+import io.activej.datastream.StreamConsumers.*;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.eventloop.Eventloop;
@@ -87,6 +84,13 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 	 */
 	static <T> StreamConsumer<T> skip() {
 		return new Skip<>();
+	}
+
+	/**
+	 * Creates a consumer which is already acknowledged.
+	 */
+	static <T> StreamConsumer<T> acknowledged() {
+		return new Acknowledged<>();
 	}
 
 	/**

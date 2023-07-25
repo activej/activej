@@ -54,6 +54,13 @@ final class StreamConsumers {
 		}
 	}
 
+	static final class Acknowledged<T> extends AbstractStreamConsumer<T> {
+		@Override
+		protected void onStarted() {
+			acknowledge();
+		}
+	}
+
 	static final class OfConsumer<T> extends AbstractStreamConsumer<T> {
 		private final ConsumerEx<T> consumer;
 
