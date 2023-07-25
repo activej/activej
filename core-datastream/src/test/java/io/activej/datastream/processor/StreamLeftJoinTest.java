@@ -1,8 +1,6 @@
 package io.activej.datastream.processor;
 
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamConsumerToList;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.*;
 import io.activej.datastream.processor.StreamLeftJoin.ValueLeftJoiner;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
@@ -22,8 +20,7 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 public class StreamLeftJoinTest {
 
@@ -70,11 +67,11 @@ public class StreamLeftJoinTest {
 		);
 
 		assertEquals(asList(
-				new DataItemMasterDetail(10, 10, "masterA", "detailX"),
-				new DataItemMasterDetail(20, 10, "masterB", "detailX"),
-				new DataItemMasterDetail(25, 15, "masterB+", null),
-				new DataItemMasterDetail(30, 20, "masterC", "detailY"),
-				new DataItemMasterDetail(40, 20, "masterD", "detailY")
+						new DataItemMasterDetail(10, 10, "masterA", "detailX"),
+						new DataItemMasterDetail(20, 10, "masterB", "detailX"),
+						new DataItemMasterDetail(25, 15, "masterB+", null),
+						new DataItemMasterDetail(30, 20, "masterC", "detailY"),
+						new DataItemMasterDetail(40, 20, "masterD", "detailY")
 				),
 				consumer.getList());
 		assertEndOfStream(source1);
@@ -219,6 +216,48 @@ public class StreamLeftJoinTest {
 		assertEquals(0, list.size());
 		assertClosedWithError(source1);
 		assertClosedWithError(source2);
+	}
+
+	@Test
+	public void testPreemptiveAcknowledge() {
+		StreamSupplier<DataItemMaster> source1 = StreamSupplier.of(
+				new DataItemMaster(10, 10, "masterA"),
+				new DataItemMaster(20, 10, "masterB"),
+				new DataItemMaster(25, 15, "masterB+"),
+				new DataItemMaster(30, 20, "masterC"),
+				new DataItemMaster(40, 20, "masterD"));
+
+		StreamSupplier<DataItemDetail> source2 = StreamSupplier.of(
+				new DataItemDetail(10, "detailX"),
+				new DataItemDetail(20, "detailY"),
+				new DataItemDetail(30, "detailP"),
+				new DataItemDetail(40, "detailJ"));
+
+		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamLeftJoin =
+				StreamLeftJoin.create(Integer::compareTo,
+						input -> input.detailId,
+						input -> input.id,
+						new ValueLeftJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+							@Override
+							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+							}
+
+							@Override
+							public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+							}
+						}
+				);
+
+		await(
+				source1.streamTo(streamLeftJoin.getLeft()),
+				source2.streamTo(streamLeftJoin.getRight()),
+				streamLeftJoin.getOutput().streamTo(StreamConsumer.acknowledged())
+		);
+
+		assertEndOfStream(source1);
+		assertEndOfStream(source2);
 	}
 
 	private static final class DataItemMaster {
