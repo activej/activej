@@ -108,7 +108,7 @@ public final class DataflowMeta extends LimitedMeta {
 		}
 
 		StatementHandle statement = createStatement(ch);
-		TransformationResult transformed = transform(sql);
+		TransformationResult transformed = transform(sql, maxRowCount);
 		ConversionResult conversionResult = transformed.conversionResult();
 		statement.signature = createSignature(sql, transformed.fields(), conversionResult.dynamicParams(), conversionResult.unmaterializedDataset().getScheme());
 
@@ -155,7 +155,7 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException("Unknown connection: " + h.connectionId);
 		}
 
-		TransformationResult transformed = transform(sql);
+		TransformationResult transformed = transform(sql, maxRowCount);
 		ConversionResult conversionResult = transformed.conversionResult();
 		UnmaterializedDataset unmaterialized = conversionResult.unmaterializedDataset();
 		h.signature = createSignature(sql, transformed.fields(), Collections.emptyList(), unmaterialized.getScheme());
@@ -328,7 +328,7 @@ public final class DataflowMeta extends LimitedMeta {
 		return ColumnMetaData.scalar(rep.typeId, typeName, rep);
 	}
 
-	private TransformationResult transform(String sql) {
+	private TransformationResult transform(String sql, long maxRows) {
 		RelNode node;
 		try {
 			node = sqlDataflow.convertToNode(sql);
@@ -336,7 +336,7 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException(e);
 		}
 
-		return new TransformationResult(node.getRowType().getFieldList(), sqlDataflow.convert(node));
+		return new TransformationResult(node.getRowType().getFieldList(), sqlDataflow.convert(node, maxRows));
 	}
 
 	@Override

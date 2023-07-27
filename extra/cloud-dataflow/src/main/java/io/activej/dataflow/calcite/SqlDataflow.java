@@ -112,8 +112,12 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 		return transformed.unmaterializedDataset().materialize(Collections.emptyList());
 	}
 
+	public ConversionResult convert(RelNode node, long maxRows) {
+		return relToDatasetConverter.convert(node, maxRows);
+	}
+
 	public ConversionResult convert(RelNode node) {
-		return relToDatasetConverter.convert(node);
+		return convert(node, -1);
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset) {

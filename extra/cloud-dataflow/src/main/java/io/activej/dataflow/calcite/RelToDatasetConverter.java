@@ -62,42 +62,42 @@ public class RelToDatasetConverter {
 		return new RelToDatasetConverter(classLoader);
 	}
 
-	public ConversionResult convert(RelNode relNode) {
-		ParamsCollector paramsCollector = new ParamsCollector();
-		UnmaterializedDataset dataset = handle(relNode, paramsCollector);
-		return new ConversionResult(dataset, paramsCollector.getParams());
+	public ConversionResult convert(RelNode relNode, long maxRows) {
+		ConversionContext conversionContext = new ConversionContext(maxRows);
+		UnmaterializedDataset dataset = handle(relNode, conversionContext);
+		return new ConversionResult(dataset, conversionContext.getParams());
 	}
 
-	private UnmaterializedDataset handle(RelNode relNode, ParamsCollector paramsCollector) {
+	private UnmaterializedDataset handle(RelNode relNode, ConversionContext conversionContext) {
 		if (relNode instanceof LogicalProject logicalProject) {
-			return handle(logicalProject, paramsCollector);
+			return handle(logicalProject, conversionContext);
 		}
 		if (relNode instanceof DataflowTableScan tableScan) {
-			return handle(tableScan, paramsCollector);
+			return handle(tableScan, conversionContext);
 		}
 		if (relNode instanceof LogicalFilter logicalFilter) {
-			return handle(logicalFilter, paramsCollector);
+			return handle(logicalFilter, conversionContext);
 		}
 		if (relNode instanceof LogicalJoin logicalJoin) {
-			return handle(logicalJoin, paramsCollector);
+			return handle(logicalJoin, conversionContext);
 		}
 		if (relNode instanceof LogicalAggregate logicalAggregate) {
-			return handle(logicalAggregate, paramsCollector);
+			return handle(logicalAggregate, conversionContext);
 		}
 		if (relNode instanceof LogicalValues logicalValues) {
-			return handle(logicalValues, paramsCollector);
+			return handle(logicalValues, conversionContext);
 		}
 		if (relNode instanceof LogicalUnion logicalUnion) {
-			return handle(logicalUnion, paramsCollector);
+			return handle(logicalUnion, conversionContext);
 		}
 		if (relNode instanceof LogicalSort logicalSort) {
-			return handle(logicalSort, paramsCollector);
+			return handle(logicalSort, conversionContext);
 		}
 		throw new IllegalArgumentException("Unknown node type: " + relNode.getClass().getName());
 	}
 
-	private UnmaterializedDataset handle(LogicalProject project, ParamsCollector paramsCollector) {
-		UnmaterializedDataset current = handle(project.getInput(), paramsCollector);
+	private UnmaterializedDataset handle(LogicalProject project, ConversionContext conversionContext) {
+		UnmaterializedDataset current = handle(project.getInput(), conversionContext);
 		RecordScheme scheme = current.getScheme();
 
 		List<RexNode> projectNodes = project.getProjects();
@@ -111,7 +111,7 @@ public class RelToDatasetConverter {
 			RexNode projectNode = projectNodes.get(i);
 			String fieldName = fieldNames.get(i);
 
-			Operand<?> projectOperand = paramsCollector.toOperand(projectNode);
+			Operand<?> projectOperand = conversionContext.toOperand(projectNode);
 
 			if (isSynthetic(fieldName) || projectNode.getKind() == SqlKind.FIELD_ACCESS) {
 				fieldName = null;
@@ -158,7 +158,7 @@ public class RelToDatasetConverter {
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
-	private UnmaterializedDataset handle(DataflowTableScan scan, ParamsCollector paramsCollector) {
+	private UnmaterializedDataset handle(DataflowTableScan scan, ConversionContext conversionContext) {
 		RelOptTable table = scan.getTable();
 
 		AbstractDataflowTable<?> dataflowTable = table.unwrap(AbstractDataflowTable.class);
@@ -171,7 +171,7 @@ public class RelToDatasetConverter {
 		RexNode predicate = scan.getCondition();
 		boolean needsFiltering = predicate instanceof RexCall;
 		if (needsFiltering) {
-			wherePredicate = paramsCollector.toWherePredicate((RexCall) predicate);
+			wherePredicate = conversionContext.toWherePredicate((RexCall) predicate);
 		} else {
 			wherePredicate = and(emptyList());
 		}
@@ -180,11 +180,11 @@ public class RelToDatasetConverter {
 		RexNode limitNode = scan.getLimit();
 		Scalar offsetOperand = offsetNode == null ?
 			new Scalar(Value.materializedValue(int.class, Skip.NO_SKIP)) :
-			paramsCollector.toScalarOperand(offsetNode);
+			conversionContext.toScalarOperand(offsetNode);
 
 		Scalar limitOperand = limitNode == null ?
 			new Scalar(Value.materializedValue(int.class, Limiter.NO_LIMIT)) :
-			paramsCollector.toScalarOperand(limitNode);
+			conversionContext.toScalarOperand(limitNode);
 
 		RecordScheme scheme = mapper.getScheme();
 		return UnmaterializedDataset.of(scheme, params -> {
@@ -201,6 +201,12 @@ public class RelToDatasetConverter {
 
 			long offset = ((Number) offsetOperand.materialize(params).value.getValue()).longValue();
 			long limit = ((Number) limitOperand.materialize(params).value.getValue()).longValue();
+
+			if (!scan.isSorted() && conversionContext.maxRows != Limiter.NO_LIMIT) {
+				limit = limit == -1 ?
+					conversionContext.maxRows :
+					Math.min(limit, conversionContext.maxRows);
+			}
 
 			if (limit != Limiter.NO_LIMIT) {
 				filtered = Datasets.localLimit(filtered, offset + limit);
@@ -221,15 +227,15 @@ public class RelToDatasetConverter {
 		});
 	}
 
-	private UnmaterializedDataset handle(LogicalFilter filter, ParamsCollector paramsCollector) {
-		UnmaterializedDataset current = handle(filter.getInput(), paramsCollector);
+	private UnmaterializedDataset handle(LogicalFilter filter, ConversionContext conversionContext) {
+		UnmaterializedDataset current = handle(filter.getInput(), conversionContext);
 
-		return filter(current, filter.getCondition(), paramsCollector);
+		return filter(current, filter.getCondition(), conversionContext);
 	}
 
-	private UnmaterializedDataset handle(LogicalJoin join, ParamsCollector paramsCollector) {
-		UnmaterializedDataset left = handle(join.getLeft(), paramsCollector);
-		UnmaterializedDataset right = handle(join.getRight(), paramsCollector);
+	private UnmaterializedDataset handle(LogicalJoin join, ConversionContext conversionContext) {
+		UnmaterializedDataset left = handle(join.getLeft(), conversionContext);
+		UnmaterializedDataset right = handle(join.getRight(), conversionContext);
 
 		RecordScheme leftScheme = left.getScheme();
 		RecordScheme rightScheme = right.getScheme();
@@ -259,8 +265,8 @@ public class RelToDatasetConverter {
 			});
 	}
 
-	private UnmaterializedDataset handle(LogicalAggregate aggregate, ParamsCollector paramsCollector) {
-		UnmaterializedDataset current = handle(aggregate.getInput(), paramsCollector);
+	private UnmaterializedDataset handle(LogicalAggregate aggregate, ConversionContext conversionContext) {
+		UnmaterializedDataset current = handle(aggregate.getInput(), conversionContext);
 
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
@@ -340,7 +346,7 @@ public class RelToDatasetConverter {
 		return RecordProjectionFn.create(projections);
 	}
 
-	private UnmaterializedDataset handle(LogicalValues values, ParamsCollector paramsCollector) {
+	private UnmaterializedDataset handle(LogicalValues values, ConversionContext conversionContext) {
 		ImmutableList<ImmutableList<RexLiteral>> tuples = values.getTuples();
 
 		List<Dataset<Record>> singleDatasets = new ArrayList<>(tuples.size());
@@ -349,7 +355,7 @@ public class RelToDatasetConverter {
 			SortedDataset<Record, Record> singleDummyDataset = Utils.singleDummyDataset();
 			List<FieldProjection> projections = new ArrayList<>();
 			for (RexLiteral field : tuple) {
-				projections.add(new FieldProjection(paramsCollector.toOperand(field), null));
+				projections.add(new FieldProjection(conversionContext.toOperand(field), null));
 			}
 			RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
 			if (scheme == null) {
@@ -375,9 +381,9 @@ public class RelToDatasetConverter {
 		return UnmaterializedDataset.of(scheme, $ -> finalUnion);
 	}
 
-	private UnmaterializedDataset handle(LogicalUnion union, ParamsCollector paramsCollector) {
-		UnmaterializedDataset left = handle(union.getInputs().get(0), paramsCollector);
-		UnmaterializedDataset right = handle(union.getInputs().get(1), paramsCollector);
+	private UnmaterializedDataset handle(LogicalUnion union, ConversionContext conversionContext) {
+		UnmaterializedDataset left = handle(union.getInputs().get(0), conversionContext);
+		UnmaterializedDataset right = handle(union.getInputs().get(1), conversionContext);
 
 		return UnmaterializedDataset.of(left.getScheme(), params -> {
 			Dataset<Record> leftDataset = left.materialize(params);
@@ -398,8 +404,8 @@ public class RelToDatasetConverter {
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	private UnmaterializedDataset handle(LogicalSort sort, ParamsCollector paramsCollector) {
-		UnmaterializedDataset current = handle(sort.getInput(), paramsCollector);
+	private UnmaterializedDataset handle(LogicalSort sort, ConversionContext conversionContext) {
+		UnmaterializedDataset current = handle(sort.getInput(), conversionContext);
 		RecordScheme scheme = current.getScheme();
 
 		List<RelDataTypeField> fieldList = sort.getRowType().getFieldList();
@@ -424,11 +430,11 @@ public class RelToDatasetConverter {
 
 		Scalar offset = sort.offset == null ?
 			new Scalar(Value.materializedValue(int.class, Skip.NO_SKIP)) :
-			paramsCollector.toScalarOperand(sort.offset);
+			conversionContext.toScalarOperand(sort.offset);
 
 		Scalar limit = sort.fetch == null ?
 			new Scalar(Value.materializedValue(int.class, Limiter.NO_LIMIT)) :
-			paramsCollector.toScalarOperand(sort.fetch);
+			conversionContext.toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
 			scheme,
@@ -533,7 +539,7 @@ public class RelToDatasetConverter {
 	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<RexDynamicParam> dynamicParams) {
 	}
 
-	private UnmaterializedDataset filter(UnmaterializedDataset dataset, RexNode conditionNode, ParamsCollector paramsCollector) {
+	private UnmaterializedDataset filter(UnmaterializedDataset dataset, RexNode conditionNode, ConversionContext conversionContext) {
 		SqlKind kind = conditionNode.getKind();
 
 		if (kind == SqlKind.LITERAL) {
@@ -547,7 +553,7 @@ public class RelToDatasetConverter {
 					throw new IllegalArgumentException("Unknown literal: " + literal.getValueAs(Object.class));
 				}
 		} else if (conditionNode instanceof RexCall call) {
-			WherePredicate wherePredicate = paramsCollector.toWherePredicate(call);
+			WherePredicate wherePredicate = conversionContext.toWherePredicate(call);
 			return UnmaterializedDataset.of(
 				dataset.getScheme(),
 				params -> Datasets.filter(dataset.materialize(params), wherePredicate.materialize(params)));
@@ -672,8 +678,15 @@ public class RelToDatasetConverter {
 	public record JoinKeyProjections(RecordProjectionFn leftKeyProjection, RecordProjectionFn rightKeyProjection) {
 	}
 
-	public final class ParamsCollector {
+	public final class ConversionContext {
+		private final long maxRows;
 		private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
+
+		private int sortCount;
+
+		public ConversionContext(long maxRows) {
+			this.maxRows = maxRows;
+		}
 
 		public List<RexDynamicParam> getParams() {
 			return List.copyOf(params);
