@@ -147,7 +147,7 @@ public final class DataflowMeta extends LimitedMeta {
 	@Override
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) {
 		if (sql.toUpperCase().startsWith(EXPLAIN)) {
-			return handleExplainQuery(h, sql);
+			return handleExplainQuery(h, sql, maxRowCount);
 		}
 
 		Map<Integer, FrameFetcher> fetchersMap = fetchers.get(h.connectionId);
@@ -185,16 +185,16 @@ public final class DataflowMeta extends LimitedMeta {
 		EXPLAIN_QUERY_COLUMNS.put(EXPLAIN, String.class);
 	}
 
-	private ExecuteResult handleExplainQuery(StatementHandle h, String sql) {
+	private ExecuteResult handleExplainQuery(StatementHandle h, String sql, long maxRows) {
 		String upperCaseSql = sql.toUpperCase();
 		String explainString;
 		try {
 			if (upperCaseSql.startsWith(EXPLAIN_PLAN)) {
 				explainString = sqlDataflow.explainPlan(sql.substring(EXPLAIN_PLAN.length()));
 			} else if (upperCaseSql.startsWith(EXPLAIN_GRAPH)) {
-				explainString = sqlDataflow.explainGraph(sql.substring(EXPLAIN_GRAPH.length()));
+				explainString = sqlDataflow.explainGraph(sql.substring(EXPLAIN_GRAPH.length()), maxRows);
 			} else if (upperCaseSql.startsWith(EXPLAIN_NODES)) {
-				explainString = reactor.submit(AsyncComputation.of(() -> sqlDataflow.explainNodes(sql.substring(EXPLAIN_GRAPH.length())))).get();
+				explainString = reactor.submit(AsyncComputation.of(() -> sqlDataflow.explainNodes(sql.substring(EXPLAIN_GRAPH.length()), maxRows))).get();
 			} else {
 				throw new RuntimeException("Unknown EXPLAIN query, only `EXPLAIN PLAN`, `EXPLAIN GRAPH` and `EXPLAIN NODES` queries are supported");
 			}

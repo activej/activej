@@ -55,17 +55,19 @@ import static java.util.Collections.emptyList;
 public class RelToDatasetConverter {
 	private final DefiningClassLoader classLoader;
 	private final long maxRows;
+	private final int numberOfPartitions;
 	private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
 
 	private int restrictImplicitLimitCount;
 
-	private RelToDatasetConverter(DefiningClassLoader classLoader, long maxRows) {
+	private RelToDatasetConverter(DefiningClassLoader classLoader, long maxRows, int numberOfPartitions) {
 		this.classLoader = classLoader;
 		this.maxRows = maxRows;
+		this.numberOfPartitions = numberOfPartitions;
 	}
 
-	public static ConversionResult convert(DefiningClassLoader classLoader, RelNode relNode, long maxRows) {
-		RelToDatasetConverter converter = new RelToDatasetConverter(classLoader, maxRows);
+	public static ConversionResult convert(DefiningClassLoader classLoader, RelNode relNode, long maxRows, int numberOfPartitions) {
+		RelToDatasetConverter converter = new RelToDatasetConverter(classLoader, maxRows, numberOfPartitions);
 		UnmaterializedDataset dataset = converter.handle(relNode);
 		return new ConversionResult(dataset, List.copyOf(converter.params));
 	}
@@ -225,7 +227,8 @@ public class RelToDatasetConverter {
 				filtered = Datasets.localLimit(filtered, offset + limit);
 			}
 
-			if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) return filtered;
+			if (numberOfPartitions <= 1 ||
+				!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) return filtered;
 
 			Set<Integer> indexes = dataflowPartitionedTable.getPrimaryKeyIndexes();
 

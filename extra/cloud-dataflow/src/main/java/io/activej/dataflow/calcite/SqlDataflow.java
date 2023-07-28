@@ -106,15 +106,19 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 		return optimize(root);
 	}
 
-	public Dataset<Record> convertToDataset(String sql) throws SqlParseException, DataflowException {
+	public Dataset<Record> convertToDataset(String sql, long maxRows) throws SqlParseException, DataflowException {
 		RelNode node = convertToNode(sql);
-		ConversionResult transformed = convert(node);
+		ConversionResult transformed = convert(node, maxRows);
 
 		return transformed.unmaterializedDataset().materialize(Collections.emptyList());
 	}
 
+	public Dataset<Record> convertToDataset(String sql) throws SqlParseException, DataflowException {
+		return convertToDataset(sql, -1);
+	}
+
 	public ConversionResult convert(RelNode node, long maxRows) {
-		return RelToDatasetConverter.convert(classLoader, node, maxRows);
+		return RelToDatasetConverter.convert(classLoader, node, maxRows, partitions.size());
 	}
 
 	public ConversionResult convert(RelNode node) {
@@ -171,18 +175,26 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 		return convertToNode(query).explain();
 	}
 
-	public String explainGraph(String query) throws SqlParseException, DataflowException {
-		return convertToDataset(query).toGraphViz();
+	public String explainGraph(String query, long maxRows) throws SqlParseException, DataflowException {
+		return convertToDataset(query, maxRows).toGraphViz();
 	}
 
-	public String explainNodes(String query) throws SqlParseException, DataflowException {
-		Dataset<Record> dataset = convertToDataset(query);
-		ICollector<Record> calciteCollector = createCollector(dataset, Limiter.NO_LIMIT);
+	public String explainGraph(String query) throws SqlParseException, DataflowException {
+		return explainGraph(query, -1);
+	}
+
+	public String explainNodes(String query, long maxRows) throws SqlParseException, DataflowException {
+		Dataset<Record> dataset = convertToDataset(query, maxRows);
+		ICollector<Record> calciteCollector = createCollector(dataset, maxRows);
 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		calciteCollector.compile(graph);
 
 		return graph.toGraphViz();
+	}
+
+	public String explainNodes(String query) throws SqlParseException, DataflowException {
+		return explainNodes(query, -1);
 	}
 
 	private <
