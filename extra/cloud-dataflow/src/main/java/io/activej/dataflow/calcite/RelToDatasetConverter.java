@@ -41,6 +41,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -53,51 +54,63 @@ import static java.util.Collections.emptyList;
 
 public class RelToDatasetConverter {
 	private final DefiningClassLoader classLoader;
+	private final long maxRows;
+	private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
 
-	private RelToDatasetConverter(DefiningClassLoader classLoader) {
+	private int restrictImplicitLimitCount;
+
+	private RelToDatasetConverter(DefiningClassLoader classLoader, long maxRows) {
 		this.classLoader = classLoader;
+		this.maxRows = maxRows;
 	}
 
-	public static RelToDatasetConverter create(DefiningClassLoader classLoader) {
-		return new RelToDatasetConverter(classLoader);
+	public static ConversionResult convert(DefiningClassLoader classLoader, RelNode relNode, long maxRows) {
+		RelToDatasetConverter converter = new RelToDatasetConverter(classLoader, maxRows);
+		UnmaterializedDataset dataset = converter.handle(relNode);
+		return new ConversionResult(dataset, List.copyOf(converter.params));
 	}
 
-	public ConversionResult convert(RelNode relNode, long maxRows) {
-		ConversionContext conversionContext = new ConversionContext(maxRows);
-		UnmaterializedDataset dataset = handle(relNode, conversionContext);
-		return new ConversionResult(dataset, conversionContext.getParams());
-	}
-
-	private UnmaterializedDataset handle(RelNode relNode, ConversionContext conversionContext) {
+	private UnmaterializedDataset handle(RelNode relNode) {
 		if (relNode instanceof LogicalProject logicalProject) {
-			return handle(logicalProject, conversionContext);
+			return handle(logicalProject);
 		}
 		if (relNode instanceof DataflowTableScan tableScan) {
-			return handle(tableScan, conversionContext);
+			return handle(tableScan);
 		}
 		if (relNode instanceof LogicalFilter logicalFilter) {
-			return handle(logicalFilter, conversionContext);
+			return restrictingImplicitLimit(() -> handle(logicalFilter));
 		}
 		if (relNode instanceof LogicalJoin logicalJoin) {
-			return handle(logicalJoin, conversionContext);
+			return restrictingImplicitLimit(() -> handle(logicalJoin));
 		}
 		if (relNode instanceof LogicalAggregate logicalAggregate) {
-			return handle(logicalAggregate, conversionContext);
+			return restrictingImplicitLimit(() -> handle(logicalAggregate));
 		}
 		if (relNode instanceof LogicalValues logicalValues) {
-			return handle(logicalValues, conversionContext);
+			return handle(logicalValues);
 		}
 		if (relNode instanceof LogicalUnion logicalUnion) {
-			return handle(logicalUnion, conversionContext);
+			return handle(logicalUnion);
 		}
 		if (relNode instanceof LogicalSort logicalSort) {
-			return handle(logicalSort, conversionContext);
+			boolean isActualSort = !logicalSort.getCollation().getFieldCollations().isEmpty();
+			return isActualSort ?
+				restrictingImplicitLimit(() -> handle(logicalSort)) :
+				handle(logicalSort);
 		}
 		throw new IllegalArgumentException("Unknown node type: " + relNode.getClass().getName());
 	}
 
-	private UnmaterializedDataset handle(LogicalProject project, ConversionContext conversionContext) {
-		UnmaterializedDataset current = handle(project.getInput(), conversionContext);
+	private UnmaterializedDataset restrictingImplicitLimit(Supplier<UnmaterializedDataset> supplier) {
+		restrictImplicitLimitCount++;
+		UnmaterializedDataset result = supplier.get();
+		restrictImplicitLimitCount--;
+
+		return result;
+	}
+
+	private UnmaterializedDataset handle(LogicalProject project) {
+		UnmaterializedDataset current = handle(project.getInput());
 		RecordScheme scheme = current.getScheme();
 
 		List<RexNode> projectNodes = project.getProjects();
@@ -111,7 +124,7 @@ public class RelToDatasetConverter {
 			RexNode projectNode = projectNodes.get(i);
 			String fieldName = fieldNames.get(i);
 
-			Operand<?> projectOperand = conversionContext.toOperand(projectNode);
+			Operand<?> projectOperand = toOperand(projectNode);
 
 			if (isSynthetic(fieldName) || projectNode.getKind() == SqlKind.FIELD_ACCESS) {
 				fieldName = null;
@@ -158,7 +171,7 @@ public class RelToDatasetConverter {
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
-	private UnmaterializedDataset handle(DataflowTableScan scan, ConversionContext conversionContext) {
+	private UnmaterializedDataset handle(DataflowTableScan scan) {
 		RelOptTable table = scan.getTable();
 
 		AbstractDataflowTable<?> dataflowTable = table.unwrap(AbstractDataflowTable.class);
@@ -171,7 +184,7 @@ public class RelToDatasetConverter {
 		RexNode predicate = scan.getCondition();
 		boolean needsFiltering = predicate instanceof RexCall;
 		if (needsFiltering) {
-			wherePredicate = conversionContext.toWherePredicate((RexCall) predicate);
+			wherePredicate = toWherePredicate((RexCall) predicate);
 		} else {
 			wherePredicate = and(emptyList());
 		}
@@ -180,11 +193,13 @@ public class RelToDatasetConverter {
 		RexNode limitNode = scan.getLimit();
 		Scalar offsetOperand = offsetNode == null ?
 			new Scalar(Value.materializedValue(int.class, Skip.NO_SKIP)) :
-			conversionContext.toScalarOperand(offsetNode);
+			toScalarOperand(offsetNode);
 
 		Scalar limitOperand = limitNode == null ?
 			new Scalar(Value.materializedValue(int.class, Limiter.NO_LIMIT)) :
-			conversionContext.toScalarOperand(limitNode);
+			toScalarOperand(limitNode);
+
+		boolean canBeImplicitlyLimited = canBeImplicitlyLimited();
 
 		RecordScheme scheme = mapper.getScheme();
 		return UnmaterializedDataset.of(scheme, params -> {
@@ -197,20 +212,20 @@ public class RelToDatasetConverter {
 				Datasets.filter(mapped, materializedPredicate) :
 				mapped;
 
-			if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) return filtered;
-
 			long offset = ((Number) offsetOperand.materialize(params).value.getValue()).longValue();
 			long limit = ((Number) limitOperand.materialize(params).value.getValue()).longValue();
 
-			if (!scan.isSorted() && conversionContext.maxRows != Limiter.NO_LIMIT) {
+			if (canBeImplicitlyLimited) {
 				limit = limit == -1 ?
-					conversionContext.maxRows :
-					Math.min(limit, conversionContext.maxRows);
+					maxRows :
+					Math.min(limit, maxRows);
 			}
 
 			if (limit != Limiter.NO_LIMIT) {
 				filtered = Datasets.localLimit(filtered, offset + limit);
 			}
+
+			if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) return filtered;
 
 			Set<Integer> indexes = dataflowPartitionedTable.getPrimaryKeyIndexes();
 
@@ -227,15 +242,15 @@ public class RelToDatasetConverter {
 		});
 	}
 
-	private UnmaterializedDataset handle(LogicalFilter filter, ConversionContext conversionContext) {
-		UnmaterializedDataset current = handle(filter.getInput(), conversionContext);
+	private UnmaterializedDataset handle(LogicalFilter filter) {
+		UnmaterializedDataset current = handle(filter.getInput());
 
-		return filter(current, filter.getCondition(), conversionContext);
+		return filter(current, filter.getCondition());
 	}
 
-	private UnmaterializedDataset handle(LogicalJoin join, ConversionContext conversionContext) {
-		UnmaterializedDataset left = handle(join.getLeft(), conversionContext);
-		UnmaterializedDataset right = handle(join.getRight(), conversionContext);
+	private UnmaterializedDataset handle(LogicalJoin join) {
+		UnmaterializedDataset left = handle(join.getLeft());
+		UnmaterializedDataset right = handle(join.getRight());
 
 		RecordScheme leftScheme = left.getScheme();
 		RecordScheme rightScheme = right.getScheme();
@@ -265,8 +280,8 @@ public class RelToDatasetConverter {
 			});
 	}
 
-	private UnmaterializedDataset handle(LogicalAggregate aggregate, ConversionContext conversionContext) {
-		UnmaterializedDataset current = handle(aggregate.getInput(), conversionContext);
+	private UnmaterializedDataset handle(LogicalAggregate aggregate) {
+		UnmaterializedDataset current = handle(aggregate.getInput());
 
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
@@ -346,7 +361,7 @@ public class RelToDatasetConverter {
 		return RecordProjectionFn.create(projections);
 	}
 
-	private UnmaterializedDataset handle(LogicalValues values, ConversionContext conversionContext) {
+	private UnmaterializedDataset handle(LogicalValues values) {
 		ImmutableList<ImmutableList<RexLiteral>> tuples = values.getTuples();
 
 		List<Dataset<Record>> singleDatasets = new ArrayList<>(tuples.size());
@@ -355,7 +370,7 @@ public class RelToDatasetConverter {
 			SortedDataset<Record, Record> singleDummyDataset = Utils.singleDummyDataset();
 			List<FieldProjection> projections = new ArrayList<>();
 			for (RexLiteral field : tuple) {
-				projections.add(new FieldProjection(conversionContext.toOperand(field), null));
+				projections.add(new FieldProjection(toOperand(field), null));
 			}
 			RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
 			if (scheme == null) {
@@ -381,9 +396,9 @@ public class RelToDatasetConverter {
 		return UnmaterializedDataset.of(scheme, $ -> finalUnion);
 	}
 
-	private UnmaterializedDataset handle(LogicalUnion union, ConversionContext conversionContext) {
-		UnmaterializedDataset left = handle(union.getInputs().get(0), conversionContext);
-		UnmaterializedDataset right = handle(union.getInputs().get(1), conversionContext);
+	private UnmaterializedDataset handle(LogicalUnion union) {
+		UnmaterializedDataset left = handle(union.getInputs().get(0));
+		UnmaterializedDataset right = handle(union.getInputs().get(1));
 
 		return UnmaterializedDataset.of(left.getScheme(), params -> {
 			Dataset<Record> leftDataset = left.materialize(params);
@@ -404,8 +419,9 @@ public class RelToDatasetConverter {
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	private UnmaterializedDataset handle(LogicalSort sort, ConversionContext conversionContext) {
-		UnmaterializedDataset current = handle(sort.getInput(), conversionContext);
+	private UnmaterializedDataset handle(LogicalSort sort) {
+		UnmaterializedDataset current = handle(sort.getInput());
+
 		RecordScheme scheme = current.getScheme();
 
 		List<RelDataTypeField> fieldList = sort.getRowType().getFieldList();
@@ -430,11 +446,11 @@ public class RelToDatasetConverter {
 
 		Scalar offset = sort.offset == null ?
 			new Scalar(Value.materializedValue(int.class, Skip.NO_SKIP)) :
-			conversionContext.toScalarOperand(sort.offset);
+			toScalarOperand(sort.offset);
 
 		Scalar limit = sort.fetch == null ?
 			new Scalar(Value.materializedValue(int.class, Limiter.NO_LIMIT)) :
-			conversionContext.toScalarOperand(sort.fetch);
+			toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
 			scheme,
@@ -539,7 +555,7 @@ public class RelToDatasetConverter {
 	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<RexDynamicParam> dynamicParams) {
 	}
 
-	private UnmaterializedDataset filter(UnmaterializedDataset dataset, RexNode conditionNode, ConversionContext conversionContext) {
+	private UnmaterializedDataset filter(UnmaterializedDataset dataset, RexNode conditionNode) {
 		SqlKind kind = conditionNode.getKind();
 
 		if (kind == SqlKind.LITERAL) {
@@ -553,7 +569,7 @@ public class RelToDatasetConverter {
 					throw new IllegalArgumentException("Unknown literal: " + literal.getValueAs(Object.class));
 				}
 		} else if (conditionNode instanceof RexCall call) {
-			WherePredicate wherePredicate = conversionContext.toWherePredicate(call);
+			WherePredicate wherePredicate = toWherePredicate(call);
 			return UnmaterializedDataset.of(
 				dataset.getScheme(),
 				params -> Datasets.filter(dataset.materialize(params), wherePredicate.materialize(params)));
@@ -563,7 +579,7 @@ public class RelToDatasetConverter {
 		return dataset;
 	}
 
-	private boolean isSynthetic(String fieldName) {
+	private static boolean isSynthetic(String fieldName) {
 		return fieldName.contains("$");
 	}
 
@@ -616,6 +632,55 @@ public class RelToDatasetConverter {
 	private static <K> Dataset<Record> repartitionMap(RecordScheme toScheme, RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
 		Dataset<Record> repartitioned = new RepartitionToSingleDataset<>(locallySortedDataset);
 		return Datasets.map(repartitioned, projectionFn, RecordStreamSchema.create(toScheme));
+	}
+
+	private boolean canBeImplicitlyLimited() {
+		return maxRows != Limiter.NO_LIMIT && restrictImplicitLimitCount == 0;
+	}
+
+	private WherePredicate toWherePredicate(RexCall conditionNode) {
+		List<RexNode> operands = conditionNode.getOperands();
+		return switch (conditionNode.getKind()) {
+			case OR -> WherePredicates.or(operands.stream()
+				.map(rexNode -> toWherePredicate((RexCall) rexNode))
+				.collect(Collectors.toList()));
+			case AND -> WherePredicates.and(operands.stream()
+				.map(rexNode -> toWherePredicate((RexCall) rexNode))
+				.collect(Collectors.toList()));
+			case EQUALS -> WherePredicates.eq(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case NOT_EQUALS -> WherePredicates.notEq(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case GREATER_THAN -> WherePredicates.gt(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case GREATER_THAN_OR_EQUAL -> WherePredicates.ge(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case LESS_THAN -> WherePredicates.lt(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case LESS_THAN_OR_EQUAL -> WherePredicates.le(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case BETWEEN ->
+				WherePredicates.between(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
+			case IN -> {
+				List<Operand<?>> options = operands.subList(1, operands.size())
+					.stream()
+					.map(this::toOperand)
+					.collect(Collectors.toList());
+				yield WherePredicates.in(toOperand(operands.get(0)), options);
+			}
+			case LIKE -> WherePredicates.like(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case IS_NULL -> WherePredicates.isNull(toOperand(operands.get(0)));
+			case IS_NOT_NULL -> WherePredicates.isNotNull(toOperand(operands.get(0)));
+			case NOT -> WherePredicates.not(toWherePredicate((RexCall) operands.get(0)));
+
+			default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
+		};
+	}
+
+	private Operand<?> toOperand(RexNode node) {
+		Operand<?> operand = Utils.toOperand(node, classLoader);
+		params.addAll(operand.getParams());
+		return operand;
+	}
+
+	private Scalar toScalarOperand(RexNode node) {
+		Operand<?> operand = toOperand(node);
+		checkArgument(operand instanceof Scalar, "Not scalar operand");
+		return (Scalar) operand;
 	}
 
 	public interface UnmaterializedDataset {
@@ -676,66 +741,5 @@ public class RelToDatasetConverter {
 	}
 
 	public record JoinKeyProjections(RecordProjectionFn leftKeyProjection, RecordProjectionFn rightKeyProjection) {
-	}
-
-	public final class ConversionContext {
-		private final long maxRows;
-		private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
-
-		private int sortCount;
-
-		public ConversionContext(long maxRows) {
-			this.maxRows = maxRows;
-		}
-
-		public List<RexDynamicParam> getParams() {
-			return List.copyOf(params);
-		}
-
-		private WherePredicate toWherePredicate(RexCall conditionNode) {
-			List<RexNode> operands = conditionNode.getOperands();
-			return switch (conditionNode.getKind()) {
-				case OR -> WherePredicates.or(operands.stream()
-					.map(rexNode -> toWherePredicate((RexCall) rexNode))
-					.collect(Collectors.toList()));
-				case AND -> WherePredicates.and(operands.stream()
-					.map(rexNode -> toWherePredicate((RexCall) rexNode))
-					.collect(Collectors.toList()));
-				case EQUALS -> WherePredicates.eq(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case NOT_EQUALS -> WherePredicates.notEq(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN -> WherePredicates.gt(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN_OR_EQUAL ->
-					WherePredicates.ge(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN -> WherePredicates.lt(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN_OR_EQUAL -> WherePredicates.le(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case BETWEEN ->
-					WherePredicates.between(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
-				case IN -> {
-					List<Operand<?>> options = operands.subList(1, operands.size())
-						.stream()
-						.map(this::toOperand)
-						.collect(Collectors.toList());
-					yield WherePredicates.in(toOperand(operands.get(0)), options);
-				}
-				case LIKE -> WherePredicates.like(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case IS_NULL -> WherePredicates.isNull(toOperand(operands.get(0)));
-				case IS_NOT_NULL -> WherePredicates.isNotNull(toOperand(operands.get(0)));
-				case NOT -> WherePredicates.not(toWherePredicate((RexCall) operands.get(0)));
-
-				default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
-			};
-		}
-
-		private Operand<?> toOperand(RexNode node) {
-			Operand<?> operand = Utils.toOperand(node, classLoader);
-			params.addAll(operand.getParams());
-			return operand;
-		}
-
-		private Scalar toScalarOperand(RexNode node) {
-			Operand<?> operand = toOperand(node);
-			checkArgument(operand instanceof Scalar, "Not scalar operand");
-			return (Scalar) operand;
-		}
 	}
 }

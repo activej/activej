@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.ISqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
@@ -55,13 +56,13 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
 	private final RelOptPlanner planner;
-	private final RelToDatasetConverter relToDatasetConverter;
+	private final DefiningClassLoader classLoader;
 
 	private final RelTraitSet traits = RelTraitSet.createEmpty();
 
 	private SqlDataflow(
 		Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
-		SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter
+		SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader
 	) {
 		super(reactor);
 		this.client = client;
@@ -70,14 +71,14 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
-		this.relToDatasetConverter = relToDatasetConverter;
+		this.classLoader = classLoader;
 	}
 
 	public static SqlDataflow create(
 		Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
-		SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter
+		SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader
 	) {
-		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
+		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, classLoader);
 	}
 
 	@Override
@@ -113,7 +114,7 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 	}
 
 	public ConversionResult convert(RelNode node, long maxRows) {
-		return relToDatasetConverter.convert(node, maxRows);
+		return RelToDatasetConverter.convert(classLoader, node, maxRows);
 	}
 
 	public ConversionResult convert(RelNode node) {

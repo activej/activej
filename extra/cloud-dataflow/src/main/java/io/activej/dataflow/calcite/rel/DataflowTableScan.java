@@ -23,8 +23,6 @@ public class DataflowTableScan extends TableScan {
 	private @Nullable RexNode offset;
 	private @Nullable RexNode limit;
 
-	private boolean sorted;
-
 	private DataflowTableScan(
 		RelOptCluster cluster, RelTraitSet traitSet, RelOptTable table, List<RelHint> hints,
 		@Nullable RexNode condition, @Nullable RexNode offset, @Nullable RexNode limit
@@ -86,21 +84,12 @@ public class DataflowTableScan extends TableScan {
 		return limit;
 	}
 
-	public void setSorted() {
-		this.sorted = true;
-	}
-
-	public boolean isSorted() {
-		return sorted;
-	}
-
 	@Override
 	public RelWriter explainTerms(RelWriter pw) {
 		return super.explainTerms(pw)
 			.item("condition", condition)
 			.item("offset", offset)
-			.item("limit", limit)
-			.item("sorted", sorted);
+			.item("limit", limit);
 	}
 
 	@Override
