@@ -351,7 +351,7 @@ public class Utils {
 
 	private static <T> Iterator<T> concatImpl(Iterator<? extends Iterator<? extends T>> iterators) {
 		return new Iterator<T>() {
-			@Nullable Iterator<? extends T> it = iterators.hasNext() ? iterators.next() : null;
+			@Nullable Iterator<? extends T> it = findNextIterator(iterators);
 
 			@Override
 			public boolean hasNext() {
@@ -363,9 +363,17 @@ public class Utils {
 				if (it == null) throw new NoSuchElementException();
 				T next = it.next();
 				if (!it.hasNext()) {
-					it = iterators.hasNext() ? iterators.next() : null;
+					it = findNextIterator(iterators);
 				}
 				return next;
+			}
+
+			private @Nullable Iterator<? extends T> findNextIterator(Iterator<? extends Iterator<? extends T>> iterators) {
+				while (iterators.hasNext()) {
+					Iterator<? extends T> it = iterators.next();
+					if (it.hasNext()) return it;
+				}
+				return null;
 			}
 		};
 	}
