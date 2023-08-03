@@ -18,7 +18,7 @@ public final class CubeSqlNaming {
 	private String tablePosition = POSITION_TABLE;
 	private String tableChunk = CHUNK_TABLE;
 
-	private String tableBackup = BACKUP_REVISION_TABLE;
+	private String tableRevisionBackup = BACKUP_REVISION_TABLE;
 	private String tablePositionBackup = BACKUP_POSITION_TABLE;
 	private String tableChunkBackup = BACKUP_CHUNK_TABLE;
 
@@ -46,9 +46,9 @@ public final class CubeSqlNaming {
 			return this;
 		}
 
-		public Builder withBackupTableNames(String tableBackup, String tablePositionBackup, String tableChunkBackup) {
+		public Builder withBackupTableNames(String tableRevisionBackup, String tablePositionBackup, String tableChunkBackup) {
 			checkNotBuilt(this);
-			CubeSqlNaming.this.tableBackup = tableBackup;
+			CubeSqlNaming.this.tableRevisionBackup = tableRevisionBackup;
 			CubeSqlNaming.this.tablePositionBackup = tablePositionBackup;
 			CubeSqlNaming.this.tableChunkBackup = tableChunkBackup;
 			return this;
@@ -71,7 +71,7 @@ public final class CubeSqlNaming {
 			.replace("{revision}", escape(tableRevision))
 			.replace("{position}", escape(tablePosition))
 			.replace("{chunk}", escape(tableChunk))
-			.replace("{backup}", escape(tableBackup))
+			.replace("{backup}", escape(tableRevisionBackup))
 			.replace("{backup_position}", escape(tablePositionBackup))
 			.replace("{backup_chunk}", escape(tableChunkBackup))
 			.replace("{backup_by}", backupBy == null ? "null" : backupBy);
