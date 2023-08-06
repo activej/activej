@@ -75,7 +75,7 @@ public final class RendezvousHashing implements RpcStrategy {
 	public final class Builder extends AbstractBuilder<Builder, RendezvousHashing> {
 		private Builder() {}
 
-		public Builder withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
+		public Builder withHashBucketFunction(ToLongBiFunction<Object, Integer> hashBucketFn) {
 			checkNotBuilt(this);
 			RendezvousHashing.this.hashBucketFn = hashBucketFn;
 			return this;

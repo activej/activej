@@ -133,7 +133,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P> {
 				RendezvousHashing.builder(req ->
 						((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 					.withBuckets(NUMBER_OF_BUCKETS)
-					.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
+					.withHashBucketFunction((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
 					.initialize(rendezvousHashing -> {
 						for (P partitionId : partitionGroup.getPartitionIds()) {
 							rendezvousHashing.withShard(partitionId, provideRpcConnection(partitionId));
