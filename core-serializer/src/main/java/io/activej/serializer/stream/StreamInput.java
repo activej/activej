@@ -71,16 +71,12 @@ public class StreamInput implements Closeable {
 		this.in = in;
 	}
 
-	public byte[] array() {
-		return in.array();
-	}
-
 	public int limit() {
 		return limit;
 	}
 
 	public int remaining() {
-		return limit() - in.pos();
+		return limit - in.pos();
 	}
 
 	public void ensure(int bytes) throws IOException {

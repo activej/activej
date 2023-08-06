@@ -42,16 +42,12 @@ public class StreamOutput implements Closeable {
 		this.out = out;
 	}
 
-	public byte[] array() {
-		return out.array();
-	}
-
 	public int limit() {
 		return out.array().length;
 	}
 
 	public int remaining() {
-		return limit() - out.pos();
+		return out.array().length - out.pos();
 	}
 
 	public void ensure(int bytes) throws IOException {

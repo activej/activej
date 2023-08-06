@@ -846,7 +846,7 @@ public class StreamCodecs {
 			} else {
 				headerSize = estimatedHeaderSize;
 			}
-			writeSize(output.array(), positionBegin, dataSize, headerSize);
+			writeSize(output.out().array(), positionBegin, dataSize, headerSize);
 		}
 
 		private void estimateMore(StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize) {
@@ -873,22 +873,18 @@ public class StreamCodecs {
 			assert headerDelta > 0;
 			int newPositionData = positionData + headerDelta;
 			int newPositionEnd = newPositionData + dataSize;
-			byte[] array = output.array();
-			if (newPositionEnd < array.length) {
+			byte[] array = output.out().array();
+			if (newPositionEnd <= array.length) {
 				System.arraycopy(array, positionData, array, newPositionData, dataSize);
+				output.out().pos(newPositionEnd);
 			} else {
 				// rare case when data overflows array
-				byte[] oldArray = array;
-
-				// ensured size without flush
-				output.out(new BinaryOutput(allocate(newPositionEnd)));
-
-				array = output.array();
-				System.arraycopy(oldArray, 0, array, 0, positionBegin);
-				System.arraycopy(oldArray, positionData, array, newPositionData, dataSize);
-				recycle(oldArray);
+				byte[] newArray = allocate(newPositionEnd);
+				System.arraycopy(array, 0, newArray, 0, positionBegin);
+				System.arraycopy(array, positionData, newArray, newPositionData, dataSize);
+				output.out(new BinaryOutput(newArray, newPositionEnd));
+				recycle(array);
 			}
-			output.out().pos(newPositionEnd);
 		}
 
 		private static int varIntSize(int dataSize) {
@@ -1022,9 +1018,9 @@ public class StreamCodecs {
 				int safeRemaining = length - idx;
 				int safeReadCount = Math.min(safeRemaining, input.remaining() / maxElementSize);
 				if (safeReadCount == 0) {
-					int safeEnsure = Math.min(input.array().length - input.remaining(), safeRemaining * minElementSize);
+					int safeEnsure = Math.min(input.in().array().length - input.remaining(), safeRemaining * minElementSize);
 					input.ensure(safeEnsure);
-					if (input.remaining() / maxElementSize == 0) {
+					if (input.remaining() < maxElementSize) {
 						break;
 					}
 					continue;
