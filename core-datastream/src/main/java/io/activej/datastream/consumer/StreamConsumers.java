@@ -48,6 +48,13 @@ public class StreamConsumers {
 	}
 
 	/**
+	 * Creates a consumer which is already acknowledged.
+	 */
+	public static <T> StreamConsumer<T> acknowledged() {
+		return new Acknowledged<>();
+	}
+
+	/**
 	 * Creates a consumer which calls the provided {@link Consumer} with items
 	 * it receives.
 	 * Its acknowledgement completes when the supplier closes.

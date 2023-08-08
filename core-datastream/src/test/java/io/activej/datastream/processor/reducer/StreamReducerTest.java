@@ -1,5 +1,6 @@
 package io.activej.datastream.processor.reducer;
 
+import io.activej.datastream.consumer.AbstractStreamConsumer;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.processor.DataItem1;
 import io.activej.datastream.supplier.StreamDataAcceptor;
@@ -11,8 +12,11 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.*;
@@ -563,4 +567,41 @@ public class StreamReducerTest {
 		assertClosedWithError(merger.getInput(1));
 	}
 
+	@Test
+	public void testPreemptiveAcknowledge() {
+		StreamSupplier<Integer> source1 = StreamSuppliers.ofStream(IntStream.range(1, 150).boxed());
+		StreamSupplier<Integer> source2 = StreamSuppliers.ofStream(IntStream.range(100, 250).boxed());
+
+		StreamReducer<Integer, Integer, Void> streamReducer = StreamReducer.<Integer, Integer, Void>builder()
+			.withBufferSize(1)
+			.build();
+
+		List<Integer> result = new ArrayList<>();
+
+		await(
+			source1.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+			source2.streamTo(streamReducer.newInput(identity(), deduplicateReducer())),
+
+			streamReducer.getOutput()
+				.streamTo(new AbstractStreamConsumer<>() {
+					@Override
+					protected void onStarted() {
+						resume(item -> {
+							result.add(item);
+							if (result.size() == 200) {
+								suspend();
+								acknowledge();
+							}
+						});
+					}
+				})
+		);
+
+		assertEquals(IntStream.range(1, 201).boxed().collect(Collectors.toList()), result);
+		assertEndOfStream(source1);
+		assertEndOfStream(source2);
+
+		assertEndOfStream(streamReducer.getOutput());
+		assertConsumersEndOfStream(streamReducer.getInputs());
+	}
 }

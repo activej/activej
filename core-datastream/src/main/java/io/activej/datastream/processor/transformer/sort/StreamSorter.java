@@ -170,6 +170,12 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 
 		@Override
 		protected void onStarted() {
+			output.getAcknowledgement()
+				.then((ackRes, e) -> cleanup()
+					.then(($, e1) -> Promise.of(ackRes, e)))
+				.whenResult(this::acknowledge)
+				.whenException(this::closeEx);
+
 			resume(this);
 		}
 
@@ -210,11 +216,6 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 		@Override
 		protected void onEndOfStream() {
 			temporaryStreamsAccumulator.run();
-			output.getAcknowledgement()
-				.then((ackRes, e) -> cleanup()
-					.then(($, e1) -> Promise.of(ackRes, e)))
-				.whenResult(this::acknowledge)
-				.whenException(this::closeEx);
 		}
 
 		@Override

@@ -116,6 +116,10 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 		inputs.add(input);
 		input.await();
 		streamsOpen++;
+
+		output.getAcknowledgement()
+				.whenResult(input::acknowledge)
+				.whenException(input::closeEx);
 		return input;
 	}
 
@@ -179,9 +183,6 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 				advance();
 			}
 			output.reduce();
-			output.getAcknowledgement()
-				.whenResult(this::acknowledge)
-				.whenException(this::closeEx);
 		}
 
 		@Override

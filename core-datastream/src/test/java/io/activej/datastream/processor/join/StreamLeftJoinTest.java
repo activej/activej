@@ -1,6 +1,7 @@
 package io.activej.datastream.processor.join;
 
 import io.activej.datastream.consumer.StreamConsumer;
+import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -256,6 +257,48 @@ public class StreamLeftJoinTest {
 		assertEquals(0, list.size());
 		assertClosedWithError(source1);
 		assertClosedWithError(source2);
+	}
+
+	@Test
+	public void testPreemptiveAcknowledge() {
+		StreamSupplier<DataItemMaster> source1 = StreamSuppliers.ofValues(
+			new DataItemMaster(10, 10, "masterA"),
+			new DataItemMaster(20, 10, "masterB"),
+			new DataItemMaster(25, 15, "masterB+"),
+			new DataItemMaster(30, 20, "masterC"),
+			new DataItemMaster(40, 20, "masterD"));
+
+		StreamSupplier<DataItemDetail> source2 = StreamSuppliers.ofValues(
+			new DataItemDetail(10, "detailX"),
+			new DataItemDetail(20, "detailY"),
+			new DataItemDetail(30, "detailP"),
+			new DataItemDetail(40, "detailJ"));
+
+		StreamLeftJoin<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail> streamLeftJoin =
+			StreamLeftJoin.create(Integer::compareTo,
+				input -> input.detailId,
+				input -> input.id,
+				new ValueLeftJoiner<>() {
+					@Override
+					public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
+					}
+
+					@Override
+					public DataItemMasterDetail doOuterJoin(Integer key, DataItemMaster left) {
+						return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
+					}
+				}
+			);
+
+		await(
+			source1.streamTo(streamLeftJoin.getLeft()),
+			source2.streamTo(streamLeftJoin.getRight()),
+			streamLeftJoin.getOutput().streamTo(StreamConsumers.acknowledged())
+		);
+
+		assertEndOfStream(source1);
+		assertEndOfStream(source2);
 	}
 
 	private record DataItemMaster(int id, int detailId, String master) {}

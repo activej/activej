@@ -126,6 +126,12 @@ public class JsonCodecs {
 	}
 
 	public static <E extends Enum<E>> JsonCodec<E> ofEnum(Class<E> enumClass) {
-		return JsonCodec.of(reader -> Enum.valueOf(enumClass, reader.readString()), (writer, value) -> writer.writeString(value.name()));
+		return JsonCodec.of(reader -> {
+			try {
+				return Enum.valueOf(enumClass, reader.readString());
+			} catch (IllegalArgumentException e) {
+				throw reader.newParseError(e.getMessage());
+			}
+		}, (writer, value) -> writer.writeString(value.name()));
 	}
 }

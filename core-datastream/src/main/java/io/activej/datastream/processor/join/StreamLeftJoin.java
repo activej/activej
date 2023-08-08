@@ -99,14 +99,14 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 		@Override
 		protected void onStarted() {
 			output.join();
+			output.getAcknowledgement()
+				.whenResult(this::acknowledge)
+				.whenException(this::closeEx);
 		}
 
 		@Override
 		protected void onEndOfStream() {
 			output.join();
-			output.getAcknowledgement()
-				.whenResult(this::acknowledge)
-				.whenException(this::closeEx);
 		}
 
 		@Override

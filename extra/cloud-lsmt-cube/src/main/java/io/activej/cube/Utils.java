@@ -17,10 +17,12 @@
 package io.activej.cube;
 
 import com.dslplatform.json.DslJson;
+import com.dslplatform.json.DslJson.ConverterFactory;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
+import io.activej.aggregation.fieldtype.JsonCodecs;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.ClassGenerator;
@@ -33,10 +35,12 @@ import io.activej.cube.attributes.IAttributeResolver.KeyFunction;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
+import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
@@ -141,6 +145,34 @@ public final class Utils {
 	}
 
 	public static final DslJson<?> CUBE_DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
+
+	static {
+		registerCodec(byte.class, JsonCodecs.ofByte());
+		registerCodec(short.class, JsonCodecs.ofShort());
+		registerCodec(int.class, JsonCodecs.ofInteger());
+		registerCodec(long.class, JsonCodecs.ofLong());
+		registerCodec(float.class, JsonCodecs.ofFloat());
+		registerCodec(double.class, JsonCodecs.ofDouble());
+		registerCodec(boolean.class, JsonCodecs.ofBoolean());
+		registerCodec(char.class, JsonCodecs.ofCharacter());
+		registerCodec(String.class, JsonCodecs.ofString());
+		registerCodec(LocalDate.class, JsonCodecs.ofLocalDate());
+		registerFactory(new EnumConverterFactory());
+	}
+
+	public static <T> void registerCodec(Class<T> cls, JsonCodec<T> codec) {
+		CUBE_DSL_JSON.registerReader(cls, codec);
+		CUBE_DSL_JSON.registerWriter(cls, codec);
+		if (cls.isPrimitive()) {
+			registerCodec(Primitives.wrap(cls), codec);
+		}
+	}
+
+	public static void registerFactory(ConverterFactory<JsonCodec<?>> converterFactory) {
+		CUBE_DSL_JSON.registerReaderFactory(converterFactory);
+		CUBE_DSL_JSON.registerWriterFactory(converterFactory);
+	}
+
 	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newWriter);
 	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newReader);
 
@@ -194,6 +226,18 @@ public final class Utils {
 			throw new MalformedDataException(e);
 		} catch (IOException e) {
 			throw new AssertionError(e);
+		}
+	}
+
+	private static final class EnumConverterFactory implements ConverterFactory<JsonCodec<?>> {
+		@SuppressWarnings("NullableProblems")
+		@Override
+		public JsonCodec<?> tryCreate(Type manifest, DslJson dslJson) {
+			if (manifest instanceof Class && ((Class<?>) manifest).isEnum()) {
+				//noinspection unchecked,rawtypes
+				return JsonCodecs.ofEnum(((Class) manifest));
+			}
+			return null;
 		}
 	}
 }

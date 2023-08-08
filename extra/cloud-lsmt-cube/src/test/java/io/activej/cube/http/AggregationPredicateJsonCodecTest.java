@@ -1,21 +1,27 @@
 package io.activej.cube.http;
 
+import com.dslplatform.json.ParsingException;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
 import java.util.Map;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.Utils.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.fail;
 
 public class AggregationPredicateJsonCodecTest {
 	private static final AggregationPredicateJsonCodec CODEC = AggregationPredicateJsonCodec.create(CUBE_DSL_JSON,
 		Map.of(
 			"campaign", int.class,
 			"site", String.class,
-			"hourOfDay", int.class),
+			"hourOfDay", int.class,
+			"date", LocalDate.class),
 		Map.of(
 			"eventCount", int.class,
 			"ctr", double.class)
@@ -107,6 +113,17 @@ public class AggregationPredicateJsonCodecTest {
 	public void testHas() {
 		doTest(has("test"));
 		doTest(has("campaign"));
+	}
+
+	@Test
+	public void testInvalidDate() {
+		try {
+			fromJson(CODEC, "[\"between\",\"date\",\"INVALID DATE\",\"INVALID DATE\"]");
+			fail();
+		} catch (MalformedDataException e) {
+			Throwable cause = e.getCause();
+			assertThat(cause, instanceOf(ParsingException.class));
+		}
 	}
 
 	private static void doTest(AggregationPredicate predicate) {
