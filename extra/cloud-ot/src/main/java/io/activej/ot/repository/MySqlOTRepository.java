@@ -16,17 +16,13 @@
 
 package io.activej.ot.repository;
 
-import com.dslplatform.json.*;
-import com.dslplatform.json.JsonReader.ReadObject;
-import com.dslplatform.json.JsonWriter.WriteObject;
-import com.dslplatform.json.runtime.Settings;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecs;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.NoCommitException;
-import io.activej.ot.repository.JsonIndentUtils.OnelineOutputStream;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
@@ -34,28 +30,24 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.sql.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import static com.dslplatform.json.PrettifyOutputStream.IndentType.TABS;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.ot.repository.JsonIndentUtils.BYTE_STREAM;
-import static io.activej.ot.repository.JsonIndentUtils.indent;
+import static io.activej.json.JsonUtils.fromJson;
+import static io.activej.json.JsonUtils.toJson;
 import static io.activej.promise.Promises.retry;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -77,8 +69,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private final OTSystem<D> otSystem;
 
-	private final ReadObject<List<D>> decoder;
-	private final WriteObject<List<D>> encoder;
+	private final JsonCodec<List<D>> codec;
 
 	private String tableRevision = DEFAULT_REVISION_TABLE;
 	private String tableDiffs = DEFAULT_DIFFS_TABLE;
@@ -99,84 +90,28 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 	private MySqlOTRepository(
 		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder
+		OTSystem<D> otSystem, JsonCodec<D> codec
 	) {
 		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.idGenerator = idGenerator;
 		this.otSystem = otSystem;
-		this.decoder = reader -> ((JsonReader<?>) reader).readCollection(decoder);
-		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
+		this.codec = JsonCodecs.ofList(codec);
 	}
 
 	public static <D> MySqlOTRepository<D> create(
 		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder
+		OTSystem<D> otSystem, JsonCodec<D> codec
 	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).build();
-	}
-
-	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D> create(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, F format
-	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format).build();
-	}
-
-	public static <D> MySqlOTRepository<D> create(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, TypeT<? extends D> typeT
-	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT).build();
-	}
-
-	public static <D> MySqlOTRepository<D> create(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, Class<? extends D> diffClass
-	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, diffClass).build();
+		return builder(reactor, executor, dataSource, idGenerator, otSystem, codec).build();
 	}
 
 	public static <D> MySqlOTRepository<D>.Builder builder(
 		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder
+		OTSystem<D> otSystem, JsonCodec<D> codec
 	) {
-		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
-	}
-
-	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D>.Builder builder(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, F format
-	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, format, format);
-	}
-
-	public static <D> MySqlOTRepository<D>.Builder builder(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, TypeT<? extends D> typeT
-	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
-	}
-
-	public static <D> MySqlOTRepository<D>.Builder builder(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, Class<? extends D> diffClass
-	) {
-		return builder(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
-	}
-
-	@SuppressWarnings("unchecked")
-	private static <D> MySqlOTRepository<D>.Builder builder(
-		Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
-		OTSystem<D> otSystem, Type diffType
-	) {
-		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
-		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
-		if (decoder == null || encoder == null) {
-			throw new IllegalArgumentException("Unknown type: " + diffType);
-		}
-		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder).new Builder();
+		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, codec).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, MySqlOTRepository<D>> {
@@ -269,41 +204,6 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 			.map(newId -> OTCommit.of(0, newId, parentDiffs));
 	}
 
-	private static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
-	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(DSL_JSON::newWriter);
-	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(DSL_JSON::newReader);
-
-	private String toJson(List<D> diffs) {
-		JsonWriter jsonWriter = WRITERS.get();
-		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		OnelineOutputStream onelineStream = new OnelineOutputStream(byteStream);
-		PrettifyOutputStream prettyStream = new PrettifyOutputStream(onelineStream, TABS, 1);
-		BYTE_STREAM.set(onelineStream);
-		jsonWriter.reset(prettyStream);
-		encoder.write(jsonWriter, diffs);
-		jsonWriter.flush();
-		return byteStream.toString();
-	}
-
-	private List<D> fromJson(String json) throws MalformedDataException {
-		byte[] bytes = json.getBytes(UTF_8);
-		List<D> deserialized;
-		try {
-			JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
-			jsonReader.getNextToken();
-			deserialized = decoder.read(jsonReader);
-			if (jsonReader.length() != jsonReader.getCurrentIndex()) {
-				String unexpectedData = jsonReader.toString().substring(jsonReader.getCurrentIndex());
-				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
-			}
-			return deserialized;
-		} catch (ParsingException e) {
-			throw new MalformedDataException(e);
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
-	}
-
 	@Override
 	public Promise<Void> push(Collection<OTCommit<Long, D>> commits) {
 		checkInReactorThread(this);
@@ -340,7 +240,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 								) {
 									ps.setLong(1, commit.getId());
 									ps.setLong(2, parentId);
-									ps.setString(3, toJson(diff));
+									ps.setString(3, toJson(codec, diff));
 									ps.executeUpdate();
 								}
 							}
@@ -462,7 +362,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 								long parentId = resultSet.getLong(4);
 								String diffString = resultSet.getString(5);
 								if (diffString != null) {
-									List<D> diff = fromJson(diffString);
+									List<D> diff = fromJson(codec, diffString);
 									parentDiffs.put(parentId, new DiffsWithLevel<>(level - 1, diff));
 								}
 							}
@@ -523,7 +423,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 
 						String str = resultSet.getString(1);
 						if (str == null) return Optional.<List<D>>empty();
-						List<? extends D> snapshot = fromJson(str);
+						List<? extends D> snapshot = fromJson(codec, str);
 						return Optional.of(otSystem.squash(snapshot));
 					}
 				})
@@ -540,7 +440,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 						connection.setAutoCommit(true);
 						connection.setTransactionIsolation(TRANSACTION_READ_COMMITTED);
 
-						String snapshot = toJson(otSystem.squash(diffs));
+						String snapshot = toJson(codec, otSystem.squash(diffs));
 						try (PreparedStatement ps = connection.prepareStatement(sql("""
 							UPDATE {revisions}
 							SET `snapshot` = ?
@@ -627,7 +527,7 @@ public final class MySqlOTRepository<D> extends AbstractReactive
 						statement.setLong(1, commit.getId());
 						statement.setInt(2, commit.getEpoch());
 						statement.setLong(3, commit.getLevel());
-						statement.setString(4, toJson(snapshot));
+						statement.setString(4, toJson(codec, snapshot));
 						statement.executeUpdate();
 					}
 				})

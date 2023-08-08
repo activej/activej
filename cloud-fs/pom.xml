@@ -34,8 +34,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.dslplatform</groupId>
-      <artifactId>dsl-json-java8</artifactId>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-json-codec</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>

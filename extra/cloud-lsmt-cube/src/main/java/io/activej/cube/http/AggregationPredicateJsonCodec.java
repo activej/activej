@@ -16,14 +16,13 @@
 
 package io.activej.cube.http;
 
-import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.aggregation.predicate.impl.*;
-import io.activej.aggregation.util.JsonCodec;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -32,7 +31,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static com.dslplatform.json.JsonWriter.*;
-import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("unchecked")
 public final class AggregationPredicateJsonCodec implements JsonCodec<AggregationPredicate> {
@@ -60,21 +58,22 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 	public static final String LE_SIGN = "<=";
 	public static final String LT_SIGN = "<";
 	public static final String IN_SIGN = "IN";
-	private final Map<String, JsonCodec<Object>> attributeFormats;
+	private final Map<String, JsonCodec<Object>> attributeCodecs;
 
-	private AggregationPredicateJsonCodec(Map<String, JsonCodec<Object>> attributeFormats) {
-		this.attributeFormats = attributeFormats;
+	private AggregationPredicateJsonCodec(Map<String, JsonCodec<Object>> attributeCodecs) {
+		this.attributeCodecs = attributeCodecs;
 	}
 
 	public static AggregationPredicateJsonCodec create(
-		DslJson<?> dslJson, Map<String, Type> attributeTypes, Map<String, Type> measureTypes
+		JsonCodecFactory factory,
+		Map<String, Type> attributeTypes, Map<String, Type> measureTypes
 	) {
 		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
 		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), getJsonCodec(dslJson, entry.getValue()).nullable());
+			attributeCodecs.put(entry.getKey(), factory.resolve(entry.getValue()).nullable());
 		}
 		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), getJsonCodec(dslJson, entry.getValue()));
+			attributeCodecs.put(entry.getKey(), factory.resolve(entry.getValue()));
 		}
 		return new AggregationPredicateJsonCodec(attributeCodecs);
 	}
@@ -82,42 +81,42 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 	private void writeEq(JsonWriter writer, Eq predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(SEMI);
-		attributeFormats.get(predicate.key).write(writer, predicate.value);
+		attributeCodecs.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeNotEq(JsonWriter writer, NotEq predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.key).write(writer, predicate.value);
+		attributeCodecs.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeGe(JsonWriter writer, Ge predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.key).write(writer, predicate.value);
+		attributeCodecs.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeGt(JsonWriter writer, Gt predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.key).write(writer, predicate.value);
+		attributeCodecs.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeLe(JsonWriter writer, Le predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.key).write(writer, predicate.value);
+		attributeCodecs.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeLt(JsonWriter writer, Lt predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		attributeFormats.get(predicate.key).write(writer, predicate.value);
+		attributeCodecs.get(predicate.key).write(writer, predicate.value);
 	}
 
 	private void writeIn(JsonWriter writer, In predicate) {
 		writer.writeString(predicate.key);
-		JsonCodec<Object> codec = attributeFormats.get(predicate.key);
+		JsonCodec<Object> codec = attributeCodecs.get(predicate.key);
 		for (Object o : predicate.values) {
 			writer.writeByte(COMMA);
 			codec.write(writer, o);
@@ -127,7 +126,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 	private void writeBetween(JsonWriter writer, Between predicate) {
 		writer.writeString(predicate.key);
 		writer.writeByte(COMMA);
-		JsonCodec<Object> codec = attributeFormats.get(predicate.key);
+		JsonCodec<Object> codec = attributeCodecs.get(predicate.key);
 		codec.write(writer, predicate.from);
 		writer.writeByte(COMMA);
 		codec.write(writer, predicate.to);
@@ -153,7 +152,6 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 		write(writer, predicate.predicate);
 	}
 
-	@SuppressWarnings("NullableProblems")
 	@Override
 	public void write(JsonWriter writer, AggregationPredicate predicate) {
 		if (predicate instanceof Eq predicateEq) {
@@ -230,7 +228,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 			String[] fieldWithOperator = reader.readKey().split(SPACES);
 			String field = fieldWithOperator[0];
 			String operator = (fieldWithOperator.length == 1) ? EMPTY_STRING : fieldWithOperator[1];
-			JsonCodec<Object> codec = attributeFormats.get(field);
+			JsonCodec<Object> codec = attributeCodecs.get(field);
 			if (codec == null) throw ParsingException.create("Could not decode: " + field, true);
 			Object value = codec.read(reader);
 			AggregationPredicate comparisonPredicate;
@@ -260,7 +258,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 	}
 
 	@Override
-	public AggregationPredicate read(JsonReader reader) throws IOException {
+	public AggregationPredicate read(JsonReader<?> reader) throws IOException {
 		if (reader.last() == OBJECT_START) {
 			reader.getNextToken();
 			return readObjectWithAlgebraOfSetsOperator(reader);
@@ -300,8 +298,8 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 		throw reader.newParseError("Either [ or { is expected");
 	}
 
-	private ReadObject<Object> getAttributeReadObject(String attribute) throws ParsingException {
-		JsonCodec<Object> codec = attributeFormats.get(attribute);
+	private JsonCodec<Object> getAttributeReadObject(String attribute) throws ParsingException {
+		JsonCodec<Object> codec = attributeCodecs.get(attribute);
 		if (codec == null) {
 			throw ParsingException.create("Unknown attribute: " + attribute, true);
 		}
@@ -310,7 +308,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 
 	private AggregationPredicate readEq(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
-		ReadObject<Object> readObject = getAttributeReadObject(attribute);
+		JsonCodec<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
 		Object value = readObject.read(reader);
@@ -320,7 +318,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 
 	private AggregationPredicate readNotEq(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
-		ReadObject<Object> readObject = getAttributeReadObject(attribute);
+		JsonCodec<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
 		Object value = readObject.read(reader);
@@ -350,7 +348,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 
 	private AttributeAndValue readAttributeAndValue(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
-		ReadObject<Object> readObject = getAttributeReadObject(attribute);
+		JsonCodec<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
 		Comparable<Object> value = (Comparable<Object>) readObject.read(reader);
@@ -360,7 +358,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 
 	private AggregationPredicate readIn(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
-		ReadObject<Object> readObject = getAttributeReadObject(attribute);
+		JsonCodec<Object> readObject = getAttributeReadObject(attribute);
 		SortedSet<Object> result = new TreeSet<>();
 		byte token;
 		while ((token = reader.getNextToken()) != ARRAY_END) {
@@ -375,7 +373,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 
 	private AggregationPredicate readBetween(JsonReader<?> reader) throws IOException {
 		String attribute = reader.readString();
-		ReadObject<Object> readObject = getAttributeReadObject(attribute);
+		JsonCodec<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
 		reader.getNextToken();
 		Comparable<Object> from = (Comparable<Object>) readObject.read(reader);

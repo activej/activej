@@ -28,6 +28,7 @@ import io.activej.serializer.def.impl.ClassSerializerDef;
 import io.activej.serializer.def.impl.SubclassSerializerDef;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
+import io.activej.types.Utils;
 import io.activej.types.scanner.TypeScannerRegistry;
 import io.activej.types.scanner.TypeScannerRegistry.Context;
 import org.jetbrains.annotations.Nullable;
@@ -1102,37 +1103,24 @@ public final class SerializerFactory {
 		return serialize != null ? new FoundSerializer(methodOrField, serialize.order(), added, removed) : null;
 	}
 
-	@SuppressWarnings("ForLoopReplaceableByForEach")
-	private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
-		for (int i = 0; i < annotations.length; i++) {
-			Class<? extends Annotation> annotationType = annotations[i].annotationType();
-			if (annotationType == type || aliasesMap.containsKey(annotationType)) {
-				return true;
-			}
-		}
-		return false;
+	private boolean hasAnnotation(Class<? extends Annotation> type, Annotation[] annotations) {
+		if (annotationAliases.isEmpty()) return Utils.hasAnnotation(annotations, type);
+		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
+		return aliasesMap == null || aliasesMap.isEmpty() ?
+			Utils.hasAnnotation(annotations, type) :
+			Utils.hasAnnotation(annotations, a -> a == type || aliasesMap.containsKey(a)) ;
 	}
 
-	@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 	private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
-		for (int i = 0; i < annotations.length; i++) {
-			Annotation annotation = annotations[i];
-			if (annotation.annotationType() == type) {
-				return (A) annotation;
-			}
-		}
+		if (annotationAliases.isEmpty()) return Utils.getAnnotation(annotations, type);
 		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
-		if (aliasesMap != null) {
-			for (int i = 0; i < annotations.length; i++) {
-				Annotation annotation = annotations[i];
-				Function<Annotation, ? extends Annotation> mapping = (Function<Annotation, ? extends Annotation>) aliasesMap.get(annotation.annotationType());
-				if (mapping != null) {
-					return (A) mapping.apply(annotation);
-				}
-			}
-		}
-		return null;
+		return aliasesMap == null ?
+			Utils.getAnnotation(annotations, type) :
+			Utils.getAnnotation(annotations, a -> {
+				//noinspection unchecked
+				Function<Annotation, A> fn = (Function<Annotation, A>) aliasesMap.get(a);
+				return fn != null ? fn.apply(a) : null;
+			});
 	}
 
 	private int getProfileVersion(String[] profiles, int[] versions) {

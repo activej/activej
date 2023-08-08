@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class CubeDiff {
+public final class CubeDiff {
 	private final Map<String, AggregationDiff> diffs;
 
 	private CubeDiff(Map<String, AggregationDiff> diffs) {
@@ -40,6 +40,10 @@ public class CubeDiff {
 			}
 		}
 		return new CubeDiff(map);
+	}
+
+	public Map<String, AggregationDiff> getDiffs() {
+		return diffs;
 	}
 
 	public Set<String> keySet() {

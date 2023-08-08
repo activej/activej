@@ -1,5 +1,6 @@
 package io.activej.record;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -118,6 +119,29 @@ public abstract class Record {
 			result[i] = get(i);
 		}
 		return result;
+	}
+
+	public Iterator<Object> iterate() {
+		//noinspection rawtypes
+		RecordGetter[] getters = new RecordGetter[scheme.size()];
+		for (int i = 0; i < scheme.size(); i++) {
+			getters[i] = scheme.getter(i);
+		}
+
+		return new Iterator<>() {
+			int i = 0;
+			final int size = scheme.size();
+
+			@Override
+			public boolean hasNext() {
+				return i < size;
+			}
+
+			@Override
+			public Object next() {
+				return getters[i++].get(Record.this);
+			}
+		};
 	}
 
 	public void setMap(Map<String, Object> values) {

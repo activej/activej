@@ -21,13 +21,11 @@ import io.activej.reactor.Reactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import io.activej.types.TypeT;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -36,8 +34,11 @@ import java.util.stream.IntStream;
 import static io.activej.config.converter.ConfigConverters.ofExecutor;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
-import static io.activej.fs.util.JsonUtils.toJson;
+import static io.activej.crdt.json.JsonCodecs.ofCrdtData;
 import static io.activej.http.HttpMethod.PUT;
+import static io.activej.json.JsonCodecs.ofInteger;
+import static io.activej.json.JsonCodecs.ofString;
+import static io.activej.json.JsonUtils.toJsonBytes;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
@@ -84,8 +85,8 @@ public final class CrdtClusterTest {
 					return new CrdtDescriptor<>(
 						ignoringTimestamp(Integer::max),
 						new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-						String.class,
-						Integer.class);
+						ofString(),
+						ofInteger());
 				}
 
 				@Provides
@@ -154,8 +155,8 @@ public final class CrdtClusterTest {
 				return new CrdtDescriptor<>(
 					ignoringTimestamp(Integer::max),
 					new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-					String.class,
-					Integer.class);
+					ofString(),
+					ofInteger());
 			}
 		}.launch(new String[0]);
 	}
@@ -166,16 +167,16 @@ public final class CrdtClusterTest {
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
-		Type manifest = new TypeT<CrdtData<String, Integer>>() {}.getType();
-
 		Promises.sequence(IntStream.range(0, 1_000_000)
 				.mapToObj(i ->
 					() -> client.request(HttpRequest.builder(PUT, "http://127.0.0.1:7000")
-							.withBody(toJson(manifest, new CrdtData<>(
-								"value_" + i,
-								Reactor.getCurrentReactor().currentTimeMillis(),
-								i
-							)))
+							.withBody(toJsonBytes(
+								ofCrdtData(ofString(), ofInteger()),
+								new CrdtData<>(
+									"value_" + i,
+									Reactor.getCurrentReactor().currentTimeMillis(),
+									i
+								)))
 							.build())
 						.toVoid()))
 			.whenException(Exception::printStackTrace)

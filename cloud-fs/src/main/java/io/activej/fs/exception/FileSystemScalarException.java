@@ -21,7 +21,7 @@ public class FileSystemScalarException extends FileSystemStateException {
 		super(message);
 	}
 
-	FileSystemScalarException(String message, boolean withStack) {
+	public FileSystemScalarException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

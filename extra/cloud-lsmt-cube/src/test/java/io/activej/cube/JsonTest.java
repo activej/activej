@@ -1,22 +1,22 @@
 package io.activej.cube;
 
-import com.dslplatform.json.JsonReader.ReadObject;
-import com.dslplatform.json.StringConverter;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.bean.TestPubRequest.TestEnum;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecFactory;
+import io.activej.json.JsonCodecs;
 import org.junit.Test;
 
 import java.time.LocalDate;
 
-import static io.activej.cube.Utils.CUBE_DSL_JSON;
-import static io.activej.cube.Utils.fromJson;
+import static io.activej.json.JsonUtils.fromJson;
 import static org.junit.Assert.*;
 
 public class JsonTest {
 
 	@Test
 	public void errorOnTrailingData() throws MalformedDataException {
-		ReadObject<String> reader = StringConverter.READER;
+		JsonCodec<String> reader = JsonCodecs.ofString();
 		String stringJson = "\"string\"";
 		String string = fromJson(reader, stringJson);
 		assertEquals("string", string);
@@ -32,7 +32,7 @@ public class JsonTest {
 
 	@Test
 	public void errorOnMalformedLocalDate() {
-		ReadObject<LocalDate> reader = CUBE_DSL_JSON.tryFindReader(LocalDate.class);
+		JsonCodec<LocalDate> reader = JsonCodecFactory.defaultInstance().resolve(LocalDate.class);
 		assertNotNull(reader);
 		try {
 			fromJson(reader, "\"INVALID DATE\"");
@@ -46,7 +46,7 @@ public class JsonTest {
 
 	@Test
 	public void errorOnMalformedEnum() {
-		ReadObject<TestEnum> reader = CUBE_DSL_JSON.tryFindReader(TestEnum.class);
+		JsonCodec<TestEnum> reader = JsonCodecFactory.defaultInstance().resolve(TestEnum.class);
 		assertNotNull(reader);
 		try {
 			fromJson(reader, "\"INVALID ENUM\"");

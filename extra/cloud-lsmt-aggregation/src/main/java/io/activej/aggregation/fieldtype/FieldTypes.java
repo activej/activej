@@ -17,10 +17,11 @@
 package io.activej.aggregation.fieldtype;
 
 import io.activej.aggregation.util.HyperLogLog;
-import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.StaticFactories;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecs;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.PrimitiveSerializerDef;
 import io.activej.serializer.def.SerializerDef;
@@ -110,8 +111,8 @@ public class FieldTypes {
 			Primitives.wrap((Class<?>) fieldType.getDataType()) :
 			fieldType.getDataType();
 		Type dataType = Types.parameterizedType(Set.class, wrappedNestedType);
-		JsonCodec<Set<T>> codec = JsonCodecs.ofSet(fieldType.getCodec());
-		return new FieldType<>(Set.class, dataType, serializer, codec, codec);
+		JsonCodec<Set<T>> jsonCodec = JsonCodecs.ofSet(fieldType.getJsonCodec());
+		return new FieldType<>(Set.class, dataType, serializer, jsonCodec, jsonCodec);
 	}
 
 	public static <E extends Enum<E>> FieldType<E> ofEnum(Class<E> enumClass) {

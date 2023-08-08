@@ -178,8 +178,9 @@ public final class TypeScannerRegistry<R> {
 		 * @param n an index of a type argument to be scanned
 		 * @return a scan result which is a {@link R} object
 		 */
-		public R scanTypeArgument(int n) {
-			return scanArgument(getTypeArgument(n));
+		public <X extends R> X scanTypeArgument(int n) {
+			//noinspection unchecked
+			return (X) scanArgument(getTypeArgument(n));
 		}
 
 		/**
@@ -267,6 +268,13 @@ public final class TypeScannerRegistry<R> {
 	 */
 	public static <R> TypeScannerRegistry<R> create() {
 		return new TypeScannerRegistry<>();
+	}
+
+	public static <R> TypeScannerRegistry<R> copyOf(TypeScannerRegistry<R> registry) {
+		TypeScannerRegistry<R> newRegistry = new TypeScannerRegistry<>();
+		newRegistry.mappingFn = registry.mappingFn;
+		newRegistry.entries.addAll(registry.entries);
+		return newRegistry;
 	}
 
 	/**

@@ -16,7 +16,6 @@
 
 package io.activej.crdt.storage.cluster;
 
-import com.dslplatform.json.CompiledJson;
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,11 +41,6 @@ public final class PartitionId {
 
 	public static PartitionId of(String id, @Nullable InetSocketAddress crdt, @Nullable InetSocketAddress rpc) {
 		return new PartitionId(id, crdt, rpc);
-	}
-
-	@CompiledJson
-	static PartitionId jsonFactory(String id, InetSocketAddress crdtAddress, InetSocketAddress rpcAddress) {
-		return new PartitionId(id, crdtAddress, rpcAddress);
 	}
 
 	public static PartitionId ofCrdtAddress(String id, InetSocketAddress crdtAddress) {

@@ -9,6 +9,7 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
+import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeCleanerController.IChunksCleanerService;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.eventloop.Eventloop;
@@ -79,7 +80,7 @@ public class CubeCleanerControllerTest {
 				.withMeasures("advRequests"))
 			.build();
 
-		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCube(cube));
 		uplink.initialize();
 		uplink.truncateTables();
 	}

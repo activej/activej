@@ -781,14 +781,14 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryWithInNotEqIntersectionPredicate() {
 		CubeQuery queryWithPredicateIn = CubeQuery.builder()
-				.withWhere(and(
-						notEq("affiliate", EXCLUDE_AFFILIATE),
-						and(
-								in("site", "site1.com", "site2.com"),
-								notEq("site", "site2.com")
-						)))
-				.withMeasures("clicks", "ctr", "conversions")
-				.withReportType(DATA_WITH_TOTALS)
+			.withWhere(and(
+				notEq("affiliate", EXCLUDE_AFFILIATE),
+				and(
+					in("site", "site1.com", "site2.com"),
+					notEq("site", "site2.com")
+				)))
+			.withMeasures("clicks", "ctr", "conversions")
+			.withReportType(DATA_WITH_TOTALS)
 			.build();
 
 		QueryResult in = await(cubeHttp.query(queryWithPredicateIn));
@@ -803,19 +803,19 @@ public final class ReportingTest extends CubeTestBase {
 	@Test
 	public void testQueryWithInNotEqNullPredicate() {
 		CubeQuery queryWithPredicateIn = CubeQuery.builder()
-				.withAttributes("advertiser.name")
-				.withOrderings(CubeQuery.Ordering.asc("attribute.name"))
-				.withWhere(and(
-						notEq("advertiser", EXCLUDE_ADVERTISER),
-						notEq("campaign", EXCLUDE_CAMPAIGN),
-						notEq("banner", EXCLUDE_BANNER)
-				))
-				.withHaving(and(
-						in("advertiser.name", "first", "third"),
-						notEq("advertiser.name", null)
-				))
-				.withMeasures("clicks", "ctr", "conversions")
-				.withReportType(DATA_WITH_TOTALS)
+			.withAttributes("advertiser.name")
+			.withOrderings(CubeQuery.Ordering.asc("attribute.name"))
+			.withWhere(and(
+				notEq("advertiser", EXCLUDE_ADVERTISER),
+				notEq("campaign", EXCLUDE_CAMPAIGN),
+				notEq("banner", EXCLUDE_BANNER)
+			))
+			.withHaving(and(
+				in("advertiser.name", "first", "third"),
+				notEq("advertiser.name", null)
+			))
+			.withMeasures("clicks", "ctr", "conversions")
+			.withReportType(DATA_WITH_TOTALS)
 			.build();
 
 		QueryResult in = await(cubeHttp.query(queryWithPredicateIn));

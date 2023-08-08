@@ -3,6 +3,7 @@ package io.activej.launchers.crdt;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
 import io.activej.inject.annotation.Provides;
+import io.activej.json.JsonCodecs;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -28,8 +29,8 @@ public class CrdtFileServerLauncherTest {
 				return new CrdtDescriptor<>(
 					CrdtFunction.ignoringTimestamp(Integer::max),
 					new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-					String.class,
-					Integer.class
+					JsonCodecs.ofString(),
+					JsonCodecs.ofInteger()
 				);
 			}
 		}.testInjector();

@@ -26,6 +26,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
+import io.activej.json.JsonCodecs;
 import io.activej.launcher.Launcher;
 import io.activej.reactor.Reactor;
 
@@ -54,8 +55,8 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 				return new CrdtDescriptor<>(
 					CrdtFunction.ignoringTimestamp(Integer::max),
 					new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-					String.class,
-					Integer.class);
+					JsonCodecs.ofString(),
+					JsonCodecs.ofInteger());
 			}
 
 			@Provides

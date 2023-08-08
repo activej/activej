@@ -25,7 +25,7 @@ public final class FileNotFoundException extends FileSystemScalarException {
 		super(message);
 	}
 
-	FileNotFoundException(String message, boolean withStack) {
+	public FileNotFoundException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

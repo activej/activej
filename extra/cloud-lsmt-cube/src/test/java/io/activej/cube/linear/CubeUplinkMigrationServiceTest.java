@@ -6,13 +6,13 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.cube.Cube;
+import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogPositionDiff;
+import io.activej.json.JsonCodec;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTCommit;
@@ -39,7 +39,9 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
+import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
 import static io.activej.cube.linear.CubeUplinkMigrationService.builderOfEmptyCube;
+import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 import static org.junit.Assert.assertEquals;
@@ -80,12 +82,12 @@ public final class CubeUplinkMigrationServiceTest {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(CubeDiffJsonCodec.create(cube));
+		JsonCodec<LogDiff<CubeDiff>> diffCodec = ofLogDiff(ofCubeDiff(cube));
 
 		repo = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
-		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofCube(cube);
+		PrimaryKeyJsonCodecFactory codecs = PrimaryKeyJsonCodecFactory.ofCube(cube);
 		uplink = CubeMySqlOTUplink.builder(reactor, executor, dataSource, codecs)
 			.withMeasuresValidator(MeasuresValidator.ofCube(cube))
 			.build();

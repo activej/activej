@@ -21,7 +21,7 @@ public final class PathContainsFileException extends FileSystemScalarException {
 		super("Path contains existing file as its part");
 	}
 
-	PathContainsFileException(String message, boolean withStack) {
+	public PathContainsFileException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

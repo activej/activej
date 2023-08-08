@@ -16,7 +16,6 @@
 
 package io.activej.cube.http;
 
-import com.dslplatform.json.DslJson;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
@@ -24,8 +23,11 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
+import io.activej.cube.QueryResult;
 import io.activej.cube.exception.QueryException;
 import io.activej.http.*;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecFactory;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.slf4j.Logger;
@@ -37,23 +39,24 @@ import java.util.regex.Pattern;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.not;
-import static io.activej.cube.Utils.*;
 import static io.activej.cube.http.Utils.*;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
+import static io.activej.json.JsonUtils.fromJson;
+import static io.activej.json.JsonUtils.toJsonBytes;
 import static java.util.stream.Collectors.toList;
 
 public final class ReportingServiceServlet extends ServletWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
 	private final ICube cube;
-	private QueryResultJsonCodec queryResultCodec;
+	private JsonCodec<QueryResult> queryResultCodec;
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private DslJson<?> dslJson = CUBE_DSL_JSON;
+	private JsonCodecFactory factory = JsonCodecFactory.defaultInstance();
 
 	private ReportingServiceServlet(Reactor reactor, ICube cube) {
 		super(reactor);
@@ -88,9 +91,9 @@ public final class ReportingServiceServlet extends ServletWithStats {
 			return this;
 		}
 
-		public Builder withDslJson(DslJson<?> dslJson){
+		public Builder withJsonCodecRegistry(JsonCodecFactory factory) {
 			checkNotBuilt(this);
-			ReportingServiceServlet.this.dslJson = dslJson;
+			ReportingServiceServlet.this.factory = factory;
 			return this;
 		}
 
@@ -102,14 +105,14 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(dslJson, cube.getAttributeTypes(), cube.getMeasureTypes());
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}
 
-	private QueryResultJsonCodec getQueryResultCodec() {
+	private JsonCodec<QueryResult> getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultJsonCodec.create(dslJson, classLoader, cube.getAttributeTypes(), cube.getMeasureTypes());
+			queryResultCodec = QueryResultJsonCodec.create(classLoader, factory, cube.getAttributeTypes(), cube.getMeasureTypes());
 		}
 		return queryResultCodec;
 	}
@@ -123,7 +126,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 			return cube.query(cubeQuery)
 				.then(queryResult -> {
 					Stopwatch resultProcessingStopwatch = Stopwatch.createStarted();
-					ByteBuf jsonBuf = toJsonBuf(getQueryResultCodec(), queryResult);
+					ByteBuf jsonBuf = ByteBuf.wrapForReading(toJsonBytes(getQueryResultCodec(), queryResult));
 					Promise<HttpResponse> httpResponse = createResponse(jsonBuf);
 					logger.info("Processed request {} ({}) [totalTime={}, jsonConstruction={}]", httpRequest,
 						cubeQuery, totalTimeStopwatch, resultProcessingStopwatch);

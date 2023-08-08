@@ -16,16 +16,13 @@
 
 package io.activej.ot.uplink;
 
-import com.dslplatform.json.CompiledJson;
-import com.dslplatform.json.JsonAttribute;
 import io.activej.promise.Promise;
 
 import java.util.List;
 
 public interface AsyncOTUplink<K, D, PC> {
 
-	@CompiledJson
-	record FetchData<K, D>(@JsonAttribute(name = "id") K commitId, long level, List<D> diffs) {
+	record FetchData<K, D>(K commitId, long level, List<D> diffs) {
 	}
 
 	Promise<FetchData<K, D>> checkout();

@@ -8,8 +8,9 @@ import org.junit.Test;
 
 import java.util.Map;
 
-import static io.activej.fs.util.JsonUtils.fromJson;
-import static io.activej.fs.util.JsonUtils.toJson;
+import static io.activej.fs.json.JsonCodecs.ofFileSystemException;
+import static io.activej.json.JsonUtils.fromJsonBytes;
+import static io.activej.json.JsonUtils.toJsonBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -48,7 +49,7 @@ public final class FileSystemExceptionCodecTest {
 	}
 
 	private static void doTest(FileSystemException exception) {
-		ByteBuf json = toJson(FileSystemException.class, exception);
+		ByteBuf json = ByteBuf.wrapForReading(toJsonBytes(ofFileSystemException(), exception));
 		FileSystemException deserializedException = deserialize(json);
 
 		doAssert(exception, deserializedException);
@@ -71,7 +72,7 @@ public final class FileSystemExceptionCodecTest {
 	private static FileSystemException deserialize(ByteBuf json) {
 		FileSystemException deserializedException;
 		try {
-			deserializedException = fromJson(FileSystemException.class, json);
+			deserializedException = fromJsonBytes(ofFileSystemException(), json.getArray());
 		} catch (MalformedDataException e) {
 			throw new AssertionError(e);
 		}

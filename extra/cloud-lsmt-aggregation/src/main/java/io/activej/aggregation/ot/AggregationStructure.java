@@ -30,14 +30,14 @@ import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes")
 public final class AggregationStructure {
-	private final ChunkIdJsonCodec<?> chunkIdCodec;
+	private final ChunkIdJsonCodec<?> chunkIdJsonCodec;
 	private final Map<String, FieldType> keyTypes = new LinkedHashMap<>();
 	private final Map<String, FieldType> measureTypes = new LinkedHashMap<>();
 	private final List<String> partitioningKey = new ArrayList<>();
 	private final Map<String, Measure> measures = new LinkedHashMap<>();
 
-	private AggregationStructure(ChunkIdJsonCodec<?> chunkIdCodec) {
-		this.chunkIdCodec = chunkIdCodec;
+	private AggregationStructure(ChunkIdJsonCodec<?> chunkIdJsonCodec) {
+		this.chunkIdJsonCodec = chunkIdJsonCodec;
 	}
 
 	public static Builder builder(ChunkIdJsonCodec<?> chunkIdCodec) {
@@ -112,8 +112,8 @@ public final class AggregationStructure {
 		}
 	}
 
-	public ChunkIdJsonCodec<?> getChunkIdCodec() {
-		return chunkIdCodec;
+	public ChunkIdJsonCodec<?> getChunkIdJsonCodec() {
+		return chunkIdJsonCodec;
 	}
 
 	public List<String> getKeys() {

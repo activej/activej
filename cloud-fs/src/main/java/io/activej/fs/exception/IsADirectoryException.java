@@ -21,7 +21,7 @@ public final class IsADirectoryException extends FileSystemScalarException {
 		super(message);
 	}
 
-	IsADirectoryException(String message, boolean withStack) {
+	public IsADirectoryException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

@@ -16,22 +16,22 @@
 
 package io.activej.aggregation;
 
-import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.NumberConverter;
-import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.json.ForwardingJsonCodec;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecs;
 
-import java.io.IOException;
+public abstract class ChunkIdJsonCodec<C> extends ForwardingJsonCodec<C> {
+	protected ChunkIdJsonCodec(JsonCodec<C> codec) {
+		super(codec);
+	}
 
-public interface ChunkIdJsonCodec<C> extends JsonCodec<C> {
-	String toFileName(C chunkId);
+	public abstract String toFileName(C chunkId);
 
-	C fromFileName(String chunkFileName) throws MalformedDataException;
+	public abstract C fromFileName(String chunkFileName) throws MalformedDataException;
 
-	@SuppressWarnings("NullableProblems")
-	static ChunkIdJsonCodec<Long> ofLong() {
-		return new ChunkIdJsonCodec<>() {
+	public static ChunkIdJsonCodec<Long> ofLong() {
+		return new ChunkIdJsonCodec<>(JsonCodecs.ofLong()) {
 			@Override
 			public String toFileName(Long chunkId) {
 				return chunkId.toString();
@@ -45,22 +45,11 @@ public interface ChunkIdJsonCodec<C> extends JsonCodec<C> {
 					throw new MalformedDataException(e);
 				}
 			}
-
-			@Override
-			public Long read(JsonReader reader) throws IOException {
-				return NumberConverter.deserializeLong(reader);
-			}
-
-			@Override
-			public void write(JsonWriter writer, Long value) {
-				NumberConverter.serialize(value, writer);
-			}
 		};
 	}
 
-	@SuppressWarnings("NullableProblems")
-	static ChunkIdJsonCodec<String> ofString() {
-		return new ChunkIdJsonCodec<>() {
+	public static ChunkIdJsonCodec<String> ofString() {
+		return new ChunkIdJsonCodec<>(JsonCodecs.ofString()) {
 			@Override
 			public String toFileName(String chunkId) {
 				return chunkId;
@@ -69,16 +58,6 @@ public interface ChunkIdJsonCodec<C> extends JsonCodec<C> {
 			@Override
 			public String fromFileName(String chunkFileName) {
 				return chunkFileName;
-			}
-
-			@Override
-			public String read(JsonReader reader) throws IOException {
-				return reader.readString();
-			}
-
-			@Override
-			public void write(JsonWriter writer, String value) {
-				writer.writeString(value);
 			}
 		};
 	}

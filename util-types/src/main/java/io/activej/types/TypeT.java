@@ -44,17 +44,6 @@ public abstract class TypeT<T> {
 		this.annotatedType = getSuperclassTypeParameter(this.getClass());
 	}
 
-	private TypeT(AnnotatedType annotatedType) {
-		this.annotatedType = annotatedType;
-	}
-
-	/**
-	 * Constructs a new {@link TypeT} out of given {@link AnnotatedType}
-	 */
-	public static <T> TypeT<T> ofAnnotatedType(AnnotatedType annotatedType) {
-		return new TypeT<>(annotatedType) {};
-	}
-
 	private static AnnotatedType getSuperclassTypeParameter(Class<?> subclass) {
 		AnnotatedType superclass = subclass.getAnnotatedSuperclass();
 		if (superclass instanceof AnnotatedParameterizedType) {

@@ -31,12 +31,14 @@ import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.csp.consumer.ChannelConsumers.recycling;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Represents any HTTP message. Its internal byte buffers will be automatically recycled in HTTP client or HTTP server.
@@ -141,6 +143,14 @@ public abstract class HttpMessage {
 
 		public B withBody(byte[] body) {
 			return withBody(ByteBuf.wrapForReading(body));
+		}
+
+		public B withBody(String string) {
+			return withBody(string, UTF_8);
+		}
+
+		public B withBody(String string, Charset charset) {
+			return withBody(string.getBytes(charset));
 		}
 
 		public B withMaxBodySize(MemSize maxBodySize) {

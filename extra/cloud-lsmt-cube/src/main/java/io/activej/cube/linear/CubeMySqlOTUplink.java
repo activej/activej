@@ -19,16 +19,17 @@ package io.activej.cube.linear;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.exception.StateFarAheadException;
+import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.json.JsonCodec;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.exception.OTException;
@@ -53,9 +54,9 @@ import java.util.stream.LongStream;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static io.activej.cube.Utils.fromJson;
-import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.linear.Utils.*;
+import static io.activej.json.JsonUtils.fromJson;
+import static io.activej.json.JsonUtils.toJson;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
@@ -76,7 +77,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	private final Executor executor;
 	private final DataSource dataSource;
 
-	private final PrimaryKeyCodecs primaryKeyCodecs;
+	private final PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory;
 
 	private CubeSqlNaming sqlNaming = CubeSqlNaming.DEFAULT_SQL_NAMING;
 
@@ -90,19 +91,19 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	private final PromiseStats promisePush = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CubeMySqlOTUplink(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+	private CubeMySqlOTUplink(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
 		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
-		this.primaryKeyCodecs = primaryKeyCodecs;
+		this.primaryKeyJsonCodecFactory = primaryKeyJsonCodecFactory;
 	}
 
-	public static CubeMySqlOTUplink create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
-		return builder(reactor, executor, dataSource, primaryKeyCodecs).build();
+	public static CubeMySqlOTUplink create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
+		return builder(reactor, executor, dataSource, primaryKeyJsonCodecFactory).build();
 	}
 
-	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
-		return new CubeMySqlOTUplink(reactor, executor, dataSource, primaryKeyCodecs).new Builder();
+	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
+		return new CubeMySqlOTUplink(reactor, executor, dataSource, primaryKeyJsonCodecFactory).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeMySqlOTUplink> {
@@ -306,10 +307,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				String aggregationId = resultSet.getString(2);
 				List<String> measures = measuresFromString(resultSet.getString(3));
 				measuresValidator.validate(aggregationId, measures);
-				JsonCodec<PrimaryKey> codec = primaryKeyCodecs.getCodec(aggregationId);
-				if (codec == null) {
-					throw new MalformedDataException("Unknown aggregation: " + aggregationId);
-				}
+				JsonCodec<PrimaryKey> codec = primaryKeyJsonCodecFactory.getJsonCodec(aggregationId);
 				PrimaryKey minKey = fromJson(codec, resultSet.getString(4));
 				PrimaryKey maxKey = fromJson(codec, resultSet.getString(5));
 				int count = resultSet.getInt(6);
@@ -436,10 +434,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				List<String> measures = aggregationChunk.getMeasures();
 				measuresValidator.validate(aggregationId, measures);
 				ps.setString(index++, measuresToString(measures));
-				JsonCodec<PrimaryKey> codec = primaryKeyCodecs.getCodec(aggregationId);
-				if (codec == null) {
-					throw new IllegalArgumentException("Unknown aggregation: " + aggregationId);
-				}
+				JsonCodec<PrimaryKey> codec = primaryKeyJsonCodecFactory.getJsonCodec(aggregationId);
 				ps.setString(index++, toJson(codec, aggregationChunk.getMinPrimaryKey()));
 				ps.setString(index++, toJson(codec, aggregationChunk.getMaxPrimaryKey()));
 				ps.setInt(index++, aggregationChunk.getCount());

@@ -21,7 +21,7 @@ public class FileSystemException extends Exception {
 		this(message, true);
 	}
 
-	FileSystemException(String message, boolean withStack) {
+	public FileSystemException(String message, boolean withStack) {
 		super(message);
 		if (withStack) super.fillInStackTrace();
 	}

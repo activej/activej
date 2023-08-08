@@ -21,7 +21,7 @@ public final class MalformedGlobException extends FileSystemScalarException {
 		super(message);
 	}
 
-	MalformedGlobException(String message, boolean withStack) {
+	public MalformedGlobException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

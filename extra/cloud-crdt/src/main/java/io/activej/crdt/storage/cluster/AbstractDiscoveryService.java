@@ -6,18 +6,18 @@ import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.strategy.RpcStrategy;
-import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Function;
 
-import static io.activej.fs.util.JsonUtils.fromJson;
+import static io.activej.crdt.json.JsonCodecs.ofPartitionId;
+import static io.activej.crdt.json.JsonCodecs.ofRendezvousPartitionGroup;
+import static io.activej.json.JsonCodecs.ofList;
+import static io.activej.json.JsonUtils.fromJsonBytes;
 
 public abstract class AbstractDiscoveryService extends AbstractReactive
 	implements IDiscoveryService<PartitionId> {
-
-	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;
 	protected @Nullable Function<PartitionId, ICrdtStorage<?, ?>> crdtProvider;
@@ -47,7 +47,9 @@ public abstract class AbstractDiscoveryService extends AbstractReactive
 	}
 
 	protected final RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
-		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
+		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJsonBytes(
+			ofList(ofRendezvousPartitionGroup(ofPartitionId())),
+			bytes);
 		RendezvousPartitionScheme<PartitionId>.Builder schemeBuilder = RendezvousPartitionScheme.builder(partitionGroups)
 			.withPartitionIdGetter(PartitionId::getId);
 

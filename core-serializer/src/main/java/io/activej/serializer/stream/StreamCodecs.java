@@ -689,8 +689,8 @@ public class StreamCodecs {
 	}
 
 	private static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(
-			StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn,
-			SizedCollectorKV<K, V, ?, M> collector) {
+		StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn,
+		SizedCollectorKV<K, V, ?, M> collector) {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, M map) throws IOException {
@@ -733,8 +733,7 @@ public class StreamCodecs {
 		private final Map<Class<?>, SubclassEntry<? extends T>> encoders = new HashMap<>();
 		private final List<StreamDecoder<? extends T>> decoders = new ArrayList<>();
 
-		private SubtypeStreamCodec() {
-		}
+		private SubtypeStreamCodec() {}
 
 		public static <T> SubtypeStreamCodec<T>.Builder builder() {
 			return new SubtypeStreamCodec<T>().new Builder();
@@ -902,7 +901,7 @@ public class StreamCodecs {
 		}
 
 		private void ensureHeaderSize(
-				StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize
+			StreamOutput output, int positionBegin, int positionData, int dataSize, int headerSize
 		) {
 			int previousHeaderSize = positionData - positionBegin;
 			if (previousHeaderSize == headerSize) return; // offset is enough for header

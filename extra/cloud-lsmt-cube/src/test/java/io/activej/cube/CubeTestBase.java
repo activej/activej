@@ -3,15 +3,13 @@ package io.activej.cube;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
+import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.linear.MeasuresValidator;
-import io.activej.cube.linear.PrimaryKeyCodecs;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.AsyncOTRepository;
@@ -42,6 +40,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.cube.TestUtils.*;
+import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.test.TestUtils.dataSource;
 
 @RunWith(Parameterized.class)
@@ -96,7 +96,7 @@ public abstract class CubeTestBase {
 					public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
 						Reactor reactor = cube.getReactor();
 						AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
-							LOG_OT, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
+							LOG_OT, ofLogDiff(ofCubeDiff(cube)));
 						return OTUplink.create(reactor, repository, LOG_OT);
 					}
 
@@ -112,7 +112,7 @@ public abstract class CubeTestBase {
 				new UplinkFactory<CubeMySqlOTUplink>() {
 					@Override
 					public CubeMySqlOTUplink createUninitialized(Cube cube) {
-						return CubeMySqlOTUplink.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
+						return CubeMySqlOTUplink.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyJsonCodecFactory.ofCube(cube))
 							.withMeasuresValidator(MeasuresValidator.ofCube(cube))
 							.build();
 					}

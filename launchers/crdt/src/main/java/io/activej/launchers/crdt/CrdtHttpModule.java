@@ -25,15 +25,16 @@ import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
+import io.activej.json.JsonCodecFactory;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.types.TypeT;
 
 import java.util.concurrent.Executor;
 
-import static io.activej.fs.util.JsonUtils.fromJson;
-import static io.activej.fs.util.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.*;
+import static io.activej.json.JsonUtils.fromJsonBytes;
+import static io.activej.json.JsonUtils.toJsonBytes;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -57,17 +58,18 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 		Reactor reactor,
 		CrdtDescriptor<K, S> descriptor,
 		MapCrdtStorage<K, S> client,
-		OptionalDependency<BackupService<K, S>> backupServiceOpt
+		OptionalDependency<BackupService<K, S>> backupServiceOpt,
+		JsonCodecFactory jsonCodecFactory
 	) {
 		return RoutingServlet.builder(reactor)
 			.with(POST, "/", request -> request.loadBody()
 				.then(body -> {
 					try {
-						K key = fromJson(descriptor.keyManifest(), body);
+						K key = fromJsonBytes(descriptor.keyJsonCodec(), body.getArray());
 						S state = client.get(key);
 						if (state != null) {
 							return HttpResponse.ok200()
-								.withBody(toJson(descriptor.stateManifest(), state))
+								.withBody(toJsonBytes(descriptor.stateJsonCodec(), state))
 								.toPromise();
 						}
 						return HttpResponse.ofCode(404)
@@ -80,7 +82,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 			.with(PUT, "/", request -> request.loadBody()
 				.then(body -> {
 					try {
-						client.put(fromJson(crdtDataManifest.getType(), body));
+						client.put(fromJsonBytes(jsonCodecFactory.resolve(crdtDataManifest), body.getArray()));
 						return HttpResponse.ok200().toPromise();
 					} catch (MalformedDataException e) {
 						throw HttpError.ofCode(400, e);
@@ -89,7 +91,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 			.with(DELETE, "/", request -> request.loadBody()
 				.then(body -> {
 					try {
-						K key = fromJson(descriptor.keyManifest(), body);
+						K key = fromJsonBytes(descriptor.keyJsonCodec(), body.getArray());
 						if (client.remove(key)) {
 							return HttpResponse.ok200().toPromise();
 						}

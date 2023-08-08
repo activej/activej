@@ -23,7 +23,6 @@ import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.IFileSystem;
 import io.activej.fs.exception.FileNotFoundException;
-import io.activej.fs.exception.FileSystemException;
 import io.activej.http.*;
 import io.activej.http.MultipartByteBufsDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
@@ -31,10 +30,7 @@ import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.fs.http.FileSystemCommand.*;
-import static io.activej.fs.util.JsonUtils.fromJson;
-import static io.activej.fs.util.JsonUtils.toJson;
-import static io.activej.fs.util.MessageTypes.STRING_SET_TYPE;
-import static io.activej.fs.util.MessageTypes.STRING_STRING_MAP_TYPE;
+import static io.activej.fs.json.JsonCodecs.*;
 import static io.activej.fs.util.RemoteFileSystemUtils.castError;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
@@ -43,6 +39,9 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static io.activej.http.MediaTypes.OCTET_STREAM;
+import static io.activej.json.JsonCodecs.*;
+import static io.activej.json.JsonUtils.fromJsonBytes;
+import static io.activej.json.JsonUtils.toJsonBytes;
 
 /**
  * An HTTP servlet that exposes some given {@link IFileSystem}.
@@ -103,8 +102,8 @@ public final class FileSystemServlet {
 				String glob = request.getQueryParameter("glob");
 				glob = glob != null ? glob : "**";
 				return fs.list(glob)
-					.then(list -> HttpResponse.ok200()
-							.withBody(toJson(list))
+					.then(map -> HttpResponse.ok200()
+							.withBody(toJsonBytes(ofMap(ofFileMetadata()), map))
 							.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 							.toPromise(),
 						errorResponseFn());
@@ -112,15 +111,15 @@ public final class FileSystemServlet {
 			.with(GET, "/" + INFO + "/*", request ->
 				fs.info(decodePath(request))
 					.then(meta -> HttpResponse.ok200()
-							.withBody(toJson(meta))
+							.withBody(ByteBuf.wrapForReading(toJsonBytes(ofFileMetadata().nullable(), meta)))
 							.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 							.toPromise(),
 						errorResponseFn()))
 			.with(GET, "/" + INFO_ALL, request -> request.loadBody()
-				.map(body -> fromJson(STRING_SET_TYPE, body))
+				.map(body -> fromJsonBytes(ofSet(ofString()), body.getArray()))
 				.then(fs::infoAll)
 				.then(map -> HttpResponse.ok200()
-						.withBody(toJson(map))
+						.withBody(ByteBuf.wrapForReading(toJsonBytes(ofMap(ofFileMetadata()), map)))
 						.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 						.toPromise(),
 					errorResponseFn()))
@@ -133,7 +132,7 @@ public final class FileSystemServlet {
 					.then(voidResponseFn(), errorResponseFn());
 			})
 			.with(POST, "/" + MOVE_ALL, request -> request.loadBody()
-				.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
+				.map(body -> fromJsonBytes(ofMap(ofString()), body.getArray()))
 				.then(fs::moveAll)
 				.then(voidResponseFn(), errorResponseFn()))
 			.with(POST, "/" + COPY, request -> {
@@ -143,14 +142,14 @@ public final class FileSystemServlet {
 					.then(voidResponseFn(), errorResponseFn());
 			})
 			.with(POST, "/" + COPY_ALL, request -> request.loadBody()
-				.map(body -> fromJson(STRING_STRING_MAP_TYPE, body))
+				.map(body -> fromJsonBytes(ofMap(ofString()), body.getArray()))
 				.then(fs::copyAll)
 				.then(voidResponseFn(), errorResponseFn()))
 			.with(HttpMethod.DELETE, "/" + DELETE + "/*", request ->
 				fs.delete(decodePath(request))
 					.then(voidResponseFn(), errorResponseFn()))
 			.with(POST, "/" + DELETE_ALL, request -> request.loadBody()
-				.map(body -> fromJson(STRING_SET_TYPE, body))
+				.map(body -> fromJsonBytes(ofSet(ofString()), body.getArray()))
 				.then(fs::deleteAll)
 				.then(voidResponseFn(), errorResponseFn()))
 			.build();
@@ -244,7 +243,7 @@ public final class FileSystemServlet {
 	private static AsyncFunction<Exception, HttpResponse> errorResponseFn() {
 		return e -> HttpResponse.ofCode(500)
 			.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-			.withBody(toJson(FileSystemException.class, castError(e)))
+			.withBody(toJsonBytes(ofFileSystemException(), castError(e)))
 			.toPromise();
 	}
 
@@ -257,10 +256,11 @@ public final class FileSystemServlet {
 	private static AsyncFunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
 		return consumer -> HttpResponse.ok200()
 			.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-			.withBodyStream(ChannelSuppliers.ofPromise(request.takeBodyStream()
-				.streamTo(consumer)
-				.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
-				.map(ack -> ChannelSuppliers.ofValue(toJson(ack)))))
+			.withBodyStream(ChannelSuppliers.ofPromise(
+				request.takeBodyStream()
+					.streamTo(consumer)
+					.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
+					.map(ack -> ChannelSuppliers.ofValue(ByteBuf.wrapForReading(toJsonBytes(ofUploadAcknowledgement(), ack))))))
 			.toPromise();
 	}
 

@@ -18,13 +18,12 @@ package io.activej.launchers.crdt;
 
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataBinarySerializer;
-
-import java.lang.reflect.Type;
+import io.activej.json.JsonCodec;
 
 public record CrdtDescriptor<K extends Comparable<K>, S>(
 	CrdtFunction<S> crdtFunction,
 	CrdtDataBinarySerializer<K, S> serializer,
-	Type keyManifest,
-	Type stateManifest
+	JsonCodec<K> keyJsonCodec,
+	JsonCodec<S> stateJsonCodec
 ) {
 }

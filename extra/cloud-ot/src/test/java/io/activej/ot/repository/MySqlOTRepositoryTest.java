@@ -2,13 +2,10 @@ package io.activej.ot.repository;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonWriter;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpOTState;
 import io.activej.ot.utils.TestSet;
@@ -34,7 +31,6 @@ import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -57,7 +53,7 @@ public class MySqlOTRepositoryTest {
 	public void before() throws IOException, SQLException {
 		repository = MySqlOTRepository.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
 			AsyncSupplier.of(id::inc),
-			createTestOp(), TestOp.class);
+			createTestOp(), TEST_OP_CODEC);
 		repository.initialize();
 		repository.truncateTables();
 	}
@@ -71,36 +67,6 @@ public class MySqlOTRepositoryTest {
 		TestOpOTState testOpState = new TestOpOTState();
 		testOps.forEach(testOpState::apply);
 		return testOpState.getValue();
-	}
-
-	@Test
-	public void testJson() throws IOException {
-		{
-			TestAdd testAdd = new TestAdd(1);
-			String json = toJson(testAdd);
-			TestOp testAdd2 = fromJson(json);
-			assertEquals(testAdd, testAdd2);
-		}
-
-		{
-			TestSet testSet = new TestSet(0, 4);
-			String json = toJson(testSet);
-			TestOp testSet2 = fromJson(json);
-			assertEquals(testSet, testSet2);
-		}
-	}
-
-	private static final DslJson<?> DSL_JSON = new DslJson<>();
-
-	private static String toJson(TestOp op) throws IOException {
-		JsonWriter jsonWriter = DSL_JSON.newWriter();
-		DSL_JSON.serialize(jsonWriter, op);
-		return jsonWriter.toString();
-	}
-
-	private static TestOp fromJson(String json) throws IOException {
-		byte[] bytes = json.getBytes(UTF_8);
-		return DSL_JSON.deserialize(TestOp.class, bytes, bytes.length);
 	}
 
 	@Test

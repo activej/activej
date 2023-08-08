@@ -21,7 +21,7 @@ public final class FileSystemIOException extends FileSystemException {
 		super(message);
 	}
 
-	FileSystemIOException(String message, boolean withStack) {
+	public FileSystemIOException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

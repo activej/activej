@@ -50,6 +50,7 @@
     <module>util-common</module>
     <module>util-types</module>
     <module>util-state</module>
+    <module>util-json-codec</module>
     <module>test</module>
 
     <module>extra/cloud-dataflow</module>
@@ -312,9 +313,6 @@
         <configuration>
           <source>17</source>
           <target>17</target>
-          <compilerArgs>
-            <arg>-Adsljson.generatedmarker</arg>
-          </compilerArgs>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>

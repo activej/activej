@@ -16,35 +16,19 @@
 
 package io.activej.cube;
 
-import com.dslplatform.json.DslJson;
-import com.dslplatform.json.DslJson.ConverterFactory;
-import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.ParsingException;
-import com.dslplatform.json.runtime.Settings;
-import io.activej.aggregation.fieldtype.JsonCodecs;
-import io.activej.aggregation.util.JsonCodec;
-import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.attributes.IAttributeResolver.AttributesFunction;
 import io.activej.cube.attributes.IAttributeResolver.KeyFunction;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
-import io.activej.types.Primitives;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.time.LocalDate;
 import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 
 public final class Utils {
@@ -144,100 +128,4 @@ public final class Utils {
 			.collect(toSet());
 	}
 
-	public static final DslJson<?> CUBE_DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
-
-	static {
-		registerCodec(byte.class, JsonCodecs.ofByte());
-		registerCodec(short.class, JsonCodecs.ofShort());
-		registerCodec(int.class, JsonCodecs.ofInteger());
-		registerCodec(long.class, JsonCodecs.ofLong());
-		registerCodec(float.class, JsonCodecs.ofFloat());
-		registerCodec(double.class, JsonCodecs.ofDouble());
-		registerCodec(boolean.class, JsonCodecs.ofBoolean());
-		registerCodec(char.class, JsonCodecs.ofCharacter());
-		registerCodec(String.class, JsonCodecs.ofString());
-		registerCodec(LocalDate.class, JsonCodecs.ofLocalDate());
-		registerFactory(new EnumConverterFactory());
-	}
-
-	public static <T> void registerCodec(Class<T> cls, JsonCodec<T> codec) {
-		CUBE_DSL_JSON.registerReader(cls, codec);
-		CUBE_DSL_JSON.registerWriter(cls, codec);
-		if (cls.isPrimitive()) {
-			registerCodec(Primitives.wrap(cls), codec);
-		}
-	}
-
-	public static void registerFactory(ConverterFactory<JsonCodec<?>> converterFactory) {
-		CUBE_DSL_JSON.registerReaderFactory(converterFactory);
-		CUBE_DSL_JSON.registerWriterFactory(converterFactory);
-	}
-
-	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newWriter);
-	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newReader);
-
-	@SuppressWarnings("unchecked")
-	public static JsonCodec<Object> getJsonCodec(DslJson<?> dslJson, Type type) {
-		JsonReader.ReadObject<Object> readObject = (JsonReader.ReadObject<Object>) dslJson.tryFindReader(type);
-		if (readObject == null) {
-			throw new IllegalArgumentException("Cannot serialize " + type);
-		}
-		JsonWriter.WriteObject<Object> writeObject = (JsonWriter.WriteObject<Object>) dslJson.tryFindWriter(type);
-		if (writeObject == null) {
-			throw new IllegalArgumentException("Cannot deserialize " + type);
-		}
-		return JsonCodec.of(readObject, writeObject);
-	}
-
-	public static <T> String toJson(JsonWriter.WriteObject<T> writeObject, @Nullable T object) {
-		return toJsonWriter(writeObject, object).toString();
-	}
-
-	public static <T> ByteBuf toJsonBuf(JsonWriter.WriteObject<T> writeObject, @Nullable T object) {
-		return ByteBuf.wrapForReading(toJsonWriter(writeObject, object).toByteArray());
-	}
-
-	private static <T> JsonWriter toJsonWriter(JsonWriter.WriteObject<T> writeObject, @Nullable T object) {
-		JsonWriter jsonWriter = WRITERS.get();
-		jsonWriter.reset();
-		writeObject.write(jsonWriter, object);
-		return jsonWriter;
-	}
-
-	public static <T> T fromJson(JsonReader.ReadObject<T> readObject, ByteBuf jsonBuf) throws MalformedDataException {
-		return fromJson(readObject, jsonBuf.getArray());
-	}
-
-	public static <T> T fromJson(JsonReader.ReadObject<T> readObject, String json) throws MalformedDataException {
-		return fromJson(readObject, json.getBytes(UTF_8));
-	}
-
-	private static <T> T fromJson(JsonReader.ReadObject<T> readObject, byte[] bytes) throws MalformedDataException {
-		JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
-		try {
-			jsonReader.getNextToken();
-			T deserialized = readObject.read(jsonReader);
-			if (jsonReader.length() != jsonReader.getCurrentIndex()) {
-				String unexpectedData = jsonReader.toString().substring(jsonReader.getCurrentIndex());
-				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
-			}
-			return deserialized;
-		} catch (ParsingException e) {
-			throw new MalformedDataException(e);
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
-	}
-
-	private static final class EnumConverterFactory implements ConverterFactory<JsonCodec<?>> {
-		@SuppressWarnings("NullableProblems")
-		@Override
-		public JsonCodec<?> tryCreate(Type manifest, DslJson dslJson) {
-			if (manifest instanceof Class && ((Class<?>) manifest).isEnum()) {
-				//noinspection unchecked,rawtypes
-				return JsonCodecs.ofEnum(((Class) manifest));
-			}
-			return null;
-		}
-	}
 }

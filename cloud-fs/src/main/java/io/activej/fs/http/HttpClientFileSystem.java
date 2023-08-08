@@ -25,7 +25,6 @@ import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
-import io.activej.fs.exception.FileSystemException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -40,11 +39,12 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
 import static io.activej.csp.process.transformer.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FileSystemCommand.*;
-import static io.activej.fs.util.JsonUtils.fromJson;
-import static io.activej.fs.util.JsonUtils.toJson;
-import static io.activej.fs.util.MessageTypes.STRING_META_MAP_TYPE;
+import static io.activej.fs.json.JsonCodecs.*;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
+import static io.activej.json.JsonCodecs.*;
+import static io.activej.json.JsonUtils.fromJsonBytes;
+import static io.activej.json.JsonUtils.toJsonBytes;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
@@ -123,7 +123,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 					.build())
 			.then(HttpClientFileSystem::checkResponse)
 			.then(response -> response.loadBody())
-			.map(body -> fromJson(STRING_META_MAP_TYPE, body));
+			.map(body -> fromJsonBytes(ofMap(ofFileMetadata()), body.getArray()));
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 				HttpRequest.get(url + UrlBuilder.create().withPath(INFO.path(), name)).build())
 			.then(HttpClientFileSystem::checkResponse)
 			.then(response -> response.loadBody())
-			.map(body -> fromJson(FileMetadata.class, body));
+			.map(body -> fromJsonBytes(ofFileMetadata().nullable(), body.getArray()));
 	}
 
 	@Override
@@ -142,11 +142,11 @@ public final class HttpClientFileSystem extends AbstractReactive
 		return client.request(
 				HttpRequest.get(url + UrlBuilder.create()
 						.withPath(INFO_ALL.path()))
-					.withBody(toJson(names))
+					.withBody(toJsonBytes(ofSet(ofString()), names))
 					.build())
 			.then(HttpClientFileSystem::checkResponse)
 			.then(response -> response.loadBody())
-			.map(body -> fromJson(STRING_META_MAP_TYPE, body));
+			.map(body -> fromJsonBytes(ofMap(ofFileMetadata()), body.getArray()));
 	}
 
 	@Override
@@ -180,7 +180,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 		return client.request(
 				HttpRequest.post(url + UrlBuilder.create()
 						.withPath(MOVE_ALL.path()))
-					.withBody(toJson(sourceToTarget))
+					.withBody(toJsonBytes(ofMap(ofString()), sourceToTarget))
 					.build())
 			.then(HttpClientFileSystem::checkResponse)
 			.toVoid();
@@ -208,7 +208,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 		return client.request(
 				HttpRequest.post(url + UrlBuilder.create()
 						.withPath(COPY_ALL.path()))
-					.withBody(toJson(sourceToTarget))
+					.withBody(toJsonBytes(ofMap(ofString()), sourceToTarget))
 					.build())
 			.then(HttpClientFileSystem::checkResponse)
 			.toVoid();
@@ -232,7 +232,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 		checkInReactorThread(this);
 		return client.request(
 				HttpRequest.post(url + UrlBuilder.create().withPath(DELETE_ALL.path()))
-					.withBody(toJson(toDelete))
+					.withBody(toJsonBytes(ofSet(ofString()), toDelete))
 					.build())
 			.then(HttpClientFileSystem::checkResponse)
 			.toVoid();
@@ -244,7 +244,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 			case 500 -> response.loadBody()
 				.map(body -> {
 					try {
-						throw fromJson(FileSystemException.class, body);
+						throw fromJsonBytes(ofFileSystemException(), body.getArray());
 					} catch (MalformedDataException ignored) {
 						throw HttpError.ofCode(500);
 					}
@@ -277,7 +277,7 @@ public final class HttpClientFileSystem extends AbstractReactive
 						channelPromise.trySet(consumer
 							.transformWith(transformer)
 							.withAcknowledgement(ack -> ack.both(response.loadBody()
-								.map(body -> fromJson(UploadAcknowledgement.class, body))
+								.map(body -> fromJsonBytes(ofUploadAcknowledgement(), body.getArray()))
 								.whenResult(uploadAck -> {
 									if (!uploadAck.isOk()) throw uploadAck.getError();
 								})

@@ -8,6 +8,7 @@ import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
+import io.activej.json.JsonCodecs;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.InMemory;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Persistent;
@@ -50,8 +51,8 @@ public class CrdtNodeLauncherTest {
 						return new CrdtDescriptor<>(
 							CrdtFunction.ignoringTimestamp(Integer::max),
 							new CrdtDataBinarySerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
-							String.class,
-							Integer.class);
+							JsonCodecs.ofString(),
+							JsonCodecs.ofInteger());
 					}
 
 					@Provides

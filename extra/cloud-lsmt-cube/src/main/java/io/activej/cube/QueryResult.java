@@ -63,7 +63,7 @@ public final class QueryResult {
 	public static QueryResult createForMetadata(
 		RecordScheme recordScheme, List<String> attributes, List<String> measures
 	) {
-		return create(recordScheme, attributes, measures, List.of(), List.of(), recordScheme.record(), 0,
+		return new QueryResult(recordScheme, null, null, 0, attributes, measures, null,
 			Map.of(), ReportType.METADATA);
 	}
 

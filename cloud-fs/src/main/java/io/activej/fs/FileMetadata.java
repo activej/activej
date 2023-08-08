@@ -16,8 +16,7 @@
 
 package io.activej.fs;
 
-import com.dslplatform.json.CompiledJson;
-import io.activej.common.exception.InvalidSizeException;
+import io.activej.json.JsonValidationException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -31,6 +30,7 @@ import static io.activej.common.Checks.checkArgument;
  * This is a POJO for holding name, size, timestamp and revision of some file
  */
 public final class FileMetadata {
+
 	public static final Comparator<FileMetadata> COMPARATOR =
 		Comparator.comparingLong(FileMetadata::getSize)
 			.thenComparing(FileMetadata::getTimestamp);
@@ -43,15 +43,14 @@ public final class FileMetadata {
 		this.timestamp = timestamp;
 	}
 
-	@CompiledJson
 	public static FileMetadata of(long size, long timestamp) {
 		checkArgument(size >= 0, "size >= 0");
 		return new FileMetadata(size, timestamp);
 	}
 
-	public static FileMetadata decode(long size, long timestamp) throws InvalidSizeException {
+	public static FileMetadata decode(long size, long timestamp) throws JsonValidationException {
 		if (size < 0) {
-			throw new InvalidSizeException("Size is less than zero");
+			throw new JsonValidationException("Size is less than zero");
 		}
 		return new FileMetadata(size, timestamp);
 	}

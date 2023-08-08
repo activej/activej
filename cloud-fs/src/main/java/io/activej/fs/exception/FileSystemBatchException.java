@@ -28,7 +28,7 @@ public final class FileSystemBatchException extends FileSystemStateException {
 		this.exceptions = exceptions;
 	}
 
-	FileSystemBatchException(Map<String, FileSystemScalarException> exceptions, boolean withStack) {
+	public FileSystemBatchException(Map<String, FileSystemScalarException> exceptions, boolean withStack) {
 		super("Operation failed", withStack);
 		this.exceptions = exceptions;
 	}

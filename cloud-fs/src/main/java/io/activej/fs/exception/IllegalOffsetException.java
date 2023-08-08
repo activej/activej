@@ -21,7 +21,7 @@ public final class IllegalOffsetException extends FileSystemScalarException {
 		super(message);
 	}
 
-	IllegalOffsetException(String message, boolean withStack) {
+	public IllegalOffsetException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

@@ -16,7 +16,6 @@
 
 package io.activej.cube.http;
 
-import com.dslplatform.json.DslJson;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
@@ -27,6 +26,8 @@ import io.activej.cube.exception.CubeException;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
 import io.activej.http.IHttpClient;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecFactory;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,23 +38,23 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.cube.Utils.*;
 import static io.activej.cube.http.Utils.*;
+import static io.activej.json.JsonUtils.fromJsonBytes;
+import static io.activej.json.JsonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class HttpClientCube implements ICube {
 	private static final Logger logger = LoggerFactory.getLogger(HttpClientCube.class);
 
+	private DefiningClassLoader classLoader = DefiningClassLoader.create();
+	private JsonCodecFactory factory = JsonCodecFactory.defaultInstance();
+
 	private final String url;
 	private final IHttpClient httpClient;
-	private QueryResultJsonCodec queryResultCodec;
+	private JsonCodec<QueryResult> queryResultJsonCodec;
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
 	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
-
-	private DslJson<?> dslJson = CUBE_DSL_JSON;
-
-	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
 	private HttpClientCube(IHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
@@ -89,9 +90,9 @@ public final class HttpClientCube implements ICube {
 			return this;
 		}
 
-		public Builder withDslJson(DslJson<?> dslJson) {
+		public Builder withJsonCodecRegistry(JsonCodecFactory factory) {
 			checkNotBuilt(this);
-			HttpClientCube.this.dslJson = dslJson;
+			HttpClientCube.this.factory = factory;
 			return this;
 		}
 
@@ -103,16 +104,16 @@ public final class HttpClientCube implements ICube {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(dslJson, attributeTypes, measureTypes);
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, attributeTypes, measureTypes);
 		}
 		return aggregationPredicateCodec;
 	}
 
-	private QueryResultJsonCodec getQueryResultCodec() {
-		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultJsonCodec.create(dslJson, classLoader, attributeTypes, measureTypes);
+	private JsonCodec<QueryResult> getQueryResultJsonCodec() {
+		if (queryResultJsonCodec == null) {
+			queryResultJsonCodec = QueryResultJsonCodec.create(classLoader, factory, attributeTypes, measureTypes);
 		}
-		return queryResultCodec;
+		return queryResultJsonCodec;
 	}
 
 	@Override
@@ -138,7 +139,7 @@ public final class HttpClientCube implements ICube {
 								"CubeHTTP query failed. Response code: " + response.getCode() +
 								" Body: " + body.getString(UTF_8));
 						}
-						return fromJson(getQueryResultCodec(), body);
+						return fromJsonBytes(getQueryResultJsonCodec(), body.getArray());
 					} catch (MalformedDataException e) {
 						throw new CubeException("Cube HTTP query failed. Invalid data received", e);
 					}

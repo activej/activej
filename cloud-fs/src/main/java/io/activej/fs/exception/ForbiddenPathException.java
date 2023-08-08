@@ -25,7 +25,7 @@ public final class ForbiddenPathException extends FileSystemScalarException {
 		super(message);
 	}
 
-	ForbiddenPathException(String message, boolean withStack) {
+	public ForbiddenPathException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

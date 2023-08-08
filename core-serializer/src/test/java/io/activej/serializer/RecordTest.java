@@ -74,7 +74,7 @@ public class RecordTest {
 		}
 		{
 			var record1 = new GenericRecord<String>(null, 1);
-			BinarySerializer<GenericRecord<String>> serializer = SerializerFactory.defaultInstance().create(DEFINING_CLASS_LOADER, new TypeT<>() {});
+			var serializer = SerializerFactory.defaultInstance().create(DEFINING_CLASS_LOADER, new TypeT<GenericRecord<String>>() {});
 			var record2 = doTest(record1, serializer);
 			Assert.assertEquals(record1, record2);
 		}

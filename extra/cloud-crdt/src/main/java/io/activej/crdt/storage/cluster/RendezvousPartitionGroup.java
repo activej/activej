@@ -1,6 +1,5 @@
 package io.activej.crdt.storage.cluster;
 
-import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.JsonAttribute;
 import io.activej.common.builder.AbstractBuilder;
 
@@ -12,7 +11,6 @@ public final class RendezvousPartitionGroup<P> {
 	private boolean repartition;
 	private boolean active;
 
-	@CompiledJson
 	RendezvousPartitionGroup(Set<P> partitionIds, int replicaCount, boolean repartition, boolean active) {
 		this.partitionIds = partitionIds;
 		this.replicaCount = replicaCount;

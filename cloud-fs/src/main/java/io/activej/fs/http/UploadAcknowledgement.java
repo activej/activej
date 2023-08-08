@@ -16,14 +16,13 @@
 
 package io.activej.fs.http;
 
-import com.dslplatform.json.CompiledJson;
 import io.activej.fs.exception.FileSystemException;
 import org.jetbrains.annotations.Nullable;
 
 public final class UploadAcknowledgement {
+
 	private final @Nullable FileSystemException error;
 
-	@CompiledJson
 	public UploadAcknowledgement(@Nullable FileSystemException error) {
 		this.error = error;
 	}

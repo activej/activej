@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package io.activej.fs.util;
+package io.activej.ot.json;
 
-import io.activej.fs.FileMetadata;
-import io.activej.types.TypeT;
+import io.activej.json.JsonCodec;
+import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 
-import java.util.Map;
-import java.util.Set;
+import static io.activej.json.JsonCodecs.*;
 
-public final class MessageTypes {
-	public static final TypeT<Set<String>> STRING_SET_TYPE = new TypeT<>() {};
-	public static final TypeT<Map<String, String>> STRING_STRING_MAP_TYPE = new TypeT<>() {};
-	public static final TypeT<Map<String, FileMetadata>> STRING_META_MAP_TYPE = new TypeT<>() {};
+public class JsonCodecs {
+
+	public static <K, D> JsonCodec<FetchData<K, D>> ofFetchData(JsonCodec<K> idCodec, JsonCodec<D> diffCodec) {
+		return ofObject(FetchData::new,
+			"id", FetchData::commitId, idCodec,
+			"level", FetchData::level, ofLong(),
+			"diffs", FetchData::diffs, ofList(diffCodec));
+	}
+
 }

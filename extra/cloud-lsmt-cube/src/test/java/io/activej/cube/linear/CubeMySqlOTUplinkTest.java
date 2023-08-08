@@ -1,10 +1,8 @@
 package io.activej.cube.linear;
 
-import com.dslplatform.json.StringConverter;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
@@ -13,6 +11,8 @@ import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogPositionDiff;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
@@ -68,13 +68,10 @@ public class CubeMySqlOTUplinkTest {
 	public void setUp() throws Exception {
 		dataSource = dataSource("test.properties");
 
-		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodec.of(
-			jsonReader -> PrimaryKey.ofArray(jsonReader.readArray(StringConverter.READER, new String[0])),
-			(jsonWriter, primaryKey) -> jsonWriter.serialize((List) List.of(primaryKey.getArray()), StringConverter.WRITER)
-		);
+		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodecs.ofList((JsonCodec<Object>) (JsonCodec) JsonCodecs.ofString())
+			.transform(PrimaryKey::values, PrimaryKey::ofList);
 
-		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofLookUp($ -> primaryKeyCodec);
-		uplink = CubeMySqlOTUplink.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), dataSource, codecs);
+		uplink = CubeMySqlOTUplink.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), dataSource, $ -> primaryKeyCodec);
 
 		initializeUplink(uplink);
 	}

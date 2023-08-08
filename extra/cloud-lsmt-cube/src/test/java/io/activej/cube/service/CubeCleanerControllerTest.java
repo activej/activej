@@ -8,11 +8,9 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.fs.FileSystem;
 import io.activej.ot.OTCommit;
@@ -40,6 +38,8 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 
@@ -84,7 +84,7 @@ public class CubeCleanerControllerTest {
 			.build();
 
 		repository = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
-			OT_SYSTEM, LogDiffCodec.create(CubeDiffJsonCodec.create(cube)));
+			OT_SYSTEM, ofLogDiff(ofCubeDiff(cube)));
 		repository.initialize();
 		repository.truncateTables();
 	}

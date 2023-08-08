@@ -3,6 +3,8 @@ package io.activej.cube.http;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.QueryResult;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecFactory;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.junit.Test;
@@ -11,14 +13,16 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
-import static io.activej.cube.Utils.*;
+import static io.activej.json.JsonUtils.fromJson;
+import static io.activej.json.JsonUtils.toJson;
 import static org.junit.Assert.assertEquals;
 
 public class QueryResultJsonCodecTest {
 
 	@Test
 	public void test() throws MalformedDataException {
-		QueryResultJsonCodec codec = QueryResultJsonCodec.create(CUBE_DSL_JSON, DefiningClassLoader.create(),
+		JsonCodec<QueryResult> codec = QueryResultJsonCodec.create(DefiningClassLoader.create(),
+			JsonCodecFactory.defaultInstance(),
 			Map.of(
 				"campaign", int.class,
 				"site", String.class),

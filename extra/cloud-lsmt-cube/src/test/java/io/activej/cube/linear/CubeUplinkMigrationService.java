@@ -6,16 +6,16 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Utils;
 import io.activej.cube.Cube;
+import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.CubeDiffJsonCodec;
 import io.activej.cube.ot.CubeOT;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
+import io.activej.json.JsonCodec;
 import io.activej.ot.OTAlgorithms;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.repository.MySqlOTRepository;
@@ -36,6 +36,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
@@ -112,13 +114,13 @@ public final class CubeUplinkMigrationService {
 	}
 
 	private AsyncOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
-		LogDiffCodec<CubeDiff> codec = LogDiffCodec.create(CubeDiffJsonCodec.create(cube));
+		JsonCodec<LogDiff<CubeDiff>> codec = ofLogDiff(ofCubeDiff(cube));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
 		return MySqlOTRepository.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
 	}
 
 	private CubeMySqlOTUplink createUplink(DataSource dataSource) {
-		return CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		return CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCube(cube));
 	}
 
 	static Cube.Builder builderOfEmptyCube(Reactor reactor, Executor executor) {

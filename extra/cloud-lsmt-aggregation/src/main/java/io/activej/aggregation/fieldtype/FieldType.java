@@ -16,9 +16,9 @@
 
 package io.activej.aggregation.fieldtype;
 
-import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
+import io.activej.json.JsonCodec;
 import io.activej.serializer.def.SerializerDef;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,19 +31,19 @@ public class FieldType<T> {
 	private final Class<?> internalDataType;
 	private final Type dataType;
 	private final SerializerDef serializer;
-	private final @Nullable JsonCodec<?> internalCodec;
-	private final JsonCodec<T> codec;
+	private final @Nullable JsonCodec<?> internalJsonCodec;
+	private final JsonCodec<T> jsonCodec;
 
-	protected FieldType(Class<T> dataType, SerializerDef serializer, JsonCodec<T> codec) {
-		this(dataType, dataType, serializer, codec, codec);
+	protected FieldType(Class<T> dataType, SerializerDef serializer, JsonCodec<T> jsonCodec) {
+		this(dataType, dataType, serializer, jsonCodec, jsonCodec);
 	}
 
-	protected FieldType(Class<?> internalDataType, Type dataType, SerializerDef serializer, JsonCodec<T> codec, @Nullable JsonCodec<?> internalCodec) {
+	protected FieldType(Class<?> internalDataType, Type dataType, SerializerDef serializer, JsonCodec<T> jsonCodec, @Nullable JsonCodec<?> internalJsonCodec) {
 		this.internalDataType = internalDataType;
 		this.dataType = dataType;
 		this.serializer = serializer;
-		this.internalCodec = internalCodec;
-		this.codec = codec;
+		this.internalJsonCodec = internalJsonCodec;
+		this.jsonCodec = jsonCodec;
 	}
 
 	public final Class<?> getInternalDataType() {
@@ -62,12 +62,12 @@ public class FieldType<T> {
 		return internalValue;
 	}
 
-	public @Nullable JsonCodec<?> getInternalCodec() {
-		return internalCodec;
+	public @Nullable JsonCodec<?> getInternalJsonCodec() {
+		return internalJsonCodec;
 	}
 
-	public JsonCodec<T> getCodec() {
-		return codec;
+	public JsonCodec<T> getJsonCodec() {
+		return jsonCodec;
 	}
 
 	@SuppressWarnings("unchecked")
