@@ -233,7 +233,17 @@ public abstract class Launcher {
 					continue;
 				}
 				logger0.info("Starting Root Service: {}", service);
-				service.start().whenComplete(($, e) -> {
+
+				CompletableFuture<?> startFuture;
+				try {
+					startFuture = service.start();
+				} catch (RuntimeException e) {
+					exceptions.add(e);
+					latch.countDown();
+					continue;
+				}
+
+				startFuture.whenComplete(($, e) -> {
 					synchronized (this) {
 						if (e == null) {
 							startedServices.add(service);
@@ -257,7 +267,17 @@ public abstract class Launcher {
 		CountDownLatch latch = new CountDownLatch(startedServices.size());
 		for (LauncherService service : startedServices) {
 			logger0.info("Stopping Root Service: {}", service);
-			service.stop().whenComplete(($, e) -> {
+
+			CompletableFuture<?> stopFuture;
+			try {
+				stopFuture = service.stop();
+			} catch (RuntimeException e) {
+				logger.error("Stop error in " + service, e);
+				latch.countDown();
+				continue;
+			}
+
+			stopFuture.whenComplete(($, e) -> {
 				if (e != null) {
 					logger.error("Stop error in " + service,
 						(e instanceof CompletionException || e instanceof ExecutionException) && e.getCause() != null ?
