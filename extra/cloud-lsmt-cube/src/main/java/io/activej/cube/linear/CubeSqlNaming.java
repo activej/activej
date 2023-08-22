@@ -74,7 +74,7 @@ public final class CubeSqlNaming {
 			.replace("{backup}", escape(tableRevisionBackup))
 			.replace("{backup_position}", escape(tablePositionBackup))
 			.replace("{backup_chunk}", escape(tableChunkBackup))
-			.replace("{backup_by}", backupBy == null ? "null" : backupBy);
+			.replace("{backup_by}", backupBy == null ? "null" : ('\'' + backupBy + '\''));
 	}
 
 	public static String escape(String name) {
