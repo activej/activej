@@ -173,7 +173,9 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A, Obje
 
 	@Override
 	protected @Nullable JsonDecoder<Object> decoder(String key, int index, A accumulator) throws JsonValidationException {
-		return map.get(key).decoderFn.decoder(key, index, accumulator);
+		Field<T, A, Object> field = map.get(key);
+		if (field == null) throw new JsonValidationException("Key not found: " + key);
+		return field.decoderFn.decoder(key, index, accumulator);
 	}
 
 	@Override

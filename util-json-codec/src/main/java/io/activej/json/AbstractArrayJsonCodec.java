@@ -32,9 +32,9 @@ public abstract class AbstractArrayJsonCodec<T, A, V> implements JsonCodec<T> {
 		Iterator<V> iterator = iterate(item);
 		while (iterator.hasNext()) {
 			V value = iterator.next();
-			if (comma) writer.writeByte(COMMA);
 			JsonEncoder<V> encoder = encoder(i++, item, value);
 			if (encoder == null) continue;
+			if (comma) writer.writeByte(COMMA);
 			encoder.write(writer, value);
 			comma = true;
 		}

@@ -1,6 +1,5 @@
 package io.activej.crdt.storage.cluster;
 
-import com.dslplatform.json.JsonAttribute;
 import io.activej.common.builder.AbstractBuilder;
 
 import java.util.Set;
@@ -65,7 +64,6 @@ public final class RendezvousPartitionGroup<P> {
 		}
 	}
 
-	@JsonAttribute(name = "ids")
 	public Set<P> getPartitionIds() {
 		return partitionIds;
 	}

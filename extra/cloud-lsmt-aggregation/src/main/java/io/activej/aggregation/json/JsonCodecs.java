@@ -68,7 +68,7 @@ public class JsonCodecs {
 		//noinspection unchecked
 		return ObjectJsonCodec.builder(params -> AggregationDiff.of((Set<AggregationChunk>) params[0], (Set<AggregationChunk>) params[1]))
 			.with("added", AggregationDiff::getAddedChunks, chunksCodec)
-			.with("removed", AggregationDiff::getAddedChunks, chunksCodec, Set.of())
+			.with("removed", AggregationDiff::getRemovedChunks, chunksCodec, Set.of())
 			.build();
 	}
 }

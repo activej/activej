@@ -49,7 +49,7 @@ public class JsonUtils {
 				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
 			}
 			return deserialized;
-		} catch (ParsingException e) {
+		} catch (ParsingException | JsonValidationException e) {
 			throw new MalformedDataException(e);
 		} catch (IOException e) {
 			throw new AssertionError(e);

@@ -43,11 +43,11 @@ public abstract class AbstractMapJsonCodec<T, A, V> implements JsonCodec<T> {
 		int i = 0;
 		while (iterator.hasNext()) {
 			JsonMapEntry<V> entry = iterator.next();
-			if (comma) writer.writeByte(COMMA);
 			String key = entry.key;
 			V value = entry.value;
 			JsonEncoder<V> encoder = encoder(key, i++, item, value);
 			if (encoder == null) continue;
+			if (comma) writer.writeByte(COMMA);
 			writer.writeString(key);
 			writer.writeByte(SEMI);
 			encoder.write(writer, value);

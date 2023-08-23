@@ -750,7 +750,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		assertEquals(6, metadata.getRecordScheme().getFields().size());
 		assertEquals(0, metadata.getTotalCount());
-		assertTrue(metadata.getRecords().isEmpty());
+		assertNull(metadata.getRecords());
 		assertTrue(metadata.getFilterAttributes().isEmpty());
 	}
 

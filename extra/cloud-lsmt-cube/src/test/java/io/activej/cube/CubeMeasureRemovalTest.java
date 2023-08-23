@@ -17,6 +17,7 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.FileSystem;
+import io.activej.json.JsonValidationException;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -273,7 +274,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		String expectedMessage;
 		if (testName.equals("OT graph")) {
 			exception = exception.getCause();
-			assertThat(exception, instanceOf(ParsingException.class));
+			assertThat(exception, instanceOf(JsonValidationException.class));
 			expectedMessage = "Unknown fields: [clicks, conversions]";
 		} else {
 			expectedMessage = "Unknown measures [clicks, conversions] in aggregation 'date'";
@@ -334,10 +335,14 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));
+		String expectedMessage;
 		if (testName.equals("OT graph")) {
 			exception = exception.getCause();
-			assertThat(exception, instanceOf(ParsingException.class));
+			assertThat(exception, instanceOf(JsonValidationException.class));
+			expectedMessage = "Key not found: impressionsAggregation";
+		} else {
+			expectedMessage = "Unknown aggregation: impressionsAggregation";
 		}
-		assertEquals("Unknown aggregation: impressionsAggregation", exception.getMessage());
+		assertEquals(expectedMessage, exception.getMessage());
 	}
 }

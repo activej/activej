@@ -28,7 +28,7 @@ public class JsonCodecs {
 				try {
 					return StringFormatUtils.parseInetSocketAddressResolving(string);
 				} catch (MalformedDataException e) {
-					throw new JsonValidationException();
+					throw new JsonValidationException(e.getMessage());
 				}
 			});
 	}
