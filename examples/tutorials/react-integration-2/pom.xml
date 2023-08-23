@@ -35,9 +35,6 @@
         <configuration>
           <source>17</source>
           <target>17</target>
-          <compilerArgs>
-            <arg>-Adsljson.generatedmarker</arg>
-          </compilerArgs>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>

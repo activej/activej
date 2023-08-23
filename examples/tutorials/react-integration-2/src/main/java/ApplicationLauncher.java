@@ -1,17 +1,18 @@
-import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
 import io.activej.http.loader.IStaticLoader;
 import io.activej.inject.annotation.Provides;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecs;
+import io.activej.json.JsonKeyCodec;
+import io.activej.json.JsonUtils;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.reactor.Reactor;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -31,11 +32,6 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 	Executor executor() {
 		return newSingleThreadExecutor();
 	}
-
-	@Provides
-	DslJson<?> dslJson() {
-		return new DslJson<>(Settings.withRuntime());
-	}
 	//[END REGION_1]
 
 	//[START REGION_2]
@@ -45,7 +41,19 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO, DslJson<?> dslJson) {
+	JsonCodec<Record> recordJsonCodec() {
+		return JsonCodecs.ofObject(Record::new,
+			"title", Record::getTitle, JsonCodecs.ofString(),
+			"plans", Record::getPlans, JsonCodecs.ofList(
+				JsonCodecs.ofObject(Plan::new,
+					"text", Plan::getText, JsonCodecs.ofString(),
+					"isComplete", Plan::isComplete, JsonCodecs.ofBoolean())
+			));
+	}
+
+	@Provides
+	AsyncServlet servlet(Reactor reactor, IStaticLoader staticLoader, RecordDAO recordDAO, JsonCodec<Record> recordJsonCodec) {
+		JsonCodec<Map<Integer, Record>> mapJsonCodec = JsonCodecs.ofMap(JsonKeyCodec.ofNumberKey(Integer.class), recordJsonCodec);
 		return RoutingServlet.builder(reactor)
 			.with("/*", StaticServlet.builder(reactor, staticLoader)
 				.withIndexHtml()
@@ -57,23 +65,17 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 					ByteBuf body = request.getBody();
 					try {
 						byte[] bodyBytes = body.getArray();
-						Record record = dslJson.deserialize(Record.class, bodyBytes, bodyBytes.length);
+						Record record = JsonUtils.fromJsonBytes(recordJsonCodec, bodyBytes);
 						recordDAO.add(record);
 						return HttpResponse.ok200().toPromise();
-					} catch (IOException e) {
+					} catch (MalformedDataException e) {
 						return HttpResponse.ofCode(400).toPromise();
 					}
 				}))
 			.with(GET, "/get/all", request -> {
 				Map<Integer, Record> records = recordDAO.findAll();
-				JsonWriter writer = dslJson.newWriter();
-				try {
-					dslJson.serialize(writer, records);
-				} catch (IOException e) {
-					throw new AssertionError(e);
-				}
 				return HttpResponse.ok200()
-					.withJson(writer.toString())
+					.withJson(JsonUtils.toJson(mapJsonCodec, records))
 					.toPromise();
 			})
 			//[START REGION_4]

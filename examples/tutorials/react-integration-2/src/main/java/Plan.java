@@ -1,7 +1,4 @@
-import com.dslplatform.json.CompiledJson;
-
 //[START EXAMPLE]
-@CompiledJson
 public final class Plan {
 	private String text;
 	private boolean complete;
