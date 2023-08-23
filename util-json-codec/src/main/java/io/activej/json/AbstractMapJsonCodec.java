@@ -11,11 +11,8 @@ import java.util.Map;
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.common.Checks.checkNotNull;
 
-@SuppressWarnings("unchecked")
-public abstract class AbstractMapJsonCodec<T, A> implements JsonCodec<T> {
+public abstract class AbstractMapJsonCodec<T, A, V> implements JsonCodec<T> {
 	public record JsonMapEntry<V>(String key, V value) {
-		public JsonMapEntry {}
-
 		public static <V> JsonMapEntry<V> of(Map.Entry<String, V> mapEntry) {
 			return new JsonMapEntry<>(mapEntry.getKey(), mapEntry.getValue());
 		}
@@ -25,15 +22,15 @@ public abstract class AbstractMapJsonCodec<T, A> implements JsonCodec<T> {
 		}
 	}
 
-	protected abstract Iterator<JsonMapEntry<?>> iterate(T item);
+	protected abstract Iterator<JsonMapEntry<V>> iterate(T item);
 
-	protected abstract @Nullable JsonEncoder<?> encoder(String key, int index, T item, Object value);
+	protected abstract @Nullable JsonEncoder<V> encoder(String key, int index, T item, V value);
 
-	protected abstract @Nullable JsonDecoder<?> decoder(String key, int index, A accumulator) throws JsonValidationException;
+	protected abstract @Nullable JsonDecoder<V> decoder(String key, int index, A accumulator) throws JsonValidationException;
 
 	protected abstract A accumulator();
 
-	protected abstract void accumulate(A accumulator, String key, int index, Object value) throws JsonValidationException;
+	protected abstract void accumulate(A accumulator, String key, int index, V value) throws JsonValidationException;
 
 	protected abstract T result(A accumulator, int count) throws JsonValidationException;
 
@@ -42,14 +39,14 @@ public abstract class AbstractMapJsonCodec<T, A> implements JsonCodec<T> {
 		checkNotNull(item);
 		writer.writeByte(OBJECT_START);
 		boolean comma = false;
-		Iterator<JsonMapEntry<?>> iterator = iterate(item);
+		Iterator<JsonMapEntry<V>> iterator = iterate(item);
 		int i = 0;
 		while (iterator.hasNext()) {
-			JsonMapEntry<?> entry = iterator.next();
+			JsonMapEntry<V> entry = iterator.next();
 			if (comma) writer.writeByte(COMMA);
 			String key = entry.key;
-			Object value = entry.value;
-			JsonEncoder<Object> encoder = (JsonEncoder<Object>) encoder(key, i++, item, value);
+			V value = entry.value;
+			JsonEncoder<V> encoder = encoder(key, i++, item, value);
 			if (encoder == null) continue;
 			writer.writeString(key);
 			writer.writeByte(SEMI);
@@ -67,12 +64,12 @@ public abstract class AbstractMapJsonCodec<T, A> implements JsonCodec<T> {
 		if (reader.getNextToken() != OBJECT_END) {
 			while (true) {
 				String key = reader.readKey();
-				JsonDecoder<Object> decoder = (JsonDecoder<Object>) decoder(key, i, accumulator);
+				JsonDecoder<V> decoder = decoder(key, i, accumulator);
 				if (decoder == null) {
 					reader.skip();
 					continue;
 				}
-				Object value = decoder.read(reader);
+				V value = decoder.read(reader);
 				accumulate(accumulator, key, i++, value);
 				if (reader.getNextToken() != COMMA) break;
 				reader.getNextToken();

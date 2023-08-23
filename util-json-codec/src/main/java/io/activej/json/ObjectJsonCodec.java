@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Utils.*;
 
 @SuppressWarnings("unchecked")
-public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
+public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A, Object> {
 
 	public interface JsonCodecProvider<T, A, V> extends JsonEncoderProvider<T, V>, JsonDecoderProvider<A, V> {
 	}
@@ -40,11 +40,11 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 	private final Supplier<A> accumulatorSupplier;
 
 	private final Field<T, A, ?>[] fields;
-	private final Map<String, Field<T, A, ?>> map;
+	private final Map<String, Field<T, A, Object>> map;
 	private final JsonFunction<A, T> constructor;
 
 	private ObjectJsonCodec(Supplier<A> accumulatorSupplier, JsonFunction<A, T> constructor,
-		Field<T, A, ?>[] fields, Map<String, Field<T, A, ?>> map
+		Field<T, A, Object>[] fields, Map<String, Field<T, A, Object>> map
 	) {
 		this.accumulatorSupplier = accumulatorSupplier;
 		this.constructor = constructor;
@@ -63,7 +63,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 	public static class BuilderObject<T, A> extends AbstractBuilder<BuilderObject<T, A>, ObjectJsonCodec<T, A>> {
 		private final Supplier<A> accumulatorSupplier;
 		private final JsonFunction<A, T> constructor;
-		private final List<Field<T, A, ?>> fields = new ArrayList<>();
+		private final List<Field<T, A, Object>> fields = new ArrayList<>();
 
 		public BuilderObject(Supplier<A> accumulatorSupplier, JsonFunction<A, T> constructor) {
 			this.accumulatorSupplier = accumulatorSupplier;
@@ -89,7 +89,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 			JsonEncoderProvider<T, V> encoderFn, JsonDecoderProvider<A, V> decoderFn
 		) {
 			Field<T, A, V> field = new Field<>(fields.size(), key, getter, setter, encoderFn, decoderFn);
-			fields.add(field);
+			fields.add((Field<T, A, Object>) field);
 			return this;
 		}
 
@@ -105,7 +105,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 
 	public static final class BuilderArray<T> extends AbstractBuilder<BuilderArray<T>, ObjectJsonCodec<T, Object[]>> {
 		private static final Object NO_DEFAULT_VALUE = new Object();
-		private final List<Field<T, Object[], ?>> fields = new ArrayList<>();
+		private final List<Field<T, Object[], Object>> fields = new ArrayList<>();
 		private final JsonConstructorN<T> constructor;
 
 		private final List<Object> prototype = new ArrayList<>();
@@ -119,7 +119,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 				(array, value) -> array[index] = value,
 				JsonEncoderProvider.of(codec),
 				JsonDecoderProvider.of(codec));
-			fields.add(field);
+			fields.add((Field<T, Object[], Object>) field);
 			prototype.add(NO_DEFAULT_VALUE);
 			return this;
 		}
@@ -131,7 +131,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 				(array, value) -> array[index] = value,
 				(key_, index_, item, value) -> Objects.equals(defaultValue, value) ? null : codec,
 				JsonDecoderProvider.of(codec));
-			fields.add(field);
+			fields.add((Field<T, Object[], Object>) field);
 			prototype.add(defaultValue);
 			return this;
 		}
@@ -162,17 +162,17 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 	}
 
 	@Override
-	protected Iterator<JsonMapEntry<?>> iterate(T item) {
+	protected Iterator<JsonMapEntry<Object>> iterate(T item) {
 		return transformIterator(iteratorOf(fields), field -> new JsonMapEntry<>(field.key, field.getter.apply(item)));
 	}
 
 	@Override
-	protected @Nullable JsonEncoder<?> encoder(String key, int index, T item, Object value) {
+	protected @Nullable JsonEncoder<Object> encoder(String key, int index, T item, Object value) {
 		return ((JsonEncoderProvider<T, Object>) fields[index].encoderFn).encoder(key, index, item, value);
 	}
 
 	@Override
-	protected @Nullable JsonDecoder<?> decoder(String key, int index, A accumulator) throws JsonValidationException {
+	protected @Nullable JsonDecoder<Object> decoder(String key, int index, A accumulator) throws JsonValidationException {
 		return map.get(key).decoderFn.decoder(key, index, accumulator);
 	}
 
@@ -183,7 +183,7 @@ public final class ObjectJsonCodec<T, A> extends AbstractMapJsonCodec<T, A> {
 
 	@Override
 	protected void accumulate(A accumulator, String key, int index, Object value) throws JsonValidationException {
-		((JsonSetter<A, Object>) map.get(key).setter).set(accumulator, value);
+		map.get(key).setter.set(accumulator, value);
 	}
 
 	@Override

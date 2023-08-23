@@ -10,16 +10,16 @@ import java.util.Iterator;
 import static com.dslplatform.json.JsonWriter.*;
 import static io.activej.common.Checks.checkNotNull;
 
-public abstract class AbstractArrayJsonCodec<T, A> implements JsonCodec<T> {
-	protected abstract Iterator<?> iterate(T item);
+public abstract class AbstractArrayJsonCodec<T, A, V> implements JsonCodec<T> {
+	protected abstract Iterator<V> iterate(T item);
 
-	protected abstract @Nullable JsonEncoder<?> encoder(int index, T item, Object value);
+	protected abstract @Nullable JsonEncoder<V> encoder(int index, T item, V value);
 
-	protected abstract @Nullable JsonDecoder<?> decoder(int index, A accumulator) throws JsonValidationException;
+	protected abstract @Nullable JsonDecoder<V> decoder(int index, A accumulator) throws JsonValidationException;
 
 	protected abstract A accumulator();
 
-	protected abstract void accumulate(A accumulator, int index, Object value) throws JsonValidationException;
+	protected abstract void accumulate(A accumulator, int index, V value) throws JsonValidationException;
 
 	protected abstract T result(A accumulator, int count) throws JsonValidationException;
 
@@ -29,12 +29,11 @@ public abstract class AbstractArrayJsonCodec<T, A> implements JsonCodec<T> {
 		writer.writeByte(ARRAY_START);
 		boolean comma = false;
 		int i = 0;
-		Iterator<?> iterator = iterate(item);
+		Iterator<V> iterator = iterate(item);
 		while (iterator.hasNext()) {
-			Object value = iterator.next();
+			V value = iterator.next();
 			if (comma) writer.writeByte(COMMA);
-			//noinspection unchecked
-			JsonEncoder<Object> encoder = (JsonEncoder<Object>) encoder(i++, item, value);
+			JsonEncoder<V> encoder = encoder(i++, item, value);
 			if (encoder == null) continue;
 			encoder.write(writer, value);
 			comma = true;
@@ -49,12 +48,12 @@ public abstract class AbstractArrayJsonCodec<T, A> implements JsonCodec<T> {
 		int i = 0;
 		if (reader.getNextToken() != ARRAY_END) {
 			while (true) {
-				JsonDecoder<?> decoder = decoder(i, accumulator);
+				JsonDecoder<V> decoder = decoder(i, accumulator);
 				if (decoder == null) {
 					reader.skip();
 					continue;
 				}
-				Object value = decoder.read(reader);
+				V value = decoder.read(reader);
 				accumulate(accumulator, i++, value);
 				if (reader.getNextToken() != COMMA) break;
 				reader.getNextToken();

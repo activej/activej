@@ -91,28 +91,28 @@ public final class QueryResultJsonCodec {
 			return recordScheme;
 		}
 
-		void setMetadata(Metadata metadata) throws JsonValidationException {
+		void setMetadata(Metadata metadata) {
 			this.attributes = metadata.attributes;
 			this.measures = metadata.measures;
 		}
 
-		public void setFilterAttributes(Map<String, ?> filterAttributes) throws JsonValidationException {
+		public void setFilterAttributes(Map<String, ?> filterAttributes) {
 			this.filterAttributes = (Map<String, Object>) filterAttributes;
 		}
 
-		public void setSortedBy(List<String> sortedBy) throws JsonValidationException {
+		public void setSortedBy(List<String> sortedBy) {
 			this.sortedBy = sortedBy;
 		}
 
-		public void setTotalCount(Integer totalCount) throws JsonValidationException {
+		public void setTotalCount(Integer totalCount) {
 			this.totalCount = totalCount;
 		}
 
-		public void setRecords(List<Record> records) throws JsonValidationException {
+		public void setRecords(List<Record> records) {
 			this.records = records;
 		}
 
-		public void setTotals(Record totals) throws JsonValidationException {
+		public void setTotals(Record totals) {
 			this.totals = totals;
 		}
 
@@ -169,7 +169,7 @@ public final class QueryResultJsonCodec {
 			}
 
 			@Override
-			public @Nullable JsonCodec<V> decoder(String key, int index, QueryResultBuilder accumulator) throws JsonValidationException {
+			public @Nullable JsonCodec<V> decoder(String key, int index, QueryResultBuilder accumulator) {
 				return codec;
 			}
 		};
@@ -198,7 +198,8 @@ public final class QueryResultJsonCodec {
 		return new Metadata(queryResult.getAttributes(), queryResult.getMeasures());
 	}
 
-	static AbstractArrayJsonCodec<Record, Record> createRecordJsonCodec(RecordScheme recordScheme,
+	@SuppressWarnings("unchecked")
+	static AbstractArrayJsonCodec<Record, Record, Object> createRecordJsonCodec(RecordScheme recordScheme,
 		Function<String, @Nullable JsonCodec<?>> codecFn
 	) {
 		List<@Nullable JsonCodec<?>> codecs = recordScheme.getFields().stream().map(codecFn).toList();
@@ -206,19 +207,19 @@ public final class QueryResultJsonCodec {
 		JsonDecoder<?>[] decoders = codecs.stream().filter(Objects::nonNull).toList().toArray(JsonCodec[]::new);
 		return new AbstractArrayJsonCodec<>() {
 			@Override
-			protected Iterator<?> iterate(Record item) {
+			protected Iterator<Object> iterate(Record item) {
 				return item.iterate();
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(int index, Record item, Object value) {
-				return encoders[index];
+			protected @Nullable JsonEncoder<Object> encoder(int index, Record item, Object value) {
+				return (JsonEncoder<Object>) encoders[index];
 			}
 
 			@Override
-			protected JsonDecoder<?> decoder(int index, Record accumulator) throws JsonValidationException {
+			protected JsonDecoder<Object> decoder(int index, Record accumulator) throws JsonValidationException {
 				if (index >= decoders.length) throw new JsonValidationException();
-				return checkNotNull(decoders[index]);
+				return (JsonDecoder<Object>) checkNotNull(decoders[index]);
 			}
 
 			@Override
@@ -227,7 +228,7 @@ public final class QueryResultJsonCodec {
 			}
 
 			@Override
-			protected void accumulate(Record accumulator, int index, Object value) throws JsonValidationException {
+			protected void accumulate(Record accumulator, int index, Object value) {
 				accumulator.set(index, value);
 			}
 

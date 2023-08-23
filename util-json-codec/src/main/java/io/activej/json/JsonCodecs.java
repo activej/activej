@@ -234,12 +234,12 @@ public class JsonCodecs {
 	}
 
 	static JsonCodec<Map<String, ?>> ofMapObject(Map<String, JsonCodec<?>> codecs) {
-		return new AbstractMapJsonCodec<Map<String, ?>, LinkedHashMap<String, Object>>() {
+		return new AbstractMapJsonCodec<Map<String, ?>, LinkedHashMap<String, Object>, Object>() {
 			@Override
-			protected Iterator<JsonMapEntry<?>> iterate(Map<String, ?> item) {
+			protected Iterator<JsonMapEntry<Object>> iterate(Map<String, ?> item) {
 				checkArgument(item.size() == codecs.size());
 				return item instanceof LinkedHashMap || !(codecs instanceof LinkedHashMap) ?
-					transformIterator(item.entrySet().iterator(), JsonMapEntry::of) :
+					transformIterator(item.entrySet().iterator(), entry -> (JsonMapEntry<Object>) JsonMapEntry.of(entry)) :
 					transformIterator(codecs.keySet().iterator(), key -> {
 						checkArgument(item.containsKey(key));
 						return new JsonMapEntry<>(key, item.get(key));
@@ -247,15 +247,15 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(String key, int index, Map<String, ?> item, Object value) {
-				return codecs.get(key);
+			protected @Nullable JsonEncoder<Object> encoder(String key, int index, Map<String, ?> item, Object value) {
+				return (JsonEncoder<Object>) codecs.get(key);
 			}
 
 			@Override
-			protected @Nullable JsonDecoder<?> decoder(String key, int index, LinkedHashMap<String, Object> accumulator) throws JsonValidationException {
+			protected @Nullable JsonDecoder<Object> decoder(String key, int index, LinkedHashMap<String, Object> accumulator) throws JsonValidationException {
 				JsonCodec<?> codec = codecs.get(key);
 				if (codec == null) throw new JsonValidationException("Key not found: " + key);
-				return codec;
+				return (JsonDecoder<Object>) codec;
 			}
 
 			@Override
@@ -278,14 +278,14 @@ public class JsonCodecs {
 	}
 
 	public static <V> JsonCodec<Map<String, V>> ofMap(Function<String, JsonCodec<V>> codecsFn) {
-		return new AbstractMapJsonCodec<Map<String, V>, LinkedHashMap<String, V>>() {
+		return new AbstractMapJsonCodec<Map<String, V>, LinkedHashMap<String, V>, V>() {
 			@Override
-			protected Iterator<JsonMapEntry<?>> iterate(Map<String, V> item) {
+			protected Iterator<JsonMapEntry<V>> iterate(Map<String, V> item) {
 				return transformIterator(item.entrySet().iterator(), JsonMapEntry::of);
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<V> encoder(String key, int index, Map<String, V> item, Object value) {
+			protected @Nullable JsonEncoder<V> encoder(String key, int index, Map<String, V> item, V value) {
 				return codecsFn.apply(key);
 			}
 
@@ -302,31 +302,31 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected void accumulate(LinkedHashMap<String, V> accumulator, String key, int index, Object value) throws JsonValidationException {
-				accumulator.put(key, (V) value);
+			protected void accumulate(LinkedHashMap<String, V> accumulator, String key, int index, V value) {
+				accumulator.put(key, value);
 			}
 
 			@Override
-			protected Map<String, V> result(LinkedHashMap<String, V> accumulator, int count) throws JsonValidationException {
+			protected Map<String, V> result(LinkedHashMap<String, V> accumulator, int count) {
 				return accumulator;
 			}
 		};
 	}
 
 	public static <T> JsonCodec<T[]> ofArray(JsonCodec<T> codec, Supplier<T[]> supplier) {
-		return new AbstractArrayJsonCodec<T[], T[]>() {
+		return new AbstractArrayJsonCodec<T[], T[], T>() {
 			@Override
-			protected Iterator<?> iterate(T[] item) {
+			protected Iterator<T> iterate(T[] item) {
 				return Arrays.asList(item).iterator();
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(int index, T[] item, Object value) {
+			protected @Nullable JsonEncoder<T> encoder(int index, T[] item, T value) {
 				return codec;
 			}
 
 			@Override
-			protected @Nullable JsonDecoder<?> decoder(int index, T[] accumulator) throws JsonValidationException {
+			protected @Nullable JsonDecoder<T> decoder(int index, T[] accumulator) {
 				return codec;
 			}
 
@@ -336,10 +336,9 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected void accumulate(T[] accumulator, int index, Object value) throws JsonValidationException {
+			protected void accumulate(T[] accumulator, int index, T value) throws JsonValidationException {
 				if (index >= accumulator.length) throw new JsonValidationException();
-				//noinspection unchecked
-				accumulator[index] = (T) value;
+				accumulator[index] = value;
 			}
 
 			@Override
@@ -351,19 +350,19 @@ public class JsonCodecs {
 	}
 
 	public static <T> JsonCodec<List<T>> ofList(JsonCodec<T> codec) {
-		return new AbstractArrayJsonCodec<List<T>, ArrayList<T>>() {
+		return new AbstractArrayJsonCodec<List<T>, ArrayList<T>, T>() {
 			@Override
-			protected Iterator<?> iterate(List<T> item) {
+			protected Iterator<T> iterate(List<T> item) {
 				return item.iterator();
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(int index, List<T> item, Object value) {
+			protected @Nullable JsonEncoder<T> encoder(int index, List<T> item, T value) {
 				return codec;
 			}
 
 			@Override
-			protected @Nullable JsonDecoder<?> decoder(int index, ArrayList<T> accumulator) throws JsonValidationException {
+			protected @Nullable JsonDecoder<T> decoder(int index, ArrayList<T> accumulator) {
 				return codec;
 			}
 
@@ -373,32 +372,31 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected void accumulate(ArrayList<T> accumulator, int index, Object value) throws JsonValidationException {
-				//noinspection unchecked
-				accumulator.add((T) value);
+			protected void accumulate(ArrayList<T> accumulator, int index, T value) {
+				accumulator.add(value);
 			}
 
 			@Override
-			protected List<T> result(ArrayList<T> accumulator, int count) throws JsonValidationException {
+			protected List<T> result(ArrayList<T> accumulator, int count) {
 				return accumulator;
 			}
 		};
 	}
 
 	public static <T> JsonCodec<Set<T>> ofSet(JsonCodec<T> codec) {
-		return new AbstractArrayJsonCodec<Set<T>, LinkedHashSet<T>>() {
+		return new AbstractArrayJsonCodec<Set<T>, LinkedHashSet<T>, T>() {
 			@Override
-			protected Iterator<?> iterate(Set<T> item) {
+			protected Iterator<T> iterate(Set<T> item) {
 				return item.iterator();
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(int index, Set<T> item, Object value) {
+			protected @Nullable JsonEncoder<T> encoder(int index, Set<T> item, T value) {
 				return codec;
 			}
 
 			@Override
-			protected @Nullable JsonDecoder<?> decoder(int index, LinkedHashSet<T> accumulator) throws JsonValidationException {
+			protected @Nullable JsonDecoder<T> decoder(int index, LinkedHashSet<T> accumulator) {
 				return codec;
 			}
 
@@ -408,35 +406,35 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected void accumulate(LinkedHashSet<T> accumulator, int index, Object value) throws JsonValidationException {
-				if (accumulator.contains((T) value)) throw new JsonValidationException();
-				accumulator.add((T) value);
+			protected void accumulate(LinkedHashSet<T> accumulator, int index, T value) throws JsonValidationException {
+				if (accumulator.contains(value)) throw new JsonValidationException();
+				accumulator.add(value);
 			}
 
 			@Override
-			protected Set<T> result(LinkedHashSet<T> accumulator, int count) throws JsonValidationException {
+			protected Set<T> result(LinkedHashSet<T> accumulator, int count) {
 				return accumulator;
 			}
 		};
 	}
 
 	public static JsonCodec<Object[]> ofArrayObject(JsonCodec<?>... codecs) {
-		return new AbstractArrayJsonCodec<Object[], Object[]>() {
+		return new AbstractArrayJsonCodec<Object[], Object[], Object>() {
 			@Override
-			protected Iterator<?> iterate(Object[] item) {
+			protected Iterator<Object> iterate(Object[] item) {
 				checkArgument(item.length == codecs.length);
 				return Arrays.asList(item).iterator();
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(int index, Object[] item, Object value) {
-				return codecs[index];
+			protected @Nullable JsonEncoder<Object> encoder(int index, Object[] item, Object value) {
+				return (JsonEncoder<Object>) codecs[index];
 			}
 
 			@Override
-			protected @Nullable JsonDecoder<?> decoder(int index, Object[] accumulator) throws JsonValidationException {
+			protected @Nullable JsonDecoder<Object> decoder(int index, Object[] accumulator) throws JsonValidationException {
 				if (index >= accumulator.length) throw new JsonValidationException();
-				return codecs[index];
+				return (JsonDecoder<Object>) codecs[index];
 			}
 
 			@Override
@@ -445,7 +443,7 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected void accumulate(Object[] accumulator, int index, Object value) throws JsonValidationException {
+			protected void accumulate(Object[] accumulator, int index, Object value) {
 				accumulator[index] = value;
 			}
 
@@ -462,19 +460,19 @@ public class JsonCodecs {
 	}
 
 	public static <K, V> JsonCodec<Map<K, V>> ofMap(JsonKeyCodec<K> keyCodec, JsonCodec<V> codec) {
-		return new AbstractMapJsonCodec<Map<K, V>, LinkedHashMap<K, V>>() {
+		return new AbstractMapJsonCodec<Map<K, V>, LinkedHashMap<K, V>, V>() {
 			@Override
-			protected Iterator<JsonMapEntry<?>> iterate(Map<K, V> item) {
+			protected Iterator<JsonMapEntry<V>> iterate(Map<K, V> item) {
 				return transformIterator(item.entrySet().iterator(), entry -> JsonMapEntry.of(entry, keyCodec));
 			}
 
 			@Override
-			protected @Nullable JsonEncoder<?> encoder(String key, int index, Map<K, V> item, Object value) {
+			protected @Nullable JsonEncoder<V> encoder(String key, int index, Map<K, V> item, V value) {
 				return codec;
 			}
 
 			@Override
-			protected @Nullable JsonDecoder<?> decoder(String key, int index, LinkedHashMap<K, V> accumulator) {
+			protected @Nullable JsonDecoder<V> decoder(String key, int index, LinkedHashMap<K, V> accumulator) {
 				return codec;
 			}
 
@@ -484,9 +482,8 @@ public class JsonCodecs {
 			}
 
 			@Override
-			protected void accumulate(LinkedHashMap<K, V> accumulator, String key, int index, Object value) throws JsonValidationException {
-				//noinspection unchecked
-				accumulator.put(keyCodec.decode(key), (V) value);
+			protected void accumulate(LinkedHashMap<K, V> accumulator, String key, int index, V value) throws JsonValidationException {
+				accumulator.put(keyCodec.decode(key), value);
 			}
 
 			@Override
