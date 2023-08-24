@@ -1,18 +1,41 @@
 package io.activej.serializer.stream;
 
-import java.util.*;
+import io.activej.common.Utils;
 
-import static io.activej.serializer.stream.SizedCollectorsKV.hashInitialSize;
+import java.util.*;
+import java.util.function.IntFunction;
+
+import static io.activej.common.Utils.newHashSet;
 import static java.util.Collections.*;
 
-class SizedCollectors {
-	public static <T> SizedCollector<T, T[], Collection<T>> toCollection() {
+public class SizedCollectors {
+
+	public static <T, C extends Collection<T>> SizedCollector<T, ?, C> toCollection(IntFunction<? extends C> factory) {
+		return new SizedCollector<T, C, C>() {
+			@Override
+			public C accumulator(int size) {
+				return factory.apply(size);
+			}
+
+			@Override
+			public void accumulate(C accumulator, int index, T item) {
+				accumulator.add(item);
+			}
+
+			@Override
+			public C result(C accumulator) {
+				return accumulator;
+			}
+		};
+	}
+
+	public static <T> SizedCollector<T, ?, Collection<T>> toCollection() {
 		//noinspection unchecked,rawtypes
 		return (SizedCollector) SizedCollectors.toList();
 	}
 
-	public static <T> SizedCollector<T, T[], List<T>> toList() {
-		return new SizedCollector<>() {
+	public static <T> SizedCollector<T, ?, List<T>> toList() {
+		return new SizedCollector<T, T[], List<T>>() {
 			@Override
 			public List<T> create0() {
 				return emptyList();
@@ -41,16 +64,16 @@ class SizedCollectors {
 		};
 	}
 
-	public static <T> SizedCollector<T, ArrayList<T>, ArrayList<T>> toArrayList() {
-		return SizedCollector.toCollection(ArrayList::new);
+	public static <T> SizedCollector<T, ?, ArrayList<T>> toArrayList() {
+		return toCollection(ArrayList::new);
 	}
 
-	public static <T> SizedCollector<T, LinkedList<T>, LinkedList<T>> toLinkedList() {
-		return SizedCollector.toCollection($ -> new LinkedList<>());
+	public static <T> SizedCollector<T, ?, LinkedList<T>> toLinkedList() {
+		return toCollection($ -> new LinkedList<>());
 	}
 
-	public static <T> SizedCollector<T, HashSet<T>, Set<T>> toSet() {
-		return new SizedCollector<>() {
+	public static <T> SizedCollector<T, ?, Set<T>> toSet() {
+		return new SizedCollector<T, HashSet<T>, Set<T>>() {
 			@Override
 			public Set<T> create0() {
 				return emptySet();
@@ -63,7 +86,7 @@ class SizedCollectors {
 
 			@Override
 			public HashSet<T> accumulator(int size) {
-				return new HashSet<>(hashInitialSize(size));
+				return newHashSet(size);
 			}
 
 			@Override
@@ -78,16 +101,15 @@ class SizedCollectors {
 		};
 	}
 
-	public static <T> SizedCollector<T, HashSet<T>, HashSet<T>> toHashSet() {
-		return SizedCollector.toCollection(size -> new HashSet<>(hashInitialSize(size)));
+	public static <T> SizedCollector<T, ?, HashSet<T>> toHashSet() {
+		return toCollection(Utils::newHashSet);
 	}
 
-	public static <T> SizedCollector<T, LinkedHashSet<T>, LinkedHashSet<T>> toLinkedHashSet() {
-		return SizedCollector.toCollection(size -> new LinkedHashSet<>(hashInitialSize(size)));
+	public static <T> SizedCollector<T, ?, LinkedHashSet<T>> toLinkedHashSet() {
+		return toCollection(Utils::newLinkedHashSet);
 	}
 
-	public static <T extends Enum<T>> SizedCollector<T, EnumSet<T>, EnumSet<T>> toEnumSet(Class<T> type) {
-		return SizedCollector.toCollection(size -> EnumSet.noneOf(type));
+	public static <T extends Enum<T>> SizedCollector<T, ?, EnumSet<T>> toEnumSet(Class<T> type) {
+		return toCollection(size -> EnumSet.noneOf(type));
 	}
-
 }

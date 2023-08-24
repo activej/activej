@@ -19,6 +19,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.serializer.stream.SizedCollectors.*;
 import static io.activej.serializer.stream.SizedCollectorsKV.*;
 import static io.activej.serializer.util.ZeroArrayUtils.*;
+import static java.util.Objects.requireNonNullElseGet;
 
 @SuppressWarnings("unused")
 @StaticFactories(StreamCodec.class)
@@ -586,11 +587,11 @@ public class StreamCodecs {
 		};
 	}
 
-	private static <T, C extends Collection<T>> StreamCodec<C> ofCollection(StreamCodec<T> itemCodec, SizedCollector<T, ?, C> collector) {
+	public static <T, C extends Collection<T>> StreamCodec<C> ofCollection(StreamCodec<T> itemCodec, SizedCollector<T, ?, ? extends C> collector) {
 		return ofCollection($ -> itemCodec, collector);
 	}
 
-	private static <T, C extends Collection<T>> StreamCodec<C> ofCollection(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn, SizedCollector<T, ?, C> collector) {
+	public static <T, C extends Collection<T>> StreamCodec<C> ofCollection(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn, SizedCollector<T, ?, ? extends C> collector) {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, C collection) throws IOException {
@@ -684,13 +685,14 @@ public class StreamCodecs {
 		return ofMap(StreamCodecs.ofEnum(type), valueCodecFn, toEnumMap(type));
 	}
 
-	private static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(StreamCodec<K> keyCodec, StreamCodec<? extends V> valueCodec, SizedCollectorKV<K, V, ?, M> collector) {
+	public static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(StreamCodec<K> keyCodec, StreamCodec<? extends V> valueCodec, SizedCollectorKV<K, V, ?, ? extends M> collector) {
 		return ofMap(keyCodec, $ -> valueCodec, collector);
 	}
 
-	private static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(
+	public static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(
 		StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn,
-		SizedCollectorKV<K, V, ?, M> collector) {
+		SizedCollectorKV<K, V, ?, ? extends M> collector
+	) {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, M map) throws IOException {
@@ -1126,7 +1128,7 @@ public class StreamCodecs {
 			}
 
 			private StreamCodec<T> ensureCodec() {
-				return codec = Objects.requireNonNullElseGet(codec, codecSupplier);
+				return codec = requireNonNullElseGet(codec, codecSupplier);
 			}
 		};
 	}

@@ -483,6 +483,26 @@ public class Utils {
 		return toHashMap(identity(), valueMapper);
 	}
 
+	public static int initialCapacity(int initialSize) {
+		return (initialSize + 2) / 3 * 4;
+	}
+
+	public static <K, V> HashMap<K, V> newHashMap(int initialSize) {
+		return new HashMap<>(initialCapacity(initialSize));
+	}
+
+	public static <K, V> LinkedHashMap<K, V> newLinkedHashMap(int initialSize) {
+		return new LinkedHashMap<>(initialCapacity(initialSize));
+	}
+
+	public static <T> HashSet<T> newHashSet(int initialSize) {
+		return new HashSet<>(initialCapacity(initialSize));
+	}
+
+	public static <T> LinkedHashSet<T> newLinkedHashSet(int initialSize) {
+		return new LinkedHashSet<>(initialCapacity(initialSize));
+	}
+
 	public static <T> String toString(Collection<? extends T> collection) {
 		return toString(collection, TO_STRING_LIMIT);
 	}

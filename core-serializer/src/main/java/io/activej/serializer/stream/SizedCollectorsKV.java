@@ -1,16 +1,40 @@
 package io.activej.serializer.stream;
 
+import io.activej.common.Utils;
+
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.IntFunction;
 
+import static io.activej.common.Utils.newHashMap;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
-class SizedCollectorsKV {
-	public static <K, V> SizedCollectorKV<K, V, HashMap<K, V>, Map<K, V>> toMap() {
-		return new SizedCollectorKV<>() {
+public class SizedCollectorsKV {
+
+	public static <K, V, M extends Map<K, V>> SizedCollectorKV<K, V, ?, M> toMap(IntFunction<? extends M> factory) {
+		return new SizedCollectorKV<K, V, M, M>() {
+			@Override
+			public M accumulator(int size) {
+				return factory.apply(size);
+			}
+
+			@Override
+			public void accumulate(M map, int index, K key, V value) {
+				map.put(key, value);
+			}
+
+			@Override
+			public M result(M map) {
+				return map;
+			}
+		};
+	}
+
+	public static <K, V> SizedCollectorKV<K, V, ?, Map<K, V>> toMap() {
+		return new SizedCollectorKV<K, V, HashMap<K, V>, Map<K, V>>() {
 			@Override
 			public Map<K, V> create0() {
 				return emptyMap();
@@ -23,7 +47,7 @@ class SizedCollectorsKV {
 
 			@Override
 			public HashMap<K, V> accumulator(int size) {
-				return new HashMap<>(hashInitialSize(size));
+				return newHashMap(size);
 			}
 
 			@Override
@@ -38,19 +62,16 @@ class SizedCollectorsKV {
 		};
 	}
 
-	public static <K, V> SizedCollectorKV<K, V, HashMap<K, V>, HashMap<K, V>> toHashMap() {
-		return SizedCollectorKV.toMap(size -> new HashMap<>(hashInitialSize(size)));
+	public static <K, V> SizedCollectorKV<K, V, ?, HashMap<K, V>> toHashMap() {
+		return toMap(Utils::newHashMap);
 	}
 
-	public static <K, V> SizedCollectorKV<K, V, LinkedHashMap<K, V>, LinkedHashMap<K, V>> toLinkedHashMap() {
-		return SizedCollectorKV.toMap(size -> new LinkedHashMap<>(hashInitialSize(size)));
+	public static <K, V> SizedCollectorKV<K, V, ?, LinkedHashMap<K, V>> toLinkedHashMap() {
+		return toMap(Utils::newLinkedHashMap);
 	}
 
-	static int hashInitialSize(int length) {
-		return (length + 2) / 3 * 4;
+	public static <K extends Enum<K>, V> SizedCollectorKV<K, V, ?, EnumMap<K, V>> toEnumMap(Class<K> type) {
+		return toMap(size -> new EnumMap<>(type));
 	}
 
-	public static <K extends Enum<K>, V> SizedCollectorKV<K, V, EnumMap<K, V>, EnumMap<K, V>> toEnumMap(Class<K> type) {
-		return SizedCollectorKV.toMap(size -> new EnumMap<>(type));
-	}
 }
