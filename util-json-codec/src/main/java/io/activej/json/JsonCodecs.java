@@ -35,6 +35,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.newLinkedHashMap;
 import static io.activej.common.Utils.transformIterator;
 import static io.activej.json.JsonKeyCodec.ofStringKey;
+import static io.activej.json.JsonValidationUtils.validateNotNull;
 
 @SuppressWarnings({"ConstantConditions", "unchecked"})
 @StaticFactories(JsonCodec.class)
@@ -42,13 +43,12 @@ public class JsonCodecs {
 	private static final JsonCodec<String> STRING_CODEC = new JsonCodec<>() {
 		@Override
 		public String read(JsonReader<?> reader) throws IOException {
-			return checkNotNull(reader.readString());
+			return validateNotNull(reader.readString());
 		}
 
 		@Override
 		public void write(JsonWriter writer, String value) {
-			checkNotNull(value);
-			writer.writeString(value);
+			writer.writeString(checkNotNull(value));
 		}
 	};
 	private static final JsonCodec<Short> SHORT_CODEC = new JsonCodec<>() {
@@ -59,8 +59,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, Short value) {
-			checkNotNull(value);
-			NumberConverter.serialize(value, writer);
+			NumberConverter.serialize(checkNotNull(value), writer);
 		}
 	};
 	private static final JsonCodec<Integer> INTEGER_CODEC = new JsonCodec<>() {
@@ -70,9 +69,8 @@ public class JsonCodecs {
 		}
 
 		@Override
-		public void write(JsonWriter writer, Integer value1) {
-			checkNotNull(value1);
-			NumberConverter.serialize(value1, writer);
+		public void write(JsonWriter writer, Integer value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
 		}
 	};
 	private static final JsonCodec<Long> LONG_CODEC = new JsonCodec<>() {
@@ -82,9 +80,8 @@ public class JsonCodecs {
 		}
 
 		@Override
-		public void write(JsonWriter writer, Long value1) {
-			checkNotNull(value1);
-			NumberConverter.serialize(value1, writer);
+		public void write(JsonWriter writer, Long value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
 		}
 	};
 	private static final JsonCodec<Float> FLOAT_CODEC = new JsonCodec<>() {
@@ -95,8 +92,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, Float value) {
-			checkNotNull(value);
-			NumberConverter.serialize(value, writer);
+			NumberConverter.serialize(checkNotNull(value), writer);
 		}
 	};
 	private static final JsonCodec<Double> DOUBLE_CODEC = new JsonCodec<>() {
@@ -107,8 +103,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, Double value) {
-			checkNotNull(value);
-			NumberConverter.serialize(value, writer);
+			NumberConverter.serialize(checkNotNull(value), writer);
 		}
 	};
 	private static final JsonCodec<Boolean> BOOLEAN_CODEC = new JsonCodec<>() {
@@ -119,8 +114,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, Boolean value) {
-			checkNotNull(value);
-			BoolConverter.serialize(value, writer);
+			BoolConverter.serialize(checkNotNull(value), writer);
 		}
 	};
 
@@ -136,8 +130,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, Byte value) {
-			checkNotNull(value);
-			NumberConverter.serialize(value & 0xFF, writer);
+			NumberConverter.serialize(checkNotNull(value) & 0xFF, writer);
 		}
 	};
 
@@ -153,8 +146,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, Character value) {
-			checkNotNull(value);
-			writer.writeString(value.toString());
+			writer.writeString(checkNotNull(value).toString());
 		}
 	};
 
@@ -162,7 +154,7 @@ public class JsonCodecs {
 		@Override
 		public LocalDate read(JsonReader<?> reader) throws IOException {
 			try {
-				return LocalDate.parse(reader.readString());
+				return LocalDate.parse(validateNotNull(reader.readString()));
 			} catch (DateTimeParseException e) {
 				throw reader.newParseError(e.getMessage());
 			}
@@ -170,8 +162,7 @@ public class JsonCodecs {
 
 		@Override
 		public void write(JsonWriter writer, LocalDate value) {
-			checkNotNull(value);
-			writer.writeString(value.toString());
+			writer.writeString(checkNotNull(value).toString());
 		}
 	};
 
@@ -228,8 +219,7 @@ public class JsonCodecs {
 
 			@Override
 			public void write(JsonWriter writer, E value) {
-				checkNotNull(value);
-				writer.writeString(value.name());
+				writer.writeString(checkNotNull(value).name());
 			}
 		};
 	}
