@@ -9,11 +9,11 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>activej-json-codec</artifactId>
+  <artifactId>activej-json</artifactId>
 
-  <name>ActiveJ : Util : JsonCodec</name>
+  <name>ActiveJ : Util : Json</name>
   <description>
-    Various general utilities for ActiveJ project.
+    JSON Codecs, Codec Factory and JSON utils for ActiveJ project.
   </description>
 
   <dependencies>
@@ -44,7 +44,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>io.activej.json-codec</Automatic-Module-Name>
+              <Automatic-Module-Name>io.activej.json</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>
