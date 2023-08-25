@@ -1251,24 +1251,20 @@ public final class Cube extends AbstractReactive
 
 			if (query.getReportType() == ReportType.DATA) {
 				return QueryResult.createForData(recordScheme,
-					resultRecords,
-					recordAttributes,
-					recordMeasures,
-					resultOrderings,
-					filterAttributes);
+					recordAttributes, recordMeasures,
+					resultOrderings, filterAttributes,
+					resultRecords
+				);
 			}
 
 			if (query.getReportType() == ReportType.DATA_WITH_TOTALS) {
 				Record totalRecord = recordScheme.record();
 				recordFunction.copyMeasures(totals, totalRecord);
 				return QueryResult.createForDataWithTotals(recordScheme,
-					resultRecords,
-					totalRecord,
-					totalCount,
-					recordAttributes,
-					recordMeasures,
-					resultOrderings,
-					filterAttributes);
+					recordAttributes, recordMeasures,
+					resultOrderings, filterAttributes,
+					resultRecords, totalRecord, totalCount
+				);
 			}
 
 			throw new AssertionError();

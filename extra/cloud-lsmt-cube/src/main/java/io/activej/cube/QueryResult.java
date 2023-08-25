@@ -23,6 +23,8 @@ import io.activej.record.RecordScheme;
 import java.util.List;
 import java.util.Map;
 
+import static io.activej.cube.ReportType.*;
+
 public final class QueryResult {
 	private final RecordScheme recordScheme;
 	private final List<String> attributes;
@@ -51,36 +53,26 @@ public final class QueryResult {
 		this.reportType = reportType;
 	}
 
-	public static QueryResult create(
-		RecordScheme recordScheme, List<String> attributes, List<String> measures, List<String> sortedBy,
-		List<Record> records, Record totals, int totalCount, Map<String, Object> filterAttributes,
-		ReportType reportType
-	) {
-		return new QueryResult(recordScheme, records, totals, totalCount, attributes, measures, sortedBy,
-			filterAttributes, reportType);
-	}
-
 	public static QueryResult createForMetadata(
 		RecordScheme recordScheme, List<String> attributes, List<String> measures
 	) {
-		return new QueryResult(recordScheme, null, null, 0, attributes, measures, null,
-			Map.of(), ReportType.METADATA);
+		return new QueryResult(recordScheme, null, null, 0, attributes, measures, null, null, METADATA);
 	}
 
 	public static QueryResult createForData(
-		RecordScheme recordScheme, List<Record> records, List<String> attributes, List<String> measures,
-		List<String> sortedBy, Map<String, Object> filterAttributes
+		RecordScheme recordScheme, List<String> attributes, List<String> measures,
+		List<String> sortedBy, Map<String, Object> filterAttributes,
+		List<Record> records
 	) {
-		return create(recordScheme, attributes, measures, sortedBy, records, recordScheme.record(), 0,
-			filterAttributes, ReportType.DATA);
+		return new QueryResult(recordScheme, records, null, 0, attributes, measures, sortedBy, filterAttributes, DATA);
 	}
 
 	public static QueryResult createForDataWithTotals(
-		RecordScheme recordScheme, List<Record> records, Record totals, int totalCount, List<String> attributes,
-		List<String> measures, List<String> sortedBy, Map<String, Object> filterAttributes
+		RecordScheme recordScheme, List<String> attributes, List<String> measures,
+		List<String> sortedBy, Map<String, Object> filterAttributes,
+		List<Record> records, Record totals, int totalCount
 	) {
-		return create(recordScheme, attributes, measures, sortedBy, records, totals, totalCount, filterAttributes,
-			ReportType.DATA_WITH_TOTALS);
+		return new QueryResult(recordScheme, records, totals, totalCount, attributes, measures, sortedBy, filterAttributes, DATA_WITH_TOTALS);
 	}
 
 	public RecordScheme getRecordScheme() {

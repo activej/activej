@@ -40,7 +40,48 @@ import static io.activej.json.JsonValidationUtils.validateNotNull;
 @SuppressWarnings({"ConstantConditions", "unchecked"})
 @StaticFactories(JsonCodec.class)
 public class JsonCodecs {
-	private static final JsonCodec<String> STRING_CODEC = new JsonCodec<>() {
+
+	public static JsonCodec<String> ofString() {
+		return new JsonCodecString();
+	}
+
+	public static JsonCodec<Byte> ofByte() {
+		return new JsonCodecByte();
+	}
+
+	public static JsonCodec<Short> ofShort() {
+		return new JsonCodecShort();
+	}
+
+	public static JsonCodec<Integer> ofInteger() {
+		return new JsonCodecInteger();
+	}
+
+	public static JsonCodec<Long> ofLong() {
+		return new JsonCodecLong();
+	}
+
+	public static JsonCodec<Float> ofFloat() {
+		return new JsonCodecFloat();
+	}
+
+	public static JsonCodec<Double> ofDouble() {
+		return new JsonCodecDouble();
+	}
+
+	public static JsonCodec<Boolean> ofBoolean() {
+		return new JsonCodecBoolean();
+	}
+
+	public static JsonCodec<Character> ofCharacter() {
+		return new JsonCodecCharacter();
+	}
+
+	public static JsonCodec<LocalDate> ofLocalDate() {
+		return new JsonCodecLocalDate();
+	}
+
+	private static final class JsonCodecString implements JsonCodec<String> {
 		@Override
 		public String read(JsonReader<?> reader) throws IOException {
 			return validateNotNull(reader.readString());
@@ -50,75 +91,9 @@ public class JsonCodecs {
 		public void write(JsonWriter writer, String value) {
 			writer.writeString(checkNotNull(value));
 		}
-	};
-	private static final JsonCodec<Short> SHORT_CODEC = new JsonCodec<>() {
-		@Override
-		public Short read(JsonReader<?> reader) throws IOException {
-			return NumberConverter.deserializeShort(reader);
-		}
+	}
 
-		@Override
-		public void write(JsonWriter writer, Short value) {
-			NumberConverter.serialize(checkNotNull(value), writer);
-		}
-	};
-	private static final JsonCodec<Integer> INTEGER_CODEC = new JsonCodec<>() {
-		@Override
-		public Integer read(JsonReader<?> reader) throws IOException {
-			return NumberConverter.deserializeInt(reader);
-		}
-
-		@Override
-		public void write(JsonWriter writer, Integer value) {
-			NumberConverter.serialize(checkNotNull(value), writer);
-		}
-	};
-	private static final JsonCodec<Long> LONG_CODEC = new JsonCodec<>() {
-		@Override
-		public Long read(JsonReader<?> reader) throws IOException {
-			return NumberConverter.deserializeLong(reader);
-		}
-
-		@Override
-		public void write(JsonWriter writer, Long value) {
-			NumberConverter.serialize(checkNotNull(value), writer);
-		}
-	};
-	private static final JsonCodec<Float> FLOAT_CODEC = new JsonCodec<>() {
-		@Override
-		public Float read(JsonReader<?> reader) throws IOException {
-			return NumberConverter.deserializeFloat(reader);
-		}
-
-		@Override
-		public void write(JsonWriter writer, Float value) {
-			NumberConverter.serialize(checkNotNull(value), writer);
-		}
-	};
-	private static final JsonCodec<Double> DOUBLE_CODEC = new JsonCodec<>() {
-		@Override
-		public Double read(JsonReader<?> reader) throws IOException {
-			return NumberConverter.deserializeDouble(reader);
-		}
-
-		@Override
-		public void write(JsonWriter writer, Double value) {
-			NumberConverter.serialize(checkNotNull(value), writer);
-		}
-	};
-	private static final JsonCodec<Boolean> BOOLEAN_CODEC = new JsonCodec<>() {
-		@Override
-		public Boolean read(JsonReader<?> reader) throws IOException {
-			return BoolConverter.deserialize(reader);
-		}
-
-		@Override
-		public void write(JsonWriter writer, Boolean value) {
-			BoolConverter.serialize(checkNotNull(value), writer);
-		}
-	};
-
-	private static final JsonCodec<Byte> BYTE_CODEC = new JsonCodec<>() {
+	private static final class JsonCodecByte implements JsonCodec<Byte> {
 		@Override
 		public Byte read(JsonReader<?> reader) throws IOException {
 			int result = NumberConverter.deserializeInt(reader);
@@ -132,9 +107,81 @@ public class JsonCodecs {
 		public void write(JsonWriter writer, Byte value) {
 			NumberConverter.serialize(checkNotNull(value) & 0xFF, writer);
 		}
-	};
+	}
 
-	private static final JsonCodec<Character> CHARACTER_CODEC = new JsonCodec<>() {
+	private static final class JsonCodecShort implements JsonCodec<Short> {
+		@Override
+		public Short read(JsonReader<?> reader) throws IOException {
+			return NumberConverter.deserializeShort(reader);
+		}
+
+		@Override
+		public void write(JsonWriter writer, Short value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
+		}
+	}
+
+	private static final class JsonCodecInteger implements JsonCodec<Integer> {
+		@Override
+		public Integer read(JsonReader<?> reader) throws IOException {
+			return NumberConverter.deserializeInt(reader);
+		}
+
+		@Override
+		public void write(JsonWriter writer, Integer value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
+		}
+	}
+
+	private static final class JsonCodecLong implements JsonCodec<Long> {
+		@Override
+		public Long read(JsonReader<?> reader) throws IOException {
+			return NumberConverter.deserializeLong(reader);
+		}
+
+		@Override
+		public void write(JsonWriter writer, Long value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
+		}
+	}
+
+	private static final class JsonCodecFloat implements JsonCodec<Float> {
+		@Override
+		public Float read(JsonReader<?> reader) throws IOException {
+			return NumberConverter.deserializeFloat(reader);
+		}
+
+		@Override
+		public void write(JsonWriter writer, Float value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
+		}
+	}
+
+	private static final class JsonCodecDouble implements JsonCodec<Double> {
+		@Override
+		public Double read(JsonReader<?> reader) throws IOException {
+			return NumberConverter.deserializeDouble(reader);
+		}
+
+		@Override
+		public void write(JsonWriter writer, Double value) {
+			NumberConverter.serialize(checkNotNull(value), writer);
+		}
+	}
+
+	private static final class JsonCodecBoolean implements JsonCodec<Boolean> {
+		@Override
+		public Boolean read(JsonReader<?> reader) throws IOException {
+			return BoolConverter.deserialize(reader);
+		}
+
+		@Override
+		public void write(JsonWriter writer, Boolean value) {
+			BoolConverter.serialize(checkNotNull(value), writer);
+		}
+	}
+
+	private static final class JsonCodecCharacter implements JsonCodec<Character> {
 		@Override
 		public Character read(JsonReader<?> reader) throws IOException {
 			String string = reader.readString();
@@ -148,9 +195,9 @@ public class JsonCodecs {
 		public void write(JsonWriter writer, Character value) {
 			writer.writeString(checkNotNull(value).toString());
 		}
-	};
+	}
 
-	private static final JsonCodec<LocalDate> LOCAL_DATE_CODEC = new JsonCodec<>() {
+	private static final class JsonCodecLocalDate implements JsonCodec<LocalDate> {
 		@Override
 		public LocalDate read(JsonReader<?> reader) throws IOException {
 			try {
@@ -164,46 +211,6 @@ public class JsonCodecs {
 		public void write(JsonWriter writer, LocalDate value) {
 			writer.writeString(checkNotNull(value).toString());
 		}
-	};
-
-	public static JsonCodec<Byte> ofByte() {
-		return BYTE_CODEC;
-	}
-
-	public static JsonCodec<Short> ofShort() {
-		return SHORT_CODEC;
-	}
-
-	public static JsonCodec<Integer> ofInteger() {
-		return INTEGER_CODEC;
-	}
-
-	public static JsonCodec<Long> ofLong() {
-		return LONG_CODEC;
-	}
-
-	public static JsonCodec<Float> ofFloat() {
-		return FLOAT_CODEC;
-	}
-
-	public static JsonCodec<Double> ofDouble() {
-		return DOUBLE_CODEC;
-	}
-
-	public static JsonCodec<Boolean> ofBoolean() {
-		return BOOLEAN_CODEC;
-	}
-
-	public static JsonCodec<Character> ofCharacter() {
-		return CHARACTER_CODEC;
-	}
-
-	public static JsonCodec<String> ofString() {
-		return STRING_CODEC;
-	}
-
-	public static JsonCodec<LocalDate> ofLocalDate() {
-		return LOCAL_DATE_CODEC;
 	}
 
 	public static <E extends Enum<E>> JsonCodec<E> ofEnum(Class<E> enumClass) {

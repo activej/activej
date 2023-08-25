@@ -23,6 +23,7 @@ import io.activej.json.*;
 import io.activej.json.ObjectJsonCodec.JsonCodecProvider;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
+import io.activej.record.RecordSetter;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -31,12 +32,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
-import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToHashMap;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.cube.ReportType.*;
 import static io.activej.json.JsonCodecs.*;
+import static io.activej.json.JsonValidationUtils.validateArgument;
+import static io.activej.json.JsonValidationUtils.validateNotNull;
 
 public final class QueryResultJsonCodec {
 
@@ -49,7 +52,11 @@ public final class QueryResultJsonCodec {
 	static final String SORTED_BY_FIELD = "sortedBy";
 	static final String METADATA_FIELD = "metadata";
 
-	record Metadata(List<String> attributes, List<String> measures) {}
+	record Metadata(List<String> attributes, List<String> measures) {
+		static Metadata create(List<String> attributes, List<String> measures) throws JsonValidationException {
+			return new Metadata(validateNotNull(attributes), validateNotNull(measures));
+		}
+	}
 
 	@SuppressWarnings({"unchecked", "NullableProblems"})
 	static final class QueryResultBuilder {
@@ -64,7 +71,7 @@ public final class QueryResultJsonCodec {
 
 		@Nullable List<Record> records;
 		@Nullable Record totals;
-		int totalCount;
+		@Nullable Integer totalCount;
 
 		@Nullable Map<String, Object> filterAttributes;
 
@@ -117,9 +124,15 @@ public final class QueryResultJsonCodec {
 		}
 
 		public QueryResult toQueryResult() throws JsonValidationException {
-			ReportType reportType = totals != null ? DATA_WITH_TOTALS : records != null ? DATA : METADATA;
-			return QueryResult.create(ensureRecordScheme(),
-				attributes, measures, sortedBy, records, totals, totalCount, filterAttributes, reportType);
+			ReportType reportType = totals != null || totalCount != null ? DATA_WITH_TOTALS : records != null ? DATA : METADATA;
+			return switch (reportType) {
+				case METADATA -> QueryResult.createForMetadata(ensureRecordScheme(),
+					validateNotNull(attributes), validateNotNull(measures));
+				case DATA -> QueryResult.createForData(ensureRecordScheme(),
+					validateNotNull(attributes), validateNotNull(measures), validateNotNull(sortedBy), validateNotNull(filterAttributes), validateNotNull(records));
+				case DATA_WITH_TOTALS -> QueryResult.createForDataWithTotals(ensureRecordScheme(),
+					validateNotNull(attributes), validateNotNull(measures), validateNotNull(sortedBy), validateNotNull(filterAttributes), validateNotNull(records), validateNotNull(totals), validateNotNull(totalCount));
+			};
 		}
 	}
 
@@ -138,25 +151,25 @@ public final class QueryResultJsonCodec {
 				() -> new QueryResultBuilder(classLoader, attributeTypes, measureTypes),
 				QueryResultBuilder::toQueryResult)
 			.with(METADATA_FIELD, QueryResultJsonCodec::getMetadata, QueryResultBuilder::setMetadata,
-				ofObject(Metadata::new,
+				ofObject(Metadata::create,
 					ATTRIBUTES_FIELD, Metadata::attributes, ofList(ofString()),
 					MEASURES_FIELD, Metadata::measures, ofList(ofString())
 				))
-			.with(FILTER_ATTRIBUTES_FIELD, QueryResult::getFilterAttributes, QueryResultBuilder::setFilterAttributes,
+			.with(FILTER_ATTRIBUTES_FIELD, QueryResultJsonCodec::getFilterAttributes, QueryResultBuilder::setFilterAttributes,
 				skipNulls(
 					ofMap(attributeCodecs::get)))
-			.with(SORTED_BY_FIELD, QueryResult::getSortedBy, QueryResultBuilder::setSortedBy,
+			.with(SORTED_BY_FIELD, QueryResultJsonCodec::getSortedBy, QueryResultBuilder::setSortedBy,
 				skipNulls(
 					ofList(ofString())))
-			.with(COUNT_FIELD, QueryResultJsonCodec::getTotalCountNullable, QueryResultBuilder::setTotalCount,
+			.with(COUNT_FIELD, QueryResultJsonCodec::getTotalCount, QueryResultBuilder::setTotalCount,
 				skipNulls(
 					ofInteger()))
-			.with(RECORDS_FIELD, QueryResult::getRecords, QueryResultBuilder::setRecords,
-				codecOf(recordScheme ->
+			.with(RECORDS_FIELD, QueryResultJsonCodec::getRecords, QueryResultBuilder::setRecords,
+				skipNulls(recordScheme ->
 					ofList(createRecordJsonCodec(recordScheme, field -> nonNullElse(attributeCodecs.get(field), measureCodecs.get(field))))))
-			.with(TOTALS_FIELD, QueryResult::getTotals, QueryResultBuilder::setTotals,
-				codecOf(recordScheme ->
-					createRecordJsonCodec(recordScheme, field -> nonNullElse(attributeCodecs.get(field), measureCodecs.get(field)))))
+			.with(TOTALS_FIELD, QueryResultJsonCodec::getTotals, QueryResultBuilder::setTotals,
+				skipNulls(recordScheme ->
+					createRecordJsonCodec(recordScheme, measureCodecs::get)))
 			.build();
 	}
 
@@ -175,7 +188,7 @@ public final class QueryResultJsonCodec {
 		};
 	}
 
-	static <V> JsonCodecProvider<QueryResult, QueryResultBuilder, V> codecOf(Function<RecordScheme, JsonCodec<V>> codecFn) {
+	static <V> JsonCodecProvider<QueryResult, QueryResultBuilder, V> skipNulls(Function<RecordScheme, JsonCodec<V>> codecFn) {
 		return new JsonCodecProvider<>() {
 			@Override
 			public @Nullable JsonCodec<V> encoder(String key, int index, QueryResult item, V value) {
@@ -190,12 +203,28 @@ public final class QueryResultJsonCodec {
 		};
 	}
 
-	static Integer getTotalCountNullable(QueryResult queryResult) {
+	static Metadata getMetadata(QueryResult queryResult) {
+		return new Metadata(queryResult.getAttributes(), queryResult.getMeasures());
+	}
+
+	static Map<String, Object> getFilterAttributes(QueryResult queryResult) {
+		return queryResult.getFilterAttributes();
+	}
+
+	static List<String> getSortedBy(QueryResult queryResult) {
+		return queryResult.getSortedBy();
+	}
+
+	static Integer getTotalCount(QueryResult queryResult) {
 		return queryResult.getTotals() == null ? null : queryResult.getTotalCount();
 	}
 
-	static Metadata getMetadata(QueryResult queryResult) {
-		return new Metadata(queryResult.getAttributes(), queryResult.getMeasures());
+	static List<Record> getRecords(QueryResult queryResult) {
+		return queryResult.getRecords();
+	}
+
+	static Record getTotals(QueryResult queryResult) {
+		return queryResult.getTotals();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -205,6 +234,7 @@ public final class QueryResultJsonCodec {
 		List<@Nullable JsonCodec<?>> codecs = recordScheme.getFields().stream().map(codecFn).toList();
 		@Nullable JsonEncoder<?>[] encoders = codecs.toArray(JsonCodec[]::new);
 		JsonDecoder<?>[] decoders = codecs.stream().filter(Objects::nonNull).toList().toArray(JsonCodec[]::new);
+		RecordSetter<?>[] setters = IntStream.range(0, encoders.length).filter(i -> encoders[i] != null).mapToObj(recordScheme::setter).toArray(RecordSetter[]::new);
 		return new AbstractArrayJsonCodec<>() {
 			@Override
 			protected Iterator<Object> iterate(Record item) {
@@ -218,8 +248,8 @@ public final class QueryResultJsonCodec {
 
 			@Override
 			protected JsonDecoder<Object> decoder(int index, Record accumulator) throws JsonValidationException {
-				if (index >= decoders.length) throw new JsonValidationException();
-				return (JsonDecoder<Object>) checkNotNull(decoders[index]);
+				validateArgument(index < decoders.length);
+				return (JsonDecoder<Object>) decoders[index];
 			}
 
 			@Override
@@ -228,13 +258,14 @@ public final class QueryResultJsonCodec {
 			}
 
 			@Override
-			protected void accumulate(Record accumulator, int index, Object value) {
-				accumulator.set(index, value);
+			protected void accumulate(Record accumulator, int index, Object value) throws JsonValidationException {
+				validateArgument(index < setters.length);
+				((RecordSetter<Object>) setters[index]).set(accumulator, value);
 			}
 
 			@Override
 			protected Record result(Record accumulator, int count) throws JsonValidationException {
-				if (count != decoders.length) throw new JsonValidationException();
+				validateArgument(count == decoders.length);
 				return accumulator;
 			}
 		};

@@ -12,7 +12,6 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
 import static org.junit.Assert.assertEquals;
@@ -53,17 +52,10 @@ public class QueryResultJsonCodecTest {
 		totals.set("clicks", 5555L);
 		totals.set("impressions", 66756L);
 
-		QueryResult queryResult = QueryResult.create(recordScheme,
-			List.of("campaign", "site"),
-			List.of("clicks", "impressions"),
-			List.of("campaign", "clicks"),
-			List.of(record1, record2),
-			totals,
-			123,
-			Map.of(
-				"campaign", 555,
-				"site", "filtered"),
-			DATA_WITH_TOTALS
+		QueryResult queryResult = QueryResult.createForDataWithTotals(recordScheme,
+			List.of("campaign", "site"), List.of("clicks", "impressions"),
+			List.of("campaign", "clicks"), Map.of("campaign", 555, "site", "filtered"),
+			List.of(record1, record2), totals, 123
 		);
 
 		String json = toJson(codec, queryResult);

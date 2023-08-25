@@ -11,4 +11,10 @@ public class JsonValidationUtils {
 		throw new JsonValidationException();
 	}
 
+	public static void validateArgument(boolean expression) throws JsonValidationException {
+		if (!expression) {
+			throw new JsonValidationException();
+		}
+	}
+
 }
