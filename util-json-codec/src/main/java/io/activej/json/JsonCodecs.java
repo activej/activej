@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Utils.newLinkedHashMap;
 import static io.activej.common.Utils.transformIterator;
 import static io.activej.json.JsonKeyCodec.ofStringKey;
 
@@ -260,7 +261,7 @@ public class JsonCodecs {
 
 			@Override
 			protected LinkedHashMap<String, Object> accumulator() {
-				return new LinkedHashMap<>((codecs.size() + 2) / 3 * 4);
+				return newLinkedHashMap(codecs.size());
 			}
 
 			@Override

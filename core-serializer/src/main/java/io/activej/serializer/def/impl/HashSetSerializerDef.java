@@ -22,7 +22,7 @@ import io.activej.common.annotation.ExposedInternals;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import static io.activej.serializer.util.Utils.initialCapacity;
 
 @ExposedInternals
 public final class HashSetSerializerDef extends RegularCollectionSerializerDef {
@@ -37,6 +37,6 @@ public final class HashSetSerializerDef extends RegularCollectionSerializerDef {
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return Expressions.constructor(decodeType, hashInitialSize(length));
+		return Expressions.constructor(decodeType, initialCapacity(length));
 	}
 }

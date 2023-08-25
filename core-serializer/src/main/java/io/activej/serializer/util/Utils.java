@@ -11,7 +11,7 @@ public class Utils {
 		return supplier.get();
 	}
 
-	public static Expression hashInitialSize(Expression length) {
-		return mul(div(add(length, value(2)), value(3)), value(4));
+	public static Expression initialCapacity(Expression initialSize) {
+		return mul(div(add(initialSize, value(2)), value(3)), value(4));
 	}
 }

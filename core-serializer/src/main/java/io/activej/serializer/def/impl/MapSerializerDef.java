@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import static io.activej.serializer.util.Utils.initialCapacity;
 
 @ExposedInternals
 public final class MapSerializerDef extends RegularMapSerializerDef {
@@ -59,6 +59,6 @@ public final class MapSerializerDef extends RegularMapSerializerDef {
 		if (rawType.isEnum()) {
 			return constructor(EnumMap.class, value(rawType));
 		}
-		return constructor(HashMap.class, hashInitialSize(length));
+		return constructor(HashMap.class, initialCapacity(length));
 	}
 }

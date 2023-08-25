@@ -5,7 +5,7 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.def.SerializerDef;
 
 import static io.activej.codegen.expression.Expressions.constructor;
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import static io.activej.serializer.util.Utils.initialCapacity;
 
 public final class Hppc9HashSetSerializerDef extends Hppc9RegularCollectionSerializerDef {
 	public Hppc9HashSetSerializerDef(SerializerDef valueSerializer, Class<?> collectionType, Class<?> collectionImplType, Class<?> valueType) {
@@ -23,6 +23,6 @@ public final class Hppc9HashSetSerializerDef extends Hppc9RegularCollectionSeria
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, hashInitialSize(length));
+		return constructor(decodeType, initialCapacity(length));
 	}
 }

@@ -10,7 +10,7 @@ import java.util.function.BinaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.examples.SerializerFactoryUtils.capitalize;
-import static io.activej.serializer.util.Utils.hashInitialSize;
+import static io.activej.serializer.util.Utils.initialCapacity;
 
 public final class Hppc9HashMapSerializerDef extends RegularMapSerializerDef {
 	public Hppc9HashMapSerializerDef(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> mapType, Class<?> mapImplType, Class<?> keyType, Class<?> valueType) {
@@ -42,6 +42,6 @@ public final class Hppc9HashMapSerializerDef extends RegularMapSerializerDef {
 
 	@Override
 	protected Expression createBuilder(Expression length) {
-		return constructor(decodeType, hashInitialSize(length));
+		return constructor(decodeType, initialCapacity(length));
 	}
 }
