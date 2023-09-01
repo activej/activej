@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public final class ThreadLocalReactor {
+final class ThreadLocalReactor {
 	private static final ThreadLocal<Reactor> CURRENT_REACTOR = new ThreadLocal<>();
 
 	private static final String NO_CURRENT_REACTOR_ERROR =
@@ -30,23 +30,31 @@ public final class ThreadLocalReactor {
 		CURRENT_REACTOR.set(reactor);
 	}
 
-	static void executeWithReactor(Reactor anotherReactor, Runnable runnable) {
-		Reactor reactor = CURRENT_REACTOR.get();
+	static void executeWithReactor(Reactor reactor, Runnable runnable) {
+		Reactor previousReactor = CURRENT_REACTOR.get();
 		try {
-			CURRENT_REACTOR.set(anotherReactor);
+			CURRENT_REACTOR.set(reactor);
 			runnable.run();
 		} finally {
-			CURRENT_REACTOR.set(reactor);
+			if (previousReactor != null) {
+				CURRENT_REACTOR.set(previousReactor);
+			} else {
+				CURRENT_REACTOR.remove();
+			}
 		}
 	}
 
 	static <T> T executeWithReactor(Reactor anotherReactor, Supplier<T> callable) {
-		Reactor reactor = CURRENT_REACTOR.get();
+		Reactor previousReactor = CURRENT_REACTOR.get();
 		try {
 			CURRENT_REACTOR.set(anotherReactor);
 			return callable.get();
 		} finally {
-			CURRENT_REACTOR.set(reactor);
+			if (previousReactor != null) {
+				CURRENT_REACTOR.set(previousReactor);
+			} else {
+				CURRENT_REACTOR.remove();
+			}
 		}
 	}
 
