@@ -747,7 +747,7 @@ public final class SerializerFactory {
 		scanSetters(ctx, classSerializerBuilder);
 		scanFields(ctx, bindings, foundSerializers);
 		scanGetters(ctx, bindings, foundSerializers);
-		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
+		addMembersToSerializer(ctx, classSerializerBuilder, foundSerializers);
 		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
 			classSerializerBuilder.withMatchingSetters();
 		}
@@ -758,7 +758,7 @@ public final class SerializerFactory {
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 		scanGetters(ctx, bindings, foundSerializers);
-		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
+		addMembersToSerializer(ctx, classSerializerBuilder, foundSerializers);
 
 		for (AnnotatedType superInterface : ctx.getRawType().getAnnotatedInterfaces()) {
 			scanInterface(ctx.push(bind(superInterface, bindings)), classSerializerBuilder);
@@ -785,70 +785,7 @@ public final class SerializerFactory {
 			foundSerializers.add(foundSerializer);
 		}
 		classSerializerBuilder.withConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
-		addMethodsAndGettersToClass(ctx, classSerializerBuilder, foundSerializers);
-	}
-
-	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder, List<FoundSerializer> foundSerializers) {
-		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
-			Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
-			String pathToClass = ctx.getRawType().getName().replace('.', '/') + ".class";
-			try (InputStream classInputStream = ctx.getRawType().getClassLoader().getResourceAsStream(pathToClass)) {
-				ClassReader cr = new ClassReader(requireNonNull(classInputStream));
-				cr.accept(new ClassVisitor(Opcodes.ASM8) {
-					int index = 0;
-
-					@Override
-					public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-						List<FoundSerializer> list = foundFields.get(name);
-						if (list == null) return null;
-						for (FoundSerializer foundSerializer : list) {
-							if (!(foundSerializer.member instanceof Field)) continue;
-							foundSerializer.index = index++;
-							break;
-						}
-						return null;
-					}
-
-					@Override
-					public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-						List<FoundSerializer> list = foundFields.get(name);
-						if (list == null) return null;
-						for (FoundSerializer foundSerializer : list) {
-							if (!(foundSerializer.member instanceof Method)) continue;
-							if (!descriptor.equals(getType((Method) foundSerializer.member).getDescriptor()))
-								continue;
-							foundSerializer.index = index++;
-							break;
-						}
-						return null;
-					}
-				}, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
-			} catch (IOException e) {
-				throw new IllegalArgumentException(e);
-			}
-			for (FoundSerializer foundSerializer : foundSerializers) {
-				if (foundSerializer.order == Integer.MIN_VALUE) {
-					foundSerializer.order = autoOrderingStart + foundSerializer.index * autoOrderingStride;
-				}
-			}
-		}
-
-		Set<Integer> orders = new HashSet<>();
-		for (FoundSerializer foundSerializer : foundSerializers) {
-			if (!orders.add(foundSerializer.order))
-				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, classSerializerBuilder));
-		}
-
-		Collections.sort(foundSerializers);
-		for (FoundSerializer foundSerializer : foundSerializers) {
-			if (foundSerializer.member instanceof Method) {
-				classSerializerBuilder.withGetter((Method) foundSerializer.member, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
-			} else if (foundSerializer.member instanceof Field) {
-				classSerializerBuilder.withField((Field) foundSerializer.member, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
-			} else {
-				throw new AssertionError();
-			}
-		}
+		addMembersToSerializer(ctx, classSerializerBuilder, foundSerializers);
 	}
 
 	private void scanFields(
@@ -960,6 +897,73 @@ public final class SerializerFactory {
 			} else {
 				if (!fields.isEmpty())
 					throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));
+			}
+		}
+	}
+
+	private void addMembersToSerializer(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder, List<FoundSerializer> foundSerializers) {
+		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
+			resolveMembersOrder(ctx.getRawType(), foundSerializers);
+		}
+
+		Set<Integer> orders = new HashSet<>();
+		for (FoundSerializer foundSerializer : foundSerializers) {
+			if (!orders.add(foundSerializer.order))
+				throw new IllegalArgumentException(format("Duplicate order %s for %s in %s", foundSerializer.order, foundSerializer, classSerializerBuilder));
+		}
+
+		Collections.sort(foundSerializers);
+		for (FoundSerializer foundSerializer : foundSerializers) {
+			if (foundSerializer.member instanceof Method) {
+				classSerializerBuilder.withGetter((Method) foundSerializer.member, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
+			} else if (foundSerializer.member instanceof Field) {
+				classSerializerBuilder.withField((Field) foundSerializer.member, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
+			} else {
+				throw new AssertionError();
+			}
+		}
+	}
+
+	private void resolveMembersOrder(Class<?> clazz, List<FoundSerializer> foundSerializers) {
+		Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
+		String pathToClass = clazz.getName().replace('.', '/') + ".class";
+		try (InputStream classInputStream = clazz.getClassLoader().getResourceAsStream(pathToClass)) {
+			ClassReader cr = new ClassReader(requireNonNull(classInputStream));
+			cr.accept(new ClassVisitor(Opcodes.ASM8) {
+				int index = 0;
+
+				@Override
+				public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+					List<FoundSerializer> list = foundFields.get(name);
+					if (list == null) return null;
+					for (FoundSerializer foundSerializer : list) {
+						if (!(foundSerializer.member instanceof Field)) continue;
+						foundSerializer.index = index++;
+						break;
+					}
+					return null;
+				}
+
+				@Override
+				public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+					List<FoundSerializer> list = foundFields.get(name);
+					if (list == null) return null;
+					for (FoundSerializer foundSerializer : list) {
+						if (!(foundSerializer.member instanceof Method)) continue;
+						if (!descriptor.equals(getType((Method) foundSerializer.member).getDescriptor()))
+							continue;
+						foundSerializer.index = index++;
+						break;
+					}
+					return null;
+				}
+			}, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
+		for (FoundSerializer foundSerializer : foundSerializers) {
+			if (foundSerializer.order == Integer.MIN_VALUE) {
+				foundSerializer.order = autoOrderingStart + foundSerializer.index * autoOrderingStride;
 			}
 		}
 	}
