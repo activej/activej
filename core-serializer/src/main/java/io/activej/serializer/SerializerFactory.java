@@ -76,8 +76,6 @@ public final class SerializerFactory {
 	private int decodeVersionMin = 0;
 	private int decodeVersionMax = Integer.MAX_VALUE;
 	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_4;
-	private int autoOrderingStart = 1;
-	private int autoOrderingStride = 1;
 
 	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
 
@@ -316,19 +314,6 @@ public final class SerializerFactory {
 			SerializerFactory.this.encodeVersionMax = encodeVersionMax;
 			SerializerFactory.this.decodeVersionMin = decodeVersionMin;
 			SerializerFactory.this.decodeVersionMax = decodeVersionMax;
-			return this;
-		}
-
-		/**
-		 * Sets auto ordering parameters (used when no explicit ordering is set)
-		 *
-		 * @param autoOrderingStart  a value of initial order index
-		 * @param autoOrderingStride a step between indices
-		 */
-		public Builder withAutoOrdering(int autoOrderingStart, int autoOrderingStride) {
-			checkNotBuilt(this);
-			SerializerFactory.this.autoOrderingStart = autoOrderingStart;
-			SerializerFactory.this.autoOrderingStride = autoOrderingStride;
 			return this;
 		}
 
@@ -903,6 +888,8 @@ public final class SerializerFactory {
 
 	private void addMembersToSerializer(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder, List<FoundSerializer> foundSerializers) {
 		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
+			if (foundSerializers.stream().anyMatch(f -> f.order != Integer.MIN_VALUE))
+				throw new IllegalArgumentException("Explicit and auto-ordering cannot be mixed");
 			resolveMembersOrder(ctx.getRawType(), foundSerializers);
 		}
 
@@ -938,7 +925,7 @@ public final class SerializerFactory {
 					if (list == null) return null;
 					for (FoundSerializer foundSerializer : list) {
 						if (!(foundSerializer.member instanceof Field)) continue;
-						foundSerializer.index = index++;
+						foundSerializer.order = index++;
 						break;
 					}
 					return null;
@@ -952,7 +939,7 @@ public final class SerializerFactory {
 						if (!(foundSerializer.member instanceof Method)) continue;
 						if (!descriptor.equals(getType((Method) foundSerializer.member).getDescriptor()))
 							continue;
-						foundSerializer.index = index++;
+						foundSerializer.order = index++;
 						break;
 					}
 					return null;
@@ -960,11 +947,6 @@ public final class SerializerFactory {
 			}, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
-		}
-		for (FoundSerializer foundSerializer : foundSerializers) {
-			if (foundSerializer.order == Integer.MIN_VALUE) {
-				foundSerializer.order = autoOrderingStart + foundSerializer.index * autoOrderingStride;
-			}
 		}
 	}
 
@@ -1014,7 +996,6 @@ public final class SerializerFactory {
 	public static final class FoundSerializer implements Comparable<FoundSerializer> {
 		final Member member;
 		int order;
-		int index;
 		final int added;
 		final int removed;
 		//		final TypedModsMap mods;
