@@ -708,10 +708,15 @@ public final class SerializerFactory {
 					"' annotated with @SerializeRecord annotation");
 			}
 			scanRecord(ctx, classSerializerBuilder);
-		} else if (!rawClass.isInterface()) {
-			scanClass(ctx, classSerializerBuilder);
-		} else {
+		} else if (rawClass.isInterface()) {
 			scanInterface(ctx, classSerializerBuilder);
+		} else {
+			scanStaticFactoryMethods(ctx, classSerializerBuilder);
+			if (!Modifier.isAbstract(rawClass.getModifiers())) {
+				scanConstructors(ctx, classSerializerBuilder);
+			}
+			scanClass(ctx, classSerializerBuilder);
+			classSerializerBuilder.withMatchingSetters();
 		}
 		return classSerializerBuilder.build();
 	}
@@ -727,16 +732,11 @@ public final class SerializerFactory {
 		}
 
 		List<MemberSerializer> memberSerializers = new ArrayList<>();
-		scanConstructors(ctx, classSerializerBuilder);
-		scanStaticFactoryMethods(ctx, classSerializerBuilder);
-		scanSetters(ctx, classSerializerBuilder);
 		scanFields(ctx, bindings, memberSerializers);
 		scanGetters(ctx, bindings, memberSerializers);
+		scanSetters(ctx, classSerializerBuilder);
 		resolveMembersOrder(ctx.getRawType(), memberSerializers);
 		addMemberSerializersToSerializerBuilder(classSerializerBuilder, memberSerializers);
-		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
-			classSerializerBuilder.withMatchingSetters();
-		}
 	}
 
 	private void scanInterface(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {

@@ -2824,4 +2824,259 @@ public class BinarySerializerTest {
 
 	public @interface Annotation {
 	}
+
+	@Test
+	public void testAbstractClassWithFactory() {
+		BinarySerializer<AbstractClassWithFactory> serializer = SerializerFactory.defaultInstance()
+			.create(AbstractClassWithFactory.class);
+		AbstractClassWithFactory ac = AbstractClassWithFactory.create(1);
+		ac.setProp(2);
+		byte[] array = new byte[100];
+		serializer.encode(array, 0, ac);
+		AbstractClassWithFactory decoded = serializer.decode(array, 0);
+		assertEquals(1, decoded.getParam());
+		assertEquals(2, decoded.getProp());
+	}
+
+	public static abstract class AbstractClassWithFactory {
+		private final int param;
+		private int prop;
+
+		private AbstractClassWithFactory(int param) {
+			this.param = param;
+		}
+
+		@Serialize(order = 0, added = 1)
+		public int getParam() {
+			return param;
+		}
+
+		@Serialize(order = 1, added = 1)
+		public int getProp() {
+			return prop;
+		}
+
+		public void setProp(int prop) {
+			this.prop = prop;
+		}
+
+		private static class AbstractClassWithFactoryImpl extends AbstractClassWithFactory {
+			private AbstractClassWithFactoryImpl(int param) {
+				super(param);
+			}
+		}
+
+		public static AbstractClassWithFactory create(@Deserialize("param") int param) {
+			return new AbstractClassWithFactoryImpl(param);
+		}
+	}
+
+	@Test
+	public void testAbstractClassWithConstructorInChild() {
+		BinarySerializer<AbstractClassMissingSetterImpl> serializer = SerializerFactory.defaultInstance()
+			.create(AbstractClassMissingSetterImpl.class);
+		AbstractClassMissingSetterImpl ac = new AbstractClassMissingSetterImpl(100);
+		byte[] array = new byte[100];
+		serializer.encode(array, 0, ac);
+		AbstractClassMissingSetter decoded = serializer.decode(array, 0);
+		assertEquals(ac.getX(), decoded.getX());
+	}
+
+	public static abstract class AbstractClassMissingSetter {
+		private final int x;
+
+		protected AbstractClassMissingSetter(int x) {
+			this.x = x;
+		}
+
+		@Serialize
+		public int getX() {
+			return x;
+		}
+	}
+
+	public static class AbstractClassMissingSetterImpl extends AbstractClassMissingSetter {
+		public AbstractClassMissingSetterImpl(@Deserialize("x") int param) {
+			super(param);
+		}
+	}
+
+	@Test
+	public void testClassWithConstructorOverridden() {
+		BinarySerializer<A> aSerializer = SerializerFactory.defaultInstance()
+			.create(A.class);
+		A a = new A(100);
+		byte[] array = new byte[100];
+		aSerializer.encode(array, 0, a);
+		A aDecoded = aSerializer.decode(array, 0);
+		assertEquals(a.getX(), aDecoded.getX());
+
+		BinarySerializer<B> bSerializer = SerializerFactory.defaultInstance()
+			.create(B.class);
+		B b = new B(50, 1.5f);
+		bSerializer.encode(array, 0, b);
+		B bDecoded = bSerializer.decode(array, 0);
+		assertEquals(b.getX(), bDecoded.getX());
+		assertEquals(b.getY(), bDecoded.getY(), 1e-9);
+	}
+
+	public static class A {
+		private final int x;
+
+		public A(@Deserialize("x") int x) {
+			this.x = x;
+		}
+
+		@Serialize
+		public int getX() {
+			return x;
+		}
+	}
+
+	public static class B extends A {
+		private final float y;
+
+		public B(@Deserialize("x") int x, @Deserialize("y") float y) {
+			super(x);
+			this.y = y;
+		}
+
+		@Serialize
+		public float getY() {
+			return y;
+		}
+	}
+
+	@Test
+	public void testClassWithGetterOverridden() {
+		BinarySerializer<BB> bSerializer = SerializerFactory.defaultInstance()
+			.create(BB.class);
+		BB b = new BB(50, 1.5f);
+		b.setZ("z");
+		byte[] array = new byte[100];
+		bSerializer.encode(array, 0, b);
+		BB bDecoded = bSerializer.decode(array, 0);
+		assertEquals(b.getX(), bDecoded.getX());
+		assertEquals(b.getY(), bDecoded.getY(), 1e-9);
+		assertEquals(b.getZ(), bDecoded.getZ());
+	}
+
+	public static class AA {
+		private final int x;
+		private String z = "";
+
+		public AA(@Deserialize("x") int x) {
+			this.x = x;
+		}
+
+		@Serialize(order = 1)
+		public int getX() {
+//			System.out.println("AA.getX()");
+			return x;
+		}
+
+		@Serialize(order = 2)
+		public String getZ() {
+//			System.out.println("AA.getZ()");
+			return z;
+		}
+
+		public void setZ(@Deserialize("z") String z) {
+//			System.out.println("AA.setZ(" + z + ")");
+			this.z = z;
+		}
+
+		public void setXZ(@Deserialize("x") int x, @Deserialize("z") String z) {
+//			System.out.println("AA.setXZ(" + x + ", " + z + ")");
+			this.z = z;
+		}
+	}
+
+	public static class BB extends AA {
+		private final float y;
+		private String z = "";
+
+		public BB(@Deserialize("x") int x, @Deserialize("y") float y) {
+			super(x);
+			this.y = y;
+		}
+
+		@Serialize(order = 1)
+		public float getY() {
+//			System.out.println("BB.getY()");
+			return y;
+		}
+
+		@Override
+		@Serialize(order = 2)
+		public int getX() {
+//			System.out.println("BB.getX()");
+			return 99;
+		}
+
+		@Override
+		@Serialize(order = 3)
+		public String getZ() {
+//			System.out.println("BB.getZ()");
+			return z;
+		}
+
+		@Override
+		public void setZ(@Deserialize("z") String z) {
+//			System.out.println("BB.setZ(" + z + ")");
+			this.z = z;
+		}
+
+		public void setXZ(@Deserialize("x") int x, @Deserialize("z") String z) {
+//			System.out.println("BB.setXZ(" + x + ", " + z + ")");
+			this.z = z;
+		}
+	}
+
+	@Test
+	public void testAbstract() {
+		BinarySerializer<AC> serializer = SerializerFactory.defaultInstance()
+			.create(AC.class);
+		AC ac = AC.create(1);
+		ac.setProp(2);
+		byte[] array = new byte[100];
+		serializer.encode(array, 0, ac);
+		AC decoded = serializer.decode(array, 0);
+		assertEquals(1, decoded.getParam());
+		assertEquals(2, decoded.getProp());
+	}
+
+	public static abstract class AC {
+		private final int param;
+		private int prop;
+
+		private AC(int param) {
+			this.param = param;
+		}
+
+		@Serialize(order = 0, added = 1)
+		public int getParam() {
+			return param;
+		}
+
+		@Serialize(order = 1, added = 1)
+		public int getProp() {
+			return prop;
+		}
+
+		public void setProp(int prop) {
+			this.prop = prop;
+		}
+
+		private static class AC1 extends AC {
+			private AC1(int param) {
+				super(param);
+			}
+		}
+
+		public static AC create(@Deserialize("param") int param) {
+			return new AC1(param);
+		}
+	}
+
 }

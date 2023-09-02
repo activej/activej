@@ -86,7 +86,10 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 	public final Class<?> decodeType;
 
 	public final LinkedHashMap<String, FieldDef> fields;
-	public final Map<Method, List<String>> setters;
+
+	public record Setter(String methodName, List<String> fields) {}
+
+	public final Set<Setter> setters;
 
 	public @Nullable Constructor<?> constructor;
 	public @Nullable List<String> constructorParams;
@@ -95,7 +98,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 
 	public ClassSerializerDef(
 		Class<?> encodeType, Class<?> decodeType, LinkedHashMap<String, FieldDef> fields,
-		Map<Method, List<String>> setters, @Nullable Constructor<?> constructor,
+		Set<Setter> setters, @Nullable Constructor<?> constructor,
 		@Nullable List<String> constructorParams, @Nullable Method staticFactoryMethod,
 		@Nullable List<String> staticFactoryMethodParams
 	) {
@@ -117,7 +120,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 		checkArgument(!decodeType.isInterface(), "Cannot serialize an interface");
 		checkArgument(encodeType.isAssignableFrom(decodeType), format("Class should be assignable from %s", decodeType));
 
-		return new ClassSerializerDef(encodeType, decodeType, new LinkedHashMap<>(), new LinkedHashMap<>(), null, null,
+		return new ClassSerializerDef(encodeType, decodeType, new LinkedHashMap<>(), new LinkedHashSet<>(), null, null,
 			null, null).new Builder();
 	}
 
@@ -129,9 +132,8 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			checkArgument(!isPrivate(method.getModifiers()), format("Setter cannot be private: %s", method));
 			checkArgument(method.getGenericParameterTypes().length == fields.size(),
 				"Number of arguments of a method should match a size of list of fields");
-			checkArgument(!setters.containsKey(method), "Setter has already been added");
 
-			setters.put(method, fields);
+			setters.add(new Setter(method.getName(), fields));
 			return this;
 		}
 
@@ -165,7 +167,6 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			checkArgument(isPublic(field.getModifiers()), "Method should be public");
 
 			String fieldName = field.getName();
-			checkArgument(!fields.containsKey(fieldName), format("Duplicate field '%s'", field));
 
 			FieldDef fieldDef = new FieldDef();
 			fieldDef.field = field;
@@ -182,7 +183,6 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			checkArgument(isPublic(method.getModifiers()), "Method should be public");
 
 			String fieldName = stripGet(method.getName(), method.getReturnType());
-			checkArgument(!fields.containsKey(fieldName), format("Duplicate field '%s'", method));
 
 			FieldDef fieldDef = new FieldDef();
 			fieldDef.method = method;
@@ -202,8 +202,8 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 			if (staticFactoryMethodParams != null) {
 				usedFields.addAll(staticFactoryMethodParams);
 			}
-			for (List<String> list : setters.values()) {
-				usedFields.addAll(list);
+			for (Setter setter : setters) {
+				usedFields.addAll(setter.fields);
 			}
 			for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 				String fieldName = entry.getKey();
@@ -219,7 +219,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 						withSetter(setter, List.of(fieldName));
 					}
 				} catch (NoSuchMethodException e) {
-					throw new RuntimeException(e);
+					throw new IllegalArgumentException(e);
 				}
 			}
 			return this;
@@ -336,14 +336,12 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 						callFactoryMethod(map, version),
 					instance -> sequence(seq -> {
 						seq.add(instanceInitializer.apply(instance));
-						for (Map.Entry<Method, List<String>> entry : setters.entrySet()) {
-							Method method = entry.getKey();
-							List<String> fieldNames = entry.getValue();
+						for (Setter setter : setters) {
 							boolean found = false;
-							for (String fieldName : fieldNames) {
-								FieldDef fieldDef = fields.get(fieldName);
+							for (String field : setter.fields) {
+								FieldDef fieldDef = fields.get(field);
 								if (fieldDef == null) {
-									throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, method));
+									throw new NullPointerException(format("Field '%s' is not found in '%s'", field, setter));
 								}
 								if (fieldDef.hasVersion(version)) {
 									found = true;
@@ -351,10 +349,10 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 								}
 							}
 							if (found) {
-								Class<?>[] parameterTypes = method.getParameterTypes();
+								Class<?>[] parameterTypes = setter.fields.stream().map(fields::get).map(FieldDef::getRawType).toArray(Class[]::new);
 								Expression[] temp = new Expression[parameterTypes.length];
-								for (int j = 0; j < fieldNames.size(); j++) {
-									String fieldName = fieldNames.get(j);
+								for (int j = 0; j < setter.fields.size(); j++) {
+									String fieldName = setter.fields.get(j);
 									FieldDef fieldDef = fields.get(fieldName);
 									assert fieldDef != null;
 									if (fieldDef.hasVersion(version)) {
@@ -363,7 +361,7 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 										temp[j] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[j]);
 									}
 								}
-								seq.add(call(instance, method.getName(), temp));
+								seq.add(call(instance, setter.methodName(), temp));
 							}
 						}
 
