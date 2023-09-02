@@ -28,7 +28,6 @@ import io.activej.serializer.def.impl.ClassSerializerDef;
 import io.activej.serializer.def.impl.SubclassSerializerDef;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
-import io.activej.types.Utils;
 import io.activej.types.scanner.TypeScannerRegistry;
 import io.activej.types.scanner.TypeScannerRegistry.Context;
 import org.jetbrains.annotations.Nullable;
@@ -51,6 +50,8 @@ import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
 import static io.activej.serializer.util.Utils.get;
 import static io.activej.types.AnnotatedTypes.*;
+import static io.activej.types.Utils.getAnnotation;
+import static io.activej.types.Utils.hasAnnotation;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
@@ -79,8 +80,6 @@ public final class SerializerFactory {
 	private int autoOrderingStride = 1;
 
 	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
-
-	private final Map<Class<? extends Annotation>, Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>>> annotationAliases = new HashMap<>();
 
 	private SerializerFactory() {
 	}
@@ -144,7 +143,7 @@ public final class SerializerFactory {
 			})
 
 			.with(String.class, ctx -> {
-				SerializeStringFormat a = factory.getAnnotation(SerializeStringFormat.class, ctx.getAnnotations());
+				SerializeStringFormat a = getAnnotation(ctx.getAnnotations(), SerializeStringFormat.class);
 				return SerializerDefs.ofString(a == null ? StringFormat.UTF8 : a.value());
 			})
 
@@ -196,8 +195,8 @@ public final class SerializerFactory {
 				SerializerDef serializerDef;
 				SerializeClass annotationClass;
 				if (false ||
-					(annotationClass = getAnnotation(SerializeClass.class, ctx.getAnnotations())) != null ||
-					(annotationClass = getAnnotation(SerializeClass.class, rawClass.getAnnotations())) != null) {
+					(annotationClass = getAnnotation(ctx.getAnnotations(), SerializeClass.class)) != null ||
+					(annotationClass = getAnnotation(rawClass.getAnnotations(), SerializeClass.class)) != null) {
 					if (annotationClass.value() != SerializerDef.class) {
 						try {
 							serializerDef = annotationClass.value().getDeclaredConstructor().newInstance();
@@ -231,16 +230,16 @@ public final class SerializerFactory {
 					serializerDef = fn.apply(ctx);
 				}
 
-				if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
+				if (hasAnnotation(ctx.getAnnotations(), SerializeVarLength.class)) {
 					serializerDef = ((SerializerDefWithVarLength) serializerDef).ensureVarLength();
 				}
 
 				SerializeFixedSize annotationFixedSize;
-				if ((annotationFixedSize = getAnnotation(SerializeFixedSize.class, ctx.getAnnotations())) != null) {
+				if ((annotationFixedSize = getAnnotation(ctx.getAnnotations(), SerializeFixedSize.class)) != null) {
 					serializerDef = ((SerializerDefWithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
 				}
 
-				if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
+				if (hasAnnotation(ctx.getAnnotations(), SerializeNullable.class)) {
 					serializerDef = serializerDef instanceof SerializerDefWithNullable ?
 						((SerializerDefWithNullable) serializerDef).ensureNullable(compatibilityLevel) : SerializerDefs.ofNullable(serializerDef);
 				}
@@ -270,24 +269,6 @@ public final class SerializerFactory {
 		public Builder withCompatibilityLevel(CompatibilityLevel compatibilityLevel) {
 			checkNotBuilt(this);
 			SerializerFactory.this.compatibilityLevel = compatibilityLevel;
-			return this;
-		}
-
-		/**
-		 * Adds alias annotation for a serializer annotation. Alias annotation acts as if it is a regular
-		 * serializer annotation
-		 *
-		 * @param annotation      a serializer annotation
-		 * @param annotationAlias an alias annotation
-		 * @param mapping         a function that transforms an alias annotation into a serializer annotation
-		 * @param <A>             a type of serializer annotation
-		 * @param <T>             a type of alias annotation
-		 */
-		public <A extends Annotation, T extends Annotation> Builder withAnnotationAlias(
-			Class<A> annotation, Class<T> annotationAlias, Function<T, A> mapping
-		) {
-			checkNotBuilt(this);
-			annotationAliases.computeIfAbsent(annotation, $ -> new HashMap<>()).put(annotationAlias, mapping);
 			return this;
 		}
 
@@ -933,7 +914,7 @@ public final class SerializerFactory {
 		List<String> fields = new ArrayList<>(method.getParameterTypes().length);
 		for (int i = 0; i < method.getParameterTypes().length; i++) {
 			Annotation[] parameterAnnotations = method.getParameterAnnotations()[i];
-			Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
+			Deserialize annotation = getAnnotation(parameterAnnotations, Deserialize.class);
 			if (annotation != null) {
 				String field = annotation.value();
 				fields.add(field);
@@ -947,7 +928,7 @@ public final class SerializerFactory {
 		for (Constructor<?> constructor : ctx.getRawType().getDeclaredConstructors()) {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);
 			for (int i = 0; i < constructor.getParameterTypes().length; i++) {
-				Deserialize annotation = getAnnotation(Deserialize.class, constructor.getParameterAnnotations()[i]);
+				Deserialize annotation = getAnnotation(constructor.getParameterAnnotations()[i], Deserialize.class);
 				if (annotation != null) {
 					String field = annotation.value();
 					fields.add(field);
@@ -1008,13 +989,13 @@ public final class SerializerFactory {
 		int added = Serialize.DEFAULT_VERSION;
 		int removed = Serialize.DEFAULT_VERSION;
 
-		Serialize serialize = getAnnotation(Serialize.class, annotations);
+		Serialize serialize = getAnnotation(annotations, Serialize.class);
 		if (serialize != null) {
 			added = serialize.added();
 			removed = serialize.removed();
 		}
 
-		SerializeProfiles profiles = getAnnotation(SerializeProfiles.class, annotations);
+		SerializeProfiles profiles = getAnnotation(annotations, SerializeProfiles.class);
 		if (profiles != null) {
 			if (!List.of(profiles.value()).contains(profile == null ? "" : profile)) {
 				return null;
@@ -1030,26 +1011,6 @@ public final class SerializerFactory {
 		}
 
 		return serialize != null ? new FoundSerializer(methodOrField, serialize.order(), added, removed) : null;
-	}
-
-	private boolean hasAnnotation(Class<? extends Annotation> type, Annotation[] annotations) {
-		if (annotationAliases.isEmpty()) return Utils.hasAnnotation(annotations, type);
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
-		return aliasesMap == null || aliasesMap.isEmpty() ?
-			Utils.hasAnnotation(annotations, type) :
-			Utils.hasAnnotation(annotations, a -> a == type || aliasesMap.containsKey(a)) ;
-	}
-
-	private <A extends Annotation> @Nullable A getAnnotation(Class<A> type, Annotation[] annotations) {
-		if (annotationAliases.isEmpty()) return Utils.getAnnotation(annotations, type);
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.get(type);
-		return aliasesMap == null ?
-			Utils.getAnnotation(annotations, type) :
-			Utils.getAnnotation(annotations, a -> {
-				//noinspection unchecked
-				Function<Annotation, A> fn = (Function<Annotation, A>) aliasesMap.get(a);
-				return fn != null ? fn.apply(a) : null;
-			});
 	}
 
 	private int getProfileVersion(String[] profiles, int[] versions) {
