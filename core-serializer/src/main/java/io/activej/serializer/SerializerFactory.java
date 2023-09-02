@@ -856,10 +856,18 @@ public final class SerializerFactory {
 		List<FoundSerializer> foundSerializers
 	) {
 		for (Field field : ctx.getRawType().getDeclaredFields()) {
-			FoundSerializer foundSerializer = tryAddField(ctx, bindings, field);
-			if (foundSerializer != null) {
-				foundSerializers.add(foundSerializer);
-			}
+			@Nullable FoundSerializer foundSerializer = findAnnotations(field, field.getAnnotations());
+			if (foundSerializer == null) continue;
+
+			if (!isPublic(field.getModifiers()))
+				throw new IllegalArgumentException(format("Field %s must be public", field));
+			if (isStatic(field.getModifiers()))
+				throw new IllegalArgumentException(format("Field %s must not be static", field));
+			if (isTransient(field.getModifiers()))
+				throw new IllegalArgumentException(format("Field %s must not be transient", field));
+
+			foundSerializer.serializer = ctx.scan(bind(field.getAnnotatedType(), bindings));
+			foundSerializers.add(foundSerializer);
 		}
 	}
 
@@ -868,18 +876,26 @@ public final class SerializerFactory {
 		List<FoundSerializer> foundSerializers
 	) {
 		for (Method method : ctx.getRawType().getDeclaredMethods()) {
-			FoundSerializer foundSerializer = tryAddGetter(ctx, bindings, method);
-			if (foundSerializer != null) {
-				foundSerializers.add(foundSerializer);
-			}
+			if (method.isBridge()) continue;
+
+			@Nullable FoundSerializer foundSerializer = findAnnotations(method, method.getAnnotations());
+			if (foundSerializer == null) continue;
+
+			if (!isPublic(method.getModifiers()))
+				throw new IllegalArgumentException(format("Getter %s must be public", method));
+			if (isStatic(method.getModifiers()))
+				throw new IllegalArgumentException(format("Getter %s must not be static", method));
+			if (method.getReturnType() == Void.TYPE || method.getParameterTypes().length != 0)
+				throw new IllegalArgumentException(format("%s must be getter", method));
+
+			foundSerializer.serializer = ctx.scan(bind(method.getAnnotatedReturnType(), bindings));
+			foundSerializers.add(foundSerializer);
 		}
 	}
 
 	private void scanSetters(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder) {
 		for (Method method : ctx.getRawType().getDeclaredMethods()) {
-			if (isStatic(method.getModifiers())) {
-				continue;
-			}
+			if (isStatic(method.getModifiers())) continue;
 			if (method.getParameterTypes().length != 0) {
 				List<String> fields = extractFields(method);
 				if (fields.size() == method.getParameterTypes().length) {
@@ -946,43 +962,6 @@ public final class SerializerFactory {
 					throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));
 			}
 		}
-	}
-
-	private FoundSerializer tryAddField(
-		Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings, Field field
-	) {
-		SerializerFactory.FoundSerializer result = findAnnotations(field, field.getAnnotations());
-		if (result == null) {
-			return null;
-		}
-		if (!isPublic(field.getModifiers()))
-			throw new IllegalArgumentException(format("Field %s must be public", field));
-		if (isStatic(field.getModifiers()))
-			throw new IllegalArgumentException(format("Field %s must not be static", field));
-		if (isTransient(field.getModifiers()))
-			throw new IllegalArgumentException(format("Field %s must not be transient", field));
-		result.serializer = ctx.scan(bind(field.getAnnotatedType(), bindings));
-		return result;
-	}
-
-	private @Nullable FoundSerializer tryAddGetter(
-		Context<SerializerDef> ctx, Function<TypeVariable<?>, AnnotatedType> bindings, Method getter
-	) {
-		if (getter.isBridge()) {
-			return null;
-		}
-		FoundSerializer result = findAnnotations(getter, getter.getAnnotations());
-		if (result == null) {
-			return null;
-		}
-		if (!isPublic(getter.getModifiers()))
-			throw new IllegalArgumentException(format("Getter %s must be public", getter));
-		if (isStatic(getter.getModifiers()))
-			throw new IllegalArgumentException(format("Getter %s must not be static", getter));
-		if (getter.getReturnType() == Void.TYPE || getter.getParameterTypes().length != 0)
-			throw new IllegalArgumentException(format("%s must be getter", getter));
-		result.serializer = ctx.scan(bind(getter.getAnnotatedReturnType(), bindings));
-		return result;
 	}
 
 	private @Nullable FoundSerializer findAnnotations(Object methodOrField, Annotation[] annotations) {
