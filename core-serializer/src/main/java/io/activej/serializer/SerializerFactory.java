@@ -77,7 +77,6 @@ public final class SerializerFactory {
 	private CompatibilityLevel compatibilityLevel = CompatibilityLevel.LEVEL_4;
 	private int autoOrderingStart = 1;
 	private int autoOrderingStride = 1;
-	private boolean annotationsCompatibilityMode;
 
 	private final Map<Object, List<Class<?>>> extraSubclassesMap = new HashMap<>();
 
@@ -271,30 +270,6 @@ public final class SerializerFactory {
 		public Builder withCompatibilityLevel(CompatibilityLevel compatibilityLevel) {
 			checkNotBuilt(this);
 			SerializerFactory.this.compatibilityLevel = compatibilityLevel;
-			return this;
-		}
-
-		/**
-		 * Enables annotation compatibility mode
-		 *
-		 * @see #withAnnotationCompatibilityMode(boolean)
-		 */
-		public Builder withAnnotationCompatibilityMode() {
-			checkNotBuilt(this);
-			return withAnnotationCompatibilityMode(true);
-		}
-
-		/**
-		 * Enables or disables annotation compatibility mode
-		 * <p>
-		 * In previous ActiveJ versions serializer annotations had to be placed directly on fields/getters.
-		 * To specify a concrete annotated type a {@code path} attribute was used. Now it is possible to
-		 * annotate types directly. However, for compatibility with classes annotated using a {@code path} attribute
-		 * this compatibility mode can be enabled
-		 */
-		public Builder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
-			checkNotBuilt(this);
-			SerializerFactory.this.annotationsCompatibilityMode = annotationsCompatibilityMode;
 			return this;
 		}
 
@@ -825,11 +800,7 @@ public final class SerializerFactory {
 				throw new IllegalArgumentException(e);
 			}
 			FoundSerializer foundSerializer = new FoundSerializer(method, order++, Serialize.DEFAULT_VERSION, Serialize.DEFAULT_VERSION);
-			foundSerializer.serializer = ctx.scan(bind(
-				annotationsCompatibilityMode ?
-					annotateWithTypePath(recordComponent.getGenericType(), recordComponent.getAnnotations()) :
-					recordComponent.getAnnotatedType(),
-				bindings));
+			foundSerializer.serializer = ctx.scan(bind(recordComponent.getAnnotatedType(), bindings));
 			foundSerializers.add(foundSerializer);
 		}
 		classSerializerBuilder.withConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
@@ -1009,11 +980,7 @@ public final class SerializerFactory {
 			throw new IllegalArgumentException(format("Field %s must not be static", field));
 		if (isTransient(field.getModifiers()))
 			throw new IllegalArgumentException(format("Field %s must not be transient", field));
-		result.serializer = ctx.scan(bind(
-			annotationsCompatibilityMode ?
-				annotateWithTypePath(field.getGenericType(), field.getAnnotations()) :
-				field.getAnnotatedType(),
-			bindings));
+		result.serializer = ctx.scan(bind(field.getAnnotatedType(), bindings));
 		return result;
 	}
 
@@ -1033,46 +1000,8 @@ public final class SerializerFactory {
 			throw new IllegalArgumentException(format("Getter %s must not be static", getter));
 		if (getter.getReturnType() == Void.TYPE || getter.getParameterTypes().length != 0)
 			throw new IllegalArgumentException(format("%s must be getter", getter));
-		result.serializer = ctx.scan(bind(
-			annotationsCompatibilityMode ?
-				annotateWithTypePath(getter.getGenericReturnType(), getter.getAnnotations()) :
-				getter.getAnnotatedReturnType(),
-			bindings));
+		result.serializer = ctx.scan(bind(getter.getAnnotatedReturnType(), bindings));
 		return result;
-	}
-
-	private static final Map<Class<? extends Annotation>, Function<Annotation, ? extends Annotation[]>> REPEATABLES_VALUE = new HashMap<>();
-	private static final Map<Class<? extends Annotation>, Function<Annotation, int[]>> ANNOTATIONS_PATH = new HashMap<>();
-
-	static {
-		repeatable(SerializeFixedSizes.class, SerializeFixedSize.class, SerializeFixedSizes::value, SerializeFixedSize::path);
-		repeatable(SerializeNullables.class, SerializeNullable.class, SerializeNullables::value, SerializeNullable::path);
-		repeatable(SerializeStringFormats.class, SerializeStringFormat.class, SerializeStringFormats::value, SerializeStringFormat::path);
-		repeatable(SerializeClasses.class, SerializeClass.class, SerializeClasses::value, SerializeClass::path);
-		repeatable(SerializeVarLengths.class, SerializeVarLength.class, SerializeVarLengths::value, SerializeVarLength::path);
-	}
-
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static <AR extends Annotation, AV extends Annotation> void repeatable(
-		Class<AR> arClass, Class<AV> avClass,
-		Function<AR, ? extends AV[]> toValue, Function<AV, int[]> toPath
-	) {
-		REPEATABLES_VALUE.put(arClass, (Function) toValue);
-		ANNOTATIONS_PATH.put(avClass, (Function) toPath);
-	}
-
-	private static AnnotatedType annotateWithTypePath(Type type, Annotation[] annotations) {
-		return annotatedTypeOf(type, ($, path) -> {
-			List<Annotation> result = new ArrayList<>();
-			for (Annotation annotation : annotations) {
-				for (Annotation a : REPEATABLES_VALUE.getOrDefault(annotation.annotationType(), ar -> new Annotation[]{ar}).apply(annotation)) {
-					if (Arrays.equals(ANNOTATIONS_PATH.getOrDefault(a.annotationType(), av -> null).apply(a), path)) {
-						result.add(a);
-					}
-				}
-			}
-			return result.toArray(new Annotation[0]);
-		});
 	}
 
 	private @Nullable FoundSerializer findAnnotations(Object methodOrField, Annotation[] annotations) {

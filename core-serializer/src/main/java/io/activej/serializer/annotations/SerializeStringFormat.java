@@ -29,6 +29,4 @@ import java.lang.annotation.*;
 @Repeatable(SerializeStringFormats.class)
 public @interface SerializeStringFormat {
 	StringFormat value();
-
-	int[] path() default {};
 }

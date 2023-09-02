@@ -26,5 +26,4 @@ import java.lang.annotation.*;
 	ElementType.RECORD_COMPONENT})
 @Repeatable(SerializeNullables.class)
 public @interface SerializeNullable {
-	int[] path() default {};
 }

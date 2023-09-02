@@ -27,6 +27,4 @@ import java.lang.annotation.*;
 @Repeatable(SerializeFixedSizes.class)
 public @interface SerializeFixedSize {
 	int value();
-
-	int[] path() default {};
 }

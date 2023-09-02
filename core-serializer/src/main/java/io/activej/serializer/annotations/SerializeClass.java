@@ -35,6 +35,4 @@ public @interface SerializeClass {
 	String subclassesId() default "";
 
 	int subclassesIdx() default 0;
-
-	int[] path() default {};
 }

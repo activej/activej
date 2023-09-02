@@ -26,5 +26,4 @@ import java.lang.annotation.*;
 	ElementType.RECORD_COMPONENT})
 @Repeatable(SerializeVarLengths.class)
 public @interface SerializeVarLength {
-	int[] path() default {};
 }

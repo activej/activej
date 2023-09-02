@@ -7,18 +7,15 @@ import io.activej.serializer.annotations.SerializeNullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SerializePathExample {
+public class SerializeExample {
 
 	//[START Storage]
 	public static class Storage {
 		@Serialize
-		@SerializeNullable(path = 0)
-		@SerializeNullable(path = {0, 1})
-		public List<Nested<Integer, String>> listOfNested;
+		public List<@SerializeNullable Nested<Integer, @SerializeNullable String>> listOfNested;
 	}
 	//[END Storage]
 
-	//[START Nested]
 	public static class Nested<T1, T2> {
 		@Serialize
 		public final T1 first;
@@ -35,13 +32,10 @@ public class SerializePathExample {
 			return "Nested{" + first + ", " + second + '}';
 		}
 	}
-	//[END Nested]
 
 	public static void main(String[] args) {
 		//[START Serializer]
-		BinarySerializer<Storage> serializer = SerializerFactory.builder()
-			.withAnnotationCompatibilityMode() // Compatibility mode has to be enabled
-			.build()
+		BinarySerializer<Storage> serializer = SerializerFactory.defaultInstance()
 			.create(Storage.class);
 		//[END Serializer]
 

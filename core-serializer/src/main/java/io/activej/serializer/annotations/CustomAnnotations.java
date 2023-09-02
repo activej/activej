@@ -46,10 +46,6 @@ public final class CustomAnnotations {
 		public final Class<? extends Annotation> annotationType() {
 			throw new UnsupportedOperationException();
 		}
-
-		public final int[] path() {
-			return new int[0];
-		}
 	}
 
 	public static final class SerializerNullableImpl extends AbstractSerializeAnnotation implements SerializeNullable {
