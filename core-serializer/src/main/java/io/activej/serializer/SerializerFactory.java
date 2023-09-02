@@ -732,7 +732,8 @@ public final class SerializerFactory {
 		scanSetters(ctx, classSerializerBuilder);
 		scanFields(ctx, bindings, memberSerializers);
 		scanGetters(ctx, bindings, memberSerializers);
-		addMemberSerializersToSerializerBuilder(ctx, classSerializerBuilder, memberSerializers);
+		resolveMembersOrder(ctx.getRawType(), memberSerializers);
+		addMemberSerializersToSerializerBuilder(classSerializerBuilder, memberSerializers);
 		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
 			classSerializerBuilder.withMatchingSetters();
 		}
@@ -743,7 +744,8 @@ public final class SerializerFactory {
 
 		List<MemberSerializer> memberSerializers = new ArrayList<>();
 		scanGetters(ctx, bindings, memberSerializers);
-		addMemberSerializersToSerializerBuilder(ctx, classSerializerBuilder, memberSerializers);
+		resolveMembersOrder(ctx.getRawType(), memberSerializers);
+		addMemberSerializersToSerializerBuilder(classSerializerBuilder, memberSerializers);
 
 		for (AnnotatedType superInterface : ctx.getRawType().getAnnotatedInterfaces()) {
 			scanInterface(ctx.push(bind(superInterface, bindings)), classSerializerBuilder);
@@ -770,7 +772,8 @@ public final class SerializerFactory {
 			memberSerializers.add(memberSerializer);
 		}
 		classSerializerBuilder.withConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
-		addMemberSerializersToSerializerBuilder(ctx, classSerializerBuilder, memberSerializers);
+		resolveMembersOrder(ctx.getRawType(), memberSerializers);
+		addMemberSerializersToSerializerBuilder(classSerializerBuilder, memberSerializers);
 	}
 
 	private void scanFields(
@@ -886,13 +889,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private void addMemberSerializersToSerializerBuilder(Context<SerializerDef> ctx, ClassSerializerDef.Builder classSerializerBuilder, List<MemberSerializer> memberSerializers) {
-		if (memberSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
-			if (memberSerializers.stream().anyMatch(f -> f.order != Integer.MIN_VALUE))
-				throw new IllegalArgumentException("Explicit and auto-ordering cannot be mixed");
-			resolveMembersOrder(ctx.getRawType(), memberSerializers);
-		}
-
+	private static void addMemberSerializersToSerializerBuilder(ClassSerializerDef.Builder classSerializerBuilder, List<MemberSerializer> memberSerializers) {
 		Set<Integer> orders = new HashSet<>();
 		for (MemberSerializer memberSerializer : memberSerializers) {
 			if (!orders.add(memberSerializer.order))
@@ -903,16 +900,20 @@ public final class SerializerFactory {
 		for (MemberSerializer memberSerializer : memberSerializers) {
 			if (memberSerializer.member instanceof Method) {
 				classSerializerBuilder.withGetter((Method) memberSerializer.member, memberSerializer.serializer, memberSerializer.added, memberSerializer.removed);
-			} else if (memberSerializer.member instanceof Field) {
-				classSerializerBuilder.withField((Field) memberSerializer.member, memberSerializer.serializer, memberSerializer.added, memberSerializer.removed);
 			} else {
-				throw new AssertionError();
+				classSerializerBuilder.withField((Field) memberSerializer.member, memberSerializer.serializer, memberSerializer.added, memberSerializer.removed);
 			}
 		}
 	}
 
-	private void resolveMembersOrder(Class<?> clazz, List<MemberSerializer> memberSerializers) {
-		Map<String, List<MemberSerializer>> foundFields = memberSerializers.stream().collect(groupingBy(MemberSerializer::getName, toList()));
+	private static void resolveMembersOrder(Class<?> clazz, List<MemberSerializer> memberSerializers) {
+		if (memberSerializers.stream().noneMatch(f -> f.order == Integer.MIN_VALUE)) {
+			return;
+		}
+		if (memberSerializers.stream().anyMatch(f -> f.order != Integer.MIN_VALUE)) {
+			throw new IllegalArgumentException("Explicit and auto-ordering cannot be mixed");
+		}
+		Map<String, List<MemberSerializer>> membersMap = memberSerializers.stream().collect(groupingBy(MemberSerializer::getName, toList()));
 		String pathToClass = clazz.getName().replace('.', '/') + ".class";
 		try (InputStream classInputStream = clazz.getClassLoader().getResourceAsStream(pathToClass)) {
 			ClassReader cr = new ClassReader(requireNonNull(classInputStream));
@@ -921,7 +922,7 @@ public final class SerializerFactory {
 
 				@Override
 				public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-					List<MemberSerializer> list = foundFields.get(name);
+					List<MemberSerializer> list = membersMap.get(name);
 					if (list == null) return null;
 					for (MemberSerializer memberSerializer : list) {
 						if (!(memberSerializer.member instanceof Field)) continue;
@@ -933,7 +934,7 @@ public final class SerializerFactory {
 
 				@Override
 				public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-					List<MemberSerializer> list = foundFields.get(name);
+					List<MemberSerializer> list = membersMap.get(name);
 					if (list == null) return null;
 					for (MemberSerializer memberSerializer : list) {
 						if (!(memberSerializer.member instanceof Method)) continue;
