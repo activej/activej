@@ -802,7 +802,7 @@ public final class SerializerFactory {
 						List<FoundSerializer> list = foundFields.get(name);
 						if (list == null) return null;
 						for (FoundSerializer foundSerializer : list) {
-							if (!(foundSerializer.methodOrField instanceof Field)) continue;
+							if (!(foundSerializer.member instanceof Field)) continue;
 							foundSerializer.index = index++;
 							break;
 						}
@@ -814,8 +814,8 @@ public final class SerializerFactory {
 						List<FoundSerializer> list = foundFields.get(name);
 						if (list == null) return null;
 						for (FoundSerializer foundSerializer : list) {
-							if (!(foundSerializer.methodOrField instanceof Method)) continue;
-							if (!descriptor.equals(getType((Method) foundSerializer.methodOrField).getDescriptor()))
+							if (!(foundSerializer.member instanceof Method)) continue;
+							if (!descriptor.equals(getType((Method) foundSerializer.member).getDescriptor()))
 								continue;
 							foundSerializer.index = index++;
 							break;
@@ -841,10 +841,10 @@ public final class SerializerFactory {
 
 		Collections.sort(foundSerializers);
 		for (FoundSerializer foundSerializer : foundSerializers) {
-			if (foundSerializer.methodOrField instanceof Method) {
-				classSerializerBuilder.withGetter((Method) foundSerializer.methodOrField, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
-			} else if (foundSerializer.methodOrField instanceof Field) {
-				classSerializerBuilder.withField((Field) foundSerializer.methodOrField, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
+			if (foundSerializer.member instanceof Method) {
+				classSerializerBuilder.withGetter((Method) foundSerializer.member, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
+			} else if (foundSerializer.member instanceof Field) {
+				classSerializerBuilder.withField((Field) foundSerializer.member, foundSerializer.serializer, foundSerializer.added, foundSerializer.removed);
 			} else {
 				throw new AssertionError();
 			}
@@ -964,7 +964,7 @@ public final class SerializerFactory {
 		}
 	}
 
-	private @Nullable FoundSerializer findAnnotations(Object methodOrField, Annotation[] annotations) {
+	private @Nullable FoundSerializer findAnnotations(Member member, Annotation[] annotations) {
 		int added = Serialize.DEFAULT_VERSION;
 		int removed = Serialize.DEFAULT_VERSION;
 
@@ -989,7 +989,7 @@ public final class SerializerFactory {
 			}
 		}
 
-		return serialize != null ? new FoundSerializer(methodOrField, serialize.order(), added, removed) : null;
+		return serialize != null ? new FoundSerializer(member, serialize.order(), added, removed) : null;
 	}
 
 	private int getProfileVersion(String[] profiles, int[] versions) {
@@ -1008,7 +1008,7 @@ public final class SerializerFactory {
 	}
 
 	public static final class FoundSerializer implements Comparable<FoundSerializer> {
-		final Object methodOrField;
+		final Member member;
 		int order;
 		int index;
 		final int added;
@@ -1016,31 +1016,19 @@ public final class SerializerFactory {
 		//		final TypedModsMap mods;
 		SerializerDef serializer;
 
-		private FoundSerializer(Object methodOrField, int order, int added, int removed) {
-			this.methodOrField = methodOrField;
+		private FoundSerializer(Member member, int order, int added, int removed) {
+			this.member = member;
 			this.order = order;
 			this.added = added;
 			this.removed = removed;
 		}
 
 		public String getName() {
-			if (methodOrField instanceof Field) {
-				return ((Field) methodOrField).getName();
-			}
-			if (methodOrField instanceof Method) {
-				return ((Method) methodOrField).getName();
-			}
-			throw new AssertionError();
+			return member.getName();
 		}
 
 		private int fieldRank() {
-			if (methodOrField instanceof Field) {
-				return 1;
-			}
-			if (methodOrField instanceof Method) {
-				return 2;
-			}
-			throw new AssertionError();
+			return member instanceof Method ? 2 : 1;
 		}
 
 		@Override
@@ -1059,7 +1047,7 @@ public final class SerializerFactory {
 
 		@Override
 		public String toString() {
-			return methodOrField.getClass().getSimpleName() + " " + getName();
+			return member.getClass().getSimpleName() + " " + getName();
 		}
 	}
 
