@@ -673,7 +673,7 @@ public class BinarySerializerTest {
 
 		@Serialize
 		@SuppressWarnings("deprecation")
-		public List<@SerializeStringFormat(UTF8_MB3) @SerializeNullable String> stringsUtf8Custom;
+		public List<@SerializeClass(StringUtf8Mb3SerializerDef.class) @SerializeNullable String> stringsUtf8Custom;
 
 		@Serialize
 		public List<@SerializeStringFormat(ISO_8859_1) @SerializeNullable String> stringsIso88591;

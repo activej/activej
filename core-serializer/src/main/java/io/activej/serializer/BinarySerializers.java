@@ -212,19 +212,6 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<String> UTF8_MB3_SERIALIZER = new BinarySerializer<>() {
-		@Override
-		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
-			out.writeUTF8mb3(item);
-		}
-
-		@Override
-		@SuppressWarnings("deprecation")
-		public String decode(BinaryInput in) {
-			return in.readUTF8mb3();
-		}
-	};
-
 	public static final BinarySerializer<byte[]> BYTES_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, byte[] item) throws ArrayIndexOutOfBoundsException {
@@ -282,20 +269,6 @@ public final class BinarySerializers {
 				@Override
 				public String decode(BinaryInput in) {
 					return in.readIso88591Nullable();
-				}
-			};
-		}
-		if (codec == UTF8_MB3_SERIALIZER) {
-			return (BinarySerializer<T>) new BinarySerializer<String>() {
-				@Override
-				public void encode(BinaryOutput out, String item) {
-					out.writeUTF8mb3Nullable(item);
-				}
-
-				@Override
-				@SuppressWarnings("deprecation")
-				public String decode(BinaryInput in) {
-					return in.readUTF8mb3Nullable();
 				}
 			};
 		}

@@ -125,9 +125,6 @@ public class SerializerBenchmark {
 		@Serialize
 		@SerializeStringFormat(UTF16)
 		public String string2 = "Hello, World!";
-		@Serialize
-		@SerializeStringFormat(UTF8_MB3)
-		public String string3 = "Hello, World!";
 
 		@Serialize
 		public TestEnum en = TestEnum.ONE;

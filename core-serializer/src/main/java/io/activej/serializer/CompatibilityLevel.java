@@ -19,11 +19,6 @@ package io.activej.serializer;
 @SuppressWarnings("DeprecatedIsStillUsed")
 public enum CompatibilityLevel {
 	/**
-	 * Provides basic version of serializer
-	 */
-	@Deprecated LEVEL_1(1, false),
-
-	/**
 	 * Provides string optimizations for ISO8859-1 and UTF8
 	 */
 	@Deprecated LEVEL_2(2, false),

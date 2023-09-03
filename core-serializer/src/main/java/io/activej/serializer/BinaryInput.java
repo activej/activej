@@ -32,7 +32,7 @@ public final class BinaryInput {
 	public final byte[] array;
 	public int pos;
 
-	private static final AtomicReference<char[]> BUF = new AtomicReference<>(new char[256]);
+	public static final AtomicReference<char[]> BUF = new AtomicReference<>(new char[256]);
 
 	public BinaryInput(byte[] array) {
 		this.array = array;
@@ -302,63 +302,6 @@ public final class BinaryInput {
 			chars[i] = (char) (array[pos + i * 2] & 0xFF | (array[pos + i * 2 + 1] & 0xFF) << 8);
 		}
 		pos += length * 2;
-		String s = new String(chars, 0, length);
-		BUF.lazySet(chars);
-		return s;
-	}
-
-	@Deprecated
-	public String readUTF8mb3() {
-		int length = readVarInt();
-		if (length == 0) return "";
-		if (length >= 40) return readUTF8mb3buf(length);
-		char[] chars = new char[length];
-		for (int i = 0; i < length; i++) {
-			byte b = array[pos++];
-			chars[i] = b >= 0 ?
-				(char) b :
-				readUTF8mb3Char(b);
-		}
-		return new String(chars, 0, length);
-	}
-
-	@Deprecated
-	public @Nullable String readUTF8mb3Nullable() {
-		int length = readVarInt();
-		if (length == 0) return null;
-		length--;
-		if (length == 0) return "";
-		if (length >= 40) return readUTF8mb3buf(length);
-		char[] chars = new char[length];
-		for (int i = 0; i < length; i++) {
-			byte b = array[pos++];
-			chars[i] = b >= 0 ?
-				(char) b :
-				readUTF8mb3Char(b);
-		}
-		return new String(chars, 0, length);
-	}
-
-	@Deprecated
-	private char readUTF8mb3Char(byte b) {
-		int c = b & 0xFF;
-		if (c < 0xE0) {
-			return (char) ((c & 0x1F) << 6 | array[pos++] & 0x3F);
-		} else {
-			return (char) ((c & 0x0F) << 12 | (array[pos++] & 0x3F) << 6 | (array[pos++] & 0x3F));
-		}
-	}
-
-	@Deprecated
-	private String readUTF8mb3buf(int length) {
-		char[] chars = BUF.getAndSet(null);
-		if (chars == null || chars.length < length) chars = new char[length + length / 4];
-		for (int i = 0; i < length; i++) {
-			byte b = array[pos++];
-			chars[i] = b >= 0 ?
-				(char) b :
-				readUTF8mb3Char(b);
-		}
 		String s = new String(chars, 0, length);
 		BUF.lazySet(chars);
 		return s;

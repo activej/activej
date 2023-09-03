@@ -282,54 +282,6 @@ public final class BinaryOutputUtils {
 		return 0;
 	}
 
-	@Deprecated
-	public static int writeUTF8mb3(byte[] buf, int off, String s) {
-		int length = s.length();
-		off = writeVarInt(buf, off, length);
-		for (int i = 0; i < length; i++) {
-			int c = s.charAt(i);
-			if (c <= 0x007F) {
-				buf[off++] = (byte) c;
-			} else {
-				off = writeMb3UtfChar(buf, off, c);
-			}
-		}
-		return off;
-	}
-
-	@Deprecated
-	public static int writeUTF8mb3Nullable(byte[] buf, int off, String s) {
-		if (s == null) {
-			buf[off] = (byte) 0;
-			return off + 1;
-		}
-		int length = s.length();
-		off = writeVarInt(buf, off, length + 1);
-		for (int i = 0; i < length; i++) {
-			int c = s.charAt(i);
-			if (c <= 0x007F) {
-				buf[off++] = (byte) c;
-			} else {
-				off = writeMb3UtfChar(buf, off, c);
-			}
-		}
-		return off;
-	}
-
-	@Deprecated
-	private static int writeMb3UtfChar(byte[] buf, int off, int c) {
-		if (c <= 0x07FF) {
-			buf[off] = (byte) (0xC0 | c >>> 6);
-			buf[off + 1] = (byte) (0x80 | c & 0x3F);
-			return off + 2;
-		} else {
-			buf[off] = (byte) (0xE0 | c >>> 12);
-			buf[off + 1] = (byte) (0x80 | c >> 6 & 0x3F);
-			buf[off + 2] = (byte) (0x80 | c & 0x3F);
-			return off + 3;
-		}
-	}
-
 	public static int writeUTF16(byte[] buf, int off, String s) {
 		int length = s.length();
 		off = writeVarInt(buf, off, length);

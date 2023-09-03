@@ -16,7 +16,6 @@
 
 package io.activej.serializer;
 
-@SuppressWarnings("DeprecatedIsStillUsed")
 public enum StringFormat {
-	UTF8, UTF16, ISO_8859_1, @Deprecated UTF8_MB3
+	UTF8, UTF16, ISO_8859_1
 }

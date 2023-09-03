@@ -26,8 +26,6 @@ import io.activej.serializer.def.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.CompatibilityLevel.LEVEL_1;
-import static io.activej.serializer.StringFormat.ISO_8859_1;
 import static io.activej.serializer.StringFormat.UTF8;
 import static io.activej.serializer.util.Utils.get;
 
@@ -64,14 +62,6 @@ public final class StringSerializerDef extends AbstractSerializerDef implements 
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return set(pos, get(() -> {
 			Expression string = cast(value, String.class);
-			if (compatibilityLevel == LEVEL_1 &&
-				(format == ISO_8859_1 || format == UTF8)
-			) {
-				// UTF-MB3
-				return nullable ?
-					staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
-					staticCall(BinaryOutputUtils.class, "writeUTF8mb3", buf, pos, string);
-			}
 			return switch (format) {
 				case ISO_8859_1 -> nullable ?
 					staticCall(BinaryOutputUtils.class, "writeIso88591Nullable", buf, pos, string) :
@@ -85,22 +75,12 @@ public final class StringSerializerDef extends AbstractSerializerDef implements 
 						staticCall(BinaryOutputUtils.class, "writeUTF16Nullable" + LE, buf, pos, string) :
 						staticCall(BinaryOutputUtils.class, "writeUTF16" + LE, buf, pos, string);
 				}
-				//noinspection deprecation
-				case UTF8_MB3 -> nullable ?
-					staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
-					staticCall(BinaryOutputUtils.class, "writeUTF8mb3", buf, pos, string);
 			};
 		}));
 	}
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (compatibilityLevel == LEVEL_1 && (format == ISO_8859_1 || format == UTF8)) {
-			// UTF-MB3
-			return nullable ?
-				call(in, "readUTF8mb3Nullable") :
-				call(in, "readUTF8mb3");
-		}
 		return switch (format) {
 			case ISO_8859_1 -> nullable ?
 				call(in, "readIso88591Nullable") :
@@ -114,9 +94,6 @@ public final class StringSerializerDef extends AbstractSerializerDef implements 
 					call(in, "readUTF16Nullable" + LE) :
 					call(in, "readUTF16" + LE);
 			}
-			case UTF8_MB3 -> nullable ?
-				call(in, "readUTF8mb3Nullable") :
-				call(in, "readUTF8mb3");
 		};
 	}
 }

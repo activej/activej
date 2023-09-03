@@ -31,35 +31,35 @@ public class CompatibilityLevelTest {
 
 	@Test
 	public void strings() {
-		byte[] level1Bytes = doTestStrings(CompatibilityLevel.LEVEL_1);
+//		byte[] level1Bytes = doTestStrings(CompatibilityLevel.LEVEL_1);
 		byte[] level2Bytes = doTestStrings(CompatibilityLevel.LEVEL_2);
 		byte[] level3Bytes = doTestStrings(CompatibilityLevel.LEVEL_3);
 		byte[] level4Bytes = doTestStrings(CompatibilityLevel.LEVEL_4);
 
-		assertThat(level1Bytes, not(equalTo(level2Bytes)));
+//		assertThat(level1Bytes, not(equalTo(level2Bytes)));
 		assertThat(level2Bytes, allOf(equalTo(level3Bytes), equalTo(level4Bytes)));
 	}
 
 	@Test
 	public void nullables() {
-		byte[] level1Bytes = doTestNullables(CompatibilityLevel.LEVEL_1);
+//		byte[] level1Bytes = doTestNullables(CompatibilityLevel.LEVEL_1);
 		byte[] level2Bytes = doTestNullables(CompatibilityLevel.LEVEL_2);
 		byte[] level3Bytes = doTestNullables(CompatibilityLevel.LEVEL_3);
 		byte[] level4Bytes = doTestNullables(CompatibilityLevel.LEVEL_4);
 
-		assertThat(level1Bytes, equalTo(level2Bytes));
+//		assertThat(level1Bytes, equalTo(level2Bytes));
 		assertThat(level2Bytes, not(equalTo(level3Bytes)));
-		assertThat(level4Bytes, allOf(equalTo(level3Bytes), not(equalTo(level1Bytes))));
+		assertThat(level4Bytes, equalTo(level3Bytes));
 	}
 
 	@Test
 	public void booleans() {
-		byte[] level1Bytes = doTestBooleans(CompatibilityLevel.LEVEL_1);
+//		byte[] level1Bytes = doTestBooleans(CompatibilityLevel.LEVEL_1);
 		byte[] level2Bytes = doTestBooleans(CompatibilityLevel.LEVEL_2);
 		byte[] level3Bytes = doTestBooleans(CompatibilityLevel.LEVEL_3);
 		byte[] level4Bytes = doTestBooleans(CompatibilityLevel.LEVEL_4);
 
-		assertThat(level1Bytes, allOf(equalTo(level2Bytes), equalTo(level3Bytes), not(equalTo(level4Bytes))));
+		assertThat(level2Bytes, allOf(equalTo(level3Bytes), not(equalTo(level4Bytes))));
 	}
 
 	private static byte[] doTestStrings(CompatibilityLevel compatibilityLevel) {
@@ -139,8 +139,9 @@ public class CompatibilityLevelTest {
 		@SerializeStringFormat(StringFormat.UTF8)
 		public String stringUtf8;
 
+		@SuppressWarnings("deprecation")
 		@Serialize
-		@SerializeStringFormat(StringFormat.UTF8_MB3)
+		@SerializeClass(StringUtf8Mb3SerializerDef.class)
 		public String stringUtf8Mb3;
 
 		@Serialize
