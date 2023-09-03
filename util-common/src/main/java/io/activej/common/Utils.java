@@ -301,18 +301,51 @@ public class Utils {
 	}
 
 	public static <T> Iterator<T> concat(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2) {
-		return concatImpl(iteratorOf(iterator1, iterator2));
+		return concat(iteratorOf(iterator1, iterator2));
 	}
 
 	public static <T> Iterator<T> append(Iterator<? extends T> iterator, T value) {
-		return concatImpl(iteratorOf(iterator, iteratorOf(value)));
+		return new Iterator<>() {
+			boolean hasNext = true;
+
+			@Override
+			public boolean hasNext() {
+				return hasNext;
+			}
+
+			@Override
+			public T next() {
+				if (iterator.hasNext()) {
+					return iterator.next();
+				}
+				if (!hasNext) throw new NoSuchElementException();
+				hasNext = false;
+				return value;
+			}
+		};
 	}
 
 	public static <T> Iterator<T> prepend(T value, Iterator<? extends T> iterator) {
-		return concatImpl(iteratorOf(iteratorOf(value), iterator));
+		return new Iterator<>() {
+			@Nullable Iterator<? extends T> it;
+
+			@Override
+			public boolean hasNext() {
+				return it == null || it.hasNext();
+			}
+
+			@Override
+			public T next() {
+				if (it != null) {
+					return it.next();
+				}
+				this.it = iterator;
+				return value;
+			}
+		};
 	}
 
-	private static <T> Iterator<T> concatImpl(Iterator<? extends Iterator<? extends T>> iterators) {
+	public static <T> Iterator<T> concat(Iterator<? extends Iterator<? extends T>> iterators) {
 		return new Iterator<>() {
 			@Nullable Iterator<? extends T> it = findNextIterator(iterators);
 
@@ -331,7 +364,7 @@ public class Utils {
 				return next;
 			}
 
-			private @Nullable Iterator<? extends T> findNextIterator(Iterator<? extends Iterator<? extends T>> iterators) {
+			private static <T> @Nullable Iterator<? extends T> findNextIterator(Iterator<? extends Iterator<? extends T>> iterators) {
 				while (iterators.hasNext()) {
 					Iterator<? extends T> it = iterators.next();
 					if (it.hasNext()) return it;
