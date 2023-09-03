@@ -35,7 +35,7 @@ import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.serializer.util.Utils.get;
+import static io.activej.common.Utils.get;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
 import static org.objectweb.asm.Type.*;

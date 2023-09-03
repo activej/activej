@@ -45,10 +45,10 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Utils.get;
 import static io.activej.serializer.def.SerializerDef.*;
 import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
-import static io.activej.serializer.util.Utils.get;
 import static io.activej.types.AnnotatedTypes.*;
 import static io.activej.types.Utils.getAnnotation;
 import static io.activej.types.Utils.hasAnnotation;

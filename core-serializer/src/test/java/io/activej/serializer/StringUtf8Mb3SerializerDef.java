@@ -8,8 +8,8 @@ import io.activej.serializer.def.SerializerDefWithNullable;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Utils.get;
 import static io.activej.serializer.util.BinaryOutputUtils.writeVarInt;
-import static io.activej.serializer.util.Utils.get;
 
 @SuppressWarnings({"unused", "DeprecatedIsStillUsed"})
 @Deprecated

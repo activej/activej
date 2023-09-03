@@ -26,8 +26,8 @@ import io.activej.serializer.def.SerializerDefWithNullable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Utils.get;
 import static io.activej.serializer.StringFormat.UTF8;
-import static io.activej.serializer.util.Utils.get;
 
 @ExposedInternals
 public final class StringSerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable {

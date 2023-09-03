@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.util.Utils.get;
+import static io.activej.common.Utils.get;
 
 //@State(Scope.Benchmark)
 public class TableSwitchBenchmark {
