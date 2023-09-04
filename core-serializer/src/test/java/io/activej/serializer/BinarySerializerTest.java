@@ -1,9 +1,12 @@
 package io.activej.serializer;
 
 import io.activej.serializer.annotations.*;
+import io.activej.serializer.def.SerializerDefs;
 import io.activej.serializer.def.SimpleSerializerDef;
 import io.activej.serializer.def.impl.*;
+import io.activej.serializer.def.impl.ClassSerializerDef.PropertyDef;
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import io.activej.types.TypeT;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -3078,5 +3081,57 @@ public class BinarySerializerTest {
 			return new AC1(param);
 		}
 	}
+
+	public static final class ExternalPojo {
+		public int a;
+		public String s;
+	}
+
+	@Test
+	public void testExplicitClassSerializerDef() {
+		SerializerFactory factory = SerializerFactory.builder()
+			.with(ExternalPojo.class, ctx -> {
+				try {
+					return ClassSerializerDef.builder(ExternalPojo.class)
+						.withPropertyDef(new PropertyDef(ExternalPojo.class.getField("a"), SerializerDefs.ofInt(false)))
+						.withPropertyDef(new PropertyDef(ExternalPojo.class.getField("s"), SerializerDefs.ofString(UTF8)))
+						.build();
+				} catch (NoSuchFieldException e) {
+					throw new AssertionError(e);
+				}
+			})
+			.build();
+		{
+			var serializer = factory.create(ExternalPojo.class);
+
+			ExternalPojo pojo = new ExternalPojo();
+			pojo.a = 10;
+			pojo.s = "abc";
+			byte[] array = new byte[100];
+			serializer.encode(array, 0, pojo);
+			ExternalPojo decoded = serializer.decode(array, 0);
+			assertEquals(pojo.a, decoded.a);
+			assertEquals(pojo.s, decoded.s);
+		}
+		{
+			var serializer = factory.create(new TypeT<List<@SerializeNullable ExternalPojo>>() {});
+
+			ExternalPojo pojo1 = new ExternalPojo();
+			pojo1.a = 10;
+			pojo1.s = "abc";
+			ExternalPojo pojo2 = new ExternalPojo();
+			pojo2.a = 20;
+			pojo2.s = "xyz";
+			byte[] array = new byte[200];
+			serializer.encode(array, 0, Arrays.asList(pojo1, null, pojo2));
+			List<ExternalPojo> decoded = serializer.decode(array, 0);
+			assertEquals(pojo1.a, decoded.get(0).a);
+			assertEquals(pojo1.s, decoded.get(0).s);
+			assertNull(decoded.get(1));
+			assertEquals(pojo2.a, decoded.get(2).a);
+			assertEquals(pojo2.s, decoded.get(2).s);
+		}
+	}
+
 
 }
