@@ -26,14 +26,12 @@ import org.objectweb.asm.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.impl.Cast.SELF_TYPE;
 import static io.activej.codegen.operation.CompareOperation.*;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Type.getType;
@@ -74,19 +72,11 @@ public class Expressions {
 	/**
 	 * Returns a sequence of operations which will be processed one after the other
 	 *
-	 * @param parts list of operations
+	 * @param expressions list of operations
 	 * @return new instance of the ExpressionSequence
 	 */
-	public static Expression sequence(List<Expression> parts) {
-		List<Expression> list = new ArrayList<>(parts.size());
-		for (Expression part : parts) {
-			if (part instanceof Sequence) {
-				list.addAll(((Sequence) part).expressions);
-			} else {
-				list.add(part);
-			}
-		}
-		return new Sequence(list);
+	public static Expression sequence(List<Expression> expressions) {
+		return new Sequence(expressions);
 	}
 
 	/**
@@ -98,9 +88,9 @@ public class Expressions {
 	 * @return new instance of the ExpressionSequence
 	 */
 	public static Expression sequence(Consumer<List<Expression>> consumer) {
-		List<Expression> seq = new ArrayList<>();
-		consumer.accept(seq);
-		return new Sequence(seq);
+		List<Expression> expressions = new ArrayList<>();
+		consumer.accept(expressions);
+		return sequence(expressions);
 	}
 
 	/**
@@ -112,10 +102,10 @@ public class Expressions {
 	 * @return new instance of the ExpressionSequence
 	 */
 	public static Expression sequence(Function<List<Expression>, Expression> fn) {
-		List<Expression> seq = new ArrayList<>();
-		Expression result = fn.apply(seq);
-		seq.add(result);
-		return new Sequence(seq);
+		List<Expression> expressions = new ArrayList<>();
+		Expression result = fn.apply(expressions);
+		expressions.add(result);
+		return new Sequence(expressions);
 	}
 
 	/**
@@ -130,6 +120,10 @@ public class Expressions {
 		return sequence(variable, fn.apply(variable));
 	}
 
+	public static Expression let(Supplier<Expression> expressionsFn, Function<Variable, Expression> fn) {
+		return let(expressionsFn.get(), fn);
+	}
+
 	/**
 	 * Returns an expression that represents new local variables with some action applied to them
 	 *
@@ -137,19 +131,18 @@ public class Expressions {
 	 * @param fn          function applied to a list of new local variables
 	 * @return an expression that represents new local variables with some action applied to them
 	 */
-	public static Expression let(List<Expression> expressions, Function<List<Variable>, Expression> fn) {
-		List<Variable> variables = expressions.stream().map(Let::new).collect(toList());
+	public static Expression let(List<Expression> expressions, Function<Variable[], Expression> fn) {
+		Variable[] variables = expressions.stream().map(Let::new).toArray(Variable[]::new);
 		List<Expression> sequence = new ArrayList<>(expressions.size() + 1);
-		sequence.addAll(variables);
+		sequence.addAll(asList(variables));
 		sequence.add(fn.apply(variables));
 		return sequence(sequence);
 	}
 
-	/**
-	 * @see #let(List, Function)
-	 */
-	public static Expression let(Expression[] expressions, Function<Variable[], Expression> fn) {
-		return let(List.of(expressions), variables -> fn.apply(variables.toArray(new Variable[0])));
+	public static Expression let(Consumer<List<Expression>> expressionsFn, Function<Variable[], Expression> fn) {
+		List<Expression> expressions = new ArrayList<>();
+		expressionsFn.accept(expressions);
+		return let(expressions, fn);
 	}
 
 	/**
@@ -161,6 +154,10 @@ public class Expressions {
 	 */
 	public static Expression set(StoreDef to, Expression from) {
 		return new Set(to, from);
+	}
+
+	public static Expression set(StoreDef to, Supplier<Expression> fromFn) {
+		return set(to, fromFn.get());
 	}
 
 	/**
@@ -870,10 +867,10 @@ public class Expressions {
 			value(false),
 			let(castIntoSelf(arg(0)), that -> and(fields.stream()
 				.map(field -> let(
-					new Expression[]{
+					List.of(
 						property(self(), field),
 						property(that, field)
-					},
+					),
 					vars ->
 						ifNull(vars[0],
 							isNull(vars[1]),

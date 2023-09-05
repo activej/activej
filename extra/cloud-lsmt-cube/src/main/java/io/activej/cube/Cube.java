@@ -89,7 +89,8 @@ import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.Utils.createResultClass;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.types.Primitives.wrap;
@@ -1164,7 +1165,7 @@ public final class Cube extends AbstractReactive
 			return queryClassLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
 				() -> ClassGenerator.builder(Comparator.class)
-					.withMethod("compare", get(() -> {
+					.withMethod("compare", () -> {
 						Compare.Builder compareBuilder = Compare.builder();
 						for (Ordering ordering : query.getOrderings()) {
 							String field = ordering.getField();
@@ -1177,7 +1178,7 @@ public final class Cube extends AbstractReactive
 							}
 						}
 						return compareBuilder.build();
-					}))
+					})
 					.build()
 			);
 		}

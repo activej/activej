@@ -55,10 +55,6 @@ public class Utils {
 		}
 	};
 
-	public static <T> T get(Supplier<T> supplier) {
-		return supplier.get();
-	}
-
 	public static <T> T nonNullElse(@Nullable T value1, T defaultValue) {
 		return value1 != null ? value1 : defaultValue;
 	}

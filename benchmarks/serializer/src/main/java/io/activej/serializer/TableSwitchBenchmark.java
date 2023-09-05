@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.get;
 
 //@State(Scope.Benchmark)
 public class TableSwitchBenchmark {
@@ -42,26 +41,26 @@ public class TableSwitchBenchmark {
 
 	private static final Test test1 = ClassGenerator.builder(Test.class)
 		.withMethod("test",
-			get(() -> {
+			() -> {
 				Expression result = value("---");
 				for (int i = 0; i < keys.length; i++) {
 					result = ifRefNe(arg(0), value(i), result, value("X" + i));
 				}
 				return result;
-			}))
+			})
 		.build()
 		.generateClassAndCreateInstance(DefiningClassLoader.create());
 
 	private static final Test test2 = ClassGenerator.builder(Test.class)
 		.withMethod("test", String.class, List.of(int.class),
-			get(() -> {
+			() -> {
 				Map<Integer, Expression> cases = new HashMap<>();
 				for (int i = 0; i < keys.length; i++) {
 					cases.put(i, value("X" + i));
 				}
 
 				return Expressions.tableSwitch(arg(0), cases, value("---"));
-			}))
+			})
 		.build()
 		.generateClassAndCreateInstance(DefiningClassLoader.create());
 

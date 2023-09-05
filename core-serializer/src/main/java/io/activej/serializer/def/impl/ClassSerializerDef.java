@@ -34,7 +34,6 @@ import java.util.function.UnaryOperator;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.Utils.get;
 import static io.activej.common.Utils.toHashMap;
 import static java.lang.Character.toUpperCase;
 import static java.lang.String.format;
@@ -311,15 +310,13 @@ public final class ClassSerializerDef extends AbstractSerializerDef {
 		Map<String, PropertyDef> propertyMap = properties.stream().collect(toHashMap(p -> p.name, identity()));
 
 		return let(
-			get(() -> {
-				List<Expression> propertyExpressions = new ArrayList<>();
+			propertyExpressions -> {
 				for (PropertyDef propertyDef : properties) {
 					if (!propertyDef.hasVersion(version)) continue;
 					propertyExpressions.add(
 						propertyDef.serializer.defineDecoder(staticDecoders, version, compatibilityLevel).decode(in));
 				}
-				return propertyExpressions.toArray(Expression[]::new);
-			}),
+			},
 			propertyValues -> {
 
 				Map<String, Expression> propertyValuesMap = new HashMap<>();

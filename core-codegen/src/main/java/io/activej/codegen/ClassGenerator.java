@@ -33,6 +33,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.DefiningClassLoader.createInstance;
@@ -144,6 +145,10 @@ public final class ClassGenerator<T> {
 			return this;
 		}
 
+		public Builder withStaticInitializer(Supplier<Expression> expressionFn) {
+			return withStaticInitializer(expressionFn.get());
+		}
+
 		/**
 		 * Adds a constructor for the given class with specified argument types and an {@link Exception}
 		 * that would be executed inside the constructor
@@ -157,6 +162,10 @@ public final class ClassGenerator<T> {
 			return this;
 		}
 
+		public Builder withConstructor(List<? extends Class<?>> argumentTypes, Supplier<Expression> expressionFn) {
+			return withConstructor(argumentTypes, expressionFn.get());
+		}
+
 		/**
 		 * Adds a constructor for the given class with an {@link Exception}
 		 * that would be executed inside the constructor
@@ -167,6 +176,10 @@ public final class ClassGenerator<T> {
 		public Builder withConstructor(Expression expression) {
 			checkNotBuilt(this);
 			return withConstructor(List.of(), expression);
+		}
+
+		public Builder withConstructor(Supplier<Expression> expressionFn) {
+			return withConstructor(expressionFn.get());
 		}
 
 		/**
@@ -195,6 +208,10 @@ public final class ClassGenerator<T> {
 			return this;
 		}
 
+		public Builder withField(String field, Class<?> type, Supplier<Expression> valueFn) {
+			return withField(field, type, valueFn.get());
+		}
+
 		/**
 		 * Adds a new final initialized field for a class
 		 *
@@ -210,6 +227,10 @@ public final class ClassGenerator<T> {
 			return this;
 		}
 
+		public Builder withFinalField(String field, Class<?> type, Supplier<Expression> valueFn) {
+			return withFinalField(field, type, valueFn.get());
+		}
+
 		/**
 		 * Adds a new method to a class
 		 *
@@ -222,6 +243,10 @@ public final class ClassGenerator<T> {
 			checkNotBuilt(this);
 			methods.put(new Method(methodName, getType(returnType), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 			return this;
+		}
+
+		public Builder withMethod(String methodName, Class<?> returnType, List<? extends Class<?>> argumentTypes, Supplier<Expression> expressionFn) {
+			return withMethod(methodName, returnType, argumentTypes, expressionFn.get());
 		}
 
 		/**
@@ -263,6 +288,10 @@ public final class ClassGenerator<T> {
 			return this;
 		}
 
+		public Builder withMethod(String methodName, Supplier<Expression> expression) {
+			return withMethod(methodName, expression.get());
+		}
+
 		/**
 		 * Adds a static method to a class
 		 *
@@ -275,6 +304,10 @@ public final class ClassGenerator<T> {
 			checkNotBuilt(this);
 			staticMethods.put(new Method(methodName, getType(returnClass), argumentTypes.stream().map(Type::getType).toArray(Type[]::new)), expression);
 			return this;
+		}
+
+		public Builder withStaticMethod(String methodName, Class<?> returnClass, List<? extends Class<?>> argumentTypes, Supplier<Expression> expressionFn) {
+			return withStaticMethod(methodName, returnClass, argumentTypes, expressionFn.get());
 		}
 
 		/**
@@ -305,6 +338,10 @@ public final class ClassGenerator<T> {
 			return this;
 		}
 
+		public Builder withStaticField(String field, Class<?> type, Supplier<Expression> valueFn) {
+			return withStaticField(field, type, valueFn.get());
+		}
+
 		/**
 		 * Adds a new static final initialized field for a class
 		 *
@@ -324,6 +361,10 @@ public final class ClassGenerator<T> {
 				fieldExpressions.put(field, value);
 			}
 			return this;
+		}
+
+		public Builder withStaticFinalField(String field, Class<?> type, Supplier<Expression> valueFn) {
+			return withStaticFinalField(field, type, valueFn.get());
 		}
 
 		@Override

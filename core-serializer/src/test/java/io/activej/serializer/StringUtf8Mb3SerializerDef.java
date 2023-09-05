@@ -8,7 +8,6 @@ import io.activej.serializer.def.SerializerDefWithNullable;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.get;
 import static io.activej.serializer.util.BinaryOutputUtils.writeVarInt;
 
 @SuppressWarnings({"unused", "DeprecatedIsStillUsed"})
@@ -37,12 +36,12 @@ public final class StringUtf8Mb3SerializerDef extends AbstractSerializerDef impl
 
 	@Override
 	public Expression encode(SerializerDef.StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return set(pos, get(() -> {
+		return set(pos, () -> {
 			Expression string = cast(value, String.class);
 			return nullable ?
 				staticCall(StringUtf8Mb3SerializerDef.class, "writeUTF8mb3Nullable", buf, pos, string) :
 				staticCall(StringUtf8Mb3SerializerDef.class, "writeUTF8mb3", buf, pos, string);
-		}));
+		});
 	}
 
 	@Override

@@ -45,7 +45,6 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.get;
 import static io.activej.serializer.def.SerializerDef.*;
 import static io.activej.serializer.def.SerializerExpressions.readByte;
 import static io.activej.serializer.def.SerializerExpressions.writeByte;
@@ -573,7 +572,7 @@ public final class SerializerFactory {
 		classGenerator.withMethod("decodeEarlierVersions",
 			serializer.getDecodeType(),
 			List.of(BinaryInput.class, byte.class),
-			get(() -> {
+			() -> {
 				List<Expression> listKey = new ArrayList<>();
 				List<Expression> listValue = new ArrayList<>();
 				for (int i = decodeVersions.size() - 2; i >= 0; i--) {
@@ -587,7 +586,7 @@ public final class SerializerFactory {
 					result = ifEq(arg(1), listKey.get(i), listValue.get(i), result);
 				}
 				return result;
-			}));
+			});
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
 			int version = decodeVersions.get(i);
