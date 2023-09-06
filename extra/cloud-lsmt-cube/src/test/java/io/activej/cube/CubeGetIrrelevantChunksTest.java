@@ -30,6 +30,7 @@ import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.predicate.AggregationPredicates.gt;
+import static io.activej.aggregation.predicate.AggregationPredicates.notEq;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
@@ -52,6 +53,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private IAggregationChunkStorage<Long> chunkStorage;
 	private Cube.AggregationConfig dateAggregation;
 	private Cube.AggregationConfig advertiserDateAggregation;
+	private Cube.AggregationConfig enumAggregation;
 	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 	private Cube basicCube;
 	private Cube cube;
@@ -83,9 +85,14 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 			.withDimensions("advertiser", "date")
 			.withMeasures("impressions", "clicks", "conversions", "revenue");
 
+		enumAggregation = id("enum-date")
+			.withDimensions("enum", "date")
+			.withMeasures("impressions", "clicks", "conversions", "revenue");
+
 		basicCube = builderOfBasicCube()
 			.withAggregation(dateAggregation)
 			.withAggregation(advertiserDateAggregation)
+			.withAggregation(enumAggregation)
 			.build();
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
@@ -105,6 +112,18 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 		toBeCleanedUp.add(addChunk("date", ofArray(DATE_MIN_DAYS), ofArray(LOWER_DATE_BOUNDARY_DAYS)));
 		toBeCleanedUp.add(addChunk("date", ofArray(DATE_MIN_DAYS), ofArray(DATE_MIN_DAYS + 50)));
+
+		doTest();
+	}
+
+	@Test
+	public void anEnum() {
+		cube = builderOfBasicCube()
+			.withAggregation(enumAggregation.withPredicate(notEq("enum", null)))
+			.build();
+
+		toBePreserved.add(addChunk("enum-date", ofArray(MyEnum.ONE, DATE_MIN_DAYS), ofArray(MyEnum.ONE, DATE_MAX_DAYS)));
+		toBePreserved.add(addChunk("enum-date", ofArray(MyEnum.ONE, DATE_MIN_DAYS + 50), ofArray(MyEnum.TWO, DATE_MAX_DAYS - 50)));
 
 		doTest();
 	}
@@ -205,11 +224,16 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 			.withDimension("advertiser", ofInt())
 			.withDimension("campaign", ofInt())
 			.withDimension("banner", ofInt())
+			.withDimension("enum", ofEnum(MyEnum.class))
 			.withRelation("campaign", "advertiser")
 			.withRelation("banner", "campaign")
 			.withMeasure("impressions", sum(ofLong()))
 			.withMeasure("clicks", sum(ofLong()))
 			.withMeasure("conversions", sum(ofLong()))
 			.withMeasure("revenue", sum(ofDouble()));
+	}
+
+	public enum MyEnum {
+		ONE, TWO, THREE
 	}
 }
