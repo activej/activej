@@ -155,6 +155,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateNotEq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (!left.value.equals(right.value))
 				return left;
 			return alwaysFalse();
@@ -162,6 +163,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateLe.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
@@ -169,6 +171,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateGe.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) <= 0)
 				return left;
 			return alwaysFalse();
@@ -176,6 +179,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateLt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) > 0)
 				return left;
 			return alwaysFalse();
@@ -183,6 +187,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateGt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) < 0)
 				return left;
 			return alwaysFalse();
@@ -190,6 +195,7 @@ public class AggregationPredicates {
 		register(PredicateEq.class, PredicateBetween.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.from.compareTo(left.value) <= 0 && right.to.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
@@ -213,13 +219,14 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateNotEq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (left.value.equals(right.value))
-				return left;
+			if (left.value == null) return right;
+			if (right.value == null) return left;
 			return null;
 		});
 		register(PredicateNotEq.class, PredicateLe.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) < 0)
 				return right;
 			if (right.value.compareTo(left.value) == 0)
@@ -229,6 +236,7 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateGe.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) > 0)
 				return right;
 			if (right.value.compareTo(left.value) == 0)
@@ -238,6 +246,7 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateLt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return null;
@@ -245,6 +254,7 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateGt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return null;
@@ -252,6 +262,7 @@ public class AggregationPredicates {
 		register(PredicateNotEq.class, PredicateBetween.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.from.compareTo(left.value) > 0 && right.to.compareTo(left.value) > 0)
 				return right;
 			if (right.from.compareTo(left.value) < 0 && right.to.compareTo(left.value) < 0)
