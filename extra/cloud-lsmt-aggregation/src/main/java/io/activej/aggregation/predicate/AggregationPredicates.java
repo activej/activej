@@ -26,6 +26,8 @@ import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
@@ -130,13 +132,14 @@ public class AggregationPredicates {
 		register(Eq.class, NotEq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (!left.value.equals(right.value))
+			if (!Objects.equals(left.value, right.value))
 				return left;
 			return alwaysFalse();
 		});
 		register(Eq.class, Le.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
@@ -144,6 +147,7 @@ public class AggregationPredicates {
 		register(Eq.class, Ge.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) <= 0)
 				return left;
 			return alwaysFalse();
@@ -151,6 +155,7 @@ public class AggregationPredicates {
 		register(Eq.class, Lt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) > 0)
 				return left;
 			return alwaysFalse();
@@ -158,6 +163,7 @@ public class AggregationPredicates {
 		register(Eq.class, Gt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.value.compareTo(left.value) < 0)
 				return left;
 			return alwaysFalse();
@@ -165,6 +171,7 @@ public class AggregationPredicates {
 		register(Eq.class, Between.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (right.from.compareTo(left.value) <= 0 && right.to.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
@@ -172,6 +179,7 @@ public class AggregationPredicates {
 		register(Eq.class, RegExp.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return alwaysFalse();
 			if (left.value instanceof CharSequence sequence && right.regexp.matcher(sequence).matches())
 				return left;
 			return alwaysFalse();
@@ -179,7 +187,8 @@ public class AggregationPredicates {
 		register(Eq.class, In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (left.value != null && right.values.contains(left.value))
+			if (left.value == null) return alwaysFalse();
+			if (right.values.contains(left.value))
 				return left;
 			return alwaysFalse();
 		});
@@ -187,13 +196,12 @@ public class AggregationPredicates {
 		register(NotEq.class, NotEq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (left.value.equals(right.value))
-				return left;
 			return null;
 		});
 		register(NotEq.class, Le.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) < 0)
 				return right;
 			if (right.value.compareTo(left.value) == 0)
@@ -203,6 +211,7 @@ public class AggregationPredicates {
 		register(NotEq.class, Ge.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) > 0)
 				return right;
 			if (right.value.compareTo(left.value) == 0)
@@ -212,6 +221,7 @@ public class AggregationPredicates {
 		register(NotEq.class, Lt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return null;
@@ -219,6 +229,7 @@ public class AggregationPredicates {
 		register(NotEq.class, Gt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return null;
@@ -226,6 +237,7 @@ public class AggregationPredicates {
 		register(NotEq.class, Between.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
+			if (left.value == null) return right;
 			if (right.from.compareTo(left.value) > 0 && right.to.compareTo(left.value) > 0)
 				return right;
 			if (right.from.compareTo(left.value) < 0 && right.to.compareTo(left.value) < 0)
@@ -235,6 +247,7 @@ public class AggregationPredicates {
 		register(NotEq.class, RegExp.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
+			if (left.value == null) return right;
 			if (left.value instanceof CharSequence sequence && right.regexp.matcher(sequence).matches())
 				return null;
 			return right;
@@ -242,7 +255,8 @@ public class AggregationPredicates {
 		register(NotEq.class, In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (left.value != null && right.values.contains(left.value)) {
+			if (left.value == null) return right;
+			if (right.values.contains(left.value)) {
 				SortedSet newValues = new TreeSet<>(right.values);
 				newValues.remove(left.value);
 				return in(right.key, newValues);
@@ -609,6 +623,28 @@ public class AggregationPredicates {
 		}
 
 		return RangeScan.rangeScan(PrimaryKey.ofList(from), PrimaryKey.ofList(to));
+	}
+
+	public static AggregationPredicate transform(AggregationPredicate predicate, UnaryOperator<AggregationPredicate> transformer) {
+		if (predicate instanceof And and) {
+			return new And(and.predicates.stream().map(p -> transform(p, transformer)).toList());
+		}
+		if (predicate instanceof Or or) {
+			return new Or(or.predicates.stream().map(p -> transform(p, transformer)).toList());
+		}
+		return transformer.apply(predicate);
+	}
+
+	public static AggregationPredicate transformHasPredicates(AggregationPredicate predicate, Function<String, @Nullable AggregationPredicate> validityPredicates) {
+		return transform(predicate,
+			p -> {
+				if (!(p instanceof Has has)) return p;
+				AggregationPredicate validityPredicate = validityPredicates.apply(has.key);
+				if (validityPredicate == null) {
+					throw new IllegalStateException("No validity predicate for: " + has);
+				}
+				return validityPredicate;
+			});
 	}
 
 }

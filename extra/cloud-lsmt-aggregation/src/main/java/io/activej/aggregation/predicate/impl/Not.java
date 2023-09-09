@@ -24,16 +24,16 @@ import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.not;
+import static io.activej.common.Checks.checkNotNull;
 
 @ExposedInternals
 public final class Not implements AggregationPredicate {
 	public final AggregationPredicate predicate;
 
 	public Not(AggregationPredicate predicate) {
-		this.predicate = predicate;
+		this.predicate = checkNotNull(predicate);
 	}
 
 	@Override
@@ -74,10 +74,8 @@ public final class Not implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
-		return not(predicate.createPredicate(record, fields, predicateFactory));
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+		return not(predicate.createPredicate(record, fields));
 	}
 
 	@Override

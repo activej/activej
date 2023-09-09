@@ -19,23 +19,19 @@ package io.activej.aggregation.predicate.impl;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.codegen.expression.Expressions.property;
-import static io.activej.codegen.expression.Expressions.value;
+import static io.activej.common.Checks.checkNotNull;
 
 @ExposedInternals
 public final class Has implements AggregationPredicate {
 	public final String key;
 
 	public Has(String key) {
-		this.key = key;
+		this.key = checkNotNull(key);
 	}
 
 	@Override
@@ -55,12 +51,8 @@ public final class Has implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
-		if (!fields.containsKey(key)) return value(false);
-		return predicateFactory.apply(key)
-			.createPredicate(record, fields, predicateFactory);
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

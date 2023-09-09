@@ -660,9 +660,7 @@ public final class Cube extends AbstractReactive
 			if (!dataInputFilterPredicate.equals(alwaysTrue()) ||
 				!aggregationContainer.precondition.equals(alwaysTrue())
 			) {
-				Predicate<T> filterPredicate = createFilterPredicate(inputClass, dataInputFilterPredicate,
-					aggregationContainer.precondition, fieldTypes, classLoader);
-
+				Predicate<T> filterPredicate = createPredicateWithPrecondition(inputClass, dataInputFilterPredicate, aggregationContainer.precondition, fieldTypes, classLoader, validityPredicates::get);
 				output = output.transformWith(StreamTransformers.filter(filterPredicate));
 			}
 
@@ -701,19 +699,6 @@ public final class Cube extends AbstractReactive
 			aggregationToDataInputFilterPredicate.put(aggregationContainer.getKey(), containerPredicate);
 		}
 		return aggregationToDataInputFilterPredicate;
-	}
-
-	private Predicate createFilterPredicate(
-		Class<?> inputClass, AggregationPredicate predicate, AggregationPredicate precondition,
-		Map<String, FieldType> keyTypes, DefiningClassLoader classLoader
-	) {
-		return createPredicateWithPrecondition(inputClass, predicate, precondition, keyTypes, classLoader, key -> {
-			AggregationPredicate validityPredicate = validityPredicates.get(key);
-			if (validityPredicate == null) {
-				throw new IllegalStateException("No validity predicate for: " + key);
-			}
-			return validityPredicate;
-		});
 	}
 
 	/**
@@ -1145,7 +1130,7 @@ public final class Cube extends AbstractReactive
 				ClassKey.of(Predicate.class, resultClass, queryHaving),
 				() -> ClassGenerator.builder(Predicate.class)
 					.withMethod("test",
-						queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes, $ -> alwaysTrue()))
+						queryHaving.createPredicate(cast(arg(0), resultClass), fieldTypes))
 					.build()
 			);
 		}

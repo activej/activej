@@ -23,9 +23,9 @@ import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
-import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.or;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 
 @ExposedInternals
@@ -33,7 +33,7 @@ public final class Or implements AggregationPredicate {
 	public final List<AggregationPredicate> predicates;
 
 	public Or(List<AggregationPredicate> predicates) {
-		this.predicates = predicates;
+		this.predicates = checkArgument(predicates, v -> v.stream().noneMatch(Objects::isNull));
 	}
 
 	@Override
@@ -70,12 +70,10 @@ public final class Or implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		List<Expression> predicateDefs = new ArrayList<>();
 		for (AggregationPredicate predicate : predicates) {
-			predicateDefs.add(predicate.createPredicate(record, fields, predicateFactory));
+			predicateDefs.add(predicate.createPredicate(record, fields));
 		}
 		return or(predicateDefs);
 	}

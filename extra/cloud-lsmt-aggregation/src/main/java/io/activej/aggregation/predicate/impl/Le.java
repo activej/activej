@@ -25,11 +25,11 @@ import io.activej.common.annotation.ExposedInternals;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.aggregation.predicate.AggregationPredicates.toInternalValue;
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkNotNull;
 
 @ExposedInternals
 public final class Le implements AggregationPredicate {
@@ -37,8 +37,8 @@ public final class Le implements AggregationPredicate {
 	public final Comparable<Object> value;
 
 	public Le(String key, Comparable<Object> value) {
-		this.key = key;
-		this.value = value;
+		this.key = checkNotNull(key);
+		this.value = checkNotNull(value);
 	}
 
 	@Override
@@ -58,9 +58,7 @@ public final class Le implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
 		return and(
 			isNotNull(property, fields.get(key)),

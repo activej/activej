@@ -23,7 +23,6 @@ import io.activej.common.annotation.ExposedInternals;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.codegen.expression.Expressions.value;
 
@@ -48,9 +47,7 @@ public final class AlwaysTrue implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		return value(true);
 	}
 

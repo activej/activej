@@ -24,10 +24,11 @@ import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
 
 import java.util.*;
-import java.util.function.Function;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 
 @ExposedInternals
 public final class In implements AggregationPredicate {
@@ -35,8 +36,8 @@ public final class In implements AggregationPredicate {
 	public final SortedSet<Object> values;
 
 	public In(String key, SortedSet<Object> values) {
-		this.key = key;
-		this.values = values;
+		this.key = checkNotNull(key);
+		this.values = checkArgument(values, v -> v.stream().noneMatch(Objects::isNull));
 	}
 
 	@Override
@@ -56,9 +57,7 @@ public final class In implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
 		return and(isNotNull(property, fields.get(key)),
 			isNe(value(false),

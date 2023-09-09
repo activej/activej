@@ -21,25 +21,26 @@ import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.isNotNull;
 import static io.activej.aggregation.predicate.AggregationPredicates.isNull;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkNotNull;
 
 @ExposedInternals
 public final class NotEq implements AggregationPredicate {
 	public final String key;
-	public final Object value;
+	public final @Nullable Object value;
 
-	public NotEq(String key, Object value) {
-		this.key = key;
+	public NotEq(String key, @Nullable Object value) {
+		this.key = checkNotNull(key);
 		this.value = value;
 	}
 
@@ -60,9 +61,7 @@ public final class NotEq implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(
-		Expression record, Map<String, FieldType> fields, Function<String, AggregationPredicate> predicateFactory
-	) {
+	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 		Variable property = property(record, key.replace('.', '$'));
 		Object internalValue = toInternalValue(fields, key, this.value);
 		FieldType fieldType = fields.get(key);

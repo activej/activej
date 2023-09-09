@@ -31,6 +31,7 @@ import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import io.activej.serializer.def.impl.ClassSerializerDef;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -40,11 +41,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.alwaysFalse;
-import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.aggregation.predicate.AggregationPredicates.transformHasPredicates;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.common.reflection.ReflectionUtils.extractFieldNameFromGetter;
@@ -351,49 +350,24 @@ public class Utils {
 	public static <T> Predicate<T> createPredicateWithPrecondition(
 		Class<T> chunkRecordClass, AggregationPredicate filter, AggregationPredicate precondition,
 		@SuppressWarnings("rawtypes") Map<String, FieldType> fieldTypes, DefiningClassLoader classLoader,
-		Function<String, AggregationPredicate> predicateFactory
+		Function<String, @Nullable AggregationPredicate> validityPredicates
 	) {
-		AggregationPredicate simplifiedFilter = filter.simplify();
-		AggregationPredicate simplifiedPrecondition = precondition.simplify();
+		AggregationPredicate simplifiedFilter = transformHasPredicates(filter, validityPredicates).simplify();
+		AggregationPredicate simplifiedPrecondition = transformHasPredicates(precondition, validityPredicates).simplify();
 
-		if (simplifiedFilter.equals(alwaysFalse())) return $ -> false;
-		if (simplifiedPrecondition.equals(alwaysFalse())) return item -> {
-			throw new IllegalStateException("Condition " + precondition + " fails for item " + item);
-		};
-
-		Predicate<T> filterPredicate = simplifiedFilter.equals(alwaysTrue()) ?
-			$ -> true :
-			createPredicate(chunkRecordClass, filter, fieldTypes, classLoader, predicateFactory);
-
-		if (simplifiedPrecondition.equals(alwaysTrue())) {
-			return filterPredicate;
-		}
-
-		Predicate<T> preconditionPredicate = createPredicate(chunkRecordClass, precondition, fieldTypes,
-			classLoader, predicateFactory);
-
-		Predicate<T> checkPreconditionPredicate = item -> {
-			checkState(preconditionPredicate.test(item), () -> "Condition " + precondition + " fails for item " + item);
-			return true;
-		};
-
-		return simplifiedFilter.equals(alwaysTrue()) ?
-			checkPreconditionPredicate :
-			filterPredicate.and(checkPreconditionPredicate);
-	}
-
-	private static <T> Predicate<T> createPredicate(
-		Class<T> chunkRecordClass, AggregationPredicate predicate,
-		@SuppressWarnings("rawtypes") Map<String, FieldType> fieldTypes, DefiningClassLoader classLoader,
-		Function<String, AggregationPredicate> predicateFactory
-	) {
 		//noinspection unchecked
 		return classLoader.ensureClassAndCreateInstance(
-			ClassKey.of(Predicate.class, chunkRecordClass, predicate),
+			ClassKey.of(Predicate.class, chunkRecordClass, simplifiedFilter, simplifiedPrecondition),
 			() -> ClassGenerator.builder(Predicate.class)
 				.withMethod("test", boolean.class, List.of(Object.class),
-					predicate.createPredicate(cast(arg(0), chunkRecordClass), fieldTypes, predicateFactory))
+					ifElse(simplifiedFilter.createPredicate(cast(arg(0), chunkRecordClass), fieldTypes),
+						ifElse(simplifiedPrecondition.createPredicate(cast(arg(0), chunkRecordClass), fieldTypes),
+							value(true),
+							throwException(IllegalStateException.class)
+						),
+						value(false)))
 				.build()
 		);
 	}
+
 }

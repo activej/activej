@@ -22,7 +22,6 @@ import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.aggregation.util.Utils;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
@@ -59,7 +58,8 @@ import java.util.stream.Collectors;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.util.Utils.*;
-import static io.activej.common.Checks.*;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
@@ -379,8 +379,8 @@ public final class Aggregation extends AbstractReactive
 			.collect(toList());
 		Class<Object> resultClass = createRecordClass(structure, getKeys(), measures, classLoader);
 
-		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(getKeys(), measures, resultClass, AggregationPredicates.alwaysTrue(),
-			AggregationPredicates.alwaysTrue(), chunksToConsolidate, classLoader);
+		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(getKeys(), measures, resultClass,
+			alwaysTrue(), alwaysTrue(), chunksToConsolidate, classLoader);
 		AggregationChunker chunker = AggregationChunker.create(
 			structure, measures, resultClass,
 			createPartitionPredicate(resultClass, getPartitioningKey(), classLoader),
@@ -431,8 +431,9 @@ public final class Aggregation extends AbstractReactive
 	}
 
 	private <R, S> StreamSupplier<R> consolidatedSupplier(
-		List<String> queryKeys, List<String> measures, Class<R> resultClass, AggregationPredicate where,
-		AggregationPredicate precondition, List<AggregationChunk> individualChunks, DefiningClassLoader queryClassLoader
+		List<String> queryKeys, List<String> measures, Class<R> resultClass,
+		AggregationPredicate where, AggregationPredicate precondition,
+		List<AggregationChunk> individualChunks, DefiningClassLoader queryClassLoader
 	) {
 		QueryPlan plan = createPlan(individualChunks, measures);
 
@@ -559,7 +560,7 @@ public final class Aggregation extends AbstractReactive
 		}
 
 		Predicate<T> filterPredicate = createPredicateWithPrecondition(chunkRecordClass, where, precondition,
-			getKeyTypes(), queryClassLoader, $ -> AggregationPredicates.alwaysTrue());
+			getKeyTypes(), queryClassLoader, $ -> alwaysTrue());
 
 		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
