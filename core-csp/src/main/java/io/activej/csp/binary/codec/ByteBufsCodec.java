@@ -19,7 +19,7 @@ package io.activej.csp.binary.codec;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.DecoderFunction;
+import io.activej.common.function.DecoderFunction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;

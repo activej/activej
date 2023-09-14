@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.csp.binary;
+package io.activej.common.function;
 
 import io.activej.common.exception.MalformedDataException;
 import org.jetbrains.annotations.Nullable;
