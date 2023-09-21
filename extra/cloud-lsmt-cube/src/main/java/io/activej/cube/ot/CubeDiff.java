@@ -18,10 +18,7 @@ package io.activej.cube.ot;
 
 import io.activej.aggregation.ot.AggregationDiff;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public final class CubeDiff {
@@ -40,6 +37,21 @@ public final class CubeDiff {
 			}
 		}
 		return new CubeDiff(map);
+	}
+
+	public static CubeDiff reduce(List<CubeDiff> cubeDiffs) {
+		Map<String, AggregationDiff> diffs = new LinkedHashMap<>();
+		for (var cubeDiff : cubeDiffs) {
+			for (var entry : cubeDiff.entrySet()) {
+				diffs.compute(entry.getKey(),
+					(aggregationId, aggregationDiff) ->
+						aggregationDiff == null ?
+							entry.getValue() :
+							AggregationDiff.squash(aggregationDiff, entry.getValue())
+				);
+			}
+		}
+		return CubeDiff.of(diffs);
 	}
 
 	public Map<String, AggregationDiff> getDiffs() {

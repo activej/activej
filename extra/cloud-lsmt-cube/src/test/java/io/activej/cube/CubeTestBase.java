@@ -3,8 +3,7 @@ package io.activej.cube;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
-import io.activej.cube.linear.CubeMySqlOTUplink;
+import io.activej.cube.etcd.CubeEtcdOTUplink;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -22,6 +21,7 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import io.etcd.jetcd.Client;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -39,8 +39,10 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.cube.TestUtils.*;
+import static io.activej.cube.TestUtils.initializeRepository;
+import static io.activej.cube.TestUtils.noFail;
 import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.test.TestUtils.dataSource;
 
@@ -72,6 +74,8 @@ public abstract class CubeTestBase {
 	public static final DataSource DATA_SOURCE;
 
 	public NioReactor reactor;
+
+	public static final Client ETCD_CLIENT = Client.builder().endpoints("http://127.0.0.1:2379").build();
 
 	@Before
 	public void setUp() throws Exception {
@@ -107,6 +111,7 @@ public abstract class CubeTestBase {
 				}},
 
 			// Linear
+/*
 			new Object[]{
 				"Linear graph",
 				new UplinkFactory<CubeMySqlOTUplink>() {
@@ -120,6 +125,25 @@ public abstract class CubeTestBase {
 					@Override
 					public void initialize(CubeMySqlOTUplink uplink) {
 						noFail(() -> initializeUplink(uplink));
+					}
+				}
+			},
+*/
+
+			new Object[]{
+				"etcd graph",
+				new UplinkFactory<CubeEtcdOTUplink>() {
+					@Override
+					public CubeEtcdOTUplink createUninitialized(Cube cube) {
+						return CubeEtcdOTUplink.builder(cube.getReactor(), ETCD_CLIENT, byteSequenceFrom("test."))
+							.withChunkCodecsFactoryJson(cube)
+							.withMeasuresValidator(MeasuresValidator.ofCube(cube))
+							.build();
+					}
+
+					@Override
+					public void initialize(CubeEtcdOTUplink uplink) {
+						noFail(uplink::delete);
 					}
 				}
 			}

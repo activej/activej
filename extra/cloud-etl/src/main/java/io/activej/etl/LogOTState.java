@@ -60,9 +60,9 @@ public final class LogOTState<D> implements OTState<LogDiff<D>> {
 
 			LogPosition previous = positions.get(key);
 			if (previous != null) {
-				checkState(diff.from().equals(previous), "'From' position should equal previous 'To' position");
+				checkState(diff.from() == null || diff.from().equals(previous), "'From' position should equal previous 'To' position");
 			} else {
-				checkState(diff.from().isInitial(), "Adding new log that does not start from initial position");
+				checkState(diff.from() == null || diff.from().isInitial(), "Adding new log that does not start from initial position");
 			}
 
 			if (diff.to().isInitial()) {

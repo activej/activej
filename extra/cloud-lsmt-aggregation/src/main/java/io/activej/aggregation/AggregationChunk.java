@@ -26,12 +26,6 @@ import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableList;
 
 public class AggregationChunk {
-	public static AggregationChunk create(
-		Object chunkId, List<String> fields, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count
-	) {
-		return new AggregationChunk(chunkId, fields, minPrimaryKey, maxPrimaryKey, count);
-	}
-
 	private final Object chunkId;
 	private final List<String> measures;
 	private final PrimaryKey minPrimaryKey;
@@ -46,6 +40,14 @@ public class AggregationChunk {
 		this.minPrimaryKey = minPrimaryKey;
 		this.maxPrimaryKey = maxPrimaryKey;
 		this.count = count;
+	}
+
+	public static AggregationChunk create(Object chunkId, List<String> fields, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count) {
+		return new AggregationChunk(chunkId, fields, minPrimaryKey, maxPrimaryKey, count);
+	}
+
+	public static AggregationChunk ofId(Object chunkId) {
+		return new AggregationChunk(chunkId, null, null, null, 0);
 	}
 
 	public Object getChunkId() {
@@ -68,19 +70,6 @@ public class AggregationChunk {
 		return count;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		AggregationChunk chunk = (AggregationChunk) o;
-		return Objects.equals(chunkId, chunk.chunkId);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(chunkId, measures, minPrimaryKey, maxPrimaryKey, count);
-	}
-
 	public AggregationPredicate toPredicate(List<String> primaryKey) {
 		List<AggregationPredicate> predicates = new ArrayList<>();
 		for (int i = 0; i < primaryKey.size(); i++) {
@@ -94,6 +83,19 @@ public class AggregationChunk {
 			}
 		}
 		return and(predicates);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		AggregationChunk chunk = (AggregationChunk) o;
+		return Objects.equals(chunkId, chunk.chunkId);
+	}
+
+	@Override
+	public int hashCode() {
+		return chunkId.hashCode();
 	}
 
 	@Override

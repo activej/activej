@@ -1,7 +1,6 @@
 package io.activej.cube.ot;
 
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
@@ -50,10 +49,6 @@ public class CubeOTTest {
 			"key", AggregationDiff.of(new HashSet<>(added), new HashSet<>(removed))));
 	}
 
-	private static AggregationChunk chunk(List<String> fields, PrimaryKey minKey, PrimaryKey maxKey, int count) {
-		return AggregationChunk.create((long) 1, fields, minKey, maxKey, count);
-	}
-
 	private static List<AggregationChunk> addedChunks(Collection<CubeDiff> cubeDiffs) {
 		return cubeDiffs.stream()
 			.flatMap(cubeDiff -> cubeDiff.keySet().stream().map(cubeDiff::get))
@@ -68,11 +63,11 @@ public class CubeOTTest {
 		List<String> fields = List.of("field1", "field2");
 		LogDiff<CubeDiff> changesLeft = LogDiff.of(Map.of(
 				"clicks", positionDiff(logFile, 0, 10)),
-			cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 20), 15)));
+			cubeDiff(AggregationChunk.create(1, fields, ofArray("str", 10), ofArray("str", 20), 15)));
 
 		LogDiff<CubeDiff> changesRight = LogDiff.of(Map.of(
 				"clicks", positionDiff(logFile, 0, 20)),
-			cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 25), 30)));
+			cubeDiff(AggregationChunk.create(2, fields, ofArray("str", 10), ofArray("str", 25), 30)));
 		TransformResult<LogDiff<CubeDiff>> transform = logSystem.transform(changesLeft, changesRight);
 
 		assertTrue(transform.hasConflict());

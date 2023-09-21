@@ -1,6 +1,5 @@
 package io.activej.cube;
 
-import com.dslplatform.json.ParsingException;
 import io.activej.aggregation.*;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
@@ -341,7 +340,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			assertThat(exception, instanceOf(JsonValidationException.class));
 			expectedMessage = "Key not found: impressionsAggregation";
 		} else {
-			expectedMessage = "Unknown aggregation: impressionsAggregation";
+			expectedMessage = "Unexpected key: impressionsAggregation";
 		}
 		assertEquals(expectedMessage, exception.getMessage());
 	}

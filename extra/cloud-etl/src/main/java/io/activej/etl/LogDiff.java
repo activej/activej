@@ -16,10 +16,12 @@
 
 package io.activej.etl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 public class LogDiff<D> {
 	private final Map<String, LogPositionDiff> positions;
@@ -37,6 +39,28 @@ public class LogDiff<D> {
 	public static <D> LogDiff<D> of(Map<String, LogPositionDiff> positions, D diff) {
 		return of(positions, List.of(diff));
 	}
+
+	public static <D> LogDiff<D> empty() {
+		return of(emptyMap(), emptyList());
+	}
+
+	public static <D> LogDiff<D> reduce(List<LogDiff<D>> logDiffs, Function<List<D>, D> diffsReducer) {
+		Map<String, LogPositionDiff> positions = new LinkedHashMap<>();
+		List<D> diffs = new ArrayList<>();
+		for (var logDiff : logDiffs) {
+			for (var entry : logDiff.getPositions().entrySet()) {
+				positions.compute(entry.getKey(),
+					(partitionId, logPositionDiff) ->
+						logPositionDiff == null ?
+							entry.getValue() :
+							new LogPositionDiff(logPositionDiff.from(), entry.getValue().to())
+				);
+			}
+			diffs.add(diffsReducer.apply(logDiff.getDiffs()));
+		}
+		return LogDiff.of(positions, diffsReducer.apply(diffs));
+	}
+
 
 	public static <D> LogDiff<D> forCurrentPosition(List<D> diffs) {
 		return of(Map.of(), diffs);

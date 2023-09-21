@@ -72,7 +72,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	public static final long ROOT_REVISION = 0L;
 
-	private static final MeasuresValidator NO_MEASURE_VALIDATION = ($1, $2) -> {};
+	public static final MeasuresValidator NO_MEASURE_VALIDATION = ($1, $2) -> {};
 
 	private final Executor executor;
 	private final DataSource dataSource;
