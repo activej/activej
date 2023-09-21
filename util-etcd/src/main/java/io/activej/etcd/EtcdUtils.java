@@ -53,15 +53,6 @@ public class EtcdUtils {
 		return ByteSequence.from(string, UTF_8);
 	}
 
-	public static ByteSequence byteSequenceNext(ByteSequence sequence) {
-		byte[] bytes = sequence.getBytes();
-		int i;
-		for (i = bytes.length - 1; i >= 0; i--) {
-			if (bytes[i]++ != 0) break;
-		}
-		return ByteSequence.from(i + 1 == bytes.length ? bytes : Arrays.copyOf(bytes, i + 1));
-	}
-
 	public record CheckoutResponse<T>(io.etcd.jetcd.Response.Header header, T response) {}
 
 	public static <T, A, R> CompletableFuture<CheckoutResponse<R>> checkout(Client client, long revision,
@@ -102,7 +93,7 @@ public class EtcdUtils {
 				.map(checkoutRequest -> Op.get(
 					checkoutRequest.prefix,
 					GetOption.builder()
-						.withRange(byteSequenceNext(checkoutRequest.prefix))
+						.isPrefix(true)
 						.withRevision(revision)
 						.build()))
 				.toArray(Op[]::new))
@@ -202,7 +193,7 @@ public class EtcdUtils {
 		return client.getWatchClient().watch(
 			root,
 			WatchOption.builder()
-				.withRange(byteSequenceNext(root))
+				.isPrefix(true)
 				.withRevision(revision)
 				.build(),
 			new Watch.Listener() {

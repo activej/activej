@@ -349,7 +349,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		client.getKVClient()
 			.delete(root,
 				DeleteOption.builder()
-					.withRange(byteSequenceNext(root))
+					.isPrefix(true)
 					.build())
 			.get();
 		client.getKVClient()
