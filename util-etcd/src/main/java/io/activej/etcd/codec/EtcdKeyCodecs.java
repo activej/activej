@@ -20,7 +20,7 @@ public class EtcdKeyCodecs {
 			}
 
 			@Override
-			public String decodeKey(ByteSequence byteSequence) throws MalformedDataException {
+			public String decodeKey(ByteSequence byteSequence) {
 				return byteSequence.toString();
 			}
 		};
@@ -30,14 +30,14 @@ public class EtcdKeyCodecs {
 		return new EtcdKeyCodec<>() {
 			@Override
 			public ByteSequence encodeKey(Integer key) {
-				ByteBuffer buffer = ByteBuffer.allocate(4).order(BIG_ENDIAN);
+				ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES).order(BIG_ENDIAN);
 				buffer.putInt(key);
 				return ByteSequence.from(buffer.array());
 			}
 
 			@Override
 			public Integer decodeKey(ByteSequence byteSequence) throws MalformedDataException {
-				if (byteSequence.size() != 4) throw new MalformedDataException();
+				if (byteSequence.size() != Integer.BYTES) throw new MalformedDataException();
 				return ByteBuffer.wrap(byteSequence.getBytes()).order(BIG_ENDIAN).getInt();
 			}
 		};
@@ -47,14 +47,14 @@ public class EtcdKeyCodecs {
 		return new EtcdKeyCodec<>() {
 			@Override
 			public ByteSequence encodeKey(Long key) {
-				ByteBuffer buffer = ByteBuffer.allocate(8).order(BIG_ENDIAN);
+				ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES).order(BIG_ENDIAN);
 				buffer.putLong(key);
 				return ByteSequence.from(buffer.array());
 			}
 
 			@Override
 			public Long decodeKey(ByteSequence byteSequence) throws MalformedDataException {
-				if (byteSequence.size() != 8) throw new MalformedDataException();
+				if (byteSequence.size() != Long.BYTES) throw new MalformedDataException();
 				return ByteBuffer.wrap(byteSequence.getBytes()).order(BIG_ENDIAN).getLong();
 			}
 		};

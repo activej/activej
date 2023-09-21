@@ -18,7 +18,7 @@ public class EtcdValueCodecs {
 			}
 
 			@Override
-			public String decodeValue(ByteSequence byteSequence) throws MalformedDataException {
+			public String decodeValue(ByteSequence byteSequence) {
 				return byteSequence.toString();
 			}
 		};

@@ -55,14 +55,6 @@ public class EtcdUtils {
 
 	public record CheckoutResponse<T>(io.etcd.jetcd.Response.Header header, T response) {}
 
-	public static <T, A, R> CompletableFuture<CheckoutResponse<R>> checkout(Client client, long revision,
-		ByteSequence prefix, EtcdKVDecoder<?, T> codec, Collector<T, A, R> collector
-	) {
-		//noinspection unchecked
-		return checkout(client, revision, new CheckoutRequest[]{new CheckoutRequest<>(prefix, codec, collector)},
-			(header, objects) -> new CheckoutResponse<>(header, (R) objects[0]));
-	}
-
 	public record CheckoutRequest<KV, R>(ByteSequence prefix, EtcdKVDecoder<?, ? extends KV> codec, Collector<KV, ?, ? extends R> collector) {
 
 		public static <K, V, R> CheckoutRequest<Map.Entry<K, V>, R> ofMapEntry(
@@ -82,6 +74,14 @@ public class EtcdUtils {
 
 	public interface CheckoutFinisher<T> {
 		T finish(Response.Header header, Object[] objects) throws MalformedDataException;
+	}
+
+	public static <T, A, R> CompletableFuture<CheckoutResponse<R>> checkout(Client client, long revision,
+		ByteSequence prefix, EtcdKVDecoder<?, T> codec, Collector<T, A, R> collector
+	) {
+		//noinspection unchecked
+		return checkout(client, revision, new CheckoutRequest[]{new CheckoutRequest<>(prefix, codec, collector)},
+			(header, objects) -> new CheckoutResponse<>(header, (R) objects[0]));
 	}
 
 	public static <R> CompletableFuture<R> checkout(Client client, long revision,
@@ -243,7 +243,7 @@ public class EtcdUtils {
 	}
 
 	public static void touch(TxnOps txn, ByteSequence key) {
-		txn.put(key, ByteSequence.EMPTY, PutOption.builder().build());
+		txn.put(key, ByteSequence.EMPTY, PutOption.DEFAULT);
 	}
 
 	public static <V> void checkAndUpdate(TxnOps txn, ByteSequence key, EtcdValueEncoder<V> codec, V prev, V next) {

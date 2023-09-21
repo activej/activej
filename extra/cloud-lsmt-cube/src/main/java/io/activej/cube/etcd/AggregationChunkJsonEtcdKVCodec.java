@@ -16,9 +16,9 @@ import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
 
 public final class AggregationChunkJsonEtcdKVCodec implements EtcdKVCodec<Long, AggregationChunk> {
-	record Value(List<String> measures, int count, PrimaryKey min, PrimaryKey max) {}
+	private record Value(List<String> measures, int count, PrimaryKey min, PrimaryKey max) {}
 
-	final JsonCodec<Value> valueJsonCodec;
+	private final JsonCodec<Value> valueJsonCodec;
 
 	public AggregationChunkJsonEtcdKVCodec(JsonCodec<PrimaryKey> primaryKeyCodec) {
 		this.valueJsonCodec = JsonCodecs.ofObject(Value::new,
@@ -38,7 +38,7 @@ public final class AggregationChunkJsonEtcdKVCodec implements EtcdKVCodec<Long, 
 
 	@Override
 	public ByteSequence encodeKey(Long key) {
-		return byteSequenceFrom(((Object) key).toString());
+		return byteSequenceFrom(key.toString());
 	}
 
 	@Override

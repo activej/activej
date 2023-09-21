@@ -57,8 +57,8 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
 	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
 
-	final Client client;
-	final ByteSequence root;
+	private final Client client;
+	private final ByteSequence root;
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private Map<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
