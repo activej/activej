@@ -8,7 +8,7 @@ import io.etcd.jetcd.ByteSequence;
 import java.util.Map;
 import java.util.function.Function;
 
-public class EtcdCodecs {
+public class EtcdKVCodecs {
 
 	public static <K, V> EtcdKVCodec<K, Map.Entry<K, V>> ofMapEntry(EtcdKeyCodec<K> keyCodec, EtcdValueCodec<V> valueCodec) {
 		return new EtcdKVCodec<>() {

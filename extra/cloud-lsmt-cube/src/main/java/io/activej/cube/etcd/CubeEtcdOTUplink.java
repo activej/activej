@@ -138,11 +138,11 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		return EtcdUtils.checkout(client, revision, new CheckoutRequest[]{
 				CheckoutRequest.<String, LogPosition, LinkedHashMap<String, LogPosition>>ofMapEntry(
 					root.concat(prefixPos),
-					EtcdCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 					entriesToLinkedHashMap()),
 				CheckoutRequest.<Tuple2<String, AggregationChunk>, Map<String, Set<AggregationChunk>>>of(
 					root.concat(prefixCube),
-					EtcdCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory::get),
+					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory::get),
 					groupingBy(Tuple2::value1, mapping(Tuple2::value2, toSet())))
 			},
 			(header, objects) -> {
@@ -181,7 +181,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		etcdWatcherRef.set(EtcdUtils.watch(client, revisionFrom + 1, new WatchRequest[]{
 				WatchRequest.<String, LogPosition, Map<String, LogPositionDiff>>ofMapEntry(
 					root.concat(prefixPos),
-					EtcdCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 					new EtcdEventProcessor<String, Map.Entry<String, LogPosition>, Map<String, LogPositionDiff>>() {
 						@Override
 						public Map<String, LogPositionDiff> createEventsAccumulator() {
@@ -201,7 +201,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 				),
 				WatchRequest.<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>of(
 					root.concat(prefixCube),
-					EtcdCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory::get),
+					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory::get),
 					new EtcdEventProcessor<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>() {
 						@Override
 						public Map<String, AggregationDiff> createEventsAccumulator() {
@@ -299,10 +299,10 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 	public void savePositions(TxnOps txn, Map<String, LogPositionDiff> positions) {
 		checkAndInsert(txn,
-			EtcdCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+			EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 			positions.entrySet().stream().filter(diff -> diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::to)));
 		checkAndUpdate(txn,
-			EtcdCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+			EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 			positions.entrySet().stream().filter(diff -> !diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::from)),
 			positions.entrySet().stream().filter(diff -> !diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::to)));
 	}
