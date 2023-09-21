@@ -213,7 +213,7 @@ public interface Promise<T> extends AsyncComputation<T> {
 					if (throwable == null) {
 						cb.set(result, null);
 					} else {
-						Exception e = getExceptionOrThrowError(throwable);
+						Exception e = getExceptionOrThrowError(throwable instanceof CompletionException ? throwable.getCause() : throwable);
 						handleError(e, cb);
 						cb.set(null, e);
 					}
