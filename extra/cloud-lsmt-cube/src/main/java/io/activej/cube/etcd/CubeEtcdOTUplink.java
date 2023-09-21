@@ -311,14 +311,14 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getRemovedChunks)).entrySet()) {
 			String aggregationId = entry.getKey();
 			checkAndDelete(
-				txn.child(aggregationIdCodec.encodePrefix(aggregationId, ByteSequence.EMPTY)),
+				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
 				chunkCodecsFactory.get(aggregationId),
 				entry.getValue().stream().map(chunk -> (long) chunk.getChunkId()).toList());
 		}
 		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getAddedChunks)).entrySet()) {
 			String aggregationId = entry.getKey();
 			checkAndInsert(
-				txn.child(aggregationIdCodec.encodePrefix(aggregationId, ByteSequence.EMPTY)),
+				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
 				chunkCodecsFactory.get(aggregationId),
 				entry.getValue());
 		}

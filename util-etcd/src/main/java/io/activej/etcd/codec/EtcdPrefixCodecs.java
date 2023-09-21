@@ -15,8 +15,8 @@ public class EtcdPrefixCodecs {
 			final ByteSequence terminatorByte = byteSequenceFrom(terminator);
 
 			@Override
-			public ByteSequence encodePrefix(String key, ByteSequence suffix) {
-				return byteSequenceFrom(key).concat(terminatorByte).concat(suffix);
+			public ByteSequence encodePrefix(Prefix<String> prefix) {
+				return byteSequenceFrom(prefix.key()).concat(terminatorByte).concat(prefix.suffix());
 			}
 
 			@Override
@@ -35,8 +35,9 @@ public class EtcdPrefixCodecs {
 	public static <T, R> EtcdPrefixCodec<R> transform(EtcdPrefixCodec<T> codec, Function<R, T> encodeFn, DecoderFunction<T, R> decodeFn) {
 		return new EtcdPrefixCodec<>() {
 			@Override
-			public ByteSequence encodePrefix(R key, ByteSequence suffix) {
-				return codec.encodePrefix(encodeFn.apply(key), suffix);
+			public ByteSequence encodePrefix(Prefix<R> prefix) {
+				Prefix<T> transformedPrefix = new Prefix<>(encodeFn.apply(prefix.key()), prefix.suffix());
+				return codec.encodePrefix(transformedPrefix);
 			}
 
 			@Override

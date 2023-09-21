@@ -59,13 +59,15 @@ public class EtcdCodecs {
 			@Override
 			public KeyValue encodeKV(Tuple2<K0, T> entry) {
 				KeyValue kv = codecs.apply(entry.value1()).encodeKV(entry.value2());
-				return new KeyValue(prefixCodec.encodePrefix(entry.value1(), kv.key()), kv.value());
+				Prefix<K0> prefix = new Prefix<>(entry.value1(), kv.key());
+				return new KeyValue(prefixCodec.encodePrefix(prefix), kv.value());
 			}
 
 			@Override
 			public ByteSequence encodeKey(Tuple2<K0, K> key) {
 				EtcdKVCodec<K, T> codec = codecs.apply(key.value1());
-				return prefixCodec.encodePrefix(key.value1(), codec.encodeKey(key.value2()));
+				Prefix<K0> prefix = new Prefix<>(key.value1(), codec.encodeKey(key.value2()));
+				return prefixCodec.encodePrefix(prefix);
 			}
 		};
 	}

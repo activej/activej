@@ -8,8 +8,8 @@ public interface EtcdPrefixCodec<K> extends EtcdPrefixEncoder<K>, EtcdPrefixDeco
 	static <K> EtcdPrefixCodec<K> of(EtcdPrefixEncoder<K> encoder, EtcdPrefixDecoder<K> decoder) {
 		return new EtcdPrefixCodec<>() {
 			@Override
-			public ByteSequence encodePrefix(K key, ByteSequence suffix) {
-				return encoder.encodePrefix(key, suffix);
+			public ByteSequence encodePrefix(Prefix<K> prefix) {
+				return encoder.encodePrefix(prefix);
 			}
 
 			@Override
