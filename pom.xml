@@ -51,6 +51,7 @@
     <module>util-types</module>
     <module>util-state</module>
     <module>util-json</module>
+    <module>util-etcd</module>
     <module>test</module>
 
     <module>extra/cloud-dataflow</module>
@@ -205,6 +206,11 @@
         <groupId>org.apache.calcite.avatica</groupId>
         <artifactId>avatica-core</artifactId>
         <version>1.23.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.etcd</groupId>
+        <artifactId>jetcd-core</artifactId>
+        <version>0.7.6</version>
       </dependency>
 
       <!--Fixing transitive dependency vulnerability-->
