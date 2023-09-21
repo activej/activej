@@ -59,7 +59,6 @@ public class EtcdUtils {
 		return ByteSequence.from(string, UTF_8);
 	}
 
-
 	public record CheckoutResponse<T>(io.etcd.jetcd.Response.Header header, T response) {}
 
 	public record CheckoutRequest<KV, R>(ByteSequence prefix, EtcdKVDecoder<?, ? extends KV> codec, Collector<KV, ?, ? extends R> collector) {
@@ -79,16 +78,16 @@ public class EtcdUtils {
 
 	}
 
-	public interface CheckoutFinisher<T> {
-		T finish(Response.Header header, Object[] objects) throws MalformedDataException;
-	}
-
 	public static <T, A, R> CompletableFuture<CheckoutResponse<R>> checkout(Client client, long revision,
 		ByteSequence prefix, EtcdKVDecoder<?, T> codec, Collector<T, A, R> collector
 	) {
 		//noinspection unchecked
 		return checkout(client, revision, new CheckoutRequest[]{new CheckoutRequest<>(prefix, codec, collector)},
 			(header, objects) -> new CheckoutResponse<>(header, (R) objects[0]));
+	}
+
+	public interface CheckoutFinisher<T> {
+		T finish(Response.Header header, Object[] objects) throws MalformedDataException;
 	}
 
 	public static <R> CompletableFuture<R> checkout(Client client, long revision,
@@ -237,9 +236,14 @@ public class EtcdUtils {
 					}
 				}
 
+				boolean onError = false;
+
 				@Override
 				public void onError(Throwable throwable) {
-					listener.onError(throwable);
+					if (!onError) {
+						onError = true;
+						listener.onError(throwable);
+					}
 				}
 
 				@Override
@@ -251,6 +255,75 @@ public class EtcdUtils {
 
 	public static void touch(TxnOps txn, ByteSequence key) {
 		txn.put(key, ByteSequence.EMPTY, PutOption.DEFAULT);
+	}
+
+	public record AtomicUpdateResponse<T>(Response.Header header, T prevValue, T newValue) {}
+
+	public static CompletableFuture<AtomicUpdateResponse<Integer>> atomicAdd(Client client, ByteSequence key, int delta) {
+		return atomicUpdate(client, key, EtcdValueCodecs.ofIntegerString(), value -> value + delta);
+	}
+
+	public static CompletableFuture<AtomicUpdateResponse<Long>> atomicAdd(Client client, ByteSequence key, long delta) {
+		return atomicUpdate(client, key, EtcdValueCodecs.ofLongString(), value -> value + delta);
+	}
+
+	public static <T> CompletableFuture<AtomicUpdateResponse<T>> atomicUpdate(
+		Client client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator
+	) {
+		CompletableFuture<AtomicUpdateResponse<T>> future = new CompletableFuture<>();
+		atomicUpdate1(client, key, codec, operator, future);
+		return future;
+	}
+
+	private static <T> void atomicUpdate1(
+		Client client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator,
+		CompletableFuture<AtomicUpdateResponse<T>> future
+	) {
+		client.getKVClient()
+			.get(key, GetOption.builder().withSerializable(true).build())
+			.whenComplete((getResponse, throwable) -> {
+				if (throwable != null) {
+					future.completeExceptionally(throwable);
+					return;
+				}
+				if (getResponse.getKvs().isEmpty()) {
+					future.completeExceptionally(new IllegalArgumentException());
+					return;
+				}
+				ByteSequence prevSequence = getResponse.getKvs().get(0).getValue();
+				T prevValue;
+				try {
+					prevValue = codec.decodeValue(prevSequence);
+				} catch (MalformedDataException e) {
+					future.completeExceptionally(e);
+					return;
+				}
+				T newValue = operator.apply(prevValue);
+				ByteSequence newSequence = codec.encodeValue(newValue);
+				atomicUpdate2(client, key, codec, operator, prevSequence, newSequence, prevValue, newValue, future);
+			});
+	}
+
+	private static <T> void atomicUpdate2(
+		Client client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator,
+		ByteSequence prevSequence, ByteSequence newSequence, T prevValue, T newValue,
+		CompletableFuture<AtomicUpdateResponse<T>> future
+	) {
+		client.getKVClient().txn()
+			.If(new Cmp(key, Cmp.Op.EQUAL, CmpTarget.value(prevSequence)))
+			.Then(Op.put(key, newSequence, PutOption.DEFAULT))
+			.commit()
+			.whenComplete((txnResponse, throwable) -> {
+				if (throwable != null) {
+					future.completeExceptionally(throwable);
+					return;
+				}
+				if (!txnResponse.isSucceeded()) {
+					atomicUpdate1(client, key, codec, operator, future);
+					return;
+				}
+				future.complete(new AtomicUpdateResponse<>(txnResponse.getHeader(), prevValue, newValue));
+			});
 	}
 
 	public static <V> void checkAndUpdate(TxnOps txn, ByteSequence key, EtcdValueEncoder<V> codec, V prev, V next) {
