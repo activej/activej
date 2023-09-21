@@ -9,6 +9,7 @@ import io.activej.cube.Cube;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.EtcdEventProcessor;
+import io.activej.etcd.EtcdListener;
 import io.activej.etcd.EtcdUtils;
 import io.activej.etcd.TxnOps;
 import io.activej.etcd.codec.key.EtcdKeyCodecs;
@@ -33,7 +34,6 @@ import io.etcd.jetcd.Response;
 import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.options.DeleteOption;
 
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +52,6 @@ import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.failedFuture;
 import static java.util.stream.Collectors.*;
 
 public final class CubeEtcdOTUplink extends AbstractReactive
@@ -232,7 +230,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					}
 				),
 			},
-			new io.activej.etcd.Listener<Object[]>() {
+			new EtcdListener<Object[]>() {
 				LogDiff<CubeDiff> logDiff = LogDiff.empty();
 
 				@SuppressWarnings("unchecked")
@@ -280,16 +278,12 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
-				EtcdUtils.executeTxnOps(client, root, txnOps -> {
+				executeTxnOps(client, root, txnOps -> {
 						touch(txnOps, ByteSequence.EMPTY);
 						for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
 							saveCubeLogDiff(txnOps, diff);
 						}
 					})
-					.thenCompose(txnResponse ->
-						txnResponse.isSucceeded() ?
-							completedFuture(txnResponse) :
-							failedFuture(new IOException("Transaction failed")))
 			)
 			.then(txnResponse ->
 				doFetch(protoCommit.parentRevision(), txnResponse.getHeader().getRevision() - 1)

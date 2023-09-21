@@ -1,11 +1,12 @@
 package io.activej.etcd;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.exception.ToDoException;
+import io.activej.etcd.codec.key.EtcdKeyEncoder;
 import io.activej.etcd.codec.kv.EtcdKVDecoder;
 import io.activej.etcd.codec.kv.EtcdKVEncoder;
 import io.activej.etcd.codec.kv.KeyValue;
-import io.activej.etcd.codec.key.EtcdKeyEncoder;
+import io.activej.etcd.codec.value.EtcdValueCodec;
+import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etcd.codec.value.EtcdValueEncoder;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.kv.GetResponse;
@@ -20,6 +21,7 @@ import io.etcd.jetcd.options.WatchOption;
 import io.etcd.jetcd.watch.WatchEvent;
 import io.etcd.jetcd.watch.WatchResponse;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
@@ -55,6 +58,7 @@ public class EtcdUtils {
 	public static ByteSequence byteSequenceFrom(String string) {
 		return ByteSequence.from(string, UTF_8);
 	}
+
 
 	public record CheckoutResponse<T>(io.etcd.jetcd.Response.Header header, T response) {}
 
@@ -132,11 +136,11 @@ public class EtcdUtils {
 
 	public static <K, KV, R> Watch.Watcher watch(Client client, long revision,
 		ByteSequence prefix, EtcdKVDecoder<? extends K, ? extends KV> codec, EtcdEventProcessor<K, KV, ?> eventProcessor,
-		Listener<R> listener
+		EtcdListener<R> listener
 	) {
 		return watch(client, revision,
 			new WatchRequest[]{new WatchRequest<>(prefix, codec, eventProcessor)},
-			new Listener<>() {
+			new EtcdListener<>() {
 				@Override
 				public void onNext(Response.Header header, Object[] operations) throws MalformedDataException {
 					assert operations.length == 1;
@@ -174,7 +178,7 @@ public class EtcdUtils {
 
 	public static Watch.Watcher watch(Client client, long revision,
 		WatchRequest<?, ?, ?>[] watchRequests,
-		Listener<Object[]> listener
+		EtcdListener<Object[]> listener
 	) {
 		byte[][] prefixes = Arrays.stream(watchRequests).map(WatchRequest::prefix).map(ByteSequence::getBytes).toArray(byte[][]::new);
 		int rootSize = 0;
@@ -229,7 +233,7 @@ public class EtcdUtils {
 						}
 						listener.onNext(response.getHeader(), accumulators);
 					} catch (MalformedDataException e) {
-						throw new ToDoException(e);
+						onError(e);
 					}
 				}
 
@@ -359,7 +363,11 @@ public class EtcdUtils {
 		return kvClient.txn()
 			.If(txnOps.cmps.toArray(Cmp[]::new))
 			.Then(txnOps.ops.toArray(Op[]::new))
-			.commit();
+			.commit()
+			.thenCompose(txnResponse ->
+				txnResponse.isSucceeded() ?
+					completedFuture(txnResponse) :
+					failedFuture(new IOException("Transaction failed")));
 	}
 
 }
