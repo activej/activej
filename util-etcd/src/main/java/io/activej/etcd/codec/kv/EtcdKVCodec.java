@@ -1,6 +1,7 @@
-package io.activej.etcd.codec;
+package io.activej.etcd.codec.kv;
 
 import io.activej.common.exception.MalformedDataException;
+import io.activej.etcd.codec.key.EtcdKeyCodec;
 import io.etcd.jetcd.ByteSequence;
 
 public interface EtcdKVCodec<K, KV> extends EtcdKVEncoder<K, KV>, EtcdKVDecoder<K, KV>, EtcdKeyCodec<K> {

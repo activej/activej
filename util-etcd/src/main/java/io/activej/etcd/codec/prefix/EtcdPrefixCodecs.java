@@ -1,4 +1,4 @@
-package io.activej.etcd.codec;
+package io.activej.etcd.codec.prefix;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.DecoderFunction;

@@ -1,4 +1,4 @@
-package io.activej.etcd.codec;
+package io.activej.etcd.codec.kv;
 
 import io.etcd.jetcd.ByteSequence;
 

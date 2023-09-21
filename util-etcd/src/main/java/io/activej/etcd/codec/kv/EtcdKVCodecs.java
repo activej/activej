@@ -1,8 +1,12 @@
-package io.activej.etcd.codec;
+package io.activej.etcd.codec.kv;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.DecoderFunction;
 import io.activej.common.tuple.Tuple2;
+import io.activej.etcd.codec.key.EtcdKeyCodec;
+import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
+import io.activej.etcd.codec.prefix.Prefix;
+import io.activej.etcd.codec.value.EtcdValueCodec;
 import io.etcd.jetcd.ByteSequence;
 
 import java.util.Map;

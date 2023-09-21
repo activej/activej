@@ -2,8 +2,11 @@ package io.activej.etcd;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.ToDoException;
-import io.activej.etcd.codec.KeyValue;
-import io.activej.etcd.codec.*;
+import io.activej.etcd.codec.kv.EtcdKVDecoder;
+import io.activej.etcd.codec.kv.EtcdKVEncoder;
+import io.activej.etcd.codec.kv.KeyValue;
+import io.activej.etcd.codec.key.EtcdKeyEncoder;
+import io.activej.etcd.codec.value.EtcdValueEncoder;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.kv.TxnResponse;
