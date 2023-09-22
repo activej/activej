@@ -75,7 +75,7 @@ public abstract class CubeTestBase {
 
 	public NioReactor reactor;
 
-	public static final Client ETCD_CLIENT = Client.builder().endpoints("http://127.0.0.1:2379").build();
+	public static final Client ETCD_CLIENT = Client.builder().waitForReady(false).endpoints("http://127.0.0.1:2379").build();
 
 	@Before
 	public void setUp() throws Exception {
