@@ -1,6 +1,5 @@
 package io.activej.etcd;
 
-import io.activej.common.exception.MalformedDataException;
 import io.activej.etcd.codec.key.EtcdKeyEncoder;
 import io.activej.etcd.codec.kv.EtcdKVDecoder;
 import io.activej.etcd.codec.kv.EtcdKVEncoder;
@@ -8,6 +7,9 @@ import io.activej.etcd.codec.kv.KeyValue;
 import io.activej.etcd.codec.value.EtcdValueCodec;
 import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etcd.codec.value.EtcdValueEncoder;
+import io.activej.etcd.exception.MalformedEtcdDataException;
+import io.activej.etcd.exception.NoKeyFoundException;
+import io.activej.etcd.exception.TransactionNotSucceededException;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.kv.TxnResponse;
@@ -21,7 +23,6 @@ import io.etcd.jetcd.options.WatchOption;
 import io.etcd.jetcd.watch.WatchEvent;
 import io.etcd.jetcd.watch.WatchResponse;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -87,7 +88,7 @@ public class EtcdUtils {
 	}
 
 	public interface CheckoutFinisher<T> {
-		T finish(Response.Header header, Object[] objects) throws MalformedDataException;
+		T finish(Response.Header header, Object[] objects) throws MalformedEtcdDataException;
 	}
 
 	public static <R> CompletableFuture<R> checkout(Client client, long revision,
@@ -116,12 +117,12 @@ public class EtcdUtils {
 							result[i] = getCheckoutResult(checkoutRequest.prefix, checkoutRequest.codec, checkoutRequest.collector, getResponse);
 						}
 						return completedFuture(checkoutFinisher.finish(response.getHeader(), result));
-					} catch (MalformedDataException e) {
+					} catch (MalformedEtcdDataException e) {
 						return failedFuture(e);
 					}
 				}
 
-				static <KV, A, R> R getCheckoutResult(ByteSequence prefix, EtcdKVDecoder<?, ? extends KV> codec, Collector<KV, A, R> collector, GetResponse response) throws MalformedDataException {
+				static <KV, A, R> R getCheckoutResult(ByteSequence prefix, EtcdKVDecoder<?, ? extends KV> codec, Collector<KV, A, R> collector, GetResponse response) throws MalformedEtcdDataException {
 					A accumulator = collector.supplier().get();
 					BiConsumer<A, ? super KV> accumulatorFn = collector.accumulator();
 					for (var kv : response.getKvs()) {
@@ -141,7 +142,7 @@ public class EtcdUtils {
 			new WatchRequest[]{new WatchRequest<>(prefix, codec, eventProcessor)},
 			new EtcdListener<>() {
 				@Override
-				public void onNext(Response.Header header, Object[] operations) throws MalformedDataException {
+				public void onNext(Response.Header header, Object[] operations) throws MalformedEtcdDataException {
 					assert operations.length == 1;
 					//noinspection unchecked
 					listener.onNext(header, (R) operations[0]);
@@ -231,7 +232,7 @@ public class EtcdUtils {
 							}
 						}
 						listener.onNext(response.getHeader(), accumulators);
-					} catch (MalformedDataException e) {
+					} catch (MalformedEtcdDataException e) {
 						onError(e);
 					}
 				}
@@ -287,14 +288,14 @@ public class EtcdUtils {
 					return;
 				}
 				if (getResponse.getKvs().isEmpty()) {
-					future.completeExceptionally(new IllegalArgumentException());
+					future.completeExceptionally(new NoKeyFoundException(key));
 					return;
 				}
 				ByteSequence prevSequence = getResponse.getKvs().get(0).getValue();
 				T prevValue;
 				try {
 					prevValue = codec.decodeValue(prevSequence);
-				} catch (MalformedDataException e) {
+				} catch (MalformedEtcdDataException e) {
 					future.completeExceptionally(e);
 					return;
 				}
@@ -440,7 +441,7 @@ public class EtcdUtils {
 			.thenCompose(txnResponse ->
 				txnResponse.isSucceeded() ?
 					completedFuture(txnResponse) :
-					failedFuture(new IOException("Transaction failed")));
+					failedFuture(new TransactionNotSucceededException()));
 	}
 
 }

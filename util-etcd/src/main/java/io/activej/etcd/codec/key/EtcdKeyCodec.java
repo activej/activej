@@ -1,6 +1,6 @@
 package io.activej.etcd.codec.key;
 
-import io.activej.common.exception.MalformedDataException;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.etcd.jetcd.ByteSequence;
 
 public interface EtcdKeyCodec<K> extends EtcdKeyEncoder<K>, EtcdKeyDecoder<K> {
@@ -13,7 +13,7 @@ public interface EtcdKeyCodec<K> extends EtcdKeyEncoder<K>, EtcdKeyDecoder<K> {
 			}
 
 			@Override
-			public K decodeKey(ByteSequence byteSequence) throws MalformedDataException {
+			public K decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
 				return decoder.decodeKey(byteSequence);
 			}
 		};

@@ -1,6 +1,6 @@
 package io.activej.etcd.codec.prefix;
 
-import io.activej.common.exception.MalformedDataException;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.etcd.jetcd.ByteSequence;
 
 public interface EtcdPrefixCodec<K> extends EtcdPrefixEncoder<K>, EtcdPrefixDecoder<K> {
@@ -13,7 +13,7 @@ public interface EtcdPrefixCodec<K> extends EtcdPrefixEncoder<K>, EtcdPrefixDeco
 			}
 
 			@Override
-			public Prefix<K> decodePrefix(ByteSequence byteSequence) throws MalformedDataException {
+			public Prefix<K> decodePrefix(ByteSequence byteSequence) throws MalformedEtcdDataException {
 				return decoder.decodePrefix(byteSequence);
 			}
 		};

@@ -19,6 +19,7 @@ import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
 import io.activej.etcd.codec.prefix.Prefix;
 import io.activej.etcd.codec.value.EtcdValueCodec;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.etl.json.JsonCodecs;
@@ -155,7 +156,11 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 				for (var entry : aggregationChunks.entrySet()) {
 					for (AggregationChunk chunk : entry.getValue()) {
-						measuresValidator.validate(entry.getKey(), chunk.getMeasures());
+						try {
+							measuresValidator.validate(entry.getKey(), chunk.getMeasures());
+						} catch (MalformedDataException e) {
+							throw new MalformedEtcdDataException(e.getMessage());
+						}
 					}
 				}
 
@@ -235,7 +240,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 				@SuppressWarnings("unchecked")
 				@Override
-				public void onNext(Response.Header header, Object[] operation) throws MalformedDataException {
+				public void onNext(Response.Header header, Object[] operation) throws MalformedEtcdDataException {
 					checkArgument(header.getRevision() <= revisionTo);
 
 					var logPositionDiffs = (Map<String, LogPositionDiff>) operation[0];
@@ -243,7 +248,11 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 					for (var entry : aggregationDiffs.entrySet()) {
 						for (AggregationChunk addedChunk : entry.getValue().getAddedChunks()) {
-							measuresValidator.validate(entry.getKey(), addedChunk.getMeasures());
+							try {
+								measuresValidator.validate(entry.getKey(), addedChunk.getMeasures());
+							} catch (MalformedDataException e) {
+								throw new MalformedEtcdDataException(e.getMessage());
+							}
 						}
 					}
 
@@ -339,8 +348,12 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 			}
 
 			@Override
-			public LogPosition decodeValue(ByteSequence byteSequence) throws MalformedDataException {
-				return fromJson(JsonCodecs.ofLogPosition(), byteSequence.toString());
+			public LogPosition decodeValue(ByteSequence byteSequence) throws MalformedEtcdDataException {
+				try {
+					return fromJson(JsonCodecs.ofLogPosition(), byteSequence.toString());
+				} catch (MalformedDataException e) {
+					throw new MalformedEtcdDataException(e.getMessage());
+				}
 			}
 		};
 	}

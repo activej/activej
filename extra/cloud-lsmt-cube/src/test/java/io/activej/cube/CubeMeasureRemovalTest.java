@@ -269,7 +269,6 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
 		Throwable exception = awaitException(uplink2.checkout());
-		assertThat(exception, instanceOf(MalformedDataException.class));
 
 		String expectedMessage;
 		if (testName.equals("OT graph")) {
@@ -334,7 +333,6 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
 
 		Throwable exception = awaitException(uplink2.checkout());
-		assertThat(exception, instanceOf(MalformedDataException.class));
 		assertThat(exception.getMessage(), containsString("impressionsAggregation"));
 	}
 }

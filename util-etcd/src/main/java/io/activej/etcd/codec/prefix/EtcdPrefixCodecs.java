@@ -2,6 +2,7 @@ package io.activej.etcd.codec.prefix;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.DecoderFunction;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.etcd.jetcd.ByteSequence;
 
 import java.util.function.Function;
@@ -20,13 +21,13 @@ public class EtcdPrefixCodecs {
 			}
 
 			@Override
-			public Prefix<String> decodePrefix(ByteSequence byteSequence) throws MalformedDataException {
+			public Prefix<String> decodePrefix(ByteSequence byteSequence) throws MalformedEtcdDataException {
 				byte[] bytes = byteSequence.getBytes();
 				int i;
 				for (i = 0; i < bytes.length; i++) {
 					if (bytes[i] == terminator) break;
 				}
-				if (i >= bytes.length) throw new MalformedDataException();
+				if (i >= bytes.length) throw new MalformedEtcdDataException("No terminator found");
 				return new Prefix<>(byteSequence.substring(0, i).toString(), byteSequence.substring(i + 1));
 			}
 		};
@@ -41,9 +42,13 @@ public class EtcdPrefixCodecs {
 			}
 
 			@Override
-			public Prefix<R> decodePrefix(ByteSequence byteSequence) throws MalformedDataException {
+			public Prefix<R> decodePrefix(ByteSequence byteSequence) throws MalformedEtcdDataException {
 				Prefix<T> prefix = codec.decodePrefix(byteSequence);
-				return new Prefix<>(decodeFn.decode(prefix.key()), prefix.suffix());
+				try {
+					return new Prefix<>(decodeFn.decode(prefix.key()), prefix.suffix());
+				} catch (MalformedDataException e) {
+					throw new MalformedEtcdDataException(e.getMessage());
+				}
 			}
 		};
 	}

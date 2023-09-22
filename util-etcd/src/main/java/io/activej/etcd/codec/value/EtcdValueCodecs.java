@@ -2,6 +2,7 @@ package io.activej.etcd.codec.value;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.DecoderFunction;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.etcd.jetcd.ByteSequence;
 
 import java.util.function.Function;
@@ -32,11 +33,11 @@ public class EtcdValueCodecs {
 			}
 
 			@Override
-			public Integer decodeValue(ByteSequence byteSequence) throws MalformedDataException {
+			public Integer decodeValue(ByteSequence byteSequence) throws MalformedEtcdDataException {
 				try {
 					return Integer.parseInt(byteSequence.toString());
 				} catch (NumberFormatException e) {
-					throw new MalformedDataException(e);
+					throw new MalformedEtcdDataException(e.getMessage());
 				}
 			}
 		};
@@ -50,11 +51,11 @@ public class EtcdValueCodecs {
 			}
 
 			@Override
-			public Long decodeValue(ByteSequence byteSequence) throws MalformedDataException {
+			public Long decodeValue(ByteSequence byteSequence) throws MalformedEtcdDataException {
 				try {
 					return Long.parseLong(byteSequence.toString());
 				} catch (NumberFormatException e) {
-					throw new MalformedDataException(e);
+					throw new MalformedEtcdDataException(e.getMessage());
 				}
 			}
 		};
@@ -63,8 +64,12 @@ public class EtcdValueCodecs {
 	public static <T, R> EtcdValueCodec<R> transform(EtcdValueCodec<T> codec, Function<R, T> encodeFn, DecoderFunction<T, R> decodeFn) {
 		return new EtcdValueCodec<>() {
 			@Override
-			public R decodeValue(ByteSequence byteSequence) throws MalformedDataException {
-				return decodeFn.decode(codec.decodeValue(byteSequence));
+			public R decodeValue(ByteSequence byteSequence) throws MalformedEtcdDataException {
+				try {
+					return decodeFn.decode(codec.decodeValue(byteSequence));
+				} catch (MalformedDataException e) {
+					throw new MalformedEtcdDataException(e.getMessage());
+				}
 			}
 
 			@Override

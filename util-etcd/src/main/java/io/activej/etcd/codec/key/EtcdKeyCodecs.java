@@ -2,6 +2,7 @@ package io.activej.etcd.codec.key;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.DecoderFunction;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.etcd.jetcd.ByteSequence;
 
 import java.nio.ByteBuffer;
@@ -36,8 +37,8 @@ public class EtcdKeyCodecs {
 			}
 
 			@Override
-			public Integer decodeKey(ByteSequence byteSequence) throws MalformedDataException {
-				if (byteSequence.size() != Integer.BYTES) throw new MalformedDataException();
+			public Integer decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
+				if (byteSequence.size() != Integer.BYTES) throw new MalformedEtcdDataException("Not an 'integer' key");
 				return ByteBuffer.wrap(byteSequence.getBytes()).order(BIG_ENDIAN).getInt();
 			}
 		};
@@ -53,8 +54,8 @@ public class EtcdKeyCodecs {
 			}
 
 			@Override
-			public Long decodeKey(ByteSequence byteSequence) throws MalformedDataException {
-				if (byteSequence.size() != Long.BYTES) throw new MalformedDataException();
+			public Long decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
+				if (byteSequence.size() != Long.BYTES) throw new MalformedEtcdDataException("Not a 'long' key");
 				return ByteBuffer.wrap(byteSequence.getBytes()).order(BIG_ENDIAN).getLong();
 			}
 		};
@@ -63,8 +64,12 @@ public class EtcdKeyCodecs {
 	public static <T, R> EtcdKeyCodec<R> transform(EtcdKeyCodec<T> codec, Function<R, T> encodeFn, DecoderFunction<T, R> decodeFn) {
 		return new EtcdKeyCodec<>() {
 			@Override
-			public R decodeKey(ByteSequence byteSequence) throws MalformedDataException {
-				return decodeFn.decode(codec.decodeKey(byteSequence));
+			public R decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
+				try {
+					return decodeFn.decode(codec.decodeKey(byteSequence));
+				} catch (MalformedDataException e) {
+					throw new RuntimeException(e);
+				}
 			}
 
 			@Override

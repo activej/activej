@@ -5,6 +5,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.kv.KeyValue;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecs;
 import io.etcd.jetcd.ByteSequence;
@@ -42,19 +43,24 @@ public final class AggregationChunkJsonEtcdKVCodec implements EtcdKVCodec<Long, 
 	}
 
 	@Override
-	public AggregationChunk decodeKV(KeyValue kv) throws MalformedDataException {
+	public AggregationChunk decodeKV(KeyValue kv) throws MalformedEtcdDataException {
 		long chunkId = decodeKey(kv.key());
-		Value value = fromJson(valueJsonCodec, kv.value().toString());
+		Value value;
+		try {
+			value = fromJson(valueJsonCodec, kv.value().toString());
+		} catch (MalformedDataException e) {
+			throw new MalformedEtcdDataException(e.getMessage());
+		}
 		return AggregationChunk.create(chunkId, value.measures(), value.min(), value.max(), value.count());
 	}
 
 	@Override
-	public Long decodeKey(ByteSequence byteSequence) throws MalformedDataException {
+	public Long decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
 		long chunkId;
 		try {
 			chunkId = Long.parseLong(byteSequence.toString());
 		} catch (NumberFormatException e) {
-			throw new MalformedDataException(e);
+			throw new MalformedEtcdDataException(e.getMessage());
 		}
 		return chunkId;
 	}
