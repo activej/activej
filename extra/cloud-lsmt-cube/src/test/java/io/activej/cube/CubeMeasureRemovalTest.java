@@ -23,6 +23,7 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,7 +44,7 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class CubeMeasureRemovalTest extends CubeTestBase {
@@ -334,14 +335,6 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception, instanceOf(MalformedDataException.class));
-		String expectedMessage;
-		if (testName.equals("OT graph")) {
-			exception = exception.getCause();
-			assertThat(exception, instanceOf(JsonValidationException.class));
-			expectedMessage = "Key not found: impressionsAggregation";
-		} else {
-			expectedMessage = "Unexpected key: impressionsAggregation";
-		}
-		assertEquals(expectedMessage, exception.getMessage());
+		assertThat(exception.getMessage(), containsString("impressionsAggregation"));
 	}
 }

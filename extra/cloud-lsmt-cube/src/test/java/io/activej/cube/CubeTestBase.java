@@ -4,6 +4,8 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.cube.etcd.CubeEtcdOTUplink;
+import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
+import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -39,8 +41,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.cube.TestUtils.initializeRepository;
-import static io.activej.cube.TestUtils.noFail;
+import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
@@ -110,8 +111,6 @@ public abstract class CubeTestBase {
 					}
 				}},
 
-			// Linear
-/*
 			new Object[]{
 				"Linear graph",
 				new UplinkFactory<CubeMySqlOTUplink>() {
@@ -128,7 +127,6 @@ public abstract class CubeTestBase {
 					}
 				}
 			},
-*/
 
 			new Object[]{
 				"etcd graph",
