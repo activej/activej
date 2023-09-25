@@ -240,8 +240,8 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 				@SuppressWarnings("unchecked")
 				@Override
-				public void onNext(Response.Header header, Object[] operation) throws MalformedEtcdDataException {
-					checkArgument(header.getRevision() <= revisionTo);
+				public void onNext(long revision, Object[] operation) throws MalformedEtcdDataException {
+					checkArgument(revision <= revisionTo);
 
 					var logPositionDiffs = (Map<String, LogPositionDiff>) operation[0];
 					var aggregationDiffs = (Map<String, AggregationDiff>) operation[1];
@@ -258,7 +258,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 					this.logDiff = LogDiff.reduce(List.of(this.logDiff, LogDiff.of(logPositionDiffs, CubeDiff.of(aggregationDiffs))), CubeDiff::reduce);
 
-					if (header.getRevision() == revisionTo) {
+					if (revision == revisionTo) {
 						reactor.execute(() -> promise.trySet(List.of(logDiff)));
 						etcdWatcherRef.get().close();
 					}

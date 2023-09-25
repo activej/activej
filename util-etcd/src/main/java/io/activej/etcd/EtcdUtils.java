@@ -142,10 +142,10 @@ public class EtcdUtils {
 			new WatchRequest[]{new WatchRequest<>(prefix, codec, eventProcessor)},
 			new EtcdListener<>() {
 				@Override
-				public void onNext(Response.Header header, Object[] operations) throws MalformedEtcdDataException {
+				public void onNext(long revision, Object[] operations) throws MalformedEtcdDataException {
 					assert operations.length == 1;
 					//noinspection unchecked
-					listener.onNext(header, (R) operations[0]);
+					listener.onNext(revision, (R) operations[0]);
 				}
 
 				@Override
@@ -204,6 +204,8 @@ public class EtcdUtils {
 				.withRevision(revision)
 				.build(),
 			new Watch.Listener() {
+				long currentRevision = -1;
+
 				@Override
 				public void onNext(WatchResponse response) {
 					try {
@@ -214,6 +216,17 @@ public class EtcdUtils {
 						for (var event : response.getEvents()) {
 							var keyValue = event.getKeyValue();
 							var rootKey = keyValue.getKey().substring(root.size());
+
+							long modRevision = keyValue.getModRevision();
+							if (modRevision != currentRevision) {
+								if (currentRevision != -1){
+									listener.onNext(currentRevision, accumulators);
+									for (int i = 0; i < accumulators.length; i++) {
+										accumulators[i] = requests[i].eventProcessor.createEventsAccumulator();
+									}
+								}
+								currentRevision = modRevision;
+							}
 
 							for (int i = 0; i < accumulators.length; i++) {
 								var request = requests[i];
@@ -231,7 +244,9 @@ public class EtcdUtils {
 								}
 							}
 						}
-						listener.onNext(response.getHeader(), accumulators);
+						if (currentRevision != -1){
+							listener.onNext(currentRevision, accumulators);
+						}
 					} catch (MalformedEtcdDataException e) {
 						onError(e);
 					}
