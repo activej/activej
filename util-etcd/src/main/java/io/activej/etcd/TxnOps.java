@@ -52,11 +52,11 @@ public final class TxnOps {
 	}
 
 	public void get(ByteSequence key, GetOption option) {
-		ops.add(Op.get(key, option));
+		ops.add(Op.get(concat(key), option));
 	}
 
 	public void delete(ByteSequence key, DeleteOption option) {
-		ops.add(Op.delete(key, option));
+		ops.add(Op.delete(concat(key), option));
 	}
 
 	public ByteSequence concat(ByteSequence key) {

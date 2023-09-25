@@ -31,7 +31,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
-import io.etcd.jetcd.Response;
 import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.options.DeleteOption;
 
@@ -42,9 +41,11 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import static io.activej.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
@@ -66,7 +67,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	private final ByteSequence root;
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
-	private Map<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
+	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
 	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixCube = CUBE;
@@ -84,17 +85,16 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	public final class Builder extends AbstractBuilder<CubeEtcdOTUplink.Builder, CubeEtcdOTUplink> {
 		private Builder() {}
 
-		public Builder withChunkCodecsFactory(Map<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory) {
+		public Builder withChunkCodecsFactory(Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory) {
 			CubeEtcdOTUplink.this.chunkCodecsFactory = chunkCodecsFactory;
 			return this;
 		}
 
 		public Builder withChunkCodecsFactoryJson(Cube cube) {
-			return withChunkCodecsFactory(
-				cube.getAggregations().entrySet().stream()
-					.collect(entriesToLinkedHashMap(aggregation ->
-						new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(aggregation.getStructure()))))
-			);
+			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cube.getAggregations().entrySet().stream()
+				.collect(entriesToLinkedHashMap(aggregation ->
+					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(aggregation.getStructure()))));
+			return withChunkCodecsFactory(collect::get);
 		}
 
 		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
@@ -119,6 +119,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 		@Override
 		protected CubeEtcdOTUplink doBuild() {
+			checkNotNull(chunkCodecsFactory, "Chunk codecs factory is required");
 			return CubeEtcdOTUplink.this;
 		}
 	}
@@ -128,12 +129,18 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
 			doCheckout(0L)
-				.thenApply(response -> new FetchData<>(response.revision, 1L, List.of(
-					LogDiff.of(
-						response.positions.entrySet().stream().collect(entriesToLinkedHashMap(logPosition -> new LogPositionDiff(null, logPosition))),
-						CubeDiff.of(response.chunks.entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::of)))
-					)
-				))));
+				.thenApply(response -> {
+					Map<String, LogPositionDiff> positions = response.positions.entrySet().stream()
+						.collect(entriesToLinkedHashMap(logPosition -> new LogPositionDiff(null, logPosition)));
+
+					CubeDiff cubeDiff = CubeDiff.of(response.chunks.entrySet().stream()
+						.collect(entriesToLinkedHashMap(AggregationDiff::of)));
+
+					List<LogDiff<CubeDiff>> diffs = positions.isEmpty() && cubeDiff.getDiffs().isEmpty() ?
+						List.of() :
+						List.of(LogDiff.of(positions, cubeDiff));
+					return new FetchData<>(response.revision, response.revision, diffs);
+				}));
 	}
 
 	record CubeCheckoutResponse(long revision, Map<String, LogPosition> positions, Map<String, Set<AggregationChunk>> chunks) {}
@@ -147,7 +154,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					entriesToLinkedHashMap()),
 				CheckoutRequest.<Tuple2<String, AggregationChunk>, Map<String, Set<AggregationChunk>>>of(
 					root.concat(prefixCube),
-					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory::get),
+					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 					groupingBy(Tuple2::value1, mapping(Tuple2::value2, toSet())))
 			},
 			(header, objects) -> {
@@ -210,7 +217,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 				),
 				WatchRequest.<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>of(
 					root.concat(prefixCube),
-					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory::get),
+					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 					new EtcdEventProcessor<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>() {
 						@Override
 						public Map<String, AggregationDiff> createEventsAccumulator() {
@@ -288,11 +295,11 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
 				executeTxnOps(client, root, txnOps -> {
-						touch(txnOps, ByteSequence.EMPTY);
-						for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
-							saveCubeLogDiff(txnOps, diff);
-						}
-					})
+					touch(txnOps, ByteSequence.EMPTY);
+					for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
+						saveCubeLogDiff(txnOps, diff);
+					}
+				})
 			)
 			.then(txnResponse ->
 				doFetch(protoCommit.parentRevision(), txnResponse.getHeader().getRevision() - 1)
@@ -321,14 +328,14 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 			String aggregationId = entry.getKey();
 			checkAndDelete(
 				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
-				chunkCodecsFactory.get(aggregationId),
+				chunkCodecsFactory.apply(aggregationId),
 				entry.getValue().stream().map(chunk -> (long) chunk.getChunkId()).toList());
 		}
 		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getAddedChunks)).entrySet()) {
 			String aggregationId = entry.getKey();
 			checkAndInsert(
 				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
-				chunkCodecsFactory.get(aggregationId),
+				chunkCodecsFactory.apply(aggregationId),
 				entry.getValue());
 		}
 	}
