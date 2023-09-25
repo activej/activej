@@ -291,7 +291,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures(MEASURES.keySet()))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);

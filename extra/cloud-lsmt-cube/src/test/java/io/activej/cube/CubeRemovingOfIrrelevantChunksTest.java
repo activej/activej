@@ -95,7 +95,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.build();
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
-		uplink = uplinkFactory.create(basicCube);
+		uplink = uplinkFactory.create(basicCube, description);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 

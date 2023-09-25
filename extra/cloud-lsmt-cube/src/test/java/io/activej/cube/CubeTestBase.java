@@ -22,12 +22,15 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import io.activej.test.rules.DescriptionRule;
 import io.activej.test.rules.EventloopRule;
+import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
@@ -65,6 +68,9 @@ public abstract class CubeTestBase {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
+	@Rule
+	public DescriptionRule descriptionRule = new DescriptionRule();
+
 	@Parameter()
 	public String testName;
 
@@ -78,9 +84,12 @@ public abstract class CubeTestBase {
 
 	public static final Client ETCD_CLIENT = Client.builder().waitForReady(false).endpoints("http://127.0.0.1:2379").build();
 
+	public Description description;
+
 	@Before
 	public void setUp() throws Exception {
 		reactor = Reactor.getCurrentReactor();
+		description = descriptionRule.getDescription();
 	}
 
 	static {
@@ -98,7 +107,7 @@ public abstract class CubeTestBase {
 				"OT graph",
 				new UplinkFactory<OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
 					@Override
-					public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
+					public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube, Description description) {
 						Reactor reactor = cube.getReactor();
 						AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 							LOG_OT, ofLogDiff(ofCubeDiff(cube)));
@@ -115,7 +124,7 @@ public abstract class CubeTestBase {
 				"Linear graph",
 				new UplinkFactory<CubeMySqlOTUplink>() {
 					@Override
-					public CubeMySqlOTUplink createUninitialized(Cube cube) {
+					public CubeMySqlOTUplink createUninitialized(Cube cube, Description description) {
 						return CubeMySqlOTUplink.builder(cube.getReactor(), EXECUTOR, DATA_SOURCE, PrimaryKeyJsonCodecFactory.ofCube(cube))
 							.withMeasuresValidator(MeasuresValidator.ofCube(cube))
 							.build();
@@ -132,8 +141,9 @@ public abstract class CubeTestBase {
 				"etcd graph",
 				new UplinkFactory<CubeEtcdOTUplink>() {
 					@Override
-					public CubeEtcdOTUplink createUninitialized(Cube cube) {
-						return CubeEtcdOTUplink.builder(cube.getReactor(), ETCD_CLIENT, byteSequenceFrom("test."))
+					public CubeEtcdOTUplink createUninitialized(Cube cube, Description description) {
+						ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
+						return CubeEtcdOTUplink.builder(cube.getReactor(), ETCD_CLIENT, root)
 							.withChunkCodecsFactoryJson(cube)
 							.withMeasuresValidator(MeasuresValidator.ofCube(cube))
 							.build();
@@ -149,13 +159,13 @@ public abstract class CubeTestBase {
 	}
 
 	public interface UplinkFactory<U extends AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> {
-		default U create(Cube cube) {
-			U uplink = createUninitialized(cube);
+		default U create(Cube cube, Description description) {
+			U uplink = createUninitialized(cube, description);
 			initialize(uplink);
 			return uplink;
 		}
 
-		U createUninitialized(Cube cube);
+		U createUninitialized(Cube cube, Description description);
 
 		void initialize(U uplink);
 	}

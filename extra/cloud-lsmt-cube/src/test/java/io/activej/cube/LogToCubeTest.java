@@ -63,7 +63,7 @@ public final class LogToCubeTest extends CubeTestBase {
 				.withMeasures("advRequests"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 

@@ -3,7 +3,6 @@ package io.activej.cube;
 import io.activej.aggregation.*;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
@@ -23,7 +22,6 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +42,8 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class CubeMeasureRemovalTest extends CubeTestBase {
@@ -100,7 +99,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			.withRelation("banner", "campaign")
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube,description);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -240,7 +239,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 					.withMeasures("impressions", "clicks", "conversions"))
 				.build();
 
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
+			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1, description);
 
 			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
@@ -266,7 +265,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withMeasures("impressions"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2, description);
 
 		Throwable exception = awaitException(uplink2.checkout());
 
@@ -299,7 +298,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 					.withMeasures("clicks"))
 				.build();
 
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1);
+			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube1, description);
 
 			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
@@ -330,7 +329,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withMeasures("clicks"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cube2, description);
 
 		Throwable exception = awaitException(uplink2.checkout());
 		assertThat(exception.getMessage(), containsString("impressionsAggregation"));

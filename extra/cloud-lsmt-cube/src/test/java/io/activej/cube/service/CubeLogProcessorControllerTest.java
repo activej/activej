@@ -85,7 +85,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
 
 		LogOTState<CubeDiff> logState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);

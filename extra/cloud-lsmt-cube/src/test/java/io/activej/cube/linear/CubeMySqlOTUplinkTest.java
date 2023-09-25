@@ -657,9 +657,11 @@ public class CubeMySqlOTUplinkTest {
 	private static List<LogDiff<CubeDiff>> randomDiffs() {
 		List<LogDiff<CubeDiff>> diffs = new ArrayList<>();
 
-		for (int i = 0; i < RANDOM.nextInt(5); i++) {
+		int iLimit = RANDOM.nextInt(5);
+		for (int i = 0; i < iLimit; i++) {
 			Map<String, LogPositionDiff> positions = new HashMap<>();
-			for (int j = 0; j < RANDOM.nextInt(5); j++) {
+			int jLimit = RANDOM.nextInt(5);
+			for (int j = 0; j < jLimit; j++) {
 				LogPosition from;
 				if (RANDOM.nextFloat() < 0.1) {
 					from = LogPosition.initial();
@@ -670,11 +672,14 @@ public class CubeMySqlOTUplinkTest {
 			}
 
 			List<CubeDiff> cubeDiffs = new ArrayList<>();
-			for (int j = 0; j < RANDOM.nextInt(5); j++) {
+			jLimit = RANDOM.nextInt(5);
+			for (int j = 0; j < jLimit; j++) {
 				Map<String, AggregationDiff> aggregationDiffs = new HashMap<>();
-				for (int k = 0; k < RANDOM.nextInt(5); k++) {
+				int kLimit = RANDOM.nextInt(5);
+				for (int k = 0; k < kLimit; k++) {
 					Set<AggregationChunk> added = new HashSet<>();
-					for (int k1 = 0; k1 < RANDOM.nextInt(5); k1++) {
+					int k1Limit = RANDOM.nextInt(5);
+					for (int k1 = 0; k1 < k1Limit; k1++) {
 						added.add(chunk(RANDOM.nextLong()));
 					}
 					aggregationDiffs.put(i + "-" + j + "-" + k, AggregationDiff.of(added));
