@@ -1,11 +1,10 @@
 package io.activej.cube;
 
-import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
+import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.cube.Cube.AggregationConfig;
-import io.activej.cube.Cube.AggregationContainer;
+import io.activej.cube.CubeStructure.AggregationConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,13 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.common.Utils.first;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
@@ -125,12 +126,12 @@ public class TestCompatibleAggregations {
 		.withMeasures(MEASURES.keySet())
 		.withPredicate(LIMITED_DATES_AGGREGATION_PREDICATE);
 
-	private Cube cube;
-	private Cube cubeWithDetailedAggregation;
+	private CubeStructure structure;
+	private CubeStructure structureWithDetailedAggregation;
 
 	@Before
 	public void setUp() {
-		cube = Cube.builder(null, null, null, null)
+		structure = CubeStructure.builder()
 			.initialize(cube -> {
 				MEASURES.forEach(cube::withMeasure);
 
@@ -145,7 +146,7 @@ public class TestCompatibleAggregations {
 			})
 			.build();
 
-		cubeWithDetailedAggregation = Cube.builder(null, null, null, null)
+		structureWithDetailedAggregation = CubeStructure.builder()
 			.initialize(cube -> {
 				MEASURES.forEach(cube::withMeasure);
 
@@ -168,7 +169,7 @@ public class TestCompatibleAggregations {
 	@Test
 	public void withAlwaysTrueDataPredicate_MatchesAllAggregations() {
 		AggregationPredicate dataPredicate = alwaysTrue();
-		Set<String> compatibleAggregations = cube.getCompatibleAggregationsForDataInput(
+		Set<String> compatibleAggregations = structure.getCompatibleAggregationsForDataInput(
 			DATA_ITEM_DIMENSIONS, DATA_ITEM_MEASURES, dataPredicate).keySet();
 
 		assertEquals(3, compatibleAggregations.size());
@@ -180,7 +181,7 @@ public class TestCompatibleAggregations {
 	@Test
 	public void withCompatibleDataPredicate_MatchesAggregationWithPredicateThatSubsetOfDataPredicate2() {
 		AggregationPredicate dataPredicate = and(has("affiliate"), has("site"));
-		Map<String, AggregationPredicate> compatibleAggregationsWithFilterPredicate = cube.getCompatibleAggregationsForDataInput(
+		Map<String, AggregationPredicate> compatibleAggregationsWithFilterPredicate = structure.getCompatibleAggregationsForDataInput(
 			DATA_ITEM_DIMENSIONS, DATA_ITEM_MEASURES, dataPredicate);
 
 		assertEquals(3, compatibleAggregationsWithFilterPredicate.size());
@@ -201,7 +202,7 @@ public class TestCompatibleAggregations {
 	public void withIncompatibleDataPredicate_DoesNotMatchAggregationWithLimitedDateRange() {
 		AggregationPredicate dataPredicate = and(has("affiliate"), has("site"),
 			between("date", LocalDate.parse("2012-01-01"), LocalDate.parse("2016-01-01")));
-		Set<String> compatibleAggregations = cubeWithDetailedAggregation.getCompatibleAggregationsForDataInput(
+		Set<String> compatibleAggregations = structureWithDetailedAggregation.getCompatibleAggregationsForDataInput(
 			DATA_ITEM_DIMENSIONS, DATA_ITEM_MEASURES, dataPredicate).keySet();
 
 		assertFalse(compatibleAggregations.contains(LIMITED_DATES_AGGREGATION.getId()));
@@ -212,7 +213,7 @@ public class TestCompatibleAggregations {
 		AggregationPredicate dataPredicate = and(notEq("date", LocalDate.parse("2001-01-04")),
 			between("date", LocalDate.parse("2001-01-01"), LocalDate.parse("2004-01-01")));
 
-		Map<String, AggregationPredicate> compatibleAggregations = cubeWithDetailedAggregation.getCompatibleAggregationsForDataInput(
+		Map<String, AggregationPredicate> compatibleAggregations = structureWithDetailedAggregation.getCompatibleAggregationsForDataInput(
 			DATA_ITEM_DIMENSIONS, DATA_ITEM_MEASURES, dataPredicate);
 
 		//matches all aggregations, but with different filtering logic
@@ -238,13 +239,13 @@ public class TestCompatibleAggregations {
 	public void withWherePredicateAlwaysTrue_MatchesDailyAggregation() {
 		AggregationPredicate whereQueryPredicate = alwaysTrue();
 
-		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations = structure.getCompatibleAggregationsForQuery(
 			List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cube.getAggregation(DAILY_AGGREGATION.getId());
+		AggregationStructure expected = structure.getAggregationStructure(DAILY_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
+		assertEquals(expected.toString(), structure.getAggregationStructure(first(actualAggregations)).toString());
 	}
 
 	@Test
@@ -254,26 +255,26 @@ public class TestCompatibleAggregations {
 			has("campaign"),
 			has("banner"));
 
-		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations = structure.getCompatibleAggregationsForQuery(
 			List.of("advertiser", "campaign", "banner"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cube.getAggregation(ADVERTISERS_AGGREGATION.getId());
+		AggregationStructure expected = structure.getAggregationStructure(ADVERTISERS_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
+		assertEquals(expected.toString(), structure.getAggregationStructure(first(actualAggregations)).toString());
 	}
 
 	@Test
 	public void withWherePredicateForAffiliatesAggregation_MatchesAffiliatesAggregation() {
 		AggregationPredicate whereQueryPredicate = and(has("affiliate"), has("site"));
 
-		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations = structure.getCompatibleAggregationsForQuery(
 			List.of("affiliate", "site"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cube.getAggregation(AFFILIATES_AGGREGATION.getId());
+		AggregationStructure expected = structure.getAggregationStructure(AFFILIATES_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
+		assertEquals(expected.toString(), structure.getAggregationStructure(first(actualAggregations)).toString());
 	}
 
 	@Test
@@ -283,44 +284,51 @@ public class TestCompatibleAggregations {
 			has("site"),
 			has("placement"));
 
-		List<AggregationContainer> actualAggregations =
-			cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations =
+			structureWithDetailedAggregation.getCompatibleAggregationsForQuery(
 				List.of("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
+		AggregationStructure expected = structureWithDetailedAggregation.getAggregationStructure(DETAILED_AFFILIATES_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
+		assertEquals(expected.toString(), structureWithDetailedAggregation.getAggregationStructure(first(actualAggregations)).toString());
 	}
 
 	@Test
 	public void withWherePredicateForDetailedAffiliatesAggregations_MatchesDetailedAffiliatesAggregation() {
 		AggregationPredicate whereQueryPredicate = and(has("affiliate"), has("site"), has("placement"));
 
-		List<AggregationContainer> actualAggregations =
-			cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations =
+			structureWithDetailedAggregation.getCompatibleAggregationsForQuery(
 				List.of("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
+		AggregationStructure expected = structureWithDetailedAggregation.getAggregationStructure(DETAILED_AFFILIATES_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
+		assertEquals(expected.toString(), structureWithDetailedAggregation.getAggregationStructure(first(actualAggregations)).toString());
 	}
 
 	@Test
 	public void withWherePredicateForDailyAggregation_MatchesOnlyDailyAggregations() {
 		AggregationPredicate whereQueryPredicate = between("date", LocalDate.parse("2001-01-01"), LocalDate.parse("2004-01-01"));
 
-		List<AggregationContainer> actualAggregations =
-			cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations =
+			structureWithDetailedAggregation.getCompatibleAggregationsForQuery(
 				List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
-		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
+		AggregationStructure expected = structureWithDetailedAggregation.getAggregationStructure(DAILY_AGGREGATION.getId());
+		AggregationStructure expected2 = structureWithDetailedAggregation.getAggregationStructure(LIMITED_DATES_AGGREGATION.getId());
 
-		assertEquals(2, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
-		assertEquals(expected2.toString(), actualAggregations.get(1).toString());
+		assertEquals(
+			Set.of(
+				expected.toString(),
+				expected2.toString()
+			),
+			actualAggregations.stream()
+				.map(structureWithDetailedAggregation::getAggregationStructure)
+				.map(Object::toString)
+				.collect(Collectors.toSet())
+		);
 	}
 
 	@Test
@@ -329,30 +337,37 @@ public class TestCompatibleAggregations {
 			has("advertiser"), has("campaign"), has("banner"),
 			between("date", LocalDate.parse("2001-01-01"), LocalDate.parse("2004-01-01")));
 
-		List<AggregationContainer> actualAggregations =
-			cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations =
+			structureWithDetailedAggregation.getCompatibleAggregationsForQuery(
 				List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cubeWithDetailedAggregation.getAggregation(ADVERTISERS_AGGREGATION.getId());
+		AggregationStructure expected = structureWithDetailedAggregation.getAggregationStructure(ADVERTISERS_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
+		assertEquals(expected.toString(), structureWithDetailedAggregation.getAggregationStructure(first(actualAggregations)).toString());
 	}
 
 	@Test
 	public void withWherePredicateForDailyAggregation_MatchesTwoAggregations() {
 		AggregationPredicate whereQueryPredicate = eq("date", LocalDate.parse("2001-01-01"));
 
-		List<AggregationContainer> actualAggregations =
-			cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
+		Set<String> actualAggregations =
+			structureWithDetailedAggregation.getCompatibleAggregationsForQuery(
 				List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
-		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
+		AggregationStructure expected = structureWithDetailedAggregation.getAggregationStructure(DAILY_AGGREGATION.getId());
+		AggregationStructure expected2 = structureWithDetailedAggregation.getAggregationStructure(LIMITED_DATES_AGGREGATION.getId());
 
-		assertEquals(2, actualAggregations.size());
-		assertEquals(expected.toString(), actualAggregations.get(0).toString());
-		assertEquals(expected2.toString(), actualAggregations.get(1).toString());
+		assertEquals(
+			Set.of(
+				expected.toString(),
+				expected2.toString()
+			),
+			actualAggregations.stream()
+				.map(structureWithDetailedAggregation::getAggregationStructure)
+				.map(Object::toString)
+				.collect(Collectors.toSet())
+		);
 	}
 	//endregion
 

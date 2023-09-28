@@ -3,10 +3,9 @@ package io.activej.cube.service;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
@@ -37,7 +36,7 @@ import java.util.concurrent.Executors;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
@@ -67,10 +66,9 @@ public class CubeCleanerControllerTest {
 
 		reactor = Reactor.getCurrentReactor();
 
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), FileSystem.create(reactor, executor, aggregationsDir));
-		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
+		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
 			.withDimension("adv", ofInt())
 			.withMeasure("pubRequests", sum(ofLong()))
@@ -84,7 +82,7 @@ public class CubeCleanerControllerTest {
 			.build();
 
 		repository = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
-			OT_SYSTEM, ofLogDiff(ofCubeDiff(cube)));
+			OT_SYSTEM, ofLogDiff(ofCubeDiff(structure)));
 		repository.initialize();
 		repository.truncateTables();
 	}

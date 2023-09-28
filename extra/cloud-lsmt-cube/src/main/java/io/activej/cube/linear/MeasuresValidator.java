@@ -16,9 +16,9 @@
 
 package io.activej.cube.linear;
 
-import io.activej.aggregation.Aggregation;
+import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 
 import java.util.List;
 import java.util.Set;
@@ -29,15 +29,13 @@ public interface MeasuresValidator {
 
 	void validate(String aggregationId, List<String> measures) throws MalformedDataException;
 
-	static MeasuresValidator ofCube(Cube cube) {
+	static MeasuresValidator ofCubeStructure(CubeStructure cubeStructure) {
 		return (aggregationId, measures) -> {
-			Aggregation aggregation;
-			try {
-				aggregation = cube.getAggregation(aggregationId);
-			} catch (NullPointerException ignored) {
+			AggregationStructure aggregationStructure = cubeStructure.getAggregationStructure(aggregationId);
+			if (aggregationStructure == null) {
 				throw new MalformedDataException("Unknown aggregation: " + aggregationId);
 			}
-			Set<String> allowedMeasures = aggregation.getMeasureTypes().keySet();
+			Set<String> allowedMeasures = aggregationStructure.getMeasureTypes().keySet();
 			List<String> unknownMeasures = measures.stream()
 				.filter(not(allowedMeasures::contains))
 				.toList();

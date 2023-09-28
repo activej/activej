@@ -20,7 +20,14 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.annotation.ComponentInterface;
 import io.activej.datastream.supplier.StreamSupplier;
 
+import java.util.List;
+
 @ComponentInterface
 public interface IAggregation {
-	<T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass, DefiningClassLoader classLoader);
+	<T> StreamSupplier<T> query(
+		List<AggregationChunk> chunks,
+		AggregationQuery query,
+		Class<T> outputClass,
+		DefiningClassLoader queryClassLoader
+	);
 }

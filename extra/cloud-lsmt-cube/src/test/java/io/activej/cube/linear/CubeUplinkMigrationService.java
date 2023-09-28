@@ -1,17 +1,12 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Utils;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
-import io.activej.datastream.consumer.StreamConsumer;
-import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
@@ -22,15 +17,12 @@ import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -53,7 +45,7 @@ public final class CubeUplinkMigrationService {
 	private final Executor executor = newSingleThreadExecutor();
 
 	@VisibleForTesting
-	Cube cube = builderOfEmptyCube(eventloop, executor)
+	CubeStructure structure = CubeStructure.builder()
 		// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
 		.build();
 
@@ -114,36 +106,12 @@ public final class CubeUplinkMigrationService {
 	}
 
 	private AsyncOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
-		JsonCodec<LogDiff<CubeDiff>> codec = ofLogDiff(ofCubeDiff(cube));
+		JsonCodec<LogDiff<CubeDiff>> codec = ofLogDiff(ofCubeDiff(structure));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
 		return MySqlOTRepository.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
 	}
 
 	private CubeMySqlOTUplink createUplink(DataSource dataSource) {
-		return CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCube(cube));
-	}
-
-	static Cube.Builder builderOfEmptyCube(Reactor reactor, Executor executor) {
-		return Cube.builder(reactor, executor, DefiningClassLoader.create(), new IAggregationChunkStorage<Long>() {
-			@Override
-			public Promise<Long> createId() {
-				throw new AssertionError();
-			}
-
-			@Override
-			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				throw new AssertionError();
-			}
-
-			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				throw new AssertionError();
-			}
-
-			@Override
-			public Promise<Void> finish(Set<Long> chunkIds) {
-				throw new AssertionError();
-			}
-		});
+		return CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCubeStructure(structure));
 	}
 }

@@ -1,6 +1,9 @@
 package io.activej.cube;
 
-import io.activej.aggregation.*;
+import io.activej.aggregation.AggregationChunk;
+import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ChunkIdJsonCodec;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldTypes;
@@ -10,7 +13,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.cube.Cube.AggregationConfig;
+import io.activej.cube.CubeStructure.AggregationConfig;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSupplier;
@@ -39,7 +42,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.first;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -80,7 +83,7 @@ public class AddedMeasuresTest {
 			.withDimensions("siteId")
 			.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue");
 
-		Cube basicCube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
+		CubeStructure basicCubeStructure = CubeStructure.builder()
 			.withDimension("siteId", FieldTypes.ofInt())
 			.withMeasure("eventCount", count(ofLong()))
 			.withMeasure("sumRevenue", sum(ofDouble()))
@@ -95,35 +98,38 @@ public class AddedMeasuresTest {
 			new EventRecord(4, 0.13));
 		initialDiffs = new ArrayList<>();
 
-		CubeDiff diff = await(supplier.streamTo(basicCube.consume(EventRecord.class)));
+		CubeExecutor basicCubeExecutor = CubeExecutor.builder(reactor, basicCubeStructure, executor, classLoader, aggregationChunkStorage).build();
+
+		CubeDiff diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCube.apply(diff);
+		CubeOTState basicCubeOTState = CubeOTState.create(basicCubeStructure);
+		basicCubeOTState.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(3, 0.30),
 			new EventRecord(33, 0.22),
 			new EventRecord(21, 0.91));
 
-		diff = await(supplier.streamTo(basicCube.consume(EventRecord.class)));
+		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCube.apply(diff);
+		basicCubeOTState.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(42, 0.01),
 			new EventRecord(12, 0.88),
 			new EventRecord(33, 1.01));
 
-		diff = await(supplier.streamTo(basicCube.consume(EventRecord.class)));
+		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCube.apply(diff);
+		basicCubeOTState.apply(diff);
 	}
 
 	@Test
 	public void consolidation() {
-		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("siteId", FieldTypes.ofInt())
 			.withMeasure("eventCount", count(ofLong()))
 			.withMeasure("sumRevenue", sum(ofDouble()))
@@ -134,18 +140,23 @@ public class AddedMeasuresTest {
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 			.build();
 
-		initialDiffs.forEach(cube::apply);
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+
+		initialDiffs.forEach(cubeOTState::apply);
 
 		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 			new EventRecord2(14, 0.35, 500),
 			new EventRecord2(12, 0.59, 17),
 			new EventRecord2(22, 0.85, 50));
 
-		CubeDiff diff = await(supplier.streamTo(cube.consume(EventRecord2.class)));
-		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
-		cube.apply(diff);
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
 
-		CubeDiff cubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
+		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
+		cubeOTState.apply(diff);
+
+		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		CubeDiff cubeDiff = await(cube.consolidate(Cube.ConsolidationStrategy.hotSegment()));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
 
@@ -165,7 +176,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void query() throws QueryException {
-		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("siteId", FieldTypes.ofInt())
 			.withMeasure("eventCount", count(ofLong()))
 			.withMeasure("sumRevenue", sum(ofDouble()))
@@ -176,7 +187,11 @@ public class AddedMeasuresTest {
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 			.build();
 
-		initialDiffs.forEach(cube::apply);
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		initialDiffs.forEach(cubeOTState::apply);
+
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
+		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.builder()
@@ -191,7 +206,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void secondAggregation() throws QueryException {
-		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("siteId", FieldTypes.ofInt())
 			.withMeasure("eventCount", count(ofLong()))
 			.withMeasure("sumRevenue", sum(ofDouble()))
@@ -201,21 +216,26 @@ public class AddedMeasuresTest {
 			.withMeasure("uniqueUserIds", union(ofLong()))
 			.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "customRevenue"))
-			.withAggregation(AggregationConfig.id("second")
+			.withAggregation(id("second")
 				.withDimensions("siteId")
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "estimatedUniqueUserIdCount"))
 			.build();
 
-		initialDiffs.forEach(cube::apply);
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		initialDiffs.forEach(cubeOTState::apply);
 
 		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 			new EventRecord2(14, 0.35, 500),
 			new EventRecord2(12, 0.59, 17),
 			new EventRecord2(22, 0.85, 50));
 
-		CubeDiff diff = await(supplier.streamTo(cube.consume(EventRecord2.class)));
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
+
+		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
-		cube.apply(diff);
+		cubeOTState.apply(diff);
+
+		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.builder()

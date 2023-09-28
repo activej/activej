@@ -5,7 +5,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -37,10 +37,9 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.first;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
-import static io.activej.cube.linear.CubeUplinkMigrationService.builderOfEmptyCube;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
@@ -55,7 +54,7 @@ public final class CubeUplinkMigrationServiceTest {
 	public static EventloopRule eventloopRule = new EventloopRule();
 
 	private DataSource dataSource;
-	private Cube cube;
+	private CubeStructure structure;
 
 	private MySqlOTRepository<LogDiff<CubeDiff>> repo;
 	private CubeMySqlOTUplink uplink;
@@ -67,7 +66,7 @@ public final class CubeUplinkMigrationServiceTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newCachedThreadPool();
 
-		cube = builderOfEmptyCube(reactor, executor)
+		structure = CubeStructure.builder()
 			.withDimension("campaign", ofInt())
 			.withDimension("advertiser", ofInt())
 			.withMeasure("impressions", sum(ofLong()))
@@ -82,14 +81,14 @@ public final class CubeUplinkMigrationServiceTest {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		JsonCodec<LogDiff<CubeDiff>> diffCodec = ofLogDiff(ofCubeDiff(cube));
+		JsonCodec<LogDiff<CubeDiff>> diffCodec = ofLogDiff(ofCubeDiff(structure));
 
 		repo = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
-		PrimaryKeyJsonCodecFactory codecs = PrimaryKeyJsonCodecFactory.ofCube(cube);
+		PrimaryKeyJsonCodecFactory codecs = PrimaryKeyJsonCodecFactory.ofCubeStructure(structure);
 		uplink = CubeMySqlOTUplink.builder(reactor, executor, dataSource, codecs)
-			.withMeasuresValidator(MeasuresValidator.ofCube(cube))
+			.withMeasuresValidator(MeasuresValidator.ofCubeStructure(structure))
 			.build();
 
 		uplink.initialize();
@@ -104,7 +103,7 @@ public final class CubeUplinkMigrationServiceTest {
 		assertTrue(checkoutData.diffs().isEmpty());
 
 		CubeUplinkMigrationService service = new CubeUplinkMigrationService();
-		service.cube = cube;
+		service.structure = structure;
 
 		List<LogDiff<CubeDiff>> diffs1 = List.of(
 			LogDiff.of(Map.of(

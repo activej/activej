@@ -12,9 +12,7 @@ import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.csp.supplier.ChannelSuppliers;
-import io.activej.cube.Cube;
-import io.activej.cube.CubeTestBase;
-import io.activej.cube.LogItem;
+import io.activej.cube.*;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
@@ -40,7 +38,7 @@ import java.util.Map;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.first;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -63,7 +61,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		await(aggregationFS.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), aggregationFS);
-		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		CubeStructure structure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
 			.withDimension("advertiser", ofInt())
 			.withDimension("campaign", ofInt())
@@ -85,9 +83,10 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(structure, description);
 
-		LogOTState<CubeDiff> logState = LogOTState.create(cube);
+		LogOTState<CubeDiff> logState = LogOTState.create(CubeOTState.create(structure));
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
@@ -99,7 +98,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
 			reactor,
 			multilog,
-			cube.logStreamConsumer(LogItem.class),
+			cubeExecutor.logStreamConsumer(LogItem.class),
 			"test",
 			List.of("partitionA"),
 			logState);

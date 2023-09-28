@@ -20,6 +20,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.CubeException;
@@ -32,7 +33,6 @@ import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,20 +53,20 @@ public final class HttpClientCube implements ICube {
 	private final IHttpClient httpClient;
 	private JsonCodec<QueryResult> queryResultJsonCodec;
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
-	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
-	private final Map<String, Type> measureTypes = new LinkedHashMap<>();
+	private final CubeStructure structure;
 
-	private HttpClientCube(IHttpClient httpClient, String url) {
+	private HttpClientCube(IHttpClient httpClient, String url, CubeStructure structure) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
+		this.structure = structure;
 	}
 
-	public static Builder builder(IHttpClient httpClient, String cubeServletUrl) {
-		return new HttpClientCube(httpClient, cubeServletUrl).new Builder();
+	public static Builder builder(IHttpClient httpClient, String cubeServletUrl, CubeStructure structure) {
+		return new HttpClientCube(httpClient, cubeServletUrl, structure).new Builder();
 	}
 
-	public static Builder builder(IHttpClient httpClient, URI cubeServletUrl) {
-		return builder(httpClient, cubeServletUrl.toString());
+	public static Builder builder(IHttpClient httpClient, URI cubeServletUrl, CubeStructure structure) {
+		return builder(httpClient, cubeServletUrl.toString(), structure);
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, HttpClientCube> {
@@ -75,18 +75,6 @@ public final class HttpClientCube implements ICube {
 		public Builder withClassLoader(DefiningClassLoader classLoader) {
 			checkNotBuilt(this);
 			HttpClientCube.this.classLoader = classLoader;
-			return this;
-		}
-
-		public Builder withAttribute(String attribute, Type type) {
-			checkNotBuilt(this);
-			attributeTypes.put(attribute, type);
-			return this;
-		}
-
-		public Builder withMeasure(String measureId, Type type) {
-			checkNotBuilt(this);
-			measureTypes.put(measureId, type);
 			return this;
 		}
 
@@ -104,26 +92,16 @@ public final class HttpClientCube implements ICube {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, attributeTypes, measureTypes);
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}
 
 	private JsonCodec<QueryResult> getQueryResultJsonCodec() {
 		if (queryResultJsonCodec == null) {
-			queryResultJsonCodec = QueryResultJsonCodec.create(classLoader, factory, attributeTypes, measureTypes);
+			queryResultJsonCodec = QueryResultJsonCodec.create(classLoader, factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
 		}
 		return queryResultJsonCodec;
-	}
-
-	@Override
-	public Map<String, Type> getAttributeTypes() {
-		return attributeTypes;
-	}
-
-	@Override
-	public Map<String, Type> getMeasureTypes() {
-		return measureTypes;
 	}
 
 	@Override
@@ -145,6 +123,11 @@ public final class HttpClientCube implements ICube {
 					}
 				})
 				.whenComplete(toLogger(logger, "query", query)));
+	}
+
+	@Override
+	public CubeStructure getStructure() {
+		return structure;
 	}
 
 	private HttpRequest buildRequest(CubeQuery query) {

@@ -27,6 +27,8 @@ import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.stream.Collectors.toSet;
@@ -34,7 +36,7 @@ import static java.util.stream.Collectors.toSet;
 public final class Utils {
 
 	public static <R> Class<R> createResultClass(
-		Collection<String> attributes, Collection<String> measures, Cube cube, DefiningClassLoader classLoader
+		Collection<String> attributes, Collection<String> measures, CubeStructure structure, DefiningClassLoader classLoader
 	) {
 		return classLoader.ensureClass(
 			ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
@@ -43,10 +45,10 @@ public final class Utils {
 				return ClassGenerator.builder((Class<R>) Object.class)
 					.initialize(b -> {
 						for (String attribute : attributes) {
-							b.withField(attribute.replace('.', '$'), cube.getAttributeInternalType(attribute));
+							b.withField(attribute.replace('.', '$'), structure.getAttributeInternalType(attribute));
 						}
 						for (String measure : measures) {
-							b.withField(measure, cube.getMeasureInternalType(measure));
+							b.withField(measure, structure.getMeasureInternalType(measure));
 						}
 					})
 					.build();
@@ -126,6 +128,10 @@ public final class Utils {
 			.flatMap(CubeDiff::addedChunks)
 			.map(id -> (C) id)
 			.collect(toSet());
+	}
+
+	public static <K, V> Stream<Map.Entry<K, V>> filterEntryKeys(Stream<Map.Entry<K, V>> stream, Predicate<K> predicate) {
+		return stream.filter(entry -> predicate.test(entry.getKey()));
 	}
 
 }

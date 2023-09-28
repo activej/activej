@@ -20,14 +20,9 @@ import io.activej.common.annotation.ComponentInterface;
 import io.activej.cube.exception.QueryException;
 import io.activej.promise.Promise;
 
-import java.lang.reflect.Type;
-import java.util.Map;
-
 @ComponentInterface
 public interface ICube {
 	Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException;
 
-	Map<String, Type> getAttributeTypes();
-
-	Map<String, Type> getMeasureTypes();
+	CubeStructure getStructure();
 }

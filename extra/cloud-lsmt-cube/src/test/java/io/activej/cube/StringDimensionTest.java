@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -60,7 +60,7 @@ public class StringDimensionTest {
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(),
 			AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
-		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("key1", ofString())
 			.withDimension("key2", ofInt())
 			.withMeasure("metric1", sum(ofLong()))
@@ -70,22 +70,27 @@ public class StringDimensionTest {
 				.withDimensions("key1", "key2")
 				.withMeasures("metric1", "metric2", "metric3"))
 			.build();
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
+
+		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
 
 		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 				new DataItemString1("str1", 2, 10, 20),
 				new DataItemString1("str2", 3, 10, 20))
-			.streamTo(cube.consume(DataItemString1.class)));
+			.streamTo(cubeExecutor.consume(DataItemString1.class)));
 
 		CubeDiff consumer2Result = await(StreamSuppliers.ofValues(
 				new DataItemString2("str2", 3, 10, 20),
 				new DataItemString2("str1", 4, 10, 20))
-			.streamTo(cube.consume(DataItemString2.class)));
+			.streamTo(cubeExecutor.consume(DataItemString2.class)));
 
 		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().map(id -> (long) id).collect(toSet())));
 		await(aggregationChunkStorage.finish(consumer2Result.addedChunks().map(id -> (long) id).collect(toSet())));
 
-		cube.apply(consumer1Result);
-		cube.apply(consumer2Result);
+		cubeOTState.apply(consumer1Result);
+		cubeOTState.apply(consumer2Result);
 
 		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();
 		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),

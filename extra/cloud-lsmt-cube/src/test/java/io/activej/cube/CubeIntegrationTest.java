@@ -1,6 +1,5 @@
 package io.activej.cube;
 
-import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
@@ -33,7 +32,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -56,7 +55,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
-		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
 			.withDimension("advertiser", ofInt())
 			.withDimension("campaign", ofInt())
@@ -78,9 +77,13 @@ public class CubeIntegrationTest extends CubeTestBase {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
@@ -93,7 +96,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
 			multilog,
-			cube.logStreamConsumer(LogItem.class),
+			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
 			List.of("partitionA"),
 			cubeDiffLogOTState);
@@ -131,7 +134,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
-		await(aggregationChunkStorage.backup("backup1", (Set) cube.getAllChunks()));
+		await(aggregationChunkStorage.backup("backup1", (Set) cubeOTState.getAllChunks()));
 
 		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
@@ -147,14 +150,14 @@ public class CubeIntegrationTest extends CubeTestBase {
 		assertEquals(map, logItems.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Consolidate revision 4 as revision 5:
-		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
+		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Cube.ConsolidationStrategy.hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
 		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));
 		await(logCubeStateManager.sync());
 
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
-		await(aggregationChunkStorage.cleanup((Set) cube.getAllChunks()));
+		await(aggregationChunkStorage.cleanup((Set) cubeOTState.getAllChunks()));
 
 		// Query
 		List<LogItem> queryResult = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
@@ -166,7 +169,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		Set<String> actualChunkFileNames = Arrays.stream(checkNotNull(aggregationsDir.toFile().listFiles()))
 			.map(File::getName)
 			.collect(toSet());
-		assertEquals(concat(Stream.of("backups"), cube.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
+		assertEquals(concat(Stream.of("backups"), cubeOTState.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
 			actualChunkFileNames);
 	}
 

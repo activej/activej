@@ -10,6 +10,7 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
+import io.activej.ot.OTState;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -100,11 +101,14 @@ public class InvertedIndexTest {
 		FrameFormat frameFormat = FrameFormats.lz4();
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
-			.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-				.withKey("word", ofString())
-				.withMeasure("documents", union(ofInt()))
-				.build())
+		AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+			.withKey("word", ofString())
+			.withMeasure("documents", union(ofInt()))
+			.build();
+		AggregationOTState state = new AggregationOTState(structure);
+
+		AggregationExecutor aggregation = AggregationExecutor.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
+			.withStructure(structure)
 			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 			.build();
 
@@ -113,28 +117,29 @@ public class InvertedIndexTest {
 			new InvertedIndexRecord("brown", 2),
 			new InvertedIndexRecord("fox", 3));
 
-		doProcess(aggregationChunkStorage, aggregation, supplier);
+		doProcess(state, aggregationChunkStorage, aggregation, supplier);
 
 		supplier = StreamSuppliers.ofValues(
 			new InvertedIndexRecord("brown", 3),
 			new InvertedIndexRecord("lazy", 4),
 			new InvertedIndexRecord("dog", 1));
 
-		doProcess(aggregationChunkStorage, aggregation, supplier);
+		doProcess(state, aggregationChunkStorage, aggregation, supplier);
 
 		supplier = StreamSuppliers.ofValues(
 			new InvertedIndexRecord("quick", 1),
 			new InvertedIndexRecord("fox", 4),
 			new InvertedIndexRecord("brown", 10));
 
-		doProcess(aggregationChunkStorage, aggregation, supplier);
+		doProcess(state, aggregationChunkStorage, aggregation, supplier);
 
 		AggregationQuery query = AggregationQuery.builder()
 			.withKeys("word")
 			.withMeasures("documents")
 			.build();
 
-		List<InvertedIndexQueryResult> list = await(aggregation.query(query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
+		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
+		List<InvertedIndexQueryResult> list = await(aggregation.query(chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 
 		List<InvertedIndexQueryResult> expectedResult = List.of(
@@ -147,9 +152,9 @@ public class InvertedIndexTest {
 		assertEquals(expectedResult, list);
 	}
 
-	public void doProcess(IAggregationChunkStorage<Long> aggregationChunkStorage, Aggregation aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
+	public void doProcess(OTState<AggregationDiff> state, IAggregationChunkStorage<Long> aggregationChunkStorage, AggregationExecutor aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
-		aggregation.getState().apply(diff);
+		state.apply(diff);
 		await(aggregationChunkStorage.finish(getAddedChunks(diff)));
 	}
 

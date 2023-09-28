@@ -19,6 +19,8 @@ package io.activej.aggregation.ot;
 import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
+import io.activej.aggregation.predicate.AggregationPredicate;
+import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.common.builder.AbstractBuilder;
 
 import java.util.ArrayList;
@@ -35,6 +37,9 @@ public final class AggregationStructure {
 	private final Map<String, FieldType> measureTypes = new LinkedHashMap<>();
 	private final List<String> partitioningKey = new ArrayList<>();
 	private final Map<String, Measure> measures = new LinkedHashMap<>();
+
+	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
+	private AggregationPredicate precondition = AggregationPredicates.alwaysTrue();
 
 	private AggregationStructure(ChunkIdJsonCodec<?> chunkIdJsonCodec) {
 		this.chunkIdJsonCodec = chunkIdJsonCodec;
@@ -106,6 +111,18 @@ public final class AggregationStructure {
 			return this;
 		}
 
+		public Builder withPredicate(AggregationPredicate predicate){
+			checkNotBuilt(this);
+			AggregationStructure.this.predicate = predicate;
+			return this;
+		}
+
+		public Builder withPrecondition(AggregationPredicate precondition){
+			checkNotBuilt(this);
+			AggregationStructure.this.precondition = precondition;
+			return this;
+		}
+
 		@Override
 		protected AggregationStructure doBuild() {
 			return AggregationStructure.this;
@@ -146,6 +163,18 @@ public final class AggregationStructure {
 
 	public List<String> getPartitioningKey() {
 		return partitioningKey;
+	}
+
+	public AggregationPredicate getPredicate() {
+		return predicate;
+	}
+
+	public AggregationPredicate getPrecondition() {
+		return precondition;
+	}
+
+	public List<String> findFields(List<String> measures) {
+		return getMeasures().stream().filter(measures::contains).toList();
 	}
 
 }

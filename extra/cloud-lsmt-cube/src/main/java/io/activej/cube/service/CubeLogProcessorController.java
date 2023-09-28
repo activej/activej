@@ -22,7 +22,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeOTState;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
@@ -56,6 +56,8 @@ import static java.util.stream.Collectors.toSet;
 public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
+	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
+
 	private static final Logger logger = LoggerFactory.getLogger(CubeLogProcessorController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
@@ -63,7 +65,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	private final List<LogOTProcessor<?, CubeDiff>> logProcessors;
 	private final IAggregationChunkStorage<C> chunkStorage;
 	private final OTStateManager<K, LogDiff<CubeDiff>> stateManager;
-	private final AsyncPredicate<K> predicate;
+	private AsyncPredicate<K> predicate;
 
 	private boolean parallelRunner;
 
@@ -74,15 +76,16 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		.withRate()
 		.build();
 
-	CubeLogProcessorController(
+	private int maxOverlappingChunksToProcessLogs = DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
+
+	private CubeLogProcessorController(
 		Reactor reactor, List<LogOTProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage,
-		OTStateManager<K, LogDiff<CubeDiff>> stateManager, AsyncPredicate<K> predicate
+		OTStateManager<K, LogDiff<CubeDiff>> stateManager
 	) {
 		super(reactor);
 		this.logProcessors = logProcessors;
 		this.chunkStorage = chunkStorage;
 		this.stateManager = stateManager;
-		this.predicate = predicate;
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C> create(
@@ -96,19 +99,16 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		Reactor reactor, LogOTState<CubeDiff> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogOTProcessor<?, CubeDiff>> logProcessors
 	) {
-		Cube cube = (Cube) state.getDataState();
-		AsyncPredicate<K> predicate = AsyncPredicate.of(commitId -> {
-			if (cube.containsExcessiveNumberOfOverlappingChunks()) {
-				logger.info("Cube contains excessive number of overlapping chunks");
-				return false;
-			}
-			return true;
-		});
-		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager, predicate).new Builder();
+		CubeOTState cubeOTState = (CubeOTState) state.getDataState();
+		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeOTState);
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<K, C>> {
-		private Builder() {}
+		private final CubeOTState cubeOTState;
+
+		private Builder(CubeOTState cubeOTState) {
+			this.cubeOTState = cubeOTState;
+		}
 
 		public Builder withParallelRunner(boolean parallelRunner) {
 			checkNotBuilt(this);
@@ -116,8 +116,22 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 			return this;
 		}
 
+		public Builder withMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
+			checkNotBuilt(this);
+			CubeLogProcessorController.this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
+			return this;
+		}
+
 		@Override
 		protected CubeLogProcessorController<K, C> doBuild() {
+			predicate = AsyncPredicate.of(commitId -> {
+				if (cubeOTState.containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
+					logger.info("Cube contains excessive number of overlapping chunks");
+					return false;
+				}
+				return true;
+			});
+
 			return CubeLogProcessorController.this;
 		}
 	}
@@ -229,6 +243,17 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	@JmxAttribute
 	public void setParallelRunner(boolean parallelRunner) {
 		this.parallelRunner = parallelRunner;
+	}
+
+
+	@JmxAttribute
+	public int getMaxOverlappingChunksToProcessLogs() {
+		return maxOverlappingChunksToProcessLogs;
+	}
+
+	@JmxAttribute
+	public void setMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
+		this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
 	}
 
 	@JmxOperation

@@ -30,7 +30,7 @@ import java.util.List;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -47,7 +47,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
-		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
 			.withDimension("adv", ofInt())
 			.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class), notEq("testEnum", null))
@@ -63,11 +63,12 @@ public final class LogToCubeTest extends CubeTestBase {
 				.withMeasures("advRequests"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
@@ -77,9 +78,11 @@ public final class LogToCubeTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, TestPubRequest.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+
 		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
 			multilog,
-			new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(EVENTLOOP, cube),
+			new TestAggregatorSplitter(cubeExecutor), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 			"testlog",
 			List.of("partitionA"),
 			cubeDiffLogOTState);
@@ -93,6 +96,8 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(supplier.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
+
+		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
 
 		List<TestAdvResult> list = await(cube.queryRawStream(
 				List.of("adv"),

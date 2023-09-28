@@ -6,10 +6,9 @@ import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
@@ -44,12 +43,13 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
+@SuppressWarnings("SqlSourceToSinkFlow")
 public class CubeBackupControllerTest {
 
 	private static final List<String> MEASURES = List.of("pubRequests");
@@ -85,13 +85,12 @@ public class CubeBackupControllerTest {
 		eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		fileSystem = fs;
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), fs);
-		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
+		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
 			.withDimension("adv", ofInt())
 			.withMeasure("pubRequests", sum(ofLong()))
@@ -106,7 +105,7 @@ public class CubeBackupControllerTest {
 
 		IChunksBackupService chunksBackupService = IChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
-		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCube(cube));
+		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCubeStructure(structure));
 		backupController.initialize();
 		backupController.truncateTables();
 	}

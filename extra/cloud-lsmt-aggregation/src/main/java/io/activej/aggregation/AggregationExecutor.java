@@ -17,7 +17,6 @@
 package io.activej.aggregation;
 
 import io.activej.aggregation.QueryPlan.Sequence;
-import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
@@ -54,7 +53,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.util.Utils.*;
@@ -73,7 +71,7 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Aggregation extends AbstractReactive
+public final class AggregationExecutor extends AbstractReactive
 	implements IAggregation, ReactiveJmxBeanWithStats {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -92,8 +90,6 @@ public final class Aggregation extends AbstractReactive
 
 	private final AggregationStructure structure;
 
-	private AggregationOTState state;
-
 	// settings
 	private int chunkSize = DEFAULT_CHUNK_SIZE;
 	private int reducerBufferSize = DEFAULT_REDUCER_BUFFER_SIZE;
@@ -110,10 +106,9 @@ public final class Aggregation extends AbstractReactive
 	private int consolidations;
 	private Exception consolidationLastError;
 
-	private Aggregation(
+	private AggregationExecutor(
 		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-		IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
-		AggregationOTState state
+		IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure
 	) {
 		super(reactor);
 		this.executor = executor;
@@ -121,7 +116,6 @@ public final class Aggregation extends AbstractReactive
 		this.aggregationChunkStorage = aggregationChunkStorage;
 		this.frameFormat = frameFormat;
 		this.structure = structure;
-		this.state = state;
 	}
 
 	/**
@@ -142,109 +136,74 @@ public final class Aggregation extends AbstractReactive
 		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 		IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat
 	) {
-		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, null, null).new Builder();
+		return new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, null).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, Aggregation> {
+	public final class Builder extends AbstractBuilder<Builder, AggregationExecutor> {
 		private Builder() {}
 
 		public Builder withStructure(AggregationStructure structure) {
 			checkNotBuilt(this);
-			return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationOTState(structure)).new Builder();
+			return new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure).new Builder();
 		}
 
 		public Builder withChunkSize(int chunkSize) {
 			checkNotBuilt(this);
-			Aggregation.this.chunkSize = chunkSize;
+			AggregationExecutor.this.chunkSize = chunkSize;
 			return this;
 		}
 
 		public Builder withReducerBufferSize(int reducerBufferSize) {
 			checkNotBuilt(this);
-			Aggregation.this.reducerBufferSize = reducerBufferSize;
+			AggregationExecutor.this.reducerBufferSize = reducerBufferSize;
 			return this;
 		}
 
 		public Builder withSorterItemsInMemory(int sorterItemsInMemory) {
 			checkNotBuilt(this);
-			Aggregation.this.sorterItemsInMemory = sorterItemsInMemory;
+			AggregationExecutor.this.sorterItemsInMemory = sorterItemsInMemory;
 			return this;
 		}
 
 		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
 			checkNotBuilt(this);
-			Aggregation.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
+			AggregationExecutor.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 			return this;
 		}
 
 		public Builder withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
 			checkNotBuilt(this);
-			Aggregation.this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
+			AggregationExecutor.this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
 			return this;
 		}
 
 		public Builder withMaxChunksToConsolidate(int maxChunksToConsolidate) {
 			checkNotBuilt(this);
-			Aggregation.this.maxChunksToConsolidate = maxChunksToConsolidate;
+			AggregationExecutor.this.maxChunksToConsolidate = maxChunksToConsolidate;
 			return this;
 		}
 
 		public Builder withTemporarySortDir(Path temporarySortDir) {
 			checkNotBuilt(this);
-			Aggregation.this.temporarySortDir = temporarySortDir;
+			AggregationExecutor.this.temporarySortDir = temporarySortDir;
 			return this;
 		}
 
 		public Builder withStats(AggregationStats stats) {
 			checkNotBuilt(this);
-			Aggregation.this.stats = stats;
+			AggregationExecutor.this.stats = stats;
 			return this;
 		}
 
 		@Override
-		protected Aggregation doBuild() {
-			checkNotNull(Aggregation.this.structure, "Aggregation structure not set");
-			return Aggregation.this;
+		protected AggregationExecutor doBuild() {
+			checkNotNull(AggregationExecutor.this.structure, "Aggregation structure not set");
+			return AggregationExecutor.this;
 		}
 	}
 
 	public AggregationStructure getStructure() {
 		return structure;
-	}
-
-	public AggregationOTState getState() {
-		return state;
-	}
-
-	public void setState(AggregationOTState state) {
-		this.state = state;
-	}
-
-	public AggregationOTState detachState() {
-		AggregationOTState state = this.state;
-		//noinspection AssignmentToNull - in the lifecycle of a component field is not nullable
-		this.state = null;
-		return state;
-	}
-
-	public List<String> getKeys() {
-		return structure.getKeys();
-	}
-
-	public List<String> getMeasures() {
-		return structure.getMeasures();
-	}
-
-	public Map<String, FieldType> getKeyTypes() {
-		return structure.getKeyTypes();
-	}
-
-	public Map<String, FieldType> getMeasureTypes() {
-		return structure.getMeasureTypes();
-	}
-
-	public List<String> getPartitioningKey() {
-		return structure.getPartitioningKey();
 	}
 
 	public <K extends Comparable, I, O, A> Reducer<K, I, O, A> aggregationReducer(
@@ -267,30 +226,30 @@ public final class Aggregation extends AbstractReactive
 		Class<T> inputClass, Map<String, String> keyFields, Map<String, String> measureFields
 	) {
 		checkInReactorThread(this);
-		checkArgument(new HashSet<>(getKeys()).equals(keyFields.keySet()), "Expected keys: %s, actual keyFields: %s", getKeys(), keyFields);
-		checkArgument(getMeasureTypes().keySet().containsAll(measureFields.keySet()), "Unknown measures: %s", difference(measureFields.keySet(),
-			getMeasureTypes().keySet()));
+		checkArgument(new HashSet<>(structure.getKeys()).equals(keyFields.keySet()), "Expected keys: %s, actual keyFields: %s", structure.getKeys(), keyFields);
+		checkArgument(structure.getMeasureTypes().keySet().containsAll(measureFields.keySet()), "Unknown measures: %s", difference(measureFields.keySet(),
+			structure.getMeasureTypes().keySet()));
 
 		logger.info("Started consuming data in aggregation {}. Keys: {} Measures: {}", this, keyFields.keySet(), measureFields.keySet());
 
 		Class<K> keyClass = createKeyClass(
-			getKeys().stream()
+			structure.getKeys().stream()
 				.collect(toLinkedHashMap(structure.getKeyTypes()::get)),
 			classLoader);
 		Set<String> measureFieldKeys = measureFields.keySet();
-		List<String> measures = getMeasureTypes().keySet().stream().filter(measureFieldKeys::contains).collect(toList());
+		List<String> measures = structure.getMeasureTypes().keySet().stream().filter(measureFieldKeys::contains).collect(toList());
 
-		Class<T> recordClass = createRecordClass(structure, getKeys(), measures, classLoader);
+		Class<T> recordClass = createRecordClass(structure, structure.getKeys(), measures, classLoader);
 
 		Aggregate<T, Object> aggregate = createPreaggregator(structure, inputClass, recordClass,
 			keyFields, measureFields,
 			classLoader);
 
-		Function<T, K> keyFunction = createKeyFunction(inputClass, keyClass, getKeys(), classLoader);
+		Function<T, K> keyFunction = createKeyFunction(inputClass, keyClass, structure.getKeys(), classLoader);
 		AggregationGroupReducer<C, T, K> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
 			structure, measures,
 			recordClass,
-			createPartitionPredicate(recordClass, getPartitioningKey(), classLoader),
+			createPartitionPredicate(recordClass, structure.getPartitioningKey(), classLoader),
 			keyFunction,
 			aggregate, chunkSize, classLoader);
 
@@ -305,15 +264,9 @@ public final class Aggregation extends AbstractReactive
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass));
 	}
 
-	public double estimateCost(AggregationQuery query) {
-		List<String> measures = getMeasures();
-		List<String> aggregationFields = query.getMeasures().stream().filter(measures::contains).collect(toList());
-		return state.findChunks(query.getPredicate(), aggregationFields).size();
-	}
-
-	public <T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass) {
+	public <T> StreamSupplier<T> query(List<AggregationChunk> chunks, AggregationQuery query, Class<T> outputClass) {
 		checkInReactorThread(this);
-		return query(query, outputClass, classLoader);
+		return query(chunks, query, outputClass, classLoader);
 	}
 
 	/**
@@ -325,14 +278,18 @@ public final class Aggregation extends AbstractReactive
 	 * @return supplier that streams query results
 	 */
 	@Override
-	public <T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass, DefiningClassLoader queryClassLoader) {
+	public <T> StreamSupplier<T> query(
+		List<AggregationChunk> chunks,
+		AggregationQuery query,
+		Class<T> outputClass,
+		DefiningClassLoader queryClassLoader
+	) {
 		checkInReactorThread(this);
 		checkArgument(iterate(queryClassLoader, Objects::nonNull, ClassLoader::getParent).anyMatch(isEqual(classLoader)),
 			"Unrelated queryClassLoader");
-		List<String> fields = getMeasures().stream().filter(query.getMeasures()::contains).collect(toList());
-		List<AggregationChunk> allChunks = state.findChunks(query.getPredicate(), fields);
+		List<String> fields = structure.findFields(query.getMeasures());
 		return consolidatedSupplier(query.getKeys(),
-			fields, outputClass, query.getPredicate(), query.getPrecondition(), allChunks, queryClassLoader)
+			fields, outputClass, query.getPredicate(), query.getPrecondition(), chunks, queryClassLoader)
 			.withEndOfStream(eos -> eos
 				.mapException(e -> new AggregationException("Query " + query + " failed", e)));
 	}
@@ -343,7 +300,7 @@ public final class Aggregation extends AbstractReactive
 	) {
 		Comparator<T> keyComparator = createKeyComparator(resultClass, allKeys, classLoader);
 		BinarySerializer<T> binarySerializer = createBinarySerializer(structure, resultClass,
-			getKeys(), measures, classLoader);
+			structure.getKeys(), measures, classLoader);
 		Path sortDir;
 		if (temporarySortDir != null) {
 			sortDir = temporarySortDir;
@@ -368,22 +325,22 @@ public final class Aggregation extends AbstractReactive
 	}
 
 	private Promise<List<AggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate) {
-		Set<String> aggregationFields = new HashSet<>(getMeasures());
+		Set<String> aggregationFields = new HashSet<>(structure.getMeasures());
 		Set<String> chunkFields = chunksToConsolidate.stream()
 			.flatMap(chunk -> chunk.getMeasures().stream())
 			.filter(aggregationFields::contains)
 			.collect(toSet());
 
-		List<String> measures = getMeasures().stream()
+		List<String> measures = structure.getMeasures().stream()
 			.filter(chunkFields::contains)
 			.collect(toList());
-		Class<Object> resultClass = createRecordClass(structure, getKeys(), measures, classLoader);
+		Class<Object> resultClass = createRecordClass(structure, structure.getKeys(), measures, classLoader);
 
-		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(getKeys(), measures, resultClass,
+		StreamSupplier<Object> consolidatedSupplier = consolidatedSupplier(structure.getKeys(), measures, resultClass,
 			alwaysTrue(), alwaysTrue(), chunksToConsolidate, classLoader);
 		AggregationChunker chunker = AggregationChunker.create(
 			structure, measures, resultClass,
-			createPartitionPredicate(resultClass, getPartitioningKey(), classLoader),
+			createPartitionPredicate(resultClass, structure.getPartitioningKey(), classLoader),
 			aggregationChunkStorage, classLoader, chunkSize);
 		return consolidatedSupplier.streamTo(chunker)
 			.then(chunker::getResult);
@@ -439,13 +396,13 @@ public final class Aggregation extends AbstractReactive
 
 		logger.info("Query plan for {} in aggregation {}: {}", queryKeys, this, plan);
 
-		boolean alreadySorted = getKeys().subList(0, min(getKeys().size(), queryKeys.size())).equals(queryKeys);
+		boolean alreadySorted = structure.getKeys().subList(0, min(structure.getKeys().size(), queryKeys.size())).equals(queryKeys);
 
 		List<SequenceStream<S>> sequenceStreams = new ArrayList<>();
 
 		for (Sequence sequence : plan.getSequences()) {
 			Class<S> sequenceClass = createRecordClass(structure,
-				getKeys(),
+				structure.getKeys(),
 				sequence.getChunksFields(),
 				classLoader);
 
@@ -476,7 +433,7 @@ public final class Aggregation extends AbstractReactive
 		List<String> queryKeys, List<String> measures, Class<R> resultClass, List<SequenceStream<S>> sequences,
 		DefiningClassLoader classLoader
 	) {
-		if (sequences.size() == 1 && new HashSet<>(queryKeys).equals(new HashSet<>(getKeys()))) {
+		if (sequences.size() == 1 && new HashSet<>(queryKeys).equals(new HashSet<>(structure.getKeys()))) {
 			/*
 			If there is only one sequential supplier and all aggregation keys are requested, then there is no need for
 			using StreamReducer, because all records have unique keys and all we need to do is copy requested measures
@@ -560,39 +517,13 @@ public final class Aggregation extends AbstractReactive
 		}
 
 		Predicate<T> filterPredicate = createPredicateWithPrecondition(chunkRecordClass, where, precondition,
-			getKeyTypes(), queryClassLoader, $ -> alwaysTrue());
+			structure.getKeyTypes(), queryClassLoader, $ -> alwaysTrue());
 
 		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
 
-	@JmxAttribute
-	public int getNumberOfOverlappingChunks() {
-		return state.findOverlappingChunks().size();
-	}
-
-	public Promise<AggregationDiff> consolidateMinKey() {
-		checkInReactorThread(this);
-		return consolidateMinKey(Set.of());
-	}
-
-	public Promise<AggregationDiff> consolidateMinKey(Set<Object> lockedChunkIds) {
-		checkInReactorThread(this);
-		return consolidate(getChunksForConsolidation(lockedChunkIds, false));
-	}
-
-	public Promise<AggregationDiff> consolidateHotSegment() {
-		checkInReactorThread(this);
-		return consolidateHotSegment(Set.of());
-	}
-
-	public Promise<AggregationDiff> consolidateHotSegment(Set<Object> lockedChunkIds) {
-		checkInReactorThread(this);
-		return consolidate(getChunksForConsolidation(lockedChunkIds, true));
-	}
-
 	public Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
 		checkInReactorThread(this);
-		checkArgument(state.getChunks().values().containsAll(chunks), "Consolidating unknown chunks");
 
 		consolidationStarted = reactor.currentTimeMillis();
 		logger.info("Starting consolidation of aggregation '{}'", this);
@@ -609,12 +540,6 @@ public final class Aggregation extends AbstractReactive
 			});
 	}
 
-	public List<AggregationChunk> getChunksForConsolidation(Set<Object> lockedChunkIds, boolean hotSegment) {
-		return hotSegment ?
-			state.findChunksForConsolidationHotSegment(maxChunksToConsolidate, lockedChunkIds) :
-			state.findChunksForConsolidationMinKey(maxChunksToConsolidate, chunkSize, lockedChunkIds);
-	}
-
 	private Path createSortDir() throws AggregationException {
 		try {
 			return Files.createTempDirectory("aggregation_sort_dir");
@@ -627,16 +552,8 @@ public final class Aggregation extends AbstractReactive
 		try {
 			Files.delete(sortDir);
 		} catch (IOException e) {
-			logger.warn("Could not delete temporal directory {} : {}", temporarySortDir, e);
+			logger.warn("Could not delete temporal directory {}", temporarySortDir, e);
 		}
-	}
-
-	public static String getChunkIds(Iterable<AggregationChunk> chunks) {
-		List<Object> ids = new ArrayList<>();
-		for (AggregationChunk chunk : chunks) {
-			ids.add(chunk.getChunkId());
-		}
-		return ids.stream().map(Object::toString).collect(Collectors.joining(", "));
 	}
 
 	// jmx
@@ -712,17 +629,12 @@ public final class Aggregation extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public int getChunks() {
-		return state.getChunks().size();
-	}
-
-	@JmxAttribute
 	public AggregationStats getStats() {
 		return stats;
 	}
 
 	@Override
 	public String toString() {
-		return "{" + getKeyTypes().keySet() + " " + getMeasures() + '}';
+		return "{" + structure.getKeyTypes().keySet() + " " + structure.getMeasures() + '}';
 	}
 }

@@ -22,6 +22,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.QueryException;
@@ -105,14 +106,16 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, cube.getAttributeTypes(), cube.getMeasureTypes());
+			CubeStructure structure = cube.getStructure();
+			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
 		}
 		return aggregationPredicateCodec;
 	}
 
 	private JsonCodec<QueryResult> getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			queryResultCodec = QueryResultJsonCodec.create(classLoader, factory, cube.getAttributeTypes(), cube.getMeasureTypes());
+			CubeStructure structure = cube.getStructure();
+			queryResultCodec = QueryResultJsonCodec.create(classLoader, factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
 		}
 		return queryResultCodec;
 	}

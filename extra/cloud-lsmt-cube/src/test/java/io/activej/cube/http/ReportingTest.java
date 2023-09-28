@@ -45,8 +45,8 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
-import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.measure.ComputedMeasures.*;
@@ -211,22 +211,22 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	public static class LogItemSplitter extends SplitterLogDataConsumer<LogItem, CubeDiff> {
-		private final Cube cube;
+		private final CubeExecutor cubeExecutor;
 
-		public LogItemSplitter(Cube cube) {
-			super(cube.getReactor());
-			this.cube = cube;
+		public LogItemSplitter(CubeExecutor cubeExecutor) {
+			super(cubeExecutor.getReactor());
+			this.cubeExecutor = cubeExecutor;
 		}
 
 		@Override
 		protected StreamDataAcceptor<LogItem> createSplitter(Context ctx) {
 			return new StreamDataAcceptor<>() {
 				private final StreamDataAcceptor<LogItem> dateAggregator = ctx.addOutput(
-					cube.logStreamConsumer(
+					cubeExecutor.logStreamConsumer(
 						LogItem.class,
 						and(has("advertiser"), has("campaign"), has("banner"))));
 				private final StreamDataAcceptor<LogItem> dateAggregator2 = ctx.addOutput(
-					cube.logStreamConsumer(
+					cubeExecutor.logStreamConsumer(
 						LogItem.class,
 						and(has("affiliate"), has("site"))));
 
@@ -257,9 +257,8 @@ public final class ReportingTest extends CubeTestBase {
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 			ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
-		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
-			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 
+		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate(LocalDate.parse("2000-01-01")))
 			.withDimension("advertiser", ofInt(), notEq("advertiser", EXCLUDE_ADVERTISER))
 			.withDimension("campaign", ofInt(), notEq("campaign", EXCLUDE_CAMPAIGN))
@@ -291,9 +290,17 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures(MEASURES.keySet()))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube, description);
+		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
+		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
+			.build();
+
+		cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
+
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
@@ -306,7 +313,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
 			multilog,
-			new LogItemSplitter(cube),
+			new LogItemSplitter(cubeExecutor),
 			"testlog",
 			List.of("partitionA"),
 			cubeDiffLogOTState);
@@ -345,27 +352,7 @@ public final class ReportingTest extends CubeTestBase {
 		IHttpClient httpClient = HttpClient.builder(reactor)
 			.withNoKeepAlive()
 			.build();
-		cubeHttp = HttpClientCube.builder(httpClient, "http://127.0.0.1:" + serverPort)
-			.withAttribute("date", LocalDate.class)
-			.withAttribute("advertiser", int.class)
-			.withAttribute("campaign", int.class)
-			.withAttribute("banner", int.class)
-			.withAttribute("affiliate", int.class)
-			.withAttribute("site", String.class)
-			.withAttribute("advertiser.name", String.class)
-			.withMeasure("impressions", long.class)
-			.withMeasure("clicks", long.class)
-			.withMeasure("conversions", long.class)
-			.withMeasure("revenue", double.class)
-			.withMeasure("errors", long.class)
-			.withMeasure("eventCount", int.class)
-			.withMeasure("minRevenue", double.class)
-			.withMeasure("maxRevenue", double.class)
-			.withMeasure("ctr", double.class)
-			.withMeasure("uniqueUserIdsCount", int.class)
-			.withMeasure("uniqueUserPercent", double.class)
-			.withMeasure("errorsPercent", double.class)
-			.build();
+		cubeHttp = HttpClientCube.builder(httpClient, "http://127.0.0.1:" + serverPort, cubeStructure).build();
 	}
 
 	private HttpServer startHttpServer() {
@@ -862,17 +849,17 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testDataCorrectlyLoadedIntoAggregations() {
-		Aggregation daily = cube.getAggregation("daily");
+		AggregationOTState daily = cube.getState().getAggregationState("daily");
 		assert daily != null;
 		int dailyAggregationItemsCount = getAggregationItemsCount(daily);
 		assertEquals(6, dailyAggregationItemsCount);
 
-		Aggregation advertisers = cube.getAggregation("advertisers");
+		AggregationOTState advertisers = cube.getState().getAggregationState("advertisers");
 		assert advertisers != null;
 		int advertisersAggregationItemsCount = getAggregationItemsCount(advertisers);
 		assertEquals(5, advertisersAggregationItemsCount);
 
-		Aggregation affiliates = cube.getAggregation("affiliates");
+		AggregationOTState affiliates = cube.getState().getAggregationState("affiliates");
 		assert affiliates != null;
 		int affiliatesAggregationItemsCount = getAggregationItemsCount(affiliates);
 		assertEquals(6, affiliatesAggregationItemsCount);
@@ -1003,9 +990,9 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(27, dailyErrors);
 	}
 
-	private static int getAggregationItemsCount(Aggregation aggregation) {
+	private static int getAggregationItemsCount(AggregationOTState state) {
 		int count = 0;
-		for (Map.Entry<Object, AggregationChunk> chunk : aggregation.getState().getChunks().entrySet()) {
+		for (Map.Entry<Object, AggregationChunk> chunk : state.getChunks().entrySet()) {
 			count += chunk.getValue().getCount();
 		}
 		return count;

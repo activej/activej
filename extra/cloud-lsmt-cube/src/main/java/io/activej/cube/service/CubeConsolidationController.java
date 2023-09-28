@@ -18,7 +18,6 @@ package io.activej.cube.service;
 
 import io.activej.aggregation.*;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.Cube;
@@ -39,7 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -57,13 +59,18 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
-	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
+	public static final Supplier<ConsolidationStrategy> DEFAULT_CONSOLIDATION_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;
 
 		@Override
-		public AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> get() {
+		public ConsolidationStrategy get() {
 			hotSegment = !hotSegment;
-			return (aggregation, chunkLocker) -> Promise.of(aggregation.getChunksForConsolidation(chunkLocker, hotSegment));
+			return (state, executor, lockedChunkIds) -> {
+				List<AggregationChunk> chunks = hotSegment ?
+					state.findChunksForConsolidationHotSegment(executor.getMaxChunksToConsolidate(), lockedChunkIds) :
+					state.findChunksForConsolidationMinKey(executor.getMaxChunksToConsolidate(), executor.getChunkSize(), lockedChunkIds);
+				return Promise.of(chunks);
+			};
 		}
 	};
 
@@ -73,8 +80,6 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final Cube cube;
 	private final OTStateManager<K, D> stateManager;
 	private final IAggregationChunkStorage<C> aggregationChunkStorage;
-
-	private final Map<Aggregation, String> aggregationsMapReversed;
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseConsolidateImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -91,22 +96,21 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private final Map<String, IChunkLocker<Object>> lockers = new HashMap<>();
 
-	private Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
+	private Supplier<ConsolidationStrategy> strategy = DEFAULT_CONSOLIDATION_STRATEGY;
 	private Function<String, IChunkLocker<C>> chunkLockerFactory = $ -> NoOpChunkLocker.create(reactor);
 
 	private boolean consolidating;
 	private boolean cleaning;
 
-	CubeConsolidationController(
+	private CubeConsolidationController(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager,
-		IAggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed
+		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
 		this.stateManager = stateManager;
 		this.aggregationChunkStorage = aggregationChunkStorage;
-		this.aggregationsMapReversed = aggregationsMapReversed;
 	}
 
 	public static <K, D, C> CubeConsolidationController<K, D, C> create(
@@ -120,17 +124,13 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
-		Map<Aggregation, String> map = new IdentityHashMap<>();
-		for (String aggregationId : cube.getAggregationIds()) {
-			map.put(cube.getAggregation(aggregationId), aggregationId);
-		}
-		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map).new Builder();
+		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<K, D, C>> {
 		private Builder() {}
 
-		public Builder withLockerStrategy(Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy) {
+		public Builder withConsolidationStrategy(Supplier<ConsolidationStrategy> strategy) {
 			checkNotBuilt(this);
 			CubeConsolidationController.this.strategy = strategy;
 			return this;
@@ -167,21 +167,20 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		checkInReactorThread(this);
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
-		AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn = strategy.get();
+		ConsolidationStrategy chunksFn = strategy.get();
 		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
 		return Promise.complete()
 			.then(stateManager::sync)
 			.mapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e))
-			.then(() -> Promises.all(cube.getAggregationIds().stream()
+			.then(() -> Promises.all(cube.getStructure().getAggregationIds().stream()
 				.map(aggregationId -> findAndLockChunksForConsolidation(aggregationId, chunksFn)
 					.whenResult(chunks -> {
 						if (!chunks.isEmpty()) chunksForConsolidation.put(aggregationId, chunks);
 					}))))
-			.then(() -> cube.consolidate(aggregation -> {
-					String aggregationId = aggregationsMapReversed.get(aggregation);
-					List<AggregationChunk> chunks = chunksForConsolidation.get(aggregationId);
+			.then(() -> cube.consolidate((id, $, executor) -> {
+					List<AggregationChunk> chunks = chunksForConsolidation.get(id);
 					if (chunks == null) return Promise.of(AggregationDiff.empty());
-					return aggregation.consolidate(chunks);
+					return executor.consolidate(chunks);
 				})
 				.whenComplete(promiseConsolidateImpl.recordStats()))
 			.whenResult(this::cubeDiffJmx)
@@ -204,14 +203,15 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	}
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(
-		String aggregationId, AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn
+		String aggregationId, ConsolidationStrategy strategy
 	) {
 		IChunkLocker<Object> locker = ensureLocker(aggregationId);
-		Aggregation aggregation = cube.getAggregation(aggregationId);
+		AggregationExecutor aggregationExecutor = cube.getExecutor().getAggregationExecutors().get(aggregationId);
+		AggregationOTState aggregationState = cube.getState().getAggregationStates().get(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 			() -> locker.getLockedChunks()
-				.then(lockedChunkIds -> chunksFn.apply(aggregation, lockedChunkIds))
+				.then(lockedChunkIds -> strategy.getChunksForConsolidation(aggregationState, aggregationExecutor, lockedChunkIds))
 				.then(chunks -> {
 					if (chunks.isEmpty()) {
 						logger.info("Nothing to consolidate in aggregation '{}'", aggregationId);
@@ -244,7 +244,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		return stateManager.sync()
 			.mapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e))
 			.then(() -> {
-				Map<String, Set<AggregationChunk>> irrelevantChunks = cube.getIrrelevantChunks();
+				Map<String, Set<AggregationChunk>> irrelevantChunks = cube.getState().getIrrelevantChunks();
 				if (irrelevantChunks.isEmpty()) {
 					logger.info("Found no irrelevant chunks");
 					return Promise.complete();
@@ -303,6 +303,10 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private IChunkLocker<Object> ensureLocker(String aggregationId) {
 		//noinspection unchecked
 		return lockers.computeIfAbsent(aggregationId, $ -> (IChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
+	}
+
+	public interface ConsolidationStrategy {
+		Promise<List<AggregationChunk>> getChunksForConsolidation(AggregationOTState state, AggregationExecutor executor, Set<Object> lockedChunkIds);
 	}
 
 	@JmxAttribute

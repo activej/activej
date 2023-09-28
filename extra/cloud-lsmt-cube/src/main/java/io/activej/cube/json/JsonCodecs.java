@@ -16,9 +16,9 @@
 
 package io.activej.cube.json;
 
-import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.cube.Cube;
+import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.json.JsonCodec;
 
@@ -30,12 +30,12 @@ import static io.activej.json.JsonCodecs.ofMap;
 
 public class JsonCodecs {
 
-	public static JsonCodec<CubeDiff> ofCubeDiff(Cube cube) {
+	public static JsonCodec<CubeDiff> ofCubeDiff(CubeStructure cubeStructure) {
 		Map<String, JsonCodec<AggregationDiff>> aggregationDiffCodecs = new LinkedHashMap<>();
 
-		for (String aggregationId : cube.getAggregationIds()) {
-			Aggregation aggregation = cube.getAggregation(aggregationId);
-			JsonCodec<AggregationDiff> aggregationDiffCodec = ofAggregationDiff(aggregation.getStructure());
+		for (String aggregationId : cubeStructure.getAggregationIds()) {
+			AggregationStructure aggregationStructure = cubeStructure.getAggregationStructure(aggregationId);
+			JsonCodec<AggregationDiff> aggregationDiffCodec = ofAggregationDiff(aggregationStructure);
 			aggregationDiffCodecs.put(aggregationId, aggregationDiffCodec);
 		}
 

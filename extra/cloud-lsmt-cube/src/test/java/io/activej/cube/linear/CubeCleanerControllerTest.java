@@ -3,10 +3,9 @@ package io.activej.cube.linear;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
@@ -29,7 +28,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeUplink;
 import static io.activej.test.TestUtils.dataSource;
 
@@ -62,12 +61,11 @@ public class CubeCleanerControllerTest {
 		eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
 		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), fs);
-		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
+		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
 			.withDimension("adv", ofInt())
 			.withMeasure("pubRequests", sum(ofLong()))
@@ -80,7 +78,7 @@ public class CubeCleanerControllerTest {
 				.withMeasures("advRequests"))
 			.build();
 
-		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCube(cube));
+		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCubeStructure(structure));
 		uplink.initialize();
 		uplink.truncateTables();
 	}

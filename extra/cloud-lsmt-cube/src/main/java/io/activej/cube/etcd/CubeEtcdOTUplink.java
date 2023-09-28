@@ -5,7 +5,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
-import io.activej.cube.Cube;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.EtcdEventProcessor;
@@ -90,10 +90,10 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 			return this;
 		}
 
-		public Builder withChunkCodecsFactoryJson(Cube cube) {
-			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cube.getAggregations().entrySet().stream()
-				.collect(entriesToLinkedHashMap(aggregation ->
-					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(aggregation.getStructure()))));
+		public Builder withChunkCodecsFactoryJson(CubeStructure cubeStructure) {
+			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
+				.collect(entriesToLinkedHashMap(structure ->
+					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
 			return withChunkCodecsFactory(collect::get);
 		}
 

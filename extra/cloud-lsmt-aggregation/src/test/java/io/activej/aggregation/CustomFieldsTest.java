@@ -94,16 +94,18 @@ public class CustomFieldsTest {
 		FrameFormat frameFormat = FrameFormats.lz4();
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
-			.withStructure(AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-				.withKey("siteId", FieldTypes.ofInt())
-				.withMeasure("eventCount", count(ofLong()))
-				.withMeasure("sumRevenue", sum(ofDouble()))
-				.withMeasure("minRevenue", min(ofDouble()))
-				.withMeasure("maxRevenue", max(ofDouble()))
-				.withMeasure("uniqueUserIds", union(ofLong()))
-				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
-				.build())
+		AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+			.withKey("siteId", FieldTypes.ofInt())
+			.withMeasure("eventCount", count(ofLong()))
+			.withMeasure("sumRevenue", sum(ofDouble()))
+			.withMeasure("minRevenue", min(ofDouble()))
+			.withMeasure("maxRevenue", max(ofDouble()))
+			.withMeasure("uniqueUserIds", union(ofLong()))
+			.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
+			.build();
+		AggregationOTState state = new AggregationOTState(structure);
+		AggregationExecutor aggregation = AggregationExecutor.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
+			.withStructure(structure)
 			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 			.build();
 
@@ -114,7 +116,7 @@ public class CustomFieldsTest {
 
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
-		aggregation.getState().apply(diff);
+		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(2, 0.30, 20),
@@ -123,7 +125,7 @@ public class CustomFieldsTest {
 
 		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
-		aggregation.getState().apply(diff);
+		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(1, 0.01, 1),
@@ -132,7 +134,7 @@ public class CustomFieldsTest {
 
 		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
-		aggregation.getState().apply(diff);
+		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(1, 0.35, 500),
@@ -141,14 +143,15 @@ public class CustomFieldsTest {
 
 		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
-		aggregation.getState().apply(diff);
+		state.apply(diff);
 
 		AggregationQuery query = AggregationQuery.builder()
 			.withKeys("siteId")
 			.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount")
 			.build();
 
-		List<QueryResult> queryResults = await(aggregation.query(query, QueryResult.class, DefiningClassLoader.create(classLoader))
+		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
+		List<QueryResult> queryResults = await(aggregation.query(chunks, query, QueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 
 		double delta = 1E-3;
