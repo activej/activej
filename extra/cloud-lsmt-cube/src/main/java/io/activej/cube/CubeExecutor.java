@@ -32,6 +32,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.expression.impl.Compare;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
@@ -79,6 +80,7 @@ import static io.activej.aggregation.predicate.AggregationPredicates.alwaysFalse
 import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.not;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
@@ -123,7 +125,7 @@ public final class CubeExecutor extends AbstractReactive
 	private long queryErrors;
 	private Exception queryLastError;
 
-	CubeExecutor(
+	private CubeExecutor(
 		Reactor reactor, CubeStructure structure, Executor executor, DefiningClassLoader classLoader,
 		IAggregationChunkStorage aggregationChunkStorage
 	) {
@@ -134,6 +136,42 @@ public final class CubeExecutor extends AbstractReactive
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
+	public static final class AggregationConfig implements WithInitializer<AggregationConfig> {
+		private final String id;
+		private int chunkSize;
+		private int reducerBufferSize;
+		private int sorterItemsInMemory;
+		private int maxChunksToConsolidate;
+
+		public AggregationConfig(String id) {
+			this.id = id;
+		}
+
+		public static AggregationConfig id(String id) {
+			return new AggregationConfig(id);
+		}
+
+		public AggregationConfig withChunkSize(int chunkSize) {
+			this.chunkSize = chunkSize;
+			return this;
+		}
+
+		public AggregationConfig withReducerBufferSize(int reducerBufferSize) {
+			this.reducerBufferSize = reducerBufferSize;
+			return this;
+		}
+
+		public AggregationConfig withSorterItemsInMemory(int sorterItemsInMemory) {
+			this.sorterItemsInMemory = sorterItemsInMemory;
+			return this;
+		}
+
+		public AggregationConfig withMaxChunksToConsolidate(int maxChunksToConsolidate) {
+			this.maxChunksToConsolidate = maxChunksToConsolidate;
+			return this;
+		}
+	}
+
 	public static Builder builder(
 		Reactor reactor, CubeStructure structure, Executor executor, DefiningClassLoader classLoader,
 		IAggregationChunkStorage aggregationChunkStorage
@@ -142,6 +180,16 @@ public final class CubeExecutor extends AbstractReactive
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeExecutor> {
+		private final Map<String, AggregationConfig> aggregationConfigs = new HashMap<>();
+
+		private Builder() {}
+
+		public Builder withAggregationConfig(AggregationConfig aggregationConfig) {
+			checkNotBuilt(this);
+			checkArgument(!aggregationConfigs.containsKey(aggregationConfig.id), "Aggregation config '%s' is already defined", aggregationConfig.id);
+			aggregationConfigs.put(aggregationConfig.id, aggregationConfig);
+			return this;
+		}
 
 		public Builder withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
 			checkNotBuilt(this);
@@ -199,6 +247,9 @@ public final class CubeExecutor extends AbstractReactive
 
 		@Override
 		protected CubeExecutor doBuild() {
+			Set<String> difference = difference(aggregationConfigs.keySet(), structure.getAggregationIds());
+			checkArgument(difference.isEmpty(), "Found configs for unknown aggregations: " + difference);
+
 			for (Entry<String, AggregationStructure> entry : structure.getAggregationStructures().entrySet()) {
 				addAggregation(entry.getKey(), entry.getValue());
 			}
@@ -206,13 +257,15 @@ public final class CubeExecutor extends AbstractReactive
 		}
 
 		private void addAggregation(String id, AggregationStructure structure) {
+			AggregationConfig aggregationConfig = aggregationConfigs.get(id);
+
 			AggregationExecutor aggregation = AggregationExecutor.builder(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat)
 				.withStructure(structure)
 				.withTemporarySortDir(temporarySortDir)
-				.withChunkSize(aggregationsChunkSize)
-				.withReducerBufferSize(aggregationsReducerBufferSize)
-				.withSorterItemsInMemory(aggregationsSorterItemsInMemory)
-				.withMaxChunksToConsolidate(aggregationsMaxChunksToConsolidate)
+				.withChunkSize(aggregationConfig != null ? aggregationConfig.chunkSize : aggregationsChunkSize)
+				.withReducerBufferSize(aggregationConfig != null ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize)
+				.withSorterItemsInMemory(aggregationConfig != null ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory)
+				.withMaxChunksToConsolidate(aggregationConfig != null ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
 				.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
 				.withMaxIncrementalReloadPeriod(maxIncrementalReloadPeriod)
 				.withStats(aggregationStats)
