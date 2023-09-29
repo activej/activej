@@ -2,7 +2,6 @@ package io.activej.cube;
 
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.cube.aggregation.AggregationStructure;
 import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
@@ -218,32 +217,30 @@ public final class CubeStructure {
 		}
 
 		private void addAggregation(AggregationConfig aggregationConfig) {
-			AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
-				.initialize(s -> {
-					for (String dimensionId : aggregationConfig.dimensions) {
-						s.withKey(dimensionId, dimensionTypes.get(dimensionId));
-					}
-					for (String measureId : aggregationConfig.measures) {
-						s.withMeasure(measureId, measures.get(measureId));
-					}
-					for (Entry<String, Measure> entry : measures.entrySet()) {
-						String measureId = entry.getKey();
-						Measure measure = entry.getValue();
-						if (!aggregationConfig.measures.contains(measureId)) {
-							s.withIgnoredMeasure(measureId, measure.getFieldType());
-						}
-					}
-				})
-				.withPartitioningKey(aggregationConfig.partitioningKey)
-				.withPredicate(aggregationConfig.getPredicate())
-				.withPrecondition(and(aggregationConfig.getDimensions().stream()
-					.map(validityPredicates::get)
-					.filter(Objects::nonNull)
-					.toList())
-					.simplify())
-				.build();
+			AggregationStructure aggregationStructure = new AggregationStructure(ChunkIdJsonCodec.ofLong());
+			for (String dimensionId : aggregationConfig.dimensions) {
+				aggregationStructure.addKey(dimensionId, dimensionTypes.get(dimensionId));
+			}
+			for (String measureId : aggregationConfig.measures) {
+				aggregationStructure.addMeasure(measureId, measures.get(measureId));
+			}
+			for (Entry<String, Measure> entry : measures.entrySet()) {
+				String measureId = entry.getKey();
+				Measure measure = entry.getValue();
+				if (!aggregationConfig.measures.contains(measureId)) {
+					aggregationStructure.addIgnoredMeasure(measureId, measure.getFieldType());
+				}
+			}
 
-			aggregationStructures.put(aggregationConfig.id, structure);
+			aggregationStructure.addPartitioningKey(aggregationConfig.partitioningKey);
+			aggregationStructure.setPredicate(aggregationConfig.getPredicate());
+			aggregationStructure.setPrecondition(and(aggregationConfig.getDimensions().stream()
+				.map(validityPredicates::get)
+				.filter(Objects::nonNull)
+				.toList())
+				.simplify());
+
+			aggregationStructures.put(aggregationConfig.id, aggregationStructure);
 		}
 	}
 

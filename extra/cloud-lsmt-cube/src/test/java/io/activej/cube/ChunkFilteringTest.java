@@ -1,6 +1,5 @@
 package io.activej.cube;
 
-import io.activej.cube.aggregation.AggregationOTState;
 import io.activej.cube.aggregation.PrimaryKey;
 import org.junit.Test;
 

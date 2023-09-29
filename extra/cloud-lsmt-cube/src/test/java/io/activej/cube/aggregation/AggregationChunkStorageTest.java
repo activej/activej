@@ -4,6 +4,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.AggregationStructure;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
@@ -27,6 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static io.activej.cube.TestUtils.aggregationStructureBuilder;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
@@ -51,7 +53,7 @@ public class AggregationChunkStorageTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private final AggregationStructure structure = AggregationStructure.builder(io.activej.cube.aggregation.ChunkIdJsonCodec.ofLong())
+	private final AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
 		.withKey("key", ofInt())
 		.withMeasure("value", sum(ofInt()))
 		.withMeasure("timestamp", sum(ofLong()))
@@ -71,7 +73,7 @@ public class AggregationChunkStorageTest {
 			fs);
 
 		int nChunks = 100;
-		io.activej.cube.aggregation.AggregationChunker<?, KeyValuePair> chunker = AggregationChunker.create(
+		AggregationChunker<?, KeyValuePair> chunker = AggregationChunker.create(
 			structure, structure.getMeasures(), KeyValuePair.class, singlePartition(),
 			aggregationChunkStorage, classLoader, 1);
 

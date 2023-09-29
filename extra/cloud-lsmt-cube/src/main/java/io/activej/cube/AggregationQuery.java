@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package io.activej.cube.aggregation;
+package io.activej.cube;
 
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 
@@ -30,80 +29,29 @@ import static java.util.Collections.unmodifiableList;
 /**
  * Represents a query to aggregation. Contains the list of requested keys, fields, predicates and orderings.
  */
-public final class AggregationQuery {
+final class AggregationQuery {
 	private final List<String> keys = new ArrayList<>();
 	private final List<String> measures = new ArrayList<>();
 	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
 	private AggregationPredicate precondition = AggregationPredicates.alwaysTrue();
 
-	private AggregationQuery() {
+	AggregationQuery() {
 	}
 
-	public static Builder builder() {
-		return new AggregationQuery().new Builder();
+	void addKeys(List<String> keys) {
+		this.keys.addAll(keys);
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, AggregationQuery> {
-		private Builder() {}
+	void addMeasures(List<String> fields) {
+		this.measures.addAll(fields);
+	}
 
-		public Builder withKey(String key) {
-			checkNotBuilt(this);
-			AggregationQuery.this.keys.add(key);
-			return this;
-		}
+	void setPredicate(AggregationPredicate predicate) {
+		this.predicate = predicate;
+	}
 
-		public Builder withKeys(List<String> keys) {
-			checkNotBuilt(this);
-			AggregationQuery.this.keys.addAll(keys);
-			return this;
-		}
-
-		public Builder withKeys(String... keys) {
-			checkNotBuilt(this);
-			AggregationQuery.this.keys.addAll(List.of(keys));
-			return this;
-		}
-
-		public Builder withMeasures(List<String> fields) {
-			checkNotBuilt(this);
-			AggregationQuery.this.measures.addAll(fields);
-			return this;
-		}
-
-		public Builder withMeasures(String... fields) {
-			checkNotBuilt(this);
-			AggregationQuery.this.measures.addAll(List.of(fields));
-			return this;
-		}
-
-		public Builder withMeasure(String field) {
-			checkNotBuilt(this);
-			AggregationQuery.this.measures.add(field);
-			return this;
-		}
-
-		public Builder withPredicate(AggregationPredicate predicate) {
-			checkNotBuilt(this);
-			AggregationQuery.this.predicate = predicate;
-			return this;
-		}
-
-		public Builder withPredicates(List<AggregationPredicate> predicates) {
-			checkNotBuilt(this);
-			AggregationQuery.this.predicate = AggregationPredicates.and(predicates);
-			return this;
-		}
-
-		public Builder withPrecondition(AggregationPredicate precondition) {
-			checkNotBuilt(this);
-			AggregationQuery.this.precondition = precondition;
-			return this;
-		}
-
-		@Override
-		protected AggregationQuery doBuild() {
-			return AggregationQuery.this;
-		}
+	void setPrecondition(AggregationPredicate precondition) {
+		this.precondition = precondition;
 	}
 
 	public List<String> getKeys() {

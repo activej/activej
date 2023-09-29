@@ -1,10 +1,11 @@
-package io.activej.cube.aggregation;
+package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -26,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofString;
 import static io.activej.cube.aggregation.measure.Measures.union;
@@ -98,16 +100,15 @@ public class InvertedIndexTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		io.activej.cube.aggregation.IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, io.activej.cube.aggregation.ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+		AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
 			.withKey("word", ofString())
 			.withMeasure("documents", union(ofInt()))
 			.build();
-		io.activej.cube.aggregation.AggregationOTState state = new AggregationOTState(structure);
+		AggregationOTState state = createAggregationOtState(structure);
 
-		io.activej.cube.aggregation.AggregationExecutor aggregation = io.activej.cube.aggregation.AggregationExecutor.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
-			.withStructure(structure)
+		AggregationExecutor aggregation = aggregationExecutorBuilder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 			.build();
 
@@ -132,12 +133,12 @@ public class InvertedIndexTest {
 
 		doProcess(state, aggregationChunkStorage, aggregation, supplier);
 
-		io.activej.cube.aggregation.AggregationQuery query = AggregationQuery.builder()
+		AggregationQuery query = aggregationQueryBuilder()
 			.withKeys("word")
 			.withMeasures("documents")
 			.build();
 
-		List<io.activej.cube.aggregation.AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
+		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
 		List<InvertedIndexQueryResult> list = await(aggregation.query(chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 

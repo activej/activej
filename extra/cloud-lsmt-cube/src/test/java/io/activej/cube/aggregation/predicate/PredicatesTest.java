@@ -41,9 +41,9 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateEqSimplification() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate expected = eq("x", 10);
-		io.activej.cube.aggregation.predicate.AggregationPredicate actual = and(notEq("x", 12), eq("x", 10));
-		io.activej.cube.aggregation.predicate.AggregationPredicate actual2 = and(eq("x", 10), notEq("x", 12));
+		AggregationPredicate expected = eq("x", 10);
+		AggregationPredicate actual = and(notEq("x", 12), eq("x", 10));
+		AggregationPredicate actual2 = and(eq("x", 10), notEq("x", 12));
 		assertEquals(expected, actual.simplify());
 		// test symmetry
 		assertEquals(expected, actual2.simplify());
@@ -63,12 +63,12 @@ public class PredicatesTest {
 
 	@Test
 	public void testUnnecessaryPredicates_areRemoved_whenSimplified() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate = and(
+		AggregationPredicate predicate = and(
 			not(eq("x", 1)),
 			notEq("x", 1),
 			not(not(not(eq("x", 1)))),
 			eq("x", 2));
-		io.activej.cube.aggregation.predicate.AggregationPredicate expected = and(notEq("x", 1), eq("x", 2)).simplify();
+		AggregationPredicate expected = and(notEq("x", 1), eq("x", 2)).simplify();
 		assertEquals(expected, predicate.simplify());
 	}
 
@@ -76,7 +76,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testBetweenPredicateAndPredicateNotEq() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", 6), between("x", 5, 10));
 		assertEquals(predicate, predicate.simplify());
 
@@ -95,7 +95,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGtAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(ge("x", 10), gt("x", 10));
 		assertEquals(gt("x", 10), predicate.simplify());
 
@@ -114,7 +114,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGeAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(ge("x", 10), ge("x", 11));
 		assertEquals(ge("x", 11), predicate.simplify());
 
@@ -127,7 +127,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGtAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(gt("x", 10), gt("x", 11));
 		assertEquals(gt("x", 11), predicate.simplify());
 
@@ -140,7 +140,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLeAndPredicateLe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(le("x", 10), le("x", 11));
 		assertEquals(le("x", 10), predicate.simplify());
 
@@ -153,7 +153,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLeAndPredicateLt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(le("x", 11), lt("x", 11));
 		assertEquals(lt("x", 11), predicate.simplify());
 
@@ -166,12 +166,12 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateGeAndPredicateLe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(ge("x", 11), le("x", 11));
 		assertEquals(eq("x", 11), predicate.simplify());
 
 		predicate = and(ge("x", 11), le("x", 10));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(ge("x", 10), le("x", 11));
 		assertEquals(between("x", 10, 11), predicate.simplify());
@@ -179,7 +179,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLtAndPredicateLt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(lt("x", 11), lt("x", 11));
 		assertEquals(lt("x", 11), predicate.simplify());
 
@@ -192,12 +192,12 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLtAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(lt("x", 11), ge("x", 11));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(lt("x", 10), ge("x", 11));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(lt("x", 11), ge("x", 10));
 		assertEquals(predicate, predicate.simplify());
@@ -205,35 +205,35 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateLeAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(le("x", 11), gt("x", 11));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(le("x", 11), gt("x", 10));
 		assertEquals(predicate, predicate.simplify());
 
 		predicate = and(le("x", 10), gt("x", 11));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 	}
 
 	@Test
 	public void testPredicateLtAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(lt("x", 11), gt("x", 11));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(lt("x", 11), gt("x", 10));
 		assertEquals(predicate, predicate.simplify());
 
 		predicate = and(lt("x", 10), gt("x", 11));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 	}
 
 	@Test
 	public void testPredicateBetweenAndPredicateLe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), le("x", -6));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(between("x", -5, 5), le("x", -5));
 		assertEquals(eq("x", -5), predicate.simplify());
@@ -250,12 +250,12 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateLt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), lt("x", -6));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(between("x", -5, 5), lt("x", -5));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(between("x", -5, 5), lt("x", 0));
 		assertEquals(predicate, predicate.simplify());
@@ -269,7 +269,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateBetweenAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), ge("x", -6));
 		assertEquals(between("x", -5, 5), predicate.simplify());
 
@@ -283,12 +283,12 @@ public class PredicatesTest {
 		assertEquals(eq("x", 5), predicate.simplify());
 
 		predicate = and(between("x", -5, 5), ge("x", 6));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 	}
 
 	@Test
 	public void testPredicateBetweenAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), gt("x", -6));
 		assertEquals(between("x", -5, 5), predicate.simplify());
 
@@ -299,15 +299,15 @@ public class PredicatesTest {
 		assertEquals(predicate, predicate.simplify());
 
 		predicate = and(between("x", -5, 5), gt("x", 5));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 
 		predicate = and(between("x", -5, 5), gt("x", 6));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 	}
 
 	@Test
 	public void testPredicateBetweenAndPredicateBetween() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(between("x", -5, 5), between("x", 5, 10));
 		assertEquals(eq("x", 5), predicate.simplify());
 
@@ -318,12 +318,12 @@ public class PredicatesTest {
 		assertEquals(between("x", -5, 5), predicate.simplify());
 
 		predicate = and(between("x", -5, 5), between("x", 6, 7));
-		assertEquals(io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse(), predicate.simplify());
+		assertEquals(AggregationPredicates.alwaysFalse(), predicate.simplify());
 	}
 
 	@Test
 	public void testPredicateNotEqAndPredicateLe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), le("x", -4));
 		assertEquals(predicate, predicate.simplify());
 
@@ -336,7 +336,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateLt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), lt("x", -4));
 		assertEquals(predicate, predicate.simplify());
 
@@ -349,7 +349,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), ge("x", -4));
 		assertEquals(ge("x", -4), predicate.simplify());
 
@@ -362,7 +362,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), gt("x", -4));
 		assertEquals(gt("x", -4), predicate.simplify());
 
@@ -375,7 +375,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateLe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), le("x", -4));
 		assertEquals(eq("x", -5), predicate.simplify());
 
@@ -388,7 +388,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateLt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), lt("x", -4));
 		assertEquals(eq("x", -5), predicate.simplify());
 
@@ -401,7 +401,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), ge("x", -4));
 		assertEquals(alwaysFalse(), predicate.simplify());
 
@@ -414,7 +414,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateEqAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(eq("x", -5), gt("x", -4));
 		assertEquals(alwaysFalse(), predicate.simplify());
 
@@ -427,7 +427,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateNotEq() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", -5), notEq("x", -5));
 		assertEquals(notEq("x", -5), predicate.simplify());
 
@@ -437,7 +437,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateIn() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(notEq("x", 0), in("x"));
 		assertEquals(alwaysFalse(), predicate.simplify());
 
@@ -456,7 +456,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateNotEqAndPredicateInAndPredicateHas() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate, predicateHas, predicateNotEq, predicateIn;
+		AggregationPredicate predicate, predicateHas, predicateNotEq, predicateIn;
 		predicateHas = has("x");
 		predicateNotEq = notEq("x", 0);
 
@@ -475,7 +475,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateEq() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), eq("x", 2));
 		assertEquals(eq("x", 2), predicate.simplify());
 
@@ -488,7 +488,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateIn() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), in("x", 2));
 		assertEquals(eq("x", 2), predicate.simplify());
 
@@ -510,7 +510,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateLe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), le("x", 2));
 		assertEquals(in("x", 1, 2), predicate.simplify());
 
@@ -529,7 +529,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateLt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), lt("x", 2));
 		assertEquals(in("x", 1), predicate.simplify());
 
@@ -548,7 +548,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateGe() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), ge("x", 2));
 		assertEquals(in("x", 2, 3, 5), predicate.simplify());
 
@@ -570,7 +570,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateInAndPredicateGt() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(in("x", 1, 2, 3, 5), gt("x", 2));
 		assertEquals(in("x", 3, 5), predicate.simplify());
 
@@ -621,7 +621,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateRegexpAndPredicateEq() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(regexp("x", "tes."), eq("x", "test"));
 		assertEquals(eq("x", "test"), predicate.simplify());
 
@@ -637,7 +637,7 @@ public class PredicatesTest {
 
 	@Test
 	public void testPredicateRegexpAndPredicateNotEq() {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate;
+		AggregationPredicate predicate;
 		predicate = and(regexp("x", "tes."), notEq("x", "test"));
 		assertEquals(predicate, predicate.simplify());
 
@@ -685,7 +685,7 @@ public class PredicatesTest {
 	}
 
 	private void testMatches(
-		Matcher matcher, io.activej.cube.aggregation.predicate.AggregationPredicate belongPredicate, io.activej.cube.aggregation.predicate.AggregationPredicate belongOtherPredicate
+		Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate
 	) {
 		assertTrue(matcher.match(belongPredicate));
 		assertTrue(matcher.match(and(
@@ -721,7 +721,7 @@ public class PredicatesTest {
 
 	@SuppressWarnings("unchecked")
 	private boolean matches(Record record, String field, @Language("RegExp") String pattern) {
-		io.activej.cube.aggregation.predicate.AggregationPredicate predicate = AggregationPredicates.regexp(field, pattern);
+		AggregationPredicate predicate = AggregationPredicates.regexp(field, pattern);
 		return ClassGenerator.builder(Predicate.class)
 			.withMethod("test", boolean.class, List.of(Object.class),
 				predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
@@ -758,13 +758,13 @@ public class PredicatesTest {
 	}
 
 	private static final class Matcher {
-		private final io.activej.cube.aggregation.predicate.AggregationPredicate matchPredicate;
+		private final AggregationPredicate matchPredicate;
 
-		private Matcher(io.activej.cube.aggregation.predicate.AggregationPredicate predicate) {
+		private Matcher(AggregationPredicate predicate) {
 			this.matchPredicate = predicate.simplify();
 		}
 
-		private boolean match(io.activej.cube.aggregation.predicate.AggregationPredicate predicate) {
+		private boolean match(AggregationPredicate predicate) {
 			AggregationPredicate simplified = predicate.simplify();
 			return simplified.equals(and(matchPredicate, simplified).simplify());
 		}

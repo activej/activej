@@ -1,6 +1,8 @@
 package io.activej.cube.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.cube.AggregationOTState;
+import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.util.PartitionPredicate;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.consumer.StreamConsumers;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 
 import static io.activej.common.Utils.last;
+import static io.activej.cube.TestUtils.aggregationStructureBuilder;
+import static io.activej.cube.TestUtils.createAggregationOtState;
 import static io.activej.cube.aggregation.StreamUtils.assertClosedWithError;
 import static io.activej.cube.aggregation.StreamUtils.assertEndOfStream;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
@@ -50,17 +54,17 @@ public final class AggregationChunkerTest {
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private final AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+	private final AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
 		.withKey("key", ofInt())
 		.withMeasure("value", sum(ofInt()))
 		.withMeasure("timestamp", sum(ofLong()))
 		.build();
-	private final io.activej.cube.aggregation.AggregationOTState state = new AggregationOTState(structure);
+	private final AggregationOTState state = createAggregationOtState(structure);
 
 	@Test
 	public void test() {
 		List<KeyValuePair> items = new ArrayList<>();
-		io.activej.cube.aggregation.IAggregationChunkStorage<Long> aggregationChunkStorage = new io.activej.cube.aggregation.IAggregationChunkStorage<>() {
+		IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
 			long chunkId;
 
 			@Override
@@ -86,10 +90,10 @@ public final class AggregationChunkerTest {
 			}
 		};
 
-		List<io.activej.cube.aggregation.AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
+		List<AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
 
 		List<String> fields = new ArrayList<>();
-		for (io.activej.cube.aggregation.AggregationChunk chunk : chunksToConsolidate) {
+		for (AggregationChunk chunk : chunksToConsolidate) {
 			for (String field : chunk.getMeasures()) {
 				if (!fields.contains(field)) {
 					fields.add(field);
@@ -99,7 +103,7 @@ public final class AggregationChunkerTest {
 
 		Class<?> recordClass = createRecordClass(structure, structure.getKeys(), fields, classLoader);
 
-		io.activej.cube.aggregation.AggregationChunker<?, KeyValuePair> chunker = io.activej.cube.aggregation.AggregationChunker.create(
+		AggregationChunker<?, KeyValuePair> chunker = AggregationChunker.create(
 			structure, structure.getMeasures(), recordClass, (PartitionPredicate) singlePartition(),
 			aggregationChunkStorage, classLoader, 1);
 
@@ -110,7 +114,7 @@ public final class AggregationChunkerTest {
 		);
 
 		await(supplier.streamTo(chunker));
-		List<io.activej.cube.aggregation.AggregationChunk> list = await(chunker.getResult());
+		List<AggregationChunk> list = await(chunker.getResult());
 
 		assertEquals(3, list.size());
 		assertEquals(new KeyValuePair(3, 4, 6), items.get(0));
@@ -121,7 +125,7 @@ public final class AggregationChunkerTest {
 	@Test
 	public void testSupplierWithError() {
 		List<StreamConsumer> listConsumers = new ArrayList<>();
-		io.activej.cube.aggregation.IAggregationChunkStorage<Long> aggregationChunkStorage = new io.activej.cube.aggregation.IAggregationChunkStorage<>() {
+		IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
 			long chunkId;
 			final List items = new ArrayList();
 
@@ -148,10 +152,10 @@ public final class AggregationChunkerTest {
 			}
 		};
 
-		List<io.activej.cube.aggregation.AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
+		List<AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
 
 		List<String> fields = new ArrayList<>();
-		for (io.activej.cube.aggregation.AggregationChunk chunk : chunksToConsolidate) {
+		for (AggregationChunk chunk : chunksToConsolidate) {
 			for (String field : chunk.getMeasures()) {
 				if (!fields.contains(field)) {
 					fields.add(field);
@@ -181,7 +185,7 @@ public final class AggregationChunkerTest {
 				new KeyValuePair(1, 1, 2)),
 			StreamSuppliers.closingWithError(exception)
 		);
-		io.activej.cube.aggregation.AggregationChunker chunker = io.activej.cube.aggregation.AggregationChunker.create(
+		AggregationChunker chunker = AggregationChunker.create(
 			structure, structure.getMeasures(), recordClass, singlePartition(),
 			aggregationChunkStorage, classLoader, 1);
 
@@ -198,7 +202,7 @@ public final class AggregationChunkerTest {
 	@Test
 	public void testStorageConsumerWithError() {
 		List<StreamConsumer> listConsumers = new ArrayList<>();
-		io.activej.cube.aggregation.IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
+		IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
 			long chunkId;
 			final List items = new ArrayList();
 
@@ -231,7 +235,7 @@ public final class AggregationChunkerTest {
 			}
 		};
 
-		List<io.activej.cube.aggregation.AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
+		List<AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
 
 		List<String> fields = new ArrayList<>();
 		for (AggregationChunk chunk : chunksToConsolidate) {
@@ -250,7 +254,7 @@ public final class AggregationChunkerTest {
 			new KeyValuePair(1, 1, 2),
 			new KeyValuePair(1, 1, 2),
 			new KeyValuePair(1, 1, 2));
-		io.activej.cube.aggregation.AggregationChunker chunker = AggregationChunker.create(
+		AggregationChunker chunker = AggregationChunker.create(
 			structure, structure.getMeasures(), recordClass, singlePartition(),
 			aggregationChunkStorage, classLoader, 1);
 

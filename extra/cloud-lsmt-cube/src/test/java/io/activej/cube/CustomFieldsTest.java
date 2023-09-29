@@ -1,10 +1,14 @@
-package io.activej.cube.aggregation;
+package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
@@ -29,6 +33,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.*;
@@ -91,9 +96,9 @@ public class CustomFieldsTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, io.activej.cube.aggregation.ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+		AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
 			.withKey("siteId", FieldTypes.ofInt())
 			.withMeasure("eventCount", count(ofLong()))
 			.withMeasure("sumRevenue", sum(ofDouble()))
@@ -102,9 +107,8 @@ public class CustomFieldsTest {
 			.withMeasure("uniqueUserIds", union(ofLong()))
 			.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
 			.build();
-		io.activej.cube.aggregation.AggregationOTState state = new AggregationOTState(structure);
-		io.activej.cube.aggregation.AggregationExecutor aggregation = AggregationExecutor.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
-			.withStructure(structure)
+		AggregationOTState state = createAggregationOtState(structure);
+		AggregationExecutor aggregation = aggregationExecutorBuilder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 			.build();
 
@@ -114,7 +118,7 @@ public class CustomFieldsTest {
 			new EventRecord(3, 0.13, 20));
 
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(io.activej.cube.aggregation.AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
@@ -123,7 +127,7 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.91, 33));
 
 		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(io.activej.cube.aggregation.AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
@@ -132,7 +136,7 @@ public class CustomFieldsTest {
 			new EventRecord(3, 1.01, 21));
 
 		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(io.activej.cube.aggregation.AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
@@ -141,10 +145,10 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.85, 50));
 
 		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(io.activej.cube.aggregation.AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
-		io.activej.cube.aggregation.AggregationQuery query = AggregationQuery.builder()
+		AggregationQuery query = aggregationQueryBuilder()
 			.withKeys("siteId")
 			.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount")
 			.build();

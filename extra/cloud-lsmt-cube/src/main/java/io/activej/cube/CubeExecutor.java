@@ -32,7 +32,8 @@ import io.activej.cube.CubeOTState.CompatibleAggregations;
 import io.activej.cube.CubeQuery.Ordering;
 import io.activej.cube.CubeStructure.AttributeResolverContainer;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
-import io.activej.cube.aggregation.*;
+import io.activej.cube.aggregation.AggregationStats;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
@@ -255,20 +256,19 @@ public final class CubeExecutor extends AbstractReactive
 		private void addAggregation(String id, AggregationStructure structure) {
 			AggregationConfig aggregationConfig = aggregationConfigs.get(id);
 
-			AggregationExecutor aggregation = AggregationExecutor.builder(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat)
-				.withStructure(structure)
-				.withTemporarySortDir(temporarySortDir)
-				.withChunkSize(aggregationConfig != null ? aggregationConfig.chunkSize : aggregationsChunkSize)
-				.withReducerBufferSize(aggregationConfig != null ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize)
-				.withSorterItemsInMemory(aggregationConfig != null ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory)
-				.withMaxChunksToConsolidate(aggregationConfig != null ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
-				.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
-				.withMaxIncrementalReloadPeriod(maxIncrementalReloadPeriod)
-				.withStats(aggregationStats)
-				.build();
+			AggregationExecutor aggregationExecutor = new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure);
 
-			aggregationExecutors.put(id, aggregation);
-			logger.info("Added aggregation executor {} for id '{}'", aggregation, id);
+			aggregationExecutor.setTemporarySortDir(temporarySortDir);
+			aggregationExecutor.setChunkSize(aggregationConfig != null ? aggregationConfig.chunkSize : aggregationsChunkSize);
+			aggregationExecutor.setReducerBufferSize(aggregationConfig != null ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize);
+			aggregationExecutor.setSorterItemsInMemory(aggregationConfig != null ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory);
+			aggregationExecutor.setMaxChunksToConsolidate(aggregationConfig != null ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate);
+			aggregationExecutor.setIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions);
+			aggregationExecutor.setMaxIncrementalReloadPeriod(maxIncrementalReloadPeriod);
+			aggregationExecutor.setStats(aggregationStats);
+
+			aggregationExecutors.put(id, aggregationExecutor);
+			logger.info("Added aggregation executor {} for id '{}'", aggregationExecutor, id);
 		}
 	}
 
@@ -389,15 +389,18 @@ public final class CubeExecutor extends AbstractReactive
 
 			AggregationExecutor aggregation = aggregationExecutors.get(compatibleAggregation.id());
 
+			AggregationQuery aggregationQuery = new AggregationQuery();
+			aggregationQuery.addKeys(dimensions);
+			aggregationQuery.addMeasures(compatibleMeasures);
+			aggregationQuery.setPredicate(where);
+			aggregationQuery.setPrecondition(aggregation.getStructure().getPrecondition());
+
 			StreamSupplier<S> aggregationSupplier = aggregation.query(
 				compatibleAggregation.chunks(),
-				AggregationQuery.builder()
-					.withKeys(dimensions)
-					.withMeasures(compatibleMeasures)
-					.withPredicate(where)
-					.withPrecondition(aggregation.getStructure().getPrecondition())
-					.build(),
-				aggregationClass, queryClassLoader);
+				aggregationQuery,
+				aggregationClass,
+				queryClassLoader
+			);
 
 			if (compatibleAggregations.size() == 1) {
 				/*

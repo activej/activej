@@ -16,8 +16,8 @@
 
 package io.activej.cube.json;
 
+import io.activej.cube.AggregationStructure;
 import io.activej.cube.CubeStructure;
-import io.activej.cube.aggregation.AggregationStructure;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.json.JsonCodec;

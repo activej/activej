@@ -1,10 +1,15 @@
-package io.activej.cube.aggregation;
+package io.activej.cube;
 
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.RangeTree;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import org.junit.Test;
 
 import java.util.*;
 
+import static io.activej.cube.TestUtils.aggregationStructureBuilder;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
@@ -13,15 +18,15 @@ import static org.junit.Assert.assertNull;
 
 public class ConsolidationChunkSelectionTest {
 
-	public static final AggregationStructure STRUCTURE = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+	public static final AggregationStructure STRUCTURE = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
 		.withKey("key", ofInt())
 		.build();
 
 	@Test
 	public void testRangeExpansion() {
-		io.activej.cube.aggregation.AggregationOTState state = new io.activej.cube.aggregation.AggregationOTState(STRUCTURE);
+		AggregationOTState state = new AggregationOTState(STRUCTURE);
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks = new HashSet<>();
+		Set<AggregationChunk> chunks = new HashSet<>();
 		chunks.add(createTestChunk(1, 1, 2));
 		chunks.add(createTestChunk(2, 1, 2));
 		chunks.add(createTestChunk(3, 1, 4));
@@ -33,7 +38,7 @@ public class ConsolidationChunkSelectionTest {
 
 		state.apply(AggregationDiff.of(chunks));
 
-		List<io.activej.cube.aggregation.AggregationChunk> selectedChunks = state.findChunksForConsolidationHotSegment(100);
+		List<AggregationChunk> selectedChunks = state.findChunksForConsolidationHotSegment(100);
 		assertEquals(chunks, new HashSet<>(selectedChunks));
 
 		selectedChunks = state.findChunksForConsolidationHotSegment(5);
@@ -51,15 +56,15 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testMinKeyStrategy() {
-		io.activej.cube.aggregation.AggregationOTState state = new io.activej.cube.aggregation.AggregationOTState(STRUCTURE);
+		AggregationOTState state = new AggregationOTState(STRUCTURE);
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks1 = new HashSet<>();
+		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(1, 1, 2));
 		chunks1.add(createTestChunk(2, 1, 2));
 		chunks1.add(createTestChunk(3, 1, 4));
 		chunks1.add(createTestChunk(4, 3, 4));
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks2 = new HashSet<>();
+		Set<AggregationChunk> chunks2 = new HashSet<>();
 		chunks2.add(createTestChunk(9, 9, 10));
 		chunks2.add(createTestChunk(10, 9, 10));
 		chunks2.add(createTestChunk(11, 10, 11));
@@ -68,78 +73,78 @@ public class ConsolidationChunkSelectionTest {
 
 		state.apply(AggregationDiff.of(concat(chunks1.stream(), chunks2.stream()).collect(toSet())));
 
-		List<io.activej.cube.aggregation.AggregationChunk> selectedChunks = state.findChunksForConsolidationMinKey(100, 4000);
+		List<AggregationChunk> selectedChunks = state.findChunksForConsolidationMinKey(100, 4000);
 		assertEquals(chunks1, new HashSet<>(selectedChunks));
 	}
 
 	@Test
 	public void testSizeFixStrategy() {
-		io.activej.cube.aggregation.AggregationOTState state = new io.activej.cube.aggregation.AggregationOTState(STRUCTURE);
+		AggregationOTState state = new AggregationOTState(STRUCTURE);
 
 		int optimalChunkSize = 5;
 		int maxChunks = 5;
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks1 = new HashSet<>();
+		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(1, 1, 2, optimalChunkSize));
 		chunks1.add(createTestChunk(2, 3, 4, optimalChunkSize));
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks2 = new HashSet<>();
+		Set<AggregationChunk> chunks2 = new HashSet<>();
 		chunks2.add(createTestChunk(3, 5, 6, 4));
 		chunks2.add(createTestChunk(4, 7, 8, 1));
 		chunks2.add(createTestChunk(5, 9, 13, optimalChunkSize));
 		chunks2.add(createTestChunk(6, 10, 11, optimalChunkSize));
 		chunks2.add(createTestChunk(7, 10, 12, optimalChunkSize));
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks3 = new HashSet<>();
+		Set<AggregationChunk> chunks3 = new HashSet<>();
 		chunks3.add(createTestChunk(8, 14, 15, 3));
 		chunks3.add(createTestChunk(9, 14, 15, 6));
 
 		state.apply(AggregationDiff.of(concat(chunks1.stream(), concat(chunks2.stream(), chunks3.stream())).collect(toSet())));
 
-		List<io.activej.cube.aggregation.AggregationChunk> selectedChunks = state.findChunksForConsolidationMinKey(maxChunks, optimalChunkSize);
+		List<AggregationChunk> selectedChunks = state.findChunksForConsolidationMinKey(maxChunks, optimalChunkSize);
 		assertEquals(chunks2, new HashSet<>(selectedChunks));
 	}
 
 	@Test
 	public void testGroupingByPartition() {
-		io.activej.cube.aggregation.AggregationOTState state = new AggregationOTState(STRUCTURE);
+		AggregationOTState state = new AggregationOTState(STRUCTURE);
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks1 = new HashSet<>();
+		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(2, 1, 1, 1, 1, 1, 5));
 		chunks1.add(createTestChunk(1, 1, 1, 1, 1, 1, 1));
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks2 = new HashSet<>();
+		Set<AggregationChunk> chunks2 = new HashSet<>();
 		chunks2.add(createTestChunk(3, 2, 2, 1, 1, 1, 1));
 		chunks2.add(createTestChunk(4, 2, 2, 1, 1, 2, 2));
 
-		Set<io.activej.cube.aggregation.AggregationChunk> chunks3 = new HashSet<>();
+		Set<AggregationChunk> chunks3 = new HashSet<>();
 		chunks3.add(createTestChunk(5, 2, 2, 2, 2, 3, 3));
 		chunks3.add(createTestChunk(6, 2, 2, 2, 2, 1, 1));
 		chunks3.add(createTestChunk(7, 2, 2, 2, 2, 1, 10));
 
 		state.apply(AggregationDiff.of(concat(chunks1.stream(), concat(chunks2.stream(), chunks3.stream())).collect(toSet())));
 
-		Map<io.activej.cube.aggregation.PrimaryKey, RangeTree<io.activej.cube.aggregation.PrimaryKey, io.activej.cube.aggregation.AggregationChunk>> partitioningKeyToTree = state.groupByPartition(2);
+		Map<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> partitioningKeyToTree = state.groupByPartition(2);
 
 		assert partitioningKeyToTree != null;
-		assertEquals(chunks1, partitioningKeyToTree.get(io.activej.cube.aggregation.PrimaryKey.ofArray(1, 1)).getAll());
-		assertEquals(chunks2, partitioningKeyToTree.get(io.activej.cube.aggregation.PrimaryKey.ofArray(2, 1)).getAll());
-		assertEquals(chunks3, partitioningKeyToTree.get(io.activej.cube.aggregation.PrimaryKey.ofArray(2, 2)).getAll());
+		assertEquals(chunks1, partitioningKeyToTree.get(PrimaryKey.ofArray(1, 1)).getAll());
+		assertEquals(chunks2, partitioningKeyToTree.get(PrimaryKey.ofArray(2, 1)).getAll());
+		assertEquals(chunks3, partitioningKeyToTree.get(PrimaryKey.ofArray(2, 2)).getAll());
 
 		state.addToIndex(createTestChunk(8, 1, 1, 2, 3, 5, 5));
 		assertNull(state.groupByPartition(2));
 	}
 
-	private static io.activej.cube.aggregation.AggregationChunk createTestChunk(int id, int min, int max) {
+	private static AggregationChunk createTestChunk(int id, int min, int max) {
 		return createTestChunk(id, min, max, id);
 	}
 
-	private static io.activej.cube.aggregation.AggregationChunk createTestChunk(int id, int d1Min, int d1Max, int d2Min, int d2Max, int d3Min, int d3Max) {
-		return io.activej.cube.aggregation.AggregationChunk.create(id, new ArrayList<>(), io.activej.cube.aggregation.PrimaryKey.ofArray(d1Min, d2Min, d3Min),
-			io.activej.cube.aggregation.PrimaryKey.ofArray(d1Max, d2Max, d3Max), 10);
+	private static AggregationChunk createTestChunk(int id, int d1Min, int d1Max, int d2Min, int d2Max, int d3Min, int d3Max) {
+		return AggregationChunk.create(id, new ArrayList<>(), PrimaryKey.ofArray(d1Min, d2Min, d3Min),
+			PrimaryKey.ofArray(d1Max, d2Max, d3Max), 10);
 	}
 
-	private static io.activej.cube.aggregation.AggregationChunk createTestChunk(int id, int min, int max, int count) {
-		return AggregationChunk.create(id, new ArrayList<>(), io.activej.cube.aggregation.PrimaryKey.ofArray(min), PrimaryKey.ofArray(max), count);
+	private static AggregationChunk createTestChunk(int id, int min, int max, int count) {
+		return AggregationChunk.create(id, new ArrayList<>(), PrimaryKey.ofArray(min), PrimaryKey.ofArray(max), count);
 	}
 }

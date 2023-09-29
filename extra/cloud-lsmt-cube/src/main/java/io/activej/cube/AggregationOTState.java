@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.cube.aggregation;
+package io.activej.cube;
 
 import io.activej.common.Utils;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.RangeTree;
 import io.activej.cube.aggregation.RangeTree.Segment;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
@@ -50,7 +53,7 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 
 	private static final Comparator<AggregationChunk> MIN_KEY_ASCENDING_COMPARATOR = Comparator.comparing(AggregationChunk::getMinPrimaryKey);
 
-	public AggregationOTState(AggregationStructure structure) {
+	AggregationOTState(AggregationStructure structure) {
 		this.structure = structure;
 		initIndex();
 	}

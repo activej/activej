@@ -21,8 +21,6 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.CubeOTState.CompatibleAggregations;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.AggregationExecutor;
-import io.activej.cube.aggregation.AggregationOTState;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.exception.CubeException;
@@ -118,10 +116,23 @@ public final class Cube extends AbstractReactive
 			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
 			AggregationOTState aggregationState = aggregationStates.get(aggregationId);
 
-			runnables.add(() -> strategy.consolidate(aggregationId, aggregationState, aggregationExecutor)
-				.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
-				.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
-				.toVoid());
+			runnables.add(() -> {
+				int maxChunksToConsolidate = aggregationExecutor.getMaxChunksToConsolidate();
+				int chunkSize = aggregationExecutor.getChunkSize();
+				List<AggregationChunk> chunks = strategy.getChunksForConsolidation(
+					aggregationId,
+					aggregationState,
+					maxChunksToConsolidate,
+					chunkSize
+				);
+				return Promise.complete()
+					.then(() -> chunks.isEmpty() ?
+						Promise.of(AggregationDiff.empty()) :
+						aggregationExecutor.consolidate(chunks))
+					.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
+					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
+					.toVoid();
+			});
 		}
 
 		return Promises.sequence(runnables).map($ -> CubeDiff.of(map));
@@ -141,21 +152,19 @@ public final class Cube extends AbstractReactive
 	}
 
 	public interface ConsolidationStrategy {
-		Promise<AggregationDiff> consolidate(String id, AggregationOTState state, AggregationExecutor executor);
+		List<AggregationChunk> getChunksForConsolidation(String id, AggregationOTState state, int maxChunksToConsolidate, int chunkSize);
 
 		static ConsolidationStrategy minKey() {
 			return minKey(Set.of());
 		}
 
 		static ConsolidationStrategy minKey(Set<Object> lockedChunkIds) {
-			return (id, state, executor) -> {
-				List<AggregationChunk> chunks = state.findChunksForConsolidationMinKey(
-					executor.getMaxChunksToConsolidate(),
-					executor.getChunkSize(),
+			return (id, state, maxChunksToConsolidate, chunkSize) ->
+				state.findChunksForConsolidationMinKey(
+					maxChunksToConsolidate,
+					chunkSize,
 					lockedChunkIds
 				);
-				return executor.consolidate(chunks);
-			};
 		}
 
 		static ConsolidationStrategy hotSegment() {
@@ -163,10 +172,11 @@ public final class Cube extends AbstractReactive
 		}
 
 		static ConsolidationStrategy hotSegment(Set<Object> lockedChunkIds) {
-			return (id, state, executor) -> {
-				List<AggregationChunk> chunks = state.findChunksForConsolidationHotSegment(executor.getMaxChunksToConsolidate(), lockedChunkIds);
-				return executor.consolidate(chunks);
-			};
+			return (id, state, maxChunksToConsolidate, chunkSize) ->
+				state.findChunksForConsolidationHotSegment(
+					maxChunksToConsolidate,
+					lockedChunkIds
+				);
 		}
 	}
 

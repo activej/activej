@@ -18,6 +18,7 @@ package io.activej.cube.aggregation;
 
 import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.util.PartitionPredicate;
 import io.activej.datastream.consumer.ForwardingStreamConsumer;
 import io.activej.datastream.consumer.StreamConsumer;

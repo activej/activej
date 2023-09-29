@@ -18,6 +18,7 @@ package io.activej.cube.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.annotation.ComponentInterface;
+import io.activej.cube.AggregationStructure;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;

@@ -1,9 +1,7 @@
 package io.activej.cube;
 
+import io.activej.cube.AggregationOTState.ConsolidationDebugInfo;
 import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.AggregationOTState;
-import io.activej.cube.aggregation.AggregationOTState.ConsolidationDebugInfo;
-import io.activej.cube.aggregation.AggregationStructure;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.ot.AggregationDiff;

@@ -6,7 +6,6 @@ import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure.AggregationConfig;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.AggregationOTState;
 import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;

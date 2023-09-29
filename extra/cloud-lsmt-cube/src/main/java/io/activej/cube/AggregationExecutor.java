@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.activej.cube.aggregation;
+package io.activej.cube;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.QueryPlan.Sequence;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.ot.AggregationDiff;
@@ -54,7 +54,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
 import static io.activej.cube.aggregation.util.Utils.*;
@@ -71,7 +70,7 @@ import static java.util.stream.Collectors.toSet;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class AggregationExecutor extends AbstractReactive
-	implements IAggregation, ReactiveJmxBeanWithStats {
+	implements ReactiveJmxBeanWithStats {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -85,7 +84,7 @@ public final class AggregationExecutor extends AbstractReactive
 	private final DefiningClassLoader classLoader;
 	private final IAggregationChunkStorage<Object> aggregationChunkStorage;
 	private final FrameFormat frameFormat;
-	private Path temporarySortDir;
+	private @Nullable Path temporarySortDir;
 
 	private final AggregationStructure structure;
 
@@ -105,7 +104,7 @@ public final class AggregationExecutor extends AbstractReactive
 	private int consolidations;
 	private Exception consolidationLastError;
 
-	private AggregationExecutor(
+	AggregationExecutor(
 		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 		IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure
 	) {
@@ -117,100 +116,20 @@ public final class AggregationExecutor extends AbstractReactive
 		this.structure = structure;
 	}
 
-	/**
-	 * Instantiates an aggregation with the specified structure, that runs in a given reactor,
-	 * uses the specified class loader for creating dynamic classes, saves data and metadata to given storages.
-	 * Maximum size of chunk is 1,000,000 bytes.
-	 * No more than 1,000,000 records stay in memory while sorting.
-	 * Maximum duration of consolidation attempt is 30 minutes.
-	 * Consolidated chunks become available for removal in 10 minutes from consolidation.
-	 *
-	 * @param reactor                 reactor, in which the aggregation is to run
-	 * @param executor                executor, that is used for asynchronous work with files
-	 * @param classLoader             class loader for defining dynamic classes
-	 * @param aggregationChunkStorage storage for data chunks
-	 * @param frameFormat             frame format in which data is to be stored
-	 */
-	public static Builder builder(
-		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-		IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat
-	) {
-		return new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, null).new Builder();
+	void setReducerBufferSize(int reducerBufferSize) {
+		this.reducerBufferSize = reducerBufferSize;
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, AggregationExecutor> {
-		private Builder() {}
+	void setTemporarySortDir(@Nullable Path temporarySortDir) {
+		this.temporarySortDir = temporarySortDir;
+	}
 
-		public Builder withStructure(AggregationStructure structure) {
-			checkNotBuilt(this);
-			return new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure).new Builder();
-		}
-
-		public Builder withChunkSize(int chunkSize) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.chunkSize = chunkSize;
-			return this;
-		}
-
-		public Builder withReducerBufferSize(int reducerBufferSize) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.reducerBufferSize = reducerBufferSize;
-			return this;
-		}
-
-		public Builder withSorterItemsInMemory(int sorterItemsInMemory) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.sorterItemsInMemory = sorterItemsInMemory;
-			return this;
-		}
-
-		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
-			return this;
-		}
-
-		public Builder withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
-			return this;
-		}
-
-		public Builder withMaxChunksToConsolidate(int maxChunksToConsolidate) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.maxChunksToConsolidate = maxChunksToConsolidate;
-			return this;
-		}
-
-		public Builder withTemporarySortDir(Path temporarySortDir) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.temporarySortDir = temporarySortDir;
-			return this;
-		}
-
-		public Builder withStats(AggregationStats stats) {
-			checkNotBuilt(this);
-			AggregationExecutor.this.stats = stats;
-			return this;
-		}
-
-		@Override
-		protected AggregationExecutor doBuild() {
-			checkNotNull(AggregationExecutor.this.structure, "Aggregation structure not set");
-			return AggregationExecutor.this;
-		}
+	void setStats(AggregationStats stats) {
+		this.stats = stats;
 	}
 
 	public AggregationStructure getStructure() {
 		return structure;
-	}
-
-	public <K extends Comparable, I, O, A> Reducer<K, I, O, A> aggregationReducer(
-		Class<I> inputClass, Class<O> outputClass, List<String> keys, List<String> measures,
-		DefiningClassLoader classLoader
-	) {
-		return Utils.aggregationReducer(structure, inputClass, outputClass,
-			keys, measures, Map.of(), classLoader);
 	}
 
 	/**
@@ -221,7 +140,7 @@ public final class AggregationExecutor extends AbstractReactive
 	 * @return consumer for streaming data to aggregation
 	 */
 	@SuppressWarnings("unchecked")
-	public <T, C, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
+	<T, C, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
 		Class<T> inputClass, Map<String, String> keyFields, Map<String, String> measureFields
 	) {
 		checkInReactorThread(this);
@@ -258,12 +177,12 @@ public final class AggregationExecutor extends AbstractReactive
 				.mapException(e -> new AggregationException("Failed to consume data", e)));
 	}
 
-	public <T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
+	<T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
 		checkInReactorThread(this);
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass));
 	}
 
-	public <T> StreamSupplier<T> query(List<AggregationChunk> chunks, AggregationQuery query, Class<T> outputClass) {
+	<T> StreamSupplier<T> query(List<AggregationChunk> chunks, AggregationQuery query, Class<T> outputClass) {
 		checkInReactorThread(this);
 		return query(chunks, query, outputClass, classLoader);
 	}
@@ -276,8 +195,7 @@ public final class AggregationExecutor extends AbstractReactive
 	 * @param outputClass class of output records
 	 * @return supplier that streams query results
 	 */
-	@Override
-	public <T> StreamSupplier<T> query(
+	<T> StreamSupplier<T> query(
 		List<AggregationChunk> chunks,
 		AggregationQuery query,
 		Class<T> outputClass,
@@ -444,7 +362,7 @@ public final class AggregationExecutor extends AbstractReactive
 				classLoader);
 			return sequence.stream
 				.transformWith(StreamTransformers.mapper(mapper))
-				.transformWith((StreamStats<R>) stats.mergeMapOutput);
+				.transformWith((StreamStats<R>) stats.getMergeMapOutput());
 		}
 
 		StreamReducer<K, R, Object>.Builder streamReducerBuilder = StreamReducer.builder();
@@ -478,11 +396,11 @@ public final class AggregationExecutor extends AbstractReactive
 
 			sequence.stream.streamTo(
 				streamReducer.newInput(extractKeyFunction, reducer)
-					.transformWith((StreamStats<S>) stats.mergeReducerInput));
+					.transformWith((StreamStats<S>) stats.getMergeReducerInput()));
 		}
 
 		return streamReducer.getOutput()
-			.transformWith((StreamStats<R>) stats.mergeReducerOutput);
+			.transformWith((StreamStats<R>) stats.getMergeReducerOutput());
 	}
 
 	private <T> StreamSupplier<T> sequenceStream(
@@ -521,7 +439,7 @@ public final class AggregationExecutor extends AbstractReactive
 		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
 
-	public Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
+	Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
 		checkInReactorThread(this);
 
 		consolidationStarted = reactor.currentTimeMillis();

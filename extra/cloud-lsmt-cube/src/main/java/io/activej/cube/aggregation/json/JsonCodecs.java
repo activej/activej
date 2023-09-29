@@ -16,8 +16,8 @@
 
 package io.activej.cube.aggregation.json;
 
+import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.AggregationStructure;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.ot.AggregationDiff;

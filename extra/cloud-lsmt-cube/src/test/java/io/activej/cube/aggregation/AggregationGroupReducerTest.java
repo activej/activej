@@ -1,6 +1,7 @@
 package io.activej.cube.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.consumer.ToListStreamConsumer;
@@ -22,6 +23,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.cube.TestUtils.aggregationStructureBuilder;
 import static io.activej.cube.aggregation.StreamUtils.assertEndOfStream;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.measure.Measures.union;
@@ -44,14 +46,14 @@ public class AggregationGroupReducerTest {
 	@Test
 	public void test() {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		AggregationStructure structure = AggregationStructure.builder(ChunkIdJsonCodec.ofLong())
+		AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
 			.withKey("word", FieldTypes.ofString())
 			.withMeasure("documents", union(ofInt()))
 			.build();
 
 		List<StreamConsumer> listConsumers = new ArrayList<>();
 		List items = new ArrayList();
-		io.activej.cube.aggregation.IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
+		IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
 			long chunkId;
 
 			@Override
@@ -103,7 +105,7 @@ public class AggregationGroupReducerTest {
 			new InvertedIndexRecord("fox", 4),
 			new InvertedIndexRecord("brown", 10));
 
-		io.activej.cube.aggregation.AggregationGroupReducer<Long, InvertedIndexRecord, Comparable> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
+		AggregationGroupReducer<Long, InvertedIndexRecord, Comparable> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
 			structure, List.of("documents"),
 			aggregationClass, singlePartition(), keyFunction, aggregate, aggregationChunkSize, classLoader);
 

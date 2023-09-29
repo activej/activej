@@ -18,7 +18,10 @@ package io.activej.cube.service;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.cube.AggregationExecutor;
+import io.activej.cube.AggregationOTState;
 import io.activej.cube.Cube;
+import io.activej.cube.Cube.ConsolidationStrategy;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
@@ -59,18 +62,16 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
-	public static final Supplier<ConsolidationStrategy> DEFAULT_CONSOLIDATION_STRATEGY = new Supplier<>() {
+	public static final Supplier<LockerStrategy> DEFAULT_CONSOLIDATION_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;
 
 		@Override
-		public ConsolidationStrategy get() {
+		public LockerStrategy get() {
 			hotSegment = !hotSegment;
-			return (state, executor, lockedChunkIds) -> {
-				List<AggregationChunk> chunks = hotSegment ?
-					state.findChunksForConsolidationHotSegment(executor.getMaxChunksToConsolidate(), lockedChunkIds) :
-					state.findChunksForConsolidationMinKey(executor.getMaxChunksToConsolidate(), executor.getChunkSize(), lockedChunkIds);
-				return Promise.of(chunks);
-			};
+			return lockedChunkIds ->
+				hotSegment ?
+					ConsolidationStrategy.hotSegment(lockedChunkIds) :
+					ConsolidationStrategy.minKey(lockedChunkIds);
 		}
 	};
 
@@ -96,7 +97,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private final Map<String, IChunkLocker<Object>> lockers = new HashMap<>();
 
-	private Supplier<ConsolidationStrategy> strategy = DEFAULT_CONSOLIDATION_STRATEGY;
+	private Supplier<LockerStrategy> strategy = DEFAULT_CONSOLIDATION_STRATEGY;
 	private Function<String, IChunkLocker<C>> chunkLockerFactory = $ -> NoOpChunkLocker.create(reactor);
 
 	private boolean consolidating;
@@ -130,7 +131,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<K, D, C>> {
 		private Builder() {}
 
-		public Builder withConsolidationStrategy(Supplier<ConsolidationStrategy> strategy) {
+		public Builder withLockerStrategy(Supplier<LockerStrategy> strategy) {
 			checkNotBuilt(this);
 			CubeConsolidationController.this.strategy = strategy;
 			return this;
@@ -167,7 +168,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		checkInReactorThread(this);
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
-		ConsolidationStrategy chunksFn = strategy.get();
+		LockerStrategy chunksFn = strategy.get();
 		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
 		return Promise.complete()
 			.then(stateManager::sync)
@@ -177,11 +178,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 					.whenResult(chunks -> {
 						if (!chunks.isEmpty()) chunksForConsolidation.put(aggregationId, chunks);
 					}))))
-			.then(() -> cube.consolidate((id, $, executor) -> {
-					List<AggregationChunk> chunks = chunksForConsolidation.get(id);
-					if (chunks == null) return Promise.of(AggregationDiff.empty());
-					return executor.consolidate(chunks);
-				})
+			.then(() -> cube.consolidate((id, $1, $2, $3) -> chunksForConsolidation.getOrDefault(id, List.of()))
 				.whenComplete(promiseConsolidateImpl.recordStats()))
 			.whenResult(this::cubeDiffJmx)
 			.whenComplete(this::logCubeDiff)
@@ -203,7 +200,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	}
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(
-		String aggregationId, ConsolidationStrategy strategy
+		String aggregationId, LockerStrategy strategy
 	) {
 		IChunkLocker<Object> locker = ensureLocker(aggregationId);
 		AggregationExecutor aggregationExecutor = cube.getExecutor().getAggregationExecutors().get(aggregationId);
@@ -211,7 +208,13 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 			() -> locker.getLockedChunks()
-				.then(lockedChunkIds -> strategy.getChunksForConsolidation(aggregationState, aggregationExecutor, lockedChunkIds))
+				.map(strategy::getConsolidationStrategy)
+				.map(consolidationStrategy -> consolidationStrategy.getChunksForConsolidation(
+					aggregationId,
+					aggregationState,
+					aggregationExecutor.getMaxChunksToConsolidate(),
+					aggregationExecutor.getChunkSize()
+				))
 				.then(chunks -> {
 					if (chunks.isEmpty()) {
 						logger.info("Nothing to consolidate in aggregation '{}'", aggregationId);
@@ -305,8 +308,8 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		return lockers.computeIfAbsent(aggregationId, $ -> (IChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
 	}
 
-	public interface ConsolidationStrategy {
-		Promise<List<AggregationChunk>> getChunksForConsolidation(AggregationOTState state, AggregationExecutor executor, Set<Object> lockedChunkIds);
+	public interface LockerStrategy {
+		ConsolidationStrategy getConsolidationStrategy(Set<Object> lockedChunkIds);
 	}
 
 	@JmxAttribute
