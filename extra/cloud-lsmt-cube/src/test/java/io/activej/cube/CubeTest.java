@@ -1,15 +1,15 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -37,13 +37,13 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
-import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
-import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
+import static io.activej.cube.aggregation.measure.Measures.sum;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;

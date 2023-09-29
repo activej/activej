@@ -58,7 +58,6 @@
     <module>extra/cloud-dataflow-jdbc-driver</module>
     <module>extra/cloud-crdt</module>
     <module>extra/cloud-etl</module>
-    <module>extra/cloud-lsmt-aggregation</module>
     <module>extra/cloud-lsmt-cube</module>
     <module>extra/cloud-memcache</module>
     <module>extra/cloud-multilog</module>

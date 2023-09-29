@@ -16,7 +16,7 @@
 
 package io.activej.cube.ot;
 
-import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 
 import java.util.*;
 import java.util.stream.Stream;

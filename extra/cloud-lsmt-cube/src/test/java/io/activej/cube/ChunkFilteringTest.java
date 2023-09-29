@@ -1,7 +1,7 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationOTState;
-import io.activej.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.AggregationOTState;
+import io.activej.cube.aggregation.PrimaryKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

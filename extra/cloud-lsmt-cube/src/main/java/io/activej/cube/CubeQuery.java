@@ -16,9 +16,9 @@
 
 package io.activej.cube;
 
-import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.predicate.AggregationPredicates;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

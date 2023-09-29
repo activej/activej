@@ -16,8 +16,8 @@
 
 package io.activej.cube.measure;
 
-import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
+import io.activej.cube.aggregation.measure.Measure;
 
 import java.util.Map;
 import java.util.Set;

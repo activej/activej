@@ -1,6 +1,6 @@
 package io.activej.cube.measure;
 
-import io.activej.aggregation.measure.Measure;
+import io.activej.cube.aggregation.measure.Measure;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

@@ -16,9 +16,9 @@
 
 package io.activej.cube.linear;
 
-import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationStructure;
 
 import java.util.List;
 import java.util.Set;

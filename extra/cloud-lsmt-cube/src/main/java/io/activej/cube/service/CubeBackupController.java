@@ -16,9 +16,9 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
+import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;

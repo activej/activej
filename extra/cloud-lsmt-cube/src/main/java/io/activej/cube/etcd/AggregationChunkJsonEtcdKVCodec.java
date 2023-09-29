@@ -1,8 +1,8 @@
 package io.activej.cube.etcd;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.PrimaryKey;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.kv.KeyValue;
 import io.activej.etcd.exception.MalformedEtcdDataException;

@@ -16,15 +16,15 @@
 
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationExecutor;
-import io.activej.aggregation.AggregationOTState;
-import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.CubeOTState.CompatibleAggregations;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.AggregationExecutor;
+import io.activej.cube.aggregation.AggregationOTState;
+import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;

@@ -1,11 +1,11 @@
 package io.activej.cube.etcd;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.EtcdEventProcessor;
@@ -43,11 +43,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import static io.activej.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
+import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static io.activej.json.JsonUtils.fromJson;

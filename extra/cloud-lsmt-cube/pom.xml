@@ -20,11 +20,6 @@
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-aggregation</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
       <artifactId>activej-etl</artifactId>
       <version>${project.version}</version>
     </dependency>

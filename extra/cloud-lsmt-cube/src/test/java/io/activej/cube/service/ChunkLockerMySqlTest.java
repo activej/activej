@@ -1,7 +1,7 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.ChunksAlreadyLockedException;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.ChunksAlreadyLockedException;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;

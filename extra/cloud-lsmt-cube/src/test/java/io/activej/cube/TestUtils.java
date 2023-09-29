@@ -1,7 +1,7 @@
 package io.activej.cube;
 
-import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;

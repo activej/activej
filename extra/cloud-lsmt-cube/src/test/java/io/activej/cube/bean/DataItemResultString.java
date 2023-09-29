@@ -1,13 +1,13 @@
 package io.activej.cube.bean;
 
-import io.activej.aggregation.measure.Measure;
+import io.activej.cube.aggregation.measure.Measure;
 
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
-import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
+import static io.activej.cube.aggregation.measure.Measures.sum;
 
 public class DataItemResultString {
 	public String key1;

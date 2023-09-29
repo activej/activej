@@ -1,11 +1,11 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.PrimaryKey;
-import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -33,12 +33,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;

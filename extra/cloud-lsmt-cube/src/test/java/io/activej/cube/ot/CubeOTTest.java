@@ -1,7 +1,7 @@
 package io.activej.cube.ot;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogOTState;
@@ -21,8 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
+import static io.activej.cube.aggregation.PrimaryKey.ofArray;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;

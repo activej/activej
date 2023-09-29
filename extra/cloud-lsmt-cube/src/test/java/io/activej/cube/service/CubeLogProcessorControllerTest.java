@@ -1,8 +1,5 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
@@ -13,6 +10,9 @@ import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.cube.*;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
@@ -35,10 +35,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;

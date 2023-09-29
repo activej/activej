@@ -16,8 +16,8 @@
 
 package io.activej.cube.ot;
 
-import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.ot.AggregationOT;
+import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.AggregationOT;
 import io.activej.ot.TransformResult;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;

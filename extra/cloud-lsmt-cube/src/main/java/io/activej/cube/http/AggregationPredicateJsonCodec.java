@@ -19,8 +19,8 @@ package io.activej.cube.http;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.aggregation.predicate.impl.*;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.predicate.impl.*;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecFactory;
 

@@ -16,9 +16,9 @@
 
 package io.activej.cube.linear;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.linear.CubeBackupController.IChunksBackupService;
 import io.activej.cube.linear.CubeCleanerController.IChunksCleanerService;
 

@@ -16,10 +16,10 @@
 
 package io.activej.cube.measure;
 
-import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.StaticFactories;
+import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.measure.impl.Value;
 
 import java.util.Map;

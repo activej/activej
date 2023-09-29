@@ -16,12 +16,12 @@ public final class Measure implements ComputedMeasure {
 	public Measure(String measureId) {this.measureId = measureId;}
 
 	@Override
-	public Class<?> getType(Map<String, io.activej.aggregation.measure.Measure> storedMeasures) {
+	public Class<?> getType(Map<String, io.activej.cube.aggregation.measure.Measure> storedMeasures) {
 		return (Class<?>) storedMeasures.get(measureId).getFieldType().getDataType();
 	}
 
 	@Override
-	public Expression getExpression(Expression record, Map<String, io.activej.aggregation.measure.Measure> storedMeasures) {
+	public Expression getExpression(Expression record, Map<String, io.activej.cube.aggregation.measure.Measure> storedMeasures) {
 		return storedMeasures.get(measureId).valueOfAccumulator(Expressions.property(record, measureId));
 	}
 

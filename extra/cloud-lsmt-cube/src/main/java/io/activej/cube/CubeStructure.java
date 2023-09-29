@@ -1,12 +1,12 @@
 package io.activej.cube;
 
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.measure.Measure;
-import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
+import io.activej.cube.aggregation.AggregationStructure;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.fieldtype.FieldType;
+import io.activej.cube.aggregation.measure.Measure;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.measure.ComputedMeasure;
@@ -16,11 +16,11 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.Utils.filterEntryKeys;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.types.Primitives.wrap;
 
 @SuppressWarnings("rawtypes")

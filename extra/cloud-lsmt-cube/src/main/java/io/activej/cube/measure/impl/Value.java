@@ -1,9 +1,9 @@
 package io.activej.cube.measure.impl;
 
-import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.measure.ComputedMeasure;
 import io.activej.types.Primitives;
 
@@ -18,7 +18,7 @@ public final class Value implements ComputedMeasure {
 	public Value(Object value) {this.value = value;}
 
 	@Override
-	public Class<?> getType(Map<String, io.activej.aggregation.measure.Measure> storedMeasures) {
+	public Class<?> getType(Map<String, io.activej.cube.aggregation.measure.Measure> storedMeasures) {
 		return Primitives.unwrap(value.getClass());
 	}
 

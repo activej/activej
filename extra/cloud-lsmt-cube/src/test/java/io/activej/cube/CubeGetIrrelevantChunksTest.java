@@ -1,11 +1,11 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.PrimaryKey;
-import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.predicate.AggregationPredicate;
-import io.activej.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.CubeStructure.AggregationConfig;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTState;
@@ -24,12 +24,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.aggregation.PrimaryKey.ofArray;
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.gt;
-import static io.activej.aggregation.predicate.AggregationPredicates.notEq;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.aggregation.PrimaryKey.ofArray;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.sum;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.gt;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.notEq;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;

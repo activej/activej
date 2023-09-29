@@ -1,9 +1,9 @@
 package io.activej.cube.http;
 
-import io.activej.aggregation.measure.Measure;
-import io.activej.aggregation.measure.Measures;
 import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.cube.aggregation.measure.Measure;
+import io.activej.cube.aggregation.measure.Measures;
 import io.activej.cube.measure.ComputedMeasure;
 import io.activej.cube.measure.ComputedMeasures;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -13,9 +13,9 @@ import org.junit.Test;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 

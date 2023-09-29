@@ -1,15 +1,15 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.AggregationOTState;
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure.AggregationConfig;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.AggregationOTState;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.service.CubeConsolidationController;
@@ -38,13 +38,13 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.alwaysTrue;
-import static io.activej.aggregation.predicate.AggregationPredicates.gt;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.sum;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.gt;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toMap;

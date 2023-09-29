@@ -1,13 +1,13 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationOTState;
-import io.activej.aggregation.AggregationOTState.ConsolidationDebugInfo;
-import io.activej.aggregation.PrimaryKey;
-import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.AggregationOTState;
+import io.activej.cube.aggregation.AggregationOTState.ConsolidationDebugInfo;
+import io.activej.cube.aggregation.AggregationStructure;
+import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.fieldtype.FieldType;
+import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.ot.OTState;
 import org.slf4j.Logger;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 

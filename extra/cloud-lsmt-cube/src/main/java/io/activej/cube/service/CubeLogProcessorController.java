@@ -16,13 +16,13 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.IAggregationChunkStorage;
-import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.CubeOTState;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;

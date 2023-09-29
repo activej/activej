@@ -16,16 +16,16 @@
 
 package io.activej.cube.json;
 
-import io.activej.aggregation.ot.AggregationDiff;
-import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationStructure;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.json.JsonCodec;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static io.activej.aggregation.json.JsonCodecs.ofAggregationDiff;
+import static io.activej.cube.aggregation.json.JsonCodecs.ofAggregationDiff;
 import static io.activej.json.JsonCodecs.ofMap;
 
 public class JsonCodecs {

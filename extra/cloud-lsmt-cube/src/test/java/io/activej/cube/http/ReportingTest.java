@@ -1,13 +1,13 @@
 package io.activej.cube.http;
 
-import io.activej.aggregation.*;
-import io.activej.aggregation.annotation.Key;
-import io.activej.aggregation.annotation.Measures;
-import io.activej.aggregation.measure.Measure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.*;
+import io.activej.cube.aggregation.*;
+import io.activej.cube.aggregation.annotation.Key;
+import io.activej.cube.aggregation.annotation.Measures;
+import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
@@ -40,15 +40,15 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.*;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.measure.ComputedMeasures.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;

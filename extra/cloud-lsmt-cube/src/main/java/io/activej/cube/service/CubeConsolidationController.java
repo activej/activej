@@ -16,11 +16,11 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.*;
-import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.Cube;
+import io.activej.cube.aggregation.*;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -45,12 +45,12 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.activej.aggregation.util.Utils.collectChunkIds;
 import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.cube.aggregation.util.Utils.collectChunkIds;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 

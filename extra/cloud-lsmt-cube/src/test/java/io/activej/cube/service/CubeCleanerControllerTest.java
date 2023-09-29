@@ -1,11 +1,11 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdJsonCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
@@ -33,10 +33,10 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
-import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
-import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
+import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;

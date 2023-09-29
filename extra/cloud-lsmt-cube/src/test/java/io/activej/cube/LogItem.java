@@ -1,7 +1,7 @@
 package io.activej.cube;
 
-import io.activej.aggregation.annotation.Key;
-import io.activej.aggregation.annotation.Measures;
+import io.activej.cube.aggregation.annotation.Key;
+import io.activej.cube.aggregation.annotation.Measures;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
 import org.jetbrains.annotations.Nullable;

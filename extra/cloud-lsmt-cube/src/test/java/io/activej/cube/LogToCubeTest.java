@@ -1,12 +1,12 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
 import io.activej.cube.ot.CubeDiff;
@@ -27,11 +27,11 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.util.List;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.sum;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;

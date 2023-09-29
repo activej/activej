@@ -1,8 +1,8 @@
 package io.activej.cube.http;
 
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.json.JsonCodecFactory;
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
 
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
 import static org.hamcrest.MatcherAssert.assertThat;

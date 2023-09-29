@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.RangeTree;
+import io.activej.cube.aggregation.RangeTree;
 import org.junit.Test;
 
 import java.util.stream.Stream;

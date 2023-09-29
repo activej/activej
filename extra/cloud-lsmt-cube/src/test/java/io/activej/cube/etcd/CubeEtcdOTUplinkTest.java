@@ -1,8 +1,8 @@
 package io.activej.cube.etcd;
 
-import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.PrimaryKey;
-import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.etcd.CubeEtcdOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -15,7 +15,6 @@ import io.activej.json.JsonCodecs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
-import io.activej.ot.exception.OTException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.reactor.Reactor;

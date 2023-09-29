@@ -1,7 +1,7 @@
 package io.activej.cube.bean;
 
-import io.activej.aggregation.annotation.Key;
-import io.activej.aggregation.annotation.Measures;
+import io.activej.cube.aggregation.annotation.Key;
+import io.activej.cube.aggregation.annotation.Measures;
 
 public class DataItem1 {
 	@Key

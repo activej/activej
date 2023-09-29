@@ -1,12 +1,12 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
 import io.activej.cube.bean.DataItemString2;
@@ -28,10 +28,11 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.sum;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.and;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.eq;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;

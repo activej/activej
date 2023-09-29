@@ -1,10 +1,10 @@
 package io.activej.cube;
 
-import io.activej.aggregation.fieldtype.FieldType;
-import io.activej.aggregation.measure.Measure;
-import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.CubeStructure.AggregationConfig;
+import io.activej.cube.aggregation.AggregationStructure;
+import io.activej.cube.aggregation.fieldtype.FieldType;
+import io.activej.cube.aggregation.measure.Measure;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,12 +16,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
+import static io.activej.cube.aggregation.measure.Measures.*;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")

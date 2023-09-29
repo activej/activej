@@ -16,11 +16,11 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.ChunkIdJsonCodec;
-import io.activej.aggregation.ChunksAlreadyLockedException;
-import io.activej.aggregation.IChunkLocker;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.cube.aggregation.ChunkIdJsonCodec;
+import io.activej.cube.aggregation.ChunksAlreadyLockedException;
+import io.activej.cube.aggregation.IChunkLocker;
 import io.activej.cube.linear.CubeSqlNaming;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
