@@ -1,0 +1,278 @@
+package io.activej.cube.etcd;
+
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.common.tuple.Tuple2;
+import io.activej.cube.CubeState;
+import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.linear.MeasuresValidator;
+import io.activej.cube.ot.CubeDiff;
+import io.activej.etcd.EtcdEventProcessor;
+import io.activej.etcd.EtcdUtils;
+import io.activej.etcd.TxnOps;
+import io.activej.etcd.codec.key.EtcdKeyCodecs;
+import io.activej.etcd.codec.kv.EtcdKVCodec;
+import io.activej.etcd.codec.kv.EtcdKVCodecs;
+import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
+import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
+import io.activej.etcd.codec.prefix.Prefix;
+import io.activej.etcd.exception.MalformedEtcdDataException;
+import io.activej.etcd.state.AbstractEtcdStateManager;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogOTState;
+import io.activej.etl.LogPositionDiff;
+import io.activej.multilog.LogPosition;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.Response;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+
+import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.Utils.union;
+import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
+import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
+import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
+import static io.activej.etcd.EtcdUtils.*;
+import static java.util.stream.Collectors.*;
+
+public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogOTState<CubeDiff>, List<LogDiff<CubeDiff>>> {
+	private static final ByteSequence POS = byteSequenceFrom("pos.");
+	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
+	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
+
+	private final CubeStructure cubeStructure;
+
+	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
+	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
+	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
+	private ByteSequence prefixPos = POS;
+	private ByteSequence prefixCube = CUBE;
+
+	private CubeEtcdStateManager(
+		Client client,
+		ByteSequence root,
+		CheckoutRequest<?, ?>[] checkoutRequests,
+		WatchRequest<?, ?, ?>[] watchRequests,
+		CubeStructure cubeStructure
+	) {
+		super(client, root, checkoutRequests, watchRequests);
+		this.cubeStructure = cubeStructure;
+	}
+
+	public static Builder builder(Client client, ByteSequence root, CubeStructure cubeStructure) {
+		CheckoutRequest<?, ?>[] checkoutRequests = new CheckoutRequest[2];
+		WatchRequest<?, ?, ?>[] watchRequests = new WatchRequest[2];
+		CubeEtcdStateManager cubeEtcdStateManager = new CubeEtcdStateManager(client, root, checkoutRequests, watchRequests, cubeStructure);
+		return cubeEtcdStateManager.new Builder(root, checkoutRequests, watchRequests);
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, CubeEtcdStateManager> {
+		private final ByteSequence root;
+		private final EtcdUtils.CheckoutRequest<?, ?>[] checkoutRequests;
+		private final EtcdUtils.WatchRequest<?, ?, ?>[] watchRequests;
+
+		private Builder(ByteSequence root, CheckoutRequest<?, ?>[] checkoutRequests, WatchRequest<?, ?, ?>[] watchRequests) {
+			this.root = root;
+			this.checkoutRequests = checkoutRequests;
+			this.watchRequests = watchRequests;
+		}
+
+		public Builder withChunkCodecsFactory(Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.chunkCodecsFactory = chunkCodecsFactory;
+			return this;
+		}
+
+		public Builder withChunkCodecsFactoryJson(CubeStructure cubeStructure) {
+			checkNotBuilt(this);
+			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
+				.collect(entriesToLinkedHashMap(structure ->
+					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
+			return withChunkCodecsFactory(collect::get);
+		}
+
+		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.measuresValidator = measuresValidator;
+			return this;
+		}
+
+		public Builder withPrefixPos(ByteSequence prefixPos) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.prefixPos = prefixPos;
+			return this;
+		}
+
+		public Builder withPrefixCube(ByteSequence prefixCube) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.prefixCube = prefixCube;
+			return this;
+		}
+
+		public Builder withAggregationIdCodec(EtcdPrefixCodec<String> aggregationIdCodec) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.aggregationIdCodec = aggregationIdCodec;
+			return this;
+		}
+
+		@Override
+		protected CubeEtcdStateManager doBuild() {
+			checkNotNull(chunkCodecsFactory, "Chunk codecs factory is required");
+
+			checkoutRequests[0] = CheckoutRequest.ofMapEntry(
+				root.concat(prefixPos),
+				EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+				entriesToLinkedHashMap());
+			checkoutRequests[1] = CheckoutRequest.of(
+				root.concat(prefixCube),
+				EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
+				groupingBy(Tuple2::value1, mapping(Tuple2::value2, toSet())));
+
+			watchRequests[0] = WatchRequest.<String, LogPosition, Map<String, LogPositionDiff>>ofMapEntry(
+				root.concat(prefixPos),
+				EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+				new EtcdEventProcessor<>() {
+					@Override
+					public Map<String, LogPositionDiff> createEventsAccumulator() {
+						return new LinkedHashMap<>();
+					}
+
+					@Override
+					public void onPut(Map<String, LogPositionDiff> accumulator, Map.Entry<String, LogPosition> entry) {
+						accumulator.put(entry.getKey(), new LogPositionDiff(null, entry.getValue()));
+					}
+
+					@Override
+					public void onDelete(Map<String, LogPositionDiff> accumulator, String key) {
+						throw new UnsupportedOperationException();
+					}
+				}
+			);
+			watchRequests[1] = WatchRequest.<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>of(
+				root.concat(prefixCube),
+				EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
+				new EtcdEventProcessor<>() {
+					@Override
+					public Map<String, AggregationDiff> createEventsAccumulator() {
+						return new LinkedHashMap<>();
+					}
+
+					@Override
+					public void onPut(Map<String, AggregationDiff> accumulator, Tuple2<String, AggregationChunk> kv) {
+						accumulator.compute(kv.value1(), (aggregationId, aggregationDiff) ->
+							aggregationDiff == null ?
+								AggregationDiff.of(Set.of(kv.value2()), Set.of()) :
+								AggregationDiff.of(union(aggregationDiff.getAddedChunks(), Set.of(kv.value2())), aggregationDiff.getRemovedChunks()));
+					}
+
+					@Override
+					public void onDelete(Map<String, AggregationDiff> accumulator, Tuple2<String, Long> key) {
+						accumulator.compute(key.value1(), (aggregationId, aggregationDiff) ->
+							aggregationDiff == null ?
+								AggregationDiff.of(Set.of(), Set.of(AggregationChunk.ofId(key.value2()))) :
+								AggregationDiff.of(aggregationDiff.getAddedChunks(), union(aggregationDiff.getRemovedChunks(), Set.of(AggregationChunk.ofId(key.value2())))));
+					}
+				}
+			);
+
+			return CubeEtcdStateManager.this;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected LogOTState<CubeDiff> finishState(Response.Header header, Object[] checkoutObjects) throws MalformedEtcdDataException {
+		LogOTState<CubeDiff> state = LogOTState.create(CubeState.create(cubeStructure));
+		state.init();
+		var logPositions = (Map<String, LogPosition>) checkoutObjects[0];
+		var aggregationChunks = (Map<String, Set<AggregationChunk>>) checkoutObjects[1];
+
+		for (var entry : aggregationChunks.entrySet()) {
+			for (AggregationChunk chunk : entry.getValue()) {
+				try {
+					measuresValidator.validate(entry.getKey(), chunk.getMeasures());
+				} catch (MalformedDataException e) {
+					throw new MalformedEtcdDataException(e.getMessage());
+				}
+			}
+		}
+
+		Map<String, LogPositionDiff> positions = logPositions.entrySet().stream()
+			.collect(entriesToLinkedHashMap(logPosition -> new LogPositionDiff(null, logPosition)));
+
+		CubeDiff cubeDiff = CubeDiff.of(aggregationChunks.entrySet().stream()
+			.collect(entriesToLinkedHashMap(AggregationDiff::of)));
+
+		state.apply(LogDiff.of(positions, cubeDiff));
+		return state;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected void applyStateTransitions(LogOTState<CubeDiff> state, Object[] operation) throws MalformedEtcdDataException {
+		var logPositionDiffs = (Map<String, LogPositionDiff>) operation[0];
+		var aggregationDiffs = (Map<String, AggregationDiff>) operation[1];
+
+		for (var entry : aggregationDiffs.entrySet()) {
+			for (AggregationChunk addedChunk : entry.getValue().getAddedChunks()) {
+				try {
+					measuresValidator.validate(entry.getKey(), addedChunk.getMeasures());
+				} catch (MalformedDataException e) {
+					throw new MalformedEtcdDataException(e.getMessage());
+				}
+			}
+		}
+
+		state.apply(LogDiff.of(logPositionDiffs, CubeDiff.of(aggregationDiffs)));
+	}
+
+	@Override
+	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
+		touch(txn, ByteSequence.EMPTY);
+		for (LogDiff<CubeDiff> diff : transaction) {
+			saveCubeLogDiff(txn, diff);
+		}
+	}
+
+	public void saveCubeLogDiff(TxnOps txn, LogDiff<CubeDiff> logDiff) {
+		savePositions(txn.child(prefixPos), logDiff.getPositions());
+		for (CubeDiff diff : logDiff.getDiffs()) {
+			saveCubeDiff(txn.child(prefixCube), diff);
+		}
+	}
+
+	public void savePositions(TxnOps txn, Map<String, LogPositionDiff> positions) {
+		checkAndInsert(txn,
+			EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+			positions.entrySet().stream().filter(diff -> diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::to)));
+		checkAndUpdate(txn,
+			EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
+			positions.entrySet().stream().filter(diff -> !diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::from)),
+			positions.entrySet().stream().filter(diff -> !diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::to)));
+	}
+
+	public void saveCubeDiff(TxnOps txn, CubeDiff cubeDiff) {
+		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getRemovedChunks)).entrySet()) {
+			String aggregationId = entry.getKey();
+			checkAndDelete(
+				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
+				chunkCodecsFactory.apply(aggregationId),
+				entry.getValue().stream().map(chunk -> (long) chunk.getChunkId()).toList());
+		}
+		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getAddedChunks)).entrySet()) {
+			String aggregationId = entry.getKey();
+			checkAndInsert(
+				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
+				chunkCodecsFactory.apply(aggregationId),
+				entry.getValue());
+		}
+	}
+}

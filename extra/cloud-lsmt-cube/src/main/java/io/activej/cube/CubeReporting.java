@@ -22,6 +22,7 @@ import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.exception.QueryException;
 import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.etl.StateQueryFunction;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 
@@ -37,19 +38,19 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 public final class CubeReporting extends AbstractReactive
 	implements ICubeReporting {
 
-	private final CubeState state;
+	private final StateQueryFunction<CubeState> stateFunction;
 	private final CubeStructure structure;
 	private final CubeExecutor executor;
 
-	private CubeReporting(CubeState state, CubeStructure structure, CubeExecutor executor) {
+	private CubeReporting(StateQueryFunction<CubeState> stateFunction, CubeStructure structure, CubeExecutor executor) {
 		super(executor.getReactor());
-		this.state = state;
+		this.stateFunction = stateFunction;
 		this.structure = structure;
 		this.executor = executor;
 	}
 
-	public static CubeReporting create(CubeState state, CubeStructure structure, CubeExecutor executor) {
-		return new CubeReporting(state, structure, executor);
+	public static CubeReporting create(StateQueryFunction<CubeState> stateFunction, CubeStructure structure, CubeExecutor executor) {
+		return new CubeReporting(stateFunction, structure, executor);
 	}
 
 	/**
@@ -69,7 +70,9 @@ public final class CubeReporting extends AbstractReactive
 		List<String> dimensions, List<String> storedMeasures, AggregationPredicate where, Class<T> resultClass,
 		DefiningClassLoader queryClassLoader
 	) {
-		List<CompatibleAggregations> compatibleAggregations = state.findCompatibleAggregations(dimensions, storedMeasures, where);
+		List<CompatibleAggregations> compatibleAggregations = stateFunction.query(state ->
+			state.findCompatibleAggregations(dimensions, storedMeasures, where)
+		);
 
 		return executor.queryRawStream(compatibleAggregations, dimensions, storedMeasures, where, resultClass, queryClassLoader);
 	}
@@ -80,11 +83,12 @@ public final class CubeReporting extends AbstractReactive
 
 		PreprocessedQuery preprocessedQuery = structure.preprocessQuery(cubeQuery);
 
-		List<CompatibleAggregations> compatibleAggregations = state.findCompatibleAggregations(
-			new ArrayList<>(preprocessedQuery.resultDimensions()),
-			new ArrayList<>(preprocessedQuery.resultStoredMeasures()),
-			cubeQuery.getWhere().simplify()
-		);
+		List<CompatibleAggregations> compatibleAggregations = stateFunction.query(state ->
+			state.findCompatibleAggregations(
+				new ArrayList<>(preprocessedQuery.resultDimensions()),
+				new ArrayList<>(preprocessedQuery.resultStoredMeasures()),
+				cubeQuery.getWhere().simplify()
+			));
 
 		return executor.query(compatibleAggregations, preprocessedQuery);
 	}
@@ -94,8 +98,8 @@ public final class CubeReporting extends AbstractReactive
 		return structure;
 	}
 
-	public CubeState getState() {
-		return state;
+	public StateQueryFunction<CubeState> getStateFunction() {
+		return stateFunction;
 	}
 
 	public CubeExecutor getExecutor() {

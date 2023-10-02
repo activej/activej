@@ -16,10 +16,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
-import io.activej.etl.SplitterLogDataConsumer;
+import io.activej.etl.*;
 import io.activej.fs.FileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
@@ -53,6 +50,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.measure.ComputedMeasures.*;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
@@ -299,7 +297,8 @@ public final class ReportingTest extends CubeTestBase {
 			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 			.build();
 
-		cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
 
@@ -852,17 +851,17 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testDataCorrectlyLoadedIntoAggregations() {
-		AggregationState daily = cubeReporting.getState().getAggregationState("daily");
+		AggregationState daily = cubeReporting.getStateFunction().query(state -> state.getAggregationState("daily"));
 		assert daily != null;
 		int dailyAggregationItemsCount = getAggregationItemsCount(daily);
 		assertEquals(6, dailyAggregationItemsCount);
 
-		AggregationState advertisers = cubeReporting.getState().getAggregationState("advertisers");
+		AggregationState advertisers = cubeReporting.getStateFunction().query(state -> state.getAggregationState("advertisers"));
 		assert advertisers != null;
 		int advertisersAggregationItemsCount = getAggregationItemsCount(advertisers);
 		assertEquals(5, advertisersAggregationItemsCount);
 
-		AggregationState affiliates = cubeReporting.getState().getAggregationState("affiliates");
+		AggregationState affiliates = cubeReporting.getStateFunction().query(state -> state.getAggregationState("affiliates"));
 		assert affiliates != null;
 		int affiliatesAggregationItemsCount = getAggregationItemsCount(affiliates);
 		assertEquals(6, affiliatesAggregationItemsCount);

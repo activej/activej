@@ -13,6 +13,7 @@ import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
+import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
@@ -35,6 +36,7 @@ import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toMap;
@@ -83,7 +85,8 @@ public class CubeIntegrationTest extends CubeTestBase {
 		CubeState cubeState = CubeState.create(cubeStructure);
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
@@ -137,7 +140,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		await(aggregationChunkStorage.backup("backup1", (Set) cubeState.getAllChunks()));
 
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		List<LogItem> logItems = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))

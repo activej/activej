@@ -13,10 +13,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.etl.ILogDataConsumer;
-import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
+import io.activej.etl.*;
 import io.activej.fs.FileSystem;
 import io.activej.json.JsonValidationException;
 import io.activej.multilog.IMultilog;
@@ -41,6 +38,7 @@ import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -196,7 +194,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		Map<Integer, Long> map = Stream.concat(listOfRandomLogItems1.stream(), listOfRandomLogItems2.stream())
 			.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		ToListStreamConsumer<LogItem> queryResultConsumer2 = ToListStreamConsumer.create();
 		await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
@@ -210,7 +209,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(map.isEmpty());
 
 		// Consolidate
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
 		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
 		assertFalse(consolidatingCubeDiff.isEmpty());

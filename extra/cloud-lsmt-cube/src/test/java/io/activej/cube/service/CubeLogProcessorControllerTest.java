@@ -86,8 +86,8 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(structure, description);
 
-		LogOTState<CubeDiff> logState = LogOTState.create(CubeState.create(structure));
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
+		LogOTState<CubeDiff> logOTState = LogOTState.create(CubeState.create(structure));
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logOTState);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
@@ -101,11 +101,11 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"test",
 			List.of("partitionA"),
-			logState);
+			logOTState);
 
 		controller = CubeLogProcessorController.create(
 			reactor,
-			logState,
+			logOTState,
 			stateManager,
 			aggregationChunkStorage,
 			List.of(logProcessor));

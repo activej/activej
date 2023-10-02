@@ -21,6 +21,7 @@ import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.etl.StateQueryFunction;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -40,19 +41,19 @@ public final class CubeConsolidator extends AbstractReactive
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidator.class);
 
-	private final CubeState state;
+	private final StateQueryFunction<CubeState> stateFunction;
 	private final CubeStructure structure;
 	private final CubeExecutor executor;
 
-	private CubeConsolidator(CubeState state, CubeStructure structure, CubeExecutor executor) {
+	private CubeConsolidator(StateQueryFunction<CubeState> stateFunction, CubeStructure structure, CubeExecutor executor) {
 		super(executor.getReactor());
-		this.state = state;
+		this.stateFunction = stateFunction;
 		this.structure = structure;
 		this.executor = executor;
 	}
 
-	public static CubeConsolidator create(CubeState state, CubeStructure structure, CubeExecutor executor) {
-		return new CubeConsolidator(state, structure, executor);
+	public static CubeConsolidator create(StateQueryFunction<CubeState> stateFunction, CubeStructure structure, CubeExecutor executor) {
+		return new CubeConsolidator(stateFunction, structure, executor);
 	}
 
 	public Promise<CubeDiff> consolidate(ConsolidationStrategy strategy) {
@@ -63,7 +64,7 @@ public final class CubeConsolidator extends AbstractReactive
 		List<AsyncRunnable> runnables = new ArrayList<>();
 
 		Map<String, AggregationExecutor> aggregationExecutors = executor.getAggregationExecutors();
-		Map<String, AggregationState> aggregationStates = state.getAggregationStates();
+		Map<String, AggregationState> aggregationStates = stateFunction.query(CubeState::getAggregationStates);
 
 		for (String aggregationId : structure.getAggregationIds()) {
 			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
@@ -95,8 +96,8 @@ public final class CubeConsolidator extends AbstractReactive
 		return structure;
 	}
 
-	public CubeState getState() {
-		return state;
+	public StateQueryFunction<CubeState> getStateFunction() {
+		return stateFunction;
 	}
 
 	public CubeExecutor getExecutor() {
@@ -134,9 +135,11 @@ public final class CubeConsolidator extends AbstractReactive
 
 	@JmxOperation
 	public Map<String, String> getIrrelevantChunksIds() {
-		return state.getIrrelevantChunks().entrySet().stream()
-			.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
-				.map(chunk -> String.valueOf(chunk.getChunkId()))
-				.collect(Collectors.joining(", "))));
+		return stateFunction.query(state ->
+			state.getIrrelevantChunks().entrySet().stream()
+				.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
+					.map(chunk -> String.valueOf(chunk.getChunkId()))
+					.collect(Collectors.joining(", "))))
+		);
 	}
 }

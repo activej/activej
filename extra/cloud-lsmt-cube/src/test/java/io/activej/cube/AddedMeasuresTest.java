@@ -18,6 +18,7 @@ import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
@@ -44,6 +45,7 @@ import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.*;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -156,7 +158,8 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cubeState.apply(diff);
 
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
 		CubeDiff cubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
@@ -192,7 +195,8 @@ public class AddedMeasuresTest {
 		initialDiffs.forEach(cubeState::apply);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
-		ICubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		ICubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
@@ -236,7 +240,8 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cubeState.apply(diff);
 
-		ICubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		ICubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()

@@ -86,11 +86,13 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		private Builder() {}
 
 		public Builder withChunkCodecsFactory(Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory) {
+			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.chunkCodecsFactory = chunkCodecsFactory;
 			return this;
 		}
 
 		public Builder withChunkCodecsFactoryJson(CubeStructure cubeStructure) {
+			checkNotBuilt(this);
 			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
 				.collect(entriesToLinkedHashMap(structure ->
 					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
@@ -98,21 +100,25 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		}
 
 		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
+			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.measuresValidator = measuresValidator;
 			return this;
 		}
 
 		public Builder withPrefixPos(ByteSequence prefixPos) {
+			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.prefixPos = prefixPos;
 			return this;
 		}
 
 		public Builder withPrefixCube(ByteSequence prefixCube) {
+			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.prefixCube = prefixCube;
 			return this;
 		}
 
 		public Builder withAggregationIdCodec(EtcdPrefixCodec<String> aggregationIdCodec) {
+			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.aggregationIdCodec = aggregationIdCodec;
 			return this;
 		}

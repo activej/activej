@@ -13,6 +13,7 @@ import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -33,6 +34,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.eq;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -75,7 +77,8 @@ public class StringDimensionTest {
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
 
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 				new DataItemString1("str1", 2, 10, 20),

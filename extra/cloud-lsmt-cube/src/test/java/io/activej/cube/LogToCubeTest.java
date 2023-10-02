@@ -16,6 +16,7 @@ import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
+import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
@@ -32,6 +33,7 @@ import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
@@ -97,7 +99,8 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 
 		List<TestAdvResult> list = await(cubeReporting.queryRawStream(
 				List.of("adv"),

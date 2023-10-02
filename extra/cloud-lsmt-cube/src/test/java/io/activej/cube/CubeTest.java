@@ -13,6 +13,7 @@ import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.HttpClientFileSystem;
@@ -45,6 +46,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -118,7 +120,8 @@ public final class CubeTest {
 	private static CubeReporting createCubeReporting(CubeStructure cubeStructure, Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage aggregationChunkStorage) {
 		CubeState cubeState = CubeState.create(cubeStructure);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(getCurrentReactor(), cubeStructure, executor, classLoader, aggregationChunkStorage).build();
-		return CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
+		return CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -126,7 +129,10 @@ public final class CubeTest {
 		return StreamSuppliers.concat(StreamSuppliers.ofValue(item), StreamSuppliers.ofValues(items))
 			.streamTo(cubeReporting.getExecutor().consume(((Class<T>) item.getClass())))
 			.then(cubeDiff -> chunkStorage.finish(cubeDiff.<Long>addedChunks().collect(toSet()))
-				.whenResult(() -> cubeReporting.getState().apply(cubeDiff)));
+				.whenResult(() -> cubeReporting.getStateFunction().query(s -> {
+					s.apply(cubeDiff);
+					return null;
+				})));
 	}
 
 	@Test
@@ -337,7 +343,7 @@ public final class CubeTest {
 	@Test
 	public void testConsolidate() {
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 4, 0, 30, 60));
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getState(), cubeReporting.getStructure(), cubeReporting.getExecutor());
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getStateFunction(), cubeReporting.getStructure(), cubeReporting.getExecutor());
 
 		await(
 			consume(cubeReporting, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),

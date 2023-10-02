@@ -22,6 +22,7 @@ import io.activej.cube.AggregationExecutor;
 import io.activej.cube.AggregationState;
 import io.activej.cube.CubeConsolidator;
 import io.activej.cube.CubeConsolidator.ConsolidationStrategy;
+import io.activej.cube.CubeState;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
@@ -204,7 +205,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	) {
 		IChunkLocker<Object> locker = ensureLocker(aggregationId);
 		AggregationExecutor aggregationExecutor = cubeConsolidator.getExecutor().getAggregationExecutors().get(aggregationId);
-		AggregationState aggregationState = cubeConsolidator.getState().getAggregationStates().get(aggregationId);
+		AggregationState aggregationState = cubeConsolidator.getStateFunction().query(state -> state.getAggregationStates().get(aggregationId));
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 			() -> locker.getLockedChunks()
@@ -247,7 +248,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		return stateManager.sync()
 			.mapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e))
 			.then(() -> {
-				Map<String, Set<AggregationChunk>> irrelevantChunks = cubeConsolidator.getState().getIrrelevantChunks();
+				Map<String, Set<AggregationChunk>> irrelevantChunks = cubeConsolidator.getStateFunction().query(CubeState::getIrrelevantChunks);
 				if (irrelevantChunks.isEmpty()) {
 					logger.info("Found no irrelevant chunks");
 					return Promise.complete();
