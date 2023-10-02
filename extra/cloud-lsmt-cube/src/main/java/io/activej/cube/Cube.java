@@ -18,7 +18,7 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.cube.CubeOTState.CompatibleAggregations;
+import io.activej.cube.CubeState.CompatibleAggregations;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
@@ -50,18 +50,18 @@ public final class Cube extends AbstractReactive
 
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
-	private final CubeOTState state;
+	private final CubeState state;
 	private final CubeStructure structure;
 	private final CubeExecutor executor;
 
-	private Cube(CubeOTState state, CubeStructure structure, CubeExecutor executor) {
+	private Cube(CubeState state, CubeStructure structure, CubeExecutor executor) {
 		super(executor.getReactor());
 		this.state = state;
 		this.structure = structure;
 		this.executor = executor;
 	}
 
-	public static Cube create(CubeOTState state, CubeStructure structure, CubeExecutor executor) {
+	public static Cube create(CubeState state, CubeStructure structure, CubeExecutor executor) {
 		return new Cube(state, structure, executor);
 	}
 
@@ -143,7 +143,7 @@ public final class Cube extends AbstractReactive
 		return structure;
 	}
 
-	public CubeOTState getState() {
+	public CubeState getState() {
 		return state;
 	}
 

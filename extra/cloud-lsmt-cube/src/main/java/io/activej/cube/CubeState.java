@@ -17,23 +17,23 @@ import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 
-public final class CubeOTState implements OTState<CubeDiff> {
-	private static final Logger logger = LoggerFactory.getLogger(CubeOTState.class);
+public final class CubeState implements OTState<CubeDiff> {
+	private static final Logger logger = LoggerFactory.getLogger(CubeState.class);
 
 	private final CubeStructure cubeStructure;
 	private final Map<String, AggregationState> aggregationStates;
 
-	private CubeOTState(CubeStructure cubeStructure, Map<String, AggregationState> aggregationStates) {
+	private CubeState(CubeStructure cubeStructure, Map<String, AggregationState> aggregationStates) {
 		this.cubeStructure = cubeStructure;
 		this.aggregationStates = aggregationStates;
 	}
 
-	public static CubeOTState create(CubeStructure cubeStructure) {
+	public static CubeState create(CubeStructure cubeStructure) {
 		Map<String, AggregationState> aggregationStates = new HashMap<>();
 		for (Map.Entry<String, AggregationStructure> entry : cubeStructure.getAggregationStructures().entrySet()) {
 			aggregationStates.put(entry.getKey(), new AggregationState(entry.getValue()));
 		}
-		return new CubeOTState(cubeStructure, aggregationStates);
+		return new CubeState(cubeStructure, aggregationStates);
 	}
 
 	@Override

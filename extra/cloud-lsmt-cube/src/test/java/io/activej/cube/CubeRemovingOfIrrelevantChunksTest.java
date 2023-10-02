@@ -96,8 +96,8 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.withAggregation(campaignBannerDateAggregation)
 			.build();
 
-		CubeOTState cubeOTState = CubeOTState.create(basicCubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
+		CubeState cubeState = CubeState.create(basicCubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		uplink = uplinkFactory.create(basicCubeStructure, description);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
@@ -139,7 +139,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			allLogItems.addAll(listOfRandomLogItems);
 		}
 
-		Cube cube = Cube.create(cubeOTState, basicCubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, basicCubeStructure, cubeExecutor);
 		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, CLASS_LOADER)
 			.toList());
@@ -158,12 +158,12 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
 			.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
 			.build();
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cubeOTState));
+		CubeState cubeState = CubeState.create(cubeStructure);
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cubeState));
 		await(stateManager.checkout());
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =
 			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cube, stateManager, chunkStorage);

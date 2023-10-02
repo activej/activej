@@ -60,7 +60,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private final Set<Object> toBePreserved = new HashSet<>();
 	private final Set<Object> toBeCleanedUp = new HashSet<>();
 
-	private CubeOTState basicCubeOTState;
+	private CubeState basicCubeState;
 
 	@Before
 	public void before() throws Exception {
@@ -92,8 +92,8 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 			.withAggregation(enumAggregation)
 			.build();
 
-		basicCubeOTState = CubeOTState.create(basicCubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCubeOTState);
+		basicCubeState = CubeState.create(basicCubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCubeState);
 		uplink = uplinkFactory.create(basicCubeStructure, description);
 		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 		await(stateManager.checkout());
@@ -187,13 +187,13 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		expectedChunks.addAll(toBePreserved);
 		expectedChunks.addAll(toBeCleanedUp);
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		assertEquals(expectedChunks, basicCubeOTState.getAllChunks());
+		CubeState cubeState = CubeState.create(cubeStructure);
+		assertEquals(expectedChunks, basicCubeState.getAllChunks());
 
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cubeOTState));
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cubeState));
 		await(stateManager.checkout());
 
-		Set<Object> irrelevantChunks = cubeOTState.getIrrelevantChunks()
+		Set<Object> irrelevantChunks = cubeState.getIrrelevantChunks()
 			.values()
 			.stream()
 			.flatMap(Collection::stream)

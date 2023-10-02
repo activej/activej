@@ -19,7 +19,7 @@ package io.activej.cube.service;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.cube.CubeOTState;
+import io.activej.cube.CubeState;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.ot.AggregationDiff;
@@ -99,15 +99,15 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		Reactor reactor, LogOTState<CubeDiff> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogOTProcessor<?, CubeDiff>> logProcessors
 	) {
-		CubeOTState cubeOTState = (CubeOTState) state.getDataState();
-		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeOTState);
+		CubeState cubeState = (CubeState) state.getDataState();
+		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeState);
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<K, C>> {
-		private final CubeOTState cubeOTState;
+		private final CubeState cubeState;
 
-		private Builder(CubeOTState cubeOTState) {
-			this.cubeOTState = cubeOTState;
+		private Builder(CubeState cubeState) {
+			this.cubeState = cubeState;
 		}
 
 		public Builder withParallelRunner(boolean parallelRunner) {
@@ -125,7 +125,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		@Override
 		protected CubeLogProcessorController<K, C> doBuild() {
 			predicate = AsyncPredicate.of(commitId -> {
-				if (cubeOTState.containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
+				if (cubeState.containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
 					logger.info("Cube contains excessive number of overlapping chunks");
 					return false;
 				}

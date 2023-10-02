@@ -79,10 +79,10 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
+		CubeState cubeState = CubeState.create(cubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
@@ -134,7 +134,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
-		await(aggregationChunkStorage.backup("backup1", (Set) cubeOTState.getAllChunks()));
+		await(aggregationChunkStorage.backup("backup1", (Set) cubeState.getAllChunks()));
 
 		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
@@ -157,7 +157,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		await(logCubeStateManager.sync());
 
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
-		await(aggregationChunkStorage.cleanup((Set) cubeOTState.getAllChunks()));
+		await(aggregationChunkStorage.cleanup((Set) cubeState.getAllChunks()));
 
 		// Query
 		List<LogItem> queryResult = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
@@ -169,7 +169,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		Set<String> actualChunkFileNames = Arrays.stream(checkNotNull(aggregationsDir.toFile().listFiles()))
 			.map(File::getName)
 			.collect(toSet());
-		assertEquals(concat(Stream.of("backups"), cubeOTState.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
+		assertEquals(concat(Stream.of("backups"), cubeState.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
 			actualChunkFileNames);
 	}
 

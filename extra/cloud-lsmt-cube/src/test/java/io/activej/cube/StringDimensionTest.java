@@ -71,11 +71,11 @@ public class StringDimensionTest {
 				.withDimensions("key1", "key2")
 				.withMeasures("metric1", "metric2", "metric3"))
 			.build();
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		CubeState cubeState = CubeState.create(cubeStructure);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
 
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 				new DataItemString1("str1", 2, 10, 20),
@@ -90,8 +90,8 @@ public class StringDimensionTest {
 		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().map(id -> (long) id).collect(toSet())));
 		await(aggregationChunkStorage.finish(consumer2Result.addedChunks().map(id -> (long) id).collect(toSet())));
 
-		cubeOTState.apply(consumer1Result);
-		cubeOTState.apply(consumer2Result);
+		cubeState.apply(consumer1Result);
+		cubeState.apply(consumer2Result);
 
 		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();
 		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),

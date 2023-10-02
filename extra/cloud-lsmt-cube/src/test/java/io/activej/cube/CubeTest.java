@@ -115,9 +115,9 @@ public final class CubeTest {
 	}
 
 	private static Cube createCube(CubeStructure cubeStructure, Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage aggregationChunkStorage) {
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		CubeState cubeState = CubeState.create(cubeStructure);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(getCurrentReactor(), cubeStructure, executor, classLoader, aggregationChunkStorage).build();
-		return Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		return Cube.create(cubeState, cubeStructure, cubeExecutor);
 	}
 
 	@SuppressWarnings("unchecked")

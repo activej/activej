@@ -293,17 +293,17 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures(MEASURES.keySet()))
 			.build();
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		CubeState cubeState = CubeState.create(cubeStructure);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 			.build();
 
-		cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());

@@ -112,8 +112,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
+		CubeState cubeState = CubeState.create(cubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
@@ -133,7 +133,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager1 = logCubeStateManager;
 		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager1, logOTProcessor);
 
-		List<AggregationChunk> chunks = new ArrayList<>(cubeOTState.getAggregationState("date").getChunks().values());
+		List<AggregationChunk> chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
 		assertEquals(1, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
@@ -160,8 +160,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			.withRelation("banner", "campaign")
 			.build();
 
-		cubeOTState = CubeOTState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState1 = LogOTState.create(cubeOTState);
+		cubeState = CubeState.create(cubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState1 = LogOTState.create(cubeState);
 		logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState1);
 
 		cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
@@ -181,12 +181,12 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		await(finalLogCubeStateManager.sync());
 		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager, finalLogOTProcessor);
 
-		chunks = new ArrayList<>(cubeOTState.getAggregationState("date").getChunks().values());
+		chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
 		assertEquals(2, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 		assertFalse(chunks.get(1).getMeasures().contains("revenue"));
 
-		chunks = new ArrayList<>(cubeOTState.getAggregationState("advertiser").getChunks().values());
+		chunks = new ArrayList<>(cubeState.getAggregationState("advertiser").getChunks().values());
 		assertEquals(2, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 		assertTrue(chunks.get(1).getMeasures().contains("revenue"));
@@ -195,7 +195,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		Map<Integer, Long> map = Stream.concat(listOfRandomLogItems1.stream(), listOfRandomLogItems2.stream())
 			.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		ToListStreamConsumer<LogItem> queryResultConsumer2 = ToListStreamConsumer.create();
 		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
@@ -216,11 +216,11 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));
 		await(logCubeStateManager.sync());
 
-		chunks = new ArrayList<>(cubeOTState.getAggregationState("date").getChunks().values());
+		chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
 		assertEquals(1, chunks.size());
 		assertFalse(chunks.get(0).getMeasures().contains("revenue"));
 
-		chunks = new ArrayList<>(cubeOTState.getAggregationState("advertiser").getChunks().values());
+		chunks = new ArrayList<>(cubeState.getAggregationState("advertiser").getChunks().values());
 		assertEquals(1, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
@@ -253,8 +253,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure1, description);
 
-			CubeOTState cubeOTState1 = CubeOTState.create(cubeStructure1);
-			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState1);
+			CubeState cubeState1 = CubeState.create(cubeStructure1);
+			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
@@ -315,8 +315,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure1, description);
 
-			CubeOTState cubeOTState1 = CubeOTState.create(cubeStructure1);
-			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState1);
+			CubeState cubeState1 = CubeState.create(cubeStructure1);
+			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState1);
 			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();

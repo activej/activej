@@ -103,8 +103,8 @@ public class AddedMeasuresTest {
 		CubeDiff diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		CubeOTState basicCubeOTState = CubeOTState.create(basicCubeStructure);
-		basicCubeOTState.apply(diff);
+		CubeState basicCubeState = CubeState.create(basicCubeStructure);
+		basicCubeState.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(3, 0.30),
@@ -114,7 +114,7 @@ public class AddedMeasuresTest {
 		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCubeOTState.apply(diff);
+		basicCubeState.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(42, 0.01),
@@ -124,7 +124,7 @@ public class AddedMeasuresTest {
 		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCubeOTState.apply(diff);
+		basicCubeState.apply(diff);
 	}
 
 	@Test
@@ -140,9 +140,9 @@ public class AddedMeasuresTest {
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 			.build();
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
+		CubeState cubeState = CubeState.create(cubeStructure);
 
-		initialDiffs.forEach(cubeOTState::apply);
+		initialDiffs.forEach(cubeState::apply);
 
 		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 			new EventRecord2(14, 0.35, 500),
@@ -153,9 +153,9 @@ public class AddedMeasuresTest {
 
 		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
-		cubeOTState.apply(diff);
+		cubeState.apply(diff);
 
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 		CubeDiff cubeDiff = await(cube.consolidate(Cube.ConsolidationStrategy.hotSegment()));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
@@ -187,11 +187,11 @@ public class AddedMeasuresTest {
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 			.build();
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		initialDiffs.forEach(cubeOTState::apply);
+		CubeState cubeState = CubeState.create(cubeStructure);
+		initialDiffs.forEach(cubeState::apply);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.builder()
@@ -221,8 +221,8 @@ public class AddedMeasuresTest {
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "estimatedUniqueUserIdCount"))
 			.build();
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		initialDiffs.forEach(cubeOTState::apply);
+		CubeState cubeState = CubeState.create(cubeStructure);
+		initialDiffs.forEach(cubeState::apply);
 
 		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 			new EventRecord2(14, 0.35, 500),
@@ -233,9 +233,9 @@ public class AddedMeasuresTest {
 
 		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
-		cubeOTState.apply(diff);
+		cubeState.apply(diff);
 
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.builder()

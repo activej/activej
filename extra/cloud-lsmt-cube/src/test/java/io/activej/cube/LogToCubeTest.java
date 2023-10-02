@@ -67,8 +67,8 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
-		CubeOTState cubeOTState = CubeOTState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeOTState);
+		CubeState cubeState = CubeState.create(cubeStructure);
+		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
@@ -97,7 +97,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
-		Cube cube = Cube.create(cubeOTState, cubeStructure, cubeExecutor);
+		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
 
 		List<TestAdvResult> list = await(cube.queryRawStream(
 				List.of("adv"),
