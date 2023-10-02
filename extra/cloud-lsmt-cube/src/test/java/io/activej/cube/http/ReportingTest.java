@@ -313,12 +313,12 @@ public final class ReportingTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
+		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor,
 			multilog,
 			new LogItemSplitter(cubeExecutor),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogState);
+			ofState(cubeDiffLogState));
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
@@ -343,7 +343,7 @@ public final class ReportingTest extends CubeTestBase {
 		await(StreamSuppliers.ofIterable(concat(logItemsForAdvertisersAggregations, logItemsForAffiliatesAggregation))
 			.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-		LogDiff<CubeDiff> logDiff = await(logOTProcessor.processLog());
+		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
 		await(aggregationChunkStorage
 			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
 		logCubeStateManager.add(logDiff);

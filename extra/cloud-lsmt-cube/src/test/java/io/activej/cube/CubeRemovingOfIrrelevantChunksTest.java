@@ -15,7 +15,7 @@ import io.activej.cube.service.CubeConsolidationController;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
 import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
@@ -114,12 +114,12 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, basicCubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
+		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogState);
+			ofState(cubeDiffLogState));
 
 		// checkout first (root) revision
 		await(stateManager.checkout());
@@ -137,7 +137,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			await(StreamSuppliers.ofIterable(listOfRandomLogItems).streamTo(
 				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-			runProcessLogs(chunkStorage, stateManager, logOTProcessor);
+			runProcessLogs(chunkStorage, stateManager, logProcessor);
 			allLogItems.addAll(listOfRandomLogItems);
 		}
 

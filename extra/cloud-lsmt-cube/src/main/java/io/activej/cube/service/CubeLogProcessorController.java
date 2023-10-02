@@ -26,7 +26,7 @@ import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -62,7 +62,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final List<LogOTProcessor<?, CubeDiff>> logProcessors;
+	private final List<LogProcessor<?, CubeDiff>> logProcessors;
 	private final IAggregationChunkStorage<C> chunkStorage;
 	private final OTStateManager<K, LogDiff<CubeDiff>> stateManager;
 	private AsyncPredicate<K> predicate;
@@ -79,7 +79,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	private int maxOverlappingChunksToProcessLogs = DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
 
 	private CubeLogProcessorController(
-		Reactor reactor, List<LogOTProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage,
+		Reactor reactor, List<LogProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage,
 		OTStateManager<K, LogDiff<CubeDiff>> stateManager
 	) {
 		super(reactor);
@@ -90,14 +90,14 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 
 	public static <K, C> CubeLogProcessorController<K, C> create(
 		Reactor reactor, LogState<CubeDiff, CubeState> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
-		IAggregationChunkStorage<C> chunkStorage, List<LogOTProcessor<?, CubeDiff>> logProcessors
+		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
 		return builder(reactor, state, stateManager, chunkStorage, logProcessors).build();
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C>.Builder builder(
 		Reactor reactor, LogState<CubeDiff, CubeState> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
-		IAggregationChunkStorage<C> chunkStorage, List<LogOTProcessor<?, CubeDiff>> logProcessors
+		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
 		CubeState cubeState = state.getDataState();
 		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeState);

@@ -118,8 +118,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.build();
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor, multilog,
-			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), cubeDiffLogState);
+		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor, multilog,
+			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), ofState(cubeDiffLogState));
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
@@ -130,7 +130,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager1 = logCubeStateManager;
-		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager1, logOTProcessor);
+		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager1, logProcessor);
 
 		List<AggregationChunk> chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
 		assertEquals(1, chunks.size());
@@ -165,8 +165,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
-		logOTProcessor = LogOTProcessor.create(reactor, multilog, cubeExecutor.logStreamConsumer(LogItem.class),
-			"testlog", List.of("partitionA"), cubeDiffLogState1);
+		logProcessor = LogProcessor.create(reactor, multilog, cubeExecutor.logStreamConsumer(LogItem.class),
+			"testlog", List.of("partitionA"), ofState(cubeDiffLogState1));
 
 		await(logCubeStateManager.checkout());
 
@@ -176,9 +176,9 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager = logCubeStateManager;
-		LogOTProcessor<LogItem, CubeDiff> finalLogOTProcessor = logOTProcessor;
+		LogProcessor<LogItem, CubeDiff> finalLogProcessor = logProcessor;
 		await(finalLogCubeStateManager.sync());
-		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager, finalLogOTProcessor);
+		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager, finalLogProcessor);
 
 		chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
 		assertEquals(2, chunks.size());
@@ -261,15 +261,15 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
-			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(reactor,
-				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogState);
+			LogProcessor<LogItem, CubeDiff> logProcessor1 = LogProcessor.create(reactor,
+				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), ofState(cubeDiffLogState));
 
 			await(logCubeStateManager1.checkout());
 
 			await(StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
 				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logOTProcessor1);
+			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logProcessor1);
 		}
 
 		// Initialize cube with new structure (remove "clicks" from cube configuration)
@@ -324,15 +324,15 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 
-			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(reactor,
-				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogState);
+			LogProcessor<LogItem, CubeDiff> logProcessor1 = LogProcessor.create(reactor,
+				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), ofState(cubeDiffLogState));
 
 			await(logCubeStateManager1.checkout());
 
 			await(StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
 				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logOTProcessor1);
+			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logProcessor1);
 		}
 
 		// Initialize cube with new structure (remove "impressions" aggregation from cube configuration)

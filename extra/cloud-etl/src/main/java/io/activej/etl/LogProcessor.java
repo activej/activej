@@ -49,9 +49,9 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Processes logs. Creates new aggregation logs and persists to {@link ILogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class LogOTProcessor<T, D> extends AbstractReactive
+public final class LogProcessor<T, D> extends AbstractReactive
 	implements ReactiveService, ReactiveJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(LogProcessor.class);
 
 	private final IMultilog<T> multilog;
 	private final ILogDataConsumer<T, D> logStreamConsumer;
@@ -59,7 +59,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	private final String log;
 	private final List<String> partitions;
 
-	private final LogState<D, ?> state;
+	private final StateQueryFunction<LogState<D, ?>> stateFunction;
 
 	// JMX
 	private boolean enabled = true;
@@ -68,23 +68,23 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	private final DetailedStreamStats<T> streamStatsDetailed = StreamStats.detailed();
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
-	private LogOTProcessor(
+	private LogProcessor(
 		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer, String log,
-		List<String> partitions, LogState<D, ?> state
+		List<String> partitions, StateQueryFunction<LogState<D, ?>> stateFunction
 	) {
 		super(reactor);
 		this.multilog = multilog;
 		this.logStreamConsumer = logStreamConsumer;
 		this.log = log;
 		this.partitions = partitions;
-		this.state = state;
+		this.stateFunction = stateFunction;
 	}
 
-	public static <T, D> LogOTProcessor<T, D> create(
+	public static <T, D> LogProcessor<T, D> create(
 		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer, String log,
-		List<String> partitions, LogState<D, ?> state
+		List<String> partitions, StateQueryFunction<LogState<D, ?>> stateFunction
 	) {
-		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);
+		return new LogProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, stateFunction);
 	}
 
 	@Override
@@ -108,9 +108,10 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 
 	private Promise<LogDiff<D>> doProcessLog() {
 		if (!enabled) return Promise.of(LogDiff.of(Map.of(), List.of()));
-		logger.trace("processLog_gotPositions called. Positions: {}", state.getPositions());
+		Map<String, LogPosition> positions = new HashMap<>(stateFunction.query(LogState::getPositions));
+		logger.trace("processLog_gotPositions called. Positions: {}", positions);
 
-		StreamSupplierWithResult<T, Map<String, LogPositionDiff>> supplier = getSupplier();
+		StreamSupplierWithResult<T, Map<String, LogPositionDiff>> supplier = getSupplier(positions);
 		StreamConsumerWithResult<T, List<D>> consumer = logStreamConsumer.consume();
 		return supplier.streamTo(consumer)
 			.whenComplete(promiseProcessLog.recordStats())
@@ -119,12 +120,12 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 				logger.info("Log '{}' processing complete. Positions: {}", log, logDiff.getPositions()));
 	}
 
-	private StreamSupplierWithResult<T, Map<String, LogPositionDiff>> getSupplier() {
+	private StreamSupplierWithResult<T, Map<String, LogPositionDiff>> getSupplier(Map<String, LogPosition> positions) {
 		AsyncAccumulator<Map<String, LogPositionDiff>> logPositionsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		StreamUnion<T> streamUnion = StreamUnion.create();
 		for (String partition : partitions) {
 			String logName = logName(partition);
-			LogPosition logPosition = state.getPositions().get(logName);
+			LogPosition logPosition = positions.get(logName);
 			if (logPosition == null) {
 				logPosition = LogPosition.initial();
 			}

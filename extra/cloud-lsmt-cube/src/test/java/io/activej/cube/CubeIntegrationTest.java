@@ -11,7 +11,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
 import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
@@ -98,12 +98,12 @@ public class CubeIntegrationTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
+		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogState);
+			ofState(cubeDiffLogState));
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
@@ -120,23 +120,23 @@ public class CubeIntegrationTest extends CubeTestBase {
 		//		channel.write(ByteBuffer.wrap(new byte[]{123}), 0).get();
 		//		channel.close();
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
+		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
+		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
 
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(300);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems2).streamTo(
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
+		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
 
 		List<LogItem> listOfRandomLogItems3 = LogItem.getListOfRandomLogItems(50);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems3).streamTo(
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
+		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
 
 		await(aggregationChunkStorage.backup("backup1", (Set) cubeState.getAllChunks()));
 

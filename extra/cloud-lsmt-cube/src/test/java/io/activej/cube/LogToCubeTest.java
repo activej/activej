@@ -14,7 +14,7 @@ import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
 import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
@@ -82,12 +82,12 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
-		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
+		LogProcessor<TestPubRequest, CubeDiff> logProcessor = LogProcessor.create(reactor,
 			multilog,
 			new TestAggregatorSplitter(cubeExecutor), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogState);
+			ofState(cubeDiffLogState));
 
 		StreamSupplier<TestPubRequest> supplier = StreamSuppliers.ofValues(
 			new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),
@@ -97,7 +97,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		await(supplier.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		await(logCubeStateManager.checkout());
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
+		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
 
 		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
 		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);

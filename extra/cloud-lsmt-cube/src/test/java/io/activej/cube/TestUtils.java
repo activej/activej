@@ -11,7 +11,7 @@ import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogProcessor;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTState;
 import io.activej.ot.OTStateManager;
@@ -46,8 +46,8 @@ public final class TestUtils {
 		await(repository.saveSnapshot(id, List.of()));
 	}
 
-	public static <T> void runProcessLogs(IAggregationChunkStorage<Long> aggregationChunkStorage, OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager, LogOTProcessor<T, CubeDiff> logOTProcessor) {
-		LogDiff<CubeDiff> logDiff = await(logOTProcessor.processLog());
+	public static <T> void runProcessLogs(IAggregationChunkStorage<Long> aggregationChunkStorage, OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager, LogProcessor<T, CubeDiff> logProcessor) {
+		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
 		await(aggregationChunkStorage
 			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
 		logCubeStateManager.add(logDiff);

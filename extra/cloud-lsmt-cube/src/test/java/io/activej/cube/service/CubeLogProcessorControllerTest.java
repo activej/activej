@@ -18,7 +18,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTProcessor;
+import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
@@ -39,6 +39,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
+import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -95,13 +96,13 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			.create(CLASS_LOADER, LogItem.class);
 		multilog = Multilog.create(reactor, logsFileSystem, FrameFormats.lz4(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
+		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(
 			reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"test",
 			List.of("partitionA"),
-			logState);
+			ofState(logState));
 
 		controller = CubeLogProcessorController.create(
 			reactor,
