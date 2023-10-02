@@ -27,7 +27,7 @@ import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
+import io.activej.etl.LogState;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -89,17 +89,17 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C> create(
-		Reactor reactor, LogOTState<CubeDiff> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
+		Reactor reactor, LogState<CubeDiff, CubeState> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogOTProcessor<?, CubeDiff>> logProcessors
 	) {
 		return builder(reactor, state, stateManager, chunkStorage, logProcessors).build();
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C>.Builder builder(
-		Reactor reactor, LogOTState<CubeDiff> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
+		Reactor reactor, LogState<CubeDiff, CubeState> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogOTProcessor<?, CubeDiff>> logProcessors
 	) {
-		CubeState cubeState = (CubeState) state.getDataState();
+		CubeState cubeState = state.getDataState();
 		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeState);
 	}
 

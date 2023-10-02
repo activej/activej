@@ -8,7 +8,7 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTState;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
@@ -93,9 +93,9 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 			.build();
 
 		basicCubeState = CubeState.create(basicCubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCubeState);
+		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(basicCubeState);
 		uplink = uplinkFactory.create(basicCubeStructure, description);
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 		await(stateManager.checkout());
 	}
 
@@ -190,7 +190,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		CubeState cubeState = CubeState.create(cubeStructure);
 		assertEquals(expectedChunks, basicCubeState.getAllChunks());
 
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cubeState));
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(cubeState));
 		await(stateManager.checkout());
 
 		Set<Object> irrelevantChunks = cubeState.getIrrelevantChunks()

@@ -302,8 +302,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(fileSystem.start());
@@ -318,7 +318,7 @@ public final class ReportingTest extends CubeTestBase {
 			new LogItemSplitter(cubeExecutor),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogOTState);
+			cubeDiffLogState);
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());

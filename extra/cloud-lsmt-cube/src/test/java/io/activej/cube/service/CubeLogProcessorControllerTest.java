@@ -19,7 +19,7 @@ import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
+import io.activej.etl.LogState;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
@@ -86,8 +86,8 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(structure, description);
 
-		LogOTState<CubeDiff> logOTState = LogOTState.create(CubeState.create(structure));
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logOTState);
+		LogState<CubeDiff, CubeState> logState = LogState.create(CubeState.create(structure));
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
@@ -101,11 +101,11 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"test",
 			List.of("partitionA"),
-			logOTState);
+			logState);
 
 		controller = CubeLogProcessorController.create(
 			reactor,
-			logOTState,
+			logState,
 			stateManager,
 			aggregationChunkStorage,
 			List.of(logProcessor));

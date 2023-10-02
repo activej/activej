@@ -16,7 +16,7 @@ import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
+import io.activej.etl.LogState;
 import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
@@ -99,10 +99,10 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.build();
 
 		CubeState cubeState = CubeState.create(basicCubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
+		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
 		uplink = uplinkFactory.create(basicCubeStructure, description);
 
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -119,7 +119,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogOTState);
+			cubeDiffLogState);
 
 		// checkout first (root) revision
 		await(stateManager.checkout());
@@ -162,7 +162,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
 			.build();
 		CubeState cubeState = CubeState.create(cubeStructure);
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cubeState));
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(cubeState));
 		await(stateManager.checkout());
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();

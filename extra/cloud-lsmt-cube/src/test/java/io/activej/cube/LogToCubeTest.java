@@ -15,7 +15,7 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
+import io.activej.etl.LogState;
 import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
@@ -70,8 +70,8 @@ public final class LogToCubeTest extends CubeTestBase {
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
 		CubeState cubeState = CubeState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -87,7 +87,7 @@ public final class LogToCubeTest extends CubeTestBase {
 			new TestAggregatorSplitter(cubeExecutor), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 			"testlog",
 			List.of("partitionA"),
-			cubeDiffLogOTState);
+			cubeDiffLogState);
 
 		StreamSupplier<TestPubRequest> supplier = StreamSuppliers.ofValues(
 			new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),

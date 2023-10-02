@@ -21,8 +21,8 @@ import io.activej.etcd.codec.prefix.Prefix;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etcd.state.AbstractEtcdStateManager;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTState;
 import io.activej.etl.LogPositionDiff;
+import io.activej.etl.LogState;
 import io.activej.multilog.LogPosition;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -43,7 +43,7 @@ import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static java.util.stream.Collectors.*;
 
-public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogOTState<CubeDiff>, List<LogDiff<CubeDiff>>> {
+public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogState<CubeDiff, CubeState>, List<LogDiff<CubeDiff>>> {
 	private static final ByteSequence POS = byteSequenceFrom("pos.");
 	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
 	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
@@ -189,8 +189,8 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogOTSt
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected LogOTState<CubeDiff> finishState(Response.Header header, Object[] checkoutObjects) throws MalformedEtcdDataException {
-		LogOTState<CubeDiff> state = LogOTState.create(CubeState.create(cubeStructure));
+	protected LogState<CubeDiff, CubeState> finishState(Response.Header header, Object[] checkoutObjects) throws MalformedEtcdDataException {
+		LogState<CubeDiff, CubeState> state = LogState.create(CubeState.create(cubeStructure));
 		state.init();
 		var logPositions = (Map<String, LogPosition>) checkoutObjects[0];
 		var aggregationChunks = (Map<String, Set<AggregationChunk>>) checkoutObjects[1];
@@ -217,7 +217,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogOTSt
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void applyStateTransitions(LogOTState<CubeDiff> state, Object[] operation) throws MalformedEtcdDataException {
+	protected void applyStateTransitions(LogState<CubeDiff, CubeState> state, Object[] operation) throws MalformedEtcdDataException {
 		var logPositionDiffs = (Map<String, LogPositionDiff>) operation[0];
 		var aggregationDiffs = (Map<String, AggregationDiff>) operation[1];
 

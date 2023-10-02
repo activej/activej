@@ -112,14 +112,14 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			NAME_PARTITION_REMAINDER_SEQ);
 
 		CubeState cubeState = CubeState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.build();
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor, multilog,
-			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), cubeDiffLogOTState);
+			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), cubeDiffLogState);
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
@@ -160,13 +160,13 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			.build();
 
 		cubeState = CubeState.create(cubeStructure);
-		LogOTState<CubeDiff> cubeDiffLogOTState1 = LogOTState.create(cubeState);
-		logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState1);
+		LogState<CubeDiff, CubeState> cubeDiffLogState1 = LogState.create(cubeState);
+		logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState1);
 
 		cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
 		logOTProcessor = LogOTProcessor.create(reactor, multilog, cubeExecutor.logStreamConsumer(LogItem.class),
-			"testlog", List.of("partitionA"), cubeDiffLogOTState1);
+			"testlog", List.of("partitionA"), cubeDiffLogState1);
 
 		await(logCubeStateManager.checkout());
 
@@ -255,14 +255,14 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure1, description);
 
 			CubeState cubeState1 = CubeState.create(cubeStructure1);
-			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState1);
-			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+			LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState1);
+			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(reactor,
-				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogOTState);
+				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogState);
 
 			await(logCubeStateManager1.checkout());
 
@@ -317,15 +317,15 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure1, description);
 
 			CubeState cubeState1 = CubeState.create(cubeStructure1);
-			LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState1);
-			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
+			LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState1);
+			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 
 			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(reactor,
-				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogOTState);
+				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogState);
 
 			await(logCubeStateManager1.checkout());
 
