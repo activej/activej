@@ -12,13 +12,9 @@ import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
-import io.activej.etl.LogState;
-import io.activej.etl.StateQueryFunction;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
@@ -36,7 +32,6 @@ import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
-import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toMap;
@@ -80,15 +75,10 @@ public class CubeIntegrationTest extends CubeTestBase {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
+		TestStateManager stateManager = stateManagerFactory.create(cubeStructure, description);
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
-
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager.getCubeState(), cubeStructure, cubeExecutor);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -98,15 +88,15 @@ public class CubeIntegrationTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor,
+		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
 			List.of("partitionA"),
-			ofState(cubeDiffLogState));
+			stateManager.getLogState());
 
 		// checkout first (root) revision
-		await(logCubeStateManager.checkout());
+		stateManager.checkout();
 
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems = LogItem.getListOfRandomLogItems(100);
@@ -120,27 +110,27 @@ public class CubeIntegrationTest extends CubeTestBase {
 		//		channel.write(ByteBuffer.wrap(new byte[]{123}), 0).get();
 		//		channel.close();
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
+		runProcessLogs(aggregationChunkStorage, stateManager, logOTProcessor);
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
+		runProcessLogs(aggregationChunkStorage, stateManager, logOTProcessor);
 
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(300);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems2).streamTo(
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
+		runProcessLogs(aggregationChunkStorage, stateManager, logOTProcessor);
 
 		List<LogItem> listOfRandomLogItems3 = LogItem.getListOfRandomLogItems(50);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems3).streamTo(
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 		printDirContents(logsDir);
 
-		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
+		runProcessLogs(aggregationChunkStorage, stateManager, logOTProcessor);
 
-		await(aggregationChunkStorage.backup("backup1", (Set) cubeState.getAllChunks()));
+		await(aggregationChunkStorage.backup("backup1", (Set) stateManager.getCubeState().query(CubeState::getAllChunks)));
 
-		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(stateManager.getCubeState(), cubeStructure, cubeExecutor);
 
 		List<LogItem> logItems = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
@@ -159,11 +149,10 @@ public class CubeIntegrationTest extends CubeTestBase {
 		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
-		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));
-		await(logCubeStateManager.sync());
+		stateManager.push(LogDiff.forCurrentPosition(consolidatingCubeDiff));
 
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
-		await(aggregationChunkStorage.cleanup((Set) cubeState.getAllChunks()));
+		await(aggregationChunkStorage.cleanup((Set) stateManager.getCubeState().query(CubeState::getAllChunks)));
 
 		// Query
 		List<LogItem> queryResult = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
@@ -175,7 +164,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		Set<String> actualChunkFileNames = Arrays.stream(checkNotNull(aggregationsDir.toFile().listFiles()))
 			.map(File::getName)
 			.collect(toSet());
-		assertEquals(concat(Stream.of("backups"), cubeState.getAllChunks().stream().map(n -> n + ".log")).collect(toSet()),
+		assertEquals(concat(Stream.of("backups"), stateManager.getCubeState().query(CubeState::getAllChunks).stream().map(n -> n + ".log")).collect(toSet()),
 			actualChunkFileNames);
 	}
 

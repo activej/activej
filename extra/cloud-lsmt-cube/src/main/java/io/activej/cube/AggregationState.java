@@ -100,7 +100,8 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public void removeFromIndex(AggregationChunk chunk) {
-		checkArgument(chunks.remove(chunk.getChunkId()) != null,
+		AggregationChunk removedChunk = chunks.remove(chunk.getChunkId());
+		checkArgument(removedChunk != null,
 			() ->
 				"Trying to remove unknown chunk: " + chunk +
 				"\n this: " + this +
@@ -109,9 +110,9 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		for (int size = 0; size <= structure.getKeys().size(); size++) {
 			RangeTree<PrimaryKey, AggregationChunk> index = prefixRanges[size];
 
-			PrimaryKey lower = chunk.getMinPrimaryKey().prefix(size);
-			PrimaryKey upper = chunk.getMaxPrimaryKey().prefix(size);
-			index.remove(lower, upper, chunk);
+			PrimaryKey lower = removedChunk.getMinPrimaryKey().prefix(size);
+			PrimaryKey upper = removedChunk.getMaxPrimaryKey().prefix(size);
+			index.remove(lower, upper, removedChunk);
 		}
 	}
 

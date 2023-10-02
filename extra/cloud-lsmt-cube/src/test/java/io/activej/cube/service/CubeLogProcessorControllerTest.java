@@ -24,8 +24,6 @@ import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
@@ -39,7 +37,6 @@ import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
-import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -85,13 +82,12 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			.build();
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(structure, description);
 
 		LogState<CubeDiff, CubeState> logState = LogState.create(CubeState.create(structure));
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
-		await(stateManager.start());
+		TestStateManager stateManager = stateManagerFactory.create(structure, description);
+		stateManager.checkout();
 
-		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = ServiceStateManager.ofOTStateManager(stateManager);
+		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = serviceStateManager(stateManager);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
@@ -105,7 +101,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"test",
 			List.of("partitionA"),
-			ofState(logState));
+			stateManager.getLogState());
 
 		controller = CubeLogProcessorController.create(
 			reactor,

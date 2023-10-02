@@ -8,10 +8,7 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
-import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,10 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.PrimaryKey.ofArray;
@@ -47,12 +41,10 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_NUMBER_BOUNDARY = 50;
 	private static final AggregationPredicate ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
 
-	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig enumAggregation;
-	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
-	private CubeStructure basicCubeStructure;
+	private TestStateManager stateManager;
 	private CubeStructure cubeStructure;
 
 	private long chunkId;
@@ -60,10 +52,11 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private final Set<Object> toBePreserved = new HashSet<>();
 	private final Set<Object> toBeCleanedUp = new HashSet<>();
 
-	private CubeState basicCubeState;
+	private List<LogDiff<CubeDiff>> diffs;
 
 	@Before
 	public void before() throws Exception {
+		diffs = new ArrayList<>();
 		chunkId = 0;
 		toBeCleanedUp.clear();
 		toBePreserved.clear();
@@ -86,21 +79,18 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 			.withDimensions("enum", "date")
 			.withMeasures("impressions", "clicks", "conversions", "revenue");
 
-		basicCubeStructure = builderOfBasicCubeStructure()
+		CubeStructure basicCubeStructure = builderOfBasicCubeStructure()
 			.withAggregation(dateAggregation)
 			.withAggregation(advertiserDateAggregation)
 			.withAggregation(enumAggregation)
 			.build();
 
-		basicCubeState = CubeState.create(basicCubeStructure);
-		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(basicCubeState);
-		uplink = uplinkFactory.create(basicCubeStructure, description);
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
-		await(stateManager.checkout());
+		stateManager = stateManagerFactory.create(basicCubeStructure, description);
+		stateManager.checkout();
 	}
 
 	@Test
-	public void date() {
+	public void date() throws Exception {
 		cubeStructure = builderOfBasicCubeStructure()
 			.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
 			.build();
@@ -115,7 +105,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	}
 
 	@Test
-	public void anEnum() {
+	public void anEnum() throws Exception {
 		cubeStructure = builderOfBasicCubeStructure()
 			.withAggregation(enumAggregation.withPredicate(notEq("enum", null)))
 			.build();
@@ -127,10 +117,12 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	}
 
 	@Test
-	public void advertiserDate_DatePredicate() {
+	public void advertiserDate_DatePredicate() throws Exception {
 		cubeStructure = builderOfBasicCubeStructure()
 			.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
 			.build();
+		stateManager = stateManagerFactory.create(cubeStructure, description);
+		stateManager.checkout();
 
 		toBePreserved.add(addChunk("advertiser-date", ofArray(5, DATE_MIN_DAYS), ofArray(6, DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("advertiser-date", ofArray(1, DATE_MIN_DAYS + 50), ofArray(20, DATE_MAX_DAYS - 50)));
@@ -144,10 +136,12 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	}
 
 	@Test
-	public void advertiserDate_AdvertiserPredicate() {
+	public void advertiserDate_AdvertiserPredicate() throws Exception {
 		cubeStructure = builderOfBasicCubeStructure()
 			.withAggregation(advertiserDateAggregation.withPredicate(ADVERTISER_PREDICATE))
 			.build();
+		stateManager = stateManagerFactory.create(cubeStructure, description);
+		stateManager.checkout();
 
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN, DATE_MIN_DAYS), ofArray(LOWER_NUMBER_BOUNDARY + 1, DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN + 50, DATE_MIN_DAYS + 50), ofArray(NUMBER_MAX - 10, DATE_MAX_DAYS - 50)));
@@ -160,11 +154,13 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	}
 
 	@Test
-	public void advertiserDate_AdvertiserPredicateAndDatePredicate() {
+	public void advertiserDate_AdvertiserPredicateAndDatePredicate() throws Exception {
 		cubeStructure = builderOfBasicCubeStructure()
 			.withAggregation(advertiserDateAggregation
 				.withPredicate(AggregationPredicates.and(ADVERTISER_PREDICATE, DATE_PREDICATE)))
 			.build();
+		stateManager = stateManagerFactory.create(cubeStructure, description);
+		stateManager.checkout();
 
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN, DATE_MIN_DAYS), ofArray(LOWER_NUMBER_BOUNDARY + 1, DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN + 50, DATE_MIN_DAYS + 50), ofArray(NUMBER_MAX - 10, DATE_MAX_DAYS - 50)));
@@ -180,20 +176,19 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		doTest();
 	}
 
-	private void doTest() {
-		await(stateManager.sync());
+	private void doTest() throws Exception {
+		stateManager.push(diffs);
 
 		Set<Object> expectedChunks = new HashSet<>();
 		expectedChunks.addAll(toBePreserved);
 		expectedChunks.addAll(toBeCleanedUp);
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-		assertEquals(expectedChunks, basicCubeState.getAllChunks());
+		assertEquals(expectedChunks, stateManager.getCubeState().query(CubeState::getAllChunks));
 
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(cubeState));
-		await(stateManager.checkout());
+		stateManager = stateManagerFactory.createUninitialized(cubeStructure, description);
+		stateManager.checkout();
 
-		Set<Object> irrelevantChunks = cubeState.getIrrelevantChunks()
+		Set<Object> irrelevantChunks = stateManager.getCubeState().query(CubeState::getIrrelevantChunks)
 			.values()
 			.stream()
 			.flatMap(Collection::stream)
@@ -204,7 +199,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	private long addChunk(String aggregationId, PrimaryKey minKey, PrimaryKey maxKey) {
 		long chunkId = ++this.chunkId;
-		stateManager.add(LogDiff.forCurrentPosition(
+		diffs.add(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
 				aggregationId, AggregationDiff.of(Set.of(
 					AggregationChunk.create(

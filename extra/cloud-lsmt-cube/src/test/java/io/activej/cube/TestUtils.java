@@ -4,6 +4,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.csp.process.frame.FrameFormat;
+import io.activej.cube.CubeTestBase.TestStateManager;
 import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.fieldtype.FieldType;
@@ -14,7 +15,6 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTState;
-import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
@@ -46,12 +46,11 @@ public final class TestUtils {
 		await(repository.saveSnapshot(id, List.of()));
 	}
 
-	public static <T> void runProcessLogs(IAggregationChunkStorage<Long> aggregationChunkStorage, OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager, LogProcessor<T, CubeDiff> logProcessor) {
+	public static <T> void runProcessLogs(IAggregationChunkStorage<Long> aggregationChunkStorage, TestStateManager stateManager, LogProcessor<T, CubeDiff> logProcessor) throws Exception {
 		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
 		await(aggregationChunkStorage
 			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
-		logCubeStateManager.add(logDiff);
-		await(logCubeStateManager.sync());
+		stateManager.push(logDiff);
 	}
 
 	public static final OTState<CubeDiff> STUB_CUBE_STATE = new OTState<>() {

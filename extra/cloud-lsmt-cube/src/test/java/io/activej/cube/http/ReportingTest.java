@@ -16,15 +16,15 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.etl.*;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogProcessor;
+import io.activej.etl.SplitterLogDataConsumer;
 import io.activej.fs.FileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.IHttpClient;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerFactory;
@@ -50,7 +50,6 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.measure.ComputedMeasures.*;
-import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
@@ -291,19 +290,13 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures(MEASURES.keySet()))
 			.build();
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 			.build();
 
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		TestStateManager logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
-
-		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
+		cubeReporting = CubeReporting.create(logCubeStateManager.getCubeState(), cubeStructure, cubeExecutor);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(fileSystem.start());
@@ -318,10 +311,10 @@ public final class ReportingTest extends CubeTestBase {
 			new LogItemSplitter(cubeExecutor),
 			"testlog",
 			List.of("partitionA"),
-			ofState(cubeDiffLogState));
+			logCubeStateManager.getLogState());
 
 		// checkout first (root) revision
-		await(logCubeStateManager.checkout());
+		logCubeStateManager.checkout();
 
 		List<LogItem> logItemsForAdvertisersAggregations = List.of(
 			new LogItem(1, 1, 1, 1, 20, 3, 1, 0.12, 2, 2, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
@@ -346,8 +339,8 @@ public final class ReportingTest extends CubeTestBase {
 		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
 		await(aggregationChunkStorage
 			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
-		logCubeStateManager.add(logDiff);
-		await(logCubeStateManager.sync());
+
+		logCubeStateManager.push(logDiff);
 
 		cubeHttpServer = startHttpServer();
 

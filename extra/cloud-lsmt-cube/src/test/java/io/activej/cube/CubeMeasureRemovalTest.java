@@ -2,6 +2,7 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
@@ -13,13 +14,13 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.etl.*;
+import io.activej.etl.ILogDataConsumer;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogProcessor;
 import io.activej.fs.FileSystem;
 import io.activej.json.JsonValidationException;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
@@ -38,14 +39,11 @@ import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
-import static io.activej.etl.StateQueryFunction.ofState;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.promise.TestUtils.awaitException;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class CubeMeasureRemovalTest extends CubeTestBase {
@@ -75,7 +73,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	}
 
 	@Test
-	public void test() {
+	public void test() throws Exception {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
@@ -101,8 +99,6 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			.withRelation("banner", "campaign")
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure, description);
-
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
 		IMultilog<LogItem> multilog = Multilog.create(reactor,
@@ -111,28 +107,28 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-		LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
+		TestStateManager logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 			.build();
 
-		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor, multilog,
-			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), ofState(cubeDiffLogState));
+		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor, multilog,
+			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), logCubeStateManager.getLogState());
 
 		// checkout first (root) revision
-		await(logCubeStateManager.checkout());
+		logCubeStateManager.checkout();
 
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems1 = LogItem.getListOfRandomLogItems(100);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems1).streamTo(
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager1 = logCubeStateManager;
-		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager1, logProcessor);
+		TestStateManager finalLogCubeStateManager1 = logCubeStateManager;
+		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager1, logOTProcessor);
 
-		List<AggregationChunk> chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
+		StateQueryFunction<CubeState> cubeState = logCubeStateManager.getCubeState();
+
+		List<AggregationChunk> chunks = new ArrayList<>(cubeState.query(s -> s.getAggregationState("date").getChunks().values()));
 		assertEquals(1, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
@@ -159,33 +155,32 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			.withRelation("banner", "campaign")
 			.build();
 
-		cubeState = CubeState.create(cubeStructure);
-		LogState<CubeDiff, CubeState> cubeDiffLogState1 = LogState.create(cubeState);
-		logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState1);
+		logCubeStateManager = stateManagerFactory.createUninitialized(cubeStructure, description);
 
+		cubeState = logCubeStateManager.getCubeState();
 		cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
-		logProcessor = LogProcessor.create(reactor, multilog, cubeExecutor.logStreamConsumer(LogItem.class),
-			"testlog", List.of("partitionA"), ofState(cubeDiffLogState1));
+		logOTProcessor = LogProcessor.create(reactor, multilog, cubeExecutor.logStreamConsumer(LogItem.class),
+			"testlog", List.of("partitionA"), logCubeStateManager.getLogState());
 
-		await(logCubeStateManager.checkout());
+		logCubeStateManager.checkout();
 
 		// Save and aggregate logs
 		List<LogItem> listOfRandomLogItems2 = LogItem.getListOfRandomLogItems(100);
 		await(StreamSuppliers.ofIterable(listOfRandomLogItems2).streamTo(
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-		OTStateManager<Long, LogDiff<CubeDiff>> finalLogCubeStateManager = logCubeStateManager;
-		LogProcessor<LogItem, CubeDiff> finalLogProcessor = logProcessor;
-		await(finalLogCubeStateManager.sync());
-		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager, finalLogProcessor);
+		TestStateManager finalLogCubeStateManager = logCubeStateManager;
+		LogProcessor<LogItem, CubeDiff> finalLogOTProcessor = logOTProcessor;
+		finalLogCubeStateManager.sync();
+		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager, finalLogOTProcessor);
 
-		chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
+		chunks = new ArrayList<>(cubeState.query(s -> s.getAggregationState("date").getChunks().values()));
 		assertEquals(2, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 		assertFalse(chunks.get(1).getMeasures().contains("revenue"));
 
-		chunks = new ArrayList<>(cubeState.getAggregationState("advertiser").getChunks().values());
+		chunks = new ArrayList<>(cubeState.query(s -> s.getAggregationState("advertiser").getChunks().values()));
 		assertEquals(2, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 		assertTrue(chunks.get(1).getMeasures().contains("revenue"));
@@ -194,8 +189,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		Map<Integer, Long> map = Stream.concat(listOfRandomLogItems1.stream(), listOfRandomLogItems2.stream())
 			.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(logCubeStateManager.getCubeState(), cubeStructure, cubeExecutor);
 
 		ToListStreamConsumer<LogItem> queryResultConsumer2 = ToListStreamConsumer.create();
 		await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
@@ -209,19 +203,19 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(map.isEmpty());
 
 		// Consolidate
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
+		cubeState = logCubeStateManager.getCubeState();
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
 		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
-		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));
-		await(logCubeStateManager.sync());
+		logCubeStateManager.push(LogDiff.forCurrentPosition(consolidatingCubeDiff));
 
-		chunks = new ArrayList<>(cubeState.getAggregationState("date").getChunks().values());
+		chunks = new ArrayList<>(cubeState.query(s -> s.getAggregationState("date").getChunks().values()));
 		assertEquals(1, chunks.size());
 		assertFalse(chunks.get(0).getMeasures().contains("revenue"));
 
-		chunks = new ArrayList<>(cubeState.getAggregationState("advertiser").getChunks().values());
+		chunks = new ArrayList<>(cubeState.query(s -> s.getAggregationState("advertiser").getChunks().values()));
 		assertEquals(1, chunks.size());
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
@@ -240,7 +234,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	}
 
 	@Test
-	public void testNewUnknownMeasureInAggregationDiffOnDeserialization() {
+	public void testNewUnknownMeasureInAggregationDiffOnDeserialization() throws Exception {
 		{
 			CubeStructure cubeStructure1 = CubeStructure.builder()
 				.withDimension("date", ofLocalDate())
@@ -252,24 +246,20 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 					.withMeasures("impressions", "clicks", "conversions"))
 				.build();
 
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure1, description);
-
-			CubeState cubeState1 = CubeState.create(cubeStructure1);
-			LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState1);
-			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
+			TestStateManager logCubeStateManager1 = stateManagerFactory.create(cubeStructure1, description);
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
-			LogProcessor<LogItem, CubeDiff> logProcessor1 = LogProcessor.create(reactor,
-				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), ofState(cubeDiffLogState));
+			LogProcessor<LogItem, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
+				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), logCubeStateManager1.getLogState());
 
-			await(logCubeStateManager1.checkout());
+			logCubeStateManager1.checkout();
 
 			await(StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
 				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logProcessor1);
+			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logOTProcessor1);
 		}
 
 		// Initialize cube with new structure (remove "clicks" from cube configuration)
@@ -281,9 +271,17 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withMeasures("impressions"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cubeStructure2, description);
+		TestStateManager stateManager = stateManagerFactory.createUninitialized(cubeStructure2, description);
 
-		Throwable exception = awaitException(uplink2.checkout());
+		Throwable exception = null;
+		try {
+			stateManager.checkout();
+			fail();
+		} catch (Throwable t) {
+			exception = t;
+		}
+
+		exception = exception.getCause();
 
 		String expectedMessage;
 		if (testName.equals("OT graph")) {
@@ -297,7 +295,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	}
 
 	@Test
-	public void testUnknownAggregation() {
+	public void testUnknownAggregation() throws Exception {
 		{
 			CubeStructure cubeStructure1 = CubeStructure.builder()
 				.withDimension("date", ofLocalDate())
@@ -314,25 +312,21 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 					.withMeasures("clicks"))
 				.build();
 
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cubeStructure1, description);
-
-			CubeState cubeState1 = CubeState.create(cubeStructure1);
-			LogState<CubeDiff, CubeState> cubeDiffLogState = LogState.create(cubeState1);
-			OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager1 = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogState);
+			TestStateManager logCubeStateManager1 = stateManagerFactory.create(cubeStructure1, description);
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 
-			LogProcessor<LogItem, CubeDiff> logProcessor1 = LogProcessor.create(reactor,
-				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), ofState(cubeDiffLogState));
+			LogProcessor<LogItem, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
+				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), logCubeStateManager1.getLogState());
 
-			await(logCubeStateManager1.checkout());
+			logCubeStateManager1.checkout();
 
 			await(StreamSuppliers.ofIterable(LogItem.getListOfRandomLogItems(100)).streamTo(
 				StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logProcessor1);
+			runProcessLogs(aggregationChunkStorage, logCubeStateManager1, logOTProcessor1);
 		}
 
 		// Initialize cube with new structure (remove "impressions" aggregation from cube configuration)
@@ -348,9 +342,13 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.withMeasures("clicks"))
 			.build();
 
-		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink2 = uplinkFactory.createUninitialized(cubeStructure2, description);
+		TestStateManager stateManager = stateManagerFactory.createUninitialized(cubeStructure2, description);
 
-		Throwable exception = awaitException(uplink2.checkout());
-		assertThat(exception.getMessage(), containsString("impressionsAggregation"));
+		try {
+			stateManager.checkout();
+			fail();
+		} catch (Throwable t) {
+			assertThat(t.getMessage(), containsString("impressionsAggregation"));
+		}
 	}
 }

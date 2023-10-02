@@ -1,4 +1,4 @@
-package io.activej.etl;
+package io.activej.common.function;
 
 import java.util.function.Function;
 

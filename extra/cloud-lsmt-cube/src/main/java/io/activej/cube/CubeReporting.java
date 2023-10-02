@@ -22,7 +22,7 @@ import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.exception.QueryException;
 import io.activej.datastream.supplier.StreamSupplier;
-import io.activej.etl.StateQueryFunction;
+import io.activej.common.function.StateQueryFunction;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 

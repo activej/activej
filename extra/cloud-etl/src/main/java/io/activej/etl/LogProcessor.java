@@ -19,6 +19,7 @@ package io.activej.etl;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
+import io.activej.common.function.StateQueryFunction;
 import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.datastream.stats.BasicStreamStats;
