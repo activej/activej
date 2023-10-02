@@ -1,5 +1,6 @@
 package io.activej.etcd.state;
 
+import io.activej.common.service.BlockingService;
 import io.activej.etcd.EtcdListener;
 import io.activej.etcd.EtcdUtils;
 import io.activej.etcd.TxnOps;
@@ -8,19 +9,21 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.Response;
 import io.etcd.jetcd.Watch;
+import io.etcd.jetcd.options.DeleteOption;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.PriorityQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import static io.activej.etcd.EtcdUtils.executeTxnOps;
 
-public abstract class AbstractEtcdStateManager<S, T> {
-	private Client client;
-	private ByteSequence root;
+public abstract class AbstractEtcdStateManager<S, T> implements BlockingService {
+	private final Client client;
+	private final ByteSequence root;
 
 	private final EtcdUtils.CheckoutRequest<?, ?>[] checkoutRequests;
 	private final EtcdUtils.WatchRequest<?, ?, ?>[] watchRequests;
@@ -32,7 +35,9 @@ public abstract class AbstractEtcdStateManager<S, T> {
 
 	protected final ReadWriteLock stateLock = new ReentrantReadWriteLock();
 
-	protected AbstractEtcdStateManager(EtcdUtils.CheckoutRequest<?, ?>[] checkoutRequests, EtcdUtils.WatchRequest<?, ?, ?>[] watchRequests) {
+	protected AbstractEtcdStateManager(Client client, ByteSequence root, EtcdUtils.CheckoutRequest<?, ?>[] checkoutRequests, EtcdUtils.WatchRequest<?, ?, ?>[] watchRequests) {
+		this.client = client;
+		this.root = root;
 		this.checkoutRequests = checkoutRequests;
 		this.watchRequests = watchRequests;
 	}
@@ -46,21 +51,24 @@ public abstract class AbstractEtcdStateManager<S, T> {
 
 	private final PriorityQueue<PromiseEntry> promisesQueue = new PriorityQueue<>();
 
-	private CompletableFuture<Void> doCheckout(long revision) {
+	@Override
+	public void start() throws Exception {
+		doCheckout().get();
+		doWatch();
+	}
+
+	@Override
+	public void stop() {
+		if (this.watcher != null) {
+			this.watcher.close();
+		}
+	}
+
+	private CompletableFuture<Void> doCheckout() {
 		return EtcdUtils.checkout(client, revision, checkoutRequests,
 			(header, objects) -> {
-				stateLock.writeLock().lock();
-				try {
-					this.revision = header.getRevision();
-					this.state = finishState(header, objects);
-				} finally {
-					stateLock.writeLock().unlock();
-				}
-
-				synchronized (promisesQueue) {
-					processQueue(header.getRevision());
-				}
-
+				this.revision = header.getRevision();
+				this.state = finishState(header, objects);
 				return null;
 			}
 		);
@@ -77,14 +85,14 @@ public abstract class AbstractEtcdStateManager<S, T> {
 
 	protected abstract S finishState(Response.Header header, Object[] checkoutObjects) throws MalformedEtcdDataException;
 
-	private void doWatch(long revision) {
+	private void doWatch() {
 		this.watcher = EtcdUtils.watch(client, revision + 1L, watchRequests,
-			new EtcdListener<Object[]>() {
+			new EtcdListener<>() {
 				@Override
 				public void onNext(long revision, Object[] operation) throws MalformedEtcdDataException {
 					stateLock.writeLock().lock();
 					try {
-						applyStateTransitions(operation);
+						applyStateTransitions(state, operation);
 						AbstractEtcdStateManager.this.revision = revision;
 					} finally {
 						stateLock.writeLock().unlock();
@@ -106,7 +114,7 @@ public abstract class AbstractEtcdStateManager<S, T> {
 			});
 	}
 
-	protected abstract void applyStateTransitions(Object[] operation) throws MalformedEtcdDataException;
+	protected abstract void applyStateTransitions(S state, Object[] operation) throws MalformedEtcdDataException;
 
 	public CompletableFuture<Response.Header> push(T transaction) {
 		CompletableFuture<Response.Header> result = new CompletableFuture<>();
@@ -135,7 +143,7 @@ public abstract class AbstractEtcdStateManager<S, T> {
 
 	protected abstract void doPush(TxnOps txn, T transaction);
 
-	void processQueue(long currentRevision) {
+	private void processQueue(long currentRevision) {
 		synchronized (promisesQueue) {
 			while (true) {
 				PromiseEntry peeked = promisesQueue.peek();
@@ -144,6 +152,18 @@ public abstract class AbstractEtcdStateManager<S, T> {
 				peeked.future.complete(peeked.header);
 			}
 		}
+	}
+
+	public void delete() throws ExecutionException, InterruptedException {
+		client.getKVClient()
+			.delete(root,
+				DeleteOption.builder()
+					.isPrefix(true)
+					.build())
+			.get();
+		client.getKVClient()
+			.put(root, ByteSequence.EMPTY)
+			.get();
 	}
 
 }
