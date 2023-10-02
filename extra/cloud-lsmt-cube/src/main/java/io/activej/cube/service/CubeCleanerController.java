@@ -80,7 +80,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseCleanupRepository = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	CubeCleanerController(
+	private CubeCleanerController(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
 		AggregationChunkStorage<C> chunksStorage
 	) {

@@ -50,7 +50,7 @@ import static org.junit.Assert.assertEquals;
 public final class CubeLogProcessorControllerTest extends CubeTestBase {
 	private IMultilog<LogItem> multilog;
 	private FileSystem logsFileSystem;
-	private CubeLogProcessorController<Long, Long> controller;
+	private CubeLogProcessorController<Long> controller;
 
 	@Before
 	public void setUp() throws Exception {
@@ -89,6 +89,9 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		LogState<CubeDiff, CubeState> logState = LogState.create(CubeState.create(structure));
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
+		await(stateManager.start());
+
+		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = ServiceStateManager.ofOTStateManager(stateManager);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
@@ -107,11 +110,9 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		controller = CubeLogProcessorController.create(
 			reactor,
 			logState,
-			stateManager,
+			serviceStateManager,
 			aggregationChunkStorage,
 			List.of(logProcessor));
-
-		await(stateManager.checkout());
 	}
 
 	@Test

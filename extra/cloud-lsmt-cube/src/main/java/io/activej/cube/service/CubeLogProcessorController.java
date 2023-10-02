@@ -16,7 +16,6 @@
 
 package io.activej.cube.service;
 
-import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.CubeState;
@@ -31,7 +30,6 @@ import io.activej.etl.LogState;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
-import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
@@ -53,7 +51,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeLogProcessorController<K, C> extends AbstractReactive
+public final class CubeLogProcessorController<C> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
@@ -64,8 +62,8 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 
 	private final List<LogProcessor<?, CubeDiff>> logProcessors;
 	private final IAggregationChunkStorage<C> chunkStorage;
-	private final OTStateManager<K, LogDiff<CubeDiff>> stateManager;
-	private AsyncPredicate<K> predicate;
+	private final ServiceStateManager<LogDiff<CubeDiff>> stateManager;
+	private AsyncSupplier<Boolean> predicate;
 
 	private boolean parallelRunner;
 
@@ -80,7 +78,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 
 	private CubeLogProcessorController(
 		Reactor reactor, List<LogProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage,
-		OTStateManager<K, LogDiff<CubeDiff>> stateManager
+		ServiceStateManager<LogDiff<CubeDiff>> stateManager
 	) {
 		super(reactor);
 		this.logProcessors = logProcessors;
@@ -88,22 +86,22 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		this.stateManager = stateManager;
 	}
 
-	public static <K, C> CubeLogProcessorController<K, C> create(
-		Reactor reactor, LogState<CubeDiff, CubeState> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
+	public static <C> CubeLogProcessorController<C> create(
+		Reactor reactor, LogState<CubeDiff, CubeState> state, ServiceStateManager<LogDiff<CubeDiff>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
 		return builder(reactor, state, stateManager, chunkStorage, logProcessors).build();
 	}
 
-	public static <K, C> CubeLogProcessorController<K, C>.Builder builder(
-		Reactor reactor, LogState<CubeDiff, CubeState> state, OTStateManager<K, LogDiff<CubeDiff>> stateManager,
+	public static <C> CubeLogProcessorController<C>.Builder builder(
+		Reactor reactor, LogState<CubeDiff, CubeState> state, ServiceStateManager<LogDiff<CubeDiff>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
 		CubeState cubeState = state.getDataState();
 		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeState);
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<K, C>> {
+	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<C>> {
 		private final CubeState cubeState;
 
 		private Builder(CubeState cubeState) {
@@ -123,8 +121,8 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		}
 
 		@Override
-		protected CubeLogProcessorController<K, C> doBuild() {
-			predicate = AsyncPredicate.of(commitId -> {
+		protected CubeLogProcessorController<C> doBuild() {
+			predicate = AsyncSupplier.of(() -> {
 				if (cubeState.containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
 					logger.info("Cube contains excessive number of overlapping chunks");
 					return false;
@@ -155,13 +153,12 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 		return Promise.complete()
 			.then(stateManager::sync)
 			.mapException(e -> new CubeException("Failed to synchronize state prior to log processing", e))
-			.map($ -> stateManager.getCommitId())
-			.then(commitId -> predicate.test(commitId)
-				.mapException(e -> new CubeException("Failed to test commit '" + commitId + "' with predicate", e)))
+			.then(() -> predicate.get()
+				.mapException(e -> new CubeException("Failed to test cube with predicate", e)))
 			.then(ok -> {
 				if (!ok) return Promise.of(false);
 
-				logger.info("Pull to commit: {}, start log processing", stateManager.getCommitId());
+				logger.info("Start log processing");
 
 				List<AsyncSupplier<LogDiff<CubeDiff>>> tasks = logProcessors.stream()
 					.map(logProcessor -> (AsyncSupplier<LogDiff<CubeDiff>>) logProcessor::processLog)
@@ -177,8 +174,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 					.whenResult(this::cubeDiffJmx)
 					.then(diffs -> chunkStorage.finish(addedChunks(diffs))
 						.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-						.whenResult(() -> stateManager.addAll(diffs))
-						.then(() -> stateManager.sync()
+						.then(() -> stateManager.push(diffs)
 							.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
 						.whenException(e -> stateManager.reset())
 						.map($2 -> true));
@@ -244,7 +240,6 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	public void setParallelRunner(boolean parallelRunner) {
 		this.parallelRunner = parallelRunner;
 	}
-
 
 	@JmxAttribute
 	public int getMaxOverlappingChunksToProcessLogs() {

@@ -31,7 +31,6 @@ import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
-import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
@@ -58,7 +57,7 @@ import static io.activej.cube.aggregation.util.Utils.collectChunkIds;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<K, D, C> extends AbstractReactive
+public final class CubeConsolidationController<D, C> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
@@ -80,7 +79,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final CubeConsolidator cubeConsolidator;
-	private final OTStateManager<K, D> stateManager;
+	private final ServiceStateManager<D> stateManager;
 	private final IAggregationChunkStorage<C> aggregationChunkStorage;
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -105,7 +104,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private boolean cleaning;
 
 	private CubeConsolidationController(
-		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, OTStateManager<K, D> stateManager,
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, ServiceStateManager<D> stateManager,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
 		super(reactor);
@@ -115,21 +114,21 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
-	public static <K, D, C> CubeConsolidationController<K, D, C> create(
-		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, OTStateManager<K, D> stateManager,
+	public static <D, C> CubeConsolidationController<D, C> create(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, ServiceStateManager<D> stateManager,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
 		return builder(reactor, cubeDiffScheme, cubeConsolidator, stateManager, aggregationChunkStorage).build();
 	}
 
-	public static <K, D, C> CubeConsolidationController<K, D, C>.Builder builder(
-		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, OTStateManager<K, D> stateManager,
+	public static <D, C> CubeConsolidationController<D, C>.Builder builder(
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, ServiceStateManager<D> stateManager,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
 		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cubeConsolidator, stateManager, aggregationChunkStorage).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<K, D, C>> {
+	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<D, C>> {
 		private Builder() {}
 
 		public Builder withLockerStrategy(Supplier<LockerStrategy> strategy) {
@@ -145,7 +144,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		}
 
 		@Override
-		protected CubeConsolidationController<K, D, C> doBuild() {
+		protected CubeConsolidationController<D, C> doBuild() {
 			return CubeConsolidationController.this;
 		}
 	}
@@ -187,8 +186,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 				if (cubeDiff.isEmpty()) return Promise.complete();
 				return aggregationChunkStorage.finish(addedChunks(cubeDiff))
 					.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-					.whenResult(() -> stateManager.add(cubeDiffScheme.wrap(cubeDiff)))
-					.then(() -> stateManager.sync()
+					.then(() -> stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
 						.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
 					.whenException(e -> stateManager.reset())
 					.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
@@ -258,8 +256,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 					.collect(entriesToLinkedHashMap(chunksToRemove -> AggregationDiff.of(Set.of(), chunksToRemove)));
 				CubeDiff cubeDiff = CubeDiff.of(diffMap);
 				cubeDiffJmx(cubeDiff);
-				stateManager.add(cubeDiffScheme.wrap(cubeDiff));
-				return stateManager.sync()
+				return stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
 					.mapException(e -> new CubeException("Failed to synchronize state after cleaning up irrelevant chunks, resetting", e))
 					.whenException(e -> stateManager.reset());
 			})

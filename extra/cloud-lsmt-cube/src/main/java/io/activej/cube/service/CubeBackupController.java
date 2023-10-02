@@ -65,7 +65,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseBackupDb = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseBackupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	CubeBackupController(
+	private CubeBackupController(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
 		AggregationChunkStorage<C> storage
 	) {

@@ -12,6 +12,7 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.service.CubeConsolidationController;
+import io.activej.cube.service.ServiceStateManager;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
@@ -163,14 +164,16 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.build();
 		CubeState cubeState = CubeState.create(cubeStructure);
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(cubeState));
-		await(stateManager.checkout());
+		await(stateManager.start());
+
+		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = ServiceStateManager.ofOTStateManager(stateManager);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
 		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
 		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
 
-		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =
-			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, stateManager, chunkStorage);
+		CubeConsolidationController<LogDiff<CubeDiff>, Long> consolidationController =
+			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, serviceStateManager, chunkStorage);
 
 		Map<String, Integer> chunksBefore = getChunksByAggregation(cubeConsolidator);
 		await(consolidationController.cleanupIrrelevantChunks());
