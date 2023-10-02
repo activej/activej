@@ -19,7 +19,7 @@ package io.activej.cube.service;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.AggregationExecutor;
-import io.activej.cube.AggregationOTState;
+import io.activej.cube.AggregationState;
 import io.activej.cube.Cube;
 import io.activej.cube.Cube.ConsolidationStrategy;
 import io.activej.cube.aggregation.*;
@@ -204,7 +204,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	) {
 		IChunkLocker<Object> locker = ensureLocker(aggregationId);
 		AggregationExecutor aggregationExecutor = cube.getExecutor().getAggregationExecutors().get(aggregationId);
-		AggregationOTState aggregationState = cube.getState().getAggregationStates().get(aggregationId);
+		AggregationState aggregationState = cube.getState().getAggregationStates().get(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 			() -> locker.getLockedChunks()

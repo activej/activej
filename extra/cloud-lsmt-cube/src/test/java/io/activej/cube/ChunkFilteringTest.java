@@ -15,7 +15,7 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 77, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 22);
 
-		assertTrue(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertTrue(AggregationState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 
 	@Test
@@ -26,7 +26,7 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 77, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 22);
 
-		assertFalse(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertFalse(AggregationState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 
 	@Test
@@ -37,7 +37,7 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 77, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 22);
 
-		assertFalse(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertFalse(AggregationState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 
 	@Test
@@ -48,6 +48,6 @@ public class ChunkFilteringTest {
 		PrimaryKey minChunkKey = PrimaryKey.ofArray(3, 5, 80, 90);
 		PrimaryKey maxChunkKey = PrimaryKey.ofArray(3, 5, 80, 90);
 
-		assertTrue(AggregationOTState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
+		assertTrue(AggregationState.chunkMightContainQueryValues(minQueryKey, maxQueryKey, minChunkKey, maxChunkKey));
 	}
 }

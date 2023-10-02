@@ -83,8 +83,8 @@ public final class TestUtils {
 		}
 	}
 
-	public static AggregationOTState createAggregationOtState(AggregationStructure aggregationStructure) {
-		return new AggregationOTState(aggregationStructure);
+	public static AggregationState createAggregationState(AggregationStructure aggregationStructure) {
+		return new AggregationState(aggregationStructure);
 	}
 
 	public static AggregationStructureBuilder aggregationStructureBuilder(ChunkIdJsonCodec<?> chunkIdCodec) {

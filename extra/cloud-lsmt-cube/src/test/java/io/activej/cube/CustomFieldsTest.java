@@ -107,7 +107,7 @@ public class CustomFieldsTest {
 			.withMeasure("uniqueUserIds", union(ofLong()))
 			.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
 			.build();
-		AggregationOTState state = createAggregationOtState(structure);
+		AggregationState state = createAggregationState(structure);
 		AggregationExecutor aggregation = aggregationExecutorBuilder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
 			.build();

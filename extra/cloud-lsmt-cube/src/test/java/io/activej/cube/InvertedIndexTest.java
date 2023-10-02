@@ -106,7 +106,7 @@ public class InvertedIndexTest {
 			.withKey("word", ofString())
 			.withMeasure("documents", union(ofInt()))
 			.build();
-		AggregationOTState state = createAggregationOtState(structure);
+		AggregationState state = createAggregationState(structure);
 
 		AggregationExecutor aggregation = aggregationExecutorBuilder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 			.withTemporarySortDir(temporaryFolder.newFolder().toPath())

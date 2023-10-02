@@ -186,7 +186,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		return cube.getState().getAggregationStates().entrySet().stream()
 			.collect(entriesToLinkedHashMap(
 				Function.identity(),
-				AggregationOTState::getChunksSize));
+				AggregationState::getChunksSize));
 	}
 
 	private CubeStructure.Builder builderOfBasicCubeStructure() {

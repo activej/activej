@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.cube.AggregationOTState.ConsolidationDebugInfo;
+import io.activej.cube.AggregationState.ConsolidationDebugInfo;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.fieldtype.FieldType;
@@ -21,48 +21,48 @@ public final class CubeOTState implements OTState<CubeDiff> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeOTState.class);
 
 	private final CubeStructure cubeStructure;
-	private final Map<String, AggregationOTState> aggregationOTStates;
+	private final Map<String, AggregationState> aggregationStates;
 
-	private CubeOTState(CubeStructure cubeStructure, Map<String, AggregationOTState> aggregationOTStates) {
+	private CubeOTState(CubeStructure cubeStructure, Map<String, AggregationState> aggregationStates) {
 		this.cubeStructure = cubeStructure;
-		this.aggregationOTStates = aggregationOTStates;
+		this.aggregationStates = aggregationStates;
 	}
 
 	public static CubeOTState create(CubeStructure cubeStructure) {
-		Map<String, AggregationOTState> aggregationOTStates = new HashMap<>();
+		Map<String, AggregationState> aggregationStates = new HashMap<>();
 		for (Map.Entry<String, AggregationStructure> entry : cubeStructure.getAggregationStructures().entrySet()) {
-			aggregationOTStates.put(entry.getKey(), new AggregationOTState(entry.getValue()));
+			aggregationStates.put(entry.getKey(), new AggregationState(entry.getValue()));
 		}
-		return new CubeOTState(cubeStructure, aggregationOTStates);
+		return new CubeOTState(cubeStructure, aggregationStates);
 	}
 
 	@Override
 	public void init() {
-		for (AggregationOTState aggregationOTState : aggregationOTStates.values()) {
-			aggregationOTState.init();
+		for (AggregationState aggregationState : aggregationStates.values()) {
+			aggregationState.init();
 		}
 	}
 
 	@Override
 	public void apply(CubeDiff op) {
 		for (Map.Entry<String, AggregationDiff> entry : op.entrySet()) {
-			aggregationOTStates.get(entry.getKey()).apply(entry.getValue());
+			aggregationStates.get(entry.getKey()).apply(entry.getValue());
 		}
 	}
 
-	public Map<String, AggregationOTState> getAggregationStates() {
-		return Collections.unmodifiableMap(aggregationOTStates);
+	public Map<String, AggregationState> getAggregationStates() {
+		return Collections.unmodifiableMap(aggregationStates);
 	}
 
-	public AggregationOTState getAggregationState(String id) {
-		return aggregationOTStates.get(id);
+	public AggregationState getAggregationState(String id) {
+		return aggregationStates.get(id);
 	}
 
 	public Map<String, Set<AggregationChunk>> getIrrelevantChunks() {
 		Map<String, Set<AggregationChunk>> irrelevantChunks = new HashMap<>();
-		for (Map.Entry<String, AggregationOTState> entry : aggregationOTStates.entrySet()) {
+		for (Map.Entry<String, AggregationState> entry : aggregationStates.entrySet()) {
 			String aggregationId = entry.getKey();
-			AggregationOTState state = entry.getValue();
+			AggregationState state = entry.getValue();
 			AggregationStructure structure = cubeStructure.getAggregationStructure(aggregationId);
 			AggregationPredicate containerPredicate = cubeStructure.getAggregationStructure(aggregationId).getPredicate();
 			List<String> keys = structure.getKeys();
@@ -94,7 +94,7 @@ public final class CubeOTState implements OTState<CubeDiff> {
 	public boolean containsExcessiveNumberOfOverlappingChunks(int maxOverlappingChunksToProcessLogs) {
 		boolean excessive = false;
 
-		for (Map.Entry<String, AggregationOTState> entry : aggregationOTStates.entrySet()) {
+		for (Map.Entry<String, AggregationState> entry : aggregationStates.entrySet()) {
 			int numberOfOverlappingChunks = entry.getValue().getNumberOfOverlappingChunks();
 			if (numberOfOverlappingChunks > maxOverlappingChunksToProcessLogs) {
 				logger.info("Aggregation {} contains {} overlapping chunks", entry.getKey(), numberOfOverlappingChunks);
@@ -107,7 +107,7 @@ public final class CubeOTState implements OTState<CubeDiff> {
 
 	public Set<Object> getAllChunks() {
 		Set<Object> chunks = new HashSet<>();
-		for (AggregationOTState state : aggregationOTStates.values()) {
+		for (AggregationState state : aggregationStates.values()) {
 			chunks.addAll(state.getChunks().keySet());
 		}
 		return chunks;
@@ -115,7 +115,7 @@ public final class CubeOTState implements OTState<CubeDiff> {
 
 	public Map<String, List<ConsolidationDebugInfo>> getConsolidationDebugInfo() {
 		Map<String, List<ConsolidationDebugInfo>> m = new HashMap<>();
-		for (Map.Entry<String, AggregationOTState> entry : aggregationOTStates.entrySet()) {
+		for (Map.Entry<String, AggregationState> entry : aggregationStates.entrySet()) {
 			m.put(entry.getKey(), entry.getValue().getConsolidationDebugInfo());
 		}
 		return m;
@@ -131,7 +131,7 @@ public final class CubeOTState implements OTState<CubeDiff> {
 		record AggregationSortRecord(
 			String key,
 			AggregationStructure structure,
-			AggregationOTState state,
+			AggregationState state,
 			double score
 		) implements Comparable<AggregationSortRecord> {
 
@@ -152,7 +152,7 @@ public final class CubeOTState implements OTState<CubeDiff> {
 		List<AggregationSortRecord> containerWithScores = new ArrayList<>();
 		for (String aggregationId : compatibleAggregations) {
 			AggregationStructure structure = cubeStructure.getAggregationStructure(aggregationId);
-			AggregationOTState state = aggregationOTStates.get(aggregationId);
+			AggregationState state = aggregationStates.get(aggregationId);
 			double score = state.estimateCost(storedMeasures, where, structure);
 			containerWithScores.add(new AggregationSortRecord(aggregationId, structure, state, score));
 		}

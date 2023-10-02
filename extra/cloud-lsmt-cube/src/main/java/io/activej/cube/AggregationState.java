@@ -44,8 +44,8 @@ import static java.util.Collections.unmodifiableMap;
  * Represents aggregation metadata. Chunks are stored in an index (represented by an array of {@link RangeTree}) for efficient search.
  * Provides methods for managing index, querying for chunks by key, searching for chunks that are available for consolidation.
  */
-public final class AggregationOTState implements OTState<AggregationDiff> {
-	private static final Logger logger = LoggerFactory.getLogger(AggregationOTState.class);
+public final class AggregationState implements OTState<AggregationDiff> {
+	private static final Logger logger = LoggerFactory.getLogger(AggregationState.class);
 
 	private final AggregationStructure structure;
 	private final Map<Object, AggregationChunk> chunks = new LinkedHashMap<>();
@@ -53,7 +53,7 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 
 	private static final Comparator<AggregationChunk> MIN_KEY_ASCENDING_COMPARATOR = Comparator.comparing(AggregationChunk::getMinPrimaryKey);
 
-	AggregationOTState(AggregationStructure structure) {
+	AggregationState(AggregationStructure structure) {
 		this.structure = structure;
 		initIndex();
 	}
@@ -506,6 +506,6 @@ public final class AggregationOTState implements OTState<AggregationDiff> {
 
 	@Override
 	public String toString() {
-		return "AggregationOTState{chunks = " + getChunksSize() + "}";
+		return "AggregationState{chunks = " + getChunksSize() + "}";
 	}
 }

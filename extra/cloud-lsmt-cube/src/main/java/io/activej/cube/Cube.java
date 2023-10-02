@@ -110,11 +110,11 @@ public final class Cube extends AbstractReactive
 		List<AsyncRunnable> runnables = new ArrayList<>();
 
 		Map<String, AggregationExecutor> aggregationExecutors = executor.getAggregationExecutors();
-		Map<String, AggregationOTState> aggregationStates = state.getAggregationStates();
+		Map<String, AggregationState> aggregationStates = state.getAggregationStates();
 
 		for (String aggregationId : structure.getAggregationIds()) {
 			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
-			AggregationOTState aggregationState = aggregationStates.get(aggregationId);
+			AggregationState aggregationState = aggregationStates.get(aggregationId);
 
 			runnables.add(() -> {
 				int maxChunksToConsolidate = aggregationExecutor.getMaxChunksToConsolidate();
@@ -152,7 +152,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public interface ConsolidationStrategy {
-		List<AggregationChunk> getChunksForConsolidation(String id, AggregationOTState state, int maxChunksToConsolidate, int chunkSize);
+		List<AggregationChunk> getChunksForConsolidation(String id, AggregationState state, int maxChunksToConsolidate, int chunkSize);
 
 		static ConsolidationStrategy minKey() {
 			return minKey(Set.of());

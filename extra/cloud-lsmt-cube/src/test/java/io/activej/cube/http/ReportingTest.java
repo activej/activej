@@ -852,17 +852,17 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testDataCorrectlyLoadedIntoAggregations() {
-		AggregationOTState daily = cube.getState().getAggregationState("daily");
+		AggregationState daily = cube.getState().getAggregationState("daily");
 		assert daily != null;
 		int dailyAggregationItemsCount = getAggregationItemsCount(daily);
 		assertEquals(6, dailyAggregationItemsCount);
 
-		AggregationOTState advertisers = cube.getState().getAggregationState("advertisers");
+		AggregationState advertisers = cube.getState().getAggregationState("advertisers");
 		assert advertisers != null;
 		int advertisersAggregationItemsCount = getAggregationItemsCount(advertisers);
 		assertEquals(5, advertisersAggregationItemsCount);
 
-		AggregationOTState affiliates = cube.getState().getAggregationState("affiliates");
+		AggregationState affiliates = cube.getState().getAggregationState("affiliates");
 		assert affiliates != null;
 		int affiliatesAggregationItemsCount = getAggregationItemsCount(affiliates);
 		assertEquals(6, affiliatesAggregationItemsCount);
@@ -993,7 +993,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(27, dailyErrors);
 	}
 
-	private static int getAggregationItemsCount(AggregationOTState state) {
+	private static int getAggregationItemsCount(AggregationState state) {
 		int count = 0;
 		for (Map.Entry<Object, AggregationChunk> chunk : state.getChunks().entrySet()) {
 			count += chunk.getValue().getCount();

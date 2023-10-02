@@ -24,7 +24,7 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testRangeExpansion() {
-		AggregationOTState state = new AggregationOTState(STRUCTURE);
+		AggregationState state = new AggregationState(STRUCTURE);
 
 		Set<AggregationChunk> chunks = new HashSet<>();
 		chunks.add(createTestChunk(1, 1, 2));
@@ -56,7 +56,7 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testMinKeyStrategy() {
-		AggregationOTState state = new AggregationOTState(STRUCTURE);
+		AggregationState state = new AggregationState(STRUCTURE);
 
 		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(1, 1, 2));
@@ -79,7 +79,7 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testSizeFixStrategy() {
-		AggregationOTState state = new AggregationOTState(STRUCTURE);
+		AggregationState state = new AggregationState(STRUCTURE);
 
 		int optimalChunkSize = 5;
 		int maxChunks = 5;
@@ -107,7 +107,7 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testGroupingByPartition() {
-		AggregationOTState state = new AggregationOTState(STRUCTURE);
+		AggregationState state = new AggregationState(STRUCTURE);
 
 		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(2, 1, 1, 1, 1, 1, 5));

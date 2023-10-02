@@ -1,7 +1,7 @@
 package io.activej.cube.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.cube.AggregationOTState;
+import io.activej.cube.AggregationState;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.util.PartitionPredicate;
 import io.activej.datastream.consumer.StreamConsumer;
@@ -25,7 +25,7 @@ import java.util.Set;
 
 import static io.activej.common.Utils.last;
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
-import static io.activej.cube.TestUtils.createAggregationOtState;
+import static io.activej.cube.TestUtils.createAggregationState;
 import static io.activej.cube.aggregation.StreamUtils.assertClosedWithError;
 import static io.activej.cube.aggregation.StreamUtils.assertEndOfStream;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
@@ -59,7 +59,7 @@ public final class AggregationChunkerTest {
 		.withMeasure("value", sum(ofInt()))
 		.withMeasure("timestamp", sum(ofLong()))
 		.build();
-	private final AggregationOTState state = createAggregationOtState(structure);
+	private final AggregationState state = createAggregationState(structure);
 
 	@Test
 	public void test() {
