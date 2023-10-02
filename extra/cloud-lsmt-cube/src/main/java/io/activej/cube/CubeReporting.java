@@ -16,29 +16,18 @@
 
 package io.activej.cube;
 
-import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.CubeState.CompatibleAggregations;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
-import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
-import io.activej.cube.exception.CubeException;
 import io.activej.cube.exception.QueryException;
-import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSupplier;
-import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
-import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
-import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
-import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
@@ -46,9 +35,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Also provides functionality for managing aggregations.
  */
 public final class CubeReporting extends AbstractReactive
-	implements ICubeReporting, ReactiveJmxBeanWithStats {
-
-	private static final Logger logger = LoggerFactory.getLogger(CubeReporting.class);
+	implements ICubeReporting {
 
 	private final CubeState state;
 	private final CubeStructure structure;
@@ -102,42 +89,6 @@ public final class CubeReporting extends AbstractReactive
 		return executor.query(compatibleAggregations, preprocessedQuery);
 	}
 
-	public Promise<CubeDiff> consolidate(ConsolidationStrategy strategy) {
-		checkInReactorThread(this);
-		logger.info("Launching consolidation");
-
-		Map<String, AggregationDiff> map = new HashMap<>();
-		List<AsyncRunnable> runnables = new ArrayList<>();
-
-		Map<String, AggregationExecutor> aggregationExecutors = executor.getAggregationExecutors();
-		Map<String, AggregationState> aggregationStates = state.getAggregationStates();
-
-		for (String aggregationId : structure.getAggregationIds()) {
-			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
-			AggregationState aggregationState = aggregationStates.get(aggregationId);
-
-			runnables.add(() -> {
-				int maxChunksToConsolidate = aggregationExecutor.getMaxChunksToConsolidate();
-				int chunkSize = aggregationExecutor.getChunkSize();
-				List<AggregationChunk> chunks = strategy.getChunksForConsolidation(
-					aggregationId,
-					aggregationState,
-					maxChunksToConsolidate,
-					chunkSize
-				);
-				return Promise.complete()
-					.then(() -> chunks.isEmpty() ?
-						Promise.of(AggregationDiff.empty()) :
-						aggregationExecutor.consolidate(chunks))
-					.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
-					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
-					.toVoid();
-			});
-		}
-
-		return Promises.sequence(runnables).map($ -> CubeDiff.of(map));
-	}
-
 	@Override
 	public CubeStructure getStructure() {
 		return structure;
@@ -150,42 +101,4 @@ public final class CubeReporting extends AbstractReactive
 	public CubeExecutor getExecutor() {
 		return executor;
 	}
-
-	public interface ConsolidationStrategy {
-		List<AggregationChunk> getChunksForConsolidation(String id, AggregationState state, int maxChunksToConsolidate, int chunkSize);
-
-		static ConsolidationStrategy minKey() {
-			return minKey(Set.of());
-		}
-
-		static ConsolidationStrategy minKey(Set<Object> lockedChunkIds) {
-			return (id, state, maxChunksToConsolidate, chunkSize) ->
-				state.findChunksForConsolidationMinKey(
-					maxChunksToConsolidate,
-					chunkSize,
-					lockedChunkIds
-				);
-		}
-
-		static ConsolidationStrategy hotSegment() {
-			return hotSegment(Set.of());
-		}
-
-		static ConsolidationStrategy hotSegment(Set<Object> lockedChunkIds) {
-			return (id, state, maxChunksToConsolidate, chunkSize) ->
-				state.findChunksForConsolidationHotSegment(
-					maxChunksToConsolidate,
-					lockedChunkIds
-				);
-		}
-	}
-
-	@JmxOperation
-	public Map<String, String> getIrrelevantChunksIds() {
-		return state.getIrrelevantChunks().entrySet().stream()
-			.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
-				.map(chunk -> String.valueOf(chunk.getChunkId()))
-				.collect(Collectors.joining(", "))));
-	}
-
 }

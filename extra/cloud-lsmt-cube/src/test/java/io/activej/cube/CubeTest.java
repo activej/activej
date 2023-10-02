@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
+import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
@@ -336,6 +337,7 @@ public final class CubeTest {
 	@Test
 	public void testConsolidate() {
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 4, 0, 30, 60));
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getState(), cubeReporting.getStructure(), cubeReporting.getExecutor());
 
 		await(
 			consume(cubeReporting, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
@@ -344,10 +346,10 @@ public final class CubeTest {
 			consume(cubeReporting, chunkStorage, new DataItem2(1, 4, 10, 20), new DataItem2(1, 5, 100, 200))
 		);
 
-		CubeDiff diff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
+		CubeDiff diff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(diff.isEmpty());
 
-		diff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
+		diff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(diff.isEmpty());
 
 		List<DataItemResult> list = await(cubeReporting.queryRawStream(

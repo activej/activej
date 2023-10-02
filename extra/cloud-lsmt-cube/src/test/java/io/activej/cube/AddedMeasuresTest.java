@@ -39,6 +39,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.common.Utils.first;
+import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
@@ -155,8 +156,8 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cubeState.apply(diff);
 
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
-		CubeDiff cubeDiff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
+		CubeDiff cubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
 

@@ -163,15 +163,15 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		await(stateManager.checkout());
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
 
 		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =
-			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeReporting, stateManager, chunkStorage);
+			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, stateManager, chunkStorage);
 
-		Map<String, Integer> chunksBefore = getChunksByAggregation(cubeReporting);
+		Map<String, Integer> chunksBefore = getChunksByAggregation(cubeConsolidator);
 		await(consolidationController.cleanupIrrelevantChunks());
 
-		Map<String, Integer> chunksAfter = getChunksByAggregation(cubeReporting);
+		Map<String, Integer> chunksAfter = getChunksByAggregation(cubeConsolidator);
 
 		for (Map.Entry<String, Integer> afterEntry : chunksAfter.entrySet()) {
 			String key = afterEntry.getKey();
@@ -182,7 +182,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		}
 	}
 
-	private static Map<String, Integer> getChunksByAggregation(CubeReporting cubeReporting) {
+	private static Map<String, Integer> getChunksByAggregation(CubeConsolidator cubeReporting) {
 		return cubeReporting.getState().getAggregationStates().entrySet().stream()
 			.collect(entriesToLinkedHashMap(
 				Function.identity(),

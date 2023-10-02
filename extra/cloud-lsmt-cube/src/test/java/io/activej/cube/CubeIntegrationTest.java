@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
@@ -82,7 +83,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		CubeState cubeState = CubeState.create(cubeStructure);
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
-		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeState, cubeStructure, cubeExecutor);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
@@ -136,6 +137,8 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		await(aggregationChunkStorage.backup("backup1", (Set) cubeState.getAllChunks()));
 
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+
 		List<LogItem> logItems = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 			.toList());
@@ -150,7 +153,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		assertEquals(map, logItems.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Consolidate revision 4 as revision 5:
-		CubeDiff consolidatingCubeDiff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
+		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
 		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));
