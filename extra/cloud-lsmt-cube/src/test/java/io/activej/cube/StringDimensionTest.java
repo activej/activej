@@ -75,7 +75,7 @@ public class StringDimensionTest {
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
 
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
 		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 				new DataItemString1("str1", 2, 10, 20),
@@ -94,7 +94,7 @@ public class StringDimensionTest {
 		cubeState.apply(consumer2Result);
 
 		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();
-		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
+		await(cubeReporting.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", "str2"), eq("key2", 3)),
 				DataItemResultString.class, DefiningClassLoader.create(classLoader))
 			.streamTo(consumerToList));

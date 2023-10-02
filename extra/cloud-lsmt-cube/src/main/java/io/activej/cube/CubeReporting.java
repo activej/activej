@@ -45,24 +45,24 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Represents an OLAP cube. Provides methods for loading and querying data.
  * Also provides functionality for managing aggregations.
  */
-public final class Cube extends AbstractReactive
-	implements ICube, ReactiveJmxBeanWithStats {
+public final class CubeReporting extends AbstractReactive
+	implements ICubeReporting, ReactiveJmxBeanWithStats {
 
-	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
+	private static final Logger logger = LoggerFactory.getLogger(CubeReporting.class);
 
 	private final CubeState state;
 	private final CubeStructure structure;
 	private final CubeExecutor executor;
 
-	private Cube(CubeState state, CubeStructure structure, CubeExecutor executor) {
+	private CubeReporting(CubeState state, CubeStructure structure, CubeExecutor executor) {
 		super(executor.getReactor());
 		this.state = state;
 		this.structure = structure;
 		this.executor = executor;
 	}
 
-	public static Cube create(CubeState state, CubeStructure structure, CubeExecutor executor) {
-		return new Cube(state, structure, executor);
+	public static CubeReporting create(CubeState state, CubeStructure structure, CubeExecutor executor) {
+		return new CubeReporting(state, structure, executor);
 	}
 
 	/**

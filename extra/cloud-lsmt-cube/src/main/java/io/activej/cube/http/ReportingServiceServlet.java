@@ -23,7 +23,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.CubeStructure;
-import io.activej.cube.ICube;
+import io.activej.cube.ICubeReporting;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.QueryException;
 import io.activej.http.*;
@@ -52,25 +52,25 @@ import static java.util.stream.Collectors.toList;
 public final class ReportingServiceServlet extends ServletWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
-	private final ICube cube;
+	private final ICubeReporting cubeReporting;
 	private JsonCodec<QueryResult> queryResultCodec;
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 	private JsonCodecFactory factory = JsonCodecFactory.defaultInstance();
 
-	private ReportingServiceServlet(Reactor reactor, ICube cube) {
+	private ReportingServiceServlet(Reactor reactor, ICubeReporting cubeReporting) {
 		super(reactor);
-		this.cube = cube;
+		this.cubeReporting = cubeReporting;
 	}
 
-	public static ReportingServiceServlet create(Reactor reactor, ICube cube) {
-		return builder(reactor, cube).build();
+	public static ReportingServiceServlet create(Reactor reactor, ICubeReporting cubeReporting) {
+		return builder(reactor, cubeReporting).build();
 	}
 
-	public static RoutingServlet createRootServlet(Reactor reactor, ICube cube) {
+	public static RoutingServlet createRootServlet(Reactor reactor, ICubeReporting cubeReporting) {
 		return createRootServlet(
-			ReportingServiceServlet.create(reactor, cube));
+			ReportingServiceServlet.create(reactor, cubeReporting));
 	}
 
 	public static RoutingServlet createRootServlet(ReportingServiceServlet reportingServiceServlet) {
@@ -79,8 +79,8 @@ public final class ReportingServiceServlet extends ServletWithStats {
 			.build();
 	}
 
-	public static Builder builder(Reactor reactor, ICube cube) {
-		return new ReportingServiceServlet(reactor, cube).new Builder();
+	public static Builder builder(Reactor reactor, ICubeReporting cubeReporting) {
+		return new ReportingServiceServlet(reactor, cubeReporting).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, ReportingServiceServlet> {
@@ -106,7 +106,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
 		if (aggregationPredicateCodec == null) {
-			CubeStructure structure = cube.getStructure();
+			CubeStructure structure = cubeReporting.getStructure();
 			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
 		}
 		return aggregationPredicateCodec;
@@ -114,7 +114,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 
 	private JsonCodec<QueryResult> getQueryResultCodec() {
 		if (queryResultCodec == null) {
-			CubeStructure structure = cube.getStructure();
+			CubeStructure structure = cubeReporting.getStructure();
 			queryResultCodec = QueryResultJsonCodec.create(classLoader, factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
 		}
 		return queryResultCodec;
@@ -126,7 +126,7 @@ public final class ReportingServiceServlet extends ServletWithStats {
 		try {
 			Stopwatch totalTimeStopwatch = Stopwatch.createStarted();
 			CubeQuery cubeQuery = parseQuery(httpRequest);
-			return cube.query(cubeQuery)
+			return cubeReporting.query(cubeQuery)
 				.then(queryResult -> {
 					Stopwatch resultProcessingStopwatch = Stopwatch.createStarted();
 					ByteBuf jsonBuf = ByteBuf.wrapForReading(toJsonBytes(getQueryResultCodec(), queryResult));

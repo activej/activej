@@ -155,8 +155,8 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cubeState.apply(diff);
 
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
-		CubeDiff cubeDiff = await(cube.consolidate(Cube.ConsolidationStrategy.hotSegment()));
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
+		CubeDiff cubeDiff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
 
@@ -191,10 +191,10 @@ public class AddedMeasuresTest {
 		initialDiffs.forEach(cubeState::apply);
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		ICubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
-		QueryResult queryResult = await(cube.query(CubeQuery.builder()
+		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
 			.withMeasures(measures)
 			.build()));
 
@@ -235,10 +235,10 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cubeState.apply(diff);
 
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		ICubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
-		QueryResult queryResult = await(cube.query(CubeQuery.builder()
+		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
 			.withMeasures(measures)
 			.build()));
 

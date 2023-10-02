@@ -21,7 +21,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.CubeStructure;
-import io.activej.cube.ICube;
+import io.activej.cube.ICubeReporting;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.CubeException;
 import io.activej.http.HttpRequest;
@@ -43,8 +43,8 @@ import static io.activej.json.JsonUtils.fromJsonBytes;
 import static io.activej.json.JsonUtils.toJson;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class HttpClientCube implements ICube {
-	private static final Logger logger = LoggerFactory.getLogger(HttpClientCube.class);
+public final class HttpClientCubeReporting implements ICubeReporting {
+	private static final Logger logger = LoggerFactory.getLogger(HttpClientCubeReporting.class);
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 	private JsonCodecFactory factory = JsonCodecFactory.defaultInstance();
@@ -55,38 +55,38 @@ public final class HttpClientCube implements ICube {
 	private AggregationPredicateJsonCodec aggregationPredicateCodec;
 	private final CubeStructure structure;
 
-	private HttpClientCube(IHttpClient httpClient, String url, CubeStructure structure) {
+	private HttpClientCubeReporting(IHttpClient httpClient, String url, CubeStructure structure) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 		this.structure = structure;
 	}
 
 	public static Builder builder(IHttpClient httpClient, String cubeServletUrl, CubeStructure structure) {
-		return new HttpClientCube(httpClient, cubeServletUrl, structure).new Builder();
+		return new HttpClientCubeReporting(httpClient, cubeServletUrl, structure).new Builder();
 	}
 
 	public static Builder builder(IHttpClient httpClient, URI cubeServletUrl, CubeStructure structure) {
 		return builder(httpClient, cubeServletUrl.toString(), structure);
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, HttpClientCube> {
+	public final class Builder extends AbstractBuilder<Builder, HttpClientCubeReporting> {
 		private Builder() {}
 
 		public Builder withClassLoader(DefiningClassLoader classLoader) {
 			checkNotBuilt(this);
-			HttpClientCube.this.classLoader = classLoader;
+			HttpClientCubeReporting.this.classLoader = classLoader;
 			return this;
 		}
 
 		public Builder withJsonCodecRegistry(JsonCodecFactory factory) {
 			checkNotBuilt(this);
-			HttpClientCube.this.factory = factory;
+			HttpClientCubeReporting.this.factory = factory;
 			return this;
 		}
 
 		@Override
-		protected HttpClientCube doBuild() {
-			return HttpClientCube.this;
+		protected HttpClientCubeReporting doBuild() {
+			return HttpClientCubeReporting.this;
 		}
 	}
 

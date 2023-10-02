@@ -195,10 +195,10 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		Map<Integer, Long> map = Stream.concat(listOfRandomLogItems1.stream(), listOfRandomLogItems2.stream())
 			.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
 		ToListStreamConsumer<LogItem> queryResultConsumer2 = ToListStreamConsumer.create();
-		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
+		await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
 			queryResultConsumer2));
 
 		// Check query results
@@ -209,7 +209,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(map.isEmpty());
 
 		// Consolidate
-		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Cube.ConsolidationStrategy.hotSegment()));
+		CubeDiff consolidatingCubeDiff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
@@ -226,7 +226,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		// Query
 		ToListStreamConsumer<LogItem> queryResultConsumer3 = ToListStreamConsumer.create();
-		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
+		await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 			.streamTo(queryResultConsumer3));
 		List<LogItem> queryResult3 = queryResultConsumer3.getList();
 

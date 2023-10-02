@@ -97,9 +97,9 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
-		List<TestAdvResult> list = await(cube.queryRawStream(
+		List<TestAdvResult> list = await(cubeReporting.queryRawStream(
 				List.of("adv"),
 				List.of("advRequests"),
 				alwaysTrue(),

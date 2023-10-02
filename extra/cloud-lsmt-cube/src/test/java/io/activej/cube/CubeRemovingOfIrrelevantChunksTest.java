@@ -139,8 +139,8 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			allLogItems.addAll(listOfRandomLogItems);
 		}
 
-		Cube cube = Cube.create(cubeState, basicCubeStructure, cubeExecutor);
-		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, basicCubeStructure, cubeExecutor);
+		List<LogItem> logItems = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, CLASS_LOADER)
 			.toList());
 
@@ -163,15 +163,15 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		await(stateManager.checkout());
 
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
 		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =
-			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cube, stateManager, chunkStorage);
+			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeReporting, stateManager, chunkStorage);
 
-		Map<String, Integer> chunksBefore = getChunksByAggregation(cube);
+		Map<String, Integer> chunksBefore = getChunksByAggregation(cubeReporting);
 		await(consolidationController.cleanupIrrelevantChunks());
 
-		Map<String, Integer> chunksAfter = getChunksByAggregation(cube);
+		Map<String, Integer> chunksAfter = getChunksByAggregation(cubeReporting);
 
 		for (Map.Entry<String, Integer> afterEntry : chunksAfter.entrySet()) {
 			String key = afterEntry.getKey();
@@ -182,8 +182,8 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		}
 	}
 
-	private static Map<String, Integer> getChunksByAggregation(Cube cube) {
-		return cube.getState().getAggregationStates().entrySet().stream()
+	private static Map<String, Integer> getChunksByAggregation(CubeReporting cubeReporting) {
+		return cubeReporting.getState().getAggregationStates().entrySet().stream()
 			.collect(entriesToLinkedHashMap(
 				Function.identity(),
 				AggregationState::getChunksSize));

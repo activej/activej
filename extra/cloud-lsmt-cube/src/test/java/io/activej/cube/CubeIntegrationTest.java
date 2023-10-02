@@ -82,7 +82,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		CubeState cubeState = CubeState.create(cubeStructure);
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cubeState);
 		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
-		Cube cube = Cube.create(cubeState, cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(cubeState, cubeStructure, cubeExecutor);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
@@ -136,7 +136,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		await(aggregationChunkStorage.backup("backup1", (Set) cubeState.getAllChunks()));
 
-		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
+		List<LogItem> logItems = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 			.toList());
 
@@ -150,7 +150,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		assertEquals(map, logItems.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Consolidate revision 4 as revision 5:
-		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Cube.ConsolidationStrategy.hotSegment()));
+		CubeDiff consolidatingCubeDiff = await(cubeReporting.consolidate(CubeReporting.ConsolidationStrategy.hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
 		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));
@@ -160,7 +160,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		await(aggregationChunkStorage.cleanup((Set) cubeState.getAllChunks()));
 
 		// Query
-		List<LogItem> queryResult = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
+		List<LogItem> queryResult = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 			LogItem.class, DefiningClassLoader.create(CLASS_LOADER)).toList());
 
 		assertEquals(map, queryResult.stream().collect(toMap(r -> r.date, r -> r.clicks)));
