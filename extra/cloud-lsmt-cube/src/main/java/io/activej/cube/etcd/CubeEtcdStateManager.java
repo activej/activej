@@ -17,7 +17,6 @@ import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.kv.EtcdKVCodecs;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
-import io.activej.etcd.codec.prefix.Prefix;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etcd.state.AbstractEtcdStateManager;
 import io.activej.etl.LogDiff;
@@ -39,6 +38,7 @@ import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
+import static io.activej.cube.etcd.EtcdUtils.saveCubeLogDiff;
 import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static java.util.stream.Collectors.*;
@@ -238,41 +238,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
 		touch(txn, ByteSequence.EMPTY);
 		for (LogDiff<CubeDiff> diff : transaction) {
-			saveCubeLogDiff(txn, diff);
-		}
-	}
-
-	public void saveCubeLogDiff(TxnOps txn, LogDiff<CubeDiff> logDiff) {
-		savePositions(txn.child(prefixPos), logDiff.getPositions());
-		for (CubeDiff diff : logDiff.getDiffs()) {
-			saveCubeDiff(txn.child(prefixCube), diff);
-		}
-	}
-
-	public void savePositions(TxnOps txn, Map<String, LogPositionDiff> positions) {
-		checkAndInsert(txn,
-			EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
-			positions.entrySet().stream().filter(diff -> diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::to)));
-		checkAndUpdate(txn,
-			EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
-			positions.entrySet().stream().filter(diff -> !diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::from)),
-			positions.entrySet().stream().filter(diff -> !diff.getValue().from().isInitial()).collect(entriesToLinkedHashMap(LogPositionDiff::to)));
-	}
-
-	public void saveCubeDiff(TxnOps txn, CubeDiff cubeDiff) {
-		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getRemovedChunks)).entrySet()) {
-			String aggregationId = entry.getKey();
-			checkAndDelete(
-				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
-				chunkCodecsFactory.apply(aggregationId),
-				entry.getValue().stream().map(chunk -> (long) chunk.getChunkId()).toList());
-		}
-		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getAddedChunks)).entrySet()) {
-			String aggregationId = entry.getKey();
-			checkAndInsert(
-				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
-				chunkCodecsFactory.apply(aggregationId),
-				entry.getValue());
+			saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txn, diff);
 		}
 	}
 }
