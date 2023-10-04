@@ -15,6 +15,7 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,7 +63,7 @@ public final class RpcClientTest {
 			RpcServer rpcServer = RpcServer.builder(serverEventloop)
 				.withMessageTypes(Request.class, Integer.class)
 				.withHandler(Request.class, $ -> Promise.of(finalI))
-				.withListenPort(getFreePort())
+				.withListenAddresses(new InetSocketAddress("localhost", getFreePort()))
 				.build();
 
 			if (i < NUMBER_OF_WORKING_SERVERS) {
@@ -273,10 +274,11 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		Exception exception = awaitException(() -> rpcClient.changeStrategy(roundRobin(getAddresses(6, 7)), false));
+		RpcStrategy failingStrategy = roundRobin(getAddresses(6, 7));
+		Exception exception = awaitException(() -> rpcClient.changeStrategy(failingStrategy, false));
 
 		assertTrue(exception instanceof RpcException);
-		assertEquals("Could not establish connection", exception.getMessage());
+		assertEquals("Could not establish connection to " + failingStrategy.getAddresses(), exception.getMessage());
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -295,19 +297,23 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		await(() -> rpcClient.changeStrategy(roundRobin(getAddresses(6, 7)), false)
-			.then(($, e) -> {
-				assertTrue(e instanceof RpcException);
-				assertEquals("Could not establish connection", e.getMessage());
+		await(() -> {
+			RpcStrategy failingStrategy1 = roundRobin(getAddresses(6, 7));
+			RpcStrategy failingStrategy2 = roundRobin(getAddresses(8, 9));
+			return rpcClient.changeStrategy(failingStrategy1, false)
+				.then(($, e) -> {
+					assertTrue(e instanceof RpcException);
+					assertEquals("Could not establish connection to " + failingStrategy1.getAddresses(), e.getMessage());
 
-				return rpcClient.changeStrategy(roundRobin(getAddresses(8, 9)), false);
-			})
-			.then(($, e) -> {
-				assertTrue(e instanceof RpcException);
-				assertEquals("Could not establish connection", e.getMessage());
+					return rpcClient.changeStrategy(failingStrategy2, false);
+				})
+				.then(($, e) -> {
+					assertTrue(e instanceof RpcException);
+					assertEquals("Could not establish connection to " + failingStrategy2.getAddresses(), e.getMessage());
 
-				return rpcClient.changeStrategy(roundRobin(getAddresses(3, 4)), false);
-			}));
+					return rpcClient.changeStrategy(roundRobin(getAddresses(3, 4)), false);
+				});
+		});
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));

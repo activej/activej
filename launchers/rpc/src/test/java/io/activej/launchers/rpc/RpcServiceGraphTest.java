@@ -25,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import static io.activej.rpc.client.sender.strategy.RpcStrategies.servers;
@@ -63,6 +64,8 @@ public class RpcServiceGraphTest {
 
 	@Test(timeout = 5_000)
 	public void testPartialConnectionOnStart() throws InterruptedException {
+		InetSocketAddress failingServerAddress = new InetSocketAddress(getFreePort());
+
 		Injector injector = Injector.of(
 			ServiceGraphModule.create(),
 			new AbstractModule() {
@@ -79,7 +82,7 @@ public class RpcServiceGraphTest {
 						.withStrategy(RoundRobin.builder(
 								servers(
 									new InetSocketAddress(port),
-									new InetSocketAddress(getFreePort())
+									failingServerAddress
 								))
 							.withMinActiveSubStrategies(2)
 							.build())
@@ -96,7 +99,7 @@ public class RpcServiceGraphTest {
 		} catch (ExecutionException e) {
 			Throwable cause = e.getCause();
 			assertTrue(cause instanceof RpcException);
-			assertEquals("Could not establish connection", cause.getMessage());
+			assertEquals("Could not establish connection to " + Set.of(failingServerAddress), cause.getMessage());
 		}
 
 		try {

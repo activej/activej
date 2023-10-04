@@ -93,7 +93,6 @@ public final class RpcClient extends AbstractNioReactive
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
 	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
 
-	private static final RpcException CONNECTION_EXCEPTION = new RpcException("Could not establish connection");
 	private static final RpcException SET_STRATEGY_EXCEPTION = new RpcException("Could not change strategy");
 	private static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
 	private static final RpcException CLIENT_IS_STOPPED = new RpcException("Client is stopped");
@@ -481,7 +480,7 @@ public final class RpcClient extends AbstractNioReactive
 			})
 			.whenException(e -> {
 				newConnections.remove(address);
-				logger.warn("Connection {} failed: {}", address, e);
+				logger.warn("Connection {} failed", address, e);
 				if (!pendingConnections.contains(address) || stopPromise != null) {
 					return;
 				}
@@ -511,7 +510,7 @@ public final class RpcClient extends AbstractNioReactive
 				connect(address);
 			});
 		} else {
-			if (connections.size() == 0) {
+			if (connections.isEmpty()) {
 				onClientStop();
 			}
 		}
@@ -553,7 +552,14 @@ public final class RpcClient extends AbstractNioReactive
 			}
 
 			Set<InetSocketAddress> strategyAddresses = this.strategy.getAddresses();
-			pendingConnections.retainAll(strategyAddresses);
+			Set<InetSocketAddress> failedConnections = new HashSet<>();
+			for (Iterator<InetSocketAddress> i = pendingConnections.iterator(); i.hasNext(); ) {
+				InetSocketAddress pendingConnection = i.next();
+				if (!strategyAddresses.contains(pendingConnection)) {
+					failedConnections.add(pendingConnection);
+					i.remove();
+				}
+			}
 			new ArrayList<>(connections.keySet()).stream()
 				.filter(not(strategyAddresses::contains))
 				.map(connections::remove).toList()
@@ -562,7 +568,7 @@ public final class RpcClient extends AbstractNioReactive
 			if (newRequestSender != null) {
 				newStrategyPromise.set(null);
 			} else {
-				newStrategyPromise.setException(CONNECTION_EXCEPTION);
+				newStrategyPromise.setException(new RpcException("Could not establish connection to " + failedConnections));
 			}
 
 		} else {
