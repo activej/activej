@@ -42,7 +42,6 @@ import io.activej.worker.annotation.Worker;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import javax.sql.DataSource;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
@@ -57,7 +56,6 @@ import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static io.activej.service.Utils.combineAll;
 import static io.activej.service.Utils.completedExceptionallyFuture;
 import static io.activej.service.adapter.ServiceAdapters.*;
-import static java.lang.Thread.currentThread;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.*;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -122,13 +120,6 @@ public final class ServiceGraphModule extends AbstractModule {
 			.with(AutoCloseable.class, forAutoCloseable())
 			.with(ExecutorService.class, forExecutorService())
 			.with(Timer.class, forTimer())
-			.initialize(b -> {
-				try {
-					currentThread().getContextClassLoader().loadClass("javax.sql.DataSource");
-					b.with(DataSource.class, forDataSource());
-				} catch (ClassNotFoundException ignored) {
-				}
-			})
 			.initialize(ServiceGraphModule::tryRegisterAsyncComponents);
 	}
 
