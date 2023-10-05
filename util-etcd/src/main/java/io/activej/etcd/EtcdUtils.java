@@ -1,5 +1,6 @@
 package io.activej.etcd;
 
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.etcd.codec.key.EtcdKeyEncoder;
 import io.activej.etcd.codec.kv.EtcdKVDecoder;
 import io.activej.etcd.codec.kv.EtcdKVEncoder;
@@ -46,6 +47,8 @@ public class EtcdUtils {
 	public static final ByteSequence UNDERSCORE = byteSequenceFrom('_');
 	public static final ByteSequence X00 = byteSequenceFrom((byte) 0x00);
 	public static final ByteSequence XFF = byteSequenceFrom((byte) 0xFF);
+
+	public static final EtcdValueCodec<Long> TOUCH_TIMESTAMP_CODEC = EtcdValueCodecs.ofLongString();
 
 	public static ByteSequence byteSequenceFrom(char ch) {
 		checkArgument(ch <= 0x7f);
@@ -219,7 +222,7 @@ public class EtcdUtils {
 
 							long modRevision = keyValue.getModRevision();
 							if (modRevision != currentRevision) {
-								if (currentRevision != -1){
+								if (currentRevision != -1) {
 									listener.onNext(currentRevision, accumulators);
 									for (int i = 0; i < accumulators.length; i++) {
 										accumulators[i] = requests[i].eventProcessor.createEventsAccumulator();
@@ -244,7 +247,7 @@ public class EtcdUtils {
 								}
 							}
 						}
-						if (currentRevision != -1){
+						if (currentRevision != -1) {
 							listener.onNext(currentRevision, accumulators);
 						}
 					} catch (MalformedEtcdDataException e) {
@@ -271,6 +274,11 @@ public class EtcdUtils {
 
 	public static void touch(TxnOps txn, ByteSequence key) {
 		txn.put(key, ByteSequence.EMPTY, PutOption.DEFAULT);
+	}
+
+	public static void touchTimestamp(TxnOps txn, ByteSequence key, CurrentTimeProvider timeProvider) {
+		ByteSequence value = TOUCH_TIMESTAMP_CODEC.encodeValue(timeProvider.currentTimeMillis());
+		txn.put(key, value, PutOption.DEFAULT);
 	}
 
 	public record AtomicUpdateResponse<T>(Response.Header header, T prevValue, T newValue) {}

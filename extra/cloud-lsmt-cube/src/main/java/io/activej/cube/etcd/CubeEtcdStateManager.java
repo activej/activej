@@ -236,7 +236,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	@Override
 	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
-		touch(txn, ByteSequence.EMPTY);
+		touchTimestamp(txn, ByteSequence.EMPTY, System::currentTimeMillis);
 		for (LogDiff<CubeDiff> diff : transaction) {
 			saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txn, diff);
 		}

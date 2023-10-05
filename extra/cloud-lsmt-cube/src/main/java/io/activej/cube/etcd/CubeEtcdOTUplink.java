@@ -300,7 +300,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
 				executeTxnOps(client, root, txnOps -> {
-					touch(txnOps, ByteSequence.EMPTY);
+					touchTimestamp(txnOps, ByteSequence.EMPTY, reactor);
 					for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
 						saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txnOps, diff);
 					}
@@ -339,7 +339,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					.build())
 			.get();
 		client.getKVClient()
-			.put(root, ByteSequence.EMPTY)
+			.put(root, TOUCH_TIMESTAMP_CODEC.encodeValue(reactor.currentTimeMillis()))
 			.get();
 	}
 

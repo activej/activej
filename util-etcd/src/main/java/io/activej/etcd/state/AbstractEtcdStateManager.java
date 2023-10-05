@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
+import static io.activej.etcd.EtcdUtils.TOUCH_TIMESTAMP_CODEC;
 import static io.activej.etcd.EtcdUtils.executeTxnOps;
 
 public abstract class AbstractEtcdStateManager<S, T> implements BlockingService {
@@ -162,7 +163,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 					.build())
 			.get();
 		client.getKVClient()
-			.put(root, ByteSequence.EMPTY)
+			.put(root, TOUCH_TIMESTAMP_CODEC.encodeValue(System.currentTimeMillis()))
 			.get();
 	}
 
