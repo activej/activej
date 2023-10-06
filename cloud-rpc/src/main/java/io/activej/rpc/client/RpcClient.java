@@ -430,7 +430,7 @@ public final class RpcClient extends AbstractNioReactive
 		if (stopPromise != null) return stopPromise;
 
 		stopPromise = new SettablePromise<>();
-		if (connections.size() == 0) {
+		if (connections.isEmpty()) {
 			onClientStop();
 			return stopPromise;
 		}
@@ -605,7 +605,7 @@ public final class RpcClient extends AbstractNioReactive
 		requestSender.sendRequest(request, cb);
 	}
 
-	public IRpcClient adaptToAnotherReactor(NioReactor anotherReactor) {
+	public IRpcClient adaptToAnotherReactor(Reactor anotherReactor) {
 		if (anotherReactor == this.reactor) {
 			return this;
 		}
