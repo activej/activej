@@ -7,6 +7,14 @@ public class TestCurrentTimeProvider {
 		return new TimeSequenceCurrentTimeProvider(start, increment);
 	}
 
+	public static ConstantCurrentTimeProvider ofConstant(long time) {
+		return new ConstantCurrentTimeProvider(time);
+	}
+
+	public static SettableCurrentTimeProvider settable(CurrentTimeProvider timeProvider) {
+		return new SettableCurrentTimeProvider(timeProvider);
+	}
+
 	public static class TimeSequenceCurrentTimeProvider implements CurrentTimeProvider {
 		private final long increment;
 		long time;
@@ -24,6 +32,40 @@ public class TestCurrentTimeProvider {
 		}
 
 		public long getTime() {
+			return time;
+		}
+	}
+
+	public static class SettableCurrentTimeProvider implements CurrentTimeProvider {
+		private CurrentTimeProvider timeProvider;
+
+		private SettableCurrentTimeProvider(CurrentTimeProvider timeProvider) {
+			this.timeProvider = timeProvider;
+		}
+
+		public void setTimeProvider(CurrentTimeProvider timeProvider) {
+			this.timeProvider = timeProvider;
+		}
+
+		public CurrentTimeProvider getTimeProvider() {
+			return timeProvider;
+		}
+
+		@Override
+		public long currentTimeMillis() {
+			return timeProvider.currentTimeMillis();
+		}
+	}
+
+	public static class ConstantCurrentTimeProvider implements CurrentTimeProvider {
+		private final long time;
+
+		private ConstantCurrentTimeProvider(long time) {
+			this.time = time;
+		}
+
+		@Override
+		public long currentTimeMillis() {
 			return time;
 		}
 	}

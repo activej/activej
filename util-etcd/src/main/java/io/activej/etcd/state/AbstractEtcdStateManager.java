@@ -152,4 +152,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 		}
 	}
 
+	public long getRevision() {
+		return revision;
+	}
 }
