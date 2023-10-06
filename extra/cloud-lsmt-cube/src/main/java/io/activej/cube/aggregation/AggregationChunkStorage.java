@@ -63,6 +63,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.LongPredicate;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
@@ -110,6 +111,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	private final PromiseStats promiseBackup = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseCleanup = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseCleanupCheckRequiredChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final PromiseStats promiseDelete = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private boolean detailed;
 
@@ -140,6 +142,8 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	private int cleanupDeletedFilesTotal;
 	private int cleanupSkippedFiles;
 	private int cleanupSkippedFilesTotal;
+
+	private int deletedFiles;
 
 	private int finishChunks;
 
@@ -273,6 +277,21 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.mapException(e -> new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e))
 			.whenComplete(promiseBackup.recordStats())
 			.toVoid();
+	}
+
+	public Promise<Void> deleteChunks(Set<C> chunksToDelete) {
+		checkInReactorThread(this);
+
+		logger.trace("Deleting chunks: {}", chunksToDelete);
+
+		Set<String> chunkPaths = chunksToDelete.stream()
+			.map(this::toPath)
+			.collect(Collectors.toSet());
+
+		return fileSystem.deleteAll(chunkPaths)
+			.mapException(e -> new AggregationException("Failed to delete chunks", e))
+			.whenResult(() -> deletedFiles += chunksToDelete.size())
+			.whenComplete(promiseDelete.recordStats());
 	}
 
 	public Promise<Void> cleanup(Set<C> saveChunks) {
@@ -524,6 +543,16 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	@JmxAttribute
 	public PromiseStats getPromiseCleanupCheckRequiredChunks() {
 		return promiseCleanupCheckRequiredChunks;
+	}
+
+	@JmxAttribute
+	public PromiseStats getPromiseDelete() {
+		return promiseDelete;
+	}
+
+	@JmxAttribute
+	public int getDeletedFiles() {
+		return deletedFiles;
 	}
 
 	@JmxOperation
