@@ -9,22 +9,19 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.Response;
 import io.etcd.jetcd.Watch;
-import io.etcd.jetcd.options.DeleteOption;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.PriorityQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
-import static io.activej.etcd.EtcdUtils.TOUCH_TIMESTAMP_CODEC;
 import static io.activej.etcd.EtcdUtils.executeTxnOps;
 
 public abstract class AbstractEtcdStateManager<S, T> implements BlockingService {
-	private final Client client;
-	private final ByteSequence root;
+	protected final Client client;
+	protected final ByteSequence root;
 
 	private final EtcdUtils.CheckoutRequest<?, ?>[] checkoutRequests;
 	private final EtcdUtils.WatchRequest<?, ?, ?>[] watchRequests;
@@ -153,18 +150,6 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 				peeked.future.complete(peeked.header);
 			}
 		}
-	}
-
-	public void delete() throws ExecutionException, InterruptedException {
-		client.getKVClient()
-			.delete(root,
-				DeleteOption.builder()
-					.isPrefix(true)
-					.build())
-			.get();
-		client.getKVClient()
-			.put(root, TOUCH_TIMESTAMP_CODEC.encodeValue(System.currentTimeMillis()))
-			.get();
 	}
 
 }

@@ -2,6 +2,7 @@ package io.activej.cube.etcd;
 
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
 import io.activej.cube.CubeState;
 import io.activej.cube.CubeStructure;
@@ -26,11 +27,13 @@ import io.activej.multilog.LogPosition;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.Response;
+import io.etcd.jetcd.options.DeleteOption;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkNotNull;
@@ -55,6 +58,8 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixCube = CUBE;
+
+	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
 	private CubeEtcdStateManager(
 		Client client,
@@ -120,6 +125,12 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		public Builder withAggregationIdCodec(EtcdPrefixCodec<String> aggregationIdCodec) {
 			checkNotBuilt(this);
 			CubeEtcdStateManager.this.aggregationIdCodec = aggregationIdCodec;
+			return this;
+		}
+
+		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.now = now;
 			return this;
 		}
 
@@ -236,9 +247,21 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	@Override
 	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
-		touchTimestamp(txn, ByteSequence.EMPTY, System::currentTimeMillis);
+		touchTimestamp(txn, ByteSequence.EMPTY, now);
 		for (LogDiff<CubeDiff> diff : transaction) {
 			saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txn, diff);
 		}
+	}
+
+	public void delete() throws ExecutionException, InterruptedException {
+		client.getKVClient()
+			.delete(root,
+				DeleteOption.builder()
+					.isPrefix(true)
+					.build())
+			.get();
+		client.getKVClient()
+			.put(root, TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
+			.get();
 	}
 }

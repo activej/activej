@@ -4,11 +4,13 @@ import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.TxnOps;
+import io.activej.etcd.codec.key.EtcdKeyCodec;
 import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.kv.EtcdKVCodecs;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
 import io.activej.etcd.codec.prefix.Prefix;
+import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.etcd.jetcd.ByteSequence;
@@ -58,5 +60,21 @@ final class EtcdUtils {
 				entry.getValue());
 		}
 	}
+
+	static final EtcdKeyCodec<Long> CHUNK_ID_CODEC = new EtcdKeyCodec<>() {
+		@Override
+		public Long decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
+			try {
+				return Long.parseLong(byteSequence.toString());
+			} catch (NumberFormatException e) {
+				throw new MalformedEtcdDataException(e.getMessage());
+			}
+		}
+
+		@Override
+		public ByteSequence encodeKey(Long key) {
+			return byteSequenceFrom(key.toString());
+		}
+	};
 
 }
