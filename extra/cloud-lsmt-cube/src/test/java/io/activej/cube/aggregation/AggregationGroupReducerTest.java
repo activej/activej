@@ -77,6 +77,16 @@ public class AggregationGroupReducerTest {
 			public Promise<Void> finish(Set<Long> chunkIds) {
 				return Promise.complete();
 			}
+
+			@Override
+			public Promise<Set<Long>> listChunks() {
+				return Promise.of(Set.of());
+			}
+
+			@Override
+			public Promise<Void> deleteChunks(Set<Long> chunksToDelete) {
+				return Promise.complete();
+			}
 		};
 
 		Class<InvertedIndexRecord> inputClass = InvertedIndexRecord.class;

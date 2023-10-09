@@ -216,6 +216,11 @@
         <artifactId>protobuf-java</artifactId>
         <version>3.24.3</version>
       </dependency>
+      <dependency>
+        <groupId>io.minio</groupId>
+        <artifactId>minio</artifactId>
+        <version>8.5.6</version>
+      </dependency>
 
       <!--Fixing transitive dependency vulnerability-->
       <dependency>

@@ -88,6 +88,16 @@ public final class AggregationChunkerTest {
 			public Promise<Void> finish(Set<Long> chunkIds) {
 				return Promise.complete();
 			}
+
+			@Override
+			public Promise<Set<Long>> listChunks() {
+				return Promise.of(Set.of());
+			}
+
+			@Override
+			public Promise<Void> deleteChunks(Set<Long> chunksToDelete) {
+				return Promise.complete();
+			}
 		};
 
 		List<AggregationChunk> chunksToConsolidate = state.findChunksGroupWithMostOverlaps();
@@ -148,6 +158,16 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public Promise<Void> finish(Set<Long> chunkIds) {
+				return Promise.complete();
+			}
+
+			@Override
+			public Promise<Set<Long>> listChunks() {
+				return Promise.of(Set.of());
+			}
+
+			@Override
+			public Promise<Void> deleteChunks(Set<Long> chunksToDelete) {
 				return Promise.complete();
 			}
 		};
@@ -231,6 +251,16 @@ public final class AggregationChunkerTest {
 
 			@Override
 			public Promise<Void> finish(Set<Long> chunkIds) {
+				return Promise.complete();
+			}
+
+			@Override
+			public Promise<Set<Long>> listChunks() {
+				return Promise.of(Set.of());
+			}
+
+			@Override
+			public Promise<Void> deleteChunks(Set<Long> chunksToDelete) {
 				return Promise.complete();
 			}
 		};

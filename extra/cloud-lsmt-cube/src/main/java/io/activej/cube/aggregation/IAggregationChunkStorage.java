@@ -61,6 +61,10 @@ public interface IAggregationChunkStorage<C> {
 
 	Promise<Void> finish(Set<C> chunkIds);
 
+	Promise<Set<C>> listChunks();
+
+	Promise<Void> deleteChunks(Set<C> chunksToDelete);
+
 }
 
 

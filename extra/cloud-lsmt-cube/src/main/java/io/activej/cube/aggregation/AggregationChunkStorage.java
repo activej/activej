@@ -279,6 +279,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.toVoid();
 	}
 
+	@Override
 	public Promise<Void> deleteChunks(Set<C> chunksToDelete) {
 		checkInReactorThread(this);
 
@@ -347,6 +348,11 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.whenComplete(promiseCleanup.recordStats());
 	}
 
+	@Override
+	public Promise<Set<C>> listChunks() {
+		return list(c -> true, c -> true);
+	}
+
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
 		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
@@ -364,7 +370,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	public Promise<Void> checkRequiredChunks(Set<C> requiredChunks) {
 		if (CHECKS) checkInReactorThread(this);
-		return list(s -> true, timestamp -> true)
+		return listChunks()
 			.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
 			.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
 				Promise.complete() :
