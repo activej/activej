@@ -27,8 +27,6 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
-import io.activej.jmx.stats.ExceptionStats;
-import io.activej.jmx.stats.StatsUtils;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
