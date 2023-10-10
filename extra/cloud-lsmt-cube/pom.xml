@@ -106,6 +106,7 @@
                 <exclude>**/ChunkLockerMySqlTest.java</exclude>
                 <exclude>**/ChunkLockerMySqlDeadlockTest.java</exclude>
                 <exclude>**/CubeMySqlOTUplinkTest.java</exclude>
+                <exclude>**/MinioChunkStorageTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
