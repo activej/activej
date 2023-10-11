@@ -449,15 +449,14 @@ public class EtcdUtils {
 		txn.delete(key, DeleteOption.DEFAULT);
 	}
 
-	public static CompletableFuture<TxnResponse> executeTxnOps(Client client, ByteSequence prefix, Consumer<TxnOps> txnOpsConsumer) {
+	public static CompletableFuture<TxnResponse> executeTxnOps(KV client, ByteSequence prefix, Consumer<TxnOps> txnOpsConsumer) {
 		TxnOps txnOps = new TxnOps(prefix);
 		txnOpsConsumer.accept(txnOps);
 		return executeTxnOps(client, txnOps);
 	}
 
-	public static CompletableFuture<TxnResponse> executeTxnOps(Client client, TxnOps txnOps) {
-		KV kvClient = client.getKVClient();
-		return kvClient.txn()
+	public static CompletableFuture<TxnResponse> executeTxnOps(KV client, TxnOps txnOps) {
+		return client.txn()
 			.If(txnOps.cmps.toArray(Cmp[]::new))
 			.Then(txnOps.ops.toArray(Op[]::new))
 			.commit()

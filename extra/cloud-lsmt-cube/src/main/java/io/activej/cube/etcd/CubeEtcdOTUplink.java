@@ -299,7 +299,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
-				executeTxnOps(client, root, txnOps -> {
+				executeTxnOps(client.getKVClient(), root, txnOps -> {
 					touchTimestamp(txnOps, ByteSequence.EMPTY, reactor);
 					for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
 						saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txnOps, diff);

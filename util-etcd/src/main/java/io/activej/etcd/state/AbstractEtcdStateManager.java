@@ -117,7 +117,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 	public CompletableFuture<Response.Header> push(T transaction) {
 		CompletableFuture<Response.Header> result = new CompletableFuture<>();
 
-		executeTxnOps(client, root, txnOps -> doPush(txnOps, transaction))
+		executeTxnOps(client.getKVClient(), root, txnOps -> doPush(txnOps, transaction))
 			.whenComplete((txnResponse, throwable) -> {
 				if (throwable != null) {
 					result.completeExceptionally(throwable);

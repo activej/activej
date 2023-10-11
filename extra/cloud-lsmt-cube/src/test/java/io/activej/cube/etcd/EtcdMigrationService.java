@@ -1,0 +1,189 @@
+package io.activej.cube.etcd;
+
+import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.function.StateQueryFunction;
+import io.activej.common.time.CurrentTimeProvider;
+import io.activej.cube.AggregationState;
+import io.activej.cube.CubeState;
+import io.activej.cube.CubeStructure;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.ot.CubeDiff;
+import io.activej.etcd.codec.kv.EtcdKVCodec;
+import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
+import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
+import io.activej.etcd.exception.EtcdException;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogPositionDiff;
+import io.activej.etl.LogState;
+import io.activej.multilog.LogPosition;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.KV;
+import io.etcd.jetcd.kv.TxnResponse;
+import io.etcd.jetcd.op.Cmp;
+import io.etcd.jetcd.op.CmpTarget;
+import io.etcd.jetcd.options.GetOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+
+import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
+import static io.activej.cube.etcd.EtcdUtils.saveCubeLogDiff;
+import static io.activej.etcd.EtcdUtils.*;
+import static java.util.concurrent.CompletableFuture.failedFuture;
+
+public final class EtcdMigrationService {
+	private static final Logger logger = LoggerFactory.getLogger(EtcdMigrationService.class);
+
+	private static final ByteSequence POS = byteSequenceFrom("pos.");
+	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
+	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
+
+	private final StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn;
+	private final KV client;
+	private final ByteSequence root;
+
+	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
+	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
+
+	private ByteSequence prefixPos = POS;
+	private ByteSequence prefixCube = CUBE;
+
+	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
+
+	private EtcdMigrationService(
+		StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn,
+		KV client,
+		ByteSequence root
+	) {
+		this.stateQueryFn = stateQueryFn;
+		this.client = client;
+		this.root = root;
+	}
+
+	public static Builder builder(
+		StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn,
+		KV client,
+		ByteSequence root
+	) {
+		return new EtcdMigrationService(stateQueryFn, client, root).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, EtcdMigrationService> {
+		private Builder() {
+		}
+
+		public Builder withChunkCodecsFactory(Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory) {
+			checkNotBuilt(this);
+			EtcdMigrationService.this.chunkCodecsFactory = chunkCodecsFactory;
+			return this;
+		}
+
+		public Builder withChunkCodecsFactoryJson(CubeStructure cubeStructure) {
+			checkNotBuilt(this);
+			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
+				.collect(entriesToLinkedHashMap(structure ->
+					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
+			return withChunkCodecsFactory(collect::get);
+		}
+
+		public Builder withPrefixPos(ByteSequence prefixPos) {
+			checkNotBuilt(this);
+			EtcdMigrationService.this.prefixPos = prefixPos;
+			return this;
+		}
+
+		public Builder withPrefixCube(ByteSequence prefixCube) {
+			checkNotBuilt(this);
+			EtcdMigrationService.this.prefixCube = prefixCube;
+			return this;
+		}
+
+		public Builder withAggregationIdCodec(EtcdPrefixCodec<String> aggregationIdCodec) {
+			checkNotBuilt(this);
+			EtcdMigrationService.this.aggregationIdCodec = aggregationIdCodec;
+			return this;
+		}
+
+		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
+			checkNotBuilt(this);
+			EtcdMigrationService.this.now = now;
+			return this;
+		}
+
+		@Override
+		protected EtcdMigrationService doBuild() {
+			checkNotNull(chunkCodecsFactory, "Chunk codecs factory is required");
+			return EtcdMigrationService.this;
+		}
+	}
+
+	public CompletableFuture<TxnResponse> migrate() {
+		logger.trace("Starting migration of state to 'etcd'. Root '{}', chunk prefix {}, position prefix {}",
+			root, prefixCube, prefixPos);
+
+		return client.get(root, GetOption.builder().isPrefix(true).build())
+			.thenCompose(getResponse -> {
+				if (!getResponse.getKvs().isEmpty()) {
+					return failedFuture(new EtcdException("Root '" + root + "' namespace is not empty"));
+				}
+
+				return migrateState();
+			})
+			.whenComplete((txnResponse, e) -> {
+				if (e == null) {
+					logger.info("State successfully migrated to 'etcd'");
+				} else {
+					logger.warn("Failed to migrate state to 'etcd'", e);
+				}
+			});
+	}
+
+	private LogDiff<CubeDiff> stateToLogDiff(LogState<CubeDiff, CubeState> logState) {
+		Map<String, LogPosition> positions = logState.getPositions();
+		Map<String, LogPositionDiff> positionDiffs = new HashMap<>(positions.size());
+
+		for (Entry<String, LogPosition> entry : positions.entrySet()) {
+			positionDiffs.put(entry.getKey(), new LogPositionDiff(LogPosition.initial(), entry.getValue()));
+		}
+
+		CubeState cubeState = logState.getDataState();
+		Map<String, AggregationState> aggregationStates = cubeState.getAggregationStates();
+		Map<String, AggregationDiff> aggregationDiffs = new HashMap<>(aggregationStates.size());
+
+		for (Entry<String, AggregationState> entry : aggregationStates.entrySet()) {
+			AggregationState aggregationState = entry.getValue();
+			Map<Object, AggregationChunk> chunksMap = aggregationState.getChunks();
+			Set<AggregationChunk> addedChunks = new HashSet<>(chunksMap.values());
+			aggregationDiffs.put(entry.getKey(), AggregationDiff.of(addedChunks));
+		}
+
+		CubeDiff cubeDiff = CubeDiff.of(aggregationDiffs);
+
+		return LogDiff.of(positionDiffs, List.of(cubeDiff));
+	}
+
+	private CompletableFuture<TxnResponse> migrateState() {
+		LogDiff<CubeDiff> logDiff = stateQueryFn.query(this::stateToLogDiff);
+
+		if (logger.isTraceEnabled()) {
+			logger.trace("Migrating state of {} log positions and {} aggregations with {} chunks",
+				logDiff.getPositions().size(),
+				logDiff.getDiffs().get(0).getDiffs().size(),
+				logDiff.getDiffs().get(0).addedChunks().count());
+		}
+
+		return executeTxnOps(client, root, txnOps -> {
+			txnOps.cmp(ByteSequence.EMPTY, Cmp.Op.EQUAL, CmpTarget.createRevision(0));
+
+			touchTimestamp(txnOps, ByteSequence.EMPTY, now);
+			saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txnOps, logDiff);
+		});
+	}
+}
