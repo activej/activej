@@ -17,11 +17,11 @@
 package io.activej.cube;
 
 import io.activej.async.function.AsyncRunnable;
+import io.activej.common.function.StateQueryFunction;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;

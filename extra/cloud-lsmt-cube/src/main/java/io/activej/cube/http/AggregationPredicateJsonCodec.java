@@ -219,7 +219,6 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private AggregationPredicate readObjectWithAlgebraOfSetsOperator(JsonReader<?> reader) throws IOException {
 		if (reader.last() == OBJECT_END) return new And(List.of());
 		List<AggregationPredicate> predicates = new ArrayList<>();
@@ -231,22 +230,7 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 			JsonCodec<Object> codec = attributeCodecs.get(field);
 			if (codec == null) throw ParsingException.create("Could not decode: " + field, true);
 			Object value = codec.read(reader);
-			AggregationPredicate comparisonPredicate;
-			switch (operator) {
-				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new Eq(field, value);
-				case NOT_EQ_SIGN -> comparisonPredicate = new NotEq(field, value);
-				case GE_SIGN -> comparisonPredicate = new Ge(field, (Comparable<Object>) value);
-				case GT_SIGN -> comparisonPredicate = new Gt(field, (Comparable<Object>) value);
-				case LE_SIGN -> comparisonPredicate = new Le(field, (Comparable<Object>) value);
-				case LT_SIGN -> comparisonPredicate = new Lt(field, (Comparable<Object>) value);
-				case IN_SIGN -> {
-					if (value == null) {
-						throw ParsingException.create("Arguments of " + IN_SIGN + " cannot be null", true);
-					}
-					comparisonPredicate = new In(field, (SortedSet<Object>) value);
-				}
-				default -> throw ParsingException.create("Could not read predicate", true);
-			}
+			AggregationPredicate comparisonPredicate = getComparisonPredicate(operator, field, value);
 			predicates.add(comparisonPredicate);
 			byte nextToken = reader.getNextToken();
 			if (nextToken == OBJECT_END) {
@@ -255,6 +239,26 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 				throw reader.newParseError("Unexpected symbol");
 			}
 		}
+	}
+
+	private static AggregationPredicate getComparisonPredicate(String operator, String field, Object value) throws ParsingException {
+		AggregationPredicate comparisonPredicate;
+		switch (operator) {
+			case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new Eq(field, value);
+			case NOT_EQ_SIGN -> comparisonPredicate = new NotEq(field, value);
+			case GE_SIGN -> comparisonPredicate = new Ge(field, (Comparable<Object>) value);
+			case GT_SIGN -> comparisonPredicate = new Gt(field, (Comparable<Object>) value);
+			case LE_SIGN -> comparisonPredicate = new Le(field, (Comparable<Object>) value);
+			case LT_SIGN -> comparisonPredicate = new Lt(field, (Comparable<Object>) value);
+			case IN_SIGN -> {
+				if (value == null) {
+					throw ParsingException.create("Arguments of " + IN_SIGN + " cannot be null", true);
+				}
+				comparisonPredicate = new In(field, (SortedSet<Object>) value);
+			}
+			default -> throw ParsingException.create("Could not read predicate", true);
+		}
+		return comparisonPredicate;
 	}
 
 	@Override

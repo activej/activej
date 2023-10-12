@@ -526,7 +526,7 @@ public class AggregationPredicates {
 		return new RegExp(key, pattern);
 	}
 
-	public static <C extends Comparable<C>> AggregationPredicate between(String key, Comparable from, Comparable to) {
+	public static AggregationPredicate between(String key, Comparable from, Comparable to) {
 		return new Between(key, from, to);
 	}
 
@@ -557,7 +557,7 @@ public class AggregationPredicates {
 		}
 
 		public boolean isFullScan() {
-			return from.size() == 0;
+			return from.isEmpty();
 		}
 
 		public boolean isRangeScan() {

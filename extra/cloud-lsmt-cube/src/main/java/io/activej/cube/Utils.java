@@ -56,18 +56,6 @@ public final class Utils {
 		);
 	}
 
-	static boolean startsWith(List<String> list, List<String> prefix) {
-		if (prefix.size() >= list.size())
-			return false;
-
-		for (int i = 0; i < prefix.size(); ++i) {
-			if (!list.get(i).equals(prefix.get(i)))
-				return false;
-		}
-
-		return true;
-	}
-
 	@SuppressWarnings("unchecked")
 	public static <R> Promise<Void> resolveAttributes(
 		List<R> results, IAttributeResolver attributeResolver, List<String> recordDimensions,

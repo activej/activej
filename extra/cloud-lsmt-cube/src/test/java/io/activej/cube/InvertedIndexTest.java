@@ -27,7 +27,8 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.cube.TestUtils.*;
+import static io.activej.cube.TestUtils.aggregationStructureBuilder;
+import static io.activej.cube.TestUtils.createAggregationState;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofString;
 import static io.activej.cube.aggregation.measure.Measures.union;
@@ -108,38 +109,36 @@ public class InvertedIndexTest {
 			.build();
 		AggregationState state = createAggregationState(structure);
 
-		AggregationExecutor aggregation = aggregationExecutorBuilder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
-			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
-			.build();
+		AggregationExecutor aggregationExecutor = new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure);
+		aggregationExecutor.setTemporarySortDir(temporaryFolder.newFolder().toPath());
 
 		StreamSupplier<InvertedIndexRecord> supplier = StreamSuppliers.ofValues(
 			new InvertedIndexRecord("fox", 1),
 			new InvertedIndexRecord("brown", 2),
 			new InvertedIndexRecord("fox", 3));
 
-		doProcess(state, aggregationChunkStorage, aggregation, supplier);
+		doProcess(state, aggregationChunkStorage, aggregationExecutor, supplier);
 
 		supplier = StreamSuppliers.ofValues(
 			new InvertedIndexRecord("brown", 3),
 			new InvertedIndexRecord("lazy", 4),
 			new InvertedIndexRecord("dog", 1));
 
-		doProcess(state, aggregationChunkStorage, aggregation, supplier);
+		doProcess(state, aggregationChunkStorage, aggregationExecutor, supplier);
 
 		supplier = StreamSuppliers.ofValues(
 			new InvertedIndexRecord("quick", 1),
 			new InvertedIndexRecord("fox", 4),
 			new InvertedIndexRecord("brown", 10));
 
-		doProcess(state, aggregationChunkStorage, aggregation, supplier);
+		doProcess(state, aggregationChunkStorage, aggregationExecutor, supplier);
 
-		AggregationQuery query = aggregationQueryBuilder()
-			.withKeys("word")
-			.withMeasures("documents")
-			.build();
+		AggregationQuery query = new AggregationQuery();
+		query.addKeys(List.of("word"));
+		query.addMeasures(List.of("documents"));
 
 		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
-		List<InvertedIndexQueryResult> list = await(aggregation.query(chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
+		List<InvertedIndexQueryResult> list = await(aggregationExecutor.query(chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 
 		List<InvertedIndexQueryResult> expectedResult = List.of(

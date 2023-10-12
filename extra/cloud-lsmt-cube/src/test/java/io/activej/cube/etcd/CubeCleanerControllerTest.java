@@ -25,7 +25,6 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.DescriptionRule;
-import io.activej.test.time.TestCurrentTimeProvider.*;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import org.junit.Before;

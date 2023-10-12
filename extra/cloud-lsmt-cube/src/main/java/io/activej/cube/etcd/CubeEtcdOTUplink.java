@@ -133,7 +133,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> checkout() {
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
-			doCheckout(0L)
+			doCheckout()
 				.thenApply(response -> {
 					Map<String, LogPositionDiff> positions = response.positions.entrySet().stream()
 						.collect(entriesToLinkedHashMap(logPosition -> new LogPositionDiff(null, logPosition)));
@@ -151,9 +151,10 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	record CubeCheckoutResponse(long revision, Map<String, LogPosition> positions, Map<String, Set<AggregationChunk>> chunks) {}
 
 	@SuppressWarnings("unchecked")
-	private CompletableFuture<CubeCheckoutResponse> doCheckout(long revision) {
-		return EtcdUtils.checkout(client, revision, new CheckoutRequest[]{
-				CheckoutRequest.<String, LogPosition, LinkedHashMap<String, LogPosition>>ofMapEntry(
+	private CompletableFuture<CubeCheckoutResponse> doCheckout() {
+		//noinspection RedundantTypeArguments - IDEA cannot resolve types
+		return EtcdUtils.checkout(client, 0L, new CheckoutRequest[]{
+				CheckoutRequest.ofMapEntry(
 					root.concat(prefixPos),
 					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 					entriesToLinkedHashMap()),
@@ -200,7 +201,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		final AtomicReference<Watch.Watcher> etcdWatcherRef = new AtomicReference<>();
 		reactor.startExternalTask();
 		etcdWatcherRef.set(EtcdUtils.watch(client, revisionFrom + 1, new WatchRequest[]{
-				WatchRequest.<String, LogPosition, Map<String, LogPositionDiff>>ofMapEntry(
+				WatchRequest.ofMapEntry(
 					root.concat(prefixPos),
 					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 					new EtcdEventProcessor<String, Map.Entry<String, LogPosition>, Map<String, LogPositionDiff>>() {
@@ -220,7 +221,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 						}
 					}
 				),
-				WatchRequest.<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>of(
+				WatchRequest.of(
 					root.concat(prefixCube),
 					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 					new EtcdEventProcessor<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>() {
@@ -247,7 +248,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					}
 				),
 			},
-			new EtcdListener<Object[]>() {
+			new EtcdListener<>() {
 				LogDiff<CubeDiff> logDiff = LogDiff.empty();
 
 				@SuppressWarnings("unchecked")

@@ -33,7 +33,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import static io.activej.cube.TestUtils.*;
+import static io.activej.cube.TestUtils.aggregationStructureBuilder;
+import static io.activej.cube.TestUtils.createAggregationState;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.*;
@@ -108,16 +109,16 @@ public class CustomFieldsTest {
 			.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
 			.build();
 		AggregationState state = createAggregationState(structure);
-		AggregationExecutor aggregation = aggregationExecutorBuilder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
-			.withTemporarySortDir(temporaryFolder.newFolder().toPath())
-			.build();
+
+		AggregationExecutor aggregationExecutor = new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure);
+		aggregationExecutor.setTemporarySortDir(temporaryFolder.newFolder().toPath());
 
 		StreamSupplier<EventRecord> supplier = StreamSuppliers.ofValues(
 			new EventRecord(1, 0.34, 1),
 			new EventRecord(2, 0.42, 3),
 			new EventRecord(3, 0.13, 20));
 
-		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
+		AggregationDiff diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
@@ -126,7 +127,7 @@ public class CustomFieldsTest {
 			new EventRecord(1, 0.22, 1000),
 			new EventRecord(2, 0.91, 33));
 
-		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
+		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
@@ -135,7 +136,7 @@ public class CustomFieldsTest {
 			new EventRecord(3, 0.88, 20),
 			new EventRecord(3, 1.01, 21));
 
-		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
+		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
@@ -144,17 +145,16 @@ public class CustomFieldsTest {
 			new EventRecord(1, 0.59, 17),
 			new EventRecord(2, 0.85, 50));
 
-		diff = await(supplier.streamTo(aggregation.consume(EventRecord.class)));
+		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
 		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
 		state.apply(diff);
 
-		AggregationQuery query = aggregationQueryBuilder()
-			.withKeys("siteId")
-			.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount")
-			.build();
+		AggregationQuery query = new AggregationQuery();
+		query.addKeys(List.of("siteId"));
+		query.addMeasures(List.of("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount"));
 
 		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
-		List<QueryResult> queryResults = await(aggregation.query(chunks, query, QueryResult.class, DefiningClassLoader.create(classLoader))
+		List<QueryResult> queryResults = await(aggregationExecutor.query(chunks, query, QueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 
 		double delta = 1E-3;

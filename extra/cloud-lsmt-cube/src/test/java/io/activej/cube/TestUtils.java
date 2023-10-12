@@ -1,9 +1,7 @@
 package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.csp.process.frame.FrameFormat;
 import io.activej.cube.CubeTestBase.TestStateManager;
 import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
@@ -19,10 +17,8 @@ import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
@@ -90,19 +86,6 @@ public final class TestUtils {
 		return new AggregationStructureBuilder(new AggregationStructure(chunkIdCodec));
 	}
 
-	public static AggregationQueryBuilder aggregationQueryBuilder() {
-		return new AggregationQueryBuilder(new AggregationQuery());
-	}
-
-	public static AggregationExecutorBuilder aggregationExecutorBuilder(
-		Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-		IAggregationChunkStorage<?> aggregationChunkStorage, FrameFormat frameFormat,
-		AggregationStructure structure
-	) {
-		AggregationExecutor aggregationExecutor = new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure);
-		return new AggregationExecutorBuilder(aggregationExecutor);
-	}
-
 	@SuppressWarnings("rawtypes")
 	public static final class AggregationStructureBuilder extends AbstractBuilder<AggregationStructureBuilder, AggregationStructure> {
 		private final AggregationStructure structure;
@@ -126,50 +109,6 @@ public final class TestUtils {
 		@Override
 		protected AggregationStructure doBuild() {
 			return structure;
-		}
-	}
-
-	public static final class AggregationExecutorBuilder extends AbstractBuilder<AggregationExecutorBuilder, AggregationExecutor> {
-		private final AggregationExecutor executor;
-
-		private AggregationExecutorBuilder(AggregationExecutor executor) {
-			this.executor = executor;
-		}
-
-		public AggregationExecutorBuilder withTemporarySortDir(Path temporarySortDir) {
-			checkNotBuilt(this);
-			executor.setTemporarySortDir(temporarySortDir);
-			return this;
-		}
-
-		@Override
-		protected AggregationExecutor doBuild() {
-			return executor;
-		}
-	}
-
-	public static final class AggregationQueryBuilder extends AbstractBuilder<AggregationQueryBuilder, AggregationQuery> {
-		private final AggregationQuery query;
-
-		private AggregationQueryBuilder(AggregationQuery query) {
-			this.query = query;
-		}
-
-		public AggregationQueryBuilder withKeys(String... keys) {
-			checkNotBuilt(this);
-			query.addKeys(List.of(keys));
-			return this;
-		}
-
-		public AggregationQueryBuilder withMeasures(String... fields) {
-			checkNotBuilt(this);
-			query.addMeasures(List.of(fields));
-			return this;
-		}
-
-		@Override
-		protected AggregationQuery doBuild() {
-			return query;
 		}
 	}
 }

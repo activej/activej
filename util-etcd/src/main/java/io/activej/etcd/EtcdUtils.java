@@ -42,12 +42,6 @@ import static java.util.concurrent.CompletableFuture.failedFuture;
 
 public class EtcdUtils {
 
-	public static final ByteSequence SLASH = byteSequenceFrom('/');
-	public static final ByteSequence DOT = byteSequenceFrom('.');
-	public static final ByteSequence UNDERSCORE = byteSequenceFrom('_');
-	public static final ByteSequence X00 = byteSequenceFrom((byte) 0x00);
-	public static final ByteSequence XFF = byteSequenceFrom((byte) 0xFF);
-
 	public static final EtcdValueCodec<Long> TOUCH_TIMESTAMP_CODEC = EtcdValueCodecs.ofLongString();
 
 	public static ByteSequence byteSequenceFrom(char ch) {
