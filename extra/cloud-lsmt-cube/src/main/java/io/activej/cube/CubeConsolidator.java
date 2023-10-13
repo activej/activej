@@ -64,21 +64,20 @@ public final class CubeConsolidator extends AbstractReactive
 		List<AsyncRunnable> runnables = new ArrayList<>();
 
 		Map<String, AggregationExecutor> aggregationExecutors = executor.getAggregationExecutors();
-		Map<String, AggregationState> aggregationStates = stateFunction.query(CubeState::getAggregationStates);
 
 		for (String aggregationId : structure.getAggregationIds()) {
 			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
-			AggregationState aggregationState = aggregationStates.get(aggregationId);
 
 			runnables.add(() -> {
 				int maxChunksToConsolidate = aggregationExecutor.getMaxChunksToConsolidate();
 				int chunkSize = aggregationExecutor.getChunkSize();
-				List<AggregationChunk> chunks = strategy.getChunksForConsolidation(
-					aggregationId,
-					aggregationState,
-					maxChunksToConsolidate,
-					chunkSize
-				);
+				List<AggregationChunk> chunks = stateFunction.query(state ->
+					strategy.getChunksForConsolidation(
+						aggregationId,
+						state.getAggregationState(aggregationId),
+						maxChunksToConsolidate,
+						chunkSize
+					));
 				return Promise.complete()
 					.then(() -> chunks.isEmpty() ?
 						Promise.of(AggregationDiff.empty()) :

@@ -109,7 +109,7 @@ public final class LogProcessor<T, D> extends AbstractReactive
 
 	private Promise<LogDiff<D>> doProcessLog() {
 		if (!enabled) return Promise.of(LogDiff.of(Map.of(), List.of()));
-		Map<String, LogPosition> positions = new HashMap<>(stateFunction.query(LogState::getPositions));
+		Map<String, LogPosition> positions = stateFunction.query(state -> Map.copyOf(state.getPositions()));
 		logger.trace("processLog_gotPositions called. Positions: {}", positions);
 
 		StreamSupplierWithResult<T, Map<String, LogPositionDiff>> supplier = getSupplier(positions);

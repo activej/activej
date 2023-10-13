@@ -203,17 +203,17 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 	) {
 		IChunkLocker<Object> locker = ensureLocker(aggregationId);
 		AggregationExecutor aggregationExecutor = cubeConsolidator.getExecutor().getAggregationExecutors().get(aggregationId);
-		AggregationState aggregationState = cubeConsolidator.getStateFunction().query(state -> state.getAggregationStates().get(aggregationId));
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 			() -> locker.getLockedChunks()
 				.map(strategy::getConsolidationStrategy)
-				.map(consolidationStrategy -> consolidationStrategy.getChunksForConsolidation(
-					aggregationId,
-					aggregationState,
-					aggregationExecutor.getMaxChunksToConsolidate(),
-					aggregationExecutor.getChunkSize()
-				))
+				.map(consolidationStrategy -> cubeConsolidator.getStateFunction().query(state ->
+					consolidationStrategy.getChunksForConsolidation(
+						aggregationId,
+						state.getAggregationStates().get(aggregationId),
+						aggregationExecutor.getMaxChunksToConsolidate(),
+						aggregationExecutor.getChunkSize()
+					)))
 				.then(chunks -> {
 					if (chunks.isEmpty()) {
 						logger.info("Nothing to consolidate in aggregation '{}'", aggregationId);
