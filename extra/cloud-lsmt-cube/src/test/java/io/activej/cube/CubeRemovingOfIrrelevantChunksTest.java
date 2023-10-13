@@ -104,7 +104,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, basicCubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, basicCubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage);
 
 		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor,
 			multilog,
@@ -155,7 +155,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		TestStateManager stateManager = stateManagerFactory.createUninitialized(cubeStructure, description);
 		stateManager.checkout();
 
-		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage);
 		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager.getCubeState(), cubeStructure, cubeExecutor);
 
 		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = serviceStateManager(stateManager);

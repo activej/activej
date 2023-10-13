@@ -70,7 +70,7 @@ public final class LogToCubeTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, TestPubRequest.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		LogProcessor<TestPubRequest, CubeDiff> logProcessor = LogProcessor.create(reactor,
 			multilog,

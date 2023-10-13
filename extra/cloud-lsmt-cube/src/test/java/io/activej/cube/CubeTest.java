@@ -119,7 +119,7 @@ public final class CubeTest {
 
 	private static CubeReporting createCubeReporting(CubeStructure cubeStructure, Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage aggregationChunkStorage) {
 		CubeState cubeState = CubeState.create(cubeStructure);
-		CubeExecutor cubeExecutor = CubeExecutor.builder(getCurrentReactor(), cubeStructure, executor, classLoader, aggregationChunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(getCurrentReactor(), cubeStructure, executor, classLoader, aggregationChunkStorage);
 		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
 		return CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
 	}
@@ -457,7 +457,7 @@ public final class CubeTest {
 		await(storage.start());
 		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		CubeStructure cubeStructure = newCubeStructure();
-		CubeExecutor cubeExecutor = CubeExecutor.builder(getCurrentReactor(), cubeStructure, executor, classLoader, chunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(getCurrentReactor(), cubeStructure, executor, classLoader, chunkStorage);
 
 		cubeExecutor.consume(DataItem1.class,
 			Stream.of("unknownKey")
@@ -476,7 +476,7 @@ public final class CubeTest {
 		await(storage.start());
 		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		CubeStructure cubeStructure = newCubeStructure();
-		CubeExecutor cubeExecutor = CubeExecutor.builder(getCurrentReactor(), cubeStructure, executor, classLoader, chunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(getCurrentReactor(), cubeStructure, executor, classLoader, chunkStorage);
 
 		cubeExecutor.consume(DataItem1.class,
 			Stream.of("key1", "key2")

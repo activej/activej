@@ -169,6 +169,13 @@ public final class CubeExecutor extends AbstractReactive
 		}
 	}
 
+	public static CubeExecutor create(
+		Reactor reactor, CubeStructure structure, Executor executor, DefiningClassLoader classLoader,
+		IAggregationChunkStorage aggregationChunkStorage
+	) {
+		return builder(reactor, structure, executor, classLoader, aggregationChunkStorage).build();
+	}
+
 	public static Builder builder(
 		Reactor reactor, CubeStructure structure, Executor executor, DefiningClassLoader classLoader,
 		IAggregationChunkStorage aggregationChunkStorage

@@ -110,8 +110,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		TestStateManager logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
 
-		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
-			.build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor, multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), logCubeStateManager.getLogState());
@@ -159,7 +158,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		logCubeStateManager = stateManagerFactory.createUninitialized(cubeStructure, description);
 
 		cubeState = logCubeStateManager.getCubeState();
-		cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+		cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		logOTProcessor = LogProcessor.create(reactor, multilog, cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog", List.of("partitionA"), logCubeStateManager.getLogState());
@@ -249,7 +248,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			TestStateManager logCubeStateManager1 = stateManagerFactory.create(cubeStructure1, description);
 
-			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+			CubeExecutor cubeExecutor1 = CubeExecutor.create(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 			LogProcessor<LogItem, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
@@ -315,7 +314,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			TestStateManager logCubeStateManager1 = stateManagerFactory.create(cubeStructure1, description);
 
-			CubeExecutor cubeExecutor1 = CubeExecutor.builder(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+			CubeExecutor cubeExecutor1 = CubeExecutor.create(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 

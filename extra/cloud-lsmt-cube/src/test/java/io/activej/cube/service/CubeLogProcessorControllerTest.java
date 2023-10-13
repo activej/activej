@@ -81,7 +81,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		LogState<CubeDiff, CubeState> logState = LogState.create(CubeState.create(structure));
 		TestStateManager stateManager = stateManagerFactory.create(structure, description);

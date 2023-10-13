@@ -75,7 +75,7 @@ public class StringDimensionTest {
 			.build();
 		CubeState cubeState = CubeState.create(cubeStructure);
 
-		CubeExecutor cubeExecutor = CubeExecutor.builder(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage).build();
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage);
 
 		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
 		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
