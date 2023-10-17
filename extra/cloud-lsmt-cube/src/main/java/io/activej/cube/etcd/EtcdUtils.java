@@ -28,6 +28,7 @@ import static io.activej.etcd.EtcdUtils.*;
 public final class EtcdUtils {
 	public static final ByteSequence POS = byteSequenceFrom("pos.");
 	public static final ByteSequence CHUNK = byteSequenceFrom("chunk.");
+	public static final ByteSequence TIMESTAMP = byteSequenceFrom("timestamp");
 	public static final ByteSequence CLEANUP_REVISION = byteSequenceFrom("cleanup-revision");
 	public static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
 	public static final EtcdValueCodec<Long> REVISION_CODEC = EtcdValueCodecs.ofLongString();

@@ -49,6 +49,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixChunk = CHUNK;
+	private ByteSequence timestampKey = TIMESTAMP;
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -96,6 +97,12 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
 			CubeEtcdStateManager.this.prefixChunk = prefixChunk;
+			return this;
+		}
+
+		public Builder withTimestampKey(ByteSequence timestampKey) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.timestampKey = timestampKey;
 			return this;
 		}
 
@@ -230,7 +237,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	@Override
 	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
-		touchTimestamp(txn, ByteSequence.EMPTY, now);
+		touchTimestamp(txn, timestampKey, now);
 		for (LogDiff<CubeDiff> diff : transaction) {
 			saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txn, diff);
 		}
@@ -244,7 +251,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 					.build())
 			.get();
 		client.getKVClient()
-			.put(root, TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
+			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
 			.get();
 	}
 }

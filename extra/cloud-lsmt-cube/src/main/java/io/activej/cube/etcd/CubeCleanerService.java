@@ -77,6 +77,7 @@ public final class CubeCleanerService extends AbstractReactive
 	private EtcdKeyCodec<Long> chunkIdCodec = CHUNK_ID_CODEC;
 
 	private ByteSequence prefixChunk = CHUNK;
+	private ByteSequence timestampKey = TIMESTAMP;
 	private ByteSequence cleanupRevisionKey = CLEANUP_REVISION;
 
 	private @Nullable Watch.Watcher watcher;
@@ -124,6 +125,12 @@ public final class CubeCleanerService extends AbstractReactive
 		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
 			CubeCleanerService.this.prefixChunk = prefixChunk;
+			return this;
+		}
+
+		public Builder withTimestampKey(ByteSequence timestampKey) {
+			checkNotBuilt(this);
+			CubeCleanerService.this.timestampKey = timestampKey;
 			return this;
 		}
 
@@ -291,7 +298,7 @@ public final class CubeCleanerService extends AbstractReactive
 
 							var rootKey = keyValue.getKey().substring(root.size());
 
-							if (rootKey.isEmpty()) {
+							if (rootKey.equals(timestampKey)) {
 								if (event.getEventType() == EventType.PUT) {
 									ByteSequence value = keyValue.getValue();
 									currentTimestamp = EtcdUtils.TOUCH_TIMESTAMP_CODEC.decodeValue(value);

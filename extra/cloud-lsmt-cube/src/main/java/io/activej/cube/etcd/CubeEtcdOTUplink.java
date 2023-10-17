@@ -62,6 +62,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixChunk = CHUNK;
+	private ByteSequence timestampKey = TIMESTAMP;
 
 	private CubeEtcdOTUplink(Reactor reactor, Client client, CubeStructure cubeStructure, ByteSequence root) {
 		super(reactor);
@@ -92,6 +93,12 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.prefixChunk = prefixChunk;
+			return this;
+		}
+
+		public Builder withTimestampKey(ByteSequence timestampKey) {
+			checkNotBuilt(this);
+			CubeEtcdOTUplink.this.timestampKey = timestampKey;
 			return this;
 		}
 
@@ -286,7 +293,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(
 				executeTxnOps(client.getKVClient(), root, txnOps -> {
-					touchTimestamp(txnOps, ByteSequence.EMPTY, reactor);
+					touchTimestamp(txnOps, timestampKey, reactor);
 					for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
 						saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txnOps, diff);
 					}
@@ -325,7 +332,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					.build())
 			.get();
 		client.getKVClient()
-			.put(root, TOUCH_TIMESTAMP_CODEC.encodeValue(reactor.currentTimeMillis()))
+			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(reactor.currentTimeMillis()))
 			.get();
 	}
 

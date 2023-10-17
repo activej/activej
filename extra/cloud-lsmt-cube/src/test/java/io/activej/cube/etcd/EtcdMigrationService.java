@@ -50,6 +50,7 @@ public final class EtcdMigrationService {
 
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixChunk = CHUNK;
+	private ByteSequence timestampKey = TIMESTAMP;
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -98,6 +99,12 @@ public final class EtcdMigrationService {
 		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
 			EtcdMigrationService.this.prefixChunk = prefixChunk;
+			return this;
+		}
+
+		public Builder withTimestampKey(ByteSequence timestampKey) {
+			checkNotBuilt(this);
+			EtcdMigrationService.this.timestampKey = timestampKey;
 			return this;
 		}
 
@@ -176,9 +183,9 @@ public final class EtcdMigrationService {
 		}
 
 		return executeTxnOps(client, root, txnOps -> {
-			txnOps.cmp(ByteSequence.EMPTY, Cmp.Op.EQUAL, CmpTarget.createRevision(0));
+			txnOps.cmp(timestampKey, Cmp.Op.EQUAL, CmpTarget.createRevision(0));
 
-			touchTimestamp(txnOps, ByteSequence.EMPTY, now);
+			touchTimestamp(txnOps, timestampKey, now);
 			saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txnOps, logDiff);
 		});
 	}
