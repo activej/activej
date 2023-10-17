@@ -20,13 +20,17 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.ref.RefLong;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.exception.CubeException;
+import io.activej.etcd.EtcdEventProcessor;
+import io.activej.etcd.EtcdListener;
 import io.activej.etcd.EtcdUtils;
 import io.activej.etcd.codec.key.EtcdKeyCodec;
+import io.activej.etcd.codec.kv.EtcdKVCodecs;
+import io.activej.etcd.codec.kv.EtcdKVDecoder;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
-import io.activej.etcd.codec.prefix.Prefix;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -38,9 +42,6 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Watch;
-import io.etcd.jetcd.options.WatchOption;
-import io.etcd.jetcd.watch.WatchEvent.EventType;
-import io.etcd.jetcd.watch.WatchResponse;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -48,7 +49,10 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static io.activej.async.function.AsyncRunnables.coalesce;
@@ -271,73 +275,81 @@ public final class CubeCleanerService extends AbstractReactive
 	}
 
 	private Watch.Watcher createWatcher() {
-		return client.getWatchClient().watch(
-			root,
-			WatchOption.builder()
-				.isPrefix(true)
-				.withRevision(lastCleanupRevision + 1L)
-				.build(),
-			new Watch.Listener() {
-				long currentRevision = -1;
-				long currentTimestamp = -1;
-
-				final List<Long> currentChunkIds = new ArrayList<>();
-
-				@Override
-				public void onNext(WatchResponse response) {
-					try {
-						for (var event : response.getEvents()) {
-							var keyValue = event.getKeyValue();
-
-							long modRevision = keyValue.getModRevision();
-							if (modRevision != currentRevision) {
-								flushCurrentChunkIds();
-								currentRevision = modRevision;
-								currentTimestamp = -1;
-							}
-
-							var rootKey = keyValue.getKey().substring(root.size());
-
-							if (rootKey.equals(timestampKey)) {
-								if (event.getEventType() == EventType.PUT) {
-									ByteSequence value = keyValue.getValue();
-									currentTimestamp = EtcdUtils.TOUCH_TIMESTAMP_CODEC.decodeValue(value);
-								}
-								continue;
-							}
-
-							if (!rootKey.startsWith(prefixChunk)) continue;
-
-							var key = rootKey.substring(prefixChunk.size());
-
-							if (event.getEventType() != EventType.DELETE) continue;
-
-							Prefix<String> prefix = aggregationIdCodec.decodePrefix(key);
-							long chunkId = chunkIdCodec.decodeKey(prefix.suffix());
-							currentChunkIds.add(chunkId);
+		return EtcdUtils.watch(client, lastCleanupRevision,
+			new EtcdUtils.WatchRequest[]{
+				new EtcdUtils.WatchRequest<>(
+					root.concat(timestampKey),
+					EtcdKVCodecs.ofEmptyKey(EtcdUtils.TOUCH_TIMESTAMP_CODEC),
+					new EtcdEventProcessor<Void, Long, RefLong>() {
+						@Override
+						public RefLong createEventsAccumulator() {
+							return new RefLong(-1L);
 						}
-						flushCurrentChunkIds();
-					} catch (MalformedEtcdDataException e) {
-						onError(e);
-					}
-				}
 
-				private void flushCurrentChunkIds() {
-					if (currentTimestamp == -1 && !currentChunkIds.isEmpty()) {
-						logger.warn("No transaction timestamp found, skip deleting chunks {}", currentChunkIds);
-					}
-					if (currentChunkIds.isEmpty()) return;
+						@Override
+						public void onPut(RefLong accumulator, Long timestamp) {
+							accumulator.set(timestamp);
+						}
 
-					deletedChunksQueue.add(new DeletedChunksEntry(currentRevision, currentTimestamp, new HashSet<>(currentChunkIds)));
-					currentChunkIds.clear();
+						@Override
+						public void onDelete(RefLong accumulator, Void key) {
+							throw new UnsupportedOperationException();
+						}
+					}),
+				EtcdUtils.WatchRequest.<Long, Long, Set<Long>>of(
+					root.concat(prefixChunk),
+					new EtcdKVDecoder<>() {
+						@Override
+						public Long decodeKV(io.activej.etcd.codec.kv.KeyValue kv) throws MalformedEtcdDataException {
+							ByteSequence suffix = aggregationIdCodec.decodePrefix(kv.key()).suffix();
+							return chunkIdCodec.decodeKey(suffix);
+						}
+
+						@Override
+						public Long decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
+							ByteSequence suffix = aggregationIdCodec.decodePrefix(byteSequence).suffix();
+							return chunkIdCodec.decodeKey(suffix);
+						}
+					},
+					new EtcdEventProcessor<>() {
+						@Override
+						public Set<Long> createEventsAccumulator() {
+							return new HashSet<>();
+						}
+
+						@Override
+						public void onPut(Set<Long> accumulator, Long key) {
+						}
+
+						@Override
+						public void onDelete(Set<Long> accumulator, Long key) {
+							accumulator.add(key);
+						}
+					}
+				)
+			},
+			new EtcdListener<>() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public void onNext(long revision, Object[] operation) {
+					RefLong timestampRef = (RefLong) operation[0];
+					Set<Long> deletedChunks = (Set<Long>) operation[1];
+
+					if (deletedChunks.isEmpty()) return;
+
+					long timestamp = timestampRef.get();
+					if (timestamp == -1) {
+						logger.warn("No transaction timestamp found, skip deleting chunks {}", deletedChunks);
+						return;
+					}
+
+					deletedChunksQueue.add(new DeletedChunksEntry(revision, timestamp, deletedChunks));
 					reactor.submit(() -> {
 						if (cleanupSchedule == null) {
 							cleanup();
 						}
 					});
 				}
-
-				boolean recreating;
 
 				@Override
 				public void onError(Throwable throwable) {
@@ -350,6 +362,8 @@ public final class CubeCleanerService extends AbstractReactive
 					logger.trace("Watcher completed");
 					recreate();
 				}
+
+				boolean recreating;
 
 				private void recreate() {
 					if (recreating) return;
@@ -364,8 +378,7 @@ public final class CubeCleanerService extends AbstractReactive
 						CubeCleanerService.this.watcher = createWatcher();
 					});
 				}
-			}
-		);
+			});
 	}
 
 	public record DeletedChunksEntry(long deleteRevision, long deleteTimestamp, Set<Long> chunkIds) {

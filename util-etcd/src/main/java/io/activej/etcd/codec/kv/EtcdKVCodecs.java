@@ -15,6 +15,36 @@ import java.util.function.Function;
 
 public class EtcdKVCodecs {
 
+	public static <V> EtcdKVCodec<Void, V> ofEmptyKey(EtcdValueCodec<V> valueCodec) {
+		return new EtcdKVCodec<>() {
+			@Override
+			public V decodeKV(KeyValue kv) throws MalformedEtcdDataException {
+				if (!kv.key().isEmpty()) {
+					throw new MalformedEtcdDataException("Detected suffix key: " + kv.key());
+				}
+				return valueCodec.decodeValue(kv.value());
+			}
+
+			@Override
+			public Void decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
+				if (!byteSequence.isEmpty()) {
+					throw new MalformedEtcdDataException("Detected suffix key: " + byteSequence);
+				}
+				return null;
+			}
+
+			@Override
+			public KeyValue encodeKV(V v) {
+				return new KeyValue(ByteSequence.EMPTY, valueCodec.encodeValue(v));
+			}
+
+			@Override
+			public ByteSequence encodeKey(Void key) {
+				return ByteSequence.EMPTY;
+			}
+		};
+	}
+
 	public static <K, V> EtcdKVCodec<K, Map.Entry<K, V>> ofMapEntry(EtcdKeyCodec<K> keyCodec, EtcdValueCodec<V> valueCodec) {
 		return new EtcdKVCodec<>() {
 			@Override
