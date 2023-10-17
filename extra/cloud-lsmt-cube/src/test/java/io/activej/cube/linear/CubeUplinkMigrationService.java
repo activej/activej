@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
-import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -105,7 +105,7 @@ public final class CubeUplinkMigrationService {
 	}
 
 	private AsyncOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
-		JsonCodec<LogDiff<CubeDiff>> codec = ofLogDiff(ofCubeDiff(structure));
+		JsonCodec<LogDiff<CubeDiff>> codec = ofLogDiff(createCubeDiffCodec(structure));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
 		return MySqlOTRepository.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
 	}

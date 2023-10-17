@@ -50,7 +50,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static io.activej.cube.TestUtils.*;
-import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
@@ -117,7 +117,7 @@ public abstract class CubeTestBase {
 					public OTManager createUninitialized(CubeStructure structure, Description description) {
 						Reactor reactor = Reactor.getCurrentReactor();
 						AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, idGenerator,
-							LOG_OT, ofLogDiff(ofCubeDiff(structure)));
+							LOG_OT, ofLogDiff(createCubeDiffCodec(structure)));
 						var uplink = OTUplink.create(reactor, repository, LOG_OT);
 						var stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 

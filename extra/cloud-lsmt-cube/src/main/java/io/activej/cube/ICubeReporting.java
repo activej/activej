@@ -23,6 +23,4 @@ import io.activej.promise.Promise;
 @ComponentInterface
 public interface ICubeReporting {
 	Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException;
-
-	CubeStructure getStructure();
 }

@@ -1,8 +1,9 @@
-package io.activej.cube.http;
+package io.activej.cube.json;
 
 import com.dslplatform.json.ParsingException;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecFactory;
 import org.junit.Test;
 
@@ -18,7 +19,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.fail;
 
 public class AggregationPredicateJsonCodecTest {
-	private static final AggregationPredicateJsonCodec CODEC = AggregationPredicateJsonCodec.create(
+	private static final JsonCodec<AggregationPredicate> CODEC = JsonCodecs.createAggregationPredicateCodec(
 		JsonCodecFactory.defaultInstance(),
 		Map.of(
 			"campaign", int.class,

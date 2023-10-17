@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.cube.http;
+package io.activej.cube.json;
 
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
@@ -22,10 +22,8 @@ import com.dslplatform.json.ParsingException;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.impl.*;
 import io.activej.json.JsonCodec;
-import io.activej.json.JsonCodecFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -33,7 +31,7 @@ import java.util.regex.PatternSyntaxException;
 import static com.dslplatform.json.JsonWriter.*;
 
 @SuppressWarnings("unchecked")
-public final class AggregationPredicateJsonCodec implements JsonCodec<AggregationPredicate> {
+final class AggregationPredicateJsonCodec implements JsonCodec<AggregationPredicate> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
 	public static final String EQ = "eq";
@@ -60,22 +58,8 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 	public static final String IN_SIGN = "IN";
 	private final Map<String, JsonCodec<Object>> attributeCodecs;
 
-	private AggregationPredicateJsonCodec(Map<String, JsonCodec<Object>> attributeCodecs) {
+	AggregationPredicateJsonCodec(Map<String, JsonCodec<Object>> attributeCodecs) {
 		this.attributeCodecs = attributeCodecs;
-	}
-
-	public static AggregationPredicateJsonCodec create(
-		JsonCodecFactory factory,
-		Map<String, Type> attributeTypes, Map<String, Type> measureTypes
-	) {
-		Map<String, JsonCodec<Object>> attributeCodecs = new LinkedHashMap<>();
-		for (Map.Entry<String, Type> entry : attributeTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), factory.resolve(entry.getValue()).nullable());
-		}
-		for (Map.Entry<String, Type> entry : measureTypes.entrySet()) {
-			attributeCodecs.put(entry.getKey(), factory.resolve(entry.getValue()));
-		}
-		return new AggregationPredicateJsonCodec(attributeCodecs);
 	}
 
 	private void writeEq(JsonWriter writer, Eq predicate) {
@@ -242,23 +226,21 @@ public final class AggregationPredicateJsonCodec implements JsonCodec<Aggregatio
 	}
 
 	private static AggregationPredicate getComparisonPredicate(String operator, String field, Object value) throws ParsingException {
-		AggregationPredicate comparisonPredicate;
-		switch (operator) {
-			case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = new Eq(field, value);
-			case NOT_EQ_SIGN -> comparisonPredicate = new NotEq(field, value);
-			case GE_SIGN -> comparisonPredicate = new Ge(field, (Comparable<Object>) value);
-			case GT_SIGN -> comparisonPredicate = new Gt(field, (Comparable<Object>) value);
-			case LE_SIGN -> comparisonPredicate = new Le(field, (Comparable<Object>) value);
-			case LT_SIGN -> comparisonPredicate = new Lt(field, (Comparable<Object>) value);
+		return switch (operator) {
+			case EMPTY_STRING, EQ_SIGN -> new Eq(field, value);
+			case NOT_EQ_SIGN -> new NotEq(field, value);
+			case GE_SIGN -> new Ge(field, (Comparable<Object>) value);
+			case GT_SIGN -> new Gt(field, (Comparable<Object>) value);
+			case LE_SIGN -> new Le(field, (Comparable<Object>) value);
+			case LT_SIGN -> new Lt(field, (Comparable<Object>) value);
 			case IN_SIGN -> {
 				if (value == null) {
 					throw ParsingException.create("Arguments of " + IN_SIGN + " cannot be null", true);
 				}
-				comparisonPredicate = new In(field, (SortedSet<Object>) value);
+				yield new In(field, (SortedSet<Object>) value);
 			}
 			default -> throw ParsingException.create("Could not read predicate", true);
-		}
-		return comparisonPredicate;
+		};
 	}
 
 	@Override

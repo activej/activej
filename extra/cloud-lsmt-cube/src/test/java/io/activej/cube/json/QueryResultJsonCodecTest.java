@@ -1,4 +1,4 @@
-package io.activej.cube.http;
+package io.activej.cube.json;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
@@ -20,7 +20,7 @@ public class QueryResultJsonCodecTest {
 
 	@Test
 	public void test() throws MalformedDataException {
-		JsonCodec<QueryResult> codec = QueryResultJsonCodec.create(DefiningClassLoader.create(),
+		JsonCodec<QueryResult> codec = JsonCodecs.createQueryResultCodec(DefiningClassLoader.create(),
 			JsonCodecFactory.defaultInstance(),
 			Map.of(
 				"campaign", int.class,

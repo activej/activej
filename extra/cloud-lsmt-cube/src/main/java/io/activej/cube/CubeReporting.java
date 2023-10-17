@@ -93,7 +93,6 @@ public final class CubeReporting extends AbstractReactive
 		return executor.query(compatibleAggregations, preprocessedQuery);
 	}
 
-	@Override
 	public CubeStructure getStructure() {
 		return structure;
 	}

@@ -11,6 +11,7 @@ import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
 import io.activej.cube.aggregation.measure.Measure;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
@@ -23,6 +24,8 @@ import io.activej.fs.FileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.IHttpClient;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecFactory;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.reactor.Reactor;
@@ -49,6 +52,8 @@ import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.json.JsonCodecs.createAggregationPredicateCodec;
+import static io.activej.cube.json.JsonCodecs.createQueryResultCodec;
 import static io.activej.cube.measure.ComputedMeasures.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -60,10 +65,14 @@ import static org.junit.Assert.*;
 public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
+
 	private HttpServer cubeHttpServer;
 	private HttpClientCubeReporting httpCubeReporting;
 	private CubeReporting cubeReporting;
 	private int serverPort;
+
+	private JsonCodec<QueryResult> queryResultJsonCodec;
+	private JsonCodec<AggregationPredicate> aggregationPredicateJsonCodec;
 
 	static final int EXCLUDE_AFFILIATE = 0;
 	static final String EXCLUDE_SITE = "--";
@@ -342,16 +351,20 @@ public final class ReportingTest extends CubeTestBase {
 
 		logCubeStateManager.push(logDiff);
 
+		queryResultJsonCodec = createQueryResultCodec(CLASS_LOADER, JsonCodecFactory.defaultInstance(), cubeStructure);
+		aggregationPredicateJsonCodec = createAggregationPredicateCodec(JsonCodecFactory.defaultInstance(), cubeStructure);
+
 		cubeHttpServer = startHttpServer();
 
 		IHttpClient httpClient = HttpClient.builder(reactor)
 			.withNoKeepAlive()
 			.build();
-		httpCubeReporting = HttpClientCubeReporting.builder(httpClient, "http://127.0.0.1:" + serverPort, cubeStructure).build();
+
+		httpCubeReporting = HttpClientCubeReporting.create(httpClient, "http://127.0.0.1:" + serverPort, queryResultJsonCodec, aggregationPredicateJsonCodec);
 	}
 
 	private HttpServer startHttpServer() {
-		HttpServer server = HttpServer.builder(reactor, ReportingServiceServlet.createRootServlet(reactor, cubeReporting))
+		HttpServer server = HttpServer.builder(reactor, ReportingServiceServlet.createRootServlet(reactor, cubeReporting, queryResultJsonCodec, aggregationPredicateJsonCodec))
 			.withListenPort(serverPort)
 			.withAcceptOnce()
 			.build();

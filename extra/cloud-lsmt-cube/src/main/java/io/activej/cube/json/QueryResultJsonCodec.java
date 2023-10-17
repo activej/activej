@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.cube.http;
+package io.activej.cube.json;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.QueryResult;
@@ -34,14 +34,13 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.entriesToHashMap;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.cube.ReportType.*;
 import static io.activej.json.JsonCodecs.*;
 import static io.activej.json.JsonValidationUtils.validateArgument;
 import static io.activej.json.JsonValidationUtils.validateNotNull;
 
-public final class QueryResultJsonCodec {
+final class QueryResultJsonCodec {
 
 	static final String ATTRIBUTES_FIELD = "attributes";
 	static final String MEASURES_FIELD = "measures";
@@ -136,17 +135,7 @@ public final class QueryResultJsonCodec {
 		}
 	}
 
-	public static JsonCodec<QueryResult> create(
-		DefiningClassLoader classLoader,
-		JsonCodecFactory factory,
-		Map<String, Type> attributeTypes,
-		Map<String, Type> measureTypes
-	) {
-		Map<String, JsonCodec<Object>> attributeCodecs = attributeTypes.entrySet().stream()
-			.collect(entriesToHashMap(value -> factory.resolve(value).nullable()));
-		Map<String, JsonCodec<Object>> measureCodecs = measureTypes.entrySet().stream()
-			.collect(entriesToHashMap(factory::resolve));
-
+	static ObjectJsonCodec<QueryResult, QueryResultBuilder> create(DefiningClassLoader classLoader, Map<String, Type> attributeTypes, Map<String, Type> measureTypes, Map<String, JsonCodec<Object>> attributeCodecs, Map<String, JsonCodec<Object>> measureCodecs) {
 		return ObjectJsonCodec.builder(
 				() -> new QueryResultBuilder(classLoader, attributeTypes, measureTypes),
 				QueryResultBuilder::toQueryResult)

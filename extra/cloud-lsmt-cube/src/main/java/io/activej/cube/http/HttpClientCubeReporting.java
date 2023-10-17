@@ -16,19 +16,16 @@
 
 package io.activej.cube.http;
 
-import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.CubeQuery;
-import io.activej.cube.CubeStructure;
 import io.activej.cube.ICubeReporting;
 import io.activej.cube.QueryResult;
+import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.exception.CubeException;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
 import io.activej.http.IHttpClient;
 import io.activej.json.JsonCodec;
-import io.activej.json.JsonCodecFactory;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,62 +43,36 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class HttpClientCubeReporting implements ICubeReporting {
 	private static final Logger logger = LoggerFactory.getLogger(HttpClientCubeReporting.class);
 
-	private DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private JsonCodecFactory factory = JsonCodecFactory.defaultInstance();
-
 	private final String url;
 	private final IHttpClient httpClient;
-	private JsonCodec<QueryResult> queryResultJsonCodec;
-	private AggregationPredicateJsonCodec aggregationPredicateCodec;
-	private final CubeStructure structure;
+	private final JsonCodec<QueryResult> queryResultJsonCodec;
+	private final JsonCodec<AggregationPredicate> aggregationPredicateCodec;
 
-	private HttpClientCubeReporting(IHttpClient httpClient, String url, CubeStructure structure) {
+	private HttpClientCubeReporting(IHttpClient httpClient, String url,
+		JsonCodec<QueryResult> queryResultJsonCodec, JsonCodec<AggregationPredicate> aggregationPredicateCodec
+	) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
-		this.structure = structure;
+		this.queryResultJsonCodec = queryResultJsonCodec;
+		this.aggregationPredicateCodec = aggregationPredicateCodec;
 	}
 
-	public static Builder builder(IHttpClient httpClient, String cubeServletUrl, CubeStructure structure) {
-		return new HttpClientCubeReporting(httpClient, cubeServletUrl, structure).new Builder();
+	public static HttpClientCubeReporting create(
+		IHttpClient httpClient,
+		String cubeServletUrl,
+		JsonCodec<QueryResult> queryResultJsonCodec,
+		JsonCodec<AggregationPredicate> aggregationPredicateCodec
+	) {
+		return new HttpClientCubeReporting(httpClient, cubeServletUrl, queryResultJsonCodec, aggregationPredicateCodec);
 	}
 
-	public static Builder builder(IHttpClient httpClient, URI cubeServletUrl, CubeStructure structure) {
-		return builder(httpClient, cubeServletUrl.toString(), structure);
-	}
-
-	public final class Builder extends AbstractBuilder<Builder, HttpClientCubeReporting> {
-		private Builder() {}
-
-		public Builder withClassLoader(DefiningClassLoader classLoader) {
-			checkNotBuilt(this);
-			HttpClientCubeReporting.this.classLoader = classLoader;
-			return this;
-		}
-
-		public Builder withJsonCodecRegistry(JsonCodecFactory factory) {
-			checkNotBuilt(this);
-			HttpClientCubeReporting.this.factory = factory;
-			return this;
-		}
-
-		@Override
-		protected HttpClientCubeReporting doBuild() {
-			return HttpClientCubeReporting.this;
-		}
-	}
-
-	private AggregationPredicateJsonCodec getAggregationPredicateCodec() {
-		if (aggregationPredicateCodec == null) {
-			aggregationPredicateCodec = AggregationPredicateJsonCodec.create(factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
-		}
-		return aggregationPredicateCodec;
-	}
-
-	private JsonCodec<QueryResult> getQueryResultJsonCodec() {
-		if (queryResultJsonCodec == null) {
-			queryResultJsonCodec = QueryResultJsonCodec.create(classLoader, factory, structure.getAllAttributeTypes(), structure.getAllMeasureTypes());
-		}
-		return queryResultJsonCodec;
+	public static HttpClientCubeReporting create(
+		IHttpClient httpClient,
+		URI cubeServletUrl,
+		JsonCodec<QueryResult> queryResultJsonCodec,
+		JsonCodec<AggregationPredicate> aggregationPredicateCodec
+	) {
+		return create(httpClient, cubeServletUrl.toString(), queryResultJsonCodec, aggregationPredicateCodec);
 	}
 
 	@Override
@@ -117,7 +88,7 @@ public final class HttpClientCubeReporting implements ICubeReporting {
 								"CubeHTTP query failed. Response code: " + response.getCode() +
 								" Body: " + body.getString(UTF_8));
 						}
-						return fromJsonBytes(getQueryResultJsonCodec(), body.getArray());
+						return fromJsonBytes(queryResultJsonCodec, body.getArray());
 					} catch (MalformedDataException e) {
 						throw new CubeException("Cube HTTP query failed. Invalid data received", e);
 					}
@@ -125,19 +96,14 @@ public final class HttpClientCubeReporting implements ICubeReporting {
 				.whenComplete(toLogger(logger, "query", query)));
 	}
 
-	@Override
-	public CubeStructure getStructure() {
-		return structure;
-	}
-
 	private HttpRequest buildRequest(CubeQuery query) {
 		Map<String, String> urlParams = new LinkedHashMap<>();
 
 		urlParams.put(ATTRIBUTES_PARAM, String.join(",", query.getAttributes()));
 		urlParams.put(MEASURES_PARAM, String.join(",", query.getMeasures()));
-		urlParams.put(WHERE_PARAM, toJson(getAggregationPredicateCodec(), query.getWhere()));
+		urlParams.put(WHERE_PARAM, toJson(aggregationPredicateCodec, query.getWhere()));
 		urlParams.put(SORT_PARAM, formatOrderings(query.getOrderings()));
-		urlParams.put(HAVING_PARAM, toJson(getAggregationPredicateCodec(), query.getHaving()));
+		urlParams.put(HAVING_PARAM, toJson(aggregationPredicateCodec, query.getHaving()));
 		if (query.getLimit() != null)
 			urlParams.put(LIMIT_PARAM, query.getLimit().toString());
 		if (query.getOffset() != null)

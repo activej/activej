@@ -38,7 +38,7 @@ import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
-import static io.activej.cube.json.JsonCodecs.ofCubeDiff;
+import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
 import static io.activej.etl.json.JsonCodecs.ofLogDiff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
@@ -80,7 +80,7 @@ public final class CubeUplinkMigrationServiceTest {
 				.withMeasures("impressions", "clicks", "conversions", "revenue"))
 			.build();
 
-		JsonCodec<LogDiff<CubeDiff>> diffCodec = ofLogDiff(ofCubeDiff(structure));
+		JsonCodec<LogDiff<CubeDiff>> diffCodec = ofLogDiff(createCubeDiffCodec(structure));
 
 		repo = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
