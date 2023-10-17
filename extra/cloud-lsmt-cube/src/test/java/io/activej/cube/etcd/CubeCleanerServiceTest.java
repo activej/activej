@@ -35,7 +35,6 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +46,7 @@ import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
-import static io.activej.cube.etcd.CubeCleanerController.DEFAULT_CLEANUP_OLDER_THAN;
+import static io.activej.cube.etcd.CubeCleanerService.DEFAULT_CLEANUP_OLDER_THAN;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.time.TestCurrentTimeProvider.*;
@@ -55,7 +54,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("DataFlowIssue")
-public class CubeCleanerControllerTest {
+public class CubeCleanerServiceTest {
 	private static final String AGGREGATION_ID = "pub";
 	private static final Client ETCD_CLIENT = Client.builder().waitForReady(false).endpoints("http://127.0.0.1:2379").build();
 	private static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
@@ -75,7 +74,7 @@ public class CubeCleanerControllerTest {
 	private final SettableCurrentTimeProvider now = settable(ofConstant(100L));
 
 	private CubeStructure structure;
-	private CubeCleanerController cleanerController;
+	private CubeCleanerService cleanerService;
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Before
@@ -118,14 +117,13 @@ public class CubeCleanerControllerTest {
 		long stateManagerRevision = stateManager.getRevision();
 
 		ByteSequence cleanupRevisionKey = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName() + ".cleanup_revision_key");
-		cleanerController = CubeCleanerController.builder(ETCD_CLIENT, aggregationChunkStorage, root, cleanupRevisionKey)
+		cleanerService = CubeCleanerService.builder(ETCD_CLIENT, aggregationChunkStorage, root, cleanupRevisionKey)
 			.withCurrentTimeProvider(now)
-			.withDefaultCleanupInterval(Duration.ofHours(999)) // no default cleanup
 			.build();
 
 		ETCD_CLIENT.getKVClient().put(cleanupRevisionKey, EtcdValueCodecs.ofLongString().encodeValue(stateManagerRevision)).get();
 
-		await(cleanerController.start());
+		await(cleanerService.start());
 
 		assertTrue(getStorageChunks().isEmpty());
 	}
@@ -191,7 +189,7 @@ public class CubeCleanerControllerTest {
 		eventloop.keepAlive(true);
 		now.setTimeProvider(ofTimeSequence(now.currentTimeMillis() - 100, 100));
 		try {
-			await(cleanerController.cleanup()
+			await(cleanerService.cleanup()
 				.then(() -> aggregationChunkStorage.list(aLong -> true, a -> true))
 				.whenResult(chunks -> {
 					assertEquals(Set.of(4L, 5L, 6L), chunks);
@@ -241,7 +239,7 @@ public class CubeCleanerControllerTest {
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		await(cleanerController.cleanup());
+		await(cleanerService.cleanup());
 	}
 
 	private Set<Long> getStorageChunks() {

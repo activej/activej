@@ -32,7 +32,6 @@ import io.activej.etcd.codec.value.EtcdValueCodec;
 import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -45,28 +44,25 @@ import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.options.WatchOption;
 import io.etcd.jetcd.watch.WatchEvent.EventType;
 import io.etcd.jetcd.watch.WatchResponse;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.stream.Collectors;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static io.activej.async.function.AsyncRunnables.reuse;
+import static io.activej.async.function.AsyncRunnables.coalesce;
 import static io.activej.cube.etcd.EtcdUtils.CHUNK_ID_CODEC;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class CubeCleanerController extends AbstractReactive
+public final class CubeCleanerService extends AbstractReactive
 	implements ReactiveService, ReactiveJmxBean {
 
-	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
+	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerService.class);
 
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
@@ -74,17 +70,17 @@ public final class CubeCleanerController extends AbstractReactive
 	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
 	private static final EtcdValueCodec<Long> REVISION_CODEC = EtcdValueCodecs.ofLongString();
 
-	public static final Duration DEFAULT_CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupOlderThan", Duration.ofHours(1));
-	public static final Duration DEFAULT_CLEANUP_INTERVAL = ApplicationSettings.getDuration(CubeCleanerController.class, "cleanupOlderThan", Duration.ofMinutes(1));
+	public static final Duration DEFAULT_CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerService.class, "cleanupOlderThan", Duration.ofHours(1));
+	public static final Duration DEFAULT_CLEANUP_RETRY = ApplicationSettings.getDuration(CubeCleanerService.class, "cleanupRetry", Duration.ofMinutes(1));
 
 	private final Client client;
 	private final AggregationChunkStorage<Long> storage;
 	private final ByteSequence root;
 	private final ByteSequence cleanupRevisionKey;
 
-	private final Queue<DeletedChunkEntry> deletedChunksQueue = new PriorityBlockingQueue<>();
+	private final Queue<DeletedChunksEntry> deletedChunksQueue = new ConcurrentLinkedQueue<>();
 
-	private final AsyncRunnable cleanup = reuse(this::doCleanup);
+	private final AsyncRunnable cleanup = coalesce(this::doCleanup);
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private EtcdKeyCodec<Long> chunkIdCodec = CHUNK_ID_CODEC;
@@ -96,7 +92,7 @@ public final class CubeCleanerController extends AbstractReactive
 	private long lastCleanupRevision;
 
 	private long cleanupOlderThanMillis = DEFAULT_CLEANUP_OLDER_THAN.toMillis();
-	private long defaultCleanupIntervalMillis = DEFAULT_CLEANUP_INTERVAL.toMillis();
+	private long cleanupRetryMillis = DEFAULT_CLEANUP_RETRY.toMillis();
 
 	private volatile boolean stopped;
 	private @Nullable ScheduledRunnable cleanupSchedule;
@@ -109,7 +105,7 @@ public final class CubeCleanerController extends AbstractReactive
 
 	private CurrentTimeProvider now = reactor;
 
-	private CubeCleanerController(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
+	private CubeCleanerService(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
 		super(storage.getReactor());
 		this.client = client;
 		this.storage = storage;
@@ -117,56 +113,56 @@ public final class CubeCleanerController extends AbstractReactive
 		this.cleanupRevisionKey = cleanupRevisionKey;
 	}
 
-	public static CubeCleanerController create(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
+	public static CubeCleanerService create(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
 		return builder(client, storage, root, cleanupRevisionKey).build();
 	}
 
 	public static Builder builder(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
-		return new CubeCleanerController(client, storage, root, cleanupRevisionKey).new Builder();
+		return new CubeCleanerService(client, storage, root, cleanupRevisionKey).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CubeCleanerController> {
+	public final class Builder extends AbstractBuilder<Builder, CubeCleanerService> {
 		private Builder() {}
 
 		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
 			checkNotBuilt(this);
-			CubeCleanerController.this.now = now;
+			CubeCleanerService.this.now = now;
 			return this;
 		}
 
 		public Builder withPrefixCube(ByteSequence prefixCube) {
 			checkNotBuilt(this);
-			CubeCleanerController.this.prefixCube = prefixCube;
+			CubeCleanerService.this.prefixCube = prefixCube;
 			return this;
 		}
 
 		public Builder withCleanupOlderThen(Duration cleanupOlderThan) {
 			checkNotBuilt(this);
-			CubeCleanerController.this.cleanupOlderThanMillis = cleanupOlderThan.toMillis();
+			CubeCleanerService.this.cleanupOlderThanMillis = cleanupOlderThan.toMillis();
 			return this;
 		}
 
-		public Builder withDefaultCleanupInterval(Duration defaultCleanupInterval) {
+		public Builder withCleanupRetry(Duration cleanupRetry) {
 			checkNotBuilt(this);
-			CubeCleanerController.this.defaultCleanupIntervalMillis = defaultCleanupInterval.toMillis();
+			CubeCleanerService.this.cleanupRetryMillis = cleanupRetry.toMillis();
 			return this;
 		}
 
 		public Builder withAggregationIdCodec(EtcdPrefixCodec<String> aggregationIdCodec) {
 			checkNotBuilt(this);
-			CubeCleanerController.this.aggregationIdCodec = aggregationIdCodec;
+			CubeCleanerService.this.aggregationIdCodec = aggregationIdCodec;
 			return this;
 		}
 
 		public Builder withChunkIdCodec(EtcdKeyCodec<Long> chunkIdCodec) {
 			checkNotBuilt(this);
-			CubeCleanerController.this.chunkIdCodec = chunkIdCodec;
+			CubeCleanerService.this.chunkIdCodec = chunkIdCodec;
 			return this;
 		}
 
 		@Override
-		protected CubeCleanerController doBuild() {
-			return CubeCleanerController.this;
+		protected CubeCleanerService doBuild() {
+			return CubeCleanerService.this;
 		}
 	}
 
@@ -201,68 +197,56 @@ public final class CubeCleanerController extends AbstractReactive
 		return Promise.complete();
 	}
 
-	public Promise<Void> cleanup() {
+	@VisibleForTesting
+	Promise<Void> cleanup() {
 		checkInReactorThread(reactor);
 		return cleanup.run();
 	}
 
 	private Promise<Void> doCleanup() {
 		checkInReactorThread(reactor);
+
+		if (cleanupSchedule != null) cleanupSchedule.cancel();
 		if (stopped) return Promise.complete();
 
-		if (cleanupSchedule != null) {
-			cleanupSchedule.cancel();
-			cleanupSchedule = null;
+		DeletedChunksEntry chunkEntry = deletedChunksQueue.peek();
+		if (chunkEntry == null) {
+			logger.trace("No chunks to be cleaned up");
+			return Promise.complete();
 		}
 
 		long cleanupStartTimestamp = now.currentTimeMillis();
 
-		long nextCleanupTimestamp = cleanupStartTimestamp + defaultCleanupIntervalMillis;
-		long lastCleanupRevision = -1;
-		List<DeletedChunkEntry> chunkEntriesToCleanup = new ArrayList<>();
-
-		while (true) {
-			DeletedChunkEntry chunkEntry = deletedChunksQueue.peek();
-			if (chunkEntry == null) break;
-
-			if (chunkEntry.deleteTimestamp() + cleanupOlderThanMillis > cleanupStartTimestamp) {
-				nextCleanupTimestamp = chunkEntry.deleteTimestamp + cleanupOlderThanMillis + 1L;
-				break;
+		if (chunkEntry.deleteTimestamp() + cleanupOlderThanMillis > cleanupStartTimestamp) {
+			long nextCleanupTimestamp = chunkEntry.deleteTimestamp + cleanupOlderThanMillis + 1L;
+			if (logger.isTraceEnabled()) {
+				logger.trace("There are chunks to be cleaned up later, at {}", Instant.ofEpochMilli(nextCleanupTimestamp));
 			}
-
-			deletedChunksQueue.remove();
-			chunkEntriesToCleanup.add(chunkEntry);
-			lastCleanupRevision = chunkEntry.deleteRevision;
-		}
-
-		if (chunkEntriesToCleanup.isEmpty()) {
-			logger.trace("No chunks to be cleaned up");
 			cleanupSchedule = reactor.scheduleBackground(nextCleanupTimestamp, this::cleanup);
 			return Promise.complete();
 		}
 
-		Set<Long> chunksToCleanup = chunkEntriesToCleanup.stream()
-			.map(DeletedChunkEntry::chunkId)
-			.collect(Collectors.toSet());
-
-		return doCleanup(chunksToCleanup, nextCleanupTimestamp, lastCleanupRevision)
-			.whenException($ -> deletedChunksQueue.addAll(chunkEntriesToCleanup));
-	}
-
-	private Promise<Void> doCleanup(Set<Long> chunksToCleanup, long nextCleanupTimestamp, long lastCleanupRevision) {
-		logger.trace("Chunks to be cleaned up: {}", chunksToCleanup);
-
-		return deleteChunksFromStorage(chunksToCleanup)
-			.then(() -> updateLastCleanupRevision(lastCleanupRevision))
-			.whenResult(() -> {
-				logger.trace("Chunks successfully cleaned up");
-				cleanupSchedule = reactor.scheduleBackground(nextCleanupTimestamp, this::cleanup);
-			})
+		return doCleanup(chunkEntry)
+			.whenResult(() -> deletedChunksQueue.remove())
 			.whenException(e -> {
 				logger.warn("Failed to cleanup chunks", e);
-				long nextCleanupAt = now.currentTimeMillis() + defaultCleanupIntervalMillis;
+				if (stopped) return;
+
+				long nextCleanupAt = now.currentTimeMillis() + cleanupRetryMillis;
+				if (logger.isTraceEnabled()) {
+					logger.trace("Scheduling next cleanup at {}", Instant.ofEpochMilli(nextCleanupAt));
+				}
 				cleanupSchedule = reactor.scheduleBackground(nextCleanupAt, this::cleanup);
 			})
+			.then(() -> doCleanup());
+	}
+
+	private Promise<Void> doCleanup(DeletedChunksEntry entry) {
+		logger.trace("Chunks to be cleaned up: {}", entry.chunkIds());
+
+		return deleteChunksFromStorage(entry.chunkIds())
+			.then(() -> updateLastCleanupRevision(lastCleanupRevision))
+			.whenResult(() -> logger.trace("Chunks successfully cleaned up"))
 			.whenComplete(promiseCleanup.recordStats());
 	}
 
@@ -337,11 +321,15 @@ public final class CubeCleanerController extends AbstractReactive
 					if (currentTimestamp == -1 && !currentChunkIds.isEmpty()) {
 						logger.warn("No transaction timestamp found, skip deleting chunks {}", currentChunkIds);
 					}
-					for (Long currentChunkId : currentChunkIds) {
-						DeletedChunkEntry entry = new DeletedChunkEntry(currentChunkId, currentRevision, currentTimestamp);
-						deletedChunksQueue.add(entry);
-					}
+					if (currentChunkIds.isEmpty()) return;
+
+					deletedChunksQueue.add(new DeletedChunksEntry(currentRevision, currentTimestamp, new HashSet<>(currentChunkIds)));
 					currentChunkIds.clear();
+					reactor.submit(() -> {
+						if (cleanupSchedule == null) {
+							cleanup();
+						}
+					});
 				}
 
 				boolean recreating;
@@ -366,22 +354,16 @@ public final class CubeCleanerController extends AbstractReactive
 						if (stopped) return;
 						logger.trace("Recreating watcher");
 
-						assert CubeCleanerController.this.watcher != null;
-						CubeCleanerController.this.watcher.close();
-						CubeCleanerController.this.watcher = createWatcher();
+						assert CubeCleanerService.this.watcher != null;
+						CubeCleanerService.this.watcher.close();
+						CubeCleanerService.this.watcher = createWatcher();
 					});
 				}
 			}
 		);
 	}
 
-	public record DeletedChunkEntry(long chunkId, long deleteRevision, long deleteTimestamp)
-		implements Comparable<DeletedChunkEntry> {
-
-		@Override
-		public int compareTo(@NotNull CubeCleanerController.DeletedChunkEntry o) {
-			return Long.compare(deleteTimestamp, o.deleteTimestamp);
-		}
+	public record DeletedChunksEntry(long deleteRevision, long deleteTimestamp, Set<Long> chunkIds) {
 	}
 
 	// region JMX getters
@@ -408,16 +390,17 @@ public final class CubeCleanerController extends AbstractReactive
 	@JmxAttribute
 	public void setCleanupOlderThan(Duration cleanupOlderThan) {
 		this.cleanupOlderThanMillis = cleanupOlderThan.toMillis();
+		cleanup();
 	}
 
 	@JmxAttribute
 	public Duration getDefaultCleanupInterval() {
-		return Duration.ofMillis(defaultCleanupIntervalMillis);
+		return Duration.ofMillis(cleanupRetryMillis);
 	}
 
 	@JmxAttribute
-	public void setDefaultCleanupInterval(Duration defaultCleanupInterval) {
-		this.defaultCleanupIntervalMillis = defaultCleanupInterval.toMillis();
+	public void setCleanupRetryMillis(Duration cleanupRetryMillis) {
+		this.cleanupRetryMillis = cleanupRetryMillis.toMillis();
 	}
 
 	@JmxAttribute
@@ -448,11 +431,6 @@ public final class CubeCleanerController extends AbstractReactive
 	@JmxAttribute
 	public PromiseStats getPromiseUpdateLastCleanupRevision() {
 		return promiseUpdateLastCleanupRevision;
-	}
-
-	@JmxOperation
-	public void cleanupNow() {
-		cleanup();
 	}
 	// endregion
 }
