@@ -26,10 +26,7 @@ import io.activej.cube.exception.CubeException;
 import io.activej.etcd.EtcdUtils;
 import io.activej.etcd.codec.key.EtcdKeyCodec;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
-import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
 import io.activej.etcd.codec.prefix.Prefix;
-import io.activej.etcd.codec.value.EtcdValueCodec;
-import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -55,8 +52,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static io.activej.async.function.AsyncRunnables.coalesce;
-import static io.activej.cube.etcd.EtcdUtils.CHUNK_ID_CODEC;
-import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
+import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CubeCleanerService extends AbstractReactive
@@ -66,17 +62,12 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
-	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
-	private static final EtcdValueCodec<Long> REVISION_CODEC = EtcdValueCodecs.ofLongString();
-
 	public static final Duration DEFAULT_CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerService.class, "cleanupOlderThan", Duration.ofHours(1));
 	public static final Duration DEFAULT_CLEANUP_RETRY = ApplicationSettings.getDuration(CubeCleanerService.class, "cleanupRetry", Duration.ofMinutes(1));
 
 	private final Client client;
 	private final AggregationChunkStorage<Long> storage;
 	private final ByteSequence root;
-	private final ByteSequence cleanupRevisionKey;
 
 	private final Queue<DeletedChunksEntry> deletedChunksQueue = new ConcurrentLinkedQueue<>();
 
@@ -85,7 +76,8 @@ public final class CubeCleanerService extends AbstractReactive
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private EtcdKeyCodec<Long> chunkIdCodec = CHUNK_ID_CODEC;
 
-	private ByteSequence prefixCube = CUBE;
+	private ByteSequence prefixChunk = CHUNK;
+	private ByteSequence cleanupRevisionKey = CLEANUP_REVISION;
 
 	private @Nullable Watch.Watcher watcher;
 
@@ -105,20 +97,19 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private CurrentTimeProvider now = reactor;
 
-	private CubeCleanerService(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
+	private CubeCleanerService(Client client, AggregationChunkStorage<Long> storage, ByteSequence root) {
 		super(storage.getReactor());
 		this.client = client;
 		this.storage = storage;
 		this.root = root;
-		this.cleanupRevisionKey = cleanupRevisionKey;
 	}
 
-	public static CubeCleanerService create(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
-		return builder(client, storage, root, cleanupRevisionKey).build();
+	public static CubeCleanerService create(Client client, AggregationChunkStorage<Long> storage, ByteSequence root) {
+		return builder(client, storage, root).build();
 	}
 
-	public static Builder builder(Client client, AggregationChunkStorage<Long> storage, ByteSequence root, ByteSequence cleanupRevisionKey) {
-		return new CubeCleanerService(client, storage, root, cleanupRevisionKey).new Builder();
+	public static Builder builder(Client client, AggregationChunkStorage<Long> storage, ByteSequence root) {
+		return new CubeCleanerService(client, storage, root).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeCleanerService> {
@@ -130,9 +121,15 @@ public final class CubeCleanerService extends AbstractReactive
 			return this;
 		}
 
-		public Builder withPrefixCube(ByteSequence prefixCube) {
+		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
-			CubeCleanerService.this.prefixCube = prefixCube;
+			CubeCleanerService.this.prefixChunk = prefixChunk;
+			return this;
+		}
+
+		public Builder withCleanupRevisionKey(ByteSequence cleanupRevisionKey) {
+			checkNotBuilt(this);
+			CubeCleanerService.this.cleanupRevisionKey = cleanupRevisionKey;
 			return this;
 		}
 
@@ -168,12 +165,13 @@ public final class CubeCleanerService extends AbstractReactive
 
 	@Override
 	public Promise<Void> start() {
-		return Promise.ofCompletionStage(client.getKVClient().get(cleanupRevisionKey))
+		ByteSequence revisionKey = root.concat(cleanupRevisionKey);
+		return Promise.ofCompletionStage(client.getKVClient().get(revisionKey))
 			.whenResult(response -> {
 				List<KeyValue> kvs = response.getKvs();
 				if (kvs.isEmpty()) {
 					throw new IllegalStateException("No cleanup revision is found on key '" +
-													cleanupRevisionKey + '\'');
+													revisionKey + '\'');
 				}
 				assert kvs.size() == 1;
 				KeyValue keyValue = kvs.get(0);
@@ -258,7 +256,7 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private Promise<Void> updateLastCleanupRevision(long lastCleanupRevision) {
 		ByteSequence value = REVISION_CODEC.encodeValue(lastCleanupRevision);
-		return Promise.ofCompletionStage(client.getKVClient().put(cleanupRevisionKey, value))
+		return Promise.ofCompletionStage(client.getKVClient().put(root.concat(cleanupRevisionKey), value))
 			.mapException(e -> new CubeException("Failed to update last cleanup revision", e))
 			.whenResult(() -> this.lastCleanupRevision = lastCleanupRevision)
 			.whenComplete(promiseUpdateLastCleanupRevision.recordStats())
@@ -301,9 +299,9 @@ public final class CubeCleanerService extends AbstractReactive
 								continue;
 							}
 
-							if (!rootKey.startsWith(prefixCube)) continue;
+							if (!rootKey.startsWith(prefixChunk)) continue;
 
-							var key = rootKey.substring(prefixCube.size());
+							var key = rootKey.substring(prefixChunk.size());
 
 							if (event.getEventType() != EventType.DELETE) continue;
 
@@ -374,7 +372,7 @@ public final class CubeCleanerService extends AbstractReactive
 
 	@JmxAttribute
 	public String getCubeEtcdPrefix() {
-		return prefixCube.toString();
+		return prefixChunk.toString();
 	}
 
 	@JmxAttribute

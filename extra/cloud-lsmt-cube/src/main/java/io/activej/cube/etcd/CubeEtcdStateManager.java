@@ -17,7 +17,6 @@ import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.kv.EtcdKVCodecs;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
-import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etcd.state.AbstractEtcdStateManager;
 import io.activej.etl.LogDiff;
@@ -41,23 +40,19 @@ import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
-import static io.activej.cube.etcd.EtcdUtils.saveCubeLogDiff;
+import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static java.util.stream.Collectors.*;
 
 public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogState<CubeDiff, CubeState>, List<LogDiff<CubeDiff>>> {
-	private static final ByteSequence POS = byteSequenceFrom("pos.");
-	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
-	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
-
 	private final CubeStructure cubeStructure;
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
 	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 	private ByteSequence prefixPos = POS;
-	private ByteSequence prefixCube = CUBE;
+	private ByteSequence prefixChunk = CHUNK;
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -116,9 +111,9 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 			return this;
 		}
 
-		public Builder withPrefixCube(ByteSequence prefixCube) {
+		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
-			CubeEtcdStateManager.this.prefixCube = prefixCube;
+			CubeEtcdStateManager.this.prefixChunk = prefixChunk;
 			return this;
 		}
 
@@ -143,7 +138,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 				EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 				entriesToLinkedHashMap());
 			checkoutRequests[1] = CheckoutRequest.of(
-				root.concat(prefixCube),
+				root.concat(prefixChunk),
 				EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 				groupingBy(Tuple2::value1, mapping(Tuple2::value2, toSet())));
 
@@ -168,7 +163,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 				}
 			);
 			watchRequests[1] = WatchRequest.<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>of(
-				root.concat(prefixCube),
+				root.concat(prefixChunk),
 				EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 				new EtcdEventProcessor<>() {
 					@Override
@@ -249,7 +244,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
 		touchTimestamp(txn, ByteSequence.EMPTY, now);
 		for (LogDiff<CubeDiff> diff : transaction) {
-			saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txn, diff);
+			saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txn, diff);
 		}
 	}
 

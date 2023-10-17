@@ -11,7 +11,6 @@ import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
-import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
 import io.activej.etcd.exception.EtcdException;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
@@ -34,16 +33,13 @@ import java.util.function.Function;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
-import static io.activej.cube.etcd.EtcdUtils.saveCubeLogDiff;
-import static io.activej.etcd.EtcdUtils.*;
+import static io.activej.cube.etcd.EtcdUtils.*;
+import static io.activej.etcd.EtcdUtils.executeTxnOps;
+import static io.activej.etcd.EtcdUtils.touchTimestamp;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 
 public final class EtcdMigrationService {
 	private static final Logger logger = LoggerFactory.getLogger(EtcdMigrationService.class);
-
-	private static final ByteSequence POS = byteSequenceFrom("pos.");
-	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
-	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
 
 	private final StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn;
 	private final KV client;
@@ -53,7 +49,7 @@ public final class EtcdMigrationService {
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
 
 	private ByteSequence prefixPos = POS;
-	private ByteSequence prefixCube = CUBE;
+	private ByteSequence prefixChunk = CHUNK;
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -99,9 +95,9 @@ public final class EtcdMigrationService {
 			return this;
 		}
 
-		public Builder withPrefixCube(ByteSequence prefixCube) {
+		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
-			EtcdMigrationService.this.prefixCube = prefixCube;
+			EtcdMigrationService.this.prefixChunk = prefixChunk;
 			return this;
 		}
 
@@ -126,7 +122,7 @@ public final class EtcdMigrationService {
 
 	public CompletableFuture<TxnResponse> migrate() {
 		logger.trace("Starting migration of state to 'etcd'. Root '{}', chunk prefix {}, position prefix {}",
-			root, prefixCube, prefixPos);
+			root, prefixChunk, prefixPos);
 
 		return client.get(root, GetOption.builder().isPrefix(true).build())
 			.thenCompose(getResponse -> {
@@ -183,7 +179,7 @@ public final class EtcdMigrationService {
 			txnOps.cmp(ByteSequence.EMPTY, Cmp.Op.EQUAL, CmpTarget.createRevision(0));
 
 			touchTimestamp(txnOps, ByteSequence.EMPTY, now);
-			saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txnOps, logDiff);
+			saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txnOps, logDiff);
 		});
 	}
 }

@@ -47,6 +47,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.etcd.CubeCleanerService.DEFAULT_CLEANUP_OLDER_THAN;
+import static io.activej.cube.etcd.EtcdUtils.CLEANUP_REVISION;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.time.TestCurrentTimeProvider.*;
@@ -116,12 +117,11 @@ public class CubeCleanerServiceTest {
 		stateManager.start();
 		long stateManagerRevision = stateManager.getRevision();
 
-		ByteSequence cleanupRevisionKey = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName() + ".cleanup_revision_key");
-		cleanerService = CubeCleanerService.builder(ETCD_CLIENT, aggregationChunkStorage, root, cleanupRevisionKey)
+		cleanerService = CubeCleanerService.builder(ETCD_CLIENT, aggregationChunkStorage, root)
 			.withCurrentTimeProvider(now)
 			.build();
 
-		ETCD_CLIENT.getKVClient().put(cleanupRevisionKey, EtcdValueCodecs.ofLongString().encodeValue(stateManagerRevision)).get();
+		ETCD_CLIENT.getKVClient().put(root.concat(CLEANUP_REVISION), EtcdValueCodecs.ofLongString().encodeValue(stateManagerRevision)).get();
 
 		await(cleanerService.start());
 

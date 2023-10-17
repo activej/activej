@@ -15,7 +15,6 @@ import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.etcd.codec.kv.EtcdKVCodec;
 import io.activej.etcd.codec.kv.EtcdKVCodecs;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
-import io.activej.etcd.codec.prefix.EtcdPrefixCodecs;
 import io.activej.etcd.codec.value.EtcdValueCodec;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etl.LogDiff;
@@ -46,7 +45,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
-import static io.activej.cube.etcd.EtcdUtils.saveCubeLogDiff;
+import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static io.activej.json.JsonUtils.fromJson;
@@ -58,10 +57,6 @@ import static java.util.stream.Collectors.*;
 public final class CubeEtcdOTUplink extends AbstractReactive
 	implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeEtcdOTUplink.UplinkProtoCommit> {
 
-	private static final ByteSequence POS = byteSequenceFrom("pos.");
-	private static final ByteSequence CUBE = byteSequenceFrom("cube.");
-	private static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
-
 	private final Client client;
 	private final ByteSequence root;
 
@@ -69,7 +64,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
 	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 	private ByteSequence prefixPos = POS;
-	private ByteSequence prefixCube = CUBE;
+	private ByteSequence prefixChunk = CHUNK;
 
 	private CubeEtcdOTUplink(Reactor reactor, Client client, ByteSequence root) {
 		super(reactor);
@@ -110,9 +105,9 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 			return this;
 		}
 
-		public Builder withPrefixCube(ByteSequence prefixCube) {
+		public Builder withPrefixChunk(ByteSequence prefixChunk) {
 			checkNotBuilt(this);
-			CubeEtcdOTUplink.this.prefixCube = prefixCube;
+			CubeEtcdOTUplink.this.prefixChunk = prefixChunk;
 			return this;
 		}
 
@@ -159,7 +154,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
 					entriesToLinkedHashMap()),
 				CheckoutRequest.<Tuple2<String, AggregationChunk>, Map<String, Set<AggregationChunk>>>of(
-					root.concat(prefixCube),
+					root.concat(prefixChunk),
 					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 					groupingBy(Tuple2::value1, mapping(Tuple2::value2, toSet())))
 			},
@@ -222,7 +217,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					}
 				),
 				WatchRequest.of(
-					root.concat(prefixCube),
+					root.concat(prefixChunk),
 					EtcdKVCodecs.ofPrefixedEntry(aggregationIdCodec, chunkCodecsFactory),
 					new EtcdEventProcessor<Tuple2<String, Long>, Tuple2<String, AggregationChunk>, Map<String, AggregationDiff>>() {
 						@Override
@@ -303,7 +298,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 				executeTxnOps(client.getKVClient(), root, txnOps -> {
 					touchTimestamp(txnOps, ByteSequence.EMPTY, reactor);
 					for (LogDiff<CubeDiff> diff : protoCommit.diffs) {
-						saveCubeLogDiff(prefixPos, prefixCube, aggregationIdCodec, chunkCodecsFactory, txnOps, diff);
+						saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txnOps, diff);
 					}
 				})
 			)
