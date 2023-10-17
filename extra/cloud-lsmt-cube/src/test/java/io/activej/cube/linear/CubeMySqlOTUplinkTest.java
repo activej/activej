@@ -1,8 +1,11 @@
 package io.activej.cube.linear;
 
 import io.activej.common.exception.MalformedDataException;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.fieldtype.FieldTypes;
+import io.activej.cube.aggregation.measure.Measures;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.StateFarAheadException;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
@@ -11,8 +14,6 @@ import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogPositionDiff;
-import io.activej.json.JsonCodec;
-import io.activej.json.JsonCodecs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
@@ -36,6 +37,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.intersection;
+import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeUplink;
 import static io.activej.cube.linear.CubeMySqlOTUplinkTest.SimplePositionDiff.diff;
 import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
@@ -52,9 +54,11 @@ public class CubeMySqlOTUplinkTest {
 	public static final Random RANDOM = ThreadLocalRandom.current();
 
 	private static final List<String> MEASURES = List.of("a", "b", "c", "d");
+	private static final List<String> DIMENSIONS = List.of("a", "b");
 	private static final PrimaryKey MIN_KEY = PrimaryKey.ofArray("100", "200");
 	private static final PrimaryKey MAX_KEY = PrimaryKey.ofArray("300", "400");
 	private static final int COUNT = 12345;
+	private static final List<String> AGGREGATIONS = List.of("a", "b", "c", "d");
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -63,15 +67,24 @@ public class CubeMySqlOTUplinkTest {
 	private DataSource dataSource;
 	private CubeMySqlOTUplink uplink;
 
-	@SuppressWarnings({"unchecked", "rawtypes", "ConstantConditions"})
+	@SuppressWarnings("ConstantConditions")
 	@Before
 	public void setUp() throws Exception {
 		dataSource = dataSource("test.properties");
 
-		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodecs.ofList((JsonCodec<Object>) (JsonCodec) JsonCodecs.ofString())
-			.transform(PrimaryKey::values, PrimaryKey::ofList);
+		CubeStructure.Builder builder = CubeStructure.builder();
+		for (String aggregationId: AGGREGATIONS){
+			builder.withAggregation(id(aggregationId).withMeasures(MEASURES).withDimensions(DIMENSIONS));
+		}
+		for (String measure : MEASURES) {
+			builder.withMeasure(measure, Measures.sum(FieldTypes.ofInt()));
+		}
+		for (String dimension : DIMENSIONS) {
+			builder.withDimension(dimension, FieldTypes.ofString());
+		}
 
-		uplink = CubeMySqlOTUplink.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), dataSource, $ -> primaryKeyCodec);
+		CubeStructure cubeStructure = builder.build();
+		uplink = CubeMySqlOTUplink.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), cubeStructure, dataSource);
 
 		initializeUplink(uplink);
 	}
@@ -161,7 +174,7 @@ public class CubeMySqlOTUplinkTest {
 	public void chunkRemovalTwoCommits() {
 		List<LogDiff<CubeDiff>> diffs = List.of(
 			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
-				"test", AggregationDiff.of(Set.of(chunk(10)))))));
+				"a", AggregationDiff.of(Set.of(chunk(10)))))));
 		UplinkProtoCommit protoCommit = await(uplink.createProtoCommit(0L, diffs, 0));
 		await(uplink.push(protoCommit));
 
@@ -172,11 +185,11 @@ public class CubeMySqlOTUplinkTest {
 
 		assertTrue(state.positions.isEmpty());
 		assertEquals(Map.of(
-			"test", Set.of(chunk(10))), state.chunks);
+			"a", Set.of(chunk(10))), state.chunks);
 
 		diffs = List.of(
 			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
-				"test", AggregationDiff.of(Set.of(), Set.of(chunk(10)))))));
+				"a", AggregationDiff.of(Set.of(), Set.of(chunk(10)))))));
 		protoCommit = await(uplink.createProtoCommit(1L, diffs, 1));
 		await(uplink.push(protoCommit));
 
@@ -198,16 +211,16 @@ public class CubeMySqlOTUplinkTest {
 		List<LogDiff<CubeDiff>> diffs1 = List.of(LogDiff.of(Map.of(
 				"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a1", 12), 100))),
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(Set.of(chunk(1), chunk(2), chunk(3))),
-				"aggr2", AggregationDiff.of(Set.of(chunk(4), chunk(5), chunk(6))))
+				"a", AggregationDiff.of(Set.of(chunk(1), chunk(2), chunk(3))),
+				"b", AggregationDiff.of(Set.of(chunk(4), chunk(5), chunk(6))))
 			)
 		));
 
 		List<LogDiff<CubeDiff>> diffs2 = List.of(LogDiff.of(Map.of(
 				"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b1", 50), 200))),
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(Set.of(chunk(10), chunk(20), chunk(30))),
-				"aggr2", AggregationDiff.of(Set.of(chunk(40), chunk(50), chunk(60)))))
+				"a", AggregationDiff.of(Set.of(chunk(10), chunk(20), chunk(30))),
+				"b", AggregationDiff.of(Set.of(chunk(40), chunk(50), chunk(60)))))
 		));
 
 		UplinkProtoCommit protoCommit1 = await(uplink.createProtoCommit(0L, diffs1, 0));
@@ -231,7 +244,7 @@ public class CubeMySqlOTUplinkTest {
 	public void pushSameParentWithConflict() {
 		List<LogDiff<CubeDiff>> initialDiffs = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(Set.of(chunk(2), chunk(3), chunk(30), chunk(100)))))
+				"a", AggregationDiff.of(Set.of(chunk(2), chunk(3), chunk(30), chunk(100)))))
 		));
 
 		await(uplink.push(await(uplink.createProtoCommit(0L, initialDiffs, 0))));
@@ -239,7 +252,7 @@ public class CubeMySqlOTUplinkTest {
 		List<LogDiff<CubeDiff>> diffs1 = List.of(LogDiff.of(Map.of(
 				"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a1", 12), 100))),
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(chunk(1)),
 					Set.of(chunk(2), chunk(3)))))
 		));
@@ -247,7 +260,7 @@ public class CubeMySqlOTUplinkTest {
 		List<LogDiff<CubeDiff>> diffs2 = List.of(LogDiff.of(Map.of(
 				"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b1", 50), 200))),
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(chunk(10)),
 					Set.of(chunk(2), chunk(30))))
 			)
@@ -284,21 +297,21 @@ public class CubeMySqlOTUplinkTest {
 	public void fetchChunkDiffs() throws SQLException, MalformedDataException {
 		List<LogDiff<CubeDiff>> diffsRev1 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(chunk(1), chunk(2), chunk(3), chunk(4))
 				)))));
 		await(uplink.push(await(uplink.createProtoCommit(0L, diffsRev1, 0))));
 
 		List<LogDiff<CubeDiff>> diffsRev2 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(),
 					Set.of(chunk(2))
 				)))));
 		await(uplink.push(await(uplink.createProtoCommit(1L, diffsRev2, 1))));
 
 		List<LogDiff<CubeDiff>> diffsRev3 = List.of(LogDiff.forCurrentPosition(
-			CubeDiff.of(Map.of("aggr1", AggregationDiff.of(
+			CubeDiff.of(Map.of("a", AggregationDiff.of(
 				Set.of(chunk(5), chunk(6), chunk(7)),
 				Set.of(chunk(3))
 			)))));
@@ -306,7 +319,7 @@ public class CubeMySqlOTUplinkTest {
 
 		List<LogDiff<CubeDiff>> diffsRev4 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(),
 					Set.of(chunk(6))
 				)))));
@@ -314,7 +327,7 @@ public class CubeMySqlOTUplinkTest {
 
 		List<LogDiff<CubeDiff>> diffsRev5 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(chunk(8), chunk(9)),
 					Set.of(chunk(4), chunk(7))
 				)))));
@@ -322,7 +335,7 @@ public class CubeMySqlOTUplinkTest {
 
 		List<LogDiff<CubeDiff>> diffsRev6 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggr1", AggregationDiff.of(
+				"a", AggregationDiff.of(
 					Set.of(),
 					Set.of(chunk(9))
 				)))));
@@ -549,19 +562,19 @@ public class CubeMySqlOTUplinkTest {
 	public void fetchStateFarAhead() throws SQLException {
 		List<LogDiff<CubeDiff>> diffs1 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggregation", AggregationDiff.of(Set.of(chunk(1), chunk(2)))))
+				"a", AggregationDiff.of(Set.of(chunk(1), chunk(2)))))
 		));
 		await(uplink.push(await(uplink.createProtoCommit(0L, diffs1, 0))));
 
 		List<LogDiff<CubeDiff>> diffs2 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggregation", AggregationDiff.of(Set.of(chunk(3), chunk(4)))))
+				"a", AggregationDiff.of(Set.of(chunk(3), chunk(4)))))
 		));
 		await(uplink.push(await(uplink.createProtoCommit(1L, diffs2, 1))));
 
 		List<LogDiff<CubeDiff>> diffs3 = List.of(LogDiff.forCurrentPosition(
 			CubeDiff.of(Map.of(
-				"aggregation", AggregationDiff.of(Set.of(chunk(5), chunk(6)))))
+				"a", AggregationDiff.of(Set.of(chunk(5), chunk(6)))))
 		));
 		await(uplink.push(await(uplink.createProtoCommit(2L, diffs3, 2))));
 
@@ -682,7 +695,8 @@ public class CubeMySqlOTUplinkTest {
 					for (int k1 = 0; k1 < k1Limit; k1++) {
 						added.add(chunk(RANDOM.nextLong()));
 					}
-					aggregationDiffs.put(i + "-" + j + "-" + k, AggregationDiff.of(added));
+					String aggregation = AGGREGATIONS.get(RANDOM.nextInt(AGGREGATIONS.size()));
+					aggregationDiffs.put(aggregation, AggregationDiff.of(added));
 
 				}
 				cubeDiffs.add(CubeDiff.of(aggregationDiffs));

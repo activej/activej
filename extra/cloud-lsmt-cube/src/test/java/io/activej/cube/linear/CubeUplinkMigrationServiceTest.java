@@ -6,7 +6,6 @@ import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
-import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
@@ -86,9 +85,7 @@ public final class CubeUplinkMigrationServiceTest {
 		repo = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
-		PrimaryKeyJsonCodecFactory codecs = PrimaryKeyJsonCodecFactory.ofCubeStructure(structure);
-		uplink = CubeMySqlOTUplink.builder(reactor, executor, dataSource, codecs)
-			.withMeasuresValidator(MeasuresValidator.ofCubeStructure(structure))
+		uplink = CubeMySqlOTUplink.builder(reactor, executor, structure, dataSource)
 			.build();
 
 		uplink.initialize();

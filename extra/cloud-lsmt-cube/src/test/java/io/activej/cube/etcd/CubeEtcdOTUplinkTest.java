@@ -1,7 +1,10 @@
 package io.activej.cube.etcd;
 
+import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.PrimaryKey;
+import io.activej.cube.aggregation.fieldtype.FieldTypes;
+import io.activej.cube.aggregation.measure.Measures;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.etcd.CubeEtcdOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
@@ -48,6 +51,7 @@ public class CubeEtcdOTUplinkTest {
 	private static final PrimaryKey MIN_KEY = PrimaryKey.ofArray("100", "200");
 	private static final PrimaryKey MAX_KEY = PrimaryKey.ofArray("300", "400");
 	private static final int COUNT = 12345;
+	private static final List<String> AGGREGATIONS = List.of("test", "aggr1", "aggr2");
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -71,7 +75,19 @@ public class CubeEtcdOTUplinkTest {
 		Description description = descriptionRule.getDescription();
 		ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
 
-		uplink = CubeEtcdOTUplink.builder(Reactor.getCurrentReactor(), ETCD_CLIENT, root)
+		CubeStructure.Builder builder = CubeStructure.builder();
+
+		for (String aggregation : AGGREGATIONS) {
+			builder.withAggregation(CubeStructure.AggregationConfig.id(aggregation).withMeasures(MEASURES));
+		}
+
+		for (String measure : MEASURES) {
+			builder.withMeasure(measure, Measures.sum(FieldTypes.ofInt()));
+		}
+
+		CubeStructure cubeStructure = builder.build();
+
+		uplink = CubeEtcdOTUplink.builder(Reactor.getCurrentReactor(), cubeStructure, ETCD_CLIENT, root)
 			.withChunkCodecsFactory($ -> new AggregationChunkJsonEtcdKVCodec(primaryKeyCodec))
 			.build();
 
@@ -123,14 +139,14 @@ public class CubeEtcdOTUplinkTest {
 
 	@Test
 	public void removeChunks() {
-		LogDiff<CubeDiff> diff = LogDiff.forCurrentPosition(CubeDiff.of(Map.of("1", AggregationDiff.of(Set.of(chunk(100))))));
+		LogDiff<CubeDiff> diff = LogDiff.forCurrentPosition(CubeDiff.of(Map.of("aggr1", AggregationDiff.of(Set.of(chunk(100))))));
 		UplinkProtoCommit protoCommit = await(uplink.createProtoCommit(initialId, List.of(diff), initialId));
 		FetchData<Long, LogDiff<CubeDiff>> push1 = await(uplink.push(protoCommit));
 
 		FetchData<Long, LogDiff<CubeDiff>> fetchData = await(uplink.fetch(initialId));
 		assertDiffs(List.of(diff), fetchData.diffs());
 
-		diff = LogDiff.forCurrentPosition(CubeDiff.of(Map.of("1", AggregationDiff.of(Set.of(), Set.of(chunk(100))))));
+		diff = LogDiff.forCurrentPosition(CubeDiff.of(Map.of("aggr1", AggregationDiff.of(Set.of(), Set.of(chunk(100))))));
 		protoCommit = await(uplink.createProtoCommit(push1.commitId(), List.of(diff), push1.level()));
 		await(uplink.push(protoCommit));
 
@@ -185,7 +201,7 @@ public class CubeEtcdOTUplinkTest {
 		diffs = List.of(
 			LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
 				"test", AggregationDiff.of(Set.of(), Set.of(chunk(10)))))));
-		protoCommit = await(uplink.createProtoCommit(initialId+1, diffs, initialId+1));
+		protoCommit = await(uplink.createProtoCommit(initialId + 1, diffs, initialId + 1));
 		await(uplink.push(protoCommit));
 
 		fetchData = await(uplink.fetch(initialId + 1L));
@@ -314,13 +330,13 @@ public class CubeEtcdOTUplinkTest {
 
 		int iLimit = RANDOM.nextInt(5);
 		for (int i = 0; i < iLimit; i++) {
-			Map<String, LogPositionDiff> positions = new HashMap<>();
+			Map<String, LogPositionDiff> partition = new HashMap<>();
 			int jLimit = RANDOM.nextInt(5);
 			for (int j = 0; j < jLimit; j++) {
 				String aggregationId = i + "-" + j;
 				LogPositionDiff prevPositionDiff = prevReduced.getPositions().get(aggregationId);
 				LogPosition from = prevPositionDiff == null ? LogPosition.initial() : prevPositionDiff.to();
-				positions.put(aggregationId, new LogPositionDiff(from, randomLogPosition()));
+				partition.put(aggregationId, new LogPositionDiff(from, randomLogPosition()));
 			}
 
 			List<CubeDiff> cubeDiffs = new ArrayList<>();
@@ -338,7 +354,7 @@ public class CubeEtcdOTUplinkTest {
 					for (int k1 = 0; k1 < k1Limit; k1++) {
 						added.add(chunk(RANDOM.nextLong()));
 					}
-					String aggregationId = i + "-" + j + "-" + k;
+					String aggregationId = AGGREGATIONS.get(RANDOM.nextInt(AGGREGATIONS.size()));
 					Set<AggregationChunk> removed = new HashSet<>();
 					AggregationDiff aggregationDiff = prevCubeDiffs.get(aggregationId);
 					if (aggregationDiff != null) {
@@ -354,7 +370,7 @@ public class CubeEtcdOTUplinkTest {
 				cubeDiffs.add(CubeDiff.of(aggregationDiffs));
 			}
 
-			diffs.add(LogDiff.of(positions, cubeDiffs));
+			diffs.add(LogDiff.of(partition, cubeDiffs));
 		}
 
 		return diffs;

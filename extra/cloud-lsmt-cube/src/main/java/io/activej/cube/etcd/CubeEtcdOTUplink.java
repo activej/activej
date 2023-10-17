@@ -6,7 +6,6 @@ import io.activej.common.tuple.Tuple2;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
-import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.EtcdEventProcessor;
 import io.activej.etcd.EtcdListener;
@@ -41,12 +40,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.EtcdUtils.*;
-import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
@@ -58,22 +55,23 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeEtcdOTUplink.UplinkProtoCommit> {
 
 	private final Client client;
+	private final CubeStructure cubeStructure;
 	private final ByteSequence root;
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
-	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixChunk = CHUNK;
 
-	private CubeEtcdOTUplink(Reactor reactor, Client client, ByteSequence root) {
+	private CubeEtcdOTUplink(Reactor reactor, Client client, CubeStructure cubeStructure, ByteSequence root) {
 		super(reactor);
 		this.client = client;
+		this.cubeStructure = cubeStructure;
 		this.root = root;
 	}
 
-	public static CubeEtcdOTUplink.Builder builder(Reactor reactor, Client client, ByteSequence root) {
-		return new CubeEtcdOTUplink(reactor, client, root).new Builder();
+	public static CubeEtcdOTUplink.Builder builder(Reactor reactor, CubeStructure cubeStructure, Client client, ByteSequence root) {
+		return new CubeEtcdOTUplink(reactor, client, cubeStructure, root).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<CubeEtcdOTUplink.Builder, CubeEtcdOTUplink> {
@@ -82,20 +80,6 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		public Builder withChunkCodecsFactory(Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory) {
 			checkNotBuilt(this);
 			CubeEtcdOTUplink.this.chunkCodecsFactory = chunkCodecsFactory;
-			return this;
-		}
-
-		public Builder withChunkCodecsFactoryJson(CubeStructure cubeStructure) {
-			checkNotBuilt(this);
-			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
-				.collect(entriesToLinkedHashMap(structure ->
-					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
-			return withChunkCodecsFactory(collect::get);
-		}
-
-		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
-			checkNotBuilt(this);
-			CubeEtcdOTUplink.this.measuresValidator = measuresValidator;
 			return this;
 		}
 
@@ -119,7 +103,13 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 
 		@Override
 		protected CubeEtcdOTUplink doBuild() {
-			checkNotNull(chunkCodecsFactory, "Chunk codecs factory is required");
+			if (chunkCodecsFactory == null) {
+				Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
+					.collect(entriesToLinkedHashMap(structure ->
+						new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
+
+				chunkCodecsFactory = collect::get;
+			}
 			return CubeEtcdOTUplink.this;
 		}
 	}
@@ -165,7 +155,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 				for (var entry : aggregationChunks.entrySet()) {
 					for (AggregationChunk chunk : entry.getValue()) {
 						try {
-							measuresValidator.validate(entry.getKey(), chunk.getMeasures());
+							cubeStructure.validateMeasures(entry.getKey(), chunk.getMeasures());
 						} catch (MalformedDataException e) {
 							throw new MalformedEtcdDataException(e.getMessage());
 						}
@@ -257,7 +247,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 					for (var entry : aggregationDiffs.entrySet()) {
 						for (AggregationChunk addedChunk : entry.getValue().getAddedChunks()) {
 							try {
-								measuresValidator.validate(entry.getKey(), addedChunk.getMeasures());
+								cubeStructure.validateMeasures(entry.getKey(), addedChunk.getMeasures());
 							} catch (MalformedDataException e) {
 								throw new MalformedEtcdDataException(e.getMessage());
 							}

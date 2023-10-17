@@ -20,6 +20,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.tuple.Tuple2;
+import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
@@ -72,16 +73,12 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 
 	public static final long ROOT_REVISION = 0L;
 
-	public static final MeasuresValidator NO_MEASURE_VALIDATION = ($1, $2) -> {};
-
 	private final Executor executor;
+	private final CubeStructure cubeStructure;
 	private final DataSource dataSource;
-
 	private final PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory;
 
 	private CubeSqlNaming sqlNaming = CubeSqlNaming.DEFAULT_SQL_NAMING;
-
-	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 
 	private @Nullable String createdBy = null;
 
@@ -91,29 +88,25 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 	private final PromiseStats promisePush = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CubeMySqlOTUplink(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
+	private CubeMySqlOTUplink(Reactor reactor, Executor executor, CubeStructure cubeStructure, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
 		super(reactor);
 		this.executor = executor;
+		this.cubeStructure = cubeStructure;
 		this.dataSource = dataSource;
 		this.primaryKeyJsonCodecFactory = primaryKeyJsonCodecFactory;
 	}
 
-	public static CubeMySqlOTUplink create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
-		return builder(reactor, executor, dataSource, primaryKeyJsonCodecFactory).build();
+	public static CubeMySqlOTUplink create(Reactor reactor, Executor executor, CubeStructure cubeStructure, DataSource dataSource) {
+		return builder(reactor, executor, cubeStructure, dataSource).build();
 	}
 
-	public static Builder builder(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory) {
-		return new CubeMySqlOTUplink(reactor, executor, dataSource, primaryKeyJsonCodecFactory).new Builder();
+	public static Builder builder(Reactor reactor, Executor executor, CubeStructure cubeStructure, DataSource dataSource) {
+		PrimaryKeyJsonCodecFactory primaryKeyJsonCodecFactory = PrimaryKeyJsonCodecFactory.ofCubeStructure(cubeStructure);
+		return new CubeMySqlOTUplink(reactor, executor, cubeStructure, dataSource, primaryKeyJsonCodecFactory).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeMySqlOTUplink> {
 		private Builder() {}
-
-		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
-			checkNotBuilt(this);
-			CubeMySqlOTUplink.this.measuresValidator = measuresValidator;
-			return this;
-		}
 
 		public Builder withSqlNaming(CubeSqlNaming sqlScheme) {
 			checkNotBuilt(this);
@@ -306,7 +299,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				long chunkId = resultSet.getLong(1);
 				String aggregationId = resultSet.getString(2);
 				List<String> measures = measuresFromString(resultSet.getString(3));
-				measuresValidator.validate(aggregationId, measures);
+				cubeStructure.validateMeasures(aggregationId, measures);
 				JsonCodec<PrimaryKey> codec = primaryKeyJsonCodecFactory.getJsonCodec(aggregationId);
 				PrimaryKey minKey = fromJson(codec, resultSet.getString(4));
 				PrimaryKey maxKey = fromJson(codec, resultSet.getString(5));
@@ -432,7 +425,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				ps.setLong(index++, (long) aggregationChunk.getChunkId());
 				ps.setString(index++, aggregationId);
 				List<String> measures = aggregationChunk.getMeasures();
-				measuresValidator.validate(aggregationId, measures);
+				cubeStructure.validateMeasures(aggregationId, measures);
 				ps.setString(index++, measuresToString(measures));
 				JsonCodec<PrimaryKey> codec = primaryKeyJsonCodecFactory.getJsonCodec(aggregationId);
 				ps.setString(index++, toJson(codec, aggregationChunk.getMinPrimaryKey()));

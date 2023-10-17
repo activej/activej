@@ -6,9 +6,7 @@ import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.cube.etcd.CubeEtcdOTUplink;
 import io.activej.cube.etcd.CubeEtcdStateManager;
-import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeMySqlOTUplink;
-import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
 import io.activej.cube.service.ServiceStateManager;
@@ -141,8 +139,7 @@ public abstract class CubeTestBase {
 					@Override
 					public OTManager createUninitialized(CubeStructure structure, Description description) {
 						Reactor reactor = Reactor.getCurrentReactor();
-						var uplink = CubeMySqlOTUplink.builder(reactor, EXECUTOR, DATA_SOURCE, PrimaryKeyJsonCodecFactory.ofCubeStructure(structure))
-							.withMeasuresValidator(MeasuresValidator.ofCubeStructure(structure))
+						var uplink = CubeMySqlOTUplink.builder(reactor, EXECUTOR, structure, DATA_SOURCE)
 							.build();
 						var stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 
@@ -162,9 +159,7 @@ public abstract class CubeTestBase {
 					@Override
 					public OTManager createUninitialized(CubeStructure structure, Description description) {
 						ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
-						var uplink = CubeEtcdOTUplink.builder(Reactor.getCurrentReactor(), ETCD_CLIENT, root)
-							.withChunkCodecsFactoryJson(structure)
-							.withMeasuresValidator(MeasuresValidator.ofCubeStructure(structure))
+						var uplink = CubeEtcdOTUplink.builder(Reactor.getCurrentReactor(), structure, ETCD_CLIENT, root)
 							.build();
 						var stateManager = OTStateManager.create(Reactor.getCurrentReactor(), LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 
@@ -186,8 +181,6 @@ public abstract class CubeTestBase {
 						ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
 
 						CubeEtcdStateManager stateManager = CubeEtcdStateManager.builder(ETCD_CLIENT, root, structure)
-							.withChunkCodecsFactoryJson(structure)
-							.withMeasuresValidator(MeasuresValidator.ofCubeStructure(structure))
 							.build();
 
 						return new EtcdManager(stateManager);

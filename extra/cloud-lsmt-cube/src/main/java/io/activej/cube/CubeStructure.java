@@ -1,6 +1,7 @@
 package io.activej.cube;
 
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.fieldtype.FieldType;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
+import static io.activej.common.Utils.not;
 import static io.activej.cube.Utils.filterEntryKeys;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.types.Primitives.wrap;
@@ -406,6 +408,20 @@ public final class CubeStructure {
 			aggregationToDataInputFilterPredicate.put(entry.getKey(), aggregationPredicate);
 		}
 		return aggregationToDataInputFilterPredicate;
+	}
+
+	public void validateMeasures(String aggregationId, List<String> measures) throws MalformedDataException {
+		AggregationStructure aggregationStructure = getAggregationStructure(aggregationId);
+		if (aggregationStructure == null) {
+			throw new MalformedDataException("Unknown aggregation: " + aggregationId);
+		}
+		Set<String> allowedMeasures = aggregationStructure.getMeasureTypes().keySet();
+		List<String> unknownMeasures = measures.stream()
+			.filter(not(allowedMeasures::contains))
+			.toList();
+		if (!unknownMeasures.isEmpty()) {
+			throw new MalformedDataException(String.format("Unknown measures %s in aggregation '%s'", unknownMeasures, aggregationId));
+		}
 	}
 
 	public PreprocessedQuery preprocessQuery(CubeQuery query) throws QueryException {

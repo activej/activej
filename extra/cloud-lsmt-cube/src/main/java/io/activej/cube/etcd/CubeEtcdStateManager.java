@@ -8,7 +8,6 @@ import io.activej.cube.CubeState;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
-import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.EtcdEventProcessor;
 import io.activej.etcd.EtcdUtils;
@@ -35,13 +34,11 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
 import static io.activej.cube.etcd.EtcdUtils.*;
-import static io.activej.cube.linear.CubeMySqlOTUplink.NO_MEASURE_VALIDATION;
 import static io.activej.etcd.EtcdUtils.*;
 import static java.util.stream.Collectors.*;
 
@@ -50,7 +47,6 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
-	private MeasuresValidator measuresValidator = NO_MEASURE_VALIDATION;
 	private ByteSequence prefixPos = POS;
 	private ByteSequence prefixChunk = CHUNK;
 
@@ -91,20 +87,6 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 			return this;
 		}
 
-		public Builder withChunkCodecsFactoryJson(CubeStructure cubeStructure) {
-			checkNotBuilt(this);
-			Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
-				.collect(entriesToLinkedHashMap(structure ->
-					new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
-			return withChunkCodecsFactory(collect::get);
-		}
-
-		public Builder withMeasuresValidator(MeasuresValidator measuresValidator) {
-			checkNotBuilt(this);
-			CubeEtcdStateManager.this.measuresValidator = measuresValidator;
-			return this;
-		}
-
 		public Builder withPrefixPos(ByteSequence prefixPos) {
 			checkNotBuilt(this);
 			CubeEtcdStateManager.this.prefixPos = prefixPos;
@@ -131,7 +113,13 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 		@Override
 		protected CubeEtcdStateManager doBuild() {
-			checkNotNull(chunkCodecsFactory, "Chunk codecs factory is required");
+			if (chunkCodecsFactory == null) {
+				Map<String, AggregationChunkJsonEtcdKVCodec> collect = cubeStructure.getAggregationStructures().entrySet().stream()
+					.collect(entriesToLinkedHashMap(structure ->
+						new AggregationChunkJsonEtcdKVCodec(ofPrimaryKey(structure))));
+
+				chunkCodecsFactory = collect::get;
+			}
 
 			checkoutRequests[0] = CheckoutRequest.ofMapEntry(
 				root.concat(prefixPos),
@@ -204,7 +192,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		for (var entry : aggregationChunks.entrySet()) {
 			for (AggregationChunk chunk : entry.getValue()) {
 				try {
-					measuresValidator.validate(entry.getKey(), chunk.getMeasures());
+					cubeStructure.validateMeasures(entry.getKey(), chunk.getMeasures());
 				} catch (MalformedDataException e) {
 					throw new MalformedEtcdDataException(e.getMessage());
 				}
@@ -230,7 +218,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		for (var entry : aggregationDiffs.entrySet()) {
 			for (AggregationChunk addedChunk : entry.getValue().getAddedChunks()) {
 				try {
-					measuresValidator.validate(entry.getKey(), addedChunk.getMeasures());
+					cubeStructure.validateMeasures(entry.getKey(), addedChunk.getMeasures());
 				} catch (MalformedDataException e) {
 					throw new MalformedEtcdDataException(e.getMessage());
 				}

@@ -11,7 +11,6 @@ import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
-import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeBackupController.IChunksBackupService;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
@@ -105,7 +104,7 @@ public class CubeBackupControllerTest {
 
 		IChunksBackupService chunksBackupService = IChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
-		uplink = CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCubeStructure(structure));
+		uplink = CubeMySqlOTUplink.create(eventloop, executor, structure, dataSource);
 		backupController.initialize();
 		backupController.truncateTables();
 	}

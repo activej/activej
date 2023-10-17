@@ -3,7 +3,6 @@ package io.activej.cube.linear;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.Utils;
 import io.activej.cube.CubeStructure;
-import io.activej.cube.json.PrimaryKeyJsonCodecFactory;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
@@ -112,6 +111,6 @@ public final class CubeUplinkMigrationService {
 	}
 
 	private CubeMySqlOTUplink createUplink(DataSource dataSource) {
-		return CubeMySqlOTUplink.create(eventloop, executor, dataSource, PrimaryKeyJsonCodecFactory.ofCubeStructure(structure));
+		return CubeMySqlOTUplink.create(eventloop, executor, structure, dataSource);
 	}
 }

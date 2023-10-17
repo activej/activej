@@ -8,7 +8,6 @@ import io.activej.cube.CubeTestBase;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
-import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
@@ -182,8 +181,6 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 
 	private CubeEtcdStateManager createEtcdStateManager(CubeStructure cubeStructure) {
 		return CubeEtcdStateManager.builder(ETCD_CLIENT, migrationRoot, cubeStructure)
-			.withChunkCodecsFactoryJson(cubeStructure)
-			.withMeasuresValidator(MeasuresValidator.ofCubeStructure(cubeStructure))
 			.build();
 	}
 
