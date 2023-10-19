@@ -19,10 +19,8 @@ package io.activej.cube.service;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.AggregationExecutor;
-import io.activej.cube.AggregationState;
 import io.activej.cube.CubeConsolidator;
 import io.activej.cube.CubeConsolidator.ConsolidationStrategy;
-import io.activej.cube.CubeState;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
@@ -31,6 +29,7 @@ import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
+import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
@@ -79,7 +78,7 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final CubeConsolidator cubeConsolidator;
-	private final ServiceStateManager<D> stateManager;
+	private final StateManager<D, ?> stateManager;
 	private final IAggregationChunkStorage<C> aggregationChunkStorage;
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -104,28 +103,29 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 	private boolean cleaning;
 
 	private CubeConsolidationController(
-		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, ServiceStateManager<D> stateManager,
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cubeConsolidator = cubeConsolidator;
-		this.stateManager = stateManager;
+		//noinspection unchecked
+		this.stateManager = (StateManager<D, ?>) cubeConsolidator.getStateManager();
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
 	public static <D, C> CubeConsolidationController<D, C> create(
-		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, ServiceStateManager<D> stateManager,
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
-		return builder(reactor, cubeDiffScheme, cubeConsolidator, stateManager, aggregationChunkStorage).build();
+		return builder(reactor, cubeDiffScheme, cubeConsolidator, aggregationChunkStorage).build();
 	}
 
 	public static <D, C> CubeConsolidationController<D, C>.Builder builder(
-		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator, ServiceStateManager<D> stateManager,
+		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator,
 		IAggregationChunkStorage<C> aggregationChunkStorage
 	) {
-		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cubeConsolidator, stateManager, aggregationChunkStorage).new Builder();
+		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cubeConsolidator, aggregationChunkStorage).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<D, C>> {
@@ -171,7 +171,7 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		LockerStrategy chunksFn = strategy.get();
 		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
 		return Promise.complete()
-			.then(stateManager::sync)
+			.then(stateManager::catchUp)
 			.mapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e))
 			.then(() -> Promises.all(cubeConsolidator.getStructure().getAggregationIds().stream()
 				.map(aggregationId -> findAndLockChunksForConsolidation(aggregationId, chunksFn)
@@ -188,7 +188,6 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 					.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
 					.then(() -> stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
 						.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
-					.whenException(e -> stateManager.reset())
 					.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
 			})
 			.then((result, e) -> releaseChunks(chunksForConsolidation)
@@ -207,10 +206,10 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 			() -> locker.getLockedChunks()
 				.map(strategy::getConsolidationStrategy)
-				.map(consolidationStrategy -> cubeConsolidator.getStateFunction().query(state ->
+				.map(consolidationStrategy -> cubeConsolidator.getStateManager().query(state ->
 					consolidationStrategy.getChunksForConsolidation(
 						aggregationId,
-						state.getAggregationStates().get(aggregationId),
+						state.getDataState().getAggregationStates().get(aggregationId),
 						aggregationExecutor.getMaxChunksToConsolidate(),
 						aggregationExecutor.getChunkSize()
 					)))
@@ -243,10 +242,10 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 	private Promise<Void> doCleanupIrrelevantChunks() {
 		checkState(!consolidating, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		cleaning = true;
-		return stateManager.sync()
+		return stateManager.catchUp()
 			.mapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e))
 			.then(() -> {
-				Map<String, Set<AggregationChunk>> irrelevantChunks = cubeConsolidator.getStateFunction().query(CubeState::getIrrelevantChunks);
+				Map<String, Set<AggregationChunk>> irrelevantChunks = cubeConsolidator.getStateManager().query(state -> state.getDataState().getIrrelevantChunks());
 				if (irrelevantChunks.isEmpty()) {
 					logger.info("Found no irrelevant chunks");
 					return Promise.complete();
@@ -257,8 +256,7 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 				CubeDiff cubeDiff = CubeDiff.of(diffMap);
 				cubeDiffJmx(cubeDiff);
 				return stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
-					.mapException(e -> new CubeException("Failed to synchronize state after cleaning up irrelevant chunks, resetting", e))
-					.whenException(e -> stateManager.reset());
+					.mapException(e -> new CubeException("Failed to synchronize state after cleaning up irrelevant chunks, resetting", e));
 			})
 			.whenComplete(promiseCleanupIrrelevantChunks.recordStats())
 			.whenComplete(toLogger(logger, thisMethod(), stateManager))
@@ -354,5 +352,4 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 	public void cleanupIrrelevantChunksNow() {
 		cleanupIrrelevantChunks();
 	}
-
 }

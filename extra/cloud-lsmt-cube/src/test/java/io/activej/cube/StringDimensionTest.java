@@ -2,7 +2,6 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
@@ -14,22 +13,17 @@ import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
-import io.activej.reactor.Reactor;
-import io.activej.test.rules.ByteBufRule;
-import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.test.rules.EventloopRule;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import io.activej.ot.StateManager;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.common.function.StateQueryFunction.ofState;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
@@ -39,25 +33,12 @@ import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
-public class StringDimensionTest {
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	@Rule
-	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+public class StringDimensionTest extends CubeTestBase {
 
 	@Test
 	public void testQuery() throws Exception {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
-		Reactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newCachedThreadPool();
-		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
 		FileSystem fs = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fs.start());
@@ -73,12 +54,11 @@ public class StringDimensionTest {
 				.withDimensions("key1", "key2")
 				.withMeasures("metric1", "metric2", "metric3"))
 			.build();
-		CubeState cubeState = CubeState.create(cubeStructure);
 
-		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage);
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, executor, CLASS_LOADER, aggregationChunkStorage);
 
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		CubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		CubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
 
 		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 				new DataItemString1("str1", 2, 10, 20),
@@ -93,13 +73,12 @@ public class StringDimensionTest {
 		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().map(id -> (long) id).collect(toSet())));
 		await(aggregationChunkStorage.finish(consumer2Result.addedChunks().map(id -> (long) id).collect(toSet())));
 
-		cubeState.apply(consumer1Result);
-		cubeState.apply(consumer2Result);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(List.of(consumer1Result, consumer2Result)))));
 
 		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();
 		await(cubeReporting.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", "str2"), eq("key2", 3)),
-				DataItemResultString.class, DefiningClassLoader.create(classLoader))
+				DataItemResultString.class, DefiningClassLoader.create(CLASS_LOADER))
 			.streamTo(consumerToList));
 
 		List<DataItemResultString> actual = consumerToList.getList();

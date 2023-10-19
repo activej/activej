@@ -39,7 +39,7 @@ public class OTStateManagerTest {
 
 	private StubOTRepository<Integer, TestOp> repository;
 	private OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
-	private OTStateManager<Integer, TestOp> stateManager;
+	private OTStateManager<Integer, TestOp, TestOpOTState> stateManager;
 	private TestOpOTState testOpState;
 	private boolean alreadyFailed = false;
 
@@ -65,7 +65,7 @@ public class OTStateManagerTest {
 					.then(fetchData -> Promises.delay(100L, fetchData));
 			}
 		};
-		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
+		OTStateManager<Integer, TestOp, TestOpOTState> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 
 		initializeRepository(repository, stateManager);
 		stateManager.add(add(1));
@@ -189,7 +189,7 @@ public class OTStateManagerTest {
 				return failOnce(() -> super.createProtoCommit(parent, diffs, parentLevel));
 			}
 		};
-		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
+		OTStateManager<Integer, TestOp, TestOpOTState> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 		initializeRepository(repository, stateManager);
 
 		stateManager.add(add(1));
@@ -222,7 +222,7 @@ public class OTStateManagerTest {
 				return failOnce(() -> super.fetch(currentCommitId));
 			}
 		};
-		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
+		OTStateManager<Integer, TestOp, TestOpOTState> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 		initializeRepository(repository, stateManager);
 		repository.setGraph(g -> {
 			g.add(0, 1, add(10));
@@ -259,7 +259,7 @@ public class OTStateManagerTest {
 				return failOnce(() -> super.push(protoCommit));
 			}
 		};
-		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
+		OTStateManager<Integer, TestOp, TestOpOTState> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 		initializeRepository(repository, stateManager);
 
 		stateManager.add(add(1));
@@ -411,7 +411,7 @@ public class OTStateManagerTest {
 				return failOnce(() -> super.push(protoCommit));
 			}
 		};
-		OTStateManager<Integer, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
+		OTStateManager<Integer, TestOp, TestOpOTState> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 		initializeRepository(repository, stateManager);
 
 		stateManager.add(add(1));
@@ -485,7 +485,7 @@ public class OTStateManagerTest {
 		}
 	}
 
-	private void initializeRepository(AsyncOTRepository<Integer, TestOp> repository, OTStateManager<Integer, TestOp> stateManager) {
+	private void initializeRepository(AsyncOTRepository<Integer, TestOp> repository, OTStateManager<Integer, TestOp, TestOpOTState> stateManager) {
 		await(repository.pushAndUpdateHead(ofRoot(0)), repository.saveSnapshot(0, List.of()));
 		await(stateManager.checkout());
 	}

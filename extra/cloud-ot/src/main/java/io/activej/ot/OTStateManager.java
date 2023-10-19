@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static io.activej.async.function.AsyncRunnables.ofExecutor;
@@ -48,8 +49,8 @@ import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.promise.Promises.sequence;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class OTStateManager<K, D> extends AbstractReactive
-	implements ReactiveService {
+public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractReactive
+	implements ReactiveService, StateManager<D, S> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final OTSystem<D> otSystem;
@@ -57,7 +58,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 	private final AsyncSupplier<Boolean> fetch = AsyncSuppliers.reuse(this::doFetch);
 
-	private OTState<D> state;
+	private S state;
 
 	private @Nullable K commitId;
 	private @Nullable K originCommitId;
@@ -78,26 +79,43 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	private boolean isPolling;
 
 	@SuppressWarnings("unchecked")
-	private OTStateManager(Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink, OTState<D> state) {
+	private OTStateManager(Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink, S state) {
 		super(reactor);
 		this.otSystem = otSystem;
 		this.uplink = (AsyncOTUplink<K, D, Object>) uplink;
 		this.state = state;
 	}
 
-	public static <K, D> OTStateManager<K, D> create(
-		Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> repository, OTState<D> state
+	public static <K, D, S extends OTState<D>> OTStateManager<K, D, S> create(
+		Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> repository, S state
 	) {
 		return builder(reactor, otSystem, repository, state).build();
 	}
 
-	public static <K, D> OTStateManager<K, D>.Builder builder(
-		Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> repository, OTState<D> state
+	public static <K, D, S extends OTState<D>> OTStateManager<K, D, S>.Builder builder(
+		Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> repository, S state
 	) {
 		return new OTStateManager<>(reactor, otSystem, repository, state).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, OTStateManager<K, D>> {
+	@Override
+	public Promise<Void> catchUp() {
+		return sync.run();
+	}
+
+	@Override
+	public Promise<Void> push(List<D> diffs) {
+		addAll(diffs);
+		return catchUp()
+			.whenException(e -> reset());
+	}
+
+	@Override
+	public <R> R query(Function<S, R> queryFn) {
+		return queryFn.apply(state);
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, OTStateManager<K, D, S>> {
 		private Builder() {}
 
 		public Builder withPoll() {
@@ -117,7 +135,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		}
 
 		@Override
-		protected OTStateManager<K, D> doBuild() {
+		protected OTStateManager<K, D, S> doBuild() {
 			return OTStateManager.this;
 		}
 	}
@@ -134,7 +152,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		checkInReactorThread(this);
 		poll = null;
 		return isValid() ?
-			sync().whenComplete(this::invalidateInternalState) :
+			catchUp().whenComplete(this::invalidateInternalState) :
 			Promise.complete();
 	}
 
@@ -165,7 +183,6 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	public Promise<Void> sync() {
 		return sync.run();
 	}
-
 	/**
 	 * Fetches changes from {@link #uplink}, but does not apply them. Moves <b>origin</b> commit ID forward.
 	 * Always returns a promise of {@code false} if there is a pending commit.
@@ -385,7 +402,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		return checkNotNull(originCommitId, "Internal state has been invalidated");
 	}
 
-	public OTState<D> getState() {
+	public S getState() {
 		return state;
 	}
 
@@ -399,6 +416,10 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 	public boolean hasPendingCommits() {
 		return pendingProtoCommit != null;
+	}
+
+	public AsyncOTUplink<K, D, ?> getUplink() {
+		return uplink;
 	}
 
 	@Override

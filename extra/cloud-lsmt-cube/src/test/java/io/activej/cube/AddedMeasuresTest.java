@@ -1,8 +1,6 @@
 package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
@@ -19,28 +17,21 @@ import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
-import io.activej.reactor.Reactor;
+import io.activej.ot.StateManager;
 import io.activej.record.Record;
-import io.activej.test.rules.ByteBufRule;
-import io.activej.test.rules.ClassBuilderConstantsRule;
-import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static io.activej.common.Utils.first;
-import static io.activej.common.function.StateQueryFunction.ofState;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
@@ -50,35 +41,20 @@ import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
-public class AddedMeasuresTest {
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@Rule
-	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
-
-	@Rule
-	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+public class AddedMeasuresTest extends CubeTestBase {
 
 	private static final String AGGREGATION_ID = "test";
 
-	private Executor executor;
-	private Reactor reactor;
-	private DefiningClassLoader classLoader;
 	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 	private AggregationConfig basicConfig;
 	private List<CubeDiff> initialDiffs;
 
 	@Before
 	public void setUp() throws Exception {
-		executor = Executors.newCachedThreadPool();
-		reactor = Reactor.getCurrentReactor();
-		classLoader = DefiningClassLoader.create();
+		super.setUp();
+
 		Path path = temporaryFolder.newFolder().toPath();
-		FileSystem fs = FileSystem.create(reactor, executor, path);
+		FileSystem fs = FileSystem.create(reactor, EXECUTOR, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
@@ -101,13 +77,13 @@ public class AddedMeasuresTest {
 			new EventRecord(4, 0.13));
 		initialDiffs = new ArrayList<>();
 
-		CubeExecutor basicCubeExecutor = CubeExecutor.create(reactor, basicCubeStructure, executor, classLoader, aggregationChunkStorage);
+		CubeExecutor basicCubeExecutor = CubeExecutor.create(reactor, basicCubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		CubeDiff diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		CubeState basicCubeState = CubeState.create(basicCubeStructure);
-		basicCubeState.apply(diff);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(basicCubeStructure, description);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(3, 0.30),
@@ -117,7 +93,7 @@ public class AddedMeasuresTest {
 		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCubeState.apply(diff);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(42, 0.01),
@@ -127,7 +103,7 @@ public class AddedMeasuresTest {
 		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
 		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
-		basicCubeState.apply(diff);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 	}
 
 	@Test
@@ -143,23 +119,21 @@ public class AddedMeasuresTest {
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 			.build();
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-
-		initialDiffs.forEach(cubeState::apply);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(initialDiffs))));
 
 		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 			new EventRecord2(14, 0.35, 500),
 			new EventRecord2(12, 0.59, 17),
 			new EventRecord2(22, 0.85, 50));
 
-		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage);
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
-		cubeState.apply(diff);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateFunction, cubeStructure, cubeExecutor);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
 		CubeDiff cubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
@@ -191,12 +165,11 @@ public class AddedMeasuresTest {
 			.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 			.build();
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-		initialDiffs.forEach(cubeState::apply);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(initialDiffs))));
 
-		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage);
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		ICubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
+		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
@@ -226,22 +199,21 @@ public class AddedMeasuresTest {
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "estimatedUniqueUserIdCount"))
 			.build();
 
-		CubeState cubeState = CubeState.create(cubeStructure);
-		initialDiffs.forEach(cubeState::apply);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(initialDiffs))));
 
 		StreamSupplier<EventRecord2> supplier = StreamSuppliers.ofValues(
 			new EventRecord2(14, 0.35, 500),
 			new EventRecord2(12, 0.59, 17),
 			new EventRecord2(22, 0.85, 50));
 
-		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, executor, classLoader, aggregationChunkStorage);
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
-		cubeState.apply(diff);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		ICubeReporting cubeReporting = CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
 
 		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()

@@ -202,12 +202,12 @@ public class CubeCleanerServiceTest {
 		assertTrue(getStorageChunks().isEmpty());
 	}
 
-	private void processChunks(long timestamp, Set<Long> addedChunks, Set<Long> removedChunks) throws Exception {
+	private void processChunks(long timestamp, Set<Long> addedChunks, Set<Long> removedChunks) {
 		now.setTimeProvider(ofConstant(timestamp));
 
-		stateManager.push(List.of(LogDiff.forCurrentPosition(CubeDiff.of(
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(CubeDiff.of(
 			Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(addedChunks), idsToChunks(removedChunks)))
-		)))).get();
+		)))));
 
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 

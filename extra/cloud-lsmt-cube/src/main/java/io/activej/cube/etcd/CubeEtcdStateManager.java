@@ -22,6 +22,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.etl.LogState;
 import io.activej.multilog.LogPosition;
+import io.activej.ot.StateManager;
+import io.activej.promise.Promise;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.Response;
@@ -42,7 +44,8 @@ import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.etcd.EtcdUtils.*;
 import static java.util.stream.Collectors.*;
 
-public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogState<CubeDiff, CubeState>, List<LogDiff<CubeDiff>>> {
+public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogState<CubeDiff, CubeState>, LogDiff<CubeDiff>>
+	implements StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> {
 	private final CubeStructure cubeStructure;
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
@@ -216,6 +219,17 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		return state;
 	}
 
+	@Override
+	public Promise<Void> catchUp() {
+		return push(List.of());
+	}
+
+	@Override
+	public Promise<Void> push(List<LogDiff<CubeDiff>> diffs) {
+		LogDiff<CubeDiff> diff = LogDiff.reduce(diffs, CubeDiff::reduce);
+		return Promise.ofCompletionStage(push(diff)).toVoid();
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void applyStateTransitions(LogState<CubeDiff, CubeState> state, Object[] operation) throws MalformedEtcdDataException {
@@ -236,11 +250,11 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	}
 
 	@Override
-	protected void doPush(TxnOps txn, List<LogDiff<CubeDiff>> transaction) {
+	protected void doPush(TxnOps txn, LogDiff<CubeDiff> transaction) {
+		if (isCatchUp(transaction)) return;
+
 		touchTimestamp(txn, timestampKey, now);
-		for (LogDiff<CubeDiff> diff : transaction) {
-			saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txn, diff);
-		}
+		saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txn, transaction);
 	}
 
 	public void delete() throws ExecutionException, InterruptedException {
@@ -253,5 +267,11 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		client.getKVClient()
 			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
 			.get();
+	}
+
+	private static boolean isCatchUp(LogDiff<CubeDiff> diff) {
+		return
+			diff.getPositions().values().stream().allMatch(LogPositionDiff::isEmpty) &&
+			diff.getDiffs().stream().allMatch(CubeDiff::isEmpty);
 	}
 }

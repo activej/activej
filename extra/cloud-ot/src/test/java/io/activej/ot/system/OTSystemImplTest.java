@@ -76,7 +76,7 @@ public final class OTSystemImplTest {
 
 		TestOpOTState state = new TestOpOTState();
 		OTUplink<String, TestOp, OTCommit<String, TestOp>> node = OTUplink.create(Reactor.getCurrentReactor(), repository, SYSTEM);
-		OTStateManager<String, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, node, state);
+		OTStateManager<String, TestOp, TestOpOTState> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, node, state);
 
 		await(stateManager.checkout());
 
@@ -150,7 +150,7 @@ public final class OTSystemImplTest {
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpOTState()));
 	}
 
-	private void pullAndThenMergeAndPush(AsyncOTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
+	private void pullAndThenMergeAndPush(AsyncOTRepository<String, TestOp> repository, OTStateManager<String, TestOp, TestOpOTState> stateManager) {
 		await(stateManager.checkout());
 
 		await(stateManager.sync());

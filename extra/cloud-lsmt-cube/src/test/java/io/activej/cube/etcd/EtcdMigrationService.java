@@ -1,7 +1,6 @@
 package io.activej.cube.etcd;
 
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.AggregationState;
 import io.activej.cube.CubeState;
@@ -16,6 +15,7 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.etl.LogState;
 import io.activej.multilog.LogPosition;
+import io.activej.ot.StateManager;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.kv.TxnResponse;
@@ -41,7 +41,7 @@ import static java.util.concurrent.CompletableFuture.failedFuture;
 public final class EtcdMigrationService {
 	private static final Logger logger = LoggerFactory.getLogger(EtcdMigrationService.class);
 
-	private final StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn;
+	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 	private final KV client;
 	private final ByteSequence root;
 
@@ -55,21 +55,21 @@ public final class EtcdMigrationService {
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
 	private EtcdMigrationService(
-		StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn,
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
 		KV client,
 		ByteSequence root
 	) {
-		this.stateQueryFn = stateQueryFn;
+		this.stateManager = stateManager;
 		this.client = client;
 		this.root = root;
 	}
 
 	public static Builder builder(
-		StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn,
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
 		KV client,
 		ByteSequence root
 	) {
-		return new EtcdMigrationService(stateQueryFn, client, root).new Builder();
+		return new EtcdMigrationService(stateManager, client, root).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, EtcdMigrationService> {
@@ -173,7 +173,7 @@ public final class EtcdMigrationService {
 	}
 
 	private CompletableFuture<TxnResponse> migrateState() {
-		LogDiff<CubeDiff> logDiff = stateQueryFn.query(this::stateToLogDiff);
+		LogDiff<CubeDiff> logDiff = stateManager.query(this::stateToLogDiff);
 
 		if (logger.isTraceEnabled()) {
 			logger.trace("Migrating state of {} log positions and {} aggregations with {} chunks",

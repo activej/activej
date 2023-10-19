@@ -33,10 +33,10 @@ public final class EtcdUtils {
 	public static final EtcdPrefixCodec<String> AGGREGATION_ID_CODEC = EtcdPrefixCodecs.ofTerminatingString('.');
 	public static final EtcdValueCodec<Long> REVISION_CODEC = EtcdValueCodecs.ofLongString();
 
-	static void saveCubeLogDiff(ByteSequence prefixPos, ByteSequence prefixCube, EtcdPrefixCodec<String> aggregationIdCodec, Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory, TxnOps txn, LogDiff<CubeDiff> logDiff) {
+	static void saveCubeLogDiff(ByteSequence prefixPos, ByteSequence prefixChunk, EtcdPrefixCodec<String> aggregationIdCodec, Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory, TxnOps txn, LogDiff<CubeDiff> logDiff) {
 		savePositions(txn.child(prefixPos), logDiff.getPositions());
 		for (CubeDiff diff : logDiff.getDiffs()) {
-			saveCubeDiff(aggregationIdCodec, chunkCodecsFactory, txn.child(prefixCube), diff);
+			saveCubeDiff(aggregationIdCodec, chunkCodecsFactory, txn.child(prefixChunk), diff);
 		}
 	}
 

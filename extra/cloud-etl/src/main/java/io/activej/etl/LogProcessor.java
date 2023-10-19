@@ -19,7 +19,6 @@ package io.activej.etl;
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.datastream.stats.BasicStreamStats;
@@ -30,6 +29,8 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.LogPosition;
+import io.activej.ot.OTState;
+import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -60,7 +61,7 @@ public final class LogProcessor<T, D> extends AbstractReactive
 	private final String log;
 	private final List<String> partitions;
 
-	private final StateQueryFunction<LogState<D, ?>> stateFunction;
+	private final StateManager<?, LogState<D, ?>> stateManager;
 
 	// JMX
 	private boolean enabled = true;
@@ -71,21 +72,22 @@ public final class LogProcessor<T, D> extends AbstractReactive
 
 	private LogProcessor(
 		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer, String log,
-		List<String> partitions, StateQueryFunction<LogState<D, ?>> stateFunction
+		List<String> partitions, StateManager<?, LogState<D, ?>> stateManager
 	) {
 		super(reactor);
 		this.multilog = multilog;
 		this.logStreamConsumer = logStreamConsumer;
 		this.log = log;
 		this.partitions = partitions;
-		this.stateFunction = stateFunction;
+		this.stateManager = stateManager;
 	}
 
-	public static <T, D> LogProcessor<T, D> create(
+	public static <T, D, S extends OTState<D>> LogProcessor<T, D> create(
 		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer, String log,
-		List<String> partitions, StateQueryFunction<LogState<D, ?>> stateFunction
+		List<String> partitions, StateManager<LogDiff<D>, LogState<D, S>> stateManager
 	) {
-		return new LogProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, stateFunction);
+		//noinspection unchecked
+		return new LogProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, (StateManager) stateManager);
 	}
 
 	@Override
@@ -109,7 +111,7 @@ public final class LogProcessor<T, D> extends AbstractReactive
 
 	private Promise<LogDiff<D>> doProcessLog() {
 		if (!enabled) return Promise.of(LogDiff.of(Map.of(), List.of()));
-		Map<String, LogPosition> positions = stateFunction.query(state -> Map.copyOf(state.getPositions()));
+		Map<String, LogPosition> positions = stateManager.query(state -> Map.copyOf(state.getPositions()));
 		logger.trace("processLog_gotPositions called. Positions: {}", positions);
 
 		StreamSupplierWithResult<T, Map<String, LogPositionDiff>> supplier = getSupplier(positions);

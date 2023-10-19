@@ -3,18 +3,21 @@ package io.activej.cube.aggregation;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.CubeState;
 import io.activej.cube.CubeStructure;
+import io.activej.cube.TestUtils;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
+import io.activej.ot.StateManager;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -152,12 +155,11 @@ public final class MinioMigrationServiceTest {
 
 		assertTrue(await(toStorage.listChunks()).isEmpty());
 
-		CubeState cubeState = CubeState.create(structure);
-		cubeState.init();
-		cubeState.apply(CubeDiff.of(Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(fromChunks), Set.of()))));
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = TestUtils.stubStateManager(structure);
+		CubeDiff cubeDiff = CubeDiff.of(Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(fromChunks), Set.of())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(cubeDiff))));
 
-		StateQueryFunction<CubeState> stateQueryFn = StateQueryFunction.ofState(cubeState);
-		CompletableFuture<Void> migrateFuture = MinioMigrationService.migrate(reactor, executor, stateQueryFn, CODEC, fileSystem, client, bucket);
+		CompletableFuture<Void> migrateFuture = MinioMigrationService.migrate(reactor, executor, stateManager, CODEC, fileSystem, client, bucket);
 		await();
 		migrateFuture.get();
 

@@ -17,18 +17,25 @@
 package io.activej.cube;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.cube.CubeState.CompatibleAggregations;
 import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.exception.QueryException;
+import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSupplier;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogState;
+import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
@@ -38,18 +45,18 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 public final class CubeReporting extends AbstractReactive
 	implements ICubeReporting {
 
-	private final StateQueryFunction<CubeState> stateFunction;
+	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 	private final CubeStructure structure;
 	private final CubeExecutor executor;
 
-	private CubeReporting(StateQueryFunction<CubeState> stateFunction, CubeStructure structure, CubeExecutor executor) {
+	private CubeReporting(StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager, CubeStructure structure, CubeExecutor executor) {
 		super(executor.getReactor());
-		this.stateFunction = stateFunction;
+		this.stateManager = stateManager;
 		this.structure = structure;
 		this.executor = executor;
 	}
 
-	public static CubeReporting create(StateQueryFunction<CubeState> stateFunction, CubeStructure structure, CubeExecutor executor) {
+	public static CubeReporting create(StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateFunction, CubeStructure structure, CubeExecutor executor) {
 		return new CubeReporting(stateFunction, structure, executor);
 	}
 
@@ -70,8 +77,8 @@ public final class CubeReporting extends AbstractReactive
 		List<String> dimensions, List<String> storedMeasures, AggregationPredicate where, Class<T> resultClass,
 		DefiningClassLoader queryClassLoader
 	) {
-		List<CompatibleAggregations> compatibleAggregations = stateFunction.query(state ->
-			state.findCompatibleAggregations(dimensions, storedMeasures, where)
+		List<CompatibleAggregations> compatibleAggregations = stateManager.query(state ->
+			state.getDataState().findCompatibleAggregations(dimensions, storedMeasures, where)
 		);
 
 		return executor.queryRawStream(compatibleAggregations, dimensions, storedMeasures, where, resultClass, queryClassLoader);
@@ -83,8 +90,8 @@ public final class CubeReporting extends AbstractReactive
 
 		PreprocessedQuery preprocessedQuery = structure.preprocessQuery(cubeQuery);
 
-		List<CompatibleAggregations> compatibleAggregations = stateFunction.query(state ->
-			state.findCompatibleAggregations(
+		List<CompatibleAggregations> compatibleAggregations = stateManager.query(state ->
+			state.getDataState().findCompatibleAggregations(
 				new ArrayList<>(preprocessedQuery.resultDimensions()),
 				new ArrayList<>(preprocessedQuery.resultStoredMeasures()),
 				cubeQuery.getWhere().simplify()
@@ -97,11 +104,21 @@ public final class CubeReporting extends AbstractReactive
 		return structure;
 	}
 
-	public StateQueryFunction<CubeState> getStateFunction() {
-		return stateFunction;
+	public StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> getStateManager() {
+		return stateManager;
 	}
 
 	public CubeExecutor getExecutor() {
 		return executor;
+	}
+
+	@JmxOperation
+	public Map<String, String> getIrrelevantChunksIds() {
+		return stateManager.query(state ->
+			state.getDataState().getIrrelevantChunks().entrySet().stream()
+				.collect(entriesToLinkedHashMap(chunks -> chunks.stream()
+					.map(chunk -> String.valueOf(chunk.getChunkId()))
+					.collect(Collectors.joining(", "))))
+		);
 	}
 }

@@ -2,25 +2,21 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.cube.etcd.CubeEtcdOTUplink;
 import io.activej.cube.etcd.CubeEtcdStateManager;
 import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
-import io.activej.cube.service.ServiceStateManager;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogState;
-import io.activej.ot.OTState;
 import io.activej.ot.OTStateManager;
+import io.activej.ot.StateManager;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.ot.uplink.OTUplink;
-import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
@@ -44,10 +40,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.json.JsonCodecs.createCubeDiffCodec;
@@ -80,7 +74,7 @@ public abstract class CubeTestBase {
 	public String testName;
 
 	@Parameter(1)
-	public StateManagerFactory<TestStateManager> stateManagerFactory;
+	public StateManagerFactory<StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>>> stateManagerFactory;
 
 	public static final Executor EXECUTOR = Executors.newCachedThreadPool();
 	public static final DataSource DATA_SOURCE;
@@ -110,110 +104,111 @@ public abstract class CubeTestBase {
 		return List.of(
 			new Object[]{
 				"OT graph",
-				new StateManagerFactory<OTManager>() {
+				new StateManagerFactory<OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>>>() {
 					private final AsyncSupplier<Long> idGenerator = AsyncSupplier.of(new RefLong(0)::inc);
 
 					@Override
-					public OTManager createUninitialized(CubeStructure structure, Description description) {
+					public OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> createUninitialized(CubeStructure structure, Description description) {
 						Reactor reactor = Reactor.getCurrentReactor();
 						AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, idGenerator,
 							LOG_OT, ofLogDiff(createCubeDiffCodec(structure)));
 						var uplink = OTUplink.create(reactor, repository, LOG_OT);
-						var stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 
-						return new OTManager(uplink, stateManager);
+						return OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 					}
 
 					@Override
-					public void initialize(OTManager stateManager) {
-						OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = (OTUplink<Long, LogDiff<CubeDiff>, ?>) stateManager.uplink;
+					public void initialize(OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+						OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = (OTUplink<Long, LogDiff<CubeDiff>, ?>) stateManager.getUplink();
 						MySqlOTRepository<LogDiff<CubeDiff>> repository = (MySqlOTRepository<LogDiff<CubeDiff>>) uplink.getRepository();
 						noFail(() -> initializeRepository(repository));
+						start(stateManager);
+					}
+
+					@Override
+					public void start(OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+						await(stateManager.start());
 					}
 				},
 			},
 
 			new Object[]{
 				"Linear graph",
-				new StateManagerFactory<OTManager>() {
+				new StateManagerFactory<OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>>>() {
 					@Override
-					public OTManager createUninitialized(CubeStructure structure, Description description) {
+					public OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> createUninitialized(CubeStructure structure, Description description) {
 						Reactor reactor = Reactor.getCurrentReactor();
 						var uplink = CubeMySqlOTUplink.builder(reactor, EXECUTOR, structure, DATA_SOURCE)
 							.build();
-						var stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 
-						return new OTManager(uplink, stateManager);
+						return OTStateManager.create(reactor, LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 					}
 
 					@Override
-					public void initialize(OTManager stateManager) {
-						noFail(() -> initializeUplink((CubeMySqlOTUplink) stateManager.uplink));
+					public void initialize(OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+						noFail(() -> initializeUplink((CubeMySqlOTUplink) stateManager.getUplink()));
+						start(stateManager);
+					}
+
+					@Override
+					public void start(OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+						await(stateManager.start());
 					}
 				},
 			},
 
 			new Object[]{
 				"etcd graph",
-				new StateManagerFactory<OTManager>() {
+				new StateManagerFactory<OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>>>() {
 					@Override
-					public OTManager createUninitialized(CubeStructure structure, Description description) {
+					public OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> createUninitialized(CubeStructure structure, Description description) {
 						ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
 						var uplink = CubeEtcdOTUplink.builder(Reactor.getCurrentReactor(), structure, ETCD_CLIENT, root)
 							.build();
-						var stateManager = OTStateManager.create(Reactor.getCurrentReactor(), LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 
-						return new OTManager(uplink, stateManager);
+						return OTStateManager.create(Reactor.getCurrentReactor(), LOG_OT, uplink, LogState.create(CubeState.create(structure)));
 					}
 
 					@Override
-					public void initialize(OTManager stateManager) {
-						noFail(((CubeEtcdOTUplink) stateManager.uplink)::delete);
+					public void initialize(OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+						noFail(((CubeEtcdOTUplink) stateManager.getUplink())::delete);
+						start(stateManager);
+					}
+
+					@Override
+					public void start(OTStateManager<Long, LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+						await(stateManager.start());
 					}
 				}
 			},
 
 			new Object[]{
 				"etcd state",
-				new StateManagerFactory<EtcdManager>() {
+				new StateManagerFactory<CubeEtcdStateManager>() {
 					@Override
-					public EtcdManager createUninitialized(CubeStructure structure, Description description) {
+					public CubeEtcdStateManager createUninitialized(CubeStructure structure, Description description) {
 						ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
 
-						CubeEtcdStateManager stateManager = CubeEtcdStateManager.builder(ETCD_CLIENT, root, structure)
+						return CubeEtcdStateManager.builder(ETCD_CLIENT, root, structure)
 							.build();
-
-						return new EtcdManager(stateManager);
 					}
 
 					@Override
-					public void initialize(EtcdManager stateManager) {
-						noFail((stateManager.stateManager)::delete);
+					public void initialize(CubeEtcdStateManager stateManager) {
+						noFail(stateManager::delete);
+						start(stateManager);
+					}
+
+					@Override
+					public void start(CubeEtcdStateManager stateManager) {
+						noFail(stateManager::start);
 					}
 				}
 			}
 		);
 	}
 
-	public interface TestStateManager {
-		void checkout() throws Exception;
-
-		void push(List<LogDiff<CubeDiff>> diffs) throws Exception;
-
-		default void push(LogDiff<CubeDiff> diff) throws Exception {
-			push(List.of(diff));
-		}
-
-		void sync() throws Exception;
-
-		void reset();
-
-		StateQueryFunction<LogState<CubeDiff, ?>> getLogState();
-
-		StateQueryFunction<CubeState> getCubeState();
-	}
-
-	public interface StateManagerFactory<S extends TestStateManager> {
+	public interface StateManagerFactory<S extends StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>>> {
 		default S create(CubeStructure structure, Description description) {
 			S stateManager = createUninitialized(structure, description);
 			initialize(stateManager);
@@ -223,137 +218,7 @@ public abstract class CubeTestBase {
 		S createUninitialized(CubeStructure structure, Description description);
 
 		void initialize(S stateManager);
+
+		void start(S stateManager);
 	}
-
-	private static final class OTManager implements TestStateManager {
-		private final AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
-		private final OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
-
-		private OTManager(
-			AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink,
-			OTStateManager<Long, LogDiff<CubeDiff>> stateManager
-		) {
-			this.uplink = uplink;
-			this.stateManager = stateManager;
-		}
-
-		@Override
-		public void checkout() {
-			await(stateManager.checkout());
-		}
-
-		@Override
-		public void push(List<LogDiff<CubeDiff>> diffs) {
-			stateManager.addAll(diffs);
-			await(stateManager.sync());
-		}
-
-		@Override
-		public void sync() {
-			await(stateManager.sync());
-		}
-
-		@Override
-		public void reset() {
-			stateManager.reset();
-		}
-
-		@Override
-		public StateQueryFunction<LogState<CubeDiff, ?>> getLogState() {
-			return StateQueryFunction.ofState(((LogState<CubeDiff, ?>) stateManager.getState()));
-		}
-
-		@Override
-		public StateQueryFunction<CubeState> getCubeState() {
-			OTState<CubeDiff> dataState = ((LogState<CubeDiff, ?>) stateManager.getState()).getDataState();
-			return StateQueryFunction.ofState(((CubeState) dataState));
-		}
-	}
-
-	private static final class EtcdManager implements TestStateManager {
-		private final CubeEtcdStateManager stateManager;
-
-		private EtcdManager(CubeEtcdStateManager stateManager) {
-			this.stateManager = stateManager;
-		}
-
-		@Override
-		public void checkout() throws Exception {
-			stateManager.start();
-		}
-
-		@Override
-		public void push(List<LogDiff<CubeDiff>> diffs) throws ExecutionException, InterruptedException {
-			stateManager.push(diffs).get();
-		}
-
-		@Override
-		public void sync() {
-		}
-
-		@Override
-		public void reset() {
-		}
-
-		@Override
-		public StateQueryFunction<LogState<CubeDiff, ?>> getLogState() {
-			return new StateQueryFunction<>() {
-				@Override
-				public <R> R query(Function<LogState<CubeDiff, ?>, R> queryFunction) {
-					return stateManager.query(queryFunction::apply);
-				}
-			};
-		}
-
-		@Override
-		public StateQueryFunction<CubeState> getCubeState() {
-			return new StateQueryFunction<>() {
-				@Override
-				public <R> R query(Function<CubeState, R> queryFunction) {
-					return stateManager.query(state -> queryFunction.apply(state.getDataState()));
-				}
-			};
-		}
-
-	}
-
-	public static ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager(TestStateManager stateManager) {
-		return new ServiceStateManager<>() {
-			@Override
-			public Promise<Void> checkout() {
-				try {
-					stateManager.checkout();
-				} catch (Exception e) {
-					return Promise.ofException(e);
-				}
-				return Promise.complete();
-			}
-
-			@Override
-			public Promise<Void> sync() {
-				try {
-					stateManager.sync();
-				} catch (Exception e) {
-					return Promise.ofException(e);
-				}
-				return Promise.complete();
-			}
-
-			@Override
-			public Promise<Void> push(List<LogDiff<CubeDiff>> diffs) {
-				try {
-					stateManager.push(diffs);
-				} catch (Exception e) {
-					return Promise.ofException(e);
-				}
-				return Promise.complete();
-			}
-
-			@Override
-			public void reset() {
-				stateManager.reset();
-			}
-		};
-	}
-
 }

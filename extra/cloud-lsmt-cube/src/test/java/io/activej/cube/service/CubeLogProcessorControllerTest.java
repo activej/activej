@@ -24,6 +24,7 @@ import io.activej.fs.FileMetadata;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
+import io.activej.ot.StateManager;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
@@ -83,11 +84,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, structure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
-		LogState<CubeDiff, CubeState> logState = LogState.create(CubeState.create(structure));
-		TestStateManager stateManager = stateManagerFactory.create(structure, description);
-		stateManager.checkout();
-
-		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = serviceStateManager(stateManager);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(structure, description);
 
 		logsFileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(logsFileSystem.start());
@@ -101,12 +98,11 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"test",
 			List.of("partitionA"),
-			stateManager.getLogState());
+			stateManager);
 
 		controller = CubeLogProcessorController.create(
 			reactor,
-			logState,
-			serviceStateManager,
+			stateManager,
 			aggregationChunkStorage,
 			List.of(logProcessor));
 	}

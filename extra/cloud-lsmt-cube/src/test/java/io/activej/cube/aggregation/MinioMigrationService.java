@@ -1,11 +1,14 @@
 package io.activej.cube.aggregation;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.csp.consumer.ChannelConsumers;
 import io.activej.cube.CubeState;
+import io.activej.cube.ot.CubeDiff;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogState;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.IFileSystem;
+import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -33,7 +36,7 @@ public final class MinioMigrationService<C> {
 
 	private final Reactor reactor;
 	private final Executor executor;
-	private final StateQueryFunction<CubeState> stateQueryFn;
+	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 	private final ChunkIdJsonCodec<C> codec;
 	private final IFileSystem fromFileSystem;
 	private final MinioAsyncClient toClient;
@@ -44,7 +47,7 @@ public final class MinioMigrationService<C> {
 	private MinioMigrationService(
 		Reactor reactor,
 		Executor executor,
-		StateQueryFunction<CubeState> stateQueryFn,
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
 		ChunkIdJsonCodec<C> codec,
 		IFileSystem fromFileSystem,
 		MinioAsyncClient toClient,
@@ -52,7 +55,7 @@ public final class MinioMigrationService<C> {
 	) {
 		this.reactor = reactor;
 		this.executor = executor;
-		this.stateQueryFn = stateQueryFn;
+		this.stateManager = stateManager;
 		this.codec = codec;
 		this.fromFileSystem = fromFileSystem;
 		this.toClient = toClient;
@@ -62,23 +65,25 @@ public final class MinioMigrationService<C> {
 	public static <C> CompletableFuture<Void> migrate(
 		Reactor reactor,
 		Executor executor,
-		StateQueryFunction<CubeState> stateQueryFn,
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
 		ChunkIdJsonCodec<C> codec,
 		IFileSystem fromFileSystem,
 		MinioAsyncClient toClient,
 		String bucket
 	) {
-		return new MinioMigrationService<>(reactor, executor, stateQueryFn, codec, fromFileSystem, toClient, bucket).migrate();
+		return new MinioMigrationService<>(reactor, executor, stateManager, codec, fromFileSystem, toClient, bucket).migrate();
 	}
 
 	private CompletableFuture<Void> migrate() {
-		//noinspection unchecked
-		chunksToMigrate = (Set<C>) stateQueryFn.query(CubeState::getAllChunks);
+		return reactor.submit(() -> stateManager.catchUp()
+			.whenResult(() -> {
+				//noinspection unchecked
+				chunksToMigrate = (Set<C>) stateManager.query(logState -> logState.getDataState().getAllChunks());
 
-		logger.info("Migrating {} chunks", chunksToMigrate.size());
-		logger.trace("Chunks to be migrated: {}", chunksToMigrate);
-
-		return reactor.submit(() -> collectFilesForMigration()
+				logger.info("Migrating {} chunks", chunksToMigrate.size());
+				logger.trace("Chunks to be migrated: {}", chunksToMigrate);
+			})
+			.then(this::collectFilesForMigration)
 			.then(files -> Promises.all(files.entrySet().stream().map(this::migrateFile)))
 			.whenComplete(toLogger(logger, "migrate")));
 	}

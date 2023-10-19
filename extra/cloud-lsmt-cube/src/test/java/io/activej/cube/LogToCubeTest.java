@@ -13,10 +13,13 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
+import io.activej.ot.StateManager;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Test;
 
@@ -61,7 +64,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
-		TestStateManager logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -77,7 +80,7 @@ public final class LogToCubeTest extends CubeTestBase {
 			new TestAggregatorSplitter(cubeExecutor), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 			"testlog",
 			List.of("partitionA"),
-			logCubeStateManager.getLogState());
+			logCubeStateManager);
 
 		StreamSupplier<TestPubRequest> supplier = StreamSuppliers.ofValues(
 			new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),
@@ -86,10 +89,9 @@ public final class LogToCubeTest extends CubeTestBase {
 			new TestPubRequest(1002, 2, List.of()));
 
 		await(supplier.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
-		logCubeStateManager.checkout();
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logProcessor);
 
-		CubeReporting cubeReporting = CubeReporting.create(logCubeStateManager.getCubeState(), cubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(logCubeStateManager, cubeStructure, cubeExecutor);
 
 		List<TestAdvResult> list = await(cubeReporting.queryRawStream(
 				List.of("adv"),

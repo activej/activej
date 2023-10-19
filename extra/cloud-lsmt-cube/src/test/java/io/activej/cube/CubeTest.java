@@ -2,7 +2,6 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
@@ -14,12 +13,15 @@ import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
+import io.activej.etl.LogDiff;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.HttpClientFileSystem;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.IHttpClient;
+import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.nio.NioReactor;
@@ -40,7 +42,6 @@ import java.util.stream.Stream;
 
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
-import static io.activej.common.function.StateQueryFunction.ofState;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
@@ -117,11 +118,10 @@ public final class CubeTest {
 			.build();
 	}
 
-	private static CubeReporting createCubeReporting(CubeStructure cubeStructure, Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage aggregationChunkStorage) {
-		CubeState cubeState = CubeState.create(cubeStructure);
+	private CubeReporting createCubeReporting(CubeStructure cubeStructure, Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage aggregationChunkStorage) {
 		CubeExecutor cubeExecutor = CubeExecutor.create(getCurrentReactor(), cubeStructure, executor, classLoader, aggregationChunkStorage);
-		StateQueryFunction<CubeState> stateFunction = ofState(cubeState);
-		return CubeReporting.create(stateFunction, cubeStructure, cubeExecutor);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = TestUtils.stubStateManager(cubeStructure);
+		return CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -129,10 +129,7 @@ public final class CubeTest {
 		return StreamSuppliers.concat(StreamSuppliers.ofValue(item), StreamSuppliers.ofValues(items))
 			.streamTo(cubeReporting.getExecutor().consume(((Class<T>) item.getClass())))
 			.then(cubeDiff -> chunkStorage.finish(cubeDiff.<Long>addedChunks().collect(toSet()))
-				.whenResult(() -> cubeReporting.getStateFunction().query(s -> {
-					s.apply(cubeDiff);
-					return null;
-				})));
+				.then(() -> cubeReporting.getStateManager().push(List.of(LogDiff.forCurrentPosition(cubeDiff)))));
 	}
 
 	@Test
@@ -343,7 +340,7 @@ public final class CubeTest {
 	@Test
 	public void testConsolidate() {
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 4, 0, 30, 60));
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getStateFunction(), cubeReporting.getStructure(), cubeReporting.getExecutor());
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getStateManager(), cubeReporting.getStructure(), cubeReporting.getExecutor());
 
 		await(
 			consume(cubeReporting, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),

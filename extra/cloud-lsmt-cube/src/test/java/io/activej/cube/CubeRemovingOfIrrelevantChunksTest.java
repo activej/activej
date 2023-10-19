@@ -1,7 +1,6 @@
 package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.function.StateQueryFunction;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
@@ -13,14 +12,15 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.service.CubeConsolidationController;
-import io.activej.cube.service.ServiceStateManager;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
+import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
+import io.activej.ot.StateManager;
 import io.activej.serializer.SerializerFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,7 +94,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.withAggregation(campaignBannerDateAggregation)
 			.build();
 
-		TestStateManager stateManager = stateManagerFactory.create(basicCubeStructure, description);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(basicCubeStructure, description);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -111,10 +111,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
 			List.of("partitionA"),
-			stateManager.getLogState());
-
-		// checkout first (root) revision
-		stateManager.checkout();
+			stateManager);
 
 		// Save and aggregate logs
 		List<LogItem> allLogItems = new ArrayList<>();
@@ -133,7 +130,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			allLogItems.addAll(listOfRandomLogItems);
 		}
 
-		CubeReporting cubeReporting = CubeReporting.create(stateManager.getCubeState(), basicCubeStructure, cubeExecutor);
+		CubeReporting cubeReporting = CubeReporting.create(stateManager, basicCubeStructure, cubeExecutor);
 		List<LogItem> logItems = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, CLASS_LOADER)
 			.toList());
@@ -152,21 +149,19 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
 			.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
 			.build();
-		TestStateManager stateManager = stateManagerFactory.createUninitialized(cubeStructure, description);
-		stateManager.checkout();
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.createUninitialized(cubeStructure, description);
+		stateManagerFactory.start(stateManager);
 
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage);
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager.getCubeState(), cubeStructure, cubeExecutor);
-
-		ServiceStateManager<LogDiff<CubeDiff>> serviceStateManager = serviceStateManager(stateManager);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
 
 		CubeConsolidationController<LogDiff<CubeDiff>, Long> consolidationController =
-			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, serviceStateManager, chunkStorage);
+			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, chunkStorage);
 
-		Map<String, Integer> chunksBefore = getChunksByAggregation(stateManager.getCubeState());
+		Map<String, Integer> chunksBefore = getChunksByAggregation(stateManager);
 		await(consolidationController.cleanupIrrelevantChunks());
 
-		Map<String, Integer> chunksAfter = getChunksByAggregation(stateManager.getCubeState());
+		Map<String, Integer> chunksAfter = getChunksByAggregation(stateManager);
 
 		for (Map.Entry<String, Integer> afterEntry : chunksAfter.entrySet()) {
 			String key = afterEntry.getKey();
@@ -177,9 +172,9 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		}
 	}
 
-	private static Map<String, Integer> getChunksByAggregation(StateQueryFunction<CubeState> queryFunction) {
-		return queryFunction.query(state ->
-			state.getAggregationStates().entrySet().stream()
+	private static Map<String, Integer> getChunksByAggregation(StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager) {
+		return stateManager.query(state ->
+			state.getDataState().getAggregationStates().entrySet().stream()
 				.collect(entriesToLinkedHashMap(
 					Function.identity(),
 					AggregationState::getChunksSize))

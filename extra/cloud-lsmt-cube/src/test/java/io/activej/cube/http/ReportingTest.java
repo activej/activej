@@ -19,6 +19,7 @@ import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
+import io.activej.etl.LogState;
 import io.activej.etl.SplitterLogDataConsumer;
 import io.activej.fs.FileSystem;
 import io.activej.http.HttpClient;
@@ -28,6 +29,7 @@ import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecFactory;
 import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
+import io.activej.ot.StateManager;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerFactory;
@@ -303,9 +305,9 @@ public final class ReportingTest extends CubeTestBase {
 			.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 			.build();
 
-		TestStateManager logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> logCubeStateManager = stateManagerFactory.create(cubeStructure, description);
 
-		cubeReporting = CubeReporting.create(logCubeStateManager.getCubeState(), cubeStructure, cubeExecutor);
+		cubeReporting = CubeReporting.create(logCubeStateManager, cubeStructure, cubeExecutor);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(fileSystem.start());
@@ -320,10 +322,7 @@ public final class ReportingTest extends CubeTestBase {
 			new LogItemSplitter(cubeExecutor),
 			"testlog",
 			List.of("partitionA"),
-			logCubeStateManager.getLogState());
-
-		// checkout first (root) revision
-		logCubeStateManager.checkout();
+			logCubeStateManager);
 
 		List<LogItem> logItemsForAdvertisersAggregations = List.of(
 			new LogItem(1, 1, 1, 1, 20, 3, 1, 0.12, 2, 2, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
@@ -349,7 +348,7 @@ public final class ReportingTest extends CubeTestBase {
 		await(aggregationChunkStorage
 			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
 
-		logCubeStateManager.push(logDiff);
+		await(logCubeStateManager.push(List.of(logDiff)));
 
 		queryResultJsonCodec = createQueryResultCodec(CLASS_LOADER, JsonCodecFactory.defaultInstance(), cubeStructure);
 		aggregationPredicateJsonCodec = createAggregationPredicateCodec(JsonCodecFactory.defaultInstance(), cubeStructure);
@@ -857,17 +856,17 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testDataCorrectlyLoadedIntoAggregations() {
-		AggregationState daily = cubeReporting.getStateFunction().query(state -> state.getAggregationState("daily"));
+		AggregationState daily = cubeReporting.getStateManager().query(state -> state.getDataState().getAggregationState("daily"));
 		assert daily != null;
 		int dailyAggregationItemsCount = getAggregationItemsCount(daily);
 		assertEquals(6, dailyAggregationItemsCount);
 
-		AggregationState advertisers = cubeReporting.getStateFunction().query(state -> state.getAggregationState("advertisers"));
+		AggregationState advertisers = cubeReporting.getStateManager().query(state -> state.getDataState().getAggregationState("advertisers"));
 		assert advertisers != null;
 		int advertisersAggregationItemsCount = getAggregationItemsCount(advertisers);
 		assertEquals(5, advertisersAggregationItemsCount);
 
-		AggregationState affiliates = cubeReporting.getStateFunction().query(state -> state.getAggregationState("affiliates"));
+		AggregationState affiliates = cubeReporting.getStateManager().query(state -> state.getDataState().getAggregationState("affiliates"));
 		assert affiliates != null;
 		int affiliatesAggregationItemsCount = getAggregationItemsCount(affiliates);
 		assertEquals(6, affiliatesAggregationItemsCount);

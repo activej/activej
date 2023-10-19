@@ -30,6 +30,7 @@ import io.activej.etl.LogState;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
+import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
@@ -62,7 +63,7 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 
 	private final List<LogProcessor<?, CubeDiff>> logProcessors;
 	private final IAggregationChunkStorage<C> chunkStorage;
-	private final ServiceStateManager<LogDiff<CubeDiff>> stateManager;
+	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 	private AsyncSupplier<Boolean> predicate;
 
 	private boolean parallelRunner;
@@ -78,7 +79,7 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 
 	private CubeLogProcessorController(
 		Reactor reactor, List<LogProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage,
-		ServiceStateManager<LogDiff<CubeDiff>> stateManager
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager
 	) {
 		super(reactor);
 		this.logProcessors = logProcessors;
@@ -87,26 +88,22 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 	}
 
 	public static <C> CubeLogProcessorController<C> create(
-		Reactor reactor, LogState<CubeDiff, CubeState> state, ServiceStateManager<LogDiff<CubeDiff>> stateManager,
+		Reactor reactor, StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
-		return builder(reactor, state, stateManager, chunkStorage, logProcessors).build();
+		return builder(reactor, stateManager, chunkStorage, logProcessors).build();
 	}
 
 	public static <C> CubeLogProcessorController<C>.Builder builder(
-		Reactor reactor, LogState<CubeDiff, CubeState> state, ServiceStateManager<LogDiff<CubeDiff>> stateManager,
+		Reactor reactor, StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
 		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
-		CubeState cubeState = state.getDataState();
-		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder(cubeState);
+		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder();
 	}
 
 	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<C>> {
-		private final CubeState cubeState;
 
-		private Builder(CubeState cubeState) {
-			this.cubeState = cubeState;
-		}
+		private Builder() {}
 
 		public Builder withParallelRunner(boolean parallelRunner) {
 			checkNotBuilt(this);
@@ -122,13 +119,13 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 
 		@Override
 		protected CubeLogProcessorController<C> doBuild() {
-			predicate = AsyncSupplier.of(() -> {
-				if (cubeState.containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
+			predicate = AsyncSupplier.of(() -> stateManager.query(state -> {
+				if (state.getDataState().containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
 					logger.info("Cube contains excessive number of overlapping chunks");
 					return false;
 				}
 				return true;
-			});
+			}));
 
 			return CubeLogProcessorController.this;
 		}
@@ -151,7 +148,7 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 	Promise<Boolean> process() {
 		checkInReactorThread(this);
 		return Promise.complete()
-			.then(stateManager::sync)
+			.then(stateManager::catchUp)
 			.mapException(e -> new CubeException("Failed to synchronize state prior to log processing", e))
 			.then(() -> predicate.get()
 				.mapException(e -> new CubeException("Failed to test cube with predicate", e)))
@@ -176,7 +173,6 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 						.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
 						.then(() -> stateManager.push(diffs)
 							.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
-						.whenException(e -> stateManager.reset())
 						.map($2 -> true));
 			})
 			.whenComplete(toLogger(logger, thisMethod(), stateManager));

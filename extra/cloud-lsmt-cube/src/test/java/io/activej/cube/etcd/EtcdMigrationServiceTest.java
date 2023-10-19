@@ -1,6 +1,5 @@
 package io.activej.cube.etcd;
 
-import io.activej.common.function.StateQueryFunction;
 import io.activej.cube.AggregationState;
 import io.activej.cube.CubeState;
 import io.activej.cube.CubeStructure;
@@ -14,6 +13,7 @@ import io.activej.etl.LogPositionDiff;
 import io.activej.etl.LogState;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
+import io.activej.ot.StateManager;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.kv.TxnResponse;
 import io.etcd.jetcd.options.DeleteOption;
@@ -31,6 +31,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
+import static io.activej.promise.TestUtils.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
@@ -71,19 +72,14 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 
 	@Test
 	public void testMigration() throws Exception {
-		TestStateManager testStateManager = stateManagerFactory.create(cubeStructure, description);
-		//noinspection unchecked,rawtypes
-		StateQueryFunction<LogState<CubeDiff, CubeState>> logState = (StateQueryFunction) testStateManager.getLogState();
-
-		testStateManager.checkout();
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
 
 		for (int i = 0; i < 10; i++) {
-			LogDiff<CubeDiff> diff = generateLogDiff(logState);
-			testStateManager.push(diff);
-			testStateManager.sync();
+			LogDiff<CubeDiff> diff = generateLogDiff(stateManager);
+			await(stateManager.push(List.of(diff)));
 		}
 
-		EtcdMigrationService migrationService = EtcdMigrationService.builder(logState, ETCD_CLIENT.getKVClient(), migrationRoot)
+		EtcdMigrationService migrationService = EtcdMigrationService.builder(stateManager, ETCD_CLIENT.getKVClient(), migrationRoot)
 			.withChunkCodecsFactoryJson(cubeStructure)
 			.build();
 
@@ -93,7 +89,7 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 		CubeEtcdStateManager etcdStateManager = createEtcdStateManager(cubeStructure);
 		etcdStateManager.start();
 
-		LogState<CubeDiff, CubeState> expected = logState.query(state -> state);
+		LogState<CubeDiff, CubeState> expected = stateManager.query(state -> state);
 		LogState<CubeDiff, CubeState> actual = etcdStateManager.query(state -> state);
 
 		assertStates(expected, actual);
@@ -101,8 +97,8 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 
 	@Test
 	public void testMigrationToNotEmptyRoot() throws InterruptedException, ExecutionException {
-		LogState<CubeDiff, CubeState> logState = LogState.create(CubeState.create(cubeStructure));
-		EtcdMigrationService migrationService = EtcdMigrationService.builder(StateQueryFunction.ofState(logState), ETCD_CLIENT.getKVClient(), migrationRoot)
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		EtcdMigrationService migrationService = EtcdMigrationService.builder(stateManager, ETCD_CLIENT.getKVClient(), migrationRoot)
 			.withChunkCodecsFactoryJson(cubeStructure)
 			.build();
 
@@ -118,7 +114,7 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 
 	private long currentChunkId;
 
-	private LogDiff<CubeDiff> generateLogDiff(StateQueryFunction<LogState<CubeDiff, CubeState>> stateQueryFn) {
+	private LogDiff<CubeDiff> generateLogDiff(StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateQueryFn) {
 		Map<String, LogPositionDiff> positionDiffs = new HashMap<>();
 		Map<String, AggregationDiff> aggregationOps = new HashMap<>();
 
