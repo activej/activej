@@ -124,7 +124,7 @@ public final class UrlParser {
 		}
 		int urlLength = limit - offset;
 		if (urlLength > Short.MAX_VALUE) {
-			throw new MalformedHttpException("URL length exceeds " + Short.MAX_VALUE + " bytes");
+			throw new MalformedHttpException("URL length exceeds " + Short.MAX_VALUE + " bytes in URL " + new String(url, offset, 100, CHARSET) + "...");
 		}
 		byte[] urlBytes = new byte[urlLength];
 		System.arraycopy(url, offset, urlBytes, 0, urlLength);
@@ -148,14 +148,14 @@ public final class UrlParser {
 			} else if (protocolLength == 2 && startsWith(WS.lowercaseBytes(), offset)) {
 				protocol = WS;
 			} else {
-				throw new MalformedHttpException("Unsupported schema: " + new String(raw, offset, protocolLength, CHARSET));
+				throw new MalformedHttpException("Unsupported schema: " + new String(raw, offset, protocolLength, CHARSET) + " in URL " + this);
 			}
 			index += PROTOCOL_DELIMITER.length;
 			host = (short) index;
 
 			int hostPortEnd = findHostPortEnd(host);
 			if (host == hostPortEnd || indexOf(COLON, host) == host) {
-				throw new MalformedHttpException("Domain name cannot be null or empty");
+				throw new MalformedHttpException("Domain name cannot be null or empty: " + this);
 			}
 
 			if (indexOf(IPV6_OPENING_BRACKET, index) != -1) {                   // parse IPv6
@@ -493,25 +493,29 @@ public final class UrlParser {
 
 	private int parsePort(int end) throws MalformedHttpException {
 		if (port == end) {
-			throw new MalformedHttpException("Empty port value");
+			throw new MalformedHttpException("Empty port value in URL " + this);
 		}
 		if ((end - port) > 5) {
-			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
+			throw badPortException(end);
 		}
 
 		int result = 0;
 		for (int i = port; i < end; i++) {
 			int c = raw[i] - '0';
 			if (c < 0 || c > 9)
-				throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
+				throw badPortException(end);
 			result = c + result * 10;
 		}
 
 		if (result > 0xFFFF) {
-			throw new MalformedHttpException("Bad port: " + new String(raw, port, end - port, CHARSET));
+			throw badPortException(end);
 		}
 
 		return result;
+	}
+
+	private MalformedHttpException badPortException(int end) {
+		return new MalformedHttpException("Bad port '" + new String(raw, port, end - port, CHARSET) + "' in URL " + this);
 	}
 
 	private static @Nullable String keyValueDecode(byte[] url, int keyEnd, int limit) {

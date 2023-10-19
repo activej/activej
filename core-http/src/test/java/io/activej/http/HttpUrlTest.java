@@ -138,9 +138,14 @@ public final class HttpUrlTest {
 		assertEquals("", url.getQuery());
 	}
 
-	@Test(expected = MalformedHttpException.class)
-	public void testInvalidScheme() throws MalformedHttpException {
-		UrlParser.parse("ftp://abc.com/");
+	@Test
+	public void testInvalidScheme() {
+		String url = "ftp://abc.com/";
+		try {
+			UrlParser.parse(url);
+		} catch (MalformedHttpException e) {
+			assertEquals("Unsupported schema: ftp in URL " + url, e.getMessage());
+		}
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -149,9 +154,16 @@ public final class HttpUrlTest {
 		UrlParser.of("/path").isRelativePath();
 	}
 
-	@Test(expected = MalformedHttpException.class)
-	public void testBadPort() throws MalformedHttpException {
-		UrlParser.parse("http://hello-world.com:80ab/path");
+	@Test
+	public void testBadPort() {
+		String url = "http://hello-world.com:80ab/path";
+
+		try {
+			UrlParser.parse(url);
+			fail();
+		} catch (MalformedHttpException e) {
+			assertEquals("Bad port '80ab' in URL " + url, e.getMessage());
+		}
 	}
 
 	@Test
@@ -413,6 +425,30 @@ public final class HttpUrlTest {
 		assertEquals(HTTP, url.getProtocol());
 		assertEquals("www.test.com", url.getHost());
 		assertEquals("fragment", url.getFragment());
+	}
+
+	@Test
+	public void testUrlTooLong() {
+		String url = "http://example.com/" + String.join("", Collections.nCopies(50_000, "a"));
+
+		try {
+			UrlParser.parse(url);
+			fail();
+		} catch (MalformedHttpException e) {
+			assertEquals("URL length exceeds 32767 bytes in URL " + url.substring(0, 100) + "...", e.getMessage());
+		}
+	}
+
+	@Test
+	public void testEmptyDomainName() {
+		String url = "http://:80/";
+
+		try {
+			UrlParser.parse(url);
+			fail();
+		} catch (MalformedHttpException e) {
+			assertEquals("Domain name cannot be null or empty: " + url, e.getMessage());
+		}
 	}
 
 }
