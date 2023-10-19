@@ -96,6 +96,34 @@ public class MemSizeTest {
 	}
 
 	@Test
+	public void testHumanReadableFormat() {
+		assertEquals("0", StringFormatUtils.formatMemSizeHumanReadable(MemSize.bytes(0)));
+		assertEquals("1", StringFormatUtils.formatMemSizeHumanReadable(MemSize.bytes(1)));
+
+		assertEquals("100", StringFormatUtils.formatMemSizeHumanReadable(MemSize.bytes(100)));
+
+		assertEquals("1023", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(1).map(x -> x - 1)));
+		assertEquals("1024", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(1)));
+		assertEquals("1025", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(1).map(x -> x + 1)));
+
+		assertEquals("10239", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(10).map(x -> x - 1)));
+		assertEquals("10Kb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(10)));
+		assertEquals("10Kb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.kilobytes(10).map(x -> x + 1)));
+
+		assertEquals("10239Kb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.megabytes(10).map(x -> x - 1)));
+		assertEquals("10Mb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.megabytes(10)));
+		assertEquals("10Mb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.megabytes(10).map(x -> x + 1)));
+
+		assertEquals("5119Gb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(5).map(x -> x - 1)));
+		assertEquals("5120Gb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(5)));
+		assertEquals("5120Gb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(5).map(x -> x + 1)));
+
+		assertEquals("10239Tb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(10 * 1024).map(x -> x - 1)));
+		assertEquals("10240Tb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(10 * 1024)));
+		assertEquals("10240Tb", StringFormatUtils.formatMemSizeHumanReadable(MemSize.terabytes(10 * 1024).map(x -> x + 1)));
+	}
+
+	@Test
 	public void testParsingExceptions() {
 		try {
 			MemSize.valueOf("2.2b");

@@ -40,8 +40,10 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 public final class StringFormatUtils {
 
 	public static String formatMemSize(MemSize memSize) {
-		long bytes = memSize.toLong();
+		return formatBytes(memSize.toLong());
+	}
 
+	public static String formatBytes(long bytes) {
 		if (bytes == 0) {
 			return "0";
 		}
@@ -56,6 +58,22 @@ public final class StringFormatUtils {
 			if (remainder == 0) {
 				return divideResult + getUnit(unit);
 			}
+		}
+	}
+
+	public static String formatMemSizeHumanReadable(MemSize memSize) {
+		return formatBytesHumanReadable(memSize.toLong());
+	}
+
+	public static String formatBytesHumanReadable(long bytes) {
+		for (long unit = MemSize.TB; ; unit /= 1024L) {
+			long divideResult = bytes / unit;
+
+			if (divideResult < 10 && unit != 1) {
+				continue;
+			}
+
+			return divideResult + getUnit(unit);
 		}
 	}
 
