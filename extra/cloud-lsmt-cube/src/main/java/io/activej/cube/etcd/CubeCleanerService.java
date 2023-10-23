@@ -377,8 +377,8 @@ public final class CubeCleanerService extends AbstractReactive
 					watchEtcdExceptionStats.recordException(throwable, this);
 					if (throwable instanceof MalformedEtcdDataException) {
 						malformedDataExceptionStats.recordException(throwable, this);
-						watcher.close();
 					}
+					watcher.close();
 				}
 
 				@Override
