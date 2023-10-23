@@ -412,13 +412,13 @@ public final class CubeCleanerService extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public Duration getDefaultCleanupInterval() {
+	public Duration getCleanupRetryInterval() {
 		return Duration.ofMillis(cleanupRetryMillis);
 	}
 
 	@JmxAttribute
-	public void setCleanupRetryMillis(Duration cleanupRetryMillis) {
-		this.cleanupRetryMillis = cleanupRetryMillis.toMillis();
+	public void setCleanupRetryInterval(Duration cleanupRetryInterval) {
+		this.cleanupRetryMillis = cleanupRetryInterval.toMillis();
 	}
 
 	@JmxAttribute
