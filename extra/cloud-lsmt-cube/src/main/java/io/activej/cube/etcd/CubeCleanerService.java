@@ -33,10 +33,12 @@ import io.activej.etcd.codec.kv.EtcdKVDecoder;
 import io.activej.etcd.codec.prefix.EtcdPrefixCodec;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.jmx.ReactiveJmxBean;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -58,9 +60,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static io.activej.async.function.AsyncRunnables.coalesce;
 import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 
 public final class CubeCleanerService extends AbstractReactive
-	implements ReactiveService, ReactiveJmxBean {
+	implements ReactiveService, ReactiveJmxBeanWithStats {
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerService.class);
 
@@ -68,6 +71,7 @@ public final class CubeCleanerService extends AbstractReactive
 
 	public static final Duration DEFAULT_CLEANUP_OLDER_THAN = ApplicationSettings.getDuration(CubeCleanerService.class, "cleanupOlderThan", Duration.ofHours(1));
 	public static final Duration DEFAULT_CLEANUP_RETRY = ApplicationSettings.getDuration(CubeCleanerService.class, "cleanupRetry", Duration.ofMinutes(1));
+	private static final Duration WATCH_RETRY_INTERVAL = ApplicationSettings.getDuration(CubeCleanerService.class, "watchRetryInterval", Duration.ofSeconds(1));
 
 	private final Client client;
 	private final AggregationChunkStorage<Long> storage;
@@ -84,8 +88,9 @@ public final class CubeCleanerService extends AbstractReactive
 	private ByteSequence timestampKey = TIMESTAMP;
 	private ByteSequence cleanupRevisionKey = CLEANUP_REVISION;
 
-	private @Nullable Watch.Watcher watcher;
+	private Watch.Watcher watcher;
 
+	private long watchRevision;
 	private long lastCleanupRevision;
 
 	private long cleanupOlderThanMillis = DEFAULT_CLEANUP_OLDER_THAN.toMillis();
@@ -98,6 +103,11 @@ public final class CubeCleanerService extends AbstractReactive
 	private final PromiseStats promiseCleanup = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseDeleteChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseUpdateLastCleanupRevision = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+
+	private final ExceptionStats watchEtcdExceptionStats = ExceptionStats.create();
+	private final ExceptionStats malformedDataExceptionStats = ExceptionStats.create();
+	private Instant watchConnectionLastEstablishedAt = null;
+	private Instant watchLastCompletedAt = null;
 	// endregion
 
 	private CurrentTimeProvider now = reactor;
@@ -177,7 +187,9 @@ public final class CubeCleanerService extends AbstractReactive
 	@Override
 	public Promise<Void> start() {
 		ByteSequence revisionKey = root.concat(cleanupRevisionKey);
-		return Promise.ofCompletionStage(client.getKVClient().get(revisionKey))
+		return Promise.ofCompletionStage(client.getKVClient().get(revisionKey)
+				.exceptionallyCompose(e -> failedFuture(new CubeException("Could not get revision key", e.getCause())))
+			)
 			.whenResult(response -> {
 				List<KeyValue> kvs = response.getKvs();
 				if (kvs.isEmpty()) {
@@ -267,15 +279,16 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private Promise<Void> updateLastCleanupRevision(long lastCleanupRevision) {
 		ByteSequence value = REVISION_CODEC.encodeValue(lastCleanupRevision);
-		return Promise.ofCompletionStage(client.getKVClient().put(root.concat(cleanupRevisionKey), value))
-			.mapException(e -> new CubeException("Failed to update last cleanup revision", e))
+		return Promise.ofCompletionStage(client.getKVClient().put(root.concat(cleanupRevisionKey), value)
+				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to update last cleanup revision", e.getCause()))))
 			.whenResult(() -> this.lastCleanupRevision = lastCleanupRevision)
 			.whenComplete(promiseUpdateLastCleanupRevision.recordStats())
 			.toVoid();
 	}
 
 	private Watch.Watcher createWatcher() {
-		return EtcdUtils.watch(client, lastCleanupRevision,
+		long revision = watchRevision == 0 ? lastCleanupRevision : (watchRevision + 1);
+		return EtcdUtils.watch(client.getWatchClient(), revision,
 			new EtcdUtils.WatchRequest[]{
 				new EtcdUtils.WatchRequest<>(
 					root.concat(timestampKey),
@@ -329,9 +342,16 @@ public final class CubeCleanerService extends AbstractReactive
 				)
 			},
 			new EtcdListener<>() {
+				@Override
+				public void onConnectionEstablished() {
+					logger.trace("Watch connection to etcd server established");
+					watchConnectionLastEstablishedAt = now.currentInstant();
+				}
+
 				@SuppressWarnings("unchecked")
 				@Override
 				public void onNext(long revision, Object[] operation) {
+					watchRevision = revision;
 					RefLong timestampRef = (RefLong) operation[0];
 					Set<Long> deletedChunks = (Set<Long>) operation[1];
 
@@ -344,7 +364,7 @@ public final class CubeCleanerService extends AbstractReactive
 					}
 
 					deletedChunksQueue.add(new DeletedChunksEntry(revision, timestamp, deletedChunks));
-					reactor.submit(() -> {
+					reactor.execute(() -> {
 						if (cleanupSchedule == null) {
 							cleanup();
 						}
@@ -354,29 +374,25 @@ public final class CubeCleanerService extends AbstractReactive
 				@Override
 				public void onError(Throwable throwable) {
 					logger.warn("Error occurred while watching chunks to be cleaned up", throwable);
-					recreate();
+					watchEtcdExceptionStats.recordException(throwable, this);
+					if (throwable instanceof MalformedEtcdDataException) {
+						malformedDataExceptionStats.recordException(throwable, this);
+						watcher.close();
+					}
 				}
 
 				@Override
 				public void onCompleted() {
-					logger.trace("Watcher completed");
-					recreate();
-				}
+					logger.warn("Watch has been completed");
+					watchLastCompletedAt = now.currentInstant();
 
-				boolean recreating;
-
-				private void recreate() {
-					if (recreating) return;
-					recreating = true;
-
-					reactor.submit(() -> {
-						if (stopped) return;
-						logger.trace("Recreating watcher");
-
-						assert CubeCleanerService.this.watcher != null;
-						CubeCleanerService.this.watcher.close();
-						CubeCleanerService.this.watcher = createWatcher();
-					});
+					//noinspection DataFlowIssue
+					reactor.execute(() ->
+						reactor.delayBackground(WATCH_RETRY_INTERVAL, () -> {
+							if (stopped) return;
+							logger.trace("Recreating watcher");
+							CubeCleanerService.this.watcher = createWatcher();
+						}));
 				}
 			});
 	}
@@ -427,6 +443,11 @@ public final class CubeCleanerService extends AbstractReactive
 	}
 
 	@JmxAttribute
+	public long getWatchRevisionRevision() {
+		return watchRevision;
+	}
+
+	@JmxAttribute
 	public boolean isStopped() {
 		return stopped;
 	}
@@ -449,6 +470,31 @@ public final class CubeCleanerService extends AbstractReactive
 	@JmxAttribute
 	public PromiseStats getPromiseUpdateLastCleanupRevision() {
 		return promiseUpdateLastCleanupRevision;
+	}
+
+	@JmxAttribute
+	public ExceptionStats getWatchEtcdExceptionStats() {
+		return watchEtcdExceptionStats;
+	}
+
+	@JmxAttribute
+	public ExceptionStats getMalformedDataExceptionStats() {
+		return malformedDataExceptionStats;
+	}
+
+	@JmxAttribute
+	public Instant getWatchLastCompletedAtAt() {
+		return watchLastCompletedAt;
+	}
+
+	@JmxAttribute
+	public Instant getWatchConnectionLastEstablishedAt() {
+		return watchConnectionLastEstablishedAt;
+	}
+
+	@JmxAttribute
+	public String getEtcdRoot() {
+		return root.toString();
 	}
 	// endregion
 }

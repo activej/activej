@@ -1,5 +1,6 @@
 package io.activej.cube.etcd;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.CurrentTimeProvider;
@@ -21,21 +22,34 @@ import io.activej.etcd.state.AbstractEtcdStateManager;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.etl.LogState;
+import io.activej.jmx.api.ConcurrentJmxBean;
+import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.stats.ExceptionStats;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.StateManager;
 import io.activej.promise.Promise;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KV;
 import io.etcd.jetcd.Response;
 import io.etcd.jetcd.options.DeleteOption;
+import org.jetbrains.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
@@ -45,7 +59,12 @@ import static io.activej.etcd.EtcdUtils.*;
 import static java.util.stream.Collectors.*;
 
 public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogState<CubeDiff, CubeState>, LogDiff<CubeDiff>>
-	implements StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> {
+	implements StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>>, ConcurrentJmxBean {
+
+	private static final Logger logger = LoggerFactory.getLogger(CubeEtcdStateManager.class);
+
+	private static final Duration WATCH_RETRY_INTERVAL = ApplicationSettings.getDuration(CubeEtcdStateManager.class, "watchRetryInterval", Duration.ofSeconds(1));
+
 	private final CubeStructure cubeStructure;
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
@@ -54,7 +73,15 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	private ByteSequence prefixChunk = CHUNK;
 	private ByteSequence timestampKey = TIMESTAMP;
 
+	private ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
+
+	// region JMX
+	private final ExceptionStats watchEtcdExceptionStats = ExceptionStats.create();
+	private final ExceptionStats malformedDataExceptionStats = ExceptionStats.create();
+	private Instant watchConnectionLastEstablishedAt = null;
+	private Instant watchLastCompletedAt = null;
+	// endregion
 
 	private CubeEtcdStateManager(
 		Client client,
@@ -118,6 +145,12 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		public Builder withCurrentTimeProvider(CurrentTimeProvider now) {
 			checkNotBuilt(this);
 			CubeEtcdStateManager.this.now = now;
+			return this;
+		}
+
+		public Builder withScheduledExecutor(ScheduledExecutorService scheduledExecutor) {
+			checkNotBuilt(this);
+			CubeEtcdStateManager.this.scheduledExecutor = scheduledExecutor;
 			return this;
 		}
 
@@ -221,13 +254,15 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	@Override
 	public Promise<Void> catchUp() {
-		return push(List.of());
+		return push(List.of())
+			.whenComplete(toLogger(logger, "catchUp", this));
 	}
 
 	@Override
 	public Promise<Void> push(List<LogDiff<CubeDiff>> diffs) {
 		LogDiff<CubeDiff> diff = LogDiff.reduce(diffs, CubeDiff::reduce);
-		return Promise.ofCompletionStage(push(diff)).toVoid();
+		return Promise.ofCompletionStage(push(diff)).toVoid()
+			.whenComplete(toLogger(logger, "push", diffs, this));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -257,16 +292,27 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		saveCubeLogDiff(prefixPos, prefixChunk, aggregationIdCodec, chunkCodecsFactory, txn, transaction);
 	}
 
-	public void delete() throws ExecutionException, InterruptedException {
-		client.getKVClient()
-			.delete(root,
-				DeleteOption.builder()
-					.isPrefix(true)
-					.build())
-			.get();
-		client.getKVClient()
-			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
-			.get();
+	@Override
+	protected void onWatchConnectionEstablished() {
+		logger.trace("Watch connection to etcd server established");
+		watchConnectionLastEstablishedAt = now.currentInstant();
+	}
+
+	@Override
+	protected void onWatchError(Throwable throwable) {
+		logger.warn("Error while watching keys", throwable);
+		watchEtcdExceptionStats.recordException(throwable, this);
+		if (throwable instanceof MalformedEtcdDataException) {
+			malformedDataExceptionStats.recordException(throwable, this);
+			watcher.close();
+		}
+	}
+
+	@Override
+	protected void onWatchCompleted() {
+		logger.warn("Watch has been completed");
+		watchLastCompletedAt = now.currentInstant();
+		scheduledExecutor.schedule(this::watch, WATCH_RETRY_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	private static boolean isCatchUp(LogDiff<CubeDiff> diff) {
@@ -274,4 +320,59 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 			diff.getPositions().values().stream().allMatch(LogPositionDiff::isEmpty) &&
 			diff.getDiffs().stream().allMatch(CubeDiff::isEmpty);
 	}
+
+	@VisibleForTesting
+	public void delete() throws ExecutionException, InterruptedException {
+		KV kvClient = client.getKVClient();
+		kvClient
+			.delete(root,
+				DeleteOption.builder()
+					.isPrefix(true)
+					.build())
+			.get();
+		kvClient
+			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
+			.get();
+	}
+
+	@Override
+	public String toString() {
+		return "CubeEtcdStateManager{" +
+			   "root=" + root +
+			   ", revision=" + getRevision() +
+			   '}';
+	}
+
+	// region JMX getters
+	@JmxAttribute
+	public ExceptionStats getWatchEtcdExceptionStats() {
+		return watchEtcdExceptionStats;
+	}
+
+	@JmxAttribute
+	public ExceptionStats getMalformedDataExceptionStats() {
+		return malformedDataExceptionStats;
+	}
+
+	@JmxAttribute
+	public Instant getWatchLastCompletedAtAt() {
+		return watchLastCompletedAt;
+	}
+
+	@JmxAttribute
+	public Instant getWatchConnectionLastEstablishedAt() {
+		return watchConnectionLastEstablishedAt;
+	}
+
+	@Override
+	@JmxAttribute
+	public long getRevision() {
+		return super.getRevision();
+	}
+
+	@JmxAttribute
+	public String getEtcdRoot() {
+		return root.toString();
+	}
+	// endregion
 }

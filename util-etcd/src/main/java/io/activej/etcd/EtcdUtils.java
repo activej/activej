@@ -8,10 +8,14 @@ import io.activej.etcd.codec.kv.KeyValue;
 import io.activej.etcd.codec.value.EtcdValueCodec;
 import io.activej.etcd.codec.value.EtcdValueCodecs;
 import io.activej.etcd.codec.value.EtcdValueEncoder;
+import io.activej.etcd.exception.EtcdException;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etcd.exception.NoKeyFoundException;
 import io.activej.etcd.exception.TransactionNotSucceededException;
-import io.etcd.jetcd.*;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.KV;
+import io.etcd.jetcd.Response;
+import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.kv.GetResponse;
 import io.etcd.jetcd.kv.TxnResponse;
 import io.etcd.jetcd.op.Cmp;
@@ -76,7 +80,7 @@ public class EtcdUtils {
 
 	}
 
-	public static <T, A, R> CompletableFuture<CheckoutResponse<R>> checkout(Client client, long revision,
+	public static <T, A, R> CompletableFuture<CheckoutResponse<R>> checkout(KV client, long revision,
 		ByteSequence prefix, EtcdKVDecoder<?, T> codec, Collector<T, A, R> collector
 	) {
 		//noinspection unchecked
@@ -88,11 +92,10 @@ public class EtcdUtils {
 		T finish(Response.Header header, Object[] objects) throws MalformedEtcdDataException;
 	}
 
-	public static <R> CompletableFuture<R> checkout(Client client, long revision,
+	public static <R> CompletableFuture<R> checkout(KV client, long revision,
 		CheckoutRequest<?, ?>[] checkoutRequests, CheckoutFinisher<R> checkoutFinisher
 	) {
-		KV kvClient = client.getKVClient();
-		return kvClient.txn()
+		return client.txn()
 			.Then(Arrays.stream(checkoutRequests)
 				.map(checkoutRequest -> Op.get(
 					checkoutRequest.prefix,
@@ -102,6 +105,7 @@ public class EtcdUtils {
 						.build()))
 				.toArray(Op[]::new))
 			.commit()
+			.exceptionallyCompose(e -> failedFuture(new EtcdException("Checkout failed", e.getCause())))
 			.thenCompose(new Function<TxnResponse, CompletionStage<R>>() {
 				@Override
 				public CompletionStage<R> apply(TxnResponse response) {
@@ -131,13 +135,18 @@ public class EtcdUtils {
 			});
 	}
 
-	public static <K, KV, R> Watch.Watcher watch(Client client, long revision,
-		ByteSequence prefix, EtcdKVDecoder<? extends K, ? extends KV> codec, EtcdEventProcessor<K, KV, ?> eventProcessor,
+	public static <K, KV, R> Watch.Watcher watch(Watch watch, long revision,
+		ByteSequence prefix, EtcdKVDecoder<? extends K, ? extends KV> codec, EtcdEventProcessor<K, KV, R> eventProcessor,
 		EtcdListener<R> listener
 	) {
-		return watch(client, revision,
+		return watch(watch, revision,
 			new WatchRequest[]{new WatchRequest<>(prefix, codec, eventProcessor)},
 			new EtcdListener<>() {
+				@Override
+				public void onConnectionEstablished() {
+					listener.onConnectionEstablished();
+				}
+
 				@Override
 				public void onNext(long revision, Object[] operations) throws MalformedEtcdDataException {
 					assert operations.length == 1;
@@ -173,7 +182,7 @@ public class EtcdUtils {
 
 	}
 
-	public static Watch.Watcher watch(Client client, long revision,
+	public static Watch.Watcher watch(Watch client, long revision,
 		WatchRequest<?, ?, ?>[] watchRequests,
 		EtcdListener<Object[]> listener
 	) {
@@ -194,33 +203,35 @@ public class EtcdUtils {
 			.map(w -> new WatchRequest(w.prefix.substring(root.size()), w.codec, w.eventProcessor))
 			.toArray(WatchRequest[]::new);
 
-		return client.getWatchClient().watch(
+		return client.watch(
 			root,
 			WatchOption.builder()
 				.isPrefix(true)
 				.withRevision(revision)
+				.withCreateNotify(true)
 				.build(),
 			new Watch.Listener() {
 				long currentRevision = -1;
 
 				@Override
 				public void onNext(WatchResponse response) {
+					if (response.isCreatedNotify()) {
+						listener.onConnectionEstablished();
+					}
 					try {
 						Object[] accumulators = new Object[requests.length];
-						for (int i = 0; i < accumulators.length; i++) {
-							accumulators[i] = requests[i].eventProcessor.createEventsAccumulator();
-						}
+
+						boolean firstRun = true;
 						for (var event : response.getEvents()) {
 							var keyValue = event.getKeyValue();
 							var rootKey = keyValue.getKey().substring(root.size());
 
 							long modRevision = keyValue.getModRevision();
 							if (modRevision != currentRevision) {
-								if (currentRevision != -1) {
-									listener.onNext(currentRevision, accumulators);
-									for (int i = 0; i < accumulators.length; i++) {
-										accumulators[i] = requests[i].eventProcessor.createEventsAccumulator();
-									}
+								if (!firstRun) listener.onNext(currentRevision, accumulators);
+
+								for (int i = 0; i < accumulators.length; i++) {
+									accumulators[i] = requests[i].eventProcessor.createEventsAccumulator();
 								}
 								currentRevision = modRevision;
 							}
@@ -240,6 +251,7 @@ public class EtcdUtils {
 									request.eventProcessor.onDelete(accumulators[i], k);
 								}
 							}
+							firstRun = false;
 						}
 						if (currentRevision != -1) {
 							listener.onNext(currentRevision, accumulators);
@@ -249,14 +261,9 @@ public class EtcdUtils {
 					}
 				}
 
-				boolean onError = false;
-
 				@Override
 				public void onError(Throwable throwable) {
-					if (!onError) {
-						onError = true;
-						listener.onError(throwable);
-					}
+					listener.onError(throwable);
 				}
 
 				@Override
@@ -277,16 +284,16 @@ public class EtcdUtils {
 
 	public record AtomicUpdateResponse<T>(Response.Header header, T prevValue, T newValue) {}
 
-	public static CompletableFuture<AtomicUpdateResponse<Integer>> atomicAdd(Client client, ByteSequence key, int delta) {
+	public static CompletableFuture<AtomicUpdateResponse<Integer>> atomicAdd(KV client, ByteSequence key, int delta) {
 		return atomicUpdate(client, key, EtcdValueCodecs.ofIntegerString(), value -> value + delta);
 	}
 
-	public static CompletableFuture<AtomicUpdateResponse<Long>> atomicAdd(Client client, ByteSequence key, long delta) {
+	public static CompletableFuture<AtomicUpdateResponse<Long>> atomicAdd(KV client, ByteSequence key, long delta) {
 		return atomicUpdate(client, key, EtcdValueCodecs.ofLongString(), value -> value + delta);
 	}
 
 	public static <T> CompletableFuture<AtomicUpdateResponse<T>> atomicUpdate(
-		Client client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator
+		KV client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator
 	) {
 		CompletableFuture<AtomicUpdateResponse<T>> future = new CompletableFuture<>();
 		atomicUpdate1(client, key, codec, operator, future);
@@ -294,14 +301,14 @@ public class EtcdUtils {
 	}
 
 	private static <T> void atomicUpdate1(
-		Client client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator,
+		KV client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator,
 		CompletableFuture<AtomicUpdateResponse<T>> future
 	) {
-		client.getKVClient()
+		client
 			.get(key, GetOption.builder().withSerializable(true).build())
 			.whenComplete((getResponse, throwable) -> {
 				if (throwable != null) {
-					future.completeExceptionally(throwable);
+					future.completeExceptionally(new EtcdException("Atomic update failed", throwable.getCause()));
 					return;
 				}
 				if (getResponse.getKvs().isEmpty()) {
@@ -323,17 +330,17 @@ public class EtcdUtils {
 	}
 
 	private static <T> void atomicUpdate2(
-		Client client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator,
+		KV client, ByteSequence key, EtcdValueCodec<T> codec, UnaryOperator<T> operator,
 		ByteSequence prevSequence, ByteSequence newSequence, T prevValue, T newValue,
 		CompletableFuture<AtomicUpdateResponse<T>> future
 	) {
-		client.getKVClient().txn()
+		client.txn()
 			.If(new Cmp(key, Cmp.Op.EQUAL, CmpTarget.value(prevSequence)))
 			.Then(Op.put(key, newSequence, PutOption.DEFAULT))
 			.commit()
 			.whenComplete((txnResponse, throwable) -> {
 				if (throwable != null) {
-					future.completeExceptionally(throwable);
+					future.completeExceptionally(new EtcdException("Atomic update failed", throwable.getCause()));
 					return;
 				}
 				if (!txnResponse.isSucceeded()) {
@@ -454,6 +461,7 @@ public class EtcdUtils {
 			.If(txnOps.cmps.toArray(Cmp[]::new))
 			.Then(txnOps.ops.toArray(Op[]::new))
 			.commit()
+			.exceptionallyCompose(e -> failedFuture(new EtcdException("Transaction failed", e.getCause())))
 			.thenCompose(txnResponse ->
 				txnResponse.isSucceeded() ?
 					completedFuture(txnResponse) :

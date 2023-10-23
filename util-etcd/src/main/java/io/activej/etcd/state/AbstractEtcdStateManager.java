@@ -26,7 +26,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 	private final EtcdUtils.CheckoutRequest<?, ?>[] checkoutRequests;
 	private final EtcdUtils.WatchRequest<?, ?, ?>[] watchRequests;
 
-	private volatile Watch.Watcher watcher;
+	protected volatile Watch.Watcher watcher;
 
 	private volatile long revision;
 	private S state;
@@ -52,7 +52,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 	@Override
 	public void start() throws Exception {
 		doCheckout().get();
-		doWatch();
+		watch();
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 	}
 
 	private CompletableFuture<Void> doCheckout() {
-		return EtcdUtils.checkout(client, revision, checkoutRequests,
+		return EtcdUtils.checkout(client.getKVClient(), revision, checkoutRequests,
 			(header, objects) -> {
 				this.revision = header.getRevision();
 				this.state = finishState(header, objects);
@@ -83,9 +83,33 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 
 	protected abstract S finishState(Response.Header header, Object[] checkoutObjects) throws MalformedEtcdDataException;
 
-	private void doWatch() {
-		this.watcher = EtcdUtils.watch(client, revision + 1L, watchRequests,
+	protected void onWatchConnectionEstablished() {
+	}
+
+	protected void onWatchError(Throwable throwable) {
+	}
+
+	protected void onWatchCompleted() {
+	}
+
+	protected final void watch() {
+		Watch.Watcher watcher = this.watcher;
+		this.watcher = null;
+		if (watcher != null) {
+			watcher.close();
+		}
+		this.watcher = doCreateWatcher();
+	}
+
+	private Watch.Watcher doCreateWatcher() {
+		return EtcdUtils.watch(client.getWatchClient(), revision + 1L, watchRequests,
 			new EtcdListener<>() {
+
+				@Override
+				public void onConnectionEstablished() {
+					AbstractEtcdStateManager.this.onWatchConnectionEstablished();
+				}
+
 				@Override
 				public void onNext(long revision, Object[] operation) throws MalformedEtcdDataException {
 					stateLock.writeLock().lock();
@@ -99,15 +123,16 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 					synchronized (promisesQueue) {
 						processQueue(revision);
 					}
-
 				}
 
 				@Override
 				public void onError(Throwable throwable) {
+					AbstractEtcdStateManager.this.onWatchError(throwable);
 				}
 
 				@Override
 				public void onCompleted() {
+					AbstractEtcdStateManager.this.onWatchCompleted();
 				}
 			});
 	}

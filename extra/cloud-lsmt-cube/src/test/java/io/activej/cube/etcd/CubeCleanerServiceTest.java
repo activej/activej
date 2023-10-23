@@ -129,7 +129,7 @@ public class CubeCleanerServiceTest {
 	}
 
 	@Test
-	public void testCleanup() throws Exception {
+	public void testCleanup() {
 		processChunks(100, Set.of(1L, 2L, 3L), Set.of());
 		processChunks(200, Set.of(4L, 5L, 6L), Set.of(1L, 2L, 3L));
 		processChunks(300, Set.of(7L, 8L, 9L), Set.of(4L, 5L));
@@ -150,7 +150,7 @@ public class CubeCleanerServiceTest {
 	}
 
 	@Test
-	public void testCleanupWithAlreadyDeletedChunks() throws Exception {
+	public void testCleanupWithAlreadyDeletedChunks() {
 		processChunks(100, Set.of(1L, 2L, 3L), Set.of());
 		processChunks(200, Set.of(4L, 5L, 6L), Set.of(1L, 2L, 3L));
 
@@ -165,7 +165,7 @@ public class CubeCleanerServiceTest {
 	}
 
 	@Test
-	public void testCleanupAllDeletedChunks() throws Exception {
+	public void testCleanupAllDeletedChunks() {
 		processChunks(100, Set.of(1L, 2L, 3L), Set.of());
 		processChunks(200, Set.of(4L, 5L, 6L), Set.of(1L, 2L, 3L));
 		processChunks(300, Set.of(), Set.of(4L, 5L, 6L));
@@ -177,7 +177,7 @@ public class CubeCleanerServiceTest {
 	}
 
 	@Test
-	public void testCleanupAutoScheduling() throws Exception {
+	public void testCleanupAutoScheduling() {
 		processChunks(100, Set.of(1L, 2L, 3L), Set.of());
 		processChunks(200, Set.of(4L, 5L, 6L), Set.of(1L, 2L, 3L));
 		processChunks(300, Set.of(), Set.of(4L, 5L, 6L));

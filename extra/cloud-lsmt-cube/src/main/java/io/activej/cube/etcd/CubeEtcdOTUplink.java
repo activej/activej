@@ -6,6 +6,7 @@ import io.activej.common.tuple.Tuple2;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etcd.EtcdEventProcessor;
 import io.activej.etcd.EtcdListener;
@@ -27,8 +28,10 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KV;
 import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.options.DeleteOption;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,6 +52,7 @@ import static io.activej.json.JsonUtils.fromJson;
 import static io.activej.json.JsonUtils.toJson;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 import static java.util.stream.Collectors.*;
 
 public final class CubeEtcdOTUplink extends AbstractReactive
@@ -145,7 +149,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	@SuppressWarnings("unchecked")
 	private CompletableFuture<CubeCheckoutResponse> doCheckout() {
 		//noinspection RedundantTypeArguments - IDEA cannot resolve types
-		return EtcdUtils.checkout(client, 0L, new CheckoutRequest[]{
+		return EtcdUtils.checkout(client.getKVClient(), 0L, new CheckoutRequest[]{
 				CheckoutRequest.ofMapEntry(
 					root.concat(prefixPos),
 					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
@@ -177,7 +181,8 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
 		checkInReactorThread(this);
-		return Promise.ofCompletionStage(client.getKVClient().get(root))
+		return Promise.ofCompletionStage(client.getKVClient().get(root)
+				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to fetch diffs", e.getCause()))))
 			.then(response -> {
 				long targetRevision = response.getKvs().isEmpty() ? response.getHeader().getRevision() : response.getKvs().get(0).getModRevision();
 				return doFetch(currentCommitId, targetRevision)
@@ -192,7 +197,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		SettablePromise<List<LogDiff<CubeDiff>>> promise = new SettablePromise<>();
 		final AtomicReference<Watch.Watcher> etcdWatcherRef = new AtomicReference<>();
 		reactor.startExternalTask();
-		etcdWatcherRef.set(EtcdUtils.watch(client, revisionFrom + 1, new WatchRequest[]{
+		etcdWatcherRef.set(EtcdUtils.watch(client.getWatchClient(), revisionFrom + 1, new WatchRequest[]{
 				WatchRequest.ofMapEntry(
 					root.concat(prefixPos),
 					EtcdKVCodecs.ofMapEntry(EtcdKeyCodecs.ofString(), logPositionEtcdCodec()),
@@ -243,6 +248,10 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 			new EtcdListener<>() {
 				LogDiff<CubeDiff> logDiff = LogDiff.empty();
 
+				@Override
+				public void onConnectionEstablished() {
+				}
+
 				@SuppressWarnings("unchecked")
 				@Override
 				public void onNext(long revision, Object[] operation) throws MalformedEtcdDataException {
@@ -272,6 +281,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 				@Override
 				public void onError(Throwable throwable) {
 					reactor.submit(() -> promise.trySetException((Exception) throwable));
+					etcdWatcherRef.get().close();
 				}
 
 				@Override
@@ -324,15 +334,15 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 		};
 	}
 
+	@VisibleForTesting
 	public void delete() throws ExecutionException, InterruptedException {
-		client.getKVClient()
-			.delete(root,
+		KV kvClient = client.getKVClient();
+		kvClient.delete(root,
 				DeleteOption.builder()
 					.isPrefix(true)
 					.build())
 			.get();
-		client.getKVClient()
-			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(reactor.currentTimeMillis()))
+		kvClient.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(reactor.currentTimeMillis()))
 			.get();
 	}
 
