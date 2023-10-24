@@ -328,7 +328,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 				try {
 					return fromJson(JsonCodecs.ofLogPosition(), byteSequence.toString());
 				} catch (MalformedDataException e) {
-					throw new MalformedEtcdDataException(e.getMessage());
+					throw new MalformedEtcdDataException("Failed to decode log position of value '" + byteSequence + '\'', e);
 				}
 			}
 		};

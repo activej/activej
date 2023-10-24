@@ -59,7 +59,14 @@ public class EtcdKVCodecs {
 
 			@Override
 			public Map.Entry<K, V> decodeKV(KeyValue kv) throws MalformedEtcdDataException {
-				return Map.entry(keyCodec.decodeKey(kv.key()), valueCodec.decodeValue(kv.value()));
+				K key = keyCodec.decodeKey(kv.key());
+				V value;
+				try {
+					value = valueCodec.decodeValue(kv.value());
+				} catch (MalformedEtcdDataException e) {
+					throw new MalformedEtcdDataException("Failed to decode value of key '" + kv.key() + '\'', e);
+				}
+				return Map.entry(key, value);
 			}
 
 			@Override
@@ -76,9 +83,16 @@ public class EtcdKVCodecs {
 				Prefix<K0> prefix = prefixCodec.decodePrefix(kv.key());
 				EtcdKVCodec<K, T> codec = codecs.apply(prefix.key());
 				if (codec == null) {
-					throw new MalformedEtcdDataException("Unexpected key: " + prefix.key());
+					throw new MalformedEtcdDataException("Failed to decode prefixed entry of key '" + kv.key() +
+														 "' .Unexpected key: " + prefix.key());
 				}
-				return new Tuple2<>(prefix.key(), codec.decodeKV(new KeyValue(prefix.suffix(), kv.value())));
+				T t;
+				try {
+					t = codec.decodeKV(new KeyValue(prefix.suffix(), kv.value()));
+				} catch (MalformedEtcdDataException e) {
+					throw new MalformedEtcdDataException("Failed to decode KV of key '" + kv.key() + '\'', e);
+				}
+				return new Tuple2<>(prefix.key(), t);
 			}
 
 			@Override
@@ -86,9 +100,16 @@ public class EtcdKVCodecs {
 				Prefix<K0> prefix = prefixCodec.decodePrefix(byteSequence);
 				EtcdKVCodec<K, T> codec = codecs.apply(prefix.key());
 				if (codec == null) {
-					throw new MalformedEtcdDataException("Unexpected key: " + prefix.key());
+					throw new MalformedEtcdDataException("Failed to decode prefixed entry of key '" + byteSequence +
+														 "'. Unexpected key: " + prefix.key());
 				}
-				return new Tuple2<>(prefix.key(), codec.decodeKey(prefix.suffix()));
+				K k;
+				try {
+					k = codec.decodeKey(prefix.suffix());
+				} catch (MalformedEtcdDataException e) {
+					throw new MalformedEtcdDataException("Failed to decode key '" + byteSequence + '\'', e);
+				}
+				return new Tuple2<>(prefix.key(), k);
 			}
 
 			@Override
@@ -124,7 +145,7 @@ public class EtcdKVCodecs {
 				try {
 					return decodeFn.decode(codec.decodeKV(kv));
 				} catch (MalformedDataException e) {
-					throw new MalformedEtcdDataException(e.getMessage());
+					throw new MalformedEtcdDataException("Failed to decode KV of key '" + kv.key() + '\'', e);
 				}
 			}
 

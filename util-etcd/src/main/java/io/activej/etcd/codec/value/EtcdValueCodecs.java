@@ -68,7 +68,7 @@ public class EtcdValueCodecs {
 				try {
 					return decodeFn.decode(codec.decodeValue(byteSequence));
 				} catch (MalformedDataException e) {
-					throw new MalformedEtcdDataException(e.getMessage());
+					throw new MalformedEtcdDataException("Failed to decode value '" + byteSequence + '\'', e);
 				}
 			}
 

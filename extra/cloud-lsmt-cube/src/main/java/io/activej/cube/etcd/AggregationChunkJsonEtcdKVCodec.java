@@ -49,7 +49,7 @@ public final class AggregationChunkJsonEtcdKVCodec implements EtcdKVCodec<Long, 
 		try {
 			value = fromJson(valueJsonCodec, kv.value().toString());
 		} catch (MalformedDataException e) {
-			throw new MalformedEtcdDataException(e.getMessage());
+			throw new MalformedEtcdDataException("Failed to decode value of key '" + kv.key() + '\'', e);
 		}
 		return AggregationChunk.create(chunkId, value.measures(), value.min(), value.max(), value.count());
 	}

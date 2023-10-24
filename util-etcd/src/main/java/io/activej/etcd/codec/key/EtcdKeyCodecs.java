@@ -38,7 +38,7 @@ public class EtcdKeyCodecs {
 
 			@Override
 			public Integer decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
-				if (byteSequence.size() != Integer.BYTES) throw new MalformedEtcdDataException("Not an 'integer' key");
+				if (byteSequence.size() != Integer.BYTES) throw new MalformedEtcdDataException("Key '" + byteSequence + "' is not an 'integer' key");
 				return ByteBuffer.wrap(byteSequence.getBytes()).order(BIG_ENDIAN).getInt();
 			}
 		};
@@ -55,7 +55,7 @@ public class EtcdKeyCodecs {
 
 			@Override
 			public Long decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
-				if (byteSequence.size() != Long.BYTES) throw new MalformedEtcdDataException("Not a 'long' key");
+				if (byteSequence.size() != Long.BYTES) throw new MalformedEtcdDataException("Key '" + byteSequence + "' is not a 'long' key");
 				return ByteBuffer.wrap(byteSequence.getBytes()).order(BIG_ENDIAN).getLong();
 			}
 		};
@@ -68,7 +68,7 @@ public class EtcdKeyCodecs {
 				try {
 					return decodeFn.decode(codec.decodeKey(byteSequence));
 				} catch (MalformedDataException e) {
-					throw new RuntimeException(e);
+					throw new MalformedEtcdDataException("Failed to decode key '" + byteSequence + '\'', e);
 				}
 			}
 

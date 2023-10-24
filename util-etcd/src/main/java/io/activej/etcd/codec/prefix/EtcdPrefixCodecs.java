@@ -27,7 +27,7 @@ public class EtcdPrefixCodecs {
 				for (i = 0; i < bytes.length; i++) {
 					if (bytes[i] == terminator) break;
 				}
-				if (i >= bytes.length) throw new MalformedEtcdDataException("No terminator found");
+				if (i >= bytes.length) throw new MalformedEtcdDataException("No terminator '" + terminator + "' found in key '" + byteSequence + '\'');
 				return new Prefix<>(byteSequence.substring(0, i).toString(), byteSequence.substring(i + 1));
 			}
 		};
@@ -47,7 +47,7 @@ public class EtcdPrefixCodecs {
 				try {
 					return new Prefix<>(decodeFn.decode(prefix.key()), prefix.suffix());
 				} catch (MalformedDataException e) {
-					throw new MalformedEtcdDataException(e.getMessage());
+					throw new MalformedEtcdDataException("Failed to decode prefix '" + byteSequence + '\'', e);
 				}
 			}
 		};

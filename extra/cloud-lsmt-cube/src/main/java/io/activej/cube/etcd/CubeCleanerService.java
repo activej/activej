@@ -199,7 +199,11 @@ public final class CubeCleanerService extends AbstractReactive
 				assert kvs.size() == 1;
 				KeyValue keyValue = kvs.get(0);
 
-				this.lastCleanupRevision = REVISION_CODEC.decodeValue(keyValue.getValue());
+				try {
+					this.lastCleanupRevision = REVISION_CODEC.decodeValue(keyValue.getValue());
+				} catch (MalformedEtcdDataException e) {
+					throw new CubeException("Could not decode last cleanup revision on key '" + revisionKey + "'", e);
+				}
 				this.watcher = createWatcher();
 			})
 			.then(this::cleanup)
@@ -314,14 +318,17 @@ public final class CubeCleanerService extends AbstractReactive
 					new EtcdKVDecoder<>() {
 						@Override
 						public Long decodeKV(io.activej.etcd.codec.kv.KeyValue kv) throws MalformedEtcdDataException {
-							ByteSequence suffix = aggregationIdCodec.decodePrefix(kv.key()).suffix();
-							return chunkIdCodec.decodeKey(suffix);
+							return decodeKey(kv.key());
 						}
 
 						@Override
 						public Long decodeKey(ByteSequence byteSequence) throws MalformedEtcdDataException {
 							ByteSequence suffix = aggregationIdCodec.decodePrefix(byteSequence).suffix();
-							return chunkIdCodec.decodeKey(suffix);
+							try {
+								return chunkIdCodec.decodeKey(suffix);
+							} catch (MalformedEtcdDataException e) {
+								throw new MalformedEtcdDataException("Failed to decode chunk ID of key '" + byteSequence + '\'', e);
+							}
 						}
 					},
 					new EtcdEventProcessor<>() {

@@ -127,7 +127,13 @@ public class EtcdUtils {
 					A accumulator = collector.supplier().get();
 					BiConsumer<A, ? super KV> accumulatorFn = collector.accumulator();
 					for (var kv : response.getKvs()) {
-						KV item = codec.decodeKV(new KeyValue(kv.getKey().substring(prefix.size()), kv.getValue()));
+						KV item;
+						ByteSequence key = kv.getKey();
+						try {
+							item = codec.decodeKV(new KeyValue(key.substring(prefix.size()), kv.getValue()));
+						} catch (MalformedEtcdDataException e) {
+							throw new MalformedEtcdDataException("Failed to decode KV of key '" + key + '\'', e);
+						}
 						accumulatorFn.accept(accumulator, item);
 					}
 					return collector.finisher().apply(accumulator);
@@ -241,12 +247,22 @@ public class EtcdUtils {
 								if (!rootKey.startsWith(request.prefix)) continue;
 								var key = rootKey.substring(request.prefix.size());
 								if (event.getEventType() == WatchEvent.EventType.PUT) {
-									Object kv = request.codec.decodeKV(new KeyValue(key, keyValue.getValue()));
+									Object kv;
+									try {
+										kv = request.codec.decodeKV(new KeyValue(key, keyValue.getValue()));
+									} catch (MalformedEtcdDataException e) {
+										throw new MalformedEtcdDataException("Failed to decode KV of key '" + rootKey + '\'', e);
+									}
 									//noinspection unchecked
 									request.eventProcessor.onPut(accumulators[i], kv);
 								}
 								if (event.getEventType() == WatchEvent.EventType.DELETE) {
-									Object k = request.codec.decodeKey(key);
+									Object k;
+									try {
+										k = request.codec.decodeKey(key);
+									} catch (MalformedEtcdDataException e) {
+										throw new MalformedEtcdDataException("Failed to decode key '" + rootKey + '\'', e);
+									}
 									//noinspection unchecked
 									request.eventProcessor.onDelete(accumulators[i], k);
 								}
@@ -320,7 +336,8 @@ public class EtcdUtils {
 				try {
 					prevValue = codec.decodeValue(prevSequence);
 				} catch (MalformedEtcdDataException e) {
-					future.completeExceptionally(e);
+					future.completeExceptionally(new MalformedEtcdDataException(
+						"Failed to decode value of key '" + key + '\'', e));
 					return;
 				}
 				T newValue = operator.apply(prevValue);
