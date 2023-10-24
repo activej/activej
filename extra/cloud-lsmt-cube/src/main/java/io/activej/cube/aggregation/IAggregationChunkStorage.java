@@ -30,8 +30,8 @@ import java.util.Set;
  * Manages persistence of aggregations (chunks of data).
  */
 @ComponentInterface
-public interface IAggregationChunkStorage<C> {
-	Promise<C> createId();
+public interface IAggregationChunkStorage {
+	Promise<Long> createId();
 
 	/**
 	 * Creates a {@code StreamSupplier} that streams records contained in the chunk.
@@ -42,7 +42,7 @@ public interface IAggregationChunkStorage<C> {
 	 * @return StreamSupplier, which will stream read records to its wired consumer.
 	 */
 	<T> Promise<StreamSupplier<T>> read(
-		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId,
 		DefiningClassLoader classLoader
 	);
 
@@ -55,15 +55,15 @@ public interface IAggregationChunkStorage<C> {
 	 * @param chunkId     id of chunk
 	 */
 	<T> Promise<StreamConsumer<T>> write(
-		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId,
 		DefiningClassLoader classLoader
 	);
 
-	Promise<Void> finish(Set<C> chunkIds);
+	Promise<Void> finish(Set<Long> chunkIds);
 
-	Promise<Set<C>> listChunks();
+	Promise<Set<Long>> listChunks();
 
-	Promise<Void> deleteChunks(Set<C> chunksToDelete);
+	Promise<Void> deleteChunks(Set<Long> chunksToDelete);
 
 }
 

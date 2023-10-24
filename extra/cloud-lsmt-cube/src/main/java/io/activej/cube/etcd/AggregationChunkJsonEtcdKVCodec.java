@@ -33,7 +33,7 @@ public final class AggregationChunkJsonEtcdKVCodec implements EtcdKVCodec<Long, 
 	@Override
 	public KeyValue encodeKV(AggregationChunk chunk) {
 		return new KeyValue(
-			encodeKey((Long) chunk.getChunkId()),
+			encodeKey(chunk.getChunkId()),
 			byteSequenceFrom(toJson(valueJsonCodec, new Value(chunk.getMeasures(), chunk.getCount(), chunk.getMinPrimaryKey(), chunk.getMaxPrimaryKey()))));
 	}
 

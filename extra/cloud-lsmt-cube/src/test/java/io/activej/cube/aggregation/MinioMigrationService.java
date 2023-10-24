@@ -31,24 +31,22 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.difference;
 import static io.activej.cube.aggregation.AggregationChunkStorage.LOG;
 
-public final class MinioMigrationService<C> {
+public final class MinioMigrationService {
 	private static final Logger logger = LoggerFactory.getLogger(MinioMigrationService.class);
 
 	private final Reactor reactor;
 	private final Executor executor;
 	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
-	private final ChunkIdJsonCodec<C> codec;
 	private final IFileSystem fromFileSystem;
 	private final MinioAsyncClient toClient;
 	private final String bucket;
 
-	private Set<C> chunksToMigrate;
+	private Set<Long> chunksToMigrate;
 
 	private MinioMigrationService(
 		Reactor reactor,
 		Executor executor,
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
-		ChunkIdJsonCodec<C> codec,
 		IFileSystem fromFileSystem,
 		MinioAsyncClient toClient,
 		String bucket
@@ -56,29 +54,26 @@ public final class MinioMigrationService<C> {
 		this.reactor = reactor;
 		this.executor = executor;
 		this.stateManager = stateManager;
-		this.codec = codec;
 		this.fromFileSystem = fromFileSystem;
 		this.toClient = toClient;
 		this.bucket = bucket;
 	}
 
-	public static <C> CompletableFuture<Void> migrate(
+	public static CompletableFuture<Void> migrate(
 		Reactor reactor,
 		Executor executor,
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
-		ChunkIdJsonCodec<C> codec,
 		IFileSystem fromFileSystem,
 		MinioAsyncClient toClient,
 		String bucket
 	) {
-		return new MinioMigrationService<>(reactor, executor, stateManager, codec, fromFileSystem, toClient, bucket).migrate();
+		return new MinioMigrationService(reactor, executor, stateManager, fromFileSystem, toClient, bucket).migrate();
 	}
 
 	private CompletableFuture<Void> migrate() {
 		return reactor.submit(() -> stateManager.catchUp()
 			.whenResult(() -> {
-				//noinspection unchecked
-				chunksToMigrate = (Set<C>) stateManager.query(logState -> logState.getDataState().getAllChunks());
+				chunksToMigrate = stateManager.query(logState -> logState.getDataState().getAllChunks());
 
 				logger.info("Migrating {} chunks", chunksToMigrate.size());
 				logger.trace("Chunks to be migrated: {}", chunksToMigrate);
@@ -92,15 +87,15 @@ public final class MinioMigrationService<C> {
 		return fromFileSystem.list("*" + LOG)
 			.map(metadataMap -> {
 				Map<String, FileMetadata> filesToMigrate = new HashMap<>(chunksToMigrate.size());
-				for (C c : chunksToMigrate) {
-					String fileName = codec.toFileName(c) + LOG;
+				for (long c : chunksToMigrate) {
+					String fileName = ChunkIdJsonCodec.toFileName(c) + LOG;
 					FileMetadata fileMetadata = metadataMap.get(fileName);
 					if (fileMetadata != null) {
 						filesToMigrate.put(fileName, fileMetadata);
 						continue;
 					}
 
-					throwMissingChunks(codec, metadataMap.keySet(), chunksToMigrate);
+					throwMissingChunks(metadataMap.keySet(), chunksToMigrate);
 				}
 				return filesToMigrate;
 			});
@@ -125,11 +120,11 @@ public final class MinioMigrationService<C> {
 			});
 	}
 
-	private void throwMissingChunks(ChunkIdJsonCodec<C> codec, Set<String> files, Set<C> chunksToMigrate) {
-		Set<C> presentChunks = new HashSet<>(files.size());
+	private void throwMissingChunks(Set<String> files, Set<Long> chunksToMigrate) {
+		Set<Long> presentChunks = new HashSet<>(files.size());
 		for (String name : files) {
 			try {
-				presentChunks.add(codec.fromFileName(name));
+				presentChunks.add(ChunkIdJsonCodec.fromFileName(name));
 			} catch (MalformedDataException ignored) {
 			}
 		}

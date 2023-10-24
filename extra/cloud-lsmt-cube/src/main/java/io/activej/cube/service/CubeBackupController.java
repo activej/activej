@@ -48,7 +48,7 @@ import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class CubeBackupController<K, D, C> extends AbstractReactive
+public final class CubeBackupController<K, D> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
@@ -57,7 +57,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	private final OTSystem<D> otSystem;
 	private final AsyncOTRepository<K, D> repository;
-	private final AggregationChunkStorage<C> storage;
+	private final AggregationChunkStorage storage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 
@@ -67,7 +67,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	private CubeBackupController(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
-		AggregationChunkStorage<C> storage
+		AggregationChunkStorage storage
 	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
@@ -76,9 +76,9 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 		this.storage = storage;
 	}
 
-	public static <K, D, C> CubeBackupController<K, D, C> create(
+	public static <K, D> CubeBackupController<K, D> create(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> otRepository, OTSystem<D> otSystem,
-		AggregationChunkStorage<C> storage
+		AggregationChunkStorage storage
 	) {
 		return new CubeBackupController<>(reactor, cubeDiffScheme, otRepository, otSystem, storage);
 	}
@@ -113,7 +113,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 			.whenComplete(toLogger(logger, thisMethod(), commitId));
 	}
 
-	private Promise<Void> backupChunks(K commitId, Set<C> chunkIds) {
+	private Promise<Void> backupChunks(K commitId, Set<Long> chunkIds) {
 		return storage.backup(String.valueOf(commitId), chunkIds)
 			.mapException(e -> new CubeException("Failed to backup chunks on storage: " + storage, e))
 			.whenComplete(promiseBackupChunks.recordStats())

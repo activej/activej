@@ -422,7 +422,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 				String aggregationId = chunk.getAggregationId();
 				AggregationChunk aggregationChunk = chunk.getChunk();
 
-				ps.setLong(index++, (long) aggregationChunk.getChunkId());
+				ps.setLong(index++, aggregationChunk.getChunkId());
 				ps.setString(index++, aggregationId);
 				List<String> measures = aggregationChunk.getMeasures();
 				cubeStructure.validateMeasures(aggregationId, measures);
@@ -451,7 +451,7 @@ public final class CubeMySqlOTUplink extends AbstractReactive
 			int index = 1;
 			ps.setLong(index++, newRevision);
 			for (ChunkWithAggregationId chunk : chunks) {
-				ps.setLong(index++, (Long) chunk.getChunk().getChunkId());
+				ps.setLong(index++, chunk.getChunk().getChunkId());
 			}
 
 			int removed = ps.executeUpdate();

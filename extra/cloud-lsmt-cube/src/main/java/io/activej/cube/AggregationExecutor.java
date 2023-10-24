@@ -82,7 +82,7 @@ public final class AggregationExecutor extends AbstractReactive
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
-	private final IAggregationChunkStorage<Object> aggregationChunkStorage;
+	private final IAggregationChunkStorage aggregationChunkStorage;
 	private final FrameFormat frameFormat;
 	private @Nullable Path temporarySortDir;
 
@@ -140,7 +140,7 @@ public final class AggregationExecutor extends AbstractReactive
 	 * @return consumer for streaming data to aggregation
 	 */
 	@SuppressWarnings("unchecked")
-	<T, C, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
+	<T, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
 		Class<T> inputClass, Map<String, String> keyFields, Map<String, String> measureFields
 	) {
 		checkInReactorThread(this);
@@ -164,7 +164,7 @@ public final class AggregationExecutor extends AbstractReactive
 			classLoader);
 
 		Function<T, K> keyFunction = createKeyFunction(inputClass, keyClass, structure.getKeys(), classLoader);
-		AggregationGroupReducer<C, T, K> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
+		AggregationGroupReducer<T, K> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
 			structure, measures,
 			recordClass,
 			createPartitionPredicate(recordClass, structure.getPartitioningKey(), classLoader),

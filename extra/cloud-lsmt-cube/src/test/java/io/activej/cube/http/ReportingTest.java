@@ -6,7 +6,6 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.*;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
@@ -66,7 +65,6 @@ import static org.junit.Assert.*;
 
 public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
-
 
 	private HttpServer cubeHttpServer;
 	private HttpClientCubeReporting httpCubeReporting;
@@ -266,8 +264,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-			ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor,
+			AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
 
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate(LocalDate.parse("2000-01-01")))
@@ -346,7 +344,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
 		await(aggregationChunkStorage
-			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
+			.finish(logDiff.diffs().flatMapToLong(CubeDiff::addedChunks).boxed().collect(toSet())));
 
 		await(logCubeStateManager.push(List.of(logDiff)));
 
@@ -999,7 +997,7 @@ public final class ReportingTest extends CubeTestBase {
 
 	private static int getAggregationItemsCount(AggregationState state) {
 		int count = 0;
-		for (Map.Entry<Object, AggregationChunk> chunk : state.getChunks().entrySet()) {
+		for (Map.Entry<Long, AggregationChunk> chunk : state.getChunks().entrySet()) {
 			count += chunk.getValue().getCount();
 		}
 		return count;

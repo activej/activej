@@ -55,7 +55,7 @@ import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeCleanerController<K, D, C> extends AbstractReactive
+public final class CubeCleanerController<K, D> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
@@ -66,7 +66,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	private final OTSystem<D> otSystem;
 	private final AsyncOTRepository<K, D> repository;
-	private final AggregationChunkStorage<C> chunksStorage;
+	private final AggregationChunkStorage chunksStorage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 
@@ -82,7 +82,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	private CubeCleanerController(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
-		AggregationChunkStorage<C> chunksStorage
+		AggregationChunkStorage chunksStorage
 	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
@@ -91,21 +91,21 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 		this.chunksStorage = chunksStorage;
 	}
 
-	public static <K, D, C> CubeCleanerController<K, D, C> create(
+	public static <K, D> CubeCleanerController<K, D> create(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
-		AggregationChunkStorage<C> storage
+		AggregationChunkStorage storage
 	) {
 		return builder(reactor, cubeDiffScheme, repository, otSystem, storage).build();
 	}
 
-	public static <K, D, C> CubeCleanerController<K, D, C>.Builder builder(
+	public static <K, D> CubeCleanerController<K, D>.Builder builder(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
-		AggregationChunkStorage<C> storage
+		AggregationChunkStorage storage
 	) {
 		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CubeCleanerController<K, D, C>> {
+	public final class Builder extends AbstractBuilder<Builder, CubeCleanerController<K, D>> {
 		private Builder() {}
 
 		public Builder withChunksCleanupDelay(Duration chunksCleanupDelay) {
@@ -127,7 +127,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 		}
 
 		@Override
-		protected CubeCleanerController<K, D, C> doBuild() {
+		protected CubeCleanerController<K, D> doBuild() {
 			return CubeCleanerController.this;
 		}
 	}
@@ -179,7 +179,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 			.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
-	public record Tuple<K, D, C>(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {}
+	public record Tuple<K, D>(Set<Long> collectedChunks, OTCommit<K, D> lastSnapshot) {}
 
 	private Promise<Void> trySaveSnapshotAndCleanupChunks(K checkpointNode) {
 		return checkout(repository, otSystem, checkpointNode)
@@ -221,13 +221,13 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 			.whenException(cb::setException);
 	}
 
-	private Promise<Set<C>> collectRequiredChunks(K checkpointNode) {
+	private Promise<Set<Long>> collectRequiredChunks(K checkpointNode) {
 		return repository.getHeads()
 			.then(heads ->
 				reduceEdges(repository, otSystem, heads, checkpointNode,
 					DiffsReducer.of(
 						new HashSet<>(),
-						(Set<C> accumulatedChunks, List<? extends D> diffs) ->
+						(Set<Long> accumulatedChunks, List<? extends D> diffs) ->
 							union(accumulatedChunks, chunksInDiffs(cubeDiffScheme, diffs)),
 						Utils::union))
 					.whenComplete(promiseCleanupCollectRequiredChunks.recordStats()))
@@ -236,7 +236,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 				toLogger(logger, thisMethod(), checkpointNode)));
 	}
 
-	private Promise<Void> cleanup(K checkpointNode, Set<C> requiredChunks, Instant chunksCleanupTimestamp) {
+	private Promise<Void> cleanup(K checkpointNode, Set<Long> requiredChunks, Instant chunksCleanupTimestamp) {
 		return chunksStorage.checkRequiredChunks(requiredChunks)
 			.then(() -> repository.cleanup(checkpointNode)
 				.whenComplete(promiseCleanupRepository.recordStats()))

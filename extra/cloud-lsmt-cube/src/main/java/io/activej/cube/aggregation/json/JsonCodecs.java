@@ -32,7 +32,6 @@ import static io.activej.json.JsonCodecs.*;
 public class JsonCodecs {
 
 	public static JsonCodec<AggregationChunk> ofAggregationChunk(
-		JsonCodec<Object> chunkIdCodec,
 		JsonCodec<PrimaryKey> primaryKeyCodec,
 		Set<String> allowedMeasures
 	) {
@@ -45,7 +44,7 @@ public class JsonCodecs {
 				}
 				return AggregationChunk.create(chunkId, fields, minPrimaryKey, maxPrimaryKey, count);
 			},
-			"id", AggregationChunk::getChunkId, chunkIdCodec,
+			"id", AggregationChunk::getChunkId, ofLong(),
 			"min", AggregationChunk::getMinPrimaryKey, primaryKeyCodec,
 			"max", AggregationChunk::getMaxPrimaryKey, primaryKeyCodec,
 			"count", AggregationChunk::getCount, ofInteger(),
@@ -59,10 +58,8 @@ public class JsonCodecs {
 	}
 
 	public static JsonCodec<AggregationDiff> ofAggregationDiff(AggregationStructure structure) {
-		//noinspection unchecked
 		JsonCodec<Set<AggregationChunk>> chunksCodec = ofSet(
 			ofAggregationChunk(
-				(JsonCodec<Object>) structure.getChunkIdJsonCodec(),
 				ofPrimaryKey(structure),
 				structure.getMeasureTypes().keySet()));
 		//noinspection unchecked

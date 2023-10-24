@@ -60,7 +60,7 @@ public final class EtcdUtils {
 			checkAndDelete(
 				txn.child(aggregationIdCodec.encodePrefix(new Prefix<>(aggregationId, ByteSequence.EMPTY))),
 				chunkCodecsFactory.apply(aggregationId),
-				entry.getValue().stream().map(chunk -> (long) chunk.getChunkId()).toList());
+				entry.getValue().stream().map(AggregationChunk::getChunkId).toList());
 		}
 		for (var entry : cubeDiff.getDiffs().entrySet().stream().collect(entriesToLinkedHashMap(AggregationDiff::getAddedChunks)).entrySet()) {
 			String aggregationId = entry.getKey();

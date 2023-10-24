@@ -16,7 +16,6 @@
 
 package io.activej.cube;
 
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
@@ -31,7 +30,6 @@ import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes")
 public final class AggregationStructure {
-	private final ChunkIdJsonCodec<?> chunkIdJsonCodec;
 	private final Map<String, FieldType> keyTypes = new LinkedHashMap<>();
 	private final Map<String, FieldType> measureTypes = new LinkedHashMap<>();
 	private final List<String> partitioningKey = new ArrayList<>();
@@ -40,8 +38,7 @@ public final class AggregationStructure {
 	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
 	private AggregationPredicate precondition = AggregationPredicates.alwaysTrue();
 
-	AggregationStructure(ChunkIdJsonCodec<?> chunkIdJsonCodec) {
-		this.chunkIdJsonCodec = chunkIdJsonCodec;
+	AggregationStructure() {
 	}
 
 	void addKey(String keyId, FieldType type) {
@@ -70,10 +67,6 @@ public final class AggregationStructure {
 
 	void setPrecondition(AggregationPredicate precondition) {
 		this.precondition = precondition;
-	}
-
-	public ChunkIdJsonCodec<?> getChunkIdJsonCodec() {
-		return chunkIdJsonCodec;
 	}
 
 	public List<String> getKeys() {

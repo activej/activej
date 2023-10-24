@@ -22,11 +22,11 @@ import io.activej.promise.Promise;
 import java.util.Set;
 
 @ComponentInterface
-public interface IChunkLocker<C> {
+public interface IChunkLocker {
 
-	Promise<Void> lockChunks(Set<C> chunkIds);
+	Promise<Void> lockChunks(Set<Long> chunkIds);
 
-	Promise<Void> releaseChunks(Set<C> chunkIds);
+	Promise<Void> releaseChunks(Set<Long> chunkIds);
 
-	Promise<Set<C>> getLockedChunks();
+	Promise<Set<Long>> getLockedChunks();
 }

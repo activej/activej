@@ -28,10 +28,10 @@ import io.activej.promise.Promise;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.stream.Collectors.toSet;
 
 public final class Utils {
 
@@ -109,13 +109,12 @@ public final class Utils {
 		return attributeResolver.resolveAttributes((List<Object>) results, keyFunction, attributesFunction);
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <D, C> Set<C> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor, List<? extends D> diffs) {
+	public static <D> Set<Long> chunksInDiffs(CubeDiffScheme<D> cubeDiffsExtractor, List<? extends D> diffs) {
 		return diffs.stream()
 			.flatMap(cubeDiffsExtractor::unwrapToStream)
-			.flatMap(CubeDiff::addedChunks)
-			.map(id -> (C) id)
-			.collect(toSet());
+			.flatMapToLong(CubeDiff::addedChunks)
+			.boxed()
+			.collect(Collectors.toSet());
 	}
 
 	public static <K, V> Stream<Map.Entry<K, V>> filterEntryKeys(Stream<Map.Entry<K, V>> stream, Predicate<K> predicate) {

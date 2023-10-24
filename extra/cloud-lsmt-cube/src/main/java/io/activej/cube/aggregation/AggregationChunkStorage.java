@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.LongPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.activej.async.util.LogUtils.thisMethod;
@@ -77,8 +76,8 @@ import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class AggregationChunkStorage<C> extends AbstractReactive
-	implements IAggregationChunkStorage<C>, ReactiveService, ReactiveJmxBeanWithStats {
+public final class AggregationChunkStorage extends AbstractReactive
+	implements IAggregationChunkStorage, ReactiveService, ReactiveJmxBeanWithStats {
 
 	private static final boolean CHECKS = Checks.isEnabled(AggregationChunkStorage.class);
 
@@ -91,8 +90,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
 
-	private final ChunkIdJsonCodec<C> chunkIdCodec;
-	private final AsyncSupplier<C> idGenerator;
+	private final AsyncSupplier<Long> idGenerator;
 	private final FrameFormat frameFormat;
 
 	private final IFileSystem fileSystem;
@@ -147,29 +145,28 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage(Reactor reactor, ChunkIdJsonCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
+	private AggregationChunkStorage(Reactor reactor, AsyncSupplier<Long> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
 		super(reactor);
-		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
 		this.frameFormat = frameFormat;
 		this.fileSystem = fileSystem;
 	}
 
-	public static <C> AggregationChunkStorage<C> create(
-		Reactor reactor, ChunkIdJsonCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat,
+	public static AggregationChunkStorage create(
+		Reactor reactor, AsyncSupplier<Long> idGenerator, FrameFormat frameFormat,
 		IFileSystem fileSystem
 	) {
-		return builder(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).build();
+		return builder(reactor, idGenerator, frameFormat, fileSystem).build();
 	}
 
-	public static <C> AggregationChunkStorage<C>.Builder builder(
-		Reactor reactor, ChunkIdJsonCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat,
+	public static AggregationChunkStorage.Builder builder(
+		Reactor reactor, AsyncSupplier<Long> idGenerator, FrameFormat frameFormat,
 		IFileSystem fileSystem
 	) {
-		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem).new Builder();
+		return new AggregationChunkStorage(reactor, idGenerator, frameFormat, fileSystem).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, AggregationChunkStorage<C>> {
+	public final class Builder extends AbstractBuilder<Builder, AggregationChunkStorage> {
 		private Builder() {}
 
 		public Builder withBufferSize(MemSize bufferSize) {
@@ -197,7 +194,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 		}
 
 		@Override
-		protected AggregationChunkStorage<C> doBuild() {
+		protected AggregationChunkStorage doBuild() {
 			return AggregationChunkStorage.this;
 		}
 	}
@@ -205,7 +202,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Promise<StreamSupplier<T>> read(
-		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId,
 		DefiningClassLoader classLoader
 	) {
 		if (CHECKS) checkInReactorThread(this);
@@ -226,7 +223,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Promise<StreamConsumer<T>> write(
-		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId,
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId,
 		DefiningClassLoader classLoader
 	) {
 		if (CHECKS) checkInReactorThread(this);
@@ -253,7 +250,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> finish(Set<C> chunkIds) {
+	public Promise<Void> finish(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		return fileSystem.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
 			.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e))
@@ -262,14 +259,14 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<C> createId() {
+	public Promise<Long> createId() {
 		if (CHECKS) checkInReactorThread(this);
 		return idGenerator.get()
 			.mapException(e -> new AggregationException("Could not create ID", e))
 			.whenComplete(promiseAsyncSupplier.recordStats());
 	}
 
-	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
+	public Promise<Void> backup(String backupId, Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		return fileSystem.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
 			.then(() -> ChannelSuppliers.<ByteBuf>empty().streamTo(
@@ -280,7 +277,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> deleteChunks(Set<C> chunksToDelete) {
+	public Promise<Void> deleteChunks(Set<Long> chunksToDelete) {
 		checkInReactorThread(this);
 
 		logger.trace("Deleting chunks: {}", chunksToDelete);
@@ -295,12 +292,12 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.whenComplete(promiseDelete.recordStats());
 	}
 
-	public Promise<Void> cleanup(Set<C> saveChunks) {
+	public Promise<Void> cleanup(Set<Long> saveChunks) {
 		checkInReactorThread(this);
 		return cleanup(saveChunks, null);
 	}
 
-	public Promise<Void> cleanup(Set<C> preserveChunks, @Nullable Instant instant) {
+	public Promise<Void> cleanup(Set<Long> preserveChunks, @Nullable Instant instant) {
 		checkInReactorThread(this);
 		long timestamp = instant != null ? instant.toEpochMilli() : -1;
 
@@ -311,7 +308,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.then(list -> {
 				Set<String> toDelete = list.entrySet().stream()
 					.filter(entry -> {
-						C id = fromPath(entry.getKey());
+						Long id = fromPath(entry.getKey());
 						if (id == null || preserveChunks.contains(id)) {
 							return false;
 						}
@@ -349,11 +346,11 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Set<C>> listChunks() {
+	public Promise<Set<Long>> listChunks() {
 		return list(c -> true, c -> true);
 	}
 
-	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
+	public Promise<Set<Long>> list(LongPredicate chunkIdPredicate, LongPredicate lastModifiedPredicate) {
 		if (CHECKS) checkInReactorThread(this);
 		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
 			.mapException(e -> new AggregationException("Failed to list chunks", e))
@@ -363,12 +360,12 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 					.map(Map.Entry::getKey)
 					.map(this::fromPath)
 					.filter(Objects::nonNull)
-					.filter(chunkIdPredicate)
+					.filter(chunkIdPredicate::test)
 					.collect(toSet()))
 			.whenComplete(promiseList.recordStats());
 	}
 
-	public Promise<Void> checkRequiredChunks(Set<C> requiredChunks) {
+	public Promise<Void> checkRequiredChunks(Set<Long> requiredChunks) {
 		if (CHECKS) checkInReactorThread(this);
 		return listChunks()
 			.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
@@ -381,29 +378,29 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			.whenComplete(toLogger(logger, thisMethod(), Utils.toString(requiredChunks)));
 	}
 
-	private String toPath(C chunkId) {
-		return toDir(chunksPath) + chunkIdCodec.toFileName(chunkId) + LOG;
+	private String toPath(long chunkId) {
+		return toDir(chunksPath) + ChunkIdJsonCodec.toFileName(chunkId) + LOG;
 	}
 
-	private String toTempPath(C chunkId) {
-		return toDir(tempPath) + chunkIdCodec.toFileName(chunkId) + TEMP_LOG;
+	private String toTempPath(long chunkId) {
+		return toDir(tempPath) + ChunkIdJsonCodec.toFileName(chunkId) + TEMP_LOG;
 	}
 
-	private String toBackupPath(String backupId, @Nullable C chunkId) {
+	private String toBackupPath(String backupId, @Nullable Long chunkId) {
 		return
 			toDir(backupPath) + backupId + IFileSystem.SEPARATOR +
-			(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
+			(chunkId != null ? ChunkIdJsonCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
 	}
 
 	private String toDir(String path) {
 		return path.isEmpty() || path.endsWith(IFileSystem.SEPARATOR) ? path : path + IFileSystem.SEPARATOR;
 	}
 
-	private @Nullable C fromPath(String path) {
+	private @Nullable Long fromPath(String path) {
 		String chunksDir = toDir(chunksPath);
 		checkArgument(path.startsWith(chunksDir));
 		try {
-			return chunkIdCodec.fromFileName(path.substring(chunksDir.length(), path.length() - LOG.length()));
+			return ChunkIdJsonCodec.fromFileName(path.substring(chunksDir.length(), path.length() - LOG.length()));
 		} catch (MalformedDataException e) {
 			chunkNameWarnings.recordException(e);
 			logger.warn("Invalid chunk filename: {}", path);

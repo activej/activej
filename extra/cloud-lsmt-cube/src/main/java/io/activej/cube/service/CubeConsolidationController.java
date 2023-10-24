@@ -56,7 +56,7 @@ import static io.activej.cube.aggregation.util.Utils.collectChunkIds;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<D, C> extends AbstractReactive
+public final class CubeConsolidationController<D> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
@@ -79,7 +79,7 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final CubeConsolidator cubeConsolidator;
 	private final StateManager<D, ?> stateManager;
-	private final IAggregationChunkStorage<C> aggregationChunkStorage;
+	private final IAggregationChunkStorage aggregationChunkStorage;
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseConsolidateImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -94,17 +94,17 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		.withRate()
 		.build();
 
-	private final Map<String, IChunkLocker<Object>> lockers = new HashMap<>();
+	private final Map<String, IChunkLocker> lockers = new HashMap<>();
 
 	private Supplier<LockerStrategy> strategy = DEFAULT_CONSOLIDATION_STRATEGY;
-	private Function<String, IChunkLocker<C>> chunkLockerFactory = $ -> NoOpChunkLocker.create(reactor);
+	private Function<String, IChunkLocker> chunkLockerFactory = $ -> NoOpChunkLocker.create(reactor);
 
 	private boolean consolidating;
 	private boolean cleaning;
 
 	private CubeConsolidationController(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator,
-		IAggregationChunkStorage<C> aggregationChunkStorage
+		IAggregationChunkStorage aggregationChunkStorage
 	) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
@@ -114,21 +114,21 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
-	public static <D, C> CubeConsolidationController<D, C> create(
+	public static <D> CubeConsolidationController<D> create(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator,
-		IAggregationChunkStorage<C> aggregationChunkStorage
+		IAggregationChunkStorage aggregationChunkStorage
 	) {
 		return builder(reactor, cubeDiffScheme, cubeConsolidator, aggregationChunkStorage).build();
 	}
 
-	public static <D, C> CubeConsolidationController<D, C>.Builder builder(
+	public static <D> CubeConsolidationController<D>.Builder builder(
 		Reactor reactor, CubeDiffScheme<D> cubeDiffScheme, CubeConsolidator cubeConsolidator,
-		IAggregationChunkStorage<C> aggregationChunkStorage
+		IAggregationChunkStorage aggregationChunkStorage
 	) {
 		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cubeConsolidator, aggregationChunkStorage).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<D, C>> {
+	public final class Builder extends AbstractBuilder<Builder, CubeConsolidationController<D>> {
 		private Builder() {}
 
 		public Builder withLockerStrategy(Supplier<LockerStrategy> strategy) {
@@ -137,14 +137,14 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 			return this;
 		}
 
-		public Builder withChunkLockerFactory(Function<String, IChunkLocker<C>> factory) {
+		public Builder withChunkLockerFactory(Function<String, IChunkLocker> factory) {
 			checkNotBuilt(this);
 			CubeConsolidationController.this.chunkLockerFactory = factory;
 			return this;
 		}
 
 		@Override
-		protected CubeConsolidationController<D, C> doBuild() {
+		protected CubeConsolidationController<D> doBuild() {
 			return CubeConsolidationController.this;
 		}
 	}
@@ -200,7 +200,7 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(
 		String aggregationId, LockerStrategy strategy
 	) {
-		IChunkLocker<Object> locker = ensureLocker(aggregationId);
+		IChunkLocker locker = ensureLocker(aggregationId);
 		AggregationExecutor aggregationExecutor = cubeConsolidator.getExecutor().getAggregationExecutors().get(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
@@ -227,7 +227,7 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		return Promises.all(chunksForConsolidation.entrySet().stream()
 			.map(entry -> {
 				String aggregationId = entry.getKey();
-				Set<Object> chunkIds = collectChunkIds(entry.getValue());
+				Set<Long> chunkIds = collectChunkIds(entry.getValue());
 				return ensureLocker(aggregationId).releaseChunks(chunkIds)
 					.map(($, e) -> {
 						if (e != null) {
@@ -288,9 +288,8 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		removedChunksRecords.recordValue(curRemovedChunksRecords);
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <C> Set<C> addedChunks(CubeDiff cubeDiff) {
-		return cubeDiff.addedChunks().map(id -> (C) id).collect(toSet());
+	private static Set<Long> addedChunks(CubeDiff cubeDiff) {
+		return cubeDiff.addedChunks().boxed().collect(toSet());
 	}
 
 	private void logCubeDiff(CubeDiff cubeDiff, Exception e) {
@@ -299,13 +298,12 @@ public final class CubeConsolidationController<D, C> extends AbstractReactive
 		else logger.info("Consolidation finished. Launching consolidation task again.");
 	}
 
-	private IChunkLocker<Object> ensureLocker(String aggregationId) {
-		//noinspection unchecked
-		return lockers.computeIfAbsent(aggregationId, $ -> (IChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
+	private IChunkLocker ensureLocker(String aggregationId) {
+		return lockers.computeIfAbsent(aggregationId, $ -> chunkLockerFactory.apply(aggregationId));
 	}
 
 	public interface LockerStrategy {
-		ConsolidationStrategy getConsolidationStrategy(Set<Object> lockedChunkIds);
+		ConsolidationStrategy getConsolidationStrategy(Set<Long> lockedChunkIds);
 	}
 
 	@JmxAttribute

@@ -327,7 +327,7 @@ public class Utils {
 			annotation = field.getAnnotation(Measures.class);
 			if (annotation != null) {
 				for (String measure : annotation.value()) {
-					measureFields.put(measure.equals("") ? field.getName() : measure, field.getName());
+					measureFields.put(measure.isEmpty() ? field.getName() : measure, field.getName());
 				}
 			}
 		}
@@ -335,7 +335,7 @@ public class Utils {
 			annotation = method.getAnnotation(Measures.class);
 			if (annotation != null) {
 				for (String measure : annotation.value()) {
-					measureFields.put(measure.equals("") ? extractFieldNameFromGetter(method) : measure, method.getName());
+					measureFields.put(measure.isEmpty() ? extractFieldNameFromGetter(method) : measure, method.getName());
 				}
 			}
 		}
@@ -343,8 +343,8 @@ public class Utils {
 		return measureFields;
 	}
 
-	public static <C> Set<C> collectChunkIds(Collection<AggregationChunk> chunks) {
-		return (Set<C>) chunks.stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet());
+	public static Set<Long> collectChunkIds(Collection<AggregationChunk> chunks) {
+		return chunks.stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet());
 	}
 
 	public static <T> Predicate<T> createPredicateWithPrecondition(

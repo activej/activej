@@ -24,31 +24,31 @@ import java.util.Set;
 
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class NoOpChunkLocker<C> extends AbstractReactive
-	implements IChunkLocker<C> {
+public final class NoOpChunkLocker extends AbstractReactive
+	implements IChunkLocker {
 
 	private NoOpChunkLocker(Reactor reactor) {
 		super(reactor);
 	}
 
-	public static <C> NoOpChunkLocker<C> create(Reactor reactor) {
-		return new NoOpChunkLocker<>(reactor);
+	public static NoOpChunkLocker create(Reactor reactor) {
+		return new NoOpChunkLocker(reactor);
 	}
 
 	@Override
-	public Promise<Void> lockChunks(Set<C> chunkIds) {
+	public Promise<Void> lockChunks(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
-	public Promise<Void> releaseChunks(Set<C> chunkIds) {
+	public Promise<Void> releaseChunks(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
-	public Promise<Set<C>> getLockedChunks() {
+	public Promise<Set<Long>> getLockedChunks() {
 		checkInReactorThread(this);
 		return Promise.of(Set.of());
 	}

@@ -162,7 +162,7 @@ public final class EtcdMigrationService {
 
 		for (Entry<String, AggregationState> entry : aggregationStates.entrySet()) {
 			AggregationState aggregationState = entry.getValue();
-			Map<Object, AggregationChunk> chunksMap = aggregationState.getChunks();
+			Map<Long, AggregationChunk> chunksMap = aggregationState.getChunks();
 			Set<AggregationChunk> addedChunks = new HashSet<>(chunksMap.values());
 			aggregationDiffs.put(entry.getKey(), AggregationDiff.of(addedChunks));
 		}

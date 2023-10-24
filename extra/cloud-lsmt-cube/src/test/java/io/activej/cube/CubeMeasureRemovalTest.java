@@ -7,13 +7,11 @@ import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
-import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etl.ILogDataConsumer;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
@@ -52,7 +50,7 @@ import static org.junit.Assert.*;
 public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = FrameFormats.lz4();
 
-	private IAggregationChunkStorage<Long> aggregationChunkStorage;
+	private IAggregationChunkStorage aggregationChunkStorage;
 	private IMultilog<LogItem> multilog;
 	private Path aggregationsDir;
 	private Path logsDir;
@@ -64,7 +62,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class);
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -79,7 +77,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	public void test() throws Exception {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
 			.withDimension("advertiser", ofInt())
@@ -201,7 +199,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		// Consolidate
 		CubeConsolidator cubeConsolidator = CubeConsolidator.create(logCubeStateManager, cubeStructure, cubeExecutor);
 		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
-		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
+		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().boxed().collect(toSet())));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
 		await(logCubeStateManager.push(List.of(LogDiff.forCurrentPosition(consolidatingCubeDiff))));

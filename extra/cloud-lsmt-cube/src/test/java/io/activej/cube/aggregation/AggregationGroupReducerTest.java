@@ -46,23 +46,23 @@ public class AggregationGroupReducerTest {
 	@Test
 	public void test() {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
+		AggregationStructure structure = aggregationStructureBuilder()
 			.withKey("word", FieldTypes.ofString())
 			.withMeasure("documents", union(ofInt()))
 			.build();
 
 		List<StreamConsumer> listConsumers = new ArrayList<>();
 		List items = new ArrayList();
-		IAggregationChunkStorage<Long> aggregationChunkStorage = new IAggregationChunkStorage<>() {
+		IAggregationChunkStorage aggregationChunkStorage = new IAggregationChunkStorage() {
 			long chunkId;
 
 			@Override
-			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
+			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
 				return Promise.of(StreamSuppliers.ofIterable(items));
 			}
 
 			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
+			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
 				StreamConsumer<T> consumer = ToListStreamConsumer.create(items);
 				listConsumers.add(consumer);
 				return Promise.of(consumer);
@@ -115,7 +115,7 @@ public class AggregationGroupReducerTest {
 			new InvertedIndexRecord("fox", 4),
 			new InvertedIndexRecord("brown", 10));
 
-		AggregationGroupReducer<Long, InvertedIndexRecord, Comparable> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
+		AggregationGroupReducer<InvertedIndexRecord, Comparable> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
 			structure, List.of("documents"),
 			aggregationClass, singlePartition(), keyFunction, aggregate, aggregationChunkSize, classLoader);
 

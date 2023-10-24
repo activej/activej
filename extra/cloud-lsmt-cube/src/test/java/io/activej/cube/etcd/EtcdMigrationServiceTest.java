@@ -196,12 +196,12 @@ public class EtcdMigrationServiceTest extends CubeTestBase {
 			AggregationState expectedState = entry.getValue();
 			AggregationState actualState = actualStates.get(entry.getKey());
 
-			Map<Object, AggregationChunk> expectedChunks = expectedState.getChunks();
-			Map<Object, AggregationChunk> actualChunks = actualState.getChunks();
+			Map<Long, AggregationChunk> expectedChunks = expectedState.getChunks();
+			Map<Long, AggregationChunk> actualChunks = actualState.getChunks();
 
 			assertEquals(expectedChunks.keySet(), actualChunks.keySet());
 
-			for (Map.Entry<Object, AggregationChunk> chunkEntry : expectedChunks.entrySet()) {
+			for (Map.Entry<Long, AggregationChunk> chunkEntry : expectedChunks.entrySet()) {
 				AggregationChunk expectedChunk = chunkEntry.getValue();
 				AggregationChunk actualChunk = actualChunks.get(chunkEntry.getKey());
 

@@ -9,7 +9,6 @@ import io.activej.cube.AggregationStructure;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
@@ -70,7 +69,7 @@ public class CubeCleanerServiceTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private CubeEtcdStateManager stateManager;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private AggregationChunkStorage aggregationChunkStorage;
 
 	private final SettableCurrentTimeProvider now = settable(ofConstant(100L));
 
@@ -91,7 +90,7 @@ public class CubeCleanerServiceTest {
 
 		FileSystem fileSystem = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fileSystem.start());
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), fileSystem);
 
 		structure = CubeStructure.builder()

@@ -67,7 +67,6 @@ public class CubeMySqlOTUplinkTest {
 	private DataSource dataSource;
 	private CubeMySqlOTUplink uplink;
 
-	@SuppressWarnings("ConstantConditions")
 	@Before
 	public void setUp() throws Exception {
 		dataSource = dataSource("test.properties");
@@ -600,10 +599,10 @@ public class CubeMySqlOTUplinkTest {
 		Set<Long> actualRemoved = new HashSet<>();
 		for (Map.Entry<String, AggregationDiff> entry : actual.entrySet()) {
 			for (AggregationChunk chunk : entry.getValue().getAddedChunks()) {
-				actualAdded.add((Long) chunk.getChunkId());
+				actualAdded.add(chunk.getChunkId());
 			}
 			for (AggregationChunk chunk : entry.getValue().getRemovedChunks()) {
-				actualRemoved.add((Long) chunk.getChunkId());
+				actualRemoved.add(chunk.getChunkId());
 			}
 		}
 		assertTrue(intersection(actualAdded, actualRemoved).isEmpty());

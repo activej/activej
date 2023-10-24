@@ -383,7 +383,7 @@ public final class CubeBackupController implements ConcurrentJmxBean {
 	public interface IChunksBackupService {
 		void backup(long revisionId, Set<Long> chunkIds) throws IOException;
 
-		static IChunksBackupService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
+		static IChunksBackupService ofReactiveAggregationChunkStorage(AggregationChunkStorage storage) {
 			return Utils.backupServiceOfStorage(storage);
 		}
 	}

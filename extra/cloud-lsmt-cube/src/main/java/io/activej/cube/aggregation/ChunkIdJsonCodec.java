@@ -17,48 +17,25 @@
 package io.activej.cube.aggregation;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.json.ForwardingJsonCodec;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecs;
 
-public abstract class ChunkIdJsonCodec<C> extends ForwardingJsonCodec<C> {
-	protected ChunkIdJsonCodec(JsonCodec<C> codec) {
-		super(codec);
+public final class ChunkIdJsonCodec {
+	public static final JsonCodec<Long> CODEC = JsonCodecs.ofLong();
+
+	private ChunkIdJsonCodec() {
+		throw new AssertionError();
 	}
 
-	public abstract String toFileName(C chunkId);
-
-	public abstract C fromFileName(String chunkFileName) throws MalformedDataException;
-
-	public static ChunkIdJsonCodec<Long> ofLong() {
-		return new ChunkIdJsonCodec<>(JsonCodecs.ofLong()) {
-			@Override
-			public String toFileName(Long chunkId) {
-				return chunkId.toString();
-			}
-
-			@Override
-			public Long fromFileName(String chunkFileName) throws MalformedDataException {
-				try {
-					return Long.parseLong(chunkFileName);
-				} catch (NumberFormatException e) {
-					throw new MalformedDataException(e);
-				}
-			}
-		};
+	public static String toFileName(long chunkId) {
+		return String.valueOf(chunkId);
 	}
 
-	public static ChunkIdJsonCodec<String> ofString() {
-		return new ChunkIdJsonCodec<>(JsonCodecs.ofString()) {
-			@Override
-			public String toFileName(String chunkId) {
-				return chunkId;
-			}
-
-			@Override
-			public String fromFileName(String chunkFileName) {
-				return chunkFileName;
-			}
-		};
+	public static long fromFileName(String chunkFileName) throws MalformedDataException {
+		try {
+			return Long.parseLong(chunkFileName);
+		} catch (NumberFormatException e) {
+			throw new MalformedDataException(e);
+		}
 	}
 }

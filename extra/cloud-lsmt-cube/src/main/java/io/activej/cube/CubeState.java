@@ -105,8 +105,8 @@ public final class CubeState implements OTState<CubeDiff> {
 		return excessive;
 	}
 
-	public Set<Object> getAllChunks() {
-		Set<Object> chunks = new HashSet<>();
+	public Set<Long> getAllChunks() {
+		Set<Long> chunks = new HashSet<>();
 		for (AggregationState state : aggregationStates.values()) {
 			chunks.addAll(state.getChunks().keySet());
 		}

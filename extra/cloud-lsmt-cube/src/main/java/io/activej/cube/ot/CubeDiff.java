@@ -16,10 +16,11 @@
 
 package io.activej.cube.ot;
 
+import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.stream.LongStream;
 
 public final class CubeDiff {
 	private final Map<String, AggregationDiff> diffs;
@@ -88,11 +89,10 @@ public final class CubeDiff {
 		return diffs.isEmpty();
 	}
 
-	@SuppressWarnings("unchecked")
-	public <C> Stream<C> addedChunks() {
+	public LongStream addedChunks() {
 		return diffs.values().stream()
 			.flatMap(aggregationDiff -> aggregationDiff.getAddedChunks().stream())
-			.map(aggregationChunk -> (C) aggregationChunk.getChunkId());
+			.mapToLong(AggregationChunk::getChunkId);
 	}
 
 	@Override

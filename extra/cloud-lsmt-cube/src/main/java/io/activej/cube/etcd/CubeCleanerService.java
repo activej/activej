@@ -37,7 +37,6 @@ import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
-import io.activej.reactor.jmx.ReactiveJmxBean;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import io.etcd.jetcd.ByteSequence;
@@ -74,7 +73,7 @@ public final class CubeCleanerService extends AbstractReactive
 	private static final Duration WATCH_RETRY_INTERVAL = ApplicationSettings.getDuration(CubeCleanerService.class, "watchRetryInterval", Duration.ofSeconds(1));
 
 	private final Client client;
-	private final AggregationChunkStorage<Long> storage;
+	private final AggregationChunkStorage storage;
 	private final ByteSequence root;
 
 	private final Queue<DeletedChunksEntry> deletedChunksQueue = new ConcurrentLinkedQueue<>();
@@ -112,18 +111,18 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private CurrentTimeProvider now = reactor;
 
-	private CubeCleanerService(Client client, AggregationChunkStorage<Long> storage, ByteSequence root) {
+	private CubeCleanerService(Client client, AggregationChunkStorage storage, ByteSequence root) {
 		super(storage.getReactor());
 		this.client = client;
 		this.storage = storage;
 		this.root = root;
 	}
 
-	public static CubeCleanerService create(Client client, AggregationChunkStorage<Long> storage, ByteSequence root) {
+	public static CubeCleanerService create(Client client, AggregationChunkStorage storage, ByteSequence root) {
 		return builder(client, storage, root).build();
 	}
 
-	public static Builder builder(Client client, AggregationChunkStorage<Long> storage, ByteSequence root) {
+	public static Builder builder(Client client, AggregationChunkStorage storage, ByteSequence root) {
 		return new CubeCleanerService(client, storage, root).new Builder();
 	}
 

@@ -53,7 +53,7 @@ public class AggregationChunkStorageTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private final AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
+	private final AggregationStructure structure = aggregationStructureBuilder()
 		.withKey("key", ofInt())
 		.withMeasure("value", sum(ofInt()))
 		.withMeasure("timestamp", sum(ofLong()))
@@ -65,15 +65,14 @@ public class AggregationChunkStorageTest {
 		Path storageDir = temporaryFolder.newFolder().toPath();
 		FileSystem fs = FileSystem.create(reactor, newCachedThreadPool(), storageDir);
 		await(fs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(
 			reactor,
-			ChunkIdJsonCodec.ofLong(),
 			AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(),
 			fs);
 
 		int nChunks = 100;
-		AggregationChunker<?, KeyValuePair> chunker = AggregationChunker.create(
+		AggregationChunker<KeyValuePair> chunker = AggregationChunker.create(
 			structure, structure.getMeasures(), KeyValuePair.class, singlePartition(),
 			aggregationChunkStorage, classLoader, 1);
 

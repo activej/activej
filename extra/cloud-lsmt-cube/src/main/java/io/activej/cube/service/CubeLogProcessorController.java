@@ -52,7 +52,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeLogProcessorController<C> extends AbstractReactive
+public final class CubeLogProcessorController extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
@@ -62,7 +62,7 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final List<LogProcessor<?, CubeDiff>> logProcessors;
-	private final IAggregationChunkStorage<C> chunkStorage;
+	private final IAggregationChunkStorage chunkStorage;
 	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 	private AsyncSupplier<Boolean> predicate;
 
@@ -78,7 +78,7 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 	private int maxOverlappingChunksToProcessLogs = DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
 
 	private CubeLogProcessorController(
-		Reactor reactor, List<LogProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage,
+		Reactor reactor, List<LogProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage chunkStorage,
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager
 	) {
 		super(reactor);
@@ -87,21 +87,21 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 		this.stateManager = stateManager;
 	}
 
-	public static <C> CubeLogProcessorController<C> create(
+	public static CubeLogProcessorController create(
 		Reactor reactor, StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
-		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
+		IAggregationChunkStorage chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
 		return builder(reactor, stateManager, chunkStorage, logProcessors).build();
 	}
 
-	public static <C> CubeLogProcessorController<C>.Builder builder(
+	public static CubeLogProcessorController.Builder builder(
 		Reactor reactor, StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
-		IAggregationChunkStorage<C> chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
+		IAggregationChunkStorage chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
 	) {
-		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager).new Builder();
+		return new CubeLogProcessorController(reactor, logProcessors, chunkStorage, stateManager).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController<C>> {
+	public final class Builder extends AbstractBuilder<Builder, CubeLogProcessorController> {
 
 		private Builder() {}
 
@@ -118,7 +118,7 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 		}
 
 		@Override
-		protected CubeLogProcessorController<C> doBuild() {
+		protected CubeLogProcessorController doBuild() {
 			predicate = AsyncSupplier.of(() -> stateManager.query(state -> {
 				if (state.getDataState().containsExcessiveNumberOfOverlappingChunks(maxOverlappingChunksToProcessLogs)) {
 					logger.info("Cube contains excessive number of overlapping chunks");
@@ -198,12 +198,11 @@ public final class CubeLogProcessorController<C> extends AbstractReactive
 		addedChunksRecords.recordValue(curAddedChunksRecords);
 	}
 
-	@SuppressWarnings("unchecked")
-	private Set<C> addedChunks(List<LogDiff<CubeDiff>> diffs) {
+	private Set<Long> addedChunks(List<LogDiff<CubeDiff>> diffs) {
 		return diffs.stream()
 			.flatMap(LogDiff::diffs)
-			.flatMap(CubeDiff::addedChunks)
-			.map(id -> (C) id)
+			.flatMapToLong(CubeDiff::addedChunks)
+			.boxed()
 			.collect(toSet());
 	}
 

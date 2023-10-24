@@ -61,13 +61,13 @@ public final class Utils {
 		return String.join(" ", measures);
 	}
 
-	static IChunksBackupService backupServiceOfStorage(AggregationChunkStorage<Long> storage) {
+	static IChunksBackupService backupServiceOfStorage(AggregationChunkStorage storage) {
 		return (revisionId, chunkIds) ->
 			execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
 				"Failed to backup chunks on storage ");
 	}
 
-	static IChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage<Long> storage) {
+	static IChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage storage) {
 		return new IChunksCleanerService() {
 			@Override
 			public void checkRequiredChunks(Set<Long> chunkIds) throws IOException {
@@ -83,7 +83,7 @@ public final class Utils {
 		};
 	}
 
-	private static void execute(AggregationChunkStorage<Long> storage, AsyncRunnable runnable, String errorMessage) throws IOException {
+	private static void execute(AggregationChunkStorage storage, AsyncRunnable runnable, String errorMessage) throws IOException {
 		try {
 			storage.getReactor().submit(runnable::run).get();
 		} catch (InterruptedException e) {

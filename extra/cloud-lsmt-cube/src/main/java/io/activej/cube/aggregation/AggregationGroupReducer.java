@@ -35,10 +35,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 @SuppressWarnings("rawtypes")
-public final class AggregationGroupReducer<C, T, K extends Comparable> extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
+public final class AggregationGroupReducer<T, K extends Comparable> extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 	private static final Logger logger = LoggerFactory.getLogger(AggregationGroupReducer.class);
 
-	private final IAggregationChunkStorage<C> storage;
+	private final IAggregationChunkStorage storage;
 	private final AggregationStructure aggregation;
 	private final List<String> measures;
 	private final PartitionPredicate<T> partitionPredicate;
@@ -52,7 +52,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	private final HashMap<K, Object> map = new HashMap<>();
 
 	public AggregationGroupReducer(
-		IAggregationChunkStorage<C> storage, AggregationStructure aggregation, List<String> measures,
+		IAggregationChunkStorage storage, AggregationStructure aggregation, List<String> measures,
 		Class<T> recordClass, PartitionPredicate<T> partitionPredicate, Function<T, K> keyFunction,
 		Aggregate<T, Object> aggregate, int chunkSize, DefiningClassLoader classLoader
 	) {
@@ -115,7 +115,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 		}
 
 		StreamSupplier<T> supplier = StreamSuppliers.ofIterable(list);
-		AggregationChunker<C, T> chunker = AggregationChunker.create(aggregation, measures, recordClass,
+		AggregationChunker<T> chunker = AggregationChunker.create(aggregation, measures, recordClass,
 			partitionPredicate, storage, classLoader, chunkSize);
 
 		chunksAccumulator.addPromise(

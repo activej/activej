@@ -56,7 +56,6 @@ public final class MinioMigrationServiceTest {
 	public static final String SECRET_KEY = "minioadmin";
 
 	public static final int CHUNK_SIZE = 10;
-	public static final ChunkIdJsonCodec<Long> CODEC = ChunkIdJsonCodec.ofLong();
 	public static final String AGGREGATION_ID = "aggregation";
 
 	@Rule
@@ -83,10 +82,10 @@ public final class MinioMigrationServiceTest {
 	private Executor executor;
 
 	private IFileSystem fileSystem;
-	private AggregationChunkStorage<Long> fromStorage;
+	private AggregationChunkStorage fromStorage;
 
 	private String bucket;
-	private MinioChunkStorage<Long> toStorage;
+	private MinioChunkStorage toStorage;
 	private MinioAsyncClient client;
 
 	@Before
@@ -109,7 +108,6 @@ public final class MinioMigrationServiceTest {
 
 		toStorage = MinioChunkStorage.create(
 			reactor,
-			ChunkIdJsonCodec.ofLong(),
 			AsyncSupplier.of(() -> {
 				throw new AssertionError();
 			}),
@@ -124,7 +122,6 @@ public final class MinioMigrationServiceTest {
 
 		fromStorage = AggregationChunkStorage.create(
 			reactor,
-			CODEC,
 			AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(),
 			fileSystem
@@ -139,7 +136,7 @@ public final class MinioMigrationServiceTest {
 	@Test
 	public void testMigration() throws ExecutionException, InterruptedException {
 		int nObjects = 1_000;
-		AggregationChunker<?, KeyValuePair> chunker = createChunker();
+		AggregationChunker<KeyValuePair> chunker = createChunker();
 
 		List<KeyValuePair> expected = generateItems(nObjects);
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofIterable(expected);
@@ -159,7 +156,7 @@ public final class MinioMigrationServiceTest {
 		CubeDiff cubeDiff = CubeDiff.of(Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(fromChunks), Set.of())));
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(cubeDiff))));
 
-		CompletableFuture<Void> migrateFuture = MinioMigrationService.migrate(reactor, executor, stateManager, CODEC, fileSystem, client, bucket);
+		CompletableFuture<Void> migrateFuture = MinioMigrationService.migrate(reactor, executor, stateManager, fileSystem, client, bucket);
 		await();
 		migrateFuture.get();
 
@@ -187,7 +184,7 @@ public final class MinioMigrationServiceTest {
 			.toList();
 	}
 
-	private void assertChunks(IAggregationChunkStorage<Long> storage, List<KeyValuePair> expected, Set<Long> chunks) {
+	private void assertChunks(IAggregationChunkStorage storage, List<KeyValuePair> expected, Set<Long> chunks) {
 		List<KeyValuePair> result = new ArrayList<>(expected.size());
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 		for (Long chunkId : chunks) {
@@ -200,7 +197,7 @@ public final class MinioMigrationServiceTest {
 		assertEquals(expected, result);
 	}
 
-	private AggregationChunker<Long, KeyValuePair> createChunker() {
+	private AggregationChunker<KeyValuePair> createChunker() {
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 		return AggregationChunker.create(
 			aggregationStructure, aggregationStructure.getMeasures(), KeyValuePair.class, singlePartition(),
@@ -211,7 +208,7 @@ public final class MinioMigrationServiceTest {
 		return await(fileSystem.list("*" + AggregationChunkStorage.TEMP_LOG)).keySet().stream()
 			.map(fileName -> {
 				try {
-					return CODEC.fromFileName(fileName.substring(0, fileName.length() - AggregationChunkStorage.TEMP_LOG.length()));
+					return ChunkIdJsonCodec.fromFileName(fileName.substring(0, fileName.length() - AggregationChunkStorage.TEMP_LOG.length()));
 				} catch (MalformedDataException e) {
 					throw new RuntimeException(e);
 				}

@@ -1,7 +1,6 @@
 package io.activej.cube.etcd;
 
 import io.activej.cube.aggregation.ChunksAlreadyLockedException;
-import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.DescriptionRule;
 import io.activej.test.rules.EventloopRule;
@@ -36,8 +35,8 @@ public class EtcdChunkLockerTest {
 
 	public static final Client ETCD_CLIENT = Client.builder().waitForReady(false).endpoints("http://127.0.0.1:2379").build();
 
-	private EtcdChunkLocker<Long> lockerA;
-	private EtcdChunkLocker<Long> lockerB;
+	private EtcdChunkLocker lockerA;
+	private EtcdChunkLocker lockerB;
 
 	@Before
 	public void before() throws IOException, SQLException, ExecutionException, InterruptedException {
@@ -45,8 +44,8 @@ public class EtcdChunkLockerTest {
 		Description description = descriptionRule.getDescription();
 		ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
 
-		lockerA = EtcdChunkLocker.create(reactor, ETCD_CLIENT, root, EtcdKeyCodecs.ofLong());
-		lockerB = EtcdChunkLocker.create(reactor, ETCD_CLIENT, root, EtcdKeyCodecs.ofLong());
+		lockerA = EtcdChunkLocker.create(reactor, ETCD_CLIENT, root);
+		lockerB = EtcdChunkLocker.create(reactor, ETCD_CLIENT, root);
 
 		lockerA.delete();
 	}

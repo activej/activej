@@ -3,7 +3,6 @@ package io.activej.cube;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
@@ -219,7 +218,7 @@ public final class CubeStructure {
 		}
 
 		private void addAggregation(AggregationConfig aggregationConfig) {
-			AggregationStructure aggregationStructure = new AggregationStructure(ChunkIdJsonCodec.ofLong());
+			AggregationStructure aggregationStructure = new AggregationStructure();
 			for (String dimensionId : aggregationConfig.dimensions) {
 				aggregationStructure.addKey(dimensionId, dimensionTypes.get(dimensionId));
 			}

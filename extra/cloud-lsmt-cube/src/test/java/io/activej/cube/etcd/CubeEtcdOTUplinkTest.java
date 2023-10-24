@@ -67,7 +67,7 @@ public class CubeEtcdOTUplinkTest {
 
 	private long initialId;
 
-	@SuppressWarnings({"ConstantConditions", "unchecked", "rawtypes"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Before
 	public void setUp() throws Exception {
 		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodecs.ofList((JsonCodec<Object>) (JsonCodec) JsonCodecs.ofString())

@@ -2,7 +2,6 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
@@ -45,10 +44,10 @@ public final class TestUtils {
 		await(repository.saveSnapshot(id, List.of()));
 	}
 
-	public static <T> void runProcessLogs(IAggregationChunkStorage<Long> aggregationChunkStorage, StateManager<LogDiff<CubeDiff>, ?> stateManager, LogProcessor<T, CubeDiff> logProcessor) {
+	public static <T> void runProcessLogs(IAggregationChunkStorage aggregationChunkStorage, StateManager<LogDiff<CubeDiff>, ?> stateManager, LogProcessor<T, CubeDiff> logProcessor) {
 		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
 		await(aggregationChunkStorage
-			.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));
+			.finish(logDiff.diffs().flatMapToLong(CubeDiff::addedChunks).boxed().collect(toSet())));
 		await(stateManager.push(List.of(logDiff)));
 	}
 
@@ -85,8 +84,8 @@ public final class TestUtils {
 		return new AggregationState(aggregationStructure);
 	}
 
-	public static AggregationStructureBuilder aggregationStructureBuilder(ChunkIdJsonCodec<?> chunkIdCodec) {
-		return new AggregationStructureBuilder(new AggregationStructure(chunkIdCodec));
+	public static AggregationStructureBuilder aggregationStructureBuilder() {
+		return new AggregationStructureBuilder(new AggregationStructure());
 	}
 
 	@SuppressWarnings("rawtypes")

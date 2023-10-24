@@ -6,7 +6,6 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -43,7 +42,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class CubeIntegrationTest extends CubeTestBase {
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Test
 	public void test() throws Exception {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
@@ -54,7 +52,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 			.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
 			.withDimension("advertiser", ofInt())
@@ -127,7 +125,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		runProcessLogs(aggregationChunkStorage, stateManager, logOTProcessor);
 
-		await(aggregationChunkStorage.backup("backup1", (Set) stateManager.query(logState -> logState.getDataState().getAllChunks())));
+		await(aggregationChunkStorage.backup("backup1", stateManager.query(logState -> logState.getDataState().getAllChunks())));
 
 		CubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
 
@@ -150,8 +148,8 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(consolidatingCubeDiff))));
 
-		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
-		await(aggregationChunkStorage.cleanup((Set) stateManager.query(logState -> logState.getDataState().getAllChunks())));
+		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().boxed().collect(toSet())));
+		await(aggregationChunkStorage.cleanup(stateManager.query(logState -> logState.getDataState().getAllChunks())));
 
 		// Query
 		List<LogItem> queryResult = await(cubeReporting.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),

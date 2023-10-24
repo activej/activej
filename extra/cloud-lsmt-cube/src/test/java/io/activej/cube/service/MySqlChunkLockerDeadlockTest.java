@@ -1,6 +1,5 @@
 package io.activej.cube.service;
 
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.ChunksAlreadyLockedException;
 import io.activej.cube.aggregation.IChunkLocker;
 import io.activej.eventloop.Eventloop;
@@ -35,18 +34,18 @@ public class MySqlChunkLockerDeadlockTest {
 	public static final String AGGREGATION_ID = "test_aggregation";
 	public static final int MAX_CHUNK_ID = 1000;
 
-	private MySqlChunkLocker<Long> lockerA;
-	private MySqlChunkLocker<Long> lockerB;
+	private MySqlChunkLocker lockerA;
+	private MySqlChunkLocker lockerB;
 
 	@Before
 	public void before() throws IOException, SQLException {
 		DataSource dataSource = dataSource("test.properties");
 
 		Reactor reactor = Reactor.getCurrentReactor();
-		lockerA = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
+		lockerA = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, AGGREGATION_ID)
 			.withLockedTtl(Duration.ofSeconds(1))
 			.build();
-		lockerB = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID)
+		lockerB = MySqlChunkLocker.builder(reactor, Executors.newSingleThreadExecutor(), dataSource, AGGREGATION_ID)
 			.withLockedTtl(Duration.ofSeconds(1))
 			.build();
 
@@ -88,7 +87,7 @@ public class MySqlChunkLockerDeadlockTest {
 		t2.join();
 	}
 
-	private static Runnable run(IChunkLocker<Long> locker) {
+	private static Runnable run(IChunkLocker locker) {
 		return () -> {
 			Eventloop eventloop = Eventloop.builder()
 				.withCurrentThread()
@@ -101,7 +100,7 @@ public class MySqlChunkLockerDeadlockTest {
 		};
 	}
 
-	private static void action(ThreadLocalRandom random, IChunkLocker<Long> locker) {
+	private static void action(ThreadLocalRandom random, IChunkLocker locker) {
 		Set<Long> chunkIds = new HashSet<>();
 		for (int i = 0; i < 100; i++) {
 			chunkIds.add(random.nextLong(MAX_CHUNK_ID));

@@ -61,7 +61,7 @@ public final class QueryPlan {
 		@Override
 		public String toString() {
 			return chunks.stream().map(AggregationChunk::getChunkId)
-				.map(Object::toString)
+				.map(String::valueOf)
 				.collect(Collectors.joining(",", "[", "]"));
 		}
 	}

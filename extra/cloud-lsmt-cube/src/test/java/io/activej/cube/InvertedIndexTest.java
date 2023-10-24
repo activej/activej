@@ -101,9 +101,9 @@ public class InvertedIndexTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
+		AggregationStructure structure = aggregationStructureBuilder()
 			.withKey("word", ofString())
 			.withMeasure("documents", union(ofInt()))
 			.build();
@@ -151,14 +151,14 @@ public class InvertedIndexTest {
 		assertEquals(expectedResult, list);
 	}
 
-	public void doProcess(OTState<AggregationDiff> state, IAggregationChunkStorage<Long> aggregationChunkStorage, AggregationExecutor aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
+	public void doProcess(OTState<AggregationDiff> state, IAggregationChunkStorage aggregationChunkStorage, AggregationExecutor aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
 		state.apply(diff);
 		await(aggregationChunkStorage.finish(getAddedChunks(diff)));
 	}
 
 	private Set<Long> getAddedChunks(AggregationDiff aggregationDiff) {
-		return aggregationDiff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet());
+		return aggregationDiff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(toSet());
 	}
 
 }

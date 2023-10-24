@@ -20,20 +20,19 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableList;
 
 public class AggregationChunk {
-	private final Object chunkId;
+	private final long chunkId;
 	private final List<String> measures;
 	private final PrimaryKey minPrimaryKey;
 	private final PrimaryKey maxPrimaryKey;
 	private final int count;
 
 	private AggregationChunk(
-		Object chunkId, List<String> measures, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count
+		long chunkId, List<String> measures, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count
 	) {
 		this.chunkId = chunkId;
 		this.measures = measures;
@@ -42,15 +41,15 @@ public class AggregationChunk {
 		this.count = count;
 	}
 
-	public static AggregationChunk create(Object chunkId, List<String> fields, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count) {
+	public static AggregationChunk create(long chunkId, List<String> fields, PrimaryKey minPrimaryKey, PrimaryKey maxPrimaryKey, int count) {
 		return new AggregationChunk(chunkId, fields, minPrimaryKey, maxPrimaryKey, count);
 	}
 
-	public static AggregationChunk ofId(Object chunkId) {
+	public static AggregationChunk ofId(long chunkId) {
 		return new AggregationChunk(chunkId, null, null, null, 0);
 	}
 
-	public Object getChunkId() {
+	public long getChunkId() {
 		return chunkId;
 	}
 
@@ -90,12 +89,12 @@ public class AggregationChunk {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		AggregationChunk chunk = (AggregationChunk) o;
-		return Objects.equals(chunkId, chunk.chunkId);
+		return chunkId == chunk.chunkId;
 	}
 
 	@Override
 	public int hashCode() {
-		return chunkId.hashCode();
+		return Long.hashCode(chunkId);
 	}
 
 	@Override

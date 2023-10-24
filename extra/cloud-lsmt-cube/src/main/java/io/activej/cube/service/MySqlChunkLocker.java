@@ -46,8 +46,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
 
-public final class MySqlChunkLocker<C> extends AbstractReactive
-	implements IChunkLocker<C> {
+public final class MySqlChunkLocker extends AbstractReactive
+	implements IChunkLocker {
 
 	private static final Logger logger = LoggerFactory.getLogger(MySqlChunkLocker.class);
 
@@ -56,7 +56,6 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 	private final Executor executor;
 	private final DataSource dataSource;
-	private final ChunkIdJsonCodec<C> idCodec;
 	private final String aggregationId;
 
 	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
@@ -65,28 +64,27 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
 	private MySqlChunkLocker(
-		Reactor reactor, Executor executor, DataSource dataSource, ChunkIdJsonCodec<C> idCodec, String aggregationId
+		Reactor reactor, Executor executor, DataSource dataSource, String aggregationId
 	) {
 		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
-		this.idCodec = idCodec;
 		this.aggregationId = aggregationId;
 	}
 
-	public static <C> MySqlChunkLocker<C> create(
-		Reactor reactor, Executor executor, DataSource dataSource, ChunkIdJsonCodec<C> idCodec, String aggregationId
+	public static MySqlChunkLocker create(
+		Reactor reactor, Executor executor, DataSource dataSource, String aggregationId
 	) {
-		return builder(reactor, executor, dataSource, idCodec, aggregationId).build();
+		return builder(reactor, executor, dataSource, aggregationId).build();
 	}
 
-	public static <C> MySqlChunkLocker<C>.Builder builder(
-		Reactor reactor, Executor executor, DataSource dataSource, ChunkIdJsonCodec<C> idCodec, String aggregationId
+	public static MySqlChunkLocker.Builder builder(
+		Reactor reactor, Executor executor, DataSource dataSource, String aggregationId
 	) {
-		return new MySqlChunkLocker<>(reactor, executor, dataSource, idCodec, aggregationId).new Builder();
+		return new MySqlChunkLocker(reactor, executor, dataSource, aggregationId).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, MySqlChunkLocker<C>> {
+	public final class Builder extends AbstractBuilder<Builder, MySqlChunkLocker> {
 		private Builder() {}
 
 		public Builder withSqlNaming(CubeSqlNaming sqlScheme) {
@@ -108,7 +106,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 		}
 
 		@Override
-		protected MySqlChunkLocker<C> doBuild() {
+		protected MySqlChunkLocker doBuild() {
 			return MySqlChunkLocker.this;
 		}
 	}
@@ -150,7 +148,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> lockChunks(Set<C> chunkIds) {
+	public Promise<Void> lockChunks(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
@@ -174,8 +172,8 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 						ps.setString(1, lockedBy);
 						ps.setLong(2, lockTtlSeconds);
 						int index = 3;
-						for (C chunkId : chunkIds) {
-							ps.setString(index++, idCodec.toFileName(chunkId));
+						for (long chunkId : chunkIds) {
+							ps.setString(index++, ChunkIdJsonCodec.toFileName(chunkId));
 						}
 						int updated = ps.executeUpdate();
 						if (updated != chunkIds.size()) {
@@ -188,7 +186,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> releaseChunks(Set<C> chunkIds) {
+	public Promise<Void> releaseChunks(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
 
@@ -211,8 +209,8 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 						ps.setString(1, aggregationId);
 						ps.setString(2, lockedBy);
 						int index = 3;
-						for (C chunkId : chunkIds) {
-							ps.setString(index++, idCodec.toFileName(chunkId));
+						for (long chunkId : chunkIds) {
+							ps.setString(index++, ChunkIdJsonCodec.toFileName(chunkId));
 						}
 
 						ps.executeUpdate();
@@ -222,7 +220,7 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Set<C>> getLockedChunks() {
+	public Promise<Set<Long>> getLockedChunks() {
 		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 			() -> {
@@ -241,9 +239,9 @@ public final class MySqlChunkLocker<C> extends AbstractReactive
 
 						ResultSet resultSet = ps.executeQuery();
 
-						Set<C> result = new HashSet<>();
+						Set<Long> result = new HashSet<>();
 						while (resultSet.next()) {
-							C chunkId = idCodec.fromFileName(resultSet.getString(1));
+							long chunkId = ChunkIdJsonCodec.fromFileName(resultSet.getString(1));
 							result.add(chunkId);
 						}
 						return result;

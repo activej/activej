@@ -112,7 +112,7 @@ public final class CubeConsolidator extends AbstractReactive
 			return minKey(Set.of());
 		}
 
-		static ConsolidationStrategy minKey(Set<Object> lockedChunkIds) {
+		static ConsolidationStrategy minKey(Set<Long> lockedChunkIds) {
 			return (id, state, maxChunksToConsolidate, chunkSize) ->
 				state.findChunksForConsolidationMinKey(
 					maxChunksToConsolidate,
@@ -125,7 +125,7 @@ public final class CubeConsolidator extends AbstractReactive
 			return hotSegment(Set.of());
 		}
 
-		static ConsolidationStrategy hotSegment(Set<Object> lockedChunkIds) {
+		static ConsolidationStrategy hotSegment(Set<Long> lockedChunkIds) {
 			return (id, state, maxChunksToConsolidate, chunkSize) ->
 				state.findChunksForConsolidationHotSegment(
 					maxChunksToConsolidate,

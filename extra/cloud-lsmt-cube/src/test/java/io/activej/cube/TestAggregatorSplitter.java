@@ -73,7 +73,6 @@ public class TestAggregatorSplitter extends SplitterLogDataConsumer<TestPubReque
 					ADV_METRICS.stream()
 						.collect(toLinkedHashMap(identity()))));
 
-			@SuppressWarnings("ConstantConditions")
 			@Override
 			public void accept(TestPubRequest pubRequest) {
 				outputItem.date = (int) (pubRequest.timestamp / (24 * 60 * 60 * 1000L));

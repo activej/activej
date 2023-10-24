@@ -53,8 +53,8 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class MinioChunkStorage<C> extends AbstractReactive
-	implements IAggregationChunkStorage<C>, ReactiveService, ReactiveJmxBeanWithStats {
+public final class MinioChunkStorage extends AbstractReactive
+	implements IAggregationChunkStorage, ReactiveService, ReactiveJmxBeanWithStats {
 
 	private static final boolean CHECKS = Checks.isEnabled(AggregationChunkStorage.class);
 
@@ -62,8 +62,7 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 	public static final int DEFAULT_PART_SIZE = ApplicationSettings.getInt(MinioChunkStorage.class, "partSize", 10485760);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final ChunkIdJsonCodec<C> chunkIdCodec;
-	private final AsyncSupplier<C> idGenerator;
+	private final AsyncSupplier<Long> idGenerator;
 	private final MinioAsyncClient client;
 	private final Executor executor;
 	private final String bucket;
@@ -111,43 +110,39 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 
 	private MinioChunkStorage(
 		Reactor reactor,
-		ChunkIdJsonCodec<C> chunkIdCodec,
-		AsyncSupplier<C> idGenerator,
+		AsyncSupplier<Long> idGenerator,
 		MinioAsyncClient client,
 		Executor executor,
 		String bucket
 	) {
 		super(reactor);
-		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
 		this.client = client;
 		this.executor = executor;
 		this.bucket = bucket;
 	}
 
-	public static <C> MinioChunkStorage<C> create(
+	public static MinioChunkStorage create(
 		Reactor reactor,
-		ChunkIdJsonCodec<C> chunkIdCodec,
-		AsyncSupplier<C> idGenerator,
+		AsyncSupplier<Long> idGenerator,
 		MinioAsyncClient client,
 		Executor executor,
 		String bucket
 	) {
-		return builder(reactor, chunkIdCodec, idGenerator, client, executor, bucket).build();
+		return builder(reactor, idGenerator, client, executor, bucket).build();
 	}
 
-	public static <C> MinioChunkStorage<C>.Builder builder(
+	public static MinioChunkStorage.Builder builder(
 		Reactor reactor,
-		ChunkIdJsonCodec<C> chunkIdCodec,
-		AsyncSupplier<C> idGenerator,
+		AsyncSupplier<Long> idGenerator,
 		MinioAsyncClient client,
 		Executor executor,
 		String bucket
 	) {
-		return new MinioChunkStorage<>(reactor, chunkIdCodec, idGenerator, client, executor, bucket).new Builder();
+		return new MinioChunkStorage(reactor, idGenerator, client, executor, bucket).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, MinioChunkStorage<C>> {
+	public final class Builder extends AbstractBuilder<Builder, MinioChunkStorage> {
 		private Builder() {}
 
 		public Builder withPartSize(int partSize) {
@@ -169,13 +164,13 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 		}
 
 		@Override
-		protected MinioChunkStorage<C> doBuild() {
+		protected MinioChunkStorage doBuild() {
 			return MinioChunkStorage.this;
 		}
 	}
 
 	@Override
-	public Promise<C> createId() {
+	public Promise<Long> createId() {
 		if (CHECKS) checkInReactorThread(this);
 		return idGenerator.get()
 			.mapException(e -> new AggregationException("Could not create ID", e))
@@ -183,7 +178,7 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId, DefiningClassLoader classLoader) {
+	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
 		if (CHECKS) checkInReactorThread(this);
 
 		CompletableFuture<GetObjectResponse> future;
@@ -218,7 +213,7 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, C chunkId, DefiningClassLoader classLoader) {
+	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
 		if (CHECKS) checkInReactorThread(this);
 
 		PipedOutputStream os = new PipedOutputStream();
@@ -264,13 +259,13 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> finish(Set<C> chunkIds) {
+	public Promise<Void> finish(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
-	public Promise<Set<C>> listChunks() {
+	public Promise<Set<Long>> listChunks() {
 		checkInReactorThread(this);
 
 		Iterable<Result<Item>> results = client.listObjects(
@@ -280,10 +275,10 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 		);
 
 		return Promise.ofBlocking(executor, () -> {
-				Set<C> chunks = new HashSet<>();
+				Set<Long> chunks = new HashSet<>();
 				for (Result<Item> result : results) {
 					Item item = result.get();
-					C chunkId = fromObjectName(item.objectName());
+					long chunkId = fromObjectName(item.objectName());
 					chunks.add(chunkId);
 				}
 				return chunks;
@@ -293,7 +288,7 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> deleteChunks(Set<C> chunksToDelete) {
+	public Promise<Void> deleteChunks(Set<Long> chunksToDelete) {
 		if (CHECKS) checkInReactorThread(this);
 
 		Iterable<Result<DeleteError>> results = client.removeObjects(
@@ -349,12 +344,12 @@ public final class MinioChunkStorage<C> extends AbstractReactive
 		return Promise.complete();
 	}
 
-	private String toObjectName(C chunkId) {
-		return chunkIdCodec.toFileName(chunkId) + LOG;
+	private String toObjectName(long chunkId) {
+		return ChunkIdJsonCodec.toFileName(chunkId) + LOG;
 	}
 
-	private C fromObjectName(String path) throws MalformedDataException {
-		return chunkIdCodec.fromFileName(path.substring(0, path.length() - LOG.length()));
+	private long fromObjectName(String path) throws MalformedDataException {
+		return ChunkIdJsonCodec.fromFileName(path.substring(0, path.length() - LOG.length()));
 	}
 
 	// region JMX

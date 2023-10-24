@@ -7,7 +7,6 @@ import io.activej.cube.CubeStructure;
 import io.activej.cube.TestUtils;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.CubeException;
@@ -87,7 +86,7 @@ public class CubeBackupControllerTest {
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		fileSystem = fs;
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		AggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(eventloop, AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), fs);
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
@@ -189,8 +188,8 @@ public class CubeBackupControllerTest {
 		await(() -> Promises.all(diffs.stream()
 			.map(LogDiff::getDiffs)
 			.flatMap(Collection::stream)
-			.flatMap(CubeDiff::addedChunks)
-			.map(String::valueOf)
+			.flatMapToLong(CubeDiff::addedChunks)
+			.mapToObj(String::valueOf)
 			.map(name -> fileSystem.upload(name + LOG)
 				.then(consumer -> consumer.acceptAll(wrapUtf8("Stub chunk data"), null)))));
 	}

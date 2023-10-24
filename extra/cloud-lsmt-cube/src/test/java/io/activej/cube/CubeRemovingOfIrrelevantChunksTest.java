@@ -6,7 +6,6 @@ import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure.AggregationConfig;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.ot.CubeDiff;
@@ -59,7 +58,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
 	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
-	private IAggregationChunkStorage<Long> chunkStorage;
+	private IAggregationChunkStorage chunkStorage;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;
@@ -74,7 +73,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 			.withDimensions("date")
@@ -155,7 +154,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage);
 		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
 
-		CubeConsolidationController<LogDiff<CubeDiff>, Long> consolidationController =
+		CubeConsolidationController<LogDiff<CubeDiff>> consolidationController =
 			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, chunkStorage);
 
 		Map<String, Integer> chunksBefore = getChunksByAggregation(stateManager);

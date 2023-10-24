@@ -7,7 +7,6 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure.AggregationConfig;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
@@ -45,7 +44,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 
 	private static final String AGGREGATION_ID = "test";
 
-	private IAggregationChunkStorage<Long> aggregationChunkStorage;
+	private IAggregationChunkStorage aggregationChunkStorage;
 	private AggregationConfig basicConfig;
 	private List<CubeDiff> initialDiffs;
 
@@ -57,7 +56,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		basicConfig = id(AGGREGATION_ID)
 			.withDimensions("siteId")
 			.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue");
@@ -81,7 +80,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 
 		CubeDiff diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
-		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
+		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(toSet()));
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(basicCubeStructure, description);
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
@@ -92,7 +91,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 
 		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
-		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
+		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(toSet()));
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
 		supplier = StreamSuppliers.ofValues(
@@ -102,7 +101,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 
 		diff = await(supplier.streamTo(basicCubeExecutor.consume(EventRecord.class)));
 		initialDiffs.add(diff);
-		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(toSet()));
+		aggregationChunkStorage.finish(diff.get(AGGREGATION_ID).getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(toSet()));
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 	}
 
@@ -130,7 +129,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
-		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
 		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
@@ -210,7 +209,7 @@ public class AddedMeasuresTest extends CubeTestBase {
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
 		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord2.class)));
-		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
 
 		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);

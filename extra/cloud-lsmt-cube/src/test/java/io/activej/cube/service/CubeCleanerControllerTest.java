@@ -5,7 +5,6 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
@@ -56,7 +55,7 @@ public class CubeCleanerControllerTest {
 
 	private Reactor reactor;
 	private MySqlOTRepository<LogDiff<CubeDiff>> repository;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private AggregationChunkStorage aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -66,7 +65,7 @@ public class CubeCleanerControllerTest {
 
 		reactor = Reactor.getCurrentReactor();
 
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), FileSystem.create(reactor, executor, aggregationsDir));
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
@@ -92,7 +91,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.builder(reactor,
+		CubeCleanerController<Long, LogDiff<CubeDiff>> cleanerController = CubeCleanerController.builder(reactor,
 				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
 			.withFreezeTimeout(Duration.ofMillis(0))
 			.withExtraSnapshotsCount(1000)
@@ -106,7 +105,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.builder(reactor,
+		CubeCleanerController<Long, LogDiff<CubeDiff>> cleanerController = CubeCleanerController.builder(reactor,
 				CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
 			.withFreezeTimeout(Duration.ofSeconds(10))
 			.build();

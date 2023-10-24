@@ -7,7 +7,6 @@ import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
@@ -97,9 +96,9 @@ public class CustomFieldsTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
+		AggregationStructure structure = aggregationStructureBuilder()
 			.withKey("siteId", FieldTypes.ofInt())
 			.withMeasure("eventCount", count(ofLong()))
 			.withMeasure("sumRevenue", sum(ofDouble()))
@@ -119,7 +118,7 @@ public class CustomFieldsTest {
 			new EventRecord(3, 0.13, 20));
 
 		AggregationDiff diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
@@ -128,7 +127,7 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.91, 33));
 
 		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
@@ -137,7 +136,7 @@ public class CustomFieldsTest {
 			new EventRecord(3, 1.01, 21));
 
 		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		supplier = StreamSuppliers.ofValues(
@@ -146,7 +145,7 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.85, 50));
 
 		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).map(id -> (long) id).collect(Collectors.toSet()));
+		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
 		state.apply(diff);
 
 		AggregationQuery query = new AggregationQuery();

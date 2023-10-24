@@ -31,7 +31,7 @@ import io.activej.promise.SettablePromise;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> {
+public final class AggregationChunker<T> extends ForwardingStreamConsumer<T> {
 	private final SwitcherStreamConsumer<T> switcher;
 	private final SettablePromise<List<AggregationChunk>> result = new SettablePromise<>();
 
@@ -39,7 +39,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private final List<String> fields;
 	private final Class<T> recordClass;
 	private final PartitionPredicate<T> partitionPredicate;
-	private final IAggregationChunkStorage<C> storage;
+	private final IAggregationChunkStorage storage;
 	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 
@@ -47,7 +47,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 
 	private AggregationChunker(
 		SwitcherStreamConsumer<T> switcher, AggregationStructure aggregation, List<String> fields, Class<T> recordClass,
-		PartitionPredicate<T> partitionPredicate, IAggregationChunkStorage<C> storage, DefiningClassLoader classLoader,
+		PartitionPredicate<T> partitionPredicate, IAggregationChunkStorage storage, DefiningClassLoader classLoader,
 		int chunkSize
 	) {
 		super(switcher);
@@ -64,13 +64,13 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 			.whenComplete(result::trySet);
 	}
 
-	public static <C, T> AggregationChunker<C, T> create(
+	public static <T> AggregationChunker<T> create(
 		AggregationStructure aggregation, List<String> fields, Class<T> recordClass,
-		PartitionPredicate<T> partitionPredicate, IAggregationChunkStorage<C> storage, DefiningClassLoader classLoader,
+		PartitionPredicate<T> partitionPredicate, IAggregationChunkStorage storage, DefiningClassLoader classLoader,
 		int chunkSize
 	) {
 		SwitcherStreamConsumer<T> switcher = SwitcherStreamConsumer.create();
-		AggregationChunker<C, T> chunker = new AggregationChunker<>(switcher, aggregation, fields, recordClass, partitionPredicate, storage, classLoader, chunkSize);
+		AggregationChunker<T> chunker = new AggregationChunker<>(switcher, aggregation, fields, recordClass, partitionPredicate, storage, classLoader, chunkSize);
 		chunker.startNewChunk();
 		return chunker;
 	}
@@ -90,7 +90,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		private int count;
 
 		public ChunkWriter(
-			StreamConsumer<T> actualConsumer, C chunkId, int chunkSize, PartitionPredicate<T> partitionPredicate
+			StreamConsumer<T> actualConsumer, long chunkId, int chunkSize, PartitionPredicate<T> partitionPredicate
 		) {
 			super(actualConsumer);
 			this.chunkSize = chunkSize;

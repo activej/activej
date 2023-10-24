@@ -404,7 +404,7 @@ public class EtcdUtils {
 		}
 	}
 
-	public static <T> void checkAndInsert(TxnOps txn, EtcdKVEncoder<?, T> codec, Collection<T> next) {
+	public static <T> void checkAndInsert(TxnOps txn, EtcdKVEncoder<Long, T> codec, Collection<T> next) {
 		for (var item : next) {
 			KeyValue nextKV = codec.encodeKV(item);
 			checkAndInsert(txn, nextKV.key(), nextKV.value());
@@ -425,7 +425,7 @@ public class EtcdUtils {
 		}
 	}
 
-	public static <K> void checkAndDelete(TxnOps txn, EtcdKeyEncoder<K> codec, Collection<K> prev) {
+	public static <K> void checkAndDelete(TxnOps txn, EtcdKeyEncoder<Long> codec, Collection<Long> prev) {
 		for (var item : prev) {
 			checkAndDelete(txn, codec.encodeKey(item));
 		}

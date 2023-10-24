@@ -11,7 +11,6 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.cube.*;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -48,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 public final class CubeLogProcessorControllerTest extends CubeTestBase {
 	private IMultilog<LogItem> multilog;
 	private FileSystem logsFileSystem;
-	private CubeLogProcessorController<Long> controller;
+	private CubeLogProcessorController controller;
 
 	@Before
 	public void setUp() throws Exception {
@@ -58,7 +57,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		FileSystem aggregationFS = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFS.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), aggregationFS);
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())

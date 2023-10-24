@@ -52,14 +52,14 @@ public class MinioChunkStorageTest {
 	public final DescriptionRule descriptionRule = new DescriptionRule();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private final AggregationStructure structure = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
+	private final AggregationStructure structure = aggregationStructureBuilder()
 		.withKey("key", ofInt())
 		.withMeasure("value", sum(ofInt()))
 		.withMeasure("timestamp", sum(ofLong()))
 		.build();
 
 	private String bucket;
-	private MinioChunkStorage<Long> storage;
+	private MinioChunkStorage storage;
 	private MinioAsyncClient client;
 
 	@Before
@@ -78,7 +78,6 @@ public class MinioChunkStorageTest {
 
 		storage = MinioChunkStorage.create(
 				Reactor.getCurrentReactor(),
-				ChunkIdJsonCodec.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc),
 				client,
 				Executors.newSingleThreadExecutor(),
@@ -94,7 +93,7 @@ public class MinioChunkStorageTest {
 	@Test
 	public void testAcknowledge() {
 		int nChunks = 100;
-		AggregationChunker<?, KeyValuePair> chunker = createChunker(1);
+		AggregationChunker<KeyValuePair> chunker = createChunker(1);
 
 		Set<String> expected = IntStream.range(0, nChunks + 1).mapToObj(i -> i + 1 + MinioChunkStorage.LOG).collect(toSet());
 
@@ -122,7 +121,7 @@ public class MinioChunkStorageTest {
 	public void testChunkWrite() {
 		int nObjects = 99;
 		int chunkSize = 10;
-		AggregationChunker<?, KeyValuePair> chunker = createChunker(chunkSize);
+		AggregationChunker<KeyValuePair> chunker = createChunker(chunkSize);
 
 		Random random = ThreadLocalRandom.current();
 		List<KeyValuePair> items = Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
@@ -141,7 +140,7 @@ public class MinioChunkStorageTest {
 	public void testChunkRead() {
 		int nObjects = 1000;
 		int chunkSize = 10;
-		AggregationChunker<?, KeyValuePair> chunker = createChunker(chunkSize);
+		AggregationChunker<KeyValuePair> chunker = createChunker(chunkSize);
 
 		Random random = ThreadLocalRandom.current();
 		List<KeyValuePair> items = Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
@@ -166,7 +165,7 @@ public class MinioChunkStorageTest {
 	public void testChunkDeletion() {
 		int nObjects = 1000;
 		int chunkSize = 10;
-		AggregationChunker<?, KeyValuePair> chunker = createChunker(chunkSize);
+		AggregationChunker<KeyValuePair> chunker = createChunker(chunkSize);
 
 		Random random = ThreadLocalRandom.current();
 		List<KeyValuePair> items = Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
@@ -193,7 +192,7 @@ public class MinioChunkStorageTest {
 		assertEquals(preserved, await(storage.listChunks()));
 	}
 
-	private AggregationChunker<Long, KeyValuePair> createChunker(int chunkSize) {
+	private AggregationChunker<KeyValuePair> createChunker(int chunkSize) {
 		return AggregationChunker.create(
 			structure, structure.getMeasures(), KeyValuePair.class, singlePartition(),
 			storage, classLoader, chunkSize);

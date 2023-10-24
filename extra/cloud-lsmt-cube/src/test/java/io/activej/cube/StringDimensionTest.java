@@ -5,7 +5,6 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
@@ -42,7 +41,7 @@ public class StringDimensionTest extends CubeTestBase {
 
 		FileSystem fs = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdJsonCodec.ofLong(),
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 			AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("key1", ofString())
@@ -70,8 +69,8 @@ public class StringDimensionTest extends CubeTestBase {
 				new DataItemString2("str1", 4, 10, 20))
 			.streamTo(cubeExecutor.consume(DataItemString2.class)));
 
-		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().map(id -> (long) id).collect(toSet())));
-		await(aggregationChunkStorage.finish(consumer2Result.addedChunks().map(id -> (long) id).collect(toSet())));
+		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().boxed().collect(toSet())));
+		await(aggregationChunkStorage.finish(consumer2Result.addedChunks().boxed().collect(toSet())));
 
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(List.of(consumer1Result, consumer2Result)))));
 

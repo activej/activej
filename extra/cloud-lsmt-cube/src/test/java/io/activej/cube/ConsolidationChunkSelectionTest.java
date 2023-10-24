@@ -1,7 +1,6 @@
 package io.activej.cube;
 
 import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.RangeTree;
 import io.activej.cube.aggregation.ot.AggregationDiff;
@@ -18,7 +17,7 @@ import static org.junit.Assert.assertNull;
 
 public class ConsolidationChunkSelectionTest {
 
-	public static final AggregationStructure STRUCTURE = aggregationStructureBuilder(ChunkIdJsonCodec.ofLong())
+	public static final AggregationStructure STRUCTURE = aggregationStructureBuilder()
 		.withKey("key", ofInt())
 		.build();
 

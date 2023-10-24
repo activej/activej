@@ -92,7 +92,6 @@ public final class RangeTree<K, V> {
 		}
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	public boolean remove(K lower, K upper, V value) {
 		boolean removed = false;
 

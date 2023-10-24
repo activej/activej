@@ -7,6 +7,7 @@ import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.aggregation.ChunksAlreadyLockedException;
 import io.activej.cube.aggregation.IChunkLocker;
 import io.activej.etcd.codec.key.EtcdKeyCodec;
+import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.etcd.exception.MalformedEtcdDataException;
 import io.activej.etcd.exception.TransactionNotSucceededException;
 import io.activej.promise.Promise;
@@ -36,36 +37,37 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.etcd.EtcdUtils.executeTxnOps;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
-public final class EtcdChunkLocker<C> extends AbstractReactive
-	implements IChunkLocker<C>, ReactiveService {
+public final class EtcdChunkLocker extends AbstractReactive
+	implements IChunkLocker, ReactiveService {
+
+	private static final EtcdKeyCodec<Long> CHUNK_ID_CODEC = EtcdKeyCodecs.ofLong();
+
 
 	public static final Duration DEFAULT_TTL = ApplicationSettings.getDuration(EtcdChunkLocker.class, "ttl", Duration.ofMinutes(10));
 
 	private final Client client;
 	private final ByteSequence root;
-	private final EtcdKeyCodec<C> chunkCodec;
 
 	private Duration ttl = DEFAULT_TTL;
 
-	private final Map<Set<C>, Long> leaseIds = new HashMap<>();
+	private final Map<Set<Long>, Long> leaseIds = new HashMap<>();
 	private final Map<Long, CloseableClient> keepAlives = new HashMap<>();
 
-	private EtcdChunkLocker(Reactor reactor, Client client, ByteSequence root, EtcdKeyCodec<C> chunkCodec) {
+	private EtcdChunkLocker(Reactor reactor, Client client, ByteSequence root) {
 		super(reactor);
 		this.client = client;
 		this.root = root;
-		this.chunkCodec = chunkCodec;
 	}
 
-	public static <C> EtcdChunkLocker<C> create(Reactor reactor, Client client, ByteSequence root, EtcdKeyCodec<C> chunkCodec) {
-		return EtcdChunkLocker.builder(reactor, client, root, chunkCodec).build();
+	public static EtcdChunkLocker create(Reactor reactor, Client client, ByteSequence root) {
+		return EtcdChunkLocker.builder(reactor, client, root).build();
 	}
 
-	public static <C> EtcdChunkLocker<C>.Builder builder(Reactor reactor, Client client, ByteSequence root, EtcdKeyCodec<C> chunkCodec) {
-		return new EtcdChunkLocker<>(reactor, client, root, chunkCodec).new Builder();
+	public static EtcdChunkLocker.Builder builder(Reactor reactor, Client client, ByteSequence root) {
+		return new EtcdChunkLocker(reactor, client, root).new Builder();
 	}
 
-	public final class Builder extends AbstractBuilder<Builder, EtcdChunkLocker<C>> {
+	public final class Builder extends AbstractBuilder<Builder, EtcdChunkLocker> {
 		private Builder() {
 		}
 
@@ -76,13 +78,13 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 		}
 
 		@Override
-		protected EtcdChunkLocker<C> doBuild() {
+		protected EtcdChunkLocker doBuild() {
 			return EtcdChunkLocker.this;
 		}
 	}
 
 	@Override
-	public Promise<Void> lockChunks(Set<C> chunkIds) {
+	public Promise<Void> lockChunks(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
@@ -90,8 +92,8 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 			.map(LeaseGrantResponse::getID)
 			.then(leaseId -> Promise.ofCompletionStage(
 					executeTxnOps(client.getKVClient(), root, txnOps -> {
-						for (C chunkId : chunkIds) {
-							ByteSequence key = chunkCodec.encodeKey(chunkId);
+						for (long chunkId : chunkIds) {
+							ByteSequence key = CHUNK_ID_CODEC.encodeKey(chunkId);
 							txnOps.cmp(key, Cmp.Op.EQUAL, CmpTarget.createRevision(0));
 							txnOps.put(key, ByteSequence.EMPTY,
 								PutOption.builder()
@@ -108,7 +110,7 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> releaseChunks(Set<C> chunkIds) {
+	public Promise<Void> releaseChunks(Set<Long> chunkIds) {
 		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
 
@@ -120,12 +122,12 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 				.toVoid();
 		}
 
-		Set<C> chunkIdsToRelease = new HashSet<>();
+		Set<Long> chunkIdsToRelease = new HashSet<>();
 		Set<Long> releasedLeaseIds = new HashSet<>();
 
-		for (Map.Entry<Set<C>, Long> entry : leaseIds.entrySet()) {
-			Set<C> lockedIds = entry.getKey();
-			Set<C> intersection = Utils.intersection(lockedIds, chunkIds);
+		for (Map.Entry<Set<Long>, Long> entry : leaseIds.entrySet()) {
+			Set<Long> lockedIds = entry.getKey();
+			Set<Long> intersection = Utils.intersection(lockedIds, chunkIds);
 			chunkIdsToRelease.addAll(intersection);
 			if (intersection.size() == lockedIds.size()) {
 				releasedLeaseIds.add(entry.getValue());
@@ -134,8 +136,8 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 
 		return Promise.ofCompletionStage(
 				executeTxnOps(client.getKVClient(), root, txnOps -> {
-					for (C chunkId : chunkIdsToRelease) {
-						ByteSequence key = chunkCodec.encodeKey(chunkId);
+					for (long chunkId : chunkIdsToRelease) {
+						ByteSequence key = CHUNK_ID_CODEC.encodeKey(chunkId);
 						txnOps.delete(key, DeleteOption.DEFAULT);
 					}
 				}))
@@ -150,18 +152,18 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Set<C>> getLockedChunks() {
+	public Promise<Set<Long>> getLockedChunks() {
 		return Promise.ofCompletionStage(client.getKVClient().get(root,
 				GetOption.builder()
 					.isPrefix(true)
 					.build()))
 			.map(getResponse -> {
-				Set<C> lockedChunks = new HashSet<>();
+				Set<Long> lockedChunks = new HashSet<>();
 				for (KeyValue kv : getResponse.getKvs()) {
 					ByteSequence key = kv.getKey().substring(root.size());
-					C chunkId;
+					long chunkId;
 					try {
-						chunkId = chunkCodec.decodeKey(key);
+						chunkId = CHUNK_ID_CODEC.decodeKey(key);
 					} catch (MalformedEtcdDataException e) {
 						throw new MalformedEtcdDataException("Failed to decode key '" + key + '\'', e);
 					}
@@ -185,7 +187,7 @@ public final class EtcdChunkLocker<C> extends AbstractReactive
 			keepAliveClient.close();
 		}
 
-		Map<Set<C>, Long> leaseIdsCopy = Map.copyOf(leaseIds);
+		Map<Set<Long>, Long> leaseIdsCopy = Map.copyOf(leaseIds);
 		leaseIds.clear();
 
 		Lease leaseClient = client.getLeaseClient();

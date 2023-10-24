@@ -6,7 +6,6 @@ import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.TestUtils;
 import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeCleanerController.IChunksCleanerService;
 import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
@@ -43,7 +42,7 @@ public class CubeCleanerControllerTest {
 	private Thread eventloopThread;
 	private DataSource dataSource;
 	private CubeMySqlOTUplink uplink;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private AggregationChunkStorage aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -62,7 +61,7 @@ public class CubeCleanerControllerTest {
 
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
-		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdJsonCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, AsyncSupplier.of(new RefLong(0)::inc),
 			FrameFormats.lz4(), fs);
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())
