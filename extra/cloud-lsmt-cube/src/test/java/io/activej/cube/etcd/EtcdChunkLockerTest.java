@@ -1,80 +1,54 @@
-package io.activej.cube.service;
+package io.activej.cube.etcd;
 
-import io.activej.cube.aggregation.ChunkIdJsonCodec;
 import io.activej.cube.aggregation.ChunksAlreadyLockedException;
+import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.reactor.Reactor;
+import io.activej.test.rules.DescriptionRule;
 import io.activej.test.rules.EventloopRule;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.Description;
 
-import javax.sql.DataSource;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.stream.LongStream;
+import java.util.concurrent.ExecutionException;
 
 import static io.activej.common.Utils.union;
-import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
-import static io.activej.cube.service.MySqlChunkLocker.DEFAULT_LOCK_TTL;
+import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.dataSource;
-import static java.util.Collections.nCopies;
-import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ChunkLockerMySqlTest {
+public class EtcdChunkLockerTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
-	public static final String AGGREGATION_ID = "test_aggregation";
 
-	private DataSource dataSource;
-	private MySqlChunkLocker<Long> lockerA;
-	private MySqlChunkLocker<Long> lockerB;
+	@Rule
+	public final DescriptionRule descriptionRule = new DescriptionRule();
+
+	public static final Client ETCD_CLIENT = Client.builder().waitForReady(false).endpoints("http://127.0.0.1:2379").build();
+
+	private EtcdChunkLocker<Long> lockerA;
+	private EtcdChunkLocker<Long> lockerB;
 
 	@Before
-	public void before() throws IOException, SQLException {
-		dataSource = dataSource("test.properties");
-		Executor executor = Executors.newSingleThreadExecutor();
-
+	public void before() throws IOException, SQLException, ExecutionException, InterruptedException {
 		Reactor reactor = Reactor.getCurrentReactor();
-		lockerA = MySqlChunkLocker.create(reactor, executor, dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID);
-		lockerB = MySqlChunkLocker.create(reactor, executor, dataSource, ChunkIdJsonCodec.ofLong(), AGGREGATION_ID);
+		Description description = descriptionRule.getDescription();
+		ByteSequence root = byteSequenceFrom("test." + description.getClassName() + "#" + description.getMethodName());
 
-		lockerA.initialize();
-		lockerA.truncateTables();
+		lockerA = EtcdChunkLocker.create(reactor, ETCD_CLIENT, root, EtcdKeyCodecs.ofLong());
+		lockerB = EtcdChunkLocker.create(reactor, ETCD_CLIENT, root, EtcdKeyCodecs.ofLong());
 
-		try (
-			Connection connection = dataSource.getConnection();
-			PreparedStatement ps = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
-					INSERT INTO {chunk}
-					(`id`, `aggregation`, `measures`, `min_key`, `max_key`, `item_count`, `added_revision`)
-					VALUES $values
-					""")
-				.replace("$values", String.join(",", nCopies(100, "(?,?,?,?,?,?,?)"))))
-		) {
-			Set<Long> chunkIds = LongStream.range(0, 100).boxed().collect(toSet());
-
-			int index = 1;
-			for (Long chunkId : chunkIds) {
-				ps.setLong(index++, chunkId);
-				ps.setString(index++, AGGREGATION_ID);
-				ps.setString(index++, "measures");
-				ps.setString(index++, "min key");
-				ps.setString(index++, "max key");
-				ps.setInt(index++, 100);
-				ps.setLong(index++, 1);
-			}
-			ps.executeUpdate();
-		}
+		lockerA.delete();
 	}
 
 	@Test
@@ -162,51 +136,29 @@ public class ChunkLockerMySqlTest {
 	}
 
 	@Test
-	public void getLockedChunksShouldNotReturnExpiredChunks() {
-		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
-		await(lockerA.lockChunks(lockedByA));
+	public void releasePartiallyShouldRelease() {
+		Set<Long> lockedByA1 = Set.of(1L, 2L);
+		await(lockerA.lockChunks(lockedByA1));
+		assertEquals(lockedByA1, await(lockerA.getLockedChunks()));
 
-		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
+		Set<Long> lockedByA2 = Set.of(3L, 4L);
+		await(lockerA.lockChunks(lockedByA2));
+		assertEquals(union(lockedByA1, lockedByA2), await(lockerA.getLockedChunks()));
 
-		expireLockedChunk(2L);
+		Set<Long> lockedByA3 = Set.of(5L, 6L);
+		await(lockerA.lockChunks(lockedByA3));
+		assertEquals(union(union(lockedByA1, lockedByA2), lockedByA3), await(lockerA.getLockedChunks()));
 
-		assertEquals(Set.of(1L, 3L), await(lockerA.getLockedChunks()));
-	}
+		await(lockerA.releaseChunks(Set.of(1L, 2L, 3L)));
 
-	@Test
-	public void lockShouldOverrideExpiredChunks() {
-		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
-		await(lockerA.lockChunks(lockedByA));
+		assertEquals(Set.of(4L, 5L, 6L), await(lockerA.getLockedChunks()));
 
-		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
+		await(lockerA.releaseChunks(Set.of(4L)));
+		assertEquals(Set.of(5L, 6L), await(lockerA.getLockedChunks()));
 
-		Set<Long> locked2 = Set.of(1L, 4L);
-		Exception exception = awaitException(lockerA.lockChunks(locked2));
-		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
+		await(lockerA.releaseChunks(Set.of(5L, 6L)));
+		assertTrue(await(lockerA.getLockedChunks()).isEmpty());
 
-		expireLockedChunk(1L);
-
-		await(lockerA.lockChunks(locked2));
-
-		assertEquals(union(lockedByA, locked2), await(lockerA.getLockedChunks()));
-	}
-
-	private void expireLockedChunk(long chunkId) {
-		try (
-			Connection connection = dataSource.getConnection();
-			PreparedStatement ps = connection.prepareStatement(DEFAULT_SQL_NAMING.sql("""
-				UPDATE {chunk}
-				SET `locked_at` = `locked_at` - INTERVAL ? SECOND
-				WHERE `id` = ?
-				"""))
-		) {
-			ps.setLong(1, DEFAULT_LOCK_TTL.getSeconds() + 1);
-			ps.setString(2, String.valueOf(chunkId));
-
-			assertEquals(1, ps.executeUpdate());
-		} catch (SQLException exceptions) {
-			throw new AssertionError(exceptions);
-		}
 	}
 
 }

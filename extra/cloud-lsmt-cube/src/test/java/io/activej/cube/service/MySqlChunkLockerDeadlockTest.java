@@ -29,7 +29,7 @@ import static io.activej.cube.linear.CubeSqlNaming.DEFAULT_SQL_NAMING;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 
-public class ChunkLockerMySqlDeadlockTest {
+public class MySqlChunkLockerDeadlockTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 	public static final String AGGREGATION_ID = "test_aggregation";

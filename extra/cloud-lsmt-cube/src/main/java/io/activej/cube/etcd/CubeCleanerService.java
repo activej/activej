@@ -409,11 +409,6 @@ public final class CubeCleanerService extends AbstractReactive
 
 	// region JMX getters
 	@JmxAttribute
-	public String getRootEtcdKey() {
-		return root.toString();
-	}
-
-	@JmxAttribute
 	public String getCubeEtcdPrefix() {
 		return prefixChunk.toString();
 	}
