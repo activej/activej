@@ -1,15 +1,19 @@
 package io.activej.cube.etcd;
 
+import io.activej.async.exception.AsyncCloseException;
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.tuple.Tuple2;
+import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.cube.CubeState;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.datastream.supplier.BlockingPutQueue;
 import io.activej.etcd.EtcdEventProcessor;
 import io.activej.etcd.EtcdUtils;
 import io.activej.etcd.TxnOps;
@@ -43,10 +47,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.toLogger;
@@ -56,6 +57,7 @@ import static io.activej.cube.aggregation.json.JsonCodecs.ofPrimaryKey;
 import static io.activej.cube.etcd.CubeEtcdOTUplink.logPositionEtcdCodec;
 import static io.activej.cube.etcd.EtcdUtils.*;
 import static io.activej.etcd.EtcdUtils.*;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.*;
 
 public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogState<CubeDiff, CubeState>, LogDiff<CubeDiff>>
@@ -63,9 +65,12 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	private static final Logger logger = LoggerFactory.getLogger(CubeEtcdStateManager.class);
 
-	private static final Duration WATCH_RETRY_INTERVAL = ApplicationSettings.getDuration(CubeEtcdStateManager.class, "watchRetryInterval", Duration.ofSeconds(1));
+	public static final Duration WATCH_RETRY_INTERVAL = ApplicationSettings.getDuration(CubeEtcdStateManager.class, "watchRetryInterval", Duration.ofSeconds(1));
+	public static final int STATE_SUBSCRIBER_BUFFER_SIZE = ApplicationSettings.getInt(CubeEtcdStateManager.class, "stateSubscriberBufferSize", 128);
 
 	private final CubeStructure cubeStructure;
+
+	private final Set<StateTransitionListener> listeners = ConcurrentHashMap.newKeySet();
 
 	private EtcdPrefixCodec<String> aggregationIdCodec = AGGREGATION_ID_CODEC;
 	private Function<String, EtcdKVCodec<Long, AggregationChunk>> chunkCodecsFactory;
@@ -75,6 +80,8 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 	private ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
+
+	private volatile boolean stopping;
 
 	// region JMX
 	private final ExceptionStats watchEtcdExceptionStats = ExceptionStats.create();
@@ -265,6 +272,33 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 			.whenComplete(toLogger(logger, "push", diffs, this));
 	}
 
+	@Override
+	public StateChangesSupplier<LogDiff<CubeDiff>> subscribeToStateChanges() {
+		return new StateChangesListener();
+	}
+
+	public void subscribeToStateTransitions(StateTransitionListener listener) {
+		if (stopping) {
+			listener.onStop();
+			return;
+		}
+		listeners.add(listener);
+	}
+
+	public void unsubscribeFromStateTransitions(StateTransitionListener listener) {
+		listeners.remove(listener);
+	}
+
+	@Override
+	public void stop() {
+		stopping = true;
+		super.stop();
+		for (StateTransitionListener listener : listeners) {
+			listener.onStop();
+		}
+		listeners.clear();
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void applyStateTransitions(LogState<CubeDiff, CubeState> state, Object[] operation) throws MalformedEtcdDataException {
@@ -281,7 +315,9 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 			}
 		}
 
-		state.apply(LogDiff.of(logPositionDiffs, CubeDiff.of(aggregationDiffs)));
+		LogDiff<CubeDiff> diff = LogDiff.of(logPositionDiffs, CubeDiff.of(aggregationDiffs));
+		state.apply(diff);
+		notifyListeners(diff);
 	}
 
 	@Override
@@ -312,7 +348,14 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	protected void onWatchCompleted() {
 		logger.warn("Watch has been completed");
 		watchLastCompletedAt = now.currentInstant();
+		if (stopping) return;
 		scheduledExecutor.schedule(this::watch, WATCH_RETRY_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
+	}
+
+	private void notifyListeners(LogDiff<CubeDiff> diff) {
+		for (StateTransitionListener listener : listeners) {
+			listener.onStateChange(diff);
+		}
 	}
 
 	private static boolean isCatchUp(LogDiff<CubeDiff> diff) {
@@ -333,6 +376,75 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		kvClient
 			.put(root.concat(timestampKey), TOUCH_TIMESTAMP_CODEC.encodeValue(now.currentTimeMillis()))
 			.get();
+	}
+
+	public interface StateTransitionListener {
+		void onStateChange(LogDiff<CubeDiff> diff);
+
+		void onStop();
+	}
+
+	private final class StateChangesListener extends AbstractAsyncCloseable
+		implements StateTransitionListener, StateChangesSupplier<LogDiff<CubeDiff>> {
+
+		private final ChannelZeroBuffer<LogDiff<CubeDiff>> zeroBuffer = new ChannelZeroBuffer<>();
+		private final Queue queue = new Queue();
+
+		public StateChangesListener() {
+			subscribeToStateTransitions(this);
+		}
+
+		@Override
+		public void onStateChange(LogDiff<CubeDiff> diff) {
+			if (queue.isSaturated()) {
+				unsubscribeFromStateTransitions(this);
+				Exception exception = new AsyncCloseException("State changes rate exceed supplier rate");
+				reactor.execute(() -> closeEx(exception));
+				return;
+			}
+
+			try {
+				queue.put(diff);
+			} catch (InterruptedException ignored) {
+				throw new AssertionError("Should not happen");
+			}
+		}
+
+		@Override
+		public Promise<LogDiff<CubeDiff>> get() {
+			checkInReactorThread(reactor);
+
+			if (!queue.isEmpty()) {
+				return Promise.of(queue.take());
+			}
+
+			return zeroBuffer.take();
+		}
+
+		@Override
+		public void onStop() {
+			reactor.execute(this::close);
+		}
+
+		@Override
+		public void onClosed(Exception e) {
+			unsubscribeFromStateTransitions(this);
+			zeroBuffer.closeEx(e);
+			queue.close();
+		}
+
+		private class Queue extends BlockingPutQueue<LogDiff<CubeDiff>> {
+			public Queue() {
+				super(STATE_SUBSCRIBER_BUFFER_SIZE);
+			}
+
+			@Override
+			protected void onMoreData() {
+				if (zeroBuffer.isSaturated()) return;
+
+				zeroBuffer.put(take());
+			}
+		}
 	}
 
 	@Override

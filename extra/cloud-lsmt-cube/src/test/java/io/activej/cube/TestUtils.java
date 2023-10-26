@@ -132,6 +132,11 @@ public final class TestUtils {
 			}
 
 			@Override
+			public StateChangesSupplier<LogDiff<CubeDiff>> subscribeToStateChanges() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
 			public <R> R query(Function<LogState<CubeDiff, CubeState>, R> queryFn) {
 				return queryFn.apply(state);
 			}

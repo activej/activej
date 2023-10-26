@@ -16,26 +16,29 @@
 
 package io.activej.ot;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.async.service.ReactiveService;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
+import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -53,10 +56,14 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 	implements ReactiveService, StateManager<D, S> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
+	public static final int STATE_SUBSCRIBER_BUFFER_SIZE = ApplicationSettings.getInt(OTState.class, "stateSubscriberBufferSize", 128);
+
 	private final OTSystem<D> otSystem;
 	private final AsyncOTUplink<K, D, Object> uplink;
 
 	private final AsyncSupplier<Boolean> fetch = AsyncSuppliers.reuse(this::doFetch);
+
+	private final Set<StateChangesListener> listeners = new HashSet<>();
 
 	private S state;
 
@@ -108,6 +115,11 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 		addAll(diffs);
 		return catchUp()
 			.whenException(e -> reset());
+	}
+
+	@Override
+	public StateChangesSupplier<D> subscribeToStateChanges() {
+		return new StateChangesListener();
 	}
 
 	@Override
@@ -183,6 +195,7 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 	public Promise<Void> sync() {
 		return sync.run();
 	}
+
 	/**
 	 * Fetches changes from {@link #uplink}, but does not apply them. Moves <b>origin</b> commit ID forward.
 	 * Always returns a promise of {@code false} if there is a pending commit.
@@ -356,6 +369,7 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 				if (!otSystem.isEmpty(diff)) {
 					workingDiffs.add(diff);
 					state.apply(diff);
+					notifyListeners(diff);
 				}
 			}
 		} catch (RuntimeException e) {
@@ -369,10 +383,17 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 		try {
 			for (D op : diffs) {
 				state.apply(op);
+				notifyListeners(op);
 			}
 		} catch (RuntimeException e) {
 			invalidateInternalState();
 			throw e;
+		}
+	}
+
+	private void notifyListeners(D diff) {
+		for (StateChangesListener listener : listeners) {
+			listener.onStateChange(diff);
 		}
 	}
 
@@ -420,6 +441,57 @@ public final class OTStateManager<K, D, S extends OTState<D>> extends AbstractRe
 
 	public AsyncOTUplink<K, D, ?> getUplink() {
 		return uplink;
+	}
+
+	private final class StateChangesListener extends AbstractAsyncCloseable implements StateChangesSupplier<D> {
+		private final Queue<D> diffs = new ArrayDeque<>(STATE_SUBSCRIBER_BUFFER_SIZE);
+
+		private SettablePromise<D> pending;
+
+		public StateChangesListener() {
+			listeners.add(this);
+		}
+
+		void onStateChange(D diff) {
+			if (isClosed()) return;
+			if (pending != null) {
+				SettablePromise<D> pending = this.pending;
+				this.pending = null;
+				pending.set(diff);
+				return;
+			}
+
+			if (diffs.size() > STATE_SUBSCRIBER_BUFFER_SIZE) {
+				closeEx(new AsyncCloseException("State changes rate exceed supplier rate"));
+				return;
+			}
+
+			diffs.add(diff);
+		}
+
+		@Override
+		public Promise<D> get() {
+			if (isClosed()) return Promise.ofException(getException());
+
+			D diff = diffs.poll();
+			if (diff != null) return Promise.of(diff);
+
+			checkState(pending == null, "Previous get() has not finished yet");
+			pending = new SettablePromise<>();
+			return pending;
+		}
+
+		@Override
+		protected void onClosed(Exception e) {
+			if (pending == null) return;
+			pending.setException(e);
+			pending = null;
+		}
+
+		@Override
+		protected void onCleanup() {
+			listeners.remove(this);
+		}
 	}
 
 	@Override
