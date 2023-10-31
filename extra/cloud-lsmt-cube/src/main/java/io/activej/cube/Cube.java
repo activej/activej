@@ -456,24 +456,10 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			AggregationContainer container = entry.getValue();
 			Aggregation aggregation = container.aggregation;
 			AggregationPredicate containerPredicate = container.predicate;
-			AggregationStructure structure = aggregation.getStructure();
 			List<String> keys = aggregation.getKeys();
+			Map<String, FieldType> keyTypes = aggregation.getKeyTypes();
 			for (AggregationChunk chunk : aggregation.getState().getChunks().values()) {
-				PrimaryKey minPrimaryKey = chunk.getMinPrimaryKey();
-				PrimaryKey maxPrimaryKey = chunk.getMaxPrimaryKey();
-				AggregationPredicate chunkPredicate = AggregationPredicates.alwaysTrue();
-				for (int i = 0; i < keys.size(); i++) {
-					String key = keys.get(i);
-					FieldType keyType = structure.getKeyType(key);
-					Object minKey = keyType.toInitialValue(minPrimaryKey.get(i));
-					Object maxKey = keyType.toInitialValue(maxPrimaryKey.get(i));
-					if (Objects.equals(minKey, maxKey)) {
-						chunkPredicate = AggregationPredicates.and(chunkPredicate, eq(key, minKey));
-					} else {
-						chunkPredicate = AggregationPredicates.and(chunkPredicate, between(key, (Comparable) minKey, (Comparable) maxKey));
-						break;
-					}
-				}
+				AggregationPredicate chunkPredicate = chunk.toPredicate(keys, keyTypes);
 				AggregationPredicate intersection = AggregationPredicates.and(chunkPredicate, containerPredicate).simplify();
 				if (intersection == AggregationPredicates.alwaysFalse()) {
 					irrelevantChunks.computeIfAbsent(entry.getKey(), $ -> new HashSet<>()).add(chunk);
@@ -548,7 +534,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
-		if (compatibleAggregations.size() == 0) {
+		if (compatibleAggregations.isEmpty()) {
 			throw new IllegalArgumentException(format("No compatible aggregation for " +
 					"dimensions fields: %s, measureFields: %s", dimensionFields, measureFields));
 		}
