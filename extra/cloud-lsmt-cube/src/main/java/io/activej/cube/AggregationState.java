@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.intersection;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.toRangeScan;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableMap;
 
 /**
@@ -485,6 +485,11 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		for (AggregationChunk chunk : rangeQuery(rangeScan.getFrom(), rangeScan.getTo())) {
 			if (intersection(new HashSet<>(chunk.getMeasures()), requestedFields).isEmpty())
 				continue;
+
+			AggregationPredicate chunkPredicate = chunk.toPredicate(structure.getKeys(), structure.getKeyTypes());
+			if (and(chunkPredicate, predicate).simplify().equals(alwaysFalse())) {
+				continue;
+			}
 
 			chunks.add(chunk);
 		}

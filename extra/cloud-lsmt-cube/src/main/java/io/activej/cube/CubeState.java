@@ -66,22 +66,10 @@ public final class CubeState implements OTState<CubeDiff> {
 			AggregationStructure structure = cubeStructure.getAggregationStructure(aggregationId);
 			AggregationPredicate containerPredicate = cubeStructure.getAggregationStructure(aggregationId).getPredicate();
 			List<String> keys = structure.getKeys();
+			//noinspection rawtypes
+			Map<String, FieldType> keyTypes = structure.getKeyTypes();
 			for (AggregationChunk chunk : state.getChunks().values()) {
-				PrimaryKey minPrimaryKey = chunk.getMinPrimaryKey();
-				PrimaryKey maxPrimaryKey = chunk.getMaxPrimaryKey();
-				AggregationPredicate chunkPredicate = alwaysTrue();
-				for (int i = 0; i < keys.size(); i++) {
-					String key = keys.get(i);
-					FieldType<?> keyType = structure.getKeyType(key);
-					Object minKey = keyType.toInitialValue(minPrimaryKey.get(i));
-					Object maxKey = keyType.toInitialValue(maxPrimaryKey.get(i));
-					if (Objects.equals(minKey, maxKey)) {
-						chunkPredicate = and(chunkPredicate, eq(key, minKey));
-					} else {
-						chunkPredicate = and(chunkPredicate, between(key, (Comparable<?>) minKey, (Comparable<?>) maxKey));
-						break;
-					}
-				}
+				AggregationPredicate chunkPredicate = chunk.toPredicate(keys, keyTypes);
 				AggregationPredicate intersection = and(chunkPredicate, containerPredicate).simplify();
 				if (intersection == alwaysFalse()) {
 					irrelevantChunks.computeIfAbsent(aggregationId, $ -> new HashSet<>()).add(chunk);

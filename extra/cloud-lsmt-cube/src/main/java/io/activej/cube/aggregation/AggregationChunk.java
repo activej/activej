@@ -16,10 +16,12 @@
 
 package io.activej.cube.aggregation;
 
+import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static java.util.Collections.unmodifiableList;
@@ -69,19 +71,26 @@ public class AggregationChunk {
 		return count;
 	}
 
-	public AggregationPredicate toPredicate(List<String> primaryKey) {
+	@SuppressWarnings("rawtypes")
+	public AggregationPredicate toPredicate(List<String> primaryKey, Map<String, FieldType> fields) {
 		List<AggregationPredicate> predicates = new ArrayList<>();
 		for (int i = 0; i < primaryKey.size(); i++) {
 			String key = primaryKey.get(i);
-			Object from = minPrimaryKey.get(i);
-			Object to = maxPrimaryKey.get(i);
+			Object from = toInitialValue(fields, key, minPrimaryKey.get(i));
+			Object to = toInitialValue(fields, key, maxPrimaryKey.get(i));
 			if (from.equals(to)) {
 				predicates.add(eq(key, from));
 			} else {
 				predicates.add(between(key, (Comparable<?>) from, (Comparable<?>) to));
+				break;
 			}
 		}
 		return and(predicates);
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static Object toInitialValue(Map<String, FieldType> fields, String key, Object value) {
+		return fields.containsKey(key) ? fields.get(key).toInitialValue(value) : value;
 	}
 
 	@Override
