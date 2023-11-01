@@ -35,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -370,4 +371,19 @@ public class Utils {
 		);
 	}
 
+	public static boolean isArithmeticType(Type type) {
+		return type == byte.class || type == Byte.class ||
+			   type == short.class || type == Short.class ||
+			   type == char.class || type == Character.class ||
+			   type == int.class || type == Integer.class ||
+			   type == long.class || type == Long.class ||
+			   type == float.class || type == Float.class ||
+			   type == double.class || type == Double.class;
+	}
+
+	public static boolean needsWideningToInt(Type type) {
+		return type == byte.class || type == Byte.class ||
+			   type == short.class || type == Short.class ||
+			   type == char.class || type == Character.class;
+	}
 }

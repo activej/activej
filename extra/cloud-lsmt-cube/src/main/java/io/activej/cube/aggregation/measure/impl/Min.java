@@ -23,12 +23,17 @@ import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.cube.aggregation.util.Utils.isArithmeticType;
+import static io.activej.cube.aggregation.util.Utils.needsWideningToInt;
+import static io.activej.types.Primitives.wrap;
 
 @ExposedInternals
 public final class Min extends Measure {
 	@SuppressWarnings("rawtypes")
 	public Min(FieldType fieldType) {
 		super(fieldType);
+		checkArgument(isArithmeticType(fieldType.getInternalDataType()), "Not arithmetic type");
 	}
 
 	@Override
@@ -38,7 +43,9 @@ public final class Min extends Measure {
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return voidExp();
+		//noinspection unchecked
+		Class<?> wrapped = wrap(fieldType.getInternalDataType());
+		return set(accumulator, staticField(wrapped, "MAX_VALUE"));
 	}
 
 	@Override
@@ -48,6 +55,12 @@ public final class Min extends Measure {
 
 	@Override
 	public Expression reduce(Variable accumulator, Variable nextAccumulator) {
+		if (needsWideningToInt(fieldType.getInternalDataType())) {
+			return set(accumulator, staticCall(Math.class, "min",
+				cast(accumulator, int.class),
+				cast(nextAccumulator, int.class)
+			));
+		}
 		return set(accumulator, staticCall(Math.class, "min", accumulator, nextAccumulator));
 	}
 
@@ -58,6 +71,6 @@ public final class Min extends Measure {
 
 	@Override
 	public Expression accumulate(Variable accumulator, Variable nextValue) {
-		return set(accumulator, staticCall(Math.class, "min", accumulator, nextValue));
+		return reduce(accumulator, nextValue);
 	}
 }

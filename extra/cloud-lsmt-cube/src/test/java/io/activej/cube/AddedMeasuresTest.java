@@ -10,6 +10,7 @@ import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
+import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.exception.QueryException;
@@ -19,8 +20,10 @@ import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
+import io.activej.json.JsonCodecs;
 import io.activej.ot.StateManager;
 import io.activej.record.Record;
+import io.activej.serializer.def.SerializerDefs;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,8 +36,7 @@ import java.util.Set;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
-import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
-import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
+import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
@@ -227,6 +229,110 @@ public class AddedMeasuresTest extends CubeTestBase {
 		assertEquals(3, (int) record.get("estimatedUniqueUserIdCount"));
 	}
 
+	@Test
+	public void minAndMaxShortMeasures() throws QueryException {
+		CubeStructure cubeStructure = CubeStructure.builder()
+			.withDimension("siteId", FieldTypes.ofInt())
+			.withMeasure("eventCount", count(ofLong()))
+			.withMeasure("sumRevenue", sum(ofDouble()))
+			.withMeasure("minRevenue", min(ofDouble()))
+			.withMeasure("maxRevenue", max(ofDouble()))
+			.withMeasure("customRevenue", max(ofDouble()))
+			.withMeasure("minRevenueShort", min(ofShort()))
+			.withMeasure("maxRevenueShort", max(ofShort()))
+			.withAggregation(basicConfig)
+			.withAggregation(AggregationConfig.id("minMax")
+				.withDimensions("siteId")
+				.withMeasures("minRevenueShort", "maxRevenueShort"))
+			.build();
+
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(initialDiffs))));
+
+		StreamSupplier<EventRecord3> supplier = StreamSuppliers.ofValues(
+			new EventRecord3(14, (short) 500),
+			new EventRecord3(12, (short) 17),
+			new EventRecord3(22, (short) 50));
+
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
+
+		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord3.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
+
+		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
+
+		List<String> measures = List.of("minRevenueShort", "maxRevenueShort", "eventCount", "minRevenue", "maxRevenue");
+		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
+			.withMeasures(measures)
+			.build()));
+
+		assertEquals(measures, queryResult.getMeasures());
+		assertEquals(1, queryResult.getRecords().size());
+		Record record = first(queryResult.getRecords());
+		assertEquals(12, (long) record.get("eventCount"));
+
+		assertEquals(short.class, record.getScheme().getFieldType("minRevenueShort"));
+		assertEquals(17, (short) record.get("minRevenueShort"));
+
+		assertEquals(short.class, record.getScheme().getFieldType("maxRevenueShort"));
+		assertEquals(500, (short) record.get("maxRevenueShort"));
+	}
+
+	@Test
+	public void minAndMaxByteWrappedMeasures() throws QueryException {
+		CubeStructure cubeStructure = CubeStructure.builder()
+			.withDimension("siteId", FieldTypes.ofInt())
+			.withMeasure("eventCount", count(ofLong()))
+			.withMeasure("sumRevenue", sum(ofDouble()))
+			.withMeasure("minRevenue", min(ofDouble()))
+			.withMeasure("maxRevenue", max(ofDouble()))
+			.withMeasure("customRevenue", max(ofDouble()))
+			.withMeasure("minRevenueByte", min(ofByteWrapped()))
+			.withMeasure("maxRevenueByte", max(ofByteWrapped()))
+			.withAggregation(basicConfig)
+			.withAggregation(AggregationConfig.id("minMax")
+				.withDimensions("siteId")
+				.withMeasures("minRevenueByte", "maxRevenueByte"))
+			.build();
+
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(initialDiffs))));
+
+		StreamSupplier<EventRecord4> supplier = StreamSuppliers.ofValues(
+			new EventRecord4(14, (byte) 101),
+			new EventRecord4(12, (byte) 17),
+			new EventRecord4(22, (byte) 50));
+
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
+
+		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord4.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
+
+		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
+
+		List<String> measures = List.of("minRevenueByte", "maxRevenueByte", "eventCount", "minRevenue", "maxRevenue");
+		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
+			.withMeasures(measures)
+			.build()));
+
+		assertEquals(measures, queryResult.getMeasures());
+		assertEquals(1, queryResult.getRecords().size());
+		Record record = first(queryResult.getRecords());
+		assertEquals(12, (long) record.get("eventCount"));
+
+		assertEquals(Byte.class, record.getScheme().getFieldType("minRevenueByte"));
+		assertEquals(17, (byte) record.get("minRevenueByte"));
+
+		assertEquals(Byte.class, record.getScheme().getFieldType("maxRevenueByte"));
+		assertEquals(101, (byte) record.get("maxRevenueByte"));
+	}
+
+	private static FieldType<Byte> ofByteWrapped() {
+		return new FieldType<>(Byte.class, SerializerDefs.ofByte(false), JsonCodecs.ofByte()){};
+	}
+
 	@Measures("eventCount")
 	public record EventRecord(
 		@Key int siteId,
@@ -239,6 +345,20 @@ public class AddedMeasuresTest extends CubeTestBase {
 		@Key int siteId,
 		@Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
 		@Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId
+	) {
+	}
+
+	@Measures("eventCount")
+	public record EventRecord3(
+		@Key int siteId,
+		@Measures({"minRevenueShort", "maxRevenueShort"}) short revenue
+	) {
+	}
+
+	@Measures("eventCount")
+	public record EventRecord4(
+		@Key int siteId,
+		@Measures({"minRevenueByte", "maxRevenueByte"}) Byte revenue
 	) {
 	}
 }
