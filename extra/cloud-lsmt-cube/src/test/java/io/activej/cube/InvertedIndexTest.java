@@ -5,7 +5,10 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.cube.aggregation.*;
+import io.activej.cube.aggregation.AggregationChunk;
+import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.IAggregationChunkStorage;
+import io.activej.cube.aggregation.InvertedIndexRecord;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -137,7 +140,7 @@ public class InvertedIndexTest {
 		query.addKeys(List.of("word"));
 		query.addMeasures(List.of("documents"));
 
-		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate(), structure);
+		List<AggregationChunk> chunks = state.findChunks(query.getMeasures(), query.getPredicate());
 		List<InvertedIndexQueryResult> list = await(aggregationExecutor.query(chunks, query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 			.toList());
 

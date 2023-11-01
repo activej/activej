@@ -58,6 +58,10 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		initIndex();
 	}
 
+	public AggregationStructure getStructure() {
+		return structure;
+	}
+
 	public Map<Long, AggregationChunk> getChunks() {
 		return unmodifiableMap(chunks);
 	}
@@ -79,8 +83,8 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		}
 	}
 
-	public double estimateCost(List<String> measures, AggregationPredicate predicate, AggregationStructure structure) {
-		return findChunks(measures, predicate, structure).size();
+	public double estimateCost(List<String> measures, AggregationPredicate predicate) {
+		return findChunks(measures, predicate).size();
 	}
 
 	public void addToIndex(AggregationChunk chunk) {
@@ -471,7 +475,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		return true;
 	}
 
-	public List<AggregationChunk> findChunks(List<String> measures, AggregationPredicate predicate, AggregationStructure structure) {
+	public List<AggregationChunk> findChunks(List<String> measures, AggregationPredicate predicate) {
 		RangeScan rangeScan = toRangeScan(predicate, structure.getKeys(), structure.getKeyTypes());
 		if (rangeScan.isNoScan())
 			return List.of();

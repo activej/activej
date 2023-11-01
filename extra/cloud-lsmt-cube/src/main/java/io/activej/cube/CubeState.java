@@ -130,7 +130,6 @@ public final class CubeState implements OTState<CubeDiff> {
 
 		record AggregationSortRecord(
 			String key,
-			AggregationStructure structure,
 			AggregationState state,
 			double score
 		) implements Comparable<AggregationSortRecord> {
@@ -138,37 +137,36 @@ public final class CubeState implements OTState<CubeDiff> {
 			@Override
 			public int compareTo(AggregationSortRecord o) {
 				int result;
-				result = -Integer.compare(structure.getMeasures().size(), o.structure.getMeasures().size());
+				result = -Integer.compare(state.getStructure().getMeasures().size(), o.state.getStructure().getMeasures().size());
 				if (result != 0) return result;
 				result = Double.compare(score, o.score);
 				if (result != 0) return result;
 				result = Integer.compare(state.getChunksSize(), o.state.getChunksSize());
 				if (result != 0) return result;
-				result = Integer.compare(structure.getKeys().size(), o.structure.getKeys().size());
+				result = Integer.compare(state.getStructure().getKeys().size(), o.state.getStructure().getKeys().size());
 				return result;
 			}
 		}
 
 		List<AggregationSortRecord> containerWithScores = new ArrayList<>();
 		for (String aggregationId : compatibleAggregations) {
-			AggregationStructure structure = cubeStructure.getAggregationStructure(aggregationId);
 			AggregationState state = aggregationStates.get(aggregationId);
-			double score = state.estimateCost(storedMeasures, where, structure);
-			containerWithScores.add(new AggregationSortRecord(aggregationId, structure, state, score));
+			double score = state.estimateCost(storedMeasures, where);
+			containerWithScores.add(new AggregationSortRecord(aggregationId, state, score));
 		}
 		sort(containerWithScores);
 
 		storedMeasures = new ArrayList<>(storedMeasures);
 		for (AggregationSortRecord record : containerWithScores) {
-			List<String> compatibleMeasures = storedMeasures.stream().filter(record.structure().getMeasures()::contains).collect(toList());
+			List<String> aggregationMeasures = record.state().getStructure().getMeasures();
+			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationMeasures::contains).collect(toList());
 			if (compatibleMeasures.isEmpty())
 				continue;
 			storedMeasures.removeAll(compatibleMeasures);
 
 			List<AggregationChunk> chunks = record.state.findChunks(
 				compatibleMeasures,
-				where,
-				record.structure()
+				where
 			);
 			result.add(new CompatibleAggregations(record.key(), compatibleMeasures, chunks));
 		}
