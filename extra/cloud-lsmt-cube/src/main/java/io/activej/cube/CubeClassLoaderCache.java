@@ -54,7 +54,10 @@ public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean {
 			cacheMisses++;
 			return DefiningClassLoader.create(rootClassLoader);
 		});
+	}
 
+	public DefiningClassLoader getRootClassLoader() {
+		return rootClassLoader;
 	}
 
 	// JMX

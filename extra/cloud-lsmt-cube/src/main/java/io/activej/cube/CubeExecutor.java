@@ -85,6 +85,7 @@ import static io.activej.cube.aggregation.util.Utils.*;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.util.function.Predicate.isEqual;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -197,6 +198,8 @@ public final class CubeExecutor extends AbstractReactive
 
 		public Builder withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
 			checkNotBuilt(this);
+			checkArgument(iterate(classLoaderCache.getRootClassLoader(), Objects::nonNull, ClassLoader::getParent).anyMatch(isEqual(classLoader)),
+				"Unrelated cache ClassLoader");
 			CubeExecutor.this.classLoaderCache = classLoaderCache;
 			return this;
 		}
