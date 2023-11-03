@@ -484,12 +484,12 @@ public final class CubeCleanerService extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public Instant getWatchLastCompletedAtAt() {
+	public @Nullable Instant getWatchLastCompletedAt() {
 		return watchLastCompletedAt;
 	}
 
 	@JmxAttribute
-	public Instant getWatchConnectionLastEstablishedAt() {
+	public @Nullable Instant getWatchConnectionLastEstablishedAt() {
 		return watchConnectionLastEstablishedAt;
 	}
 

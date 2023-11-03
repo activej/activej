@@ -37,6 +37,7 @@ import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.Response;
 import io.etcd.jetcd.options.DeleteOption;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	private final ExceptionStats watchEtcdExceptionStats = ExceptionStats.create();
 	private final ExceptionStats malformedDataExceptionStats = ExceptionStats.create();
 	private Instant watchConnectionLastEstablishedAt = null;
+	private Instant watchStateLastUpdatedAt = null;
 	private Instant watchLastCompletedAt = null;
 	// endregion
 
@@ -317,6 +319,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 
 		LogDiff<CubeDiff> diff = LogDiff.of(logPositionDiffs, CubeDiff.of(aggregationDiffs));
 		state.apply(diff);
+		watchStateLastUpdatedAt = now.currentInstant();
 		notifyListeners(diff);
 	}
 
@@ -467,13 +470,18 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	}
 
 	@JmxAttribute
-	public Instant getWatchLastCompletedAtAt() {
+	public @Nullable Instant getWatchLastCompletedAt() {
 		return watchLastCompletedAt;
 	}
 
 	@JmxAttribute
-	public Instant getWatchConnectionLastEstablishedAt() {
+	public @Nullable Instant getWatchConnectionLastEstablishedAt() {
 		return watchConnectionLastEstablishedAt;
+	}
+
+	@JmxAttribute
+	public @Nullable Instant getWatchStateLastUpdatedAt() {
+		return watchStateLastUpdatedAt;
 	}
 
 	@Override
