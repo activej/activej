@@ -42,7 +42,6 @@ public final class EtcdChunkLocker extends AbstractReactive
 
 	private static final EtcdKeyCodec<Long> CHUNK_ID_CODEC = EtcdKeyCodecs.ofLong();
 
-
 	public static final Duration DEFAULT_TTL = ApplicationSettings.getDuration(EtcdChunkLocker.class, "ttl", Duration.ofMinutes(10));
 
 	private final Client client;
@@ -118,7 +117,7 @@ public final class EtcdChunkLocker extends AbstractReactive
 		Lease leaseClient = client.getLeaseClient();
 		if (leaseId != null) {
 			return Promise.ofCompletionStage(leaseClient.revoke(leaseId))
-				.whenComplete(() -> keepAlives.remove(leaseId).close())
+				.whenComplete(() -> tryCloseKeepAlive(leaseId))
 				.toVoid();
 		}
 
@@ -143,8 +142,7 @@ public final class EtcdChunkLocker extends AbstractReactive
 				}))
 			.whenResult(() -> {
 				for (Long releasedLeaseId : releasedLeaseIds) {
-					CloseableClient closeableClient = keepAlives.remove(releasedLeaseId);
-					if (closeableClient != null) closeableClient.close();
+					tryCloseKeepAlive(releasedLeaseId);
 					leaseClient.revoke(releasedLeaseId);
 				}
 			})
@@ -203,16 +201,19 @@ public final class EtcdChunkLocker extends AbstractReactive
 
 			@Override
 			public void onError(Throwable throwable) {
-				CloseableClient closeableClient = keepAlives.remove(leaseId);
-				if (closeableClient != null) closeableClient.close();
+				tryCloseKeepAlive(leaseId);
 			}
 
 			@Override
 			public void onCompleted() {
-				CloseableClient closeableClient = keepAlives.remove(leaseId);
-				if (closeableClient != null) closeableClient.close();
+				tryCloseKeepAlive(leaseId);
 			}
 		});
+	}
+
+	private void tryCloseKeepAlive(Long leaseId) {
+		CloseableClient closeableClient = keepAlives.remove(leaseId);
+		if (closeableClient != null) closeableClient.close();
 	}
 
 	@VisibleForTesting
