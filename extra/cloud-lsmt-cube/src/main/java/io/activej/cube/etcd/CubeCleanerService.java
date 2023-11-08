@@ -230,7 +230,10 @@ public final class CubeCleanerService extends AbstractReactive
 	private Promise<Void> doCleanup() {
 		checkInReactorThread(reactor);
 
-		if (cleanupSchedule != null) cleanupSchedule.cancel();
+		if (cleanupSchedule != null) {
+			cleanupSchedule.cancel();
+			cleanupSchedule = null;
+		}
 		if (stopped) return Promise.complete();
 
 		DeletedChunksEntry chunkEntry = deletedChunksQueue.peek();

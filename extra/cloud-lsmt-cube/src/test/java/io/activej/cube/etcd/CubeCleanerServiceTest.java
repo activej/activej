@@ -4,6 +4,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.common.ref.RefLong;
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.CubeStructure;
@@ -21,6 +22,7 @@ import io.activej.fs.FileSystem;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecs;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.DescriptionRule;
@@ -201,6 +203,24 @@ public class CubeCleanerServiceTest {
 		assertTrue(getStorageChunks().isEmpty());
 	}
 
+	@Test
+	public void testCleanupIterations() {
+		processChunks(100, Set.of(1L, 2L, 3L), Set.of());
+		processChunks(200, Set.of(4L, 5L, 6L), Set.of(1L, 2L, 3L));
+
+		Eventloop eventloop = Reactor.getCurrentReactor();
+		eventloop.keepAlive(true);
+		now.setTimeProvider(ofTimeSequence(now.currentTimeMillis() + DEFAULT_CLEANUP_OLDER_THAN.toMillis() - 1000, 100));
+		await(aggregationChunkStorage.listChunks()
+			.whenResult(chunks -> assertEquals(6, chunks.size()))
+			.then(() -> Promises.<Set<Long>>until(Set.of(), chunks ->
+				aggregationChunkStorage.listChunks(), s -> s.size() == 3))
+			.then(() -> processChunksAsync(300, Set.of(), Set.of(4L, 5L, 6L)))
+			.then(() -> Promises.<Set<Long>>until(Set.of(), chunks ->
+				aggregationChunkStorage.listChunks(), Set::isEmpty))
+			.whenComplete(() -> eventloop.keepAlive(false)));
+	}
+
 	private void processChunks(long timestamp, Set<Long> addedChunks, Set<Long> removedChunks) {
 		now.setTimeProvider(ofConstant(timestamp));
 
@@ -222,6 +242,27 @@ public class CubeCleanerServiceTest {
 		}
 
 		await(aggregationChunkStorage.finish(addedChunks));
+	}
+
+	private Promise<Void> processChunksAsync(long timestamp, Set<Long> addedChunks, Set<Long> removedChunks) {
+		CurrentTimeProvider prevProvider = now.getTimeProvider();
+		now.setTimeProvider(ofConstant(timestamp));
+		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
+
+		return stateManager.push(List.of(LogDiff.forCurrentPosition(CubeDiff.of(
+				Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(addedChunks), idsToChunks(removedChunks)))
+			))))
+			.then(() -> Promises.all(addedChunks.stream()
+				.map(addedChunk ->
+					StreamSuppliers.<Container>ofValues().streamTo(aggregationChunkStorage.write(
+						aggregationStructure,
+						List.of(),
+						Container.class,
+						addedChunk,
+						CLASS_LOADER
+					)))))
+			.then(() -> aggregationChunkStorage.finish(addedChunks))
+			.whenComplete(() -> now.setTimeProvider(prevProvider));
 	}
 
 	private static Set<AggregationChunk> idsToChunks(Set<Long> addedChunks) {
