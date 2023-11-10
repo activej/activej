@@ -264,15 +264,23 @@ public final class CubeExecutor extends AbstractReactive
 		}
 
 		private void addAggregation(String id, AggregationStructure structure) {
-			AggregationConfig aggregationConfig = aggregationConfigs.get(id);
+			AggregationConfig config = aggregationConfigs.get(id);
 
 			AggregationExecutor aggregationExecutor = new AggregationExecutor(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure);
 
 			aggregationExecutor.setTemporarySortDir(temporarySortDir);
-			aggregationExecutor.setChunkSize(aggregationConfig != null ? aggregationConfig.chunkSize : aggregationsChunkSize);
-			aggregationExecutor.setReducerBufferSize(aggregationConfig != null ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize);
-			aggregationExecutor.setSorterItemsInMemory(aggregationConfig != null ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory);
-			aggregationExecutor.setMaxChunksToConsolidate(aggregationConfig != null ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate);
+			aggregationExecutor.setChunkSize(config != null && config.chunkSize != 0 ?
+				config.chunkSize :
+				aggregationsChunkSize);
+			aggregationExecutor.setReducerBufferSize(config != null && config.reducerBufferSize != 0 ?
+				config.reducerBufferSize :
+				aggregationsReducerBufferSize);
+			aggregationExecutor.setSorterItemsInMemory(config != null && config.sorterItemsInMemory != 0 ?
+				config.sorterItemsInMemory :
+				aggregationsSorterItemsInMemory);
+			aggregationExecutor.setMaxChunksToConsolidate(config != null && config.maxChunksToConsolidate != 0 ?
+				config.maxChunksToConsolidate :
+				aggregationsMaxChunksToConsolidate);
 			aggregationExecutor.setIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions);
 			aggregationExecutor.setMaxIncrementalReloadPeriod(maxIncrementalReloadPeriod);
 			aggregationExecutor.setStats(aggregationStats);
