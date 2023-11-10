@@ -224,6 +224,7 @@ public final class CubeExecutor extends AbstractReactive
 
 		public Builder withAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
 			checkNotBuilt(this);
+			checkArgument(aggregationsMaxChunksToConsolidate > 0, "Nothing to consolidate");
 			CubeExecutor.this.aggregationsMaxChunksToConsolidate = aggregationsMaxChunksToConsolidate;
 			return this;
 		}
@@ -867,6 +868,7 @@ public final class CubeExecutor extends AbstractReactive
 
 	@JmxAttribute
 	public void setAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
+		checkArgument(aggregationsMaxChunksToConsolidate > 0, "Nothing to consolidate");
 		this.aggregationsMaxChunksToConsolidate = aggregationsMaxChunksToConsolidate;
 		for (AggregationExecutor aggregationExecutor : aggregationExecutors.values()) {
 			aggregationExecutor.setMaxChunksToConsolidate(aggregationsMaxChunksToConsolidate);
