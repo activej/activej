@@ -272,7 +272,7 @@ public final class CubeCleanerService extends AbstractReactive
 		logger.trace("Chunks to be cleaned up: {}", entry.chunkIds());
 
 		return deleteChunksFromStorage(entry.chunkIds())
-			.then(() -> updateLastCleanupRevision(lastCleanupRevision))
+			.then(() -> updateLastCleanupRevision(entry.deleteRevision()))
 			.whenResult(() -> logger.trace("Chunks successfully cleaned up"))
 			.whenComplete(promiseCleanup.recordStats());
 	}
@@ -447,7 +447,7 @@ public final class CubeCleanerService extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public long getWatchRevisionRevision() {
+	public long getWatchRevision() {
 		return watchRevision;
 	}
 
