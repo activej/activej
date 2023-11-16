@@ -451,4 +451,9 @@ public final class HttpUrlTest {
 		}
 	}
 
+	@Test
+	public void testGetQueryParametersNoQuery() {
+		UrlParser url = UrlParser.of("http://abc.com");
+		assertTrue(url.getQueryParameters().isEmpty());
+	}
 }

@@ -360,8 +360,10 @@ public final class UrlParser {
 	}
 
 	public Map<String, String> getQueryParameters() {
-		HashMap<String, String> map = new HashMap<>();
-		for (QueryParameter queryParameter : getQueryParametersIterable()) {
+		Iterable<QueryParameter> queryParametersIterable = getQueryParametersIterable();
+		if (queryPositions == null) return Map.of();
+		HashMap<String, String> map = new HashMap<>(queryPositions.length);
+		for (QueryParameter queryParameter : queryParametersIterable) {
 			map.put(queryParameter.getKey(), queryParameter.getValue());
 		}
 		return map;
