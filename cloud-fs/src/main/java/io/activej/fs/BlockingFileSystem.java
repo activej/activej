@@ -24,7 +24,6 @@ import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.util.ForwardingOutputStream;
 import io.activej.fs.util.LimitedInputStream;
 import io.activej.fs.util.UploadOutputStream;
-import io.activej.jmx.api.ConcurrentJmxBean;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,7 @@ import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 
-public final class BlockingFileSystem implements IBlockingFileSystem, BlockingService, ConcurrentJmxBean {
+public final class BlockingFileSystem implements IBlockingFileSystem, BlockingService {
 	private static final Logger logger = LoggerFactory.getLogger(BlockingFileSystem.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
