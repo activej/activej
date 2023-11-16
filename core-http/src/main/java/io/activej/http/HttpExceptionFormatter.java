@@ -77,8 +77,6 @@ public interface HttpExceptionFormatter {
 		// default formatter leaks no information about unknown exceptions
 		return responseBuilder
 			.withHeader(CACHE_CONTROL, "no-store")
-			.withHeader(PRAGMA, "no-cache")
-			.withHeader(AGE, "0")
 			.toPromise();
 	};
 
@@ -88,8 +86,6 @@ public interface HttpExceptionFormatter {
 	HttpExceptionFormatter DEBUG_FORMATTER = e ->
 		DebugStacktraceRenderer.render(e, e instanceof HttpError ? ((HttpError) e).getCode() : 500)
 			.withHeader(CACHE_CONTROL, "no-store")
-			.withHeader(PRAGMA, "no-cache")
-			.withHeader(AGE, "0")
 			.toPromise();
 
 	/**
