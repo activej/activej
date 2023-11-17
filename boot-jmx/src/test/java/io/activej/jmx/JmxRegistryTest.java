@@ -118,6 +118,36 @@ public class JmxRegistryTest {
 		jmxRegistry.registerWorkers(workerPool, key, List.of(worker_1, worker_2, worker_3), JmxBeanSettings.create());
 	}
 
+	@Test
+	public void conditionalRegisterSingletons() throws Exception {
+		String skipQualifier = "SKIP";
+
+		jmxRegistry = JmxRegistry.builder(mBeanServer, mBeanFactory)
+			.withObjectNameMapping(protoObjectName -> {
+				if (skipQualifier.equals(protoObjectName.qualifier())) {
+					return null;
+				}
+				return protoObjectName;
+			})
+			.build();
+
+		ServiceStub registered = new ServiceStub();
+		ServiceStub skipped = new ServiceStub();
+
+		context.checking(new Expectations() {{
+			oneOf(mBeanServer).registerMBean(with(Matchers.any(DynamicMBean.class)),
+				with(objectname(DOMAIN + ":type=ServiceStub")));
+			never(mBeanServer).registerMBean(with(Matchers.any(DynamicMBean.class)),
+				with(objectname(DOMAIN + ":type=ServiceStub,qualifier=SKIP")));
+		}});
+
+		Key<?> registeredKey = Key.of(ServiceStub.class);
+		jmxRegistry.registerSingleton(registeredKey, registered, JmxBeanSettings.create());
+
+		Key<?> skippedKey = Key.of(ServiceStub.class, skipQualifier);
+		jmxRegistry.registerSingleton(skippedKey, skipped, JmxBeanSettings.create());
+	}
+
 	private WorkerPool getWorkerPool() {
 		Injector injector = Injector.of(WorkerPoolModule.create(), new AbstractModule() {
 			@Override

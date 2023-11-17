@@ -151,6 +151,10 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		}
 
 		protoName = objectNameMapper.apply(protoName);
+		if (protoName == null) {
+			logger.trace("Instance with key {} will not be registered to JMX", key);
+			return;
+		}
 
 		ObjectName objectName;
 		try {
@@ -183,6 +187,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			try {
 				ProtoObjectName name = createProtoObjectNameForKey(key);
 				name = objectNameMapper.apply(name);
+				if (name == null) return;
 				ObjectName objectName = createObjectName(name);
 				mbs.unregisterMBean(objectName);
 				registeredObjectNames.remove(objectName);
@@ -243,6 +248,10 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		}
 
 		ProtoObjectName mappedName = objectNameMapper.apply(commonName);
+		if (mappedName == null) {
+			logger.trace("Aggregated MBean of pool {} of workers with key {} will not be registered to JMX", pool, key);
+			return;
+		}
 
 		ObjectName objectName;
 		try {
@@ -300,6 +309,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 			try {
 				ProtoObjectName workerName = addWorkerName(commonName, i);
 				ProtoObjectName mappedWorkerName = objectNameMapper.apply(workerName);
+				if (mappedWorkerName == null) continue;
 				ObjectName objectName = createObjectName(mappedWorkerName);
 				mbs.unregisterMBean(objectName);
 				registeredObjectNames.remove(objectName);
@@ -312,6 +322,7 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 		}
 
 		ProtoObjectName mappedName = objectNameMapper.apply(commonName);
+		if (mappedName == null) return;
 
 		// unregister aggregated mbean for pool of workers
 		try {
@@ -345,6 +356,10 @@ public final class JmxRegistry implements JmxRegistryMXBean {
 	) {
 		ProtoObjectName workerName = addWorkerName(commonName, workerId);
 		ProtoObjectName mappedWorkerName = objectNameMapper.apply(workerName);
+		if (mappedWorkerName == null) {
+			logger.trace("MBean of worker ID {} with key {} will not be registered to JMX", workerId, key);
+			return;
+		}
 
 		DynamicMBean mbean;
 		try {

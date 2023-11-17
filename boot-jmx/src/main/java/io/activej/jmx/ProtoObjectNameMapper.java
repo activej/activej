@@ -16,6 +16,8 @@
 
 package io.activej.jmx;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -23,7 +25,16 @@ import static io.activej.jmx.Utils.doMap;
 
 public interface ProtoObjectNameMapper {
 
-	ProtoObjectName apply(ProtoObjectName protoObjectName);
+	/**
+	 * Transforms initial JMX proto object name
+	 * <p>
+	 * If method returns {@code null}, corresponding instance will not be registered into JMX.
+	 *
+	 * @param protoObjectName initial JMX proto object name
+	 * @return mapped JMX proto object name, or {@code null} if an instance should not be
+	 * registered into JMX.
+	 */
+	@Nullable ProtoObjectName apply(ProtoObjectName protoObjectName);
 
 	static ProtoObjectNameMapper identity() {
 		return protoObjectName -> protoObjectName;
@@ -58,7 +69,9 @@ public interface ProtoObjectNameMapper {
 	}
 
 	default ProtoObjectNameMapper then(ProtoObjectNameMapper next) {
-		return protoObjectName -> next
-			.apply(apply(protoObjectName));
+		return protoObjectName -> {
+			ProtoObjectName mapped = apply(protoObjectName);
+			return mapped == null ? null : next.apply(mapped);
+		};
 	}
 }
