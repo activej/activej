@@ -24,6 +24,7 @@ import io.activej.serializer.def.*;
 import io.activej.serializer.util.ZeroArrayUtils;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.def.SerializerExpressions.*;
 
@@ -31,19 +32,25 @@ import static io.activej.serializer.def.SerializerExpressions.*;
 public final class ArraySerializerDef extends AbstractSerializerDef implements SerializerDefWithNullable, SerializerDefWithFixedSize {
 	public final SerializerDef valueSerializer;
 	public final int fixedSize;
-	public final Class<?> type;
 	public final boolean nullable;
 
-	public ArraySerializerDef(SerializerDef serializer, int fixedSize, Class<?> type, boolean nullable) {
+	private final Class<?> encodeType;
+	private final Class<?> decodeType;
+
+	public ArraySerializerDef(SerializerDef serializer, int fixedSize, boolean nullable, Class<?> encodeType, Class<?> decodeType) {
+		checkArgument(encodeType.isArray());
+		checkArgument(decodeType.isArray());
+
 		this.valueSerializer = serializer;
 		this.fixedSize = fixedSize;
-		this.type = type;
 		this.nullable = nullable;
+		this.encodeType = encodeType;
+		this.decodeType = decodeType;
 	}
 
 	@Override
 	public ArraySerializerDef ensureFixedSize(int fixedSize) {
-		return new ArraySerializerDef(valueSerializer, fixedSize, type, nullable);
+		return new ArraySerializerDef(valueSerializer, fixedSize, nullable, encodeType, decodeType);
 	}
 
 	@Override
@@ -51,7 +58,7 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
 			return SerializerDefs.ofNullable(this);
 		}
-		return new ArraySerializerDef(valueSerializer, fixedSize, type, true);
+		return new ArraySerializerDef(valueSerializer, fixedSize, true, encodeType, decodeType);
 	}
 
 	@Override
@@ -61,18 +68,23 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 
 	@Override
 	public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
-		return type.getComponentType() == Byte.TYPE;
+		return encodeType.getComponentType() == Byte.TYPE;
 	}
 
 	@Override
 	public Class<?> getEncodeType() {
-		return type;
+		return encodeType;
+	}
+
+	@Override
+	public Class<?> getDecodeType() {
+		return decodeType;
 	}
 
 	@Override
 	public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		if (type.getComponentType() == Byte.TYPE) {
-			Expression castedValue = cast(value, type);
+		if (encodeType.getComponentType() == Byte.TYPE) {
+			Expression castedValue = cast(value, encodeType);
 			Expression length = fixedSize != -1 ? value(fixedSize) : length(castedValue);
 
 			if (!nullable) {
@@ -88,11 +100,11 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 				);
 			}
 		} else {
-			Expression size = fixedSize != -1 ? value(fixedSize) : length(cast(value, type));
+			Expression size = fixedSize != -1 ? value(fixedSize) : length(cast(value, encodeType));
 
 			Encoder encoder = valueSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
 			Expression writeCollection = iterate(value(0), size,
-				i -> encoder.encode(buf, pos, arrayGet(cast(value, type), i)));
+				i -> encoder.encode(buf, pos, arrayGet(cast(value, encodeType), i)));
 
 			if (!nullable) {
 				return sequence(
@@ -110,7 +122,7 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 
 	@Override
 	public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		if (type.getComponentType() == Byte.TYPE) {
+		if (decodeType.getComponentType() == Byte.TYPE) {
 			return let(readVarInt(in),
 				len -> !nullable ?
 					let(arrayNew0(len),
@@ -118,7 +130,7 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 							readBytes(in, array),
 							array)) :
 					ifEq(len, value(0),
-						nullRef(type),
+						nullRef(decodeType),
 						let(arrayNew0(dec(len)),
 							array -> sequence(
 								readBytes(in, array, value(0), dec(len)),
@@ -129,7 +141,7 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 			len -> !nullable ?
 				doDecode(staticDecoders, in, version, compatibilityLevel, len) :
 				ifEq(len, value(0),
-					nullRef(type),
+					nullRef(decodeType),
 					let(dec(len),
 						len0 -> doDecode(staticDecoders, in, version, compatibilityLevel, len0))));
 	}
@@ -140,16 +152,16 @@ public final class ArraySerializerDef extends AbstractSerializerDef implements S
 			array -> sequence(
 				iterate(value(0), size,
 					i -> arraySet(array, i,
-						cast(decoder.decode(in), type.getComponentType()))),
+						cast(decoder.decode(in), decodeType.getComponentType()))),
 				array));
 	}
 
 	private Expression arrayNew0(Expression len) {
-		Class<?> componentType = type.getComponentType();
-		if (!componentType.isPrimitive()) return arrayNew(type, len);
+		Class<?> componentType = decodeType.getComponentType();
+		if (!componentType.isPrimitive()) return arrayNew(decodeType, len);
 		return ifEq(len, value(0),
 			staticField(ZeroArrayUtils.class, "ZERO_ARRAY_" + componentType.getSimpleName().toUpperCase() + "S"),
-			arrayNew(type, len));
+			arrayNew(decodeType, len));
 
 	}
 }

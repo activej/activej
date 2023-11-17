@@ -3,6 +3,8 @@ package io.activej.serializer.def;
 import io.activej.common.annotation.StaticFactories;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.impl.*;
+import io.activej.serializer.util.Utils;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -16,14 +18,15 @@ import static io.activej.common.Checks.checkArgument;
 @StaticFactories(SerializerDef.class)
 public class SerializerDefs {
 
-	public static SerializerDef ofArray(SerializerDef elementSerializer) {
-		checkArgument(elementSerializer.getEncodeType() == elementSerializer.getDecodeType(),
-			"Ambiguous encode and decode types");
-		return ofArray(elementSerializer, elementSerializer.getEncodeType());
-	}
+	public static SerializerDef ofArray(SerializerDef componentSerializer) {
+		Class<?> componentEncodeType = componentSerializer.getEncodeType();
+		Class<?> componentDecodeType = componentSerializer.getDecodeType();
 
-	public static SerializerDef ofArray(SerializerDef elementSerializer, Class<?> elementClass) {
-		return new ArraySerializerDef(elementSerializer, -1, elementClass, false);
+		Class<?> encodeType = getArrayType(componentEncodeType);
+		Class<?> decodeType = componentEncodeType == componentDecodeType ?
+			encodeType :
+			getArrayType(componentDecodeType);
+		return new ArraySerializerDef(componentSerializer, -1, false, encodeType, decodeType);
 	}
 
 	public static SerializerDef ofBoolean(boolean wrapped) {
@@ -152,5 +155,15 @@ public class SerializerDefs {
 
 	public static SerializerDef ofNullable(SerializerDef serializer) {
 		return new NullableSerializerDef(serializer);
+	}
+
+	private static Class<?> getArrayType(Class<?> componentType) {
+		Class<?> arrayClass;
+		try {
+			arrayClass = Utils.getArrayClass(componentType);
+		} catch (ClassNotFoundException e) {
+			throw new IllegalArgumentException("Could not obtain array class for: " + componentType, e);
+		}
+		return arrayClass;
 	}
 }

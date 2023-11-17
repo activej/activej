@@ -116,7 +116,7 @@ public final class SerializerFactory {
 				for (Type type : new Type[]{
 					boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
 					Object[].class}) {
-					builder.with(type, ctx -> SerializerDefs.ofArray(ctx.scanTypeArgument(0), ctx.getRawType()));
+					builder.with(type, ctx -> SerializerDefs.ofArray(ctx.scanTypeArgument(0)));
 				}
 			})
 

@@ -92,7 +92,7 @@ public class FieldTypes {
 		try {
 			return ClassSerializerDef.builder(HyperLogLog.class)
 				.withGetter(HyperLogLog.class.getMethod("getRegisters"),
-					SerializerDefs.ofArray(SerializerDefs.ofByte(false), byte[].class), -1, -1)
+					SerializerDefs.ofArray(SerializerDefs.ofByte(false)), -1, -1)
 				.withConstructor(HyperLogLog.class.getConstructor(byte[].class),
 					List.of("registers"))
 				.build();
