@@ -19,6 +19,8 @@ package io.activej.cube.aggregation.util;
 import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Variable;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.Aggregate;
 import io.activej.cube.aggregation.AggregationChunk;
@@ -28,8 +30,14 @@ import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.datastream.processor.reducer.Reducer;
+import io.activej.json.JsonCodec;
+import io.activej.json.JsonCodecs;
 import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerFactory;
+import io.activej.serializer.def.AbstractSerializerDef;
+import io.activej.serializer.def.PrimitiveSerializerDef;
+import io.activej.serializer.def.SerializerDef;
 import io.activej.serializer.def.impl.ClassSerializerDef;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +56,8 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.common.reflection.ReflectionUtils.extractFieldNameFromGetter;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.transformHasPredicates;
+import static io.activej.serializer.def.SerializerExpressions.readVarLong;
+import static io.activej.serializer.def.SerializerExpressions.writeVarLong;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class Utils {
@@ -385,5 +395,77 @@ public class Utils {
 		return type == byte.class || type == Byte.class ||
 			   type == short.class || type == Short.class ||
 			   type == char.class || type == Character.class;
+	}
+
+	public static <T> FieldType<T> valueWithTimestampFieldType(FieldType<T> fieldType) {
+		SerializerDef serializerDef = valueWithTimestampSerializer(fieldType.getSerializer());
+		JsonCodec<ValueWithTimestamp<T>> jsonCodec = JsonCodecs.ofObject(ValueWithTimestamp::new,
+			"value", v -> v.value, fieldType.getJsonCodec(),
+			"timestamp", v -> v.timestamp, JsonCodecs.ofLong());
+
+		return new FieldType<>(ValueWithTimestamp.class, fieldType.getDataType(), serializerDef, fieldType.getJsonCodec(), jsonCodec) {
+		};
+	}
+
+	private static SerializerDef valueWithTimestampSerializer(SerializerDef serializer) {
+		if (serializer instanceof PrimitiveSerializerDef primitiveSerializerDef) {
+			serializer = primitiveSerializerDef.ensureWrapped();
+		}
+		SerializerDef finalSerializer = serializer;
+		return new AbstractSerializerDef() {
+			@Override
+			public Class<?> getEncodeType() {
+				return ValueWithTimestamp.class;
+			}
+
+			@Override
+			public void accept(Visitor visitor) {
+				visitor.visit(finalSerializer);
+			}
+
+			@Override
+			public boolean isInline(int version, CompatibilityLevel compatibilityLevel) {
+				return finalSerializer.isInline(version, compatibilityLevel);
+			}
+
+			@Override
+			public Expression encode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+				Encoder encoder = finalSerializer.defineEncoder(staticEncoders, version, compatibilityLevel);
+				return sequence(
+					encoder.encode(buf, pos, cast(property(value, "value"), finalSerializer.getEncodeType())),
+					writeVarLong(buf, pos, property(value, "timestamp"))
+				);
+			}
+
+			@Override
+			public Expression decode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+				Decoder decoder = finalSerializer.defineDecoder(staticDecoders, version, compatibilityLevel);
+				return constructor(ValueWithTimestamp.class, decoder.decode(in), readVarLong(in));
+			}
+		};
+	}
+
+	public static Expression defaultValue(Class<?> cls) {
+		if (!cls.isPrimitive()) return nullRef(cls);
+
+		if (cls == boolean.class) return value(false, cls);
+		if (cls == byte.class) return value((byte) 0, cls);
+		if (cls == short.class) return value((short) 0, cls);
+		if (cls == char.class) return value((char) 0, cls);
+		if (cls == int.class) return value(0, cls);
+		if (cls == long.class) return value(0L, cls);
+		if (cls == float.class) return value(0f, cls);
+		if (cls == double.class) return value(0.0, cls);
+		throw new AssertionError();
+	}
+
+	public static final class ValueWithTimestamp<T> {
+		public T value;
+		public long timestamp;
+
+		public ValueWithTimestamp(T value, long timestamp) {
+			this.value = value;
+			this.timestamp = timestamp;
+		}
 	}
 }
