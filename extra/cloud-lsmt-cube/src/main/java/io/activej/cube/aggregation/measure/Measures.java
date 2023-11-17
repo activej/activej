@@ -17,9 +17,13 @@
 package io.activej.cube.aggregation.measure;
 
 import io.activej.common.annotation.StaticFactories;
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
 import io.activej.cube.aggregation.measure.impl.*;
+import io.activej.cube.aggregation.util.Utils;
+
+import static io.activej.cube.aggregation.util.Utils.valueWithTimestampFieldType;
 
 @StaticFactories(Measure.class)
 public class Measures {
@@ -45,5 +49,21 @@ public class Measures {
 
 	public static Measure union(FieldType<?> fieldType) {
 		return new Union(FieldTypes.ofSet(fieldType));
+	}
+
+	public static Measure lastNotNull(FieldType<?> fieldType, CurrentTimeProvider timeProvider) {
+		return new LastNotNull(valueWithTimestampFieldType(fieldType), timeProvider);
+	}
+
+	public static Measure lastNotNull(FieldType<?> fieldType) {
+		return new LastNotNull(valueWithTimestampFieldType(fieldType), null);
+	}
+
+	public static Measure last(FieldType<?> fieldType, CurrentTimeProvider timeProvider) {
+		return new Last(valueWithTimestampFieldType(fieldType), timeProvider);
+	}
+
+	public static Measure last(FieldType<?> fieldType) {
+		return new Last(valueWithTimestampFieldType(fieldType), null);
 	}
 }
