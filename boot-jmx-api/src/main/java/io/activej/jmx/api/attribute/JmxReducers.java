@@ -19,6 +19,7 @@ package io.activej.jmx.api.attribute;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -114,6 +115,22 @@ public final class JmxReducers {
 				.filter(Objects::nonNull)
 				.max(Comparator.naturalOrder())
 				.orElse(null);
+		}
+	}
+
+	public static final class JmxReducerConcat implements JmxReducer<Object> {
+		@Override
+		public @Nullable List<String> reduce(List<?> list) {
+			list = list.stream().filter(Objects::nonNull).toList();
+			if (list.isEmpty()) return null;
+
+			Class<?> attributeClass = list.get(0).getClass();
+			if (Collection.class.isAssignableFrom(attributeClass)) {
+				@SuppressWarnings("unchecked")
+				List<? extends Collection<?>> l = (List<? extends Collection<?>>) list;
+				return l.stream().flatMap(Collection::stream).map(Objects::toString).toList();
+			}
+			return list.stream().map(Objects::toString).toList();
 		}
 	}
 

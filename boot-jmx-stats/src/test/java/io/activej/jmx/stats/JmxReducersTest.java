@@ -1,5 +1,6 @@
 package io.activej.jmx.stats;
 
+import io.activej.jmx.api.attribute.JmxReducers;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -251,5 +252,37 @@ public class JmxReducersTest {
 		List<Integer> numbers = new ArrayList<>();
 
 		assertNull(maxReducer.reduce(numbers));
+	}
+
+	@Test
+	public void concatReducerWorksCorrectlyWithScalarValues() {
+		JmxReducerConcat concatReducer = new JmxReducerConcat();
+		List<Integer> numbers = new ArrayList<>();
+		numbers.add(5);
+		numbers.add(2);
+		numbers.add(10);
+
+		List<String> result = concatReducer.reduce(numbers);
+		assertEquals(List.of("5", "2", "10"), result);
+	}
+
+	@Test
+	public void concatReducerFlattensLists() {
+		JmxReducerConcat concatReducer = new JmxReducerConcat();
+		List<List<Integer>> numberLists = new ArrayList<>();
+		numberLists.add(List.of(1, 2, 3));
+		numberLists.add(List.of());
+		numberLists.add(List.of(4, 5, 3));
+
+		List<String> result = concatReducer.reduce(numberLists);
+		assertEquals(List.of("1", "2", "3", "4", "5", "3"), result);
+	}
+
+	@Test
+	public void concatReducerReturnsNullInCaseOfEmptyList() {
+		JmxReducerConcat concatReducer = new JmxReducerConcat();
+		List<Integer> numbers = new ArrayList<>();
+
+		assertNull(concatReducer.reduce(numbers));
 	}
 }
