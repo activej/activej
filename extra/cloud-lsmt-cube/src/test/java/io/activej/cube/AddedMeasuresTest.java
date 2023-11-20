@@ -23,7 +23,9 @@ import io.activej.fs.FileSystem;
 import io.activej.json.JsonCodecs;
 import io.activej.ot.StateManager;
 import io.activej.record.Record;
+import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.SerializerDefs;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
@@ -39,8 +42,10 @@ import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.serializer.StringFormat.UTF8;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class AddedMeasuresTest extends CubeTestBase {
 
@@ -329,8 +334,156 @@ public class AddedMeasuresTest extends CubeTestBase {
 		assertEquals(101, (byte) record.get("maxRevenueByte"));
 	}
 
+	@Test
+	public void lastNotNullMeasure() throws QueryException {
+		CubeStructure cubeStructure = CubeStructure.builder()
+			.withDimension("siteId", FieldTypes.ofInt())
+			.withMeasure("val", lastNotNull(ofNullableString(), reactor))
+			.withAggregation(AggregationConfig.id("lastNotNull")
+				.withDimensions("siteId")
+				.withMeasures("val"))
+			.build();
+
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+
+		StreamSupplier<EventRecord5> supplier = StreamSuppliers.ofValues(
+			new EventRecord5(1, null),
+			new EventRecord5(1, "1"),
+			new EventRecord5(1, null),
+			new EventRecord5(2, null),
+			new EventRecord5(3, "3"),
+			new EventRecord5(4, "4"),
+			new EventRecord5(5, null)
+		);
+
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
+
+		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord5.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
+
+		supplier = StreamSuppliers.ofValues(
+			new EventRecord5(1, null),
+			new EventRecord5(2, "2"),
+			new EventRecord5(3, null),
+			new EventRecord5(4, "44")
+		);
+
+		diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord5.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
+
+		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
+
+		List<String> measures = List.of("val");
+		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
+			.withAttributes("siteId")
+			.withMeasures(measures)
+			.build()));
+
+		assertEquals(measures, queryResult.getMeasures());
+
+		List<Record> records = queryResult.getRecords();
+		assertEquals(5, records.size());
+		Record record1 = records.get(0);
+		assertEquals(1, record1.getInt("siteId"));
+		assertEquals("1", record1.get("val"));
+
+		Record record2 = records.get(1);
+		assertEquals(2, record2.getInt("siteId"));
+		assertEquals("2", record2.get("val"));
+
+		Record record3 = records.get(2);
+		assertEquals(3, record3.getInt("siteId"));
+		assertEquals("3", record3.get("val"));
+
+		Record record4 = records.get(3);
+		assertEquals(4, record4.getInt("siteId"));
+		assertEquals("44", record4.get("val"));
+
+		Record record5 = records.get(4);
+		assertEquals(5, record5.getInt("siteId"));
+		assertNull(record5.get("val"));
+	}
+
+	@Test
+	public void lastMeasure() throws QueryException {
+		CubeStructure cubeStructure = CubeStructure.builder()
+			.withDimension("siteId", FieldTypes.ofInt())
+			.withMeasure("value", last(ofInt(), reactor))
+			.withAggregation(AggregationConfig.id("last")
+				.withDimensions("siteId")
+				.withMeasures("value"))
+			.build();
+
+		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
+
+		StreamSupplier<EventRecord6> supplier = StreamSuppliers.ofValues(
+			new EventRecord6(1, 0),
+			new EventRecord6(1, 1),
+			new EventRecord6(1, 0),
+			new EventRecord6(2, 0),
+			new EventRecord6(3, 3),
+			new EventRecord6(4, 4),
+			new EventRecord6(5, 0)
+		);
+
+		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
+
+		CubeDiff diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord6.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
+
+		supplier = StreamSuppliers.ofValues(
+			new EventRecord6(1, 0),
+			new EventRecord6(2, 2),
+			new EventRecord6(3, 0),
+			new EventRecord6(4, 44)
+		);
+
+		diff = await(supplier.streamTo(cubeExecutor.consume(EventRecord6.class)));
+		await(aggregationChunkStorage.finish(diff.addedChunks().boxed().collect(toSet())));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(diff))));
+
+		ICubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
+
+		List<String> measures = List.of("value");
+		QueryResult queryResult = await(cubeReporting.query(CubeQuery.builder()
+			.withAttributes("siteId")
+			.withMeasures(measures)
+			.build()));
+
+		assertEquals(measures, queryResult.getMeasures());
+
+		List<Record> records = queryResult.getRecords();
+		assertEquals(5, records.size());
+		Record record1 = records.get(0);
+		assertEquals(1, record1.getInt("siteId"));
+		assertEquals(0, record1.getInt("value"));
+
+		Record record2 = records.get(1);
+		assertEquals(2, record2.getInt("siteId"));
+		assertEquals(2, record2.getInt("value"));
+
+		Record record3 = records.get(2);
+		assertEquals(3, record3.getInt("siteId"));
+		assertEquals(0, record3.getInt("value"));
+
+		Record record4 = records.get(3);
+		assertEquals(4, record4.getInt("siteId"));
+		assertEquals(44, record4.getInt("value"));
+
+		Record record5 = records.get(4);
+		assertEquals(5, record5.getInt("siteId"));
+		assertEquals(0, record5.getInt("value"));
+	}
+
 	private static FieldType<Byte> ofByteWrapped() {
-		return new FieldType<>(Byte.class, SerializerDefs.ofByte(false), JsonCodecs.ofByte()){};
+		return new FieldType<>(Byte.class, SerializerDefs.ofByte(false), JsonCodecs.ofByte()) {};
+	}
+
+	private static FieldType<String> ofNullableString() {
+		return new FieldType<>(String.class, SerializerDefs.ofNullable(SerializerDefs.ofString(UTF8)), JsonCodecs.ofString()) {};
 	}
 
 	@Measures("eventCount")
@@ -359,6 +512,18 @@ public class AddedMeasuresTest extends CubeTestBase {
 	public record EventRecord4(
 		@Key int siteId,
 		@Measures({"minRevenueByte", "maxRevenueByte"}) Byte revenue
+	) {
+	}
+
+	public record EventRecord5(
+		@Key int siteId,
+		@Measures("val") @Nullable String value
+	) {
+	}
+
+	public record EventRecord6(
+		@Key int siteId,
+		@Measures("value") int value
 	) {
 	}
 }
