@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import static io.activej.common.Checks.checkArgument;
@@ -89,7 +90,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	// formatting
 	private @Nullable String unit;
 	private @Nullable String rateUnit;
-	private boolean useAvgAndDeviaton = true;
+	private boolean useAvgAndDeviation = true;
 	private boolean useMinMax = true;
 	private boolean useLastValue = true;
 	private boolean useAbsoluteValues;
@@ -174,7 +175,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 		public Builder withAverageAndDeviation(boolean value) {
 			checkNotBuilt(this);
-			ValueStats.this.useAvgAndDeviaton = value;
+			ValueStats.this.useAvgAndDeviation = value;
 			return this;
 		}
 
@@ -395,11 +396,34 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		if (addedStats == 0) {
 			smoothingWindow = anotherStats.smoothingWindow;
 			smoothingWindowCoef = anotherStats.smoothingWindowCoef;
+			unit = anotherStats.unit;
+			rateUnit = anotherStats.rateUnit;
+			useAvgAndDeviation = anotherStats.useAvgAndDeviation;
+			useMinMax = anotherStats.useMinMax;
+			useLastValue = anotherStats.useLastValue;
+			useAbsoluteValues = anotherStats.useAbsoluteValues;
 		} else {
 			// all stats should have same smoothing window, -1 means smoothing windows differ in stats, which is error
 			if (smoothingWindow != anotherStats.smoothingWindow) {
 				smoothingWindow = -1;
 				smoothingWindowCoef = calculateSmoothingWindowCoef(smoothingWindow);
+			}
+			// if units differ, use no unit
+			if (!Objects.equals(unit, anotherStats.unit)) {
+				unit = null;
+			}
+			// if rate units differ, use no rate unit
+			if (!Objects.equals(rateUnit, anotherStats.rateUnit)) {
+				rateUnit = null;
+			}
+			// if formatting settings differ, use default one
+			useAvgAndDeviation &= anotherStats.useAvgAndDeviation;
+			useMinMax &= anotherStats.useMinMax;
+			useLastValue &= anotherStats.useLastValue;
+			useAbsoluteValues |= anotherStats.useAbsoluteValues;
+			// if precisions differ, use default precision
+			if (precision != anotherStats.precision) {
+				precision = 1000;
 			}
 		}
 
@@ -590,7 +614,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		StringBuilder constructorTemplate = new StringBuilder();
 
 		// average and deviation
-		if (useAvgAndDeviaton) {
+		if (useAvgAndDeviation) {
 			constructorTemplate
 				.append(decimalFormat.format(getSmoothedAverage()))
 				.append('±')

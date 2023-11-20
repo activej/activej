@@ -1,5 +1,7 @@
 package io.activej.jmx.stats;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.text.DecimalFormat;
@@ -11,6 +13,8 @@ import java.util.Random;
 
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 import static java.lang.Math.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -144,6 +148,31 @@ public class ValueStatsTest {
 		double acceptableError = 10E-5;
 		double expectedAccumulatedSmoothedAvg = (5 + 10) / 2.0;
 		assertEquals(expectedAccumulatedSmoothedAvg, accumulator.getSmoothedAverage(), acceptableError);
+	}
+
+	@Test
+	public void itShouldAccumulateWithOriginalUnits() {
+		Duration smoothingWindow = Duration.ofSeconds(10);
+		long currentTimestamp = 0;
+		ValueStats valueStats_1 = ValueStats.builder(smoothingWindow).withUnit("seconds").build();
+		ValueStats valueStats_2 = ValueStats.builder(smoothingWindow).withUnit("seconds").build();
+		int inputValue_1 = 5;
+		int inputValue_2 = 10;
+		int iterations = 1000;
+
+		for (int i = 0; i < iterations; i++) {
+			valueStats_1.recordValue(inputValue_1);
+			valueStats_2.recordValue(inputValue_2);
+			currentTimestamp += ONE_SECOND_IN_MILLIS;
+			valueStats_1.refresh(currentTimestamp);
+			valueStats_2.refresh(currentTimestamp);
+		}
+
+		ValueStats accumulator = ValueStats.createAccumulator();
+		accumulator.add(valueStats_1);
+		accumulator.add(valueStats_2);
+
+		assertThat(accumulator.toString(), containsString("seconds"));
 	}
 
 	@Test

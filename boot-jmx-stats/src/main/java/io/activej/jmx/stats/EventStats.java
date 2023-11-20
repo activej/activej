@@ -25,6 +25,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.Objects;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.*;
@@ -181,11 +182,21 @@ public final class EventStats implements JmxRefreshableStats<EventStats>, JmxSta
 		if (addedStats == 0) {
 			smoothingWindow = anotherStats.smoothingWindow;
 			smoothingWindowCoef = anotherStats.smoothingWindowCoef;
+			rateUnit = anotherStats.rateUnit;
+			precision = anotherStats.precision;
 		} else {
 			// all stats should have same smoothing window, -1 means smoothing windows differ in stats, which is error
 			if (smoothingWindow != anotherStats.smoothingWindow) {
 				smoothingWindow = -1;
 				smoothingWindowCoef = calculateSmoothingWindowCoef(smoothingWindow);
+			}
+			// if rate units differ, use no rate unit
+			if (!Objects.equals(rateUnit, anotherStats.rateUnit)) {
+				rateUnit = null;
+			}
+			// if precisions differ, use default precision
+			if (precision != anotherStats.precision) {
+				precision = 1000;
 			}
 		}
 		addedStats++;

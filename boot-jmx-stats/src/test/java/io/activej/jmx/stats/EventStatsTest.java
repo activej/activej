@@ -1,12 +1,14 @@
 package io.activej.jmx.stats;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.*;
 
 public class EventStatsTest {
 
@@ -123,6 +125,37 @@ public class EventStatsTest {
 
 		double acceptableError = 0.1;
 		assertEquals(30.0, accumulator.getSmoothedRate(), acceptableError);
+	}
+
+	@Test
+	public void itShouldProperlyAggregateEventsWithOriginalRateUnits() {
+		int iterations = 1000;
+		int period = 100;
+		long currentTimestamp = 0;
+
+		Duration smoothingWindow = Duration.ofSeconds(10);
+
+		EventStats stats_1 = EventStats.builder(smoothingWindow).withRateUnit("requests").build();
+		EventStats stats_2 = EventStats.builder(smoothingWindow).withRateUnit("requests").build();
+		EventStats stats_3 = EventStats.builder(smoothingWindow).withRateUnit("requests").build();
+
+		for (int i = 0; i < iterations; i++) {
+			stats_1.recordEvents(1);
+			stats_2.recordEvents(2);
+			// we do not record event to stats_3
+
+			currentTimestamp += period;
+			stats_1.refresh(currentTimestamp);
+			stats_2.refresh(currentTimestamp);
+			stats_3.refresh(currentTimestamp);
+		}
+
+		EventStats accumulator = EventStats.createAccumulator();
+		accumulator.add(stats_1);
+		accumulator.add(stats_2);
+		accumulator.add(stats_3);
+
+		MatcherAssert.assertThat(accumulator.toString(), containsString("requests"));
 	}
 
 	@Test
