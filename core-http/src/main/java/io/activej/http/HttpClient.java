@@ -281,12 +281,12 @@ public final class HttpClient extends AbstractNioReactive
 			return sslErrors;
 		}
 
-		@JmxAttribute
+		@JmxAttribute(reducer = JmxReducerSum.class)
 		public long getActiveConnections() {
 			return activeConnections;
 		}
 
-		@JmxAttribute(description = "number of \"currently connecting\" sockets)")
+		@JmxAttribute(description = "number of \"currently connecting\" sockets)", reducer = JmxReducerSum.class)
 		public int getConnecting() {
 			return connecting;
 		}

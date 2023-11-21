@@ -186,7 +186,7 @@ public final class HttpServer extends AbstractReactiveServer {
 			return servletExceptions;
 		}
 
-		@JmxAttribute
+		@JmxAttribute(reducer = JmxReducerSum.class)
 		public long getActiveConnections() {
 			return activeConnections;
 		}
@@ -349,6 +349,10 @@ public final class HttpServer extends AbstractReactiveServer {
 		return HttpUtils.getHttpAddresses(this);
 	}
 
+	Promise<HttpResponse> formatHttpError(Exception e) {
+		return errorFormatter.formatException(e);
+	}
+
 	@JmxAttribute(description = "current number of connections", reducer = JmxReducerSum.class)
 	public int getConnectionsCount() {
 		return poolNew.size() + poolKeepAlive.size() + poolReadWrite.size() + poolServing.size();
@@ -382,10 +386,6 @@ public final class HttpServer extends AbstractReactiveServer {
 	@JmxAttribute(reducer = JmxReducerSum.class)
 	public int getConnectionsReadWriteExpired() {
 		return poolReadWriteExpired;
-	}
-
-	Promise<HttpResponse> formatHttpError(Exception e) {
-		return errorFormatter.formatException(e);
 	}
 
 	@JmxAttribute(name = "")
