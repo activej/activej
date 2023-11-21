@@ -123,7 +123,7 @@ final class QueryResultJsonCodec {
 		}
 
 		public QueryResult toQueryResult() throws JsonValidationException {
-			ReportType reportType = totals != null || totalCount != null ? DATA_WITH_TOTALS : records != null ? DATA : METADATA;
+			ReportType reportType = totals != null ? DATA_WITH_TOTALS : records != null ? DATA : METADATA;
 			return switch (reportType) {
 				case METADATA -> QueryResult.createForMetadata(ensureRecordScheme(),
 					validateNotNull(attributes), validateNotNull(measures));
