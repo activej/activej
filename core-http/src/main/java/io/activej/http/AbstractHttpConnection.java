@@ -219,7 +219,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		flags |= CLOSED;
 		onClosedWithError(e);
 		onClosed();
-		socket.close();
+		socket.closeEx(e);
 		closeException = e;
 	}
 
@@ -608,7 +608,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 						onMalformedHttpException(e1);
 					}
 				} else {
-					close();
+					closeEx(new MalformedHttpException("Unexpected end of data"));
 				}
 			} else {
 				closeEx(translateToHttpException(e));

@@ -126,6 +126,8 @@ public final class HttpClient extends AbstractNioReactive
 	public interface Inspector extends BaseInspector<Inspector> {
 		void onRequest(HttpRequest request);
 
+		void onRequestComplete(HttpResponse response, HttpClientConnection httpClientConnection);
+
 		void onResolve(HttpRequest request, DnsResponse dnsResponse);
 
 		void onResolveError(HttpRequest request, Exception e);
@@ -159,14 +161,20 @@ public final class HttpClient extends AbstractNioReactive
 		private final EventStats httpTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats httpErrors = ExceptionStats.create();
 		private final ExceptionStats malformedHttpExceptions = ExceptionStats.create();
-		private long responsesErrors;
 		private final EventStats sslErrors = EventStats.create(SMOOTHING_WINDOW);
-		private long activeConnections;
+		private int activeRequests;
+		private int activeConnections;
 		private int connecting;
 
 		@Override
 		public void onRequest(HttpRequest request) {
+			activeRequests++;
 			totalRequests.recordEvent();
+		}
+
+		@Override
+		public void onRequestComplete(HttpResponse response, HttpClientConnection httpClientConnection) {
+			activeRequests--;
 		}
 
 		@Override
@@ -175,6 +183,7 @@ public final class HttpClient extends AbstractNioReactive
 
 		@Override
 		public void onResolveError(HttpRequest request, Exception e) {
+			activeRequests--;
 			resolveErrors.recordException(e, request.getUrl().getHost());
 		}
 
@@ -192,6 +201,7 @@ public final class HttpClient extends AbstractNioReactive
 
 		@Override
 		public void onConnectError(HttpRequest request, InetSocketAddress address, Exception e) {
+			activeRequests--;
 			connecting--;
 			connectErrors.recordException(e, request.getUrl().getHost());
 		}
@@ -203,6 +213,9 @@ public final class HttpClient extends AbstractNioReactive
 
 		@Override
 		public void onHttpError(HttpClientConnection connection, Exception e) {
+			if (connection.getCurrentPool() == PoolLabel.READ_WRITE) {
+				activeRequests--;
+			}
 			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 				return;
@@ -211,16 +224,11 @@ public final class HttpClient extends AbstractNioReactive
 			if (e instanceof SSLException) {
 				sslErrors.recordEvent();
 			}
-			// when connection is in keep-alive state, it means that the response already happened,
-			// so error of keep-alive connection is not a response error
-			if (!connection.isKeepAlive()) {
-				responsesErrors++;
-			}
 		}
 
 		@Override
 		public void onMalformedHttpResponse(HttpClientConnection connection, MalformedHttpException e, byte[] malformedResponseBytes) {
-			String responseString = new String(malformedResponseBytes, 0, malformedResponseBytes.length, ISO_8859_1);
+			String responseString = new String(malformedResponseBytes, ISO_8859_1);
 			malformedHttpExceptions.recordException(e, responseString);
 		}
 
@@ -265,10 +273,8 @@ public final class HttpClient extends AbstractNioReactive
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
-		public long getActiveRequests() {
-			return
-				totalRequests.getTotalCount() -
-				(httpTimeouts.getTotalCount() + resolveErrors.getTotal() + connectErrors.getTotal() + responsesErrors + responses);
+		public int getActiveRequests() {
+			return activeRequests;
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
@@ -282,7 +288,7 @@ public final class HttpClient extends AbstractNioReactive
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
-		public long getActiveConnections() {
+		public int getActiveConnections() {
 			return activeConnections;
 		}
 

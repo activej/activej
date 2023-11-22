@@ -92,10 +92,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
 
 	private @Nullable SettablePromise<HttpResponse> promise;
-	private @Nullable HttpResponse response;
 	private final HttpClient client;
 	private final @Nullable Inspector inspector;
 
+	@Nullable HttpResponse response;
 	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
@@ -348,6 +348,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	private void onHttpMessageComplete() {
+		if (inspector != null) inspector.onRequestComplete(response, this);
 		if (IWebSocket.ENABLED && isWebSocket()) return;
 
 		//noinspection ConstantConditions

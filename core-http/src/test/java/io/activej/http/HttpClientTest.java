@@ -3,6 +3,7 @@ package io.activej.http;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.ref.Ref;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.decoder.ByteBufsDecoder;
@@ -193,6 +194,43 @@ public final class HttpClientTest {
 		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build());
 		assertEquals(1, inspector.getActiveRequests());
 		await(requestPromise);
+		assertEquals(0, inspector.getActiveRequests());
+	}
+
+	@Test
+	public void testActiveRequestsCounterWithReadWriteTimeout() throws IOException {
+		NioReactor reactor = Reactor.getCurrentReactor();
+
+		HttpServer server = HttpServer.builder(reactor,
+				request -> HttpResponse.ok200()
+					.withBodyStream(ChannelSuppliers.ofSupplier(() -> ByteBufStrings.wrapUtf8("response\n"))
+						.mapAsync(buf -> Promises.delay(Duration.ofSeconds(1), buf)))
+					.toPromise())
+			.withAcceptOnce(true)
+			.withListenPort(port)
+			.build();
+
+		server.listen();
+
+		JmxInspector inspector = new JmxInspector();
+		IHttpClient httpClient = HttpClient.builder(reactor)
+			.withNoKeepAlive()
+			.withReadWriteTimeout(Duration.ofMillis(20))
+			.withInspector(inspector)
+			.build();
+
+		Exception exception = awaitException(httpClient.request(HttpRequest.get("http://127.0.0.1:" + port).build())
+			.whenComplete(assertCompleteFn())
+			.then(response -> {
+				assertEquals(1, inspector.getTotalRequests().getTotalCount());
+				assertEquals(1, inspector.getActiveRequests());
+				return response.loadBody();
+			}));
+
+		assertThat(exception, instanceOf(HttpException.class));
+		assertThat(exception.getCause(), instanceOf(AsyncTimeoutException.class));
+
+		assertEquals(1, inspector.getTotalRequests().getTotalCount());
 		assertEquals(0, inspector.getActiveRequests());
 	}
 
