@@ -89,8 +89,7 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		void onHttpError(HttpServerConnection connection, Exception e);
 
-		default void onMalformedHttpRequest(HttpServerConnection connection, MalformedHttpException e, byte[] malformedRequestBytes) {
-		}
+		void onMalformedHttpRequest(HttpServerConnection connection, MalformedHttpException e, byte[] malformedRequestBytes);
 
 		void onDisconnect(HttpServerConnection connection);
 	}

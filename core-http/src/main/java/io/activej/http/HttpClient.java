@@ -132,8 +132,7 @@ public final class HttpClient extends AbstractNioReactive
 
 		void onResolveError(HttpRequest request, Exception e);
 
-		default void onConnecting(HttpRequest request, InetSocketAddress address) {
-		}
+		void onConnecting(HttpRequest request, InetSocketAddress address);
 
 		void onConnect(HttpRequest request, HttpClientConnection connection);
 
@@ -143,8 +142,7 @@ public final class HttpClient extends AbstractNioReactive
 
 		void onHttpError(HttpClientConnection connection, Exception e);
 
-		default void onMalformedHttpResponse(HttpClientConnection connection, MalformedHttpException e, byte[] malformedResponseBytes) {
-		}
+		void onMalformedHttpResponse(HttpClientConnection connection, MalformedHttpException e, byte[] malformedResponseBytes);
 
 		void onDisconnect(HttpClientConnection connection);
 	}
