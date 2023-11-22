@@ -137,9 +137,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		return remoteAddress;
 	}
 
+	@Nullable HttpRequest getRequest() {
+		return request;
+	}
+
 	@Override
 	protected void readMessage() throws MalformedHttpException {
 		do {
+			request = nullify(request, HttpMessage::recycle); // nullify any previous request
 			contentLength = 0L; // RFC 7230, section 3.3.3: if no Content-Length header is set, server can assume that a length of a message is 0
 			flags = READING_MESSAGES;
 			readStartLine();
@@ -472,9 +477,11 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private void onHttpMessageComplete() {
 		assert !isClosed();
+		if (inspector != null) inspector.onHttpResponseComplete(this);
 		if (IWebSocket.ENABLED && isWebSocket()) return;
 
 		if ((flags & KEEP_ALIVE) != 0 && server.keepAliveTimeoutMillis != 0) {
+			request = nullify(request, HttpMessage::recycle);
 			switchPool(server.poolKeepAlive);
 
 			if (socket.isReadAvailable()) {

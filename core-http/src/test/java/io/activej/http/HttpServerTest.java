@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.Selector;
+import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -741,6 +742,48 @@ public final class HttpServerTest {
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
 		assertTrue(malformedPipelinedRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testActiveRequestsCounter() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		HttpServer server = HttpServer.builder(eventloop, request -> {
+				assertEquals(1, inspector.getTotalRequests().getTotalCount());
+				assertEquals(1, inspector.getActiveConnections());
+				return HttpResponse.ok200()
+					.withBodyStream(request.takeBodyStream())
+					.toPromise();
+			})
+			.withListenPort(port)
+			.withReadWriteTimeout(Duration.ofMillis(20))
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, """
+				POST / HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				Transfer-Encoding: chunked\r
+				\r
+				""");
+
+			int read;
+			do {
+				read = socket.getInputStream().read();
+			} while (read != -1);
+		}
+
+		assertEquals(1, inspector.getTotalRequests().getTotalCount());
+		assertEquals(0, inspector.getActiveConnections());
 
 		server.closeFuture().get();
 		thread.join();

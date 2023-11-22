@@ -136,6 +136,10 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 		remoteAddress = inetAddress;
 	}
 
+	boolean isRemoteAddressSet() {
+		return remoteAddress != null;
+	}
+
 	public Protocol getProtocol() {
 		return url.getProtocol();
 	}

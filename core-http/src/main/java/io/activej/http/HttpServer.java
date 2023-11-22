@@ -83,6 +83,8 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		void onHttpResponse(HttpRequest request, HttpResponse httpResponse);
 
+		void onHttpResponseComplete(HttpServerConnection httpServerConnection);
+
 		void onServletException(HttpRequest request, Exception e);
 
 		void onHttpError(HttpServerConnection connection, Exception e);
@@ -103,7 +105,8 @@ public final class HttpServer extends AbstractReactiveServer {
 		private final ExceptionStats httpErrors = ExceptionStats.create();
 		private final ExceptionStats malformedHttpExceptions = ExceptionStats.create();
 		private final ExceptionStats servletExceptions = ExceptionStats.create();
-		private long activeConnections;
+		private int activeConnections;
+		private int activeRequests;
 
 		@Override
 		public void onAccept(HttpServerConnection connection) {
@@ -113,6 +116,7 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		@Override
 		public void onHttpRequest(HttpRequest request) {
+			activeRequests++;
 			totalRequests.recordEvent();
 		}
 
@@ -128,6 +132,17 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		@Override
 		public void onHttpError(HttpServerConnection connection, Exception e) {
+			PoolLabel pool = connection.getCurrentPool();
+			if (pool == PoolLabel.SERVING) {
+				activeRequests--;
+			}
+			if (pool == PoolLabel.READ_WRITE) {
+				// check if request and address was already set
+				HttpRequest request = connection.getRequest();
+				if (request != null && request.isRemoteAddressSet()) {
+					activeRequests--;
+				}
+			}
 			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 			} else {
@@ -137,13 +152,25 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		@Override
 		public void onMalformedHttpRequest(HttpServerConnection connection, MalformedHttpException e, byte[] malformedRequestBytes) {
-			String requestString = new String(malformedRequestBytes, 0, malformedRequestBytes.length, ISO_8859_1);
+			if (connection.getCurrentPool() == PoolLabel.READ_WRITE) {
+				// check if request and address was already set
+				HttpRequest request = connection.getRequest();
+				if (request != null && request.isRemoteAddressSet()) {
+					activeRequests--;
+				}
+			}
+			String requestString = new String(malformedRequestBytes, ISO_8859_1);
 			malformedHttpExceptions.recordException(e, requestString);
 		}
 
 		@Override
 		public void onDisconnect(HttpServerConnection connection) {
 			activeConnections--;
+		}
+
+		@Override
+		public void onHttpResponseComplete(HttpServerConnection httpServerConnection) {
+			activeRequests--;
 		}
 
 		@JmxAttribute(extraSubAttributes = "totalCount")
@@ -187,8 +214,13 @@ public final class HttpServer extends AbstractReactiveServer {
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)
-		public long getActiveConnections() {
+		public int getActiveConnections() {
 			return activeConnections;
+		}
+
+		@JmxAttribute(reducer = JmxReducerSum.class)
+		public int getActiveRequests() {
+			return activeRequests;
 		}
 	}
 
