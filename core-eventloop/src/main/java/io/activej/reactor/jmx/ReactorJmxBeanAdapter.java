@@ -61,7 +61,11 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	public synchronized void registerRefreshableBean(Object bean, List<JmxRefreshable> beanRefreshables) {
 		checkNotNull(refreshPeriod, "Not initialized");
 
-		Reactor reactor = ensureReactor(bean);
+		if (beanToReactor.containsKey(bean)) return;
+
+		Reactor reactor = obtainReactor(bean);
+		beanToReactor.put(bean, reactor);
+
 		if (!reactorToJmxRefreshables.containsKey(reactor)) {
 			Duration smoothingWindows = reactor instanceof ReactiveJmxBeanWithStats reactorJmxBeanWithStats ?
 				reactorJmxBeanWithStats.getSmoothingWindow() :
@@ -92,17 +96,14 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		});
 	}
 
-	private Reactor ensureReactor(Object bean) {
-		Reactor reactor = beanToReactor.get(bean);
-		if (reactor == null) {
-			try {
-				reactor = (Reactor) bean.getClass().getMethod("getReactor").invoke(bean);
-			} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-				throw new IllegalStateException("Class annotated with @ReactorJmxBean should have a 'getReactor()' method");
-			}
-			checkNotNull(reactor);
-			beanToReactor.put(bean, reactor);
+	private Reactor obtainReactor(Object bean) {
+		Reactor reactor;
+		try {
+			reactor = (Reactor) bean.getClass().getMethod("getReactor").invoke(bean);
+		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			throw new IllegalStateException("Class annotated with @ReactorJmxBean should have a 'getReactor()' method");
 		}
+		checkNotNull(reactor);
 		return reactor;
 	}
 
