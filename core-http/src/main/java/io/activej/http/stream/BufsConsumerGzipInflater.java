@@ -22,10 +22,10 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.InvalidSizeException;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.ChannelOutput;
 import io.activej.csp.binary.BinaryChannelInput;
-import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.decoder.ByteBufsDecoders;
 import io.activej.csp.consumer.ChannelConsumer;
 import io.activej.csp.dsl.WithBinaryChannelInput;
@@ -69,7 +69,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	private Inflater inflater = new Inflater(true);
 
 	private ByteBufs bufs;
-	private BinaryChannelSupplier input;
+	private SanitizedBinaryChannelSupplier input;
 	private ChannelConsumer<ByteBuf> output;
 
 	private BufsConsumerGzipInflater() {}
@@ -136,6 +136,19 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	}
 
 	private void processHeader() {
+		if (input.getBufs().isEmpty()) {
+			input.getUnsanitizedSupplier().needMoreData()
+				.whenResult(this::processHeader)
+				.whenException(e -> {
+					if (e instanceof TruncatedDataException) {
+						output.acceptEndOfStream()
+							.whenResult(this::completeProcess);
+					} else {
+						closeEx(e);
+					}
+				});
+			return;
+		}
 		input.decode(ofFixedSize(10))
 			.whenResult(buf -> {
 				//header validation

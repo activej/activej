@@ -788,12 +788,12 @@ public final class HttpServerTest {
 	}
 
 	@Test
-	public void testEmptyGzipRequest() throws IOException, InterruptedException, ExecutionException {
+	public void testEmptyGzipRequestChunked() throws IOException, InterruptedException, ExecutionException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
 				.map($ -> HttpResponse.ok200().build()))
+			.withAcceptOnce()
 			.withListenPort(port)
-			.withReadWriteTimeout(Duration.ofMillis(20))
 			.withInspector(inspector)
 			.build();
 		server.listen();
@@ -806,15 +806,53 @@ public final class HttpServerTest {
 			writeByRandomParts(socket, """
 				POST / HTTP/1.1\r
 				Host: localhost\r
-				Connection: keep-alive\r
+				Connection: close\r
 				Transfer-Encoding: chunked\r
 				Content-Encoding: gzip\r
 				\r
 				0\r
 				\r
-
 				""");
-			socket.shutdownOutput();
+
+			readAndAssert(socket.getInputStream(),
+				"""
+					HTTP/1.1 200 OK\r
+					Connection: close\r
+					Content-Length: 0\r
+					\r
+					""");
+
+			assertEmpty(socket.getInputStream());
+		}
+
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedGzipRequest() throws IOException, InterruptedException, ExecutionException {
+		JmxInspector inspector = new JmxInspector();
+		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
+				.map($ -> HttpResponse.ok200().build()))
+			.withAcceptOnce()
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, """
+				POST / HTTP/1.1\r
+				Host: localhost\r
+				Connection: close\r
+				Content-Length: 3\r
+				Content-Encoding: gzip\r
+				\r
+				abc
+				""");
 
 			skipResponse(socket);
 		}
@@ -825,7 +863,6 @@ public final class HttpServerTest {
 		//noinspection DataFlowIssue
 		assertThat(lastException.getCause(), instanceOf(TruncatedDataException.class));
 
-		server.closeFuture().get();
 		thread.join();
 	}
 

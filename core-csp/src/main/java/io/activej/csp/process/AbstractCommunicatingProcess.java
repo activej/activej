@@ -175,24 +175,8 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 		};
 	}
 
-	protected final BinaryChannelSupplier sanitize(BinaryChannelSupplier supplier) {
-		return new BinaryChannelSupplier(supplier.getBufs()) {
-			@Override
-			public Promise<Void> needMoreData() {
-				return sanitize(supplier.needMoreData());
-			}
-
-			@Override
-			public Promise<Void> endOfStream() {
-				return sanitize(supplier.endOfStream());
-			}
-
-			@Override
-			public void onClosed(Exception e) {
-				supplier.closeEx(e);
-				AbstractCommunicatingProcess.this.closeEx(e);
-			}
-		};
+	protected final SanitizedBinaryChannelSupplier sanitize(BinaryChannelSupplier supplier) {
+		return new SanitizedBinaryChannelSupplier(supplier);
 	}
 
 	protected final <T> Promise<T> sanitize(Promise<T> promise) {
@@ -230,4 +214,32 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 		}
 	}
 
+	protected final class SanitizedBinaryChannelSupplier extends BinaryChannelSupplier {
+		private final BinaryChannelSupplier supplier;
+
+		public SanitizedBinaryChannelSupplier(BinaryChannelSupplier supplier) {
+			super(supplier.getBufs());
+			this.supplier = supplier;
+		}
+
+		@Override
+		public Promise<Void> needMoreData() {
+			return sanitize(supplier.needMoreData());
+		}
+
+		@Override
+		public Promise<Void> endOfStream() {
+			return sanitize(supplier.endOfStream());
+		}
+
+		@Override
+		public void onClosed(Exception e) {
+			supplier.closeEx(e);
+			AbstractCommunicatingProcess.this.closeEx(e);
+		}
+
+		public BinaryChannelSupplier getUnsanitizedSupplier() {
+			return supplier;
+		}
+	}
 }
