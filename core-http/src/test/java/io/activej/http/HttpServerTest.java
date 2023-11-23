@@ -3,6 +3,7 @@ package io.activej.http;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
@@ -776,10 +777,7 @@ public final class HttpServerTest {
 				\r
 				""");
 
-			int read;
-			do {
-				read = socket.getInputStream().read();
-			} while (read != -1);
+			skipResponse(socket);
 		}
 
 		assertEquals(1, inspector.getTotalRequests().getTotalCount());
@@ -787,6 +785,55 @@ public final class HttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
+	}
+
+	@Test
+	public void testEmptyGzipRequest() throws IOException, InterruptedException, ExecutionException {
+		JmxInspector inspector = new JmxInspector();
+		HttpServer server = HttpServer.builder(eventloop, request -> request.loadBody()
+				.map($ -> HttpResponse.ok200().build()))
+			.withListenPort(port)
+			.withReadWriteTimeout(Duration.ofMillis(20))
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, """
+				POST / HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				Transfer-Encoding: chunked\r
+				Content-Encoding: gzip\r
+				\r
+				0\r
+				\r
+
+				""");
+			socket.shutdownOutput();
+
+			skipResponse(socket);
+		}
+
+		Throwable lastException = inspector.getHttpErrors().getLastException();
+
+		assertThat(lastException, instanceOf(HttpException.class));
+		//noinspection DataFlowIssue
+		assertThat(lastException.getCause(), instanceOf(TruncatedDataException.class));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	private static void skipResponse(Socket socket) throws IOException {
+		int read;
+		do {
+			read = socket.getInputStream().read();
+		} while (read != -1);
 	}
 
 	private void doTestMalformedRequest(String string) throws IOException {

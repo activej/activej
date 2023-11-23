@@ -468,7 +468,9 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 			bodyStream = decoder.getOutput();
 		}
 
-		ChannelSupplier<ByteBuf> supplier = bodyStream.getSupplier(); // process gets started here and can cause connection closing
+		ChannelSupplier<ByteBuf> supplier = bodyStream.getSupplier()
+			.withEndOfStream(eos -> eos
+				.mapException(HttpUtils::translateToHttpException)); // process gets started here and can cause connection closing
 
 		if (isClosed()) return;
 

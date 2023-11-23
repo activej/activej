@@ -146,7 +146,8 @@ public final class MultipartByteBufsDecoder implements ByteBufsDecoder<Multipart
 				Exception e = new MalformedHttpException("First frame had no headers");
 				frames.closeEx(e);
 				return Promise.ofException(e);
-			});
+			})
+			.mapException(HttpUtils::translateToHttpException);
 	}
 
 	private boolean sawCrlf = true;
