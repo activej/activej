@@ -64,12 +64,18 @@ public interface HttpExceptionFormatter {
 	 */
 	HttpExceptionFormatter DEFAULT_FORMATTER = e -> {
 		HttpResponse.Builder responseBuilder;
-		if (e instanceof HttpError) {
-			int code = ((HttpError) e).getCode();
+		if (e instanceof HttpError httpError) {
+			int code = httpError.getCode();
 			responseBuilder = HttpResponse.ofCode(code)
 				.withHtml(HTTP_ERROR_HTML
 					.replace("{title}", HttpUtils.getHttpErrorTitle(code))
 					.replace("{message}", e.toString()));
+		} else if (e instanceof MalformedHttpException) {
+			responseBuilder = HttpResponse.ofCode(400)
+				.withHtml(HTTP_ERROR_HTML
+					.replace("{title}", "400. Bad Request")
+					.replace("{message}", e.toString()));
+
 		} else {
 			responseBuilder = HttpResponse.ofCode(500)
 				.withHtml(INTERNAL_SERVER_ERROR_HTML);
@@ -83,10 +89,16 @@ public interface HttpExceptionFormatter {
 	/**
 	 * This formatter prints the stacktrace of the exception into the HTTP response.
 	 */
-	HttpExceptionFormatter DEBUG_FORMATTER = e ->
-		DebugStacktraceRenderer.render(e, e instanceof HttpError ? ((HttpError) e).getCode() : 500)
+	HttpExceptionFormatter DEBUG_FORMATTER = e -> {
+		int code = e instanceof HttpError httpError ?
+			httpError.getCode() :
+			e instanceof MalformedHttpException ?
+				400 :
+				500;
+		return DebugStacktraceRenderer.render(e, code)
 			.withHeader(CACHE_CONTROL, "no-store")
 			.toPromise();
+	};
 
 	/**
 	 * This formatter if either one of {@link #DEFAULT_FORMATTER} or {@link #DEBUG_FORMATTER},
