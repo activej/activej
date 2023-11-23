@@ -9,8 +9,8 @@ import org.apache.calcite.rex.RexDynamicParam;
 
 import java.lang.reflect.Type;
 import java.sql.Types;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -32,7 +32,7 @@ public final class Cast implements Operand<Cast> {
 
 		return (T) switch (type) {
 			case Types.DATE -> LocalDate.parse(((String) value));
-			case Types.TIMESTAMP -> Utils.parseInstantFromTimestampString((String) value);
+			case Types.TIMESTAMP -> Utils.parseLocalDateTimeFromTimestampString((String) value);
 			case Types.TIME -> LocalTime.parse(((String) value));
 			case Types.INTEGER -> ((Number) value).intValue();
 			case Types.BIGINT -> ((Number) value).longValue();
@@ -46,7 +46,7 @@ public final class Cast implements Operand<Cast> {
 	public Type getFieldType(RecordScheme original) {
 		return switch (type) {
 			case Types.DATE -> LocalDate.class;
-			case Types.TIMESTAMP -> Instant.class;
+			case Types.TIMESTAMP -> LocalDateTime.class;
 			case Types.TIME -> LocalTime.class;
 			case Types.INTEGER -> Integer.class;
 			case Types.BIGINT -> Long.class;

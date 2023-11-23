@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
+import io.activej.dataflow.jdbc.driver.utils.LocalDateTimeHolder;
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -12,7 +12,7 @@ import org.apache.calcite.avatica.Meta;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -43,8 +43,8 @@ public class DataflowResultSet extends AvaticaResultSet {
 	public Object getObject(int columnIndex) throws SQLException {
 		Object result = doGetObject(columnIndex, null);
 
-		if (result instanceof Instant instant) {
-			return new InstantHolder(instant);
+		if (result instanceof LocalDateTime localDateTime) {
+			return new LocalDateTimeHolder(localDateTime);
 		}
 
 		return result;
@@ -54,9 +54,9 @@ public class DataflowResultSet extends AvaticaResultSet {
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
 		Object object = doGetObject(columnIndex, type);
 
-		if (type == InstantHolder.class && object instanceof Instant instant) {
+		if (type == LocalDateTimeHolder.class && object instanceof LocalDateTime localDateTime) {
 			//noinspection unchecked
-			return (T) new InstantHolder(instant);
+			return (T) new LocalDateTimeHolder(localDateTime);
 		}
 
 		return MAPPER.convertValue(object, type);

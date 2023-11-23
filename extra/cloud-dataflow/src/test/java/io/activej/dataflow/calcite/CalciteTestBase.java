@@ -37,8 +37,9 @@ import org.junit.Rule;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
-import java.time.*;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -182,7 +183,7 @@ public abstract class CalciteTestBase {
 	);
 
 	private static final LocalDateTime INITIAL_DATE_TIME = LocalDateTime.of(2022, 6, 15, 12, 0, 0);
-	private static final Instant INITIAL_REGISTERED_AT = INITIAL_DATE_TIME.toInstant(ZoneOffset.UTC);
+	private static final LocalDateTime INITIAL_REGISTERED_AT = INITIAL_DATE_TIME;
 	private static final LocalDate INITIAL_DATE = INITIAL_DATE_TIME.toLocalDate();
 	private static final LocalTime INITIAL_TIME = INITIAL_DATE_TIME.toLocalTime();
 
@@ -190,26 +191,26 @@ public abstract class CalciteTestBase {
 		new TemporalValues(
 			1,
 			INITIAL_REGISTERED_AT,
-			INITIAL_DATE.minus(20, ChronoUnit.YEARS),
+			INITIAL_DATE.minusYears(20),
 			INITIAL_TIME),
 		new TemporalValues(
 			3,
-			INITIAL_REGISTERED_AT.minus(15, ChronoUnit.DAYS),
-			INITIAL_DATE.minus(31, ChronoUnit.YEARS),
-			INITIAL_TIME.minus(5, ChronoUnit.HOURS))
+			INITIAL_REGISTERED_AT.minusDays(15),
+			INITIAL_DATE.minusYears(31),
+			INITIAL_TIME.minusHours(5))
 	);
 
 	protected static final List<TemporalValues> TEMPORAL_VALUES_LIST_2 = List.of(
 		new TemporalValues(
 			2,
-			INITIAL_REGISTERED_AT.minus(20, ChronoUnit.DAYS),
-			INITIAL_DATE.minus(39, ChronoUnit.YEARS),
-			INITIAL_TIME.minus(20, ChronoUnit.MINUTES)),
+			INITIAL_REGISTERED_AT.minusDays(20),
+			INITIAL_DATE.minusYears(39),
+			INITIAL_TIME.minusMinutes(20)),
 		new TemporalValues(
 			5,
-			INITIAL_REGISTERED_AT.minus(7, ChronoUnit.DAYS),
-			INITIAL_DATE.minus(43, ChronoUnit.YEARS),
-			INITIAL_TIME.minus(30, ChronoUnit.MINUTES))
+			INITIAL_REGISTERED_AT.minusDays(7),
+			INITIAL_DATE.minusYears(43),
+			INITIAL_TIME.minusMinutes(30))
 	);
 
 	protected static final List<Enrollment> ENROLLMENT_LIST_1 = List.of(
@@ -403,7 +404,7 @@ public abstract class CalciteTestBase {
 	public record Custom(int id, BigDecimal price, String description) {
 	}
 
-	public record TemporalValues(int userId, Instant registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
+	public record TemporalValues(int userId, LocalDateTime registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
 	}
 
 	public record Enrollment(int studentId, String courseCode, boolean active, LocalDate startDate) {
@@ -517,7 +518,7 @@ public abstract class CalciteTestBase {
 	private static DataflowTable<TemporalValues> createTemporalValuesTable(DefiningClassLoader classLoader) {
 		return DataflowTable.builder(classLoader, TEMPORAL_VALUES_TABLE_NAME, TemporalValues.class)
 			.withColumn("userId", int.class, TemporalValues::userId)
-			.withColumn("registeredAt", Instant.class, TemporalValues::registeredAt)
+			.withColumn("registeredAt", LocalDateTime.class, TemporalValues::registeredAt)
 			.withColumn("dateOfBirth", LocalDate.class, TemporalValues::dateOfBirth)
 			.withColumn("timeOfBirth", LocalTime.class, TemporalValues::timeOfBirth)
 			.build();

@@ -658,7 +658,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	private Object paramToJdbc(TypedValue typedValue) {
 		Object result = typedValue.toJdbc(UTC_CALENDAR);
-		if (result instanceof Timestamp timestamp) return timestamp.toLocalDateTime().toInstant(ZoneOffset.UTC);
+		if (result instanceof Timestamp timestamp) return timestamp.toLocalDateTime();
 		if (result instanceof Date date) return date.toLocalDate().plusDays(1); // Bug with TypedValue
 		if (result instanceof Time time) return time.toLocalTime();
 		return result;

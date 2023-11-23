@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +112,7 @@ public class Value {
 			case NULL, UNKNOWN, ANY -> Object.class;
 			case TIME -> LocalTime.class;
 			case DATE -> LocalDate.class;
-			case TIMESTAMP -> Instant.class;
+			case TIMESTAMP -> LocalDateTime.class;
 			default -> throw new AssertionError();
 		};
 	}

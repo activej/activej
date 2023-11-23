@@ -64,9 +64,9 @@ public final class Utils {
 		LocalTime::getNano, StreamCodecs.ofVarInt()
 	);
 
-	private static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StreamCodec.create(Instant::ofEpochSecond,
-		Instant::getEpochSecond, StreamCodecs.ofVarLong(),
-		Instant::getNano, StreamCodecs.ofVarInt()
+	private static final StreamCodec<LocalDateTime> LOCAL_DATE_TIME_STREAM_CODEC = StreamCodec.create(LocalDateTime::of,
+		LocalDateTime::toLocalDate, LOCAL_DATE_STREAM_CODEC,
+		LocalDateTime::toLocalTime, LOCAL_TIME_STREAM_CODEC
 	);
 
 	private static final LinkedHashMap<Class<?>, StreamCodec<?>> VALUE_CODECS = new LinkedHashMap<>();
@@ -81,7 +81,7 @@ public final class Utils {
 		addValueCodec(Double.class, StreamCodecs.ofDouble());
 		addValueCodec(LocalDate.class, LOCAL_DATE_STREAM_CODEC);
 		addValueCodec(LocalTime.class, LOCAL_TIME_STREAM_CODEC);
-		addValueCodec(Instant.class, INSTANT_STREAM_CODEC);
+		addValueCodec(LocalDateTime.class, LOCAL_DATE_TIME_STREAM_CODEC);
 	}
 
 	private static <T> void addValueCodec(Class<T> cls, StreamCodec<T> codec) {
@@ -116,7 +116,8 @@ public final class Utils {
 		}
 		if (typeName.getFamily() == SqlTypeFamily.TIMESTAMP) {
 			Long epochMillis = literal.getValueAs(Long.class);
-			return (T) Instant.ofEpochMilli(epochMillis);
+			long epochSeconds = epochMillis / 1000;
+			return (T) LocalDateTime.ofEpochSecond(epochSeconds, 0, ZoneOffset.UTC);
 		}
 
 		return (T) literal.getValue();
@@ -204,7 +205,7 @@ public final class Utils {
 			if (cls == String.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR), true);
 			}
-			if (cls == Instant.class) {
+			if (cls == LocalDateTime.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIMESTAMP), true);
 			}
 			if (cls == LocalTime.class) {
@@ -291,8 +292,8 @@ public final class Utils {
 		.append(ISO_LOCAL_TIME)
 		.toFormatter();
 
-	public static Instant parseInstantFromTimestampString(String timestampString) {
+	public static LocalDateTime parseLocalDateTimeFromTimestampString(String timestampString) {
 		TemporalAccessor parsed = DATE_TIME_FORMATTER.parse(timestampString);
-		return LocalDateTime.from(parsed).toInstant(ZoneOffset.UTC);
+		return LocalDateTime.from(parsed);
 	}
 }

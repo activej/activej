@@ -3,8 +3,7 @@ package io.activej.dataflow.calcite.jdbc;
 import io.activej.dataflow.calcite.AbstractCalciteTest;
 import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
-import io.activej.dataflow.jdbc.driver.Driver;
-import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
+import io.activej.dataflow.jdbc.driver.utils.LocalDateTimeHolder;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpServer;
 import io.activej.inject.module.Module;
@@ -19,6 +18,7 @@ import org.junit.Test;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -131,8 +131,8 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	}
 
 	@Override
-	protected InstantHolder wrapInstant(Instant instant) {
-		return new InstantHolder(instant);
+	protected LocalDateTimeHolder wrapLocalDateTime(LocalDateTime localDateTime) {
+		return new LocalDateTimeHolder(localDateTime);
 	}
 
 	private QueryResult toQueryResult(ResultSet resultSet) throws SQLException {

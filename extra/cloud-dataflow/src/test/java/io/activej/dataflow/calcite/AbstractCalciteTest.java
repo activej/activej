@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -2396,8 +2397,8 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 
 	protected abstract List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters);
 
-	protected Object wrapInstant(Instant instant) {
-		return instant;
+	protected Object wrapLocalDateTime(LocalDateTime localDateTime) {
+		return localDateTime;
 	}
 
 	public static final class QueryResult {
@@ -2593,7 +2594,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 		List<Object[]> columnValues = new ArrayList<>(temporalValues.size());
 
 		for (TemporalValues temporalValue : temporalValues) {
-			Object wrappedInstant = wrapInstant(temporalValue.registeredAt());
+			Object wrappedInstant = wrapLocalDateTime(temporalValue.registeredAt());
 			columnValues.add(new Object[]{temporalValue.userId(), wrappedInstant, temporalValue.dateOfBirth(), temporalValue.timeOfBirth()});
 		}
 
