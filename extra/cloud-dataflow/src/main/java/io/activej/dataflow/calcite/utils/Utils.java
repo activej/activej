@@ -24,14 +24,18 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.DateString;
+import org.apache.calcite.util.TimeString;
+import org.apache.calcite.util.TimestampString;
 
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -105,19 +109,16 @@ public final class Utils {
 			return (T) literal.getValueAs(String.class);
 		}
 		if (typeName.getFamily() == SqlTypeFamily.DATE) {
-			Integer daysSinceEpoch = literal.getValueAs(Integer.class);
-			return (T) LocalDate.ofEpochDay(daysSinceEpoch);
+			DateString dateString = literal.getValueAs(DateString.class);
+			return (T) LocalDate.parse(dateString.toString());
 		}
 		if (typeName.getFamily() == SqlTypeFamily.TIME) {
-			Integer millisOfDay = literal.getValueAs(Integer.class);
-			assert millisOfDay % 1000 == 0; // Millis are ignored
-			int secondsOfDay = millisOfDay / 1000;
-			return (T) LocalTime.ofSecondOfDay(secondsOfDay);
+			TimeString timeString = literal.getValueAs(TimeString.class);
+			return (T) LocalTime.parse(timeString.toString());
 		}
 		if (typeName.getFamily() == SqlTypeFamily.TIMESTAMP) {
-			Long epochMillis = literal.getValueAs(Long.class);
-			long epochSeconds = epochMillis / 1000;
-			return (T) LocalDateTime.ofEpochSecond(epochSeconds, 0, ZoneOffset.UTC);
+			TimestampString timestampString = literal.getValueAs(TimestampString.class);
+			return (T) LocalDateTime.parse(timestampString.toString(), DATE_TIME_FORMATTER);
 		}
 
 		return (T) literal.getValue();
@@ -285,15 +286,11 @@ public final class Utils {
 		return cls.isPrimitive() || Comparable.class.isAssignableFrom(cls);
 	}
 
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
 		.parseCaseInsensitive()
 		.append(ISO_LOCAL_DATE)
 		.appendLiteral(' ')
 		.append(ISO_LOCAL_TIME)
 		.toFormatter();
 
-	public static LocalDateTime parseLocalDateTimeFromTimestampString(String timestampString) {
-		TemporalAccessor parsed = DATE_TIME_FORMATTER.parse(timestampString);
-		return LocalDateTime.from(parsed);
-	}
 }

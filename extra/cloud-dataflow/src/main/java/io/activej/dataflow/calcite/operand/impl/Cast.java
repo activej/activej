@@ -2,7 +2,6 @@ package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.annotation.ExposedInternals;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -13,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+
+import static io.activej.dataflow.calcite.utils.Utils.DATE_TIME_FORMATTER;
 
 @ExposedInternals
 public final class Cast implements Operand<Cast> {
@@ -32,7 +33,7 @@ public final class Cast implements Operand<Cast> {
 
 		return (T) switch (type) {
 			case Types.DATE -> LocalDate.parse(((String) value));
-			case Types.TIMESTAMP -> Utils.parseLocalDateTimeFromTimestampString((String) value);
+			case Types.TIMESTAMP -> LocalDateTime.parse((String) value, DATE_TIME_FORMATTER);
 			case Types.TIME -> LocalTime.parse(((String) value));
 			case Types.INTEGER -> ((Number) value).intValue();
 			case Types.BIGINT -> ((Number) value).longValue();
