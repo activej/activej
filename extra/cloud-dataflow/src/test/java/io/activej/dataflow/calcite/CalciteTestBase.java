@@ -43,6 +43,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 import java.util.stream.LongStream;
 
 import static io.activej.dataflow.calcite.CalciteTestBase.MatchType.TYPE_1;
@@ -76,6 +77,8 @@ public abstract class CalciteTestBase {
 	public static final String ENROLLMENT_TABLE_NAME = "enrollment";
 	public static final String PAYMENT_TABLE_NAME = "payment";
 	public static final String STATES_TABLE_NAME = "states";
+	public static final String FAILING_TABLE_NAME = "failing";
+	public static final String FAILING_FILTERED_TABLE_NAME = "failing_filtered";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 		new Student(4, "Mark", null, 3),
@@ -150,6 +153,7 @@ public abstract class CalciteTestBase {
 	);
 	protected static final TreeSet<Filterable> FILTERABLE_1 = new TreeSet<>(Comparator.comparing(Filterable::created));
 	protected static final TreeSet<Filterable> FILTERABLE_2 = new TreeSet<>(Comparator.comparing(Filterable::created));
+	protected static final IllegalStateException FAILING_TABLE_EXCEPTION = new IllegalStateException("This table is failing");
 
 	static {
 		FILTERABLE_1.add(new Filterable(43, 65L));
@@ -277,6 +281,8 @@ public abstract class CalciteTestBase {
 			.bind(setTableKey).to(classLoader -> Set.of(createEnrollmentTable(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createPaymentTable(classLoader)), DefiningClassLoader.class)
 			.bind(setTableKey).to(classLoader -> Set.of(createStatesTable(classLoader)), DefiningClassLoader.class)
+			.bind(setTableKey).to(classLoader -> Set.of(createFailingTable(classLoader)), DefiningClassLoader.class)
+			.bind(setTableKey).to(classLoader -> Set.of(createFailingFilteredTable(classLoader)), DefiningClassLoader.class)
 			.multibindToSet(new Key<AbstractDataflowTable<?>>() {})
 			.build();
 		Module serverCommon = createCommonServer(common, executor, sortingExecutor);
@@ -312,6 +318,8 @@ public abstract class CalciteTestBase {
 				.bind(datasetId(ENROLLMENT_TABLE_NAME)).toInstance(ENROLLMENT_LIST_1)
 				.bind(datasetId(PAYMENT_TABLE_NAME)).toInstance(PAYMENT_LIST_1)
 				.bind(datasetId(STATES_TABLE_NAME)).toInstance(STATES_LIST_1)
+				.bind(datasetId(FAILING_TABLE_NAME)).toInstance(createFailingSupplier())
+				.bind(datasetId(FAILING_FILTERED_TABLE_NAME)).toInstance(createFailingSupplier())
 				.build());
 		Module server2Module = Modules.combine(serverModule,
 			ModuleBuilder.create()
@@ -331,6 +339,8 @@ public abstract class CalciteTestBase {
 				.bind(datasetId(ENROLLMENT_TABLE_NAME)).toInstance(ENROLLMENT_LIST_2)
 				.bind(datasetId(PAYMENT_TABLE_NAME)).toInstance(PAYMENT_LIST_2)
 				.bind(datasetId(STATES_TABLE_NAME)).toInstance(STATES_LIST_2)
+				.bind(datasetId(FAILING_TABLE_NAME)).toInstance(createFailingSupplier())
+				.bind(datasetId(FAILING_FILTERED_TABLE_NAME)).toInstance(createFailingFilteredSupplier())
 				.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -415,6 +425,10 @@ public abstract class CalciteTestBase {
 
 	@SerializeRecord
 	public record States(int id, State state, InnerState innerState) {
+	}
+
+	@SerializeRecord
+	public record Failing() {
 	}
 
 	public enum State {
@@ -550,6 +564,16 @@ public abstract class CalciteTestBase {
 			.build();
 	}
 
+	private static DataflowTable<Failing> createFailingTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, FAILING_TABLE_NAME, Failing.class)
+			.build();
+	}
+
+	private static DataflowTable<Failing> createFailingFilteredTable(DefiningClassLoader classLoader) {
+		return DataflowTable.builder(classLoader, FAILING_FILTERED_TABLE_NAME, Failing.class)
+			.build();
+	}
+
 	private static FilteredDataflowSupplier<Filterable> createFilterableSupplier(NavigableSet<Filterable> filterableData) {
 		return predicate -> {
 			DateRange dateRange = predicateToDateRange(predicate);
@@ -562,6 +586,18 @@ public abstract class CalciteTestBase {
 				new Filterable(-1, dateRange.from), dateRange.fromInclusive,
 				new Filterable(-1, dateRange.to), dateRange.toInclusive
 			));
+		};
+	}
+
+	private static Supplier<Failing> createFailingSupplier() {
+		return () -> {
+			throw FAILING_TABLE_EXCEPTION;
+		};
+	}
+
+	private static FilteredDataflowSupplier<Failing> createFailingFilteredSupplier() {
+		return $ -> {
+			throw FAILING_TABLE_EXCEPTION;
 		};
 	}
 

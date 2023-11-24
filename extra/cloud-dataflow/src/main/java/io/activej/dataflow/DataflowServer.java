@@ -122,13 +122,12 @@ public final class DataflowServer extends AbstractReactiveServer {
 		}
 	}
 
-	private void sendResponse(IMessaging<DataflowRequest, DataflowResponse> messaging, @Nullable Exception exception) {
+	private Promise<Void> sendResponse(IMessaging<DataflowRequest, DataflowResponse> messaging, @Nullable Exception exception) {
 		String error = null;
 		if (exception != null) {
 			error = exception.getClass().getSimpleName() + ": " + exception.getMessage();
 		}
-		messaging.send(new Result(error))
-			.whenComplete(messaging::close);
+		return messaging.send(new Result(error));
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
@@ -230,7 +229,8 @@ public final class DataflowServer extends AbstractReactiveServer {
 			task.bind();
 		} catch (Exception e) {
 			logger.error("Failed to construct task: {}", execute, e);
-			sendResponse(messaging, e);
+			sendResponse(messaging, e)
+				.whenComplete(messaging::close);
 			return;
 		}
 		lastTasks.put(taskId, task);
@@ -254,11 +254,15 @@ public final class DataflowServer extends AbstractReactiveServer {
 			});
 
 		messaging.receive()
-			.whenException(() -> {
+			.whenComplete((message, e) -> {
+				if (message != null) {
+					logger.warn("Unexpected message: {}", message);
+				}
 				if (!task.isExecuted()) {
 					logger.warn("Client disconnected. Canceling task: {}", execute);
-					task.cancel();
 				}
+				task.cancel();
+				messaging.close();
 			});
 	}
 
@@ -293,6 +297,8 @@ public final class DataflowServer extends AbstractReactiveServer {
 		List<ChannelQueue<ByteBuf>> pending = new ArrayList<>(pendingStreams.values());
 		pendingStreams.clear();
 		pending.forEach(AsyncCloseable::close);
+		List<Task> activeTasks = new ArrayList<>(runningTasks.values());
+		activeTasks.forEach(Task::cancel);
 		cb.set(null);
 	}
 

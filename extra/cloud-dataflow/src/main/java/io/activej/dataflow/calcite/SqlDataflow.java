@@ -141,7 +141,8 @@ public final class SqlDataflow extends AbstractReactive implements ISqlDataflow 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
 
-		graph.execute();
+		graph.execute()
+			.whenException(result::closeEx);
 		return result;
 	}
 
