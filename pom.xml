@@ -63,7 +63,6 @@
     <module>extra/cloud-multilog</module>
     <module>extra/cloud-ot</module>
     <module>extra/cloud-redis</module>
-    <module>extra/uikernel</module>
   </modules>
 
   <scm>
