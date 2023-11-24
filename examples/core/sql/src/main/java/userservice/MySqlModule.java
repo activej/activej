@@ -55,7 +55,7 @@ public class MySqlModule extends AbstractModule {
 			Statement statement = connection.createStatement()
 		) {
 			statement.execute(new String(loadResource(), UTF_8));
-			statement.execute("TRUNCATE TABLE user");
+			statement.execute("TRUNCATE TABLE users");
 		}
 	}
 

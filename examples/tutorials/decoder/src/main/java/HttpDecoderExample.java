@@ -14,6 +14,7 @@ import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.reactor.Reactor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.http.HttpMethod.POST;
@@ -70,7 +71,8 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 					if (decodedUser.isLeft()) {
 						contactDAO.add(decodedUser.getLeft());
 					}
-					Map<String, Object> scopes = Map.of("contacts", contactDAO.list());
+					Map<String, Object> scopes = new HashMap<>();
+					scopes.put("contacts", contactDAO.list());
 					if (decodedUser.isRight()) {
 						//noinspection ConstantConditions - is 'right', hence not 'null'
 						scopes.put("errors", decodedUser.getRight().toMap(SEPARATOR));
