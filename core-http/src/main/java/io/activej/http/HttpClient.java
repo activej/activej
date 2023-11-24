@@ -607,8 +607,9 @@ public final class HttpClient extends AbstractNioReactive
 
 	void handleShutdown() {
 		if (shutdownPromise != null && pendingResolves == 0 && pendingConnects == 0 && getConnectionsCount() == 0) {
+			SettablePromise<Void> shutdownPromise = this.shutdownPromise;
 			reactor.post(() -> shutdownPromise.set(null));
-			shutdownPromise = null;
+			this.shutdownPromise = null;
 		}
 	}
 
