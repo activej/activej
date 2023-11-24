@@ -4,7 +4,6 @@ import io.activej.common.annotation.StaticFactories;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.impl.*;
 import io.activej.serializer.util.Utils;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -12,8 +11,6 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import static io.activej.common.Checks.checkArgument;
 
 @StaticFactories(SerializerDef.class)
 public class SerializerDefs {

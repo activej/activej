@@ -21,7 +21,6 @@ import io.activej.common.time.CurrentTimeProvider;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
 import io.activej.cube.aggregation.measure.impl.*;
-import io.activej.cube.aggregation.util.Utils;
 
 import static io.activej.cube.aggregation.util.Utils.valueWithTimestampFieldType;
 

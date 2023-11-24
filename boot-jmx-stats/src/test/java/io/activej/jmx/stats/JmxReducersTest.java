@@ -1,6 +1,5 @@
 package io.activej.jmx.stats;
 
-import io.activej.jmx.api.attribute.JmxReducers;
 import org.junit.Test;
 
 import java.time.Duration;

@@ -1,9 +1,6 @@
 package io.activej.serializer.util;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.types.Types;
-
-import java.util.Arrays;
 
 import static io.activej.codegen.expression.Expressions.*;
 

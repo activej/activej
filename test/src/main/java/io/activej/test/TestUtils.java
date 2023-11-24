@@ -20,14 +20,11 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import io.activej.common.function.*;
 
 import javax.sql.DataSource;
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.function.BiFunction;

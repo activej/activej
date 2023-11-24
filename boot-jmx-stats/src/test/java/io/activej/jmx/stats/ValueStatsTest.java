@@ -1,7 +1,5 @@
 package io.activej.jmx.stats;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.text.DecimalFormat;

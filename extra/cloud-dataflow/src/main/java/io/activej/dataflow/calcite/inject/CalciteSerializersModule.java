@@ -2,8 +2,8 @@ package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.utils.BigDecimalBinarySerializer;
-import io.activej.dataflow.calcite.utils.time.LocalDateTimeBinarySerializer;
 import io.activej.dataflow.calcite.utils.time.LocalDateBinarySerializer;
+import io.activej.dataflow.calcite.utils.time.LocalDateTimeBinarySerializer;
 import io.activej.dataflow.calcite.utils.time.LocalTimeBinarySerializer;
 import io.activej.inject.Key;
 import io.activej.inject.module.AbstractModule;

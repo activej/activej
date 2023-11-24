@@ -23,7 +23,6 @@ import io.activej.cube.aggregation.RangeTree;
 import io.activej.cube.aggregation.RangeTree.Segment;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
-import io.activej.cube.aggregation.predicate.AggregationPredicates.RangeScan;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTState;
 import org.jetbrains.annotations.Nullable;

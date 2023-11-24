@@ -2,7 +2,6 @@ package io.activej.rpc;
 
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.ref.RefInt;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;

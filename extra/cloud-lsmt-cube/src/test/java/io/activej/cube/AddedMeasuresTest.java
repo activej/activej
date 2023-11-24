@@ -23,7 +23,6 @@ import io.activej.fs.FileSystem;
 import io.activej.json.JsonCodecs;
 import io.activej.ot.StateManager;
 import io.activej.record.Record;
-import io.activej.serializer.StringFormat;
 import io.activej.serializer.def.SerializerDefs;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
@@ -34,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;

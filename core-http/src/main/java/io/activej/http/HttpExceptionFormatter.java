@@ -19,7 +19,7 @@ package io.activej.http;
 import io.activej.promise.Promise;
 import org.intellij.lang.annotations.Language;
 
-import static io.activej.http.HttpHeaders.*;
+import static io.activej.http.HttpHeaders.CACHE_CONTROL;
 
 /**
  * This is an interface for the formatter function for HTTP.

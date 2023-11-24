@@ -1,8 +1,8 @@
 package io.activej.dataflow.codec.module;
 
-import io.activej.dataflow.codec.SubtypeStreamCodec;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.dataflow.codec.SubtypeImpl;
+import io.activej.dataflow.codec.SubtypeStreamCodec;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;

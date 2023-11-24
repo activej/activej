@@ -75,6 +75,7 @@ import java.util.function.Predicate;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.iterate;
 import static io.activej.common.Utils.not;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
