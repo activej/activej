@@ -16,6 +16,7 @@ public class SerializeExample {
 	}
 	//[END Storage]
 
+	//[START Nested]
 	public static class Nested<T1, T2> {
 		@Serialize
 		public final T1 first;
@@ -32,6 +33,7 @@ public class SerializeExample {
 			return "Nested{" + first + ", " + second + '}';
 		}
 	}
+	//[END Nested]
 
 	public static void main(String[] args) {
 		//[START Serializer]
