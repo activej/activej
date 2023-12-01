@@ -68,7 +68,11 @@ public final class RegExp implements AggregationPredicate {
 
 	@SuppressWarnings("rawtypes")
 	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
-		return fields.containsKey(key) ? fields.get(key).toStringValue(value) : value;
+		if (!fields.containsKey(key)) return value;
+
+		FieldType fieldType = fields.get(key);
+		Expression initialValue = fieldType.toValue(value);
+		return fieldType.toStringValue(initialValue);
 	}
 
 	@Override

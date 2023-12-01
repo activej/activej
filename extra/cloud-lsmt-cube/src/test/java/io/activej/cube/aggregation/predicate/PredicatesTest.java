@@ -17,6 +17,7 @@ import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.aggregation.predicate.PredicatesTest.Record.START_DATE;
 import static org.junit.Assert.*;
 
 public class PredicatesTest {
@@ -738,7 +739,7 @@ public class PredicatesTest {
 		Record record = new Record();
 		record.dateValue = 100;
 
-		LocalDate targetDate = Record.START_DATE.plusDays(record.dateValue);
+		LocalDate targetDate = START_DATE.plusDays(record.dateValue);
 
 		assertTrue(matches(record, gt("dateValue", targetDate.minusDays(10))));
 		assertFalse(matches(record, gt("dateValue", targetDate.plusDays(10))));
@@ -749,7 +750,7 @@ public class PredicatesTest {
 		Record record = new Record();
 		record.dateValue = 10;
 
-		LocalDate targetDate = Record.START_DATE.plusDays(record.dateValue);
+		LocalDate targetDate = START_DATE.plusDays(record.dateValue);
 
 		assertFalse(matches(record, in("dateValue",
 			targetDate.minusDays(1),
@@ -761,6 +762,18 @@ public class PredicatesTest {
 			targetDate,
 			targetDate.plusDays(1)
 		)));
+	}
+
+	@Test
+	public void testPredicateRegExpForDateMatches() {
+		Record record = new Record();
+		record.dateValue = 10;
+
+		LocalDate targetDate = START_DATE.plusDays(record.dateValue);
+
+		assertTrue(matches(record, regexp("dateValue", "1970-.*")));
+		assertTrue(matches(record, regexp("dateValue", targetDate.toString())));
+		assertFalse(matches(record, regexp("dateValue", "1970-6.*")));
 	}
 
 	private void testMatches(
@@ -810,7 +823,7 @@ public class PredicatesTest {
 
 	public static final class Record {
 
-		private static final LocalDate START_DATE = LocalDate.of(1970, 1, 1);
+		public static final LocalDate START_DATE = LocalDate.of(1970, 1, 1);
 		@SuppressWarnings("rawtypes")
 		private static final Map<String, FieldType> FIELD_TYPES = new HashMap<>();
 
