@@ -238,9 +238,9 @@ public class AggregationPredicates {
 			if (!right.key.equals(left.key))
 				return null;
 			if (left.value == null) return right;
-			if (right.from.compareTo(left.value) > 0 && right.to.compareTo(left.value) > 0)
+			if (right.from.compareTo(left.value) > 0)
 				return right;
-			if (right.from.compareTo(left.value) < 0 && right.to.compareTo(left.value) < 0)
+			if (right.to.compareTo(left.value) < 0)
 				return right;
 			return null;
 		});
