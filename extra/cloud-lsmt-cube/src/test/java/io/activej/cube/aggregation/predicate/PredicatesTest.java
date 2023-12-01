@@ -684,6 +684,55 @@ public class PredicatesTest {
 		assertTrue(matcher.match(has("other")));
 	}
 
+	@Test
+	public void testPredicateInAndPredicateBetween() {
+		AggregationPredicate predicate;
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 1, 5));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 1, 10));
+		assertEquals(eq("x", 10), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 1, 12));
+		assertEquals(in("x", 10, 11, 12), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 10, 12));
+		assertEquals(in("x", 10, 11, 12), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 11, 12));
+		assertEquals(in("x", 11, 12), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 11, 13));
+		assertEquals(in("x", 11, 12, 13), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 10, 13));
+		assertEquals(in("x", 10, 11, 12, 13), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 13, 15));
+		assertEquals(eq("x", 13), predicate.simplify());
+
+		predicate = and(in("x", 10, 11, 12, 13), between("x", 14, 16));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(in("x", 10), between("x", 14, 16));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(in("x", 14), between("x", 14, 16));
+		assertEquals(eq("x", 14), predicate.simplify());
+
+		predicate = and(in("x", 15), between("x", 14, 16));
+		assertEquals(eq("x", 15), predicate.simplify());
+
+		predicate = and(in("x", 16), between("x", 14, 16));
+		assertEquals(eq("x", 16), predicate.simplify());
+
+		predicate = and(in("x", 17), between("x", 14, 16));
+		assertEquals(alwaysFalse(), predicate.simplify());
+
+		predicate = and(in("x"), between("x", 14, 16));
+		assertEquals(alwaysFalse(), predicate.simplify());
+	}
+
 	private void testMatches(
 		Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate
 	) {

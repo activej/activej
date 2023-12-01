@@ -432,9 +432,9 @@ public class AggregationPredicates {
 		register(Between.class, In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
-			if (left.from.compareTo(right.values.first()) > 0 && left.to.compareTo(right.values.last()) > 0)
-				return left;
-			return null;
+			SortedSet subset = new TreeSet(right.values.subSet(left.from, left.to));
+			if (right.values.contains(left.to)) subset.add(left.to);
+			return in(left.key, subset).simplify();
 		});
 
 		register(In.class, In.class, (left, right) -> {
