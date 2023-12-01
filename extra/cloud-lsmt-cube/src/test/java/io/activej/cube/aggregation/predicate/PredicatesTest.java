@@ -4,10 +4,10 @@ import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.test.rules.ClassBuilderConstantsRule;
-import org.intellij.lang.annotations.Language;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -587,36 +587,36 @@ public class PredicatesTest {
 	@Test
 	public void testPredicateRegexp() {
 		Record record = new Record();
-		assertTrue(matches(record, "booleanValue", "^false$"));
+		assertTrue(matches(record, regexp("booleanValue", "^false$")));
 		record.booleanValue = true;
-		assertTrue(matches(record, "booleanValue", "^true$"));
+		assertTrue(matches(record, regexp("booleanValue", "^true$")));
 
-		assertTrue(matches(record, "byteValue", "^0$"));
+		assertTrue(matches(record, regexp("byteValue", "^0$")));
 		record.byteValue = 123;
-		assertTrue(matches(record, "byteValue", "^123$"));
+		assertTrue(matches(record, regexp("byteValue", "^123$")));
 
 		record.shortValue = 123;
-		assertTrue(matches(record, "shortValue", "^123$"));
+		assertTrue(matches(record, regexp("shortValue", "^123$")));
 
 		record.charValue = 'i';
-		assertTrue(matches(record, "charValue", "^i$"));
+		assertTrue(matches(record, regexp("charValue", "^i$")));
 
 		record.intValue = -123;
-		assertTrue(matches(record, "intValue", "^-123$"));
+		assertTrue(matches(record, regexp("intValue", "^-123$")));
 
 		record.longValue = Long.MIN_VALUE;
-		assertTrue(matches(record, "longValue", "^" + Long.MIN_VALUE + "$"));
+		assertTrue(matches(record, regexp("longValue", "^" + Long.MIN_VALUE + "$")));
 
 		record.floatValue = 0.000000001f;
-		assertTrue(matches(record, "floatValue", "^1\\.0E-9$"));
+		assertTrue(matches(record, regexp("floatValue", "^1\\.0E-9$")));
 
 		record.doubleValue = 123.33333;
-		assertTrue(matches(record, "doubleValue", "^123\\.3+$"));
+		assertTrue(matches(record, regexp("doubleValue", "^123\\.3+$")));
 
 		// null is not matched
-		assertFalse(matches(record, "stringValue", ".*"));
+		assertFalse(matches(record, regexp("stringValue", ".*")));
 		record.stringValue = "abcdefg";
-		assertTrue(matches(record, "stringValue", "^abc.*fg$"));
+		assertTrue(matches(record, regexp("stringValue", "^abc.*fg$")));
 	}
 
 	@Test
@@ -733,6 +733,36 @@ public class PredicatesTest {
 		assertEquals(alwaysFalse(), predicate.simplify());
 	}
 
+	@Test
+	public void testPredicateGtForDateMatches() {
+		Record record = new Record();
+		record.dateValue = 100;
+
+		LocalDate targetDate = Record.START_DATE.plusDays(record.dateValue);
+
+		assertTrue(matches(record, gt("dateValue", targetDate.minusDays(10))));
+		assertFalse(matches(record, gt("dateValue", targetDate.plusDays(10))));
+	}
+
+	@Test
+	public void testPredicateInForDateMatches() {
+		Record record = new Record();
+		record.dateValue = 10;
+
+		LocalDate targetDate = Record.START_DATE.plusDays(record.dateValue);
+
+		assertFalse(matches(record, in("dateValue",
+			targetDate.minusDays(1),
+			targetDate.plusDays(1)
+		)));
+
+		assertTrue(matches(record, in("dateValue",
+			targetDate.minusDays(1),
+			targetDate,
+			targetDate.plusDays(1)
+		)));
+	}
+
 	private void testMatches(
 		Matcher matcher, AggregationPredicate belongPredicate, AggregationPredicate belongOtherPredicate
 	) {
@@ -769,8 +799,7 @@ public class PredicatesTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean matches(Record record, String field, @Language("RegExp") String pattern) {
-		AggregationPredicate predicate = AggregationPredicates.regexp(field, pattern);
+	private boolean matches(Record record, AggregationPredicate predicate) {
 		return ClassGenerator.builder(Predicate.class)
 			.withMethod("test", boolean.class, List.of(Object.class),
 				predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
@@ -780,6 +809,8 @@ public class PredicatesTest {
 	}
 
 	public static final class Record {
+
+		private static final LocalDate START_DATE = LocalDate.of(1970, 1, 1);
 		@SuppressWarnings("rawtypes")
 		private static final Map<String, FieldType> FIELD_TYPES = new HashMap<>();
 
@@ -793,6 +824,7 @@ public class PredicatesTest {
 			FIELD_TYPES.put("floatValue", ofFloat());
 			FIELD_TYPES.put("doubleValue", ofDouble());
 			FIELD_TYPES.put("stringValue", ofString());
+			FIELD_TYPES.put("dateValue", ofLocalDate(START_DATE));
 		}
 
 		public boolean booleanValue;
@@ -804,6 +836,7 @@ public class PredicatesTest {
 		public float floatValue;
 		public double doubleValue;
 		public String stringValue;
+		public int dateValue;
 	}
 
 	private static final class Matcher {
