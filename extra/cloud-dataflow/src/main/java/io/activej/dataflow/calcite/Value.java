@@ -73,10 +73,10 @@ public class Value {
 	}
 
 	@JsonIgnore
-	public RexDynamicParam getDynamicParam() {
+	public Param getParam() {
 		checkState(!isMaterialized());
 
-		return dynamicParam;
+		return new Param(dynamicParam ,type);
 	}
 
 	public boolean isMaterialized() {

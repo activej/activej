@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
@@ -49,10 +50,10 @@ public final class Scalar implements Operand<Scalar> {
 	}
 
 	@Override
-	public List<RexDynamicParam> getParams() {
+	public List<Param> getParams() {
 		return value.isMaterialized() ?
 			Collections.emptyList() :
-			Collections.singletonList(value.getDynamicParam());
+			Collections.singletonList(value.getParam());
 	}
 
 	@Override

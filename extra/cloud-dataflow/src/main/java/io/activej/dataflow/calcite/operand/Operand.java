@@ -1,8 +1,8 @@
 package io.activej.dataflow.calcite.operand;
 
+import io.activej.dataflow.calcite.Param;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import org.apache.calcite.rex.RexDynamicParam;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -17,5 +17,5 @@ public interface Operand<Self extends Operand<Self>> {
 
 	Self materialize(List<Object> params);
 
-	List<RexDynamicParam> getParams();
+	List<Param> getParams();
 }

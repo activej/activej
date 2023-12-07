@@ -4,6 +4,7 @@ import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -90,7 +91,7 @@ public final class FieldAccess implements Operand<FieldAccess> {
 	}
 
 	@Override
-	public List<RexDynamicParam> getParams() {
+	public List<Param> getParams() {
 		return objectOperand.getParams();
 	}
 

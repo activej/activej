@@ -1,10 +1,10 @@
 package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import org.apache.calcite.rex.RexDynamicParam;
 
 import java.lang.reflect.Type;
 import java.sql.Types;
@@ -68,7 +68,7 @@ public final class Cast implements Operand<Cast> {
 	}
 
 	@Override
-	public List<RexDynamicParam> getParams() {
+	public List<Param> getParams() {
 		return valueOperand.getParams();
 	}
 

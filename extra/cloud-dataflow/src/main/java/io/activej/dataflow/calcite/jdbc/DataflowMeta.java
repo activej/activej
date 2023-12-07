@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.async.callback.AsyncComputation;
+import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.RelToDatasetConverter.UnmaterializedDataset;
 import io.activej.dataflow.calcite.SqlDataflow;
@@ -31,14 +32,16 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.DatabaseMetaData;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+
+import static io.activej.dataflow.calcite.utils.Utils.DATE_TIME_FORMATTER;
 
 public final class DataflowMeta extends LimitedMeta {
 	private static final String TABLE_CAT = "TABLE_CAT";
@@ -82,7 +85,8 @@ public final class DataflowMeta extends LimitedMeta {
 	private static final String EXPLAIN_GRAPH = "EXPLAIN GRAPH ";
 	private static final String EXPLAIN_NODES = "EXPLAIN NODES ";
 
-	private static final Calendar UTC_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+	// Will not be actually used for date/time conversions
+	private static final Calendar CALENDAR = Calendar.getInstance();
 
 	private final Reactor reactor;
 	private final SqlDataflow sqlDataflow;
@@ -109,9 +113,9 @@ public final class DataflowMeta extends LimitedMeta {
 		StatementHandle statement = createStatement(ch);
 		TransformationResult transformed = transform(sql, maxRowCount);
 		ConversionResult conversionResult = transformed.conversionResult();
-		statement.signature = createSignature(sql, transformed.fields(), conversionResult.dynamicParams(), conversionResult.unmaterializedDataset().getScheme());
+		statement.signature = createSignature(sql, transformed.fields(), conversionResult.params(), conversionResult.unmaterializedDataset().getScheme());
 
-		connectionDatasets.put(statement.id, new DatasetWithLimit(conversionResult.unmaterializedDataset(), maxRowCount));
+		connectionDatasets.put(statement.id, new DatasetWithLimit(conversionResult, maxRowCount));
 		return statement;
 	}
 
@@ -132,11 +136,25 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new NoSuchStatementException(h);
 		}
 
-		List<Object> params = parameterValues.stream()
-			.map(this::paramToJdbc)
-			.toList();
+		List<Object> resolvedParams = new ArrayList<>();
+		List<Param> params = datasetWithLimit.conversionResult.params();
+		for (int i = 0; i < parameterValues.size(); i++) {
+			TypedValue typedValue = parameterValues.get(i);
+			Object jdbc = typedValue.toJdbc(CALENDAR);
+			Type type = params.get(i).paramType();
+			if (type == LocalDate.class) {
+				jdbc = LocalDate.parse((String) jdbc);
+			}
+			if (type == LocalTime.class) {
+				jdbc = LocalTime.parse((String) jdbc);
+			}
+			if (type == LocalDateTime.class) {
+				jdbc = LocalDateTime.parse((String) jdbc, DATE_TIME_FORMATTER);
+			}
+			resolvedParams.add(jdbc);
+		}
 
-		Dataset<Record> dataset = datasetWithLimit.dataset.materialize(params);
+		Dataset<Record> dataset = datasetWithLimit.conversionResult.unmaterializedDataset().materialize(resolvedParams);
 
 		FrameFetcher frameFetcher = createFrameFetcher(h, dataset, datasetWithLimit.limit);
 
@@ -238,7 +256,7 @@ public final class DataflowMeta extends LimitedMeta {
 		return frameFetcher;
 	}
 
-	private Signature createSignature(String sql, List<RelDataTypeField> fields, List<RexDynamicParam> dynamicParams, RecordScheme scheme) {
+	private Signature createSignature(String sql, List<RelDataTypeField> fields, List<Param> params, RecordScheme scheme) {
 		int fieldCount = scheme.size();
 		List<ColumnMetaData> columns = new ArrayList<>(fieldCount);
 		for (int i = 0; i < fieldCount; i++) {
@@ -256,15 +274,16 @@ public final class DataflowMeta extends LimitedMeta {
 			columns.add(columnMetaData);
 		}
 
-		List<AvaticaParameter> parameters = new ArrayList<>(dynamicParams.size());
-		for (RexDynamicParam dynamicParam : dynamicParams) {
+		List<AvaticaParameter> parameters = new ArrayList<>(params.size());
+		for (Param param : params) {
+			RexDynamicParam dynamicParam = param.dynamicParam();
 			RelDataType type = dynamicParam.getType();
 			parameters.add(new AvaticaParameter(false,
 				getPrecision(type),
 				getScale(type),
 				type.getSqlTypeName().getJdbcOrdinal(),
 				getTypeName(type),
-				Object.class.getName(),
+				Types.getRawType(param.paramType()).getName(),
 				dynamicParam.getName()
 			));
 		}
@@ -655,19 +674,11 @@ public final class DataflowMeta extends LimitedMeta {
 		return string -> regexPattern.matcher(string).matches();
 	}
 
-	private Object paramToJdbc(TypedValue typedValue) {
-		Object result = typedValue.toJdbc(UTC_CALENDAR);
-		if (result instanceof Timestamp timestamp) return timestamp.toLocalDateTime();
-		if (result instanceof Date date) return date.toLocalDate().plusDays(1); // Bug with TypedValue
-		if (result instanceof Time time) return time.toLocalTime();
-		return result;
-	}
-
 	public record TransformationResult(List<RelDataTypeField> fields, ConversionResult conversionResult) {
 
 	}
 
-	public record DatasetWithLimit(UnmaterializedDataset dataset, long limit) {
+	public record DatasetWithLimit(ConversionResult conversionResult, long limit) {
 
 	}
 }

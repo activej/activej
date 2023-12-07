@@ -56,7 +56,7 @@ public class RelToDatasetConverter {
 	private final DefiningClassLoader classLoader;
 	private final long maxRows;
 	private final int numberOfPartitions;
-	private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
+	private final Set<Param> params = new TreeSet<>(Comparator.comparingInt(param -> param.dynamicParam().getIndex()));
 
 	private int restrictImplicitLimitCount;
 
@@ -555,7 +555,7 @@ public class RelToDatasetConverter {
 			"Unsupported join condition: " + condition + ". Only equi-joins are supported");
 	}
 
-	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<RexDynamicParam> dynamicParams) {
+	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<Param> params) {
 	}
 
 	private UnmaterializedDataset filter(UnmaterializedDataset dataset, RexNode conditionNode) {

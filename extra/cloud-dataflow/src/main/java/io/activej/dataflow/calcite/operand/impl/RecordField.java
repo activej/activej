@@ -1,10 +1,10 @@
 package io.activej.dataflow.calcite.operand.impl;
 
 import io.activej.common.annotation.ExposedInternals;
+import io.activej.dataflow.calcite.Param;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import org.apache.calcite.rex.RexDynamicParam;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -39,7 +39,7 @@ public final class RecordField implements Operand<RecordField> {
 	}
 
 	@Override
-	public List<RexDynamicParam> getParams() {
+	public List<Param> getParams() {
 		return Collections.emptyList();
 	}
 

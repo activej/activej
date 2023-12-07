@@ -10,17 +10,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
-@SuppressWarnings("unused") // Used through reflection
-public class DataflowJdbc41Factory implements AvaticaFactory {
-	public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
-	public static final Calendar UTC_CALENDAR = Calendar.getInstance(UTC_TIME_ZONE);
+import static io.activej.dataflow.jdbc.driver.DataflowResultSet.DATE_TIME_FORMATTER;
 
+@SuppressWarnings("unused") // Used via reflection
+public class DataflowJdbc41Factory implements AvaticaFactory {
 	private static final String SOCKET_TIMEOUT_PARAM = "socketTimeout=";
 	private static final String DATAFLOW_HTTP_SOCKET_TIMEOUT = "dataflow.http.socketTimeout";
 
@@ -80,11 +81,6 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 			PoolingHttpClientConnectionManager pool = CommonsHttpClientPoolCache.getPool(config());
 			DataflowJdbc41Factory.setSocketTimeout(pool, timeout);
 		}
-
-		@Override
-		public TimeZone getTimeZone() {
-			return UTC_TIME_ZONE;
-		}
 	}
 
 	public static class DataflowJdbc41DatabaseMetaData extends AvaticaDatabaseMetaData {
@@ -113,8 +109,46 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 		}
 
 		@Override
-		protected Calendar getCalendar() {
-			return UTC_CALENDAR;
+		public void setObject(int parameterIndex, Object x) throws SQLException {
+			if (x instanceof LocalTime) {
+				setString(parameterIndex, x.toString());
+			} else if (x instanceof LocalDate) {
+				setString(parameterIndex, x.toString());
+			} else if (x instanceof LocalDateTime localDateTime) {
+				setString(parameterIndex, localDateTime.format(DATE_TIME_FORMATTER));
+			} else {
+				super.setObject(parameterIndex, x);
+			}
+		}
+
+		@Override
+		public void setDate(int parameterIndex, Date x, Calendar calendar) {
+			throw notSupported(Date.class);
+		}
+
+		@Override
+		public void setDate(int parameterIndex, Date x) {
+			throw notSupported(Date.class);
+		}
+
+		@Override
+		public void setTime(int parameterIndex, Time x, Calendar calendar) {
+			throw notSupported(Time.class);
+		}
+
+		@Override
+		public void setTime(int parameterIndex, Time x) {
+			throw notSupported(Time.class);
+		}
+
+		@Override
+		public void setTimestamp(int parameterIndex, Timestamp x, Calendar calendar) {
+			throw notSupported(Timestamp.class);
+		}
+
+		@Override
+		public void setTimestamp(int parameterIndex, Timestamp x) {
+			throw notSupported(Timestamp.class);
 		}
 	}
 
@@ -158,5 +192,9 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 			.setSoTimeout(timeout)
 			.build();
 		pool.setDefaultSocketConfig(socketConfig);
+	}
+
+	public static UnsupportedOperationException notSupported(Class<?> cls) {
+		return new UnsupportedOperationException(cls.getName() + " is not supported");
 	}
 }

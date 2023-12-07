@@ -4,15 +4,17 @@ import io.activej.common.Utils;
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.concat;
+import static io.activej.dataflow.calcite.utils.Utils.DATE_TIME_FORMATTER;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
@@ -2014,7 +2016,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM failing
 				""");
 			fail();
-		} catch (AssertionError e){
+		} catch (AssertionError e) {
 			Throwable cause = e.getCause();
 			assertThat(cause.getMessage(), containsString(FAILING_TABLE_EXCEPTION.getMessage()));
 		}
@@ -2028,7 +2030,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM failing_filtered
 				""");
 			fail();
-		} catch (AssertionError e){
+		} catch (AssertionError e) {
 			Throwable cause = e.getCause();
 			assertThat(cause.getMessage(), containsString(FAILING_TABLE_EXCEPTION.getMessage()));
 		}
@@ -2131,7 +2133,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM temporal_values
 				WHERE registeredAt > ?
 				""",
-			stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-01 12:34:23")));
+			stmt -> stmt.setObject(1, LocalDateTime.parse("2022-06-01 12:34:23", DATE_TIME_FORMATTER)));
 
 		assertSelectTemporalValuesByTimestamp(result);
 	}
@@ -2162,7 +2164,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM temporal_values
 				WHERE registeredAt = ?
 				""",
-			stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-15 12:00:00")));
+			stmt -> stmt.setObject(1, LocalDateTime.parse("2022-06-15 12:00:00", DATE_TIME_FORMATTER)));
 
 		assertSelectTemporalValuesByTimestampEquals(result);
 	}
@@ -2193,7 +2195,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM temporal_values
 				WHERE timeOfBirth > ?
 				""",
-			stmt -> stmt.setTime(1, Time.valueOf("09:27:21")));
+			stmt -> stmt.setObject(1, LocalTime.parse("09:27:21")));
 
 		assertSelectTemporalValuesByTime(result);
 	}
@@ -2224,7 +2226,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM temporal_values
 				WHERE timeOfBirth = ?
 				""",
-			stmt -> stmt.setTime(1, Time.valueOf("12:00:00")));
+			stmt -> stmt.setObject(1, LocalTime.parse("12:00:00")));
 
 		assertSelectTemporalValuesByTimeEquals(result);
 	}
@@ -2255,7 +2257,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM temporal_values
 				WHERE dateOfBirth > ?
 				""",
-			stmt -> stmt.setDate(1, Date.valueOf("1985-01-01")));
+			stmt -> stmt.setObject(1, LocalDate.parse("1985-01-01")));
 
 		assertSelectTemporalValuesByDate(result);
 	}
@@ -2286,7 +2288,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				FROM temporal_values
 				WHERE dateOfBirth = ?
 				""",
-			stmt -> stmt.setDate(1, Date.valueOf("2002-06-15")));
+			stmt -> stmt.setObject(1, LocalDate.parse("2002-06-15")));
 
 		assertSelectTemporalValuesByDateEquals(result);
 	}
@@ -2622,8 +2624,8 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 		List<Object[]> columnValues = new ArrayList<>(temporalValues.size());
 
 		for (TemporalValues temporalValue : temporalValues) {
-			Object wrappedInstant = wrapLocalDateTime(temporalValue.registeredAt());
-			columnValues.add(new Object[]{temporalValue.userId(), wrappedInstant, temporalValue.dateOfBirth(), temporalValue.timeOfBirth()});
+			Object wrappedLocalDateTime = wrapLocalDateTime(temporalValue.registeredAt());
+			columnValues.add(new Object[]{temporalValue.userId(), wrappedLocalDateTime, temporalValue.dateOfBirth(), temporalValue.timeOfBirth()});
 		}
 
 		return new QueryResult(columnNames, columnValues);

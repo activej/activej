@@ -4,20 +4,23 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import io.activej.dataflow.jdbc.driver.utils.LocalDateTimeHolder;
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Date;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.dataflow.jdbc.driver.DataflowJdbc41Factory.notSupported;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static org.apache.calcite.avatica.remote.JsonService.MAPPER;
 
 public class DataflowResultSet extends AvaticaResultSet {
@@ -25,12 +28,24 @@ public class DataflowResultSet extends AvaticaResultSet {
 	private static final TypeFactory TYPE_FACTORY = TypeFactory.defaultInstance();
 	private static final Map<String, JavaType> JAVA_TYPE_CACHE = new ConcurrentHashMap<>();
 
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
+		.parseCaseInsensitive()
+		.append(ISO_LOCAL_DATE)
+		.appendLiteral(' ')
+		.append(ISO_LOCAL_TIME)
+		.toFormatter();
+
 	DataflowResultSet(AvaticaStatement statement,
 		Meta.Signature signature,
 		ResultSetMetaData resultSetMetaData, TimeZone timeZone,
 		Meta.Frame firstFrame) throws SQLException {
-
 		super(statement, null, signature, resultSetMetaData, timeZone, firstFrame);
+	}
+
+	@Override
+	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+		int column = findColumn(columnLabel);
+		return getObject(column, type);
 	}
 
 	@Override
@@ -41,46 +56,145 @@ public class DataflowResultSet extends AvaticaResultSet {
 
 	@Override
 	public Object getObject(int columnIndex) throws SQLException {
-		Object result = doGetObject(columnIndex, null);
+		return doGetObject(columnIndex, null);
+	}
 
-		if (result instanceof LocalDateTime localDateTime) {
-			return new LocalDateTimeHolder(localDateTime);
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+		if (type == Time.class || type == Date.class || type == Timestamp.class) {
+			throw notSupported(type);
 		}
-
-		return result;
+		Class<?> expectedClass = type == Object.class ? null : type;
+		return (T) doGetObject(columnIndex, expectedClass);
 	}
 
 	@Override
-	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-		Object object = doGetObject(columnIndex, type);
-
-		if (type == LocalDateTimeHolder.class && object instanceof LocalDateTime localDateTime) {
-			//noinspection unchecked
-			return (T) new LocalDateTimeHolder(localDateTime);
-		}
-
-		return MAPPER.convertValue(object, type);
+	public String getString(int columnIndex) throws SQLException {
+		Object object = getObject(columnIndex);
+		if (object == null) return null;
+		return Objects.toString(object);
 	}
+
+	// region not supported temporal types
+	@Override
+	public Date getDate(int columnIndex) {
+		throw notSupported(Date.class);
+	}
+
+	@Override
+	public Date getDate(int columnIndex, Calendar cal) {
+		throw notSupported(Date.class);
+	}
+
+	@Override
+	public Date getDate(String columnLabel, Calendar cal) {
+		throw notSupported(Date.class);
+	}
+
+	@Override
+	public Date getDate(String columnLabel) {
+		throw notSupported(Date.class);
+	}
+
+	@Override
+	public void updateDate(int columnIndex, Date x) {
+		throw notSupported(Date.class);
+	}
+
+	@Override
+	public void updateDate(String columnLabel, Date x) {
+		throw notSupported(Date.class);
+	}
+
+	@Override
+	public Time getTime(int columnIndex) throws SQLException {
+		throw notSupported(Time.class);
+	}
+
+	@Override
+	public Time getTime(String columnLabel) throws SQLException {
+		throw notSupported(Time.class);
+	}
+
+	@Override
+	public Time getTime(int columnIndex, Calendar cal) throws SQLException {
+		throw notSupported(Time.class);
+	}
+
+	@Override
+	public Time getTime(String columnLabel, Calendar cal) throws SQLException {
+		throw notSupported(Time.class);
+	}
+
+	@Override
+	public void updateTime(int columnIndex, Time x) {
+		throw notSupported(Time.class);
+	}
+
+	@Override
+	public void updateTime(String columnLabel, Time x) {
+		throw notSupported(Time.class);
+	}
+
+	@Override
+	public Timestamp getTimestamp(int columnIndex) {
+		throw notSupported(Timestamp.class);
+	}
+
+	@Override
+	public Timestamp getTimestamp(String columnLabel) {
+		throw notSupported(Timestamp.class);
+	}
+
+	@Override
+	public Timestamp getTimestamp(int columnIndex, Calendar cal) {
+		throw notSupported(Timestamp.class);
+	}
+
+	@Override
+	public Timestamp getTimestamp(String columnLabel, Calendar cal) {
+		throw notSupported(Timestamp.class);
+	}
+
+	@Override
+	public void updateTimestamp(int columnIndex, Timestamp x) {
+		throw notSupported(Timestamp.class);
+	}
+
+	@Override
+	public void updateTimestamp(String columnLabel, Timestamp x) {
+		throw notSupported(Timestamp.class);
+	}
+	// endregion
 
 	private Object doGetObject(int columnIndex, @Nullable Class<?> expectedClass) throws SQLException {
 		Object result = super.getObject(columnIndex);
 
-		ColumnMetaData columnMetaData = signature.columns.get(columnIndex - 1);
-		ColumnMetaData.AvaticaType type = columnMetaData.type;
-
 		JavaType javaType = expectedClass == null ?
-			getJavaType(type) :
+			getJavaType(columnIndex) :
 			TYPE_FACTORY.constructSimpleType(expectedClass, new JavaType[0]);
 
+		Class<?> internalClass = javaType.getRawClass();
 		if (result == null ||
 			javaType == TypeFactory.unknownType() ||
 			result instanceof Array ||
-			javaType.getRawClass().isAssignableFrom(result.getClass())
+			internalClass.isAssignableFrom(result.getClass())
 		) {
 			return result;
 		}
 
-		return MAPPER.convertValue(result, javaType);
+		Object converted = MAPPER.convertValue(result, javaType);
+		if (expectedClass == null && converted instanceof LocalDateTime localDateTime) {
+			return localDateTime.format(DATE_TIME_FORMATTER);
+		}
+		return converted;
+	}
+
+	private JavaType getJavaType(int columnIndex) {
+		ColumnMetaData columnMetaData = signature.columns.get(columnIndex - 1);
+		ColumnMetaData.AvaticaType type = columnMetaData.type;
+		return getJavaType(type);
 	}
 
 	private static JavaType getJavaType(ColumnMetaData.AvaticaType avaticaType) {
@@ -129,21 +243,6 @@ public class DataflowResultSet extends AvaticaResultSet {
 			resolveSimple(components[0]),
 			resolveSimple(components[1])
 		);
-	}
-
-	@Override
-	public Date getDate(int columnIndex) {
-		throw new UnsupportedOperationException("java.sql.Date is not supported");
-	}
-
-	@Override
-	public Timestamp getTimestamp(int columnIndex) throws SQLException {
-		throw new UnsupportedOperationException("java.sql.Timestamp is not supported");
-	}
-
-	@Override
-	public Time getTime(int columnIndex) {
-		throw new UnsupportedOperationException("java.sql.Time is not supported");
 	}
 
 	public record MapTypes(JavaType keyType, JavaType valueType) {
