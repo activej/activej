@@ -120,13 +120,13 @@ public abstract class CalciteTestBase {
 
 	protected static final List<UserProfile> USER_PROFILES_LIST_1 = List.of(
 		new UserProfile("user2", new UserProfilePojo("test2", 2), Map.of(
-			2, new UserProfileIntent(2, "test2", TYPE_2, new Limits(new float[]{4.3f, 2.1f}, System.currentTimeMillis())),
-			3, new UserProfileIntent(3, "test3", TYPE_1, new Limits(new float[]{6.5f, 8.7f}, System.currentTimeMillis()))),
+			2, UserProfileIntent.of(2, "test2", TYPE_2, new Limits(new float[]{4.3f, 2.1f}, System.currentTimeMillis())),
+			3, UserProfileIntent.of(3, "test3", TYPE_1, new Limits(new float[]{6.5f, 8.7f}, System.currentTimeMillis()))),
 			System.currentTimeMillis()));
 	protected static final List<UserProfile> USER_PROFILES_LIST_2 = List.of(
 		new UserProfile("user1", new UserProfilePojo("test1", 1), Map.of(
-			1, new UserProfileIntent(1, "test1", TYPE_1, new Limits(new float[]{1.2f, 3.4f}, System.currentTimeMillis())),
-			2, new UserProfileIntent(2, "test2", TYPE_2, new Limits(new float[]{5.6f, 7.8f}, System.currentTimeMillis()))),
+			1, UserProfileIntent.of(1, "test1", TYPE_1, new Limits(new float[]{1.2f, 3.4f}, System.currentTimeMillis())),
+			2, UserProfileIntent.of(2, "test2", TYPE_2, new Limits(new float[]{5.6f, 7.8f}, System.currentTimeMillis()))),
 			System.currentTimeMillis()));
 
 	protected static final List<Large> LARGE_LIST_1 = LongStream.range(0, 1_000_000)
@@ -236,12 +236,12 @@ public abstract class CalciteTestBase {
 	);
 
 	protected static final List<States> STATES_LIST_1 = List.of(
-		new States(1, ON, new InnerState(OFF)),
-		new States(4, ON, new InnerState(ON))
+		States.of(1, ON, InnerState.of(OFF)),
+		States.of(4, ON, InnerState.of(ON))
 	);
 	protected static final List<States> STATES_LIST_2 = List.of(
-		new States(3, OFF, new InnerState(OFF)),
-		new States(2, OFF, new InnerState(ON))
+		States.of(3, OFF, InnerState.of(OFF)),
+		States.of(2, OFF, InnerState.of(ON))
 	);
 
 	@Rule
@@ -391,7 +391,10 @@ public abstract class CalciteTestBase {
 	}
 
 	@SerializeRecord
-	public record UserProfileIntent(int campaignId, String keyword, MatchType matchType, Limits limits) {
+	public record UserProfileIntent(int campaignId, String keyword, String matchType, Limits limits) {
+		public static UserProfileIntent of(int campaignId, String keyword, MatchType matchType, Limits limits) {
+			return new UserProfileIntent(campaignId, keyword, matchType.name(), limits);
+		}
 	}
 
 	public enum MatchType {
@@ -424,7 +427,10 @@ public abstract class CalciteTestBase {
 	}
 
 	@SerializeRecord
-	public record States(int id, State state, InnerState innerState) {
+	public record States(int id, String state, InnerState innerState) {
+		public static States of(int id, State state, InnerState innerState) {
+			return new States(id, state.name(), innerState);
+		}
 	}
 
 	@SerializeRecord
@@ -436,7 +442,10 @@ public abstract class CalciteTestBase {
 	}
 
 	@SerializeRecord
-	public record InnerState(State state) {
+	public record InnerState(String state) {
+		public static InnerState of(State state) {
+			return new InnerState(state.name());
+		}
 	}
 
 	private static DataflowTable<Student> createStudentTable(DefiningClassLoader classLoader) {
@@ -559,7 +568,7 @@ public abstract class CalciteTestBase {
 	private static DataflowTable<States> createStatesTable(DefiningClassLoader classLoader) {
 		return DataflowTable.builder(classLoader, STATES_TABLE_NAME, States.class)
 			.withColumn("id", int.class, States::id)
-			.withColumn("state", State.class, States::state)
+			.withColumn("state", String.class, States::state)
 			.withColumn("innerState", InnerState.class, States::innerState)
 			.build();
 	}

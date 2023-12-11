@@ -16,6 +16,7 @@ import io.activej.record.RecordScheme;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.types.Primitives;
+import io.activej.types.Types;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -215,9 +216,6 @@ public final class Utils {
 			if (cls == LocalDate.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DATE), true);
 			}
-			if (cls.isEnum()) {
-				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR), true);
-			}
 			if (cls.isPrimitive() || Primitives.isWrapperType(cls)) {
 				return typeFactory.createJavaType(cls);
 			}
@@ -242,18 +240,7 @@ public final class Utils {
 				return typeFactory.createArrayType(elementType, -1);
 			}
 
-			List<RelDataTypeField> fields = new ArrayList<>();
-
-			for (Field field : cls.getFields()) {
-				if (Modifier.isStatic(field.getModifiers())) continue;
-
-				fields.add(new RelDataTypeFieldImpl(
-					field.getName(),
-					fields.size(),
-					toRowType(typeFactory, field.getGenericType())
-				));
-			}
-			return new JavaRecordType(fields, cls);
+			throw new IllegalArgumentException("Could not inference RelDataType of type " + cls.getName());
 		}
 
 		if (type instanceof ParameterizedType parameterizedType) {
@@ -279,7 +266,7 @@ public final class Utils {
 			return typeFactory.createArrayType(elementType, -1);
 		}
 
-		throw new ToDoException();
+		throw new IllegalArgumentException("Could not inference RelDataType of type " + Types.getRawType(type).getName());
 	}
 
 	public static boolean isSortable(Class<?> cls) {
