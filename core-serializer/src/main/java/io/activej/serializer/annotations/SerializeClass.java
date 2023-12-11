@@ -18,7 +18,10 @@ package io.activej.serializer.annotations;
 
 import io.activej.serializer.def.SerializerDef;
 
-import java.lang.annotation.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
@@ -26,7 +29,6 @@ import java.lang.annotation.*;
 	ElementType.METHOD,
 	ElementType.TYPE_USE,
 	ElementType.RECORD_COMPONENT})
-@Repeatable(SerializeClasses.class)
 public @interface SerializeClass {
 	Class<? extends SerializerDef> value() default SerializerDef.class;
 
