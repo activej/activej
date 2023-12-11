@@ -94,7 +94,7 @@ public final class CubeReporting extends AbstractReactive
 			state.getDataState().findCompatibleAggregations(
 				new ArrayList<>(preprocessedQuery.resultDimensions()),
 				new ArrayList<>(preprocessedQuery.resultStoredMeasures()),
-				cubeQuery.getWhere().simplify()
+				cubeQuery.getWhere()
 			));
 
 		return executor.query(compatibleAggregations, preprocessedQuery);

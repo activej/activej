@@ -428,8 +428,6 @@ public final class CubeStructure {
 	}
 
 	public class CubePreprocessor {
-		private List<String> compatibleAggregations = new ArrayList<>();
-
 		private final Set<String> resultDimensions = new LinkedHashSet<>();
 		private final Set<String> resultAttributes = new LinkedHashSet<>();
 
@@ -452,7 +450,6 @@ public final class CubeStructure {
 
 			return new CubeStructure.PreprocessedQuery(
 				query,
-				compatibleAggregations,
 				resultDimensions,
 				resultAttributes,
 				resultMeasures,
@@ -492,7 +489,7 @@ public final class CubeStructure {
 					queryStoredMeasures.add(measure);
 				}
 			}
-			compatibleAggregations = new ArrayList<>(getCompatibleAggregationsForQuery(resultDimensions, queryStoredMeasures, query.getWhere().simplify()));
+			Set<String> compatibleAggregations = getCompatibleAggregationsForQuery(resultDimensions, queryStoredMeasures, query.getWhere());
 
 			Set<String> compatibleMeasures = new LinkedHashSet<>();
 			for (String aggregationId : compatibleAggregations) {
@@ -526,8 +523,6 @@ public final class CubeStructure {
 
 	public record PreprocessedQuery(
 		CubeQuery query,
-
-		List<String> compatibleAggregations,
 
 		Set<String> resultDimensions,
 		Set<String> resultAttributes,
