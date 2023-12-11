@@ -113,7 +113,8 @@ public abstract class CalciteTestBase {
 
 	protected static final List<Registry> REGISTRY_LIST_1 = List.of(
 		new Registry(4, Map.of("Kevin", 8), List.of("google.com")),
-		new Registry(1, Map.of("John", 1, "Jack", 2, "Kevin", 7), List.of("google.com", "amazon.com")));
+		new Registry(1, Map.of("John", 1, "Jack", 2, "Kevin", 7), List.of("google.com", "amazon.com")),
+		new Registry(5, null, List.of()));
 	protected static final List<Registry> REGISTRY_LIST_2 = List.of(
 		new Registry(3, Map.of("Sarah", 53, "Rob", 7564, "John", 18, "Kevin", 7), List.of("yahoo.com", "ebay.com", "netflix.com")),
 		new Registry(2, Map.of("John", 999), List.of("wikipedia.org")));

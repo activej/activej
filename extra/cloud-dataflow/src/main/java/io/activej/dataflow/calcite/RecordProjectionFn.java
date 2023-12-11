@@ -7,8 +7,10 @@ import io.activej.dataflow.calcite.operand.Operands;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
 import io.activej.record.RecordScheme;
+import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +79,11 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 		for (FieldProjection fieldProjection : fieldProjections) {
 			String fieldName = fieldProjection.fieldName() != null ? fieldProjection.fieldName() : fieldProjection.operand().getFieldName(original);
 			fields.add(fieldName);
-			schemeToBuilder.withField(fieldName, fieldProjection.operand().getFieldType(original));
+			Type fieldType = fieldProjection.operand().getFieldType(original);
+			if (Primitives.isPrimitiveType(fieldType)) {
+				fieldType = Primitives.wrap(((Class<?>) fieldType));
+			}
+			schemeToBuilder.withField(fieldName, fieldType);
 
 			if (mapping == null) continue;
 

@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.utils;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.RecordStreamSchema;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
@@ -29,7 +28,10 @@ import org.apache.calcite.util.DateString;
 import org.apache.calcite.util.TimeString;
 import org.apache.calcite.util.TimestampString;
 
-import java.lang.reflect.*;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -216,8 +218,11 @@ public final class Utils {
 			if (cls == LocalDate.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DATE), true);
 			}
-			if (cls.isPrimitive() || Primitives.isWrapperType(cls)) {
+			if (cls.isPrimitive()) {
 				return typeFactory.createJavaType(cls);
+			}
+			if (Primitives.isWrapperType(cls)) {
+				return typeFactory.createTypeWithNullability(typeFactory.createJavaType(cls), true);
 			}
 
 			if (cls.isRecord()) {
@@ -232,12 +237,12 @@ public final class Utils {
 					));
 				}
 
-				return new JavaRecordType(fields, cls);
+				return typeFactory.createTypeWithNullability(new JavaRecordType(fields, cls), true);
 			}
 
 			if (cls.isArray()) {
 				RelDataType elementType = toRowType(typeFactory, cls.getComponentType());
-				return typeFactory.createArrayType(elementType, -1);
+				return typeFactory.createTypeWithNullability(typeFactory.createArrayType(elementType, -1), true);
 			}
 
 			throw new IllegalArgumentException("Could not inference RelDataType of type " + cls.getName());
@@ -247,23 +252,23 @@ public final class Utils {
 			Type rawType = parameterizedType.getRawType();
 			if (rawType == List.class) {
 				RelDataType elementType = toRowType(typeFactory, parameterizedType.getActualTypeArguments()[0]);
-				return typeFactory.createArrayType(elementType, -1);
+				return typeFactory.createTypeWithNullability(typeFactory.createArrayType(elementType, -1), true);
 			}
 			if (rawType == Set.class) {
 				RelDataType elementType = toRowType(typeFactory, parameterizedType.getActualTypeArguments()[0]);
-				return typeFactory.createMultisetType(elementType, -1);
+				return typeFactory.createTypeWithNullability(typeFactory.createMultisetType(elementType, -1), true);
 			}
 			if (rawType == Map.class) {
 				Type[] typeArguments = parameterizedType.getActualTypeArguments();
 				RelDataType keyType = toRowType(typeFactory, typeArguments[0]);
 				RelDataType valueType = toRowType(typeFactory, typeArguments[1]);
-				return typeFactory.createMapType(keyType, valueType);
+				return typeFactory.createTypeWithNullability(typeFactory.createMapType(keyType, valueType), true);
 			}
 		}
 
 		if (type instanceof GenericArrayType genericArrayType) {
 			RelDataType elementType = toRowType(typeFactory, genericArrayType.getGenericComponentType());
-			return typeFactory.createArrayType(elementType, -1);
+			return typeFactory.createTypeWithNullability(typeFactory.createArrayType(elementType, -1), true);
 		}
 
 		throw new IllegalArgumentException("Could not inference RelDataType of type " + Types.getRawType(type).getName());

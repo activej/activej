@@ -772,7 +772,8 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 
 		List<Object[]> columnValues = new ArrayList<>(result.columnValues.size());
 		for (Registry registry : concat(REGISTRY_LIST_1, REGISTRY_LIST_2)) {
-			columnValues.add(new Object[]{registry.id(), registry.counters().get("John")});
+			Map<String, Integer> counters = registry.counters();
+			columnValues.add(new Object[]{registry.id(), counters == null ? null : counters.get("John")});
 		}
 
 		QueryResult expected = new QueryResult(List.of("id", "counters.get('John')"), columnValues);
@@ -815,6 +816,24 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 		assertEquals(expected, result);
 	}
 	// endregion
+
+	@Test
+	public void testMapIsNotNull() {
+		QueryResult result = query("""
+			SELECT id FROM registry
+			WHERE counters IS NOT NULL
+			""");
+
+		QueryResult expected = new QueryResult(List.of("id"),
+			List.of(
+				new Object[]{REGISTRY_LIST_1.get(0).id()},
+				new Object[]{REGISTRY_LIST_1.get(1).id()},
+				new Object[]{REGISTRY_LIST_2.get(0).id()},
+				new Object[]{REGISTRY_LIST_2.get(1).id()}
+			));
+
+		assertEquals(expected, result);
+	}
 
 	// region ListGetQuery
 	@Test
@@ -1146,7 +1165,8 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 				REGISTRY_LIST_1.get(1),
 				REGISTRY_LIST_2.get(0),
 				REGISTRY_LIST_1.get(0),
-				REGISTRY_LIST_2.get(1)
+				REGISTRY_LIST_2.get(1),
+				REGISTRY_LIST_1.get(2)
 			)
 		);
 
@@ -1157,6 +1177,7 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 	public void testOrderByFunctionCallNullsLast() {
 		QueryResult result = query("""
 			SELECT * FROM registry
+			WHERE counters IS NOT NULL
 			ORDER BY MAP_GET(counters, 'Kevin'), id
 			NULLS LAST
 			""");
@@ -1177,11 +1198,12 @@ public abstract class AbstractCalciteTest extends CalciteTestBase {
 	public void testOrderByFunctionCallNullsFirst() {
 		QueryResult result = query("""
 			SELECT * FROM registry
+			WHERE counters IS NOT NULL
 			ORDER BY MAP_GET(counters, 'John')
 			NULLS FIRST
 			""");
 
-		QueryResult expected = registryToQueryResult(concat(REGISTRY_LIST_1, REGISTRY_LIST_2));
+		QueryResult expected = registryToQueryResult(concat(REGISTRY_LIST_1.subList(0, 2), REGISTRY_LIST_2));
 
 		assertTrue(expected.equalsOrdered(result));
 	}
