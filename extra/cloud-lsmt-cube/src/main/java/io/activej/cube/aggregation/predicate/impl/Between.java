@@ -17,19 +17,16 @@
 package io.activej.cube.aggregation.predicate.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 
 import java.util.Map;
 import java.util.Set;
 
-import static io.activej.codegen.expression.Expressions.and;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysFalse;
+import static io.activej.cube.aggregation.predicate.AggregationPredicates.eq;
 
 @ExposedInternals
 public final class Between implements AggregationPredicate {
@@ -58,13 +55,12 @@ public final class Between implements AggregationPredicate {
 		return Map.of();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
-		return and(isNotNull(property, fields.get(key)),
-			isGe(property, value(toInternalValue(fields, key, from))),
-			isLe(property, value(toInternalValue(fields, key, to))));
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
+		Expression property = valueResolver.getProperty(record, key);
+		return and(isNotNull(property),
+			isGe(property, value(valueResolver.transformArg(key, from))),
+			isLe(property, value(valueResolver.transformArg(key, to))));
 	}
 
 	@Override

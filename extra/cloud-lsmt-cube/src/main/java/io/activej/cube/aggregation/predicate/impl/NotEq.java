@@ -17,9 +17,8 @@
 package io.activej.cube.aggregation.predicate.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
+import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,12 +26,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static io.activej.codegen.expression.Expressions.or;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.isNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 
 @ExposedInternals
 public final class NotEq implements AggregationPredicate {
@@ -59,17 +54,15 @@ public final class NotEq implements AggregationPredicate {
 		return Map.of();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
-		Object internalValue = toInternalValue(fields, key, this.value);
-		FieldType fieldType = fields.get(key);
-		return internalValue == null ?
-			isNotNull(property, fieldType) :
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
+		Expression property = valueResolver.getProperty(record, key);
+		Object arg = valueResolver.transformArg(key, value);
+		return arg == null ?
+			Expressions.isNotNull(property) :
 			or(
-				isNull(property, fieldType),
-				isNe(property, value(internalValue))
+				Expressions.isNull(property),
+				isNe(property, value(arg))
 			);
 	}
 

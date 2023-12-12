@@ -16,8 +16,6 @@
 
 package io.activej.cube.aggregation.predicate;
 
-import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.StaticFactories;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.fieldtype.FieldType;
@@ -31,12 +29,11 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.cube.aggregation.util.Utils.toInternalValue;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @StaticFactories(AggregationPredicate.class)
 public class AggregationPredicates {
-	private static final class E extends Expressions {}
-
 	public record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
 		Class<L> leftType, Class<R> rightType
 	) {
@@ -573,19 +570,6 @@ public class AggregationPredicates {
 			checkState(!isNoScan(), "Cannot return 'to' in 'No Scan' mode");
 			return to;
 		}
-	}
-
-	public static Expression isNotNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(true) : E.isNotNull(field);
-	}
-
-	public static Expression isNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(false) : E.isNull(field);
-	}
-
-	@SuppressWarnings("unchecked")
-	public static Object toInternalValue(Map<String, FieldType> fields, String key, Object value) {
-		return fields.containsKey(key) ? fields.get(key).toInternalValue(value) : value;
 	}
 
 	public static RangeScan toRangeScan(AggregationPredicate predicate, List<String> primaryKey, Map<String, FieldType> fields) {

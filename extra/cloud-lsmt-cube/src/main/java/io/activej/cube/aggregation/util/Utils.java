@@ -20,6 +20,7 @@ import io.activej.codegen.ClassGenerator;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.Aggregate;
@@ -29,6 +30,7 @@ import io.activej.cube.aggregation.annotation.Measures;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.predicate.AggregationPredicate.ValueResolver;
 import io.activej.datastream.processor.reducer.Reducer;
 import io.activej.json.JsonCodec;
 import io.activej.json.JsonCodecs;
@@ -61,6 +63,8 @@ import static io.activej.serializer.def.SerializerExpressions.writeVarLong;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class Utils {
+
+	private static final class E extends Expressions {}
 
 	public static <K extends Comparable> Class<K> createKeyClass(Map<String, FieldType> keys, DefiningClassLoader classLoader) {
 		List<String> keyList = new ArrayList<>(keys.keySet());
@@ -369,16 +373,74 @@ public class Utils {
 		//noinspection unchecked
 		return classLoader.ensureClassAndCreateInstance(
 			ClassKey.of(Predicate.class, chunkRecordClass, simplifiedFilter, simplifiedPrecondition),
-			() -> ClassGenerator.builder(Predicate.class)
-				.withMethod("test", boolean.class, List.of(Object.class),
-					ifElse(simplifiedFilter.createPredicate(cast(arg(0), chunkRecordClass), fieldTypes),
-						ifElse(simplifiedPrecondition.createPredicate(cast(arg(0), chunkRecordClass), fieldTypes),
-							value(true),
-							throwException(IllegalStateException.class)
-						),
-						value(false)))
-				.build()
+			() -> {
+				Expression record = cast(arg(0), chunkRecordClass);
+				ValueResolver valueResolver = createValueResolverOfFields(fieldTypes);
+				return ClassGenerator.builder(Predicate.class)
+					.withMethod("test", boolean.class, List.of(Object.class),
+						ifElse(simplifiedFilter.createPredicate(record, valueResolver),
+							ifElse(simplifiedPrecondition.createPredicate(record, valueResolver),
+								value(true),
+								throwException(IllegalStateException.class)
+							),
+							value(false)))
+					.build();
+			}
 		);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Object toInternalValue(Map<String, FieldType> fields, String key, Object value) {
+		return fields.containsKey(key) ? fields.get(key).toInternalValue(value) : value;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
+		if (!fields.containsKey(key)) return value;
+
+		FieldType fieldType = fields.get(key);
+		Expression initialValue = fieldType.toValue(value);
+		return fieldType.toStringValue(initialValue);
+	}
+
+	public static ValueResolver createValueResolverOfFields(Map<String, FieldType> fields) {
+		return new ValueResolver() {
+			@Override
+			public Expression getProperty(Expression record, String key) {
+				return property(record, key.replace('.', '$'));
+			}
+
+			@Override
+			public Object transformArg(String key, Object value) {
+				return toInternalValue(fields, key, value);
+			}
+
+			@Override
+			public Expression toString(String key, Expression value) {
+				return toStringValue(fields, key, value);
+			}
+		};
+	}
+
+	public static ValueResolver createValueResolverOfMeasures(Map<String, FieldType> fields, Map<String, Measure> measures) {
+		return new ValueResolver() {
+			@Override
+			public Expression getProperty(Expression record, String key) {
+				Variable property = property(record, key.replace('.', '$'));
+				Measure measure = measures.get(key);
+				return measure == null ? property : measure.valueOfAccumulator(property);
+			}
+
+			@Override
+			public Object transformArg(String key, Object value) {
+				return toInternalValue(fields, key, value);
+			}
+
+			@Override
+			public Expression toString(String key, Expression value) {
+				return toStringValue(fields, key, value);
+			}
+		};
 	}
 
 	public static boolean isArithmeticType(Type type) {

@@ -796,7 +796,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testQueryWithInNotEqNullPredicate() {
 		CubeQuery queryWithPredicateIn = CubeQuery.builder()
 			.withAttributes("advertiser.name")
-			.withOrderings(CubeQuery.Ordering.asc("attribute.name"))
+			.withOrderings(asc("attribute.name"))
 			.withWhere(and(
 				notEq("advertiser", EXCLUDE_ADVERTISER),
 				notEq("campaign", EXCLUDE_CAMPAIGN),
@@ -993,6 +993,91 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(33, dailyClicks);
 		assertEquals(2.68, dailyRevenue, DELTA);
 		assertEquals(27, dailyErrors);
+	}
+
+	@Test
+	public void testHavingMeasure() {
+		String measure = "uniqueUserIdsCount";
+		CubeQuery query = CubeQuery.builder()
+			.withAttributes("date")
+			.withMeasures(measure)
+			.withOrderings(asc(measure))
+			.withReportType(DATA)
+			.build();
+
+		QueryResult queryResult = await(httpCubeReporting.query(query));
+
+		List<Record> records = queryResult.getRecords();
+		assertEquals(3, records.size());
+
+		Record r1 = records.get(0);
+		assertEquals(2, (int) r1.get(measure));
+
+		Record r2 = records.get(1);
+		assertEquals(2, (int) r2.get(measure));
+
+		Record r3 = records.get(2);
+		assertEquals(4, (int) r3.get(measure));
+
+		CubeQuery queryHaving = CubeQuery.builder()
+			.withAttributes("date")
+			.withMeasures(measure)
+			.withHaving(gt(measure, 2))
+			.withReportType(DATA)
+			.build();
+
+		startHttpServer();
+		QueryResult queryHavingResult = await(httpCubeReporting.query(queryHaving));
+
+		List<Record> recordsHaving = queryHavingResult.getRecords();
+		assertEquals(1, recordsHaving.size());
+
+		Record r1Having = recordsHaving.get(0);
+		assertEquals(4, (int) r1Having.get(measure));
+	}
+
+	@Test
+	public void testHavingComputedMeasure() {
+		String measure = "uniqueUserPercent";
+		CubeQuery query = CubeQuery.builder()
+			.withAttributes("date")
+			.withMeasures(measure)
+			.withOrderings(asc(measure))
+			.withReportType(DATA)
+			.build();
+
+		QueryResult queryResult = await(httpCubeReporting.query(query));
+
+		List<Record> records = queryResult.getRecords();
+		assertEquals(3, records.size());
+
+		Record r1 = records.get(0);
+		assertEquals(50.0, r1.get(measure), DELTA);
+
+		Record r2 = records.get(1);
+		assertEquals(66.666, r2.get(measure), DELTA);
+
+		Record r3 = records.get(2);
+		assertEquals(100.0, r3.get(measure), DELTA);
+
+		CubeQuery queryHaving = CubeQuery.builder()
+			.withAttributes("date")
+			.withMeasures(measure)
+			.withHaving(gt(measure, 60.0))
+			.withReportType(DATA)
+			.build();
+
+		startHttpServer();
+		QueryResult queryHavingResult = await(httpCubeReporting.query(queryHaving));
+
+		List<Record> recordsHaving = queryHavingResult.getRecords();
+		assertEquals(2, recordsHaving.size());
+
+		Record r1Having = recordsHaving.get(0);
+		assertEquals(66.666, r1Having.get(measure), DELTA);
+
+		Record r2Having = recordsHaving.get(1);
+		assertEquals(100.0, r2Having.get(measure), DELTA);
 	}
 
 	private static int getAggregationItemsCount(AggregationState state) {

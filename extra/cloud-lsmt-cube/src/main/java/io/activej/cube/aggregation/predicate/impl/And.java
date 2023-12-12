@@ -19,7 +19,6 @@ package io.activej.cube.aggregation.predicate.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.aggregation.predicate.AggregationPredicates.PredicateSimplifier;
@@ -110,12 +109,11 @@ public final class And implements AggregationPredicate {
 		return result;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
 		List<Expression> predicateDefs = new ArrayList<>();
 		for (AggregationPredicate predicate : predicates) {
-			predicateDefs.add(predicate.createPredicate(record, fields));
+			predicateDefs.add(predicate.createPredicate(record, valueResolver));
 		}
 		return E.and(predicateDefs);
 	}

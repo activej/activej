@@ -17,9 +17,8 @@
 package io.activej.cube.aggregation.predicate.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
+import io.activej.codegen.expression.Expressions;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 
 import java.util.Map;
@@ -28,8 +27,6 @@ import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.toInternalValue;
 
 @ExposedInternals
 public final class Ge implements AggregationPredicate {
@@ -56,13 +53,12 @@ public final class Ge implements AggregationPredicate {
 		return Map.of();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
+		Expression property = valueResolver.getProperty(record, key);
 		return and(
-			isNotNull(property, fields.get(key)),
-			isGe(property, value(toInternalValue(fields, key, value)))
+			Expressions.isNotNull(property),
+			isGe(property, value(valueResolver.transformArg(key, value)))
 		);
 	}
 

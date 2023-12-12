@@ -17,9 +17,7 @@
 package io.activej.cube.aggregation.predicate.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 
 import java.util.Map;
@@ -28,7 +26,6 @@ import java.util.regex.Pattern;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.isNotNull;
 
 @ExposedInternals
 public final class RegExp implements AggregationPredicate {
@@ -55,24 +52,14 @@ public final class RegExp implements AggregationPredicate {
 		return Map.of();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable value = property(record, key.replace('.', '$'));
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
+		Expression property = valueResolver.getProperty(record, key);
 		return and(
-			isNotNull(value, fields.get(key)),
+			isNotNull(property),
 			isNe(
 				value(false),
-				call(call(value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
-	}
-
-	@SuppressWarnings("rawtypes")
-	private static Expression toStringValue(Map<String, FieldType> fields, String key, Expression value) {
-		if (!fields.containsKey(key)) return value;
-
-		FieldType fieldType = fields.get(key);
-		Expression initialValue = fieldType.toValue(value);
-		return fieldType.toStringValue(initialValue);
+				call(call(value(regexp), "matcher", valueResolver.toString(key, property)), "matches")));
 	}
 
 	@Override

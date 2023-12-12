@@ -18,6 +18,7 @@ import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.aggregation.predicate.PredicatesTest.Record.START_DATE;
+import static io.activej.cube.aggregation.util.Utils.createValueResolverOfFields;
 import static org.junit.Assert.*;
 
 public class PredicatesTest {
@@ -815,7 +816,7 @@ public class PredicatesTest {
 	private boolean matches(Record record, AggregationPredicate predicate) {
 		return ClassGenerator.builder(Predicate.class)
 			.withMethod("test", boolean.class, List.of(Object.class),
-				predicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
+				predicate.createPredicate(cast(arg(0), Record.class), createValueResolverOfFields(Record.FIELD_TYPES)))
 			.build()
 			.generateClassAndCreateInstance(CLASS_LOADER)
 			.test(record);

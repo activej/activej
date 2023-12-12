@@ -37,6 +37,7 @@ import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
+import io.activej.cube.aggregation.predicate.AggregationPredicate.ValueResolver;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.function.MeasuresFunction;
 import io.activej.cube.function.RecordFunction;
@@ -601,10 +602,16 @@ public final class CubeExecutor extends AbstractReactive
 
 			return queryClassLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, resultClass, queryHaving),
-				() -> ClassGenerator.builder(Predicate.class)
-					.withMethod("test",
-						queryHaving.createPredicate(cast(arg(0), resultClass), structure.getFieldTypes()))
-					.build()
+				() -> {
+					ValueResolver valueResolver = createValueResolverOfMeasures(
+						structure.getFieldTypes(),
+						structure.getMeasures()
+					);
+					return ClassGenerator.builder(Predicate.class)
+						.withMethod("test",
+							queryHaving.createPredicate(cast(arg(0), resultClass), valueResolver))
+						.build();
+				}
 			);
 		}
 

@@ -30,11 +30,19 @@ public interface AggregationPredicate {
 
 	Map<String, Object> getFullySpecifiedDimensions();
 
-	Expression createPredicate(Expression record, @SuppressWarnings("rawtypes") Map<String, FieldType> fields);
+	Expression createPredicate(Expression record, ValueResolver valueResolver);
 
 	@Override
 	boolean equals(Object o);
 
 	@Override
 	int hashCode();
+
+	interface ValueResolver {
+		Expression getProperty(Expression record, String key);
+
+		Object transformArg(String key, Object value);
+
+		Expression toString(String key, Expression value);
+	}
 }

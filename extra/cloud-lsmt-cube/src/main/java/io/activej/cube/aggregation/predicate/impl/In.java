@@ -17,9 +17,7 @@
 package io.activej.cube.aggregation.predicate.impl;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 
@@ -29,8 +27,6 @@ import java.util.stream.Collectors;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.isNotNull;
-import static io.activej.cube.aggregation.predicate.AggregationPredicates.toInternalValue;
 
 @ExposedInternals
 public final class In implements AggregationPredicate {
@@ -57,14 +53,13 @@ public final class In implements AggregationPredicate {
 		return Map.of();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-		Variable property = property(record, key.replace('.', '$'));
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
+		Expression property = valueResolver.getProperty(record, key);
 		Set<Object> internalValuesSet = values.stream()
-			.map(value -> toInternalValue(fields, key, value))
+			.map(value -> valueResolver.transformArg(key, value))
 			.collect(Collectors.toSet());
-		return and(isNotNull(property, fields.get(key)),
+		return and(isNotNull(property),
 			isNe(value(false),
 				call(value(internalValuesSet), "contains",
 					cast(property, Object.class))));

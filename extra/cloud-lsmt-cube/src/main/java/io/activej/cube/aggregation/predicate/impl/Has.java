@@ -18,7 +18,6 @@ package io.activej.cube.aggregation.predicate.impl;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.common.annotation.ExposedInternals;
-import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 
 import java.util.Map;
@@ -49,9 +48,8 @@ public final class Has implements AggregationPredicate {
 		return Map.of();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
+	public Expression createPredicate(Expression record, ValueResolver valueResolver) {
 		throw new UnsupportedOperationException();
 	}
 
