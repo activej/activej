@@ -117,6 +117,34 @@ public final class HttpHeaders {
 	public static final HttpHeader SEC_WEBSOCKET_ACCEPT = headers.register("Sec-WebSocket-Accept");
 	public static final HttpHeader SEC_WEBSOCKET_VERSION = headers.register("Sec-WebSocket-Version");
 
+	public static final HttpHeader ACCEPT_CH = headers.register("Accept-CH");
+	public static final HttpHeader ACCEPT_PATCH = headers.register("Accept-Patch");
+	public static final HttpHeader ACCEPT_POST = headers.register("Accept-Post");
+	public static final HttpHeader ALT_SVC = headers.register("Alt-Svc");
+	public static final HttpHeader ALT_USED = headers.register("Alt-Used");
+	public static final HttpHeader CLEAR_SITE_DATA = headers.register("Clear-Site-Data");
+	public static final HttpHeader CROSS_ORIGIN_EMBEDDER_POLICY = headers.register("Cross-Origin-Embedder-Policy");
+	public static final HttpHeader CROSS_ORIGIN_OPENER_POLICY = headers.register("Cross-Origin-Opener-Policy");
+	public static final HttpHeader CROSS_ORIGIN_RESOURCE_POLICY = headers.register("Cross-Origin-Resource-Policy");
+	public static final HttpHeader DEVICE_MEMORY = headers.register("Device-Memory");
+	public static final HttpHeader EXPECT_CT = headers.register("Expect-CT");
+	public static final HttpHeader FORWARDED = headers.register("Forwarded");
+	public static final HttpHeader KEEP_ALIVE = headers.register("Keep-Alive");
+	public static final HttpHeader PERMISSIONS_POLICY = headers.register("Permissions-Policy");
+	public static final HttpHeader REFERRER_POLICY = headers.register("Referrer-Policy");
+	public static final HttpHeader SEC_FETCH_DEST = headers.register("Sec-Fetch-Dest");
+	public static final HttpHeader SEC_FETCH_MODE = headers.register("Sec-Fetch-Mode");
+	public static final HttpHeader SEC_FETCH_SITE = headers.register("Sec-Fetch-Site");
+	public static final HttpHeader SEC_FETCH_USER = headers.register("Sec-Fetch-User");
+	public static final HttpHeader SEC_PURPOSE = headers.register("Sec-Purpose");
+	public static final HttpHeader SERVER_TIMING = headers.register("Server-Timing");
+	public static final HttpHeader SERVICE_WORKER_NAVIGATION_PRELOAD = headers.register("Service-Worker-Navigation-Preload");
+	public static final HttpHeader SOURCE_MAP = headers.register("SourceMap");
+	public static final HttpHeader UPGRADE_INSECURE_REQUESTS = headers.register("Upgrade-Insecure-Requests");
+	public static final HttpHeader SET_COOKIE_2 = headers.register("Set-Cookie2");
+	public static final HttpHeader PING_FROM = headers.register("Ping-From");
+	public static final HttpHeader PING_TO = headers.register("Ping-To");
+
 	public static HttpHeader register(String headerName) {
 		return headers.register(headerName);
 	}
