@@ -147,9 +147,13 @@ public final class LocalFileUtils {
 	static @Nullable FileMetadata toFileMetadata(Path path) throws IOException {
 		if (!Files.isRegularFile(path)) return null;
 
-		long size = Files.size(path);
-		long timestamp = Files.getLastModifiedTime(path).toMillis();
-		return FileMetadata.of(size, timestamp);
+		try {
+			long size = Files.size(path);
+			long timestamp = Files.getLastModifiedTime(path).toMillis();
+			return FileMetadata.of(size, timestamp);
+		} catch (NoSuchFileException e) {
+			return null;
+		}
 	}
 
 	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")

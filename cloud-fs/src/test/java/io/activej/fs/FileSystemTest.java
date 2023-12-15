@@ -11,6 +11,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.fs.exception.*;
+import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
@@ -26,9 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -576,5 +575,24 @@ public final class FileSystemTest {
 		Map<String, FileMetadata> actual = await(client.list("**"));
 
 		assertEquals(expected, actual.keySet());
+	}
+
+	@Test
+	public void testDeleteWithListDoesNotThrowException() {
+		for (int i = 0; i < 10; i++) {
+			List<Promise<Void>> promises = new ArrayList<>();
+			Set<String> currentFiles = new HashSet<>();
+			for (int j = 0; j < 100; j++) {
+				String name = i + "-" + j;
+				currentFiles.add(name);
+				promises.add(ChannelSuppliers.<ByteBuf>empty().streamTo(client.upload(name)));
+			}
+			await(Promises.all(promises));
+
+			await(Promises.all(
+				client.list("**"),
+				client.deleteAll(currentFiles)
+			));
+		}
 	}
 }
