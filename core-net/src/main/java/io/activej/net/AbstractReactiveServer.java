@@ -254,6 +254,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 				channels.add(reactor.listen(address, serverSocketSettings, channel -> doAccept(channel, address, ssl)));
 			} catch (IOException e) {
 				logger.error("Can't listen on [" + address + "]: " + this, e);
+				closeServerSockets(channels);
 				close();
 				throw e;
 			}
