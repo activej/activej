@@ -1,12 +1,11 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
@@ -30,9 +29,11 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toMap;
@@ -52,7 +53,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 			.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		AggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), frameFormat, fs);
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
 			.withDimension("advertiser", ofInt())
@@ -88,7 +89,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor,
+		LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logOTProcessor = LogProcessor.create(reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",
@@ -143,12 +144,12 @@ public class CubeIntegrationTest extends CubeTestBase {
 		assertEquals(map, logItems.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Consolidate revision 4 as revision 5:
-		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
+		ProtoCubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
-		await(stateManager.push(List.of(LogDiff.forCurrentPosition(consolidatingCubeDiff))));
-
-		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().boxed().collect(toSet())));
+		List<String> protoChunkIds = consolidatingCubeDiff.addedProtoChunks().toList();
+		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(materializeProtoCubeDiff(consolidatingCubeDiff, protoChunkIds, chunkIds)))));
 		await(aggregationChunkStorage.cleanup(stateManager.query(logState -> logState.getDataState().getAllChunks())));
 
 		// Query

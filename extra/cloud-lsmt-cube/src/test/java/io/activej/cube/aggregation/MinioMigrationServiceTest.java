@@ -1,9 +1,6 @@
 package io.activej.cube.aggregation;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.exception.MalformedDataException;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.CubeState;
@@ -18,6 +15,7 @@ import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
 import io.activej.fs.IFileSystem;
 import io.activej.ot.StateManager;
+import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -36,6 +34,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
@@ -108,9 +107,17 @@ public final class MinioMigrationServiceTest {
 
 		toStorage = MinioChunkStorage.create(
 			reactor,
-			AsyncSupplier.of(() -> {
-				throw new AssertionError();
-			}),
+			new ChunkIdGenerator() {
+				@Override
+				public Promise<String> createProtoChunkId() {
+					throw new AssertionError();
+				}
+
+				@Override
+				public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
+					throw new AssertionError();
+				}
+			},
 			client,
 			executor,
 			bucket
@@ -122,7 +129,7 @@ public final class MinioMigrationServiceTest {
 
 		fromStorage = AggregationChunkStorage.create(
 			reactor,
-			AsyncSupplier.of(new RefLong(0)::inc),
+			stubChunkIdGenerator(),
 			FrameFormats.lz4(),
 			fileSystem
 		);
@@ -138,14 +145,14 @@ public final class MinioMigrationServiceTest {
 		int nObjects = 1_000;
 		AggregationChunker<KeyValuePair> chunker = createChunker();
 
-		List<KeyValuePair> expected = generateItems(nObjects);
+		Set<KeyValuePair> expected = generateItems(nObjects);
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofIterable(expected);
 
 		assertTrue(await(fromStorage.listChunks()).isEmpty());
 
 		await(supplier.streamTo(chunker));
 
-		await(fromStorage.finish(getTempChunks()));
+		await(fromStorage.finish(getProtoChunks()));
 
 		Set<Long> fromChunks = await(fromStorage.listChunks());
 		assertChunks(fromStorage, expected, fromChunks);
@@ -176,16 +183,16 @@ public final class MinioMigrationServiceTest {
 			.collect(Collectors.toSet());
 	}
 
-	private static List<KeyValuePair> generateItems(int nObjects) {
+	private static Set<KeyValuePair> generateItems(int nObjects) {
 		Random random = ThreadLocalRandom.current();
 
 		return Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
 			.limit(nObjects)
-			.toList();
+			.collect(Collectors.toSet());
 	}
 
-	private void assertChunks(IAggregationChunkStorage storage, List<KeyValuePair> expected, Set<Long> chunks) {
-		List<KeyValuePair> result = new ArrayList<>(expected.size());
+	private void assertChunks(IAggregationChunkStorage storage, Set<KeyValuePair> expected, Set<Long> chunks) {
+		Set<KeyValuePair> result = new HashSet<>(expected.size());
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 		for (Long chunkId : chunks) {
 			List<String> fields = aggregationStructure.getMeasures();
@@ -204,16 +211,10 @@ public final class MinioMigrationServiceTest {
 			fromStorage, classLoader, CHUNK_SIZE);
 	}
 
-	private Set<Long> getTempChunks(){
+	private List<String> getProtoChunks() {
 		return await(fileSystem.list("*" + AggregationChunkStorage.TEMP_LOG)).keySet().stream()
-			.map(fileName -> {
-				try {
-					return ChunkIdJsonCodec.fromFileName(fileName.substring(0, fileName.length() - AggregationChunkStorage.TEMP_LOG.length()));
-				} catch (MalformedDataException e) {
-					throw new RuntimeException(e);
-				}
-			})
-			.collect(Collectors.toSet());
+			.map(fileName -> fileName.substring(0, fileName.length() - AggregationChunkStorage.TEMP_LOG.length()))
+			.toList();
 	}
 
 	private void clearBucket() throws Exception {

@@ -45,7 +45,7 @@ public final class AggregationGroupReducer<T, K extends Comparable> extends Abst
 	private final Class<T> recordClass;
 	private final Function<T, K> keyFunction;
 	private final Aggregate<T, Object> aggregate;
-	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
+	private final AsyncAccumulator<List<ProtoAggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 	private final int chunkSize;
 
@@ -68,7 +68,7 @@ public final class AggregationGroupReducer<T, K extends Comparable> extends Abst
 		this.classLoader = classLoader;
 	}
 
-	public Promise<List<AggregationChunk>> getResult() {
+	public Promise<List<ProtoAggregationChunk>> getResult() {
 		return chunksAccumulator.get();
 	}
 

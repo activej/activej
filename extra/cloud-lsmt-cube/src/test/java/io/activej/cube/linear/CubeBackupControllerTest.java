@@ -1,7 +1,6 @@
 package io.activej.cube.linear;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.TestUtils;
@@ -38,6 +37,7 @@ import java.util.concurrent.Executors;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.AggregationChunkStorage.LOG;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
@@ -86,7 +86,7 @@ public class CubeBackupControllerTest {
 		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		fileSystem = fs;
-		AggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(eventloop, AsyncSupplier.of(new RefLong(0)::inc),
+		AggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(eventloop, stubChunkIdGenerator(),
 			FrameFormats.lz4(), fs);
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())

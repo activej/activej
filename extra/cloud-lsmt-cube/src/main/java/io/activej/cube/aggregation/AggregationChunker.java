@@ -33,14 +33,14 @@ import java.util.List;
 
 public final class AggregationChunker<T> extends ForwardingStreamConsumer<T> {
 	private final SwitcherStreamConsumer<T> switcher;
-	private final SettablePromise<List<AggregationChunk>> result = new SettablePromise<>();
+	private final SettablePromise<List<ProtoAggregationChunk>> result = new SettablePromise<>();
 
 	private final AggregationStructure aggregation;
 	private final List<String> fields;
 	private final Class<T> recordClass;
 	private final PartitionPredicate<T> partitionPredicate;
 	private final IAggregationChunkStorage storage;
-	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
+	private final AsyncAccumulator<List<ProtoAggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 
 	private final int chunkSize;
@@ -75,12 +75,12 @@ public final class AggregationChunker<T> extends ForwardingStreamConsumer<T> {
 		return chunker;
 	}
 
-	public Promise<List<AggregationChunk>> getResult() {
+	public Promise<List<ProtoAggregationChunk>> getResult() {
 		return result;
 	}
 
 	public class ChunkWriter extends ForwardingStreamConsumer<T> implements StreamDataAcceptor<T> {
-		private final SettablePromise<AggregationChunk> result = new SettablePromise<>();
+		private final SettablePromise<ProtoAggregationChunk> result = new SettablePromise<>();
 		private final int chunkSize;
 		private final PartitionPredicate<T> partitionPredicate;
 		private StreamDataAcceptor<T> dataAcceptor;
@@ -90,7 +90,7 @@ public final class AggregationChunker<T> extends ForwardingStreamConsumer<T> {
 		private int count;
 
 		public ChunkWriter(
-			StreamConsumer<T> actualConsumer, long chunkId, int chunkSize, PartitionPredicate<T> partitionPredicate
+			StreamConsumer<T> actualConsumer, String protoChunkId, int chunkSize, PartitionPredicate<T> partitionPredicate
 		) {
 			super(actualConsumer);
 			this.chunkSize = chunkSize;
@@ -98,7 +98,7 @@ public final class AggregationChunker<T> extends ForwardingStreamConsumer<T> {
 			actualConsumer.getAcknowledgement()
 				.map($ -> count == 0 ?
 					null :
-					AggregationChunk.create(chunkId,
+					new ProtoAggregationChunk(protoChunkId,
 						fields,
 						PrimaryKey.ofObject(first, aggregation.getKeys()),
 						PrimaryKey.ofObject(last, aggregation.getKeys()),
@@ -126,23 +126,22 @@ public final class AggregationChunker<T> extends ForwardingStreamConsumer<T> {
 			}
 		}
 
-		public Promise<AggregationChunk> getResult() {
+		public Promise<ProtoAggregationChunk> getResult() {
 			return result;
 		}
 	}
 
 	private void startNewChunk() {
 		switcher.switchTo(StreamConsumers.ofPromise(
-			storage.createId()
+			storage.createProtoChunkId()
 				.then(chunkId -> storage.write(aggregation, fields, recordClass, chunkId, classLoader)
 					.map(streamConsumer -> new ChunkWriter(streamConsumer, chunkId, chunkSize, partitionPredicate))
 					.whenResult(chunkWriter -> chunksAccumulator.addPromise(
 						chunkWriter.getResult(),
 						(chunks, newChunk) -> {
-							if (newChunk != null && newChunk.getCount() != 0) {
+							if (newChunk != null && newChunk.count() != 0) {
 								chunks.add(newChunk);
 							}
 						})))));
 	}
-
 }

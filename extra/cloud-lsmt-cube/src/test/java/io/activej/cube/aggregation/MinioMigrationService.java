@@ -110,7 +110,7 @@ public final class MinioMigrationService {
 				CompletableFuture<ObjectWriteResponse> future = toClient.putObject(
 					PutObjectArgs.builder()
 						.bucket(bucket)
-						.object(entry.getKey())
+						.object(MinioChunkStorage.CHUNK_PREFIX + entry.getKey())
 						.stream(is, entry.getValue().getSize(), -1)
 						.build()
 				);

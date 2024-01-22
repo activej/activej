@@ -1,7 +1,5 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.CubeStructure.AggregationConfig;
@@ -10,6 +8,7 @@ import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.cube.service.CubeConsolidationController;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -38,6 +37,7 @@ import java.util.function.Function;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
@@ -73,7 +73,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			.build();
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		chunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), frameFormat, fs);
 
 		dateAggregation = id("date")
 			.withDimensions("date")
@@ -105,7 +105,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, basicCubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage);
 
-		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor,
+		LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logOTProcessor = LogProcessor.create(reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),
 			"testlog",

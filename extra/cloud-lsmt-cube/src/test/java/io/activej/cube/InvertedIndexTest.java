@@ -1,15 +1,11 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
-import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.AggregationChunkStorage;
-import io.activej.cube.aggregation.IAggregationChunkStorage;
-import io.activej.cube.aggregation.InvertedIndexRecord;
+import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.fs.FileSystem;
@@ -30,13 +26,12 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.cube.TestUtils.aggregationStructureBuilder;
-import static io.activej.cube.TestUtils.createAggregationState;
+import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofString;
 import static io.activej.cube.aggregation.measure.Measures.union;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoAggregationDiff;
 import static io.activej.promise.TestUtils.await;
-import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public class InvertedIndexTest {
@@ -104,7 +99,7 @@ public class InvertedIndexTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), frameFormat, fs);
 
 		AggregationStructure structure = aggregationStructureBuilder()
 			.withKey("word", ofString())
@@ -155,13 +150,14 @@ public class InvertedIndexTest {
 	}
 
 	public void doProcess(OTState<AggregationDiff> state, IAggregationChunkStorage aggregationChunkStorage, AggregationExecutor aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
-		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
-		state.apply(diff);
-		await(aggregationChunkStorage.finish(getAddedChunks(diff)));
+		ProtoAggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
+		List<String> protoChunkIds = getAddedChunks(diff);
+		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		state.apply(materializeProtoAggregationDiff(diff, protoChunkIds, chunkIds));
 	}
 
-	private Set<Long> getAddedChunks(AggregationDiff aggregationDiff) {
-		return aggregationDiff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(toSet());
+	private List<String> getAddedChunks(ProtoAggregationDiff aggregationDiff) {
+		return aggregationDiff.addedChunks().stream().map(ProtoAggregationChunk::protoChunkId).toList();
 	}
 
 }

@@ -15,10 +15,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -55,6 +52,7 @@ public class AggregationGroupReducerTest {
 		List items = new ArrayList();
 		IAggregationChunkStorage aggregationChunkStorage = new IAggregationChunkStorage() {
 			long chunkId;
+			final Map<String, Long> idsMap = new HashMap<>();
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
@@ -62,20 +60,22 @@ public class AggregationGroupReducerTest {
 			}
 
 			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
+			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId, DefiningClassLoader classLoader) {
 				StreamConsumer<T> consumer = ToListStreamConsumer.create(items);
 				listConsumers.add(consumer);
 				return Promise.of(consumer);
 			}
 
 			@Override
-			public Promise<Long> createId() {
-				return Promise.of(++chunkId);
+			public Promise<String> createProtoChunkId() {
+				String protoId = UUID.randomUUID().toString();
+				idsMap.put(protoId, ++chunkId);
+				return Promise.of(protoId);
 			}
 
 			@Override
-			public Promise<Void> finish(Set<Long> chunkIds) {
-				return Promise.complete();
+			public Promise<List<Long>> finish(List<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
 			}
 
 			@Override
@@ -120,7 +120,7 @@ public class AggregationGroupReducerTest {
 			aggregationClass, singlePartition(), keyFunction, aggregate, aggregationChunkSize, classLoader);
 
 		await(supplier.streamTo(groupReducer));
-		List<AggregationChunk> list = await(groupReducer.getResult());
+		List<ProtoAggregationChunk> list = await(groupReducer.getResult());
 
 		assertEndOfStream(supplier);
 		assertEndOfStream(groupReducer);

@@ -1,8 +1,6 @@
 package io.activej.cube.aggregation;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.AggregationStructure;
 import io.activej.datastream.supplier.StreamSupplier;
@@ -29,6 +27,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
@@ -67,7 +66,7 @@ public class AggregationChunkStorageTest {
 		await(fs.start());
 		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(
 			reactor,
-			AsyncSupplier.of(new RefLong(0)::inc),
+			stubChunkIdGenerator(),
 			FrameFormats.lz4(),
 			fs);
 
@@ -76,7 +75,7 @@ public class AggregationChunkStorageTest {
 			structure, structure.getMeasures(), KeyValuePair.class, singlePartition(),
 			aggregationChunkStorage, classLoader, 1);
 
-		Set<Path> expected = IntStream.range(0, nChunks + 1).mapToObj(i -> Paths.get((i + 1) + ".temp")).collect(toSet());
+		Set<Path> expected = IntStream.range(0, nChunks).mapToObj(i -> Paths.get((i + 1) + AggregationChunkStorage.LOG)).collect(toSet());
 
 		Random random = ThreadLocalRandom.current();
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofStream(
@@ -84,9 +83,13 @@ public class AggregationChunkStorageTest {
 				.limit(nChunks));
 
 		List<Path> paths = await(supplier.streamTo(chunker)
+			.then(chunker::getResult)
+			.then(protoAggregationChunks -> aggregationChunkStorage.finish(protoAggregationChunks.stream()
+				.map(ProtoAggregationChunk::protoChunkId)
+				.toList()))
 			.map($ -> {
 				try (Stream<Path> list = Files.list(storageDir)) {
-					return list.collect(toList());
+					return list.filter(path -> path.toString().endsWith(AggregationChunkStorage.LOG)).collect(toList());
 				} catch (IOException e) {
 					throw new AssertionError(e);
 				}

@@ -2,11 +2,14 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
+import io.activej.cube.aggregation.ChunkIdGenerator;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
+import io.activej.cube.aggregation.util.Utils;
 import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
@@ -18,12 +21,13 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import static io.activej.promise.TestUtils.await;
-import static java.util.stream.Collectors.toSet;
 
 public final class TestUtils {
 
@@ -44,11 +48,12 @@ public final class TestUtils {
 		await(repository.saveSnapshot(id, List.of()));
 	}
 
-	public static <T> void runProcessLogs(IAggregationChunkStorage aggregationChunkStorage, StateManager<LogDiff<CubeDiff>, ?> stateManager, LogProcessor<T, CubeDiff> logProcessor) {
-		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
-		await(aggregationChunkStorage
-			.finish(logDiff.diffs().flatMapToLong(CubeDiff::addedChunks).boxed().collect(toSet())));
-		await(stateManager.push(List.of(logDiff)));
+	public static <T> void runProcessLogs(IAggregationChunkStorage aggregationChunkStorage, StateManager<LogDiff<CubeDiff>, ?> stateManager, LogProcessor<T, ProtoCubeDiff, CubeDiff> logProcessor) {
+		LogDiff<ProtoCubeDiff> logDiff = await(logProcessor.processLog());
+		List<String> protoChunkIds = logDiff.diffs().flatMap(ProtoCubeDiff::addedProtoChunks).toList();
+		List<Long> chunkIds = await(aggregationChunkStorage
+			.finish(protoChunkIds));
+		await(stateManager.push(List.of(Utils.materializeProtoCubeDiff(logDiff, protoChunkIds, chunkIds))));
 	}
 
 	public static final OTState<CubeDiff> STUB_CUBE_STATE = new OTState<>() {
@@ -139,6 +144,26 @@ public final class TestUtils {
 			@Override
 			public <R> R query(Function<LogState<CubeDiff, CubeState>, R> queryFn) {
 				return queryFn.apply(state);
+			}
+		};
+	}
+
+	public static ChunkIdGenerator stubChunkIdGenerator() {
+		return new ChunkIdGenerator() {
+			private long id = 0;
+
+			@Override
+			public Promise<String> createProtoChunkId() {
+				return Promise.of(UUID.randomUUID().toString());
+			}
+
+			@Override
+			public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
+				List<Long> result = new ArrayList<>(protoChunkIds.size());
+				for (String ignored : protoChunkIds) {
+					result.add(++id);
+				}
+				return Promise.of(result);
 			}
 		};
 	}

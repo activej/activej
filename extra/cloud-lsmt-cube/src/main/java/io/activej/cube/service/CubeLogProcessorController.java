@@ -19,11 +19,13 @@ package io.activej.cube.service;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.CubeState;
-import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
-import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ProtoAggregationChunk;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
+import io.activej.cube.aggregation.util.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogProcessor;
 import io.activej.etl.LogState;
@@ -42,15 +44,15 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import static io.activej.async.function.AsyncSuppliers.coalesce;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.promise.Promises.asPromises;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 public final class CubeLogProcessorController extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
@@ -61,7 +63,7 @@ public final class CubeLogProcessorController extends AbstractReactive
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final List<LogProcessor<?, CubeDiff>> logProcessors;
+	private final List<LogProcessor<?, ProtoCubeDiff, CubeDiff>> logProcessors;
 	private final IAggregationChunkStorage chunkStorage;
 	private final StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager;
 	private AsyncSupplier<Boolean> predicate;
@@ -78,7 +80,7 @@ public final class CubeLogProcessorController extends AbstractReactive
 	private int maxOverlappingChunksToProcessLogs = DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
 
 	private CubeLogProcessorController(
-		Reactor reactor, List<LogProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage chunkStorage,
+		Reactor reactor, List<LogProcessor<?, ProtoCubeDiff, CubeDiff>> logProcessors, IAggregationChunkStorage chunkStorage,
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager
 	) {
 		super(reactor);
@@ -89,14 +91,14 @@ public final class CubeLogProcessorController extends AbstractReactive
 
 	public static CubeLogProcessorController create(
 		Reactor reactor, StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
-		IAggregationChunkStorage chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
+		IAggregationChunkStorage chunkStorage, List<LogProcessor<?, ProtoCubeDiff, CubeDiff>> logProcessors
 	) {
 		return builder(reactor, stateManager, chunkStorage, logProcessors).build();
 	}
 
 	public static CubeLogProcessorController.Builder builder(
 		Reactor reactor, StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager,
-		IAggregationChunkStorage chunkStorage, List<LogProcessor<?, CubeDiff>> logProcessors
+		IAggregationChunkStorage chunkStorage, List<LogProcessor<?, ProtoCubeDiff, CubeDiff>> logProcessors
 	) {
 		return new CubeLogProcessorController(reactor, logProcessors, chunkStorage, stateManager).new Builder();
 	}
@@ -157,11 +159,11 @@ public final class CubeLogProcessorController extends AbstractReactive
 
 				logger.info("Start log processing");
 
-				List<AsyncSupplier<LogDiff<CubeDiff>>> tasks = logProcessors.stream()
-					.map(logProcessor -> (AsyncSupplier<LogDiff<CubeDiff>>) logProcessor::processLog)
+				List<AsyncSupplier<LogDiff<ProtoCubeDiff>>> tasks = logProcessors.stream()
+					.map(logProcessor -> (AsyncSupplier<LogDiff<ProtoCubeDiff>>) logProcessor::processLog)
 					.collect(toList());
 
-				Promise<List<LogDiff<CubeDiff>>> promise = parallelRunner ?
+				Promise<List<LogDiff<ProtoCubeDiff>>> promise = parallelRunner ?
 					Promises.toList(tasks.stream().map(AsyncSupplier::get)) :
 					Promises.reduce(toList(), 1, asPromises(tasks));
 
@@ -169,26 +171,30 @@ public final class CubeLogProcessorController extends AbstractReactive
 					.mapException(e -> new CubeException("Failed to process logs", e))
 					.whenComplete(promiseProcessLogsImpl.recordStats())
 					.whenResult(this::cubeDiffJmx)
-					.then(diffs -> chunkStorage.finish(addedChunks(diffs))
-						.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-						.then(() -> stateManager.push(diffs)
-							.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
-						.map($2 -> true));
+					.then(protoDiffs -> {
+						List<String> protoChunkIds = addedProtoChunks(protoDiffs);
+						return chunkStorage.finish(protoChunkIds)
+							.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
+							.then(chunkIds -> stateManager.push(Utils.materializeProtoCubeDiff(protoDiffs, protoChunkIds, chunkIds))
+								.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
+							.map($ -> true);
+					});
 			})
 			.whenComplete(toLogger(logger, thisMethod(), stateManager));
 	}
 
-	private void cubeDiffJmx(List<LogDiff<CubeDiff>> logDiffs) {
+	private void cubeDiffJmx(List<LogDiff<ProtoCubeDiff>> logDiffs) {
 		long curAddedChunks = 0;
 		long curAddedChunksRecords = 0;
 
-		for (LogDiff<CubeDiff> logDiff : logDiffs) {
-			for (CubeDiff cubeDiff : logDiff.getDiffs()) {
-				for (String key : cubeDiff.keySet()) {
-					AggregationDiff aggregationDiff = cubeDiff.get(key);
-					curAddedChunks += aggregationDiff.getAddedChunks().size();
-					for (AggregationChunk aggregationChunk : aggregationDiff.getAddedChunks()) {
-						curAddedChunksRecords += aggregationChunk.getCount();
+		for (LogDiff<ProtoCubeDiff> logDiff : logDiffs) {
+			for (ProtoCubeDiff protoCubeDiff : logDiff.getDiffs()) {
+				Map<String, ProtoAggregationDiff> diffs = protoCubeDiff.diffs();
+				for (String key : diffs.keySet()) {
+					ProtoAggregationDiff aggregationDiff = diffs.get(key);
+					curAddedChunks += aggregationDiff.addedChunks().size();
+					for (ProtoAggregationChunk aggregationChunk : aggregationDiff.addedChunks()) {
+						curAddedChunksRecords += aggregationChunk.count();
 					}
 				}
 			}
@@ -198,12 +204,11 @@ public final class CubeLogProcessorController extends AbstractReactive
 		addedChunksRecords.recordValue(curAddedChunksRecords);
 	}
 
-	private Set<Long> addedChunks(List<LogDiff<CubeDiff>> diffs) {
+	private List<String> addedProtoChunks(List<LogDiff<ProtoCubeDiff>> diffs) {
 		return diffs.stream()
 			.flatMap(LogDiff::diffs)
-			.flatMapToLong(CubeDiff::addedChunks)
-			.boxed()
-			.collect(toSet());
+			.flatMap(ProtoCubeDiff::addedProtoChunks)
+			.toList();
 	}
 
 	@JmxAttribute

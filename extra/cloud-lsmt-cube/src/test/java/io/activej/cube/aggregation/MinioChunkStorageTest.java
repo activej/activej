@@ -1,8 +1,6 @@
 package io.activej.cube.aggregation;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.cube.AggregationStructure;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -27,6 +25,7 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
@@ -77,12 +76,12 @@ public class MinioChunkStorageTest {
 		client.makeBucket(MakeBucketArgs.builder().bucket(bucket).build()).get();
 
 		storage = MinioChunkStorage.create(
-				Reactor.getCurrentReactor(),
-				AsyncSupplier.of(new RefLong(0)::inc),
-				client,
-				Executors.newSingleThreadExecutor(),
-				bucket
-			);
+			Reactor.getCurrentReactor(),
+			stubChunkIdGenerator(),
+			client,
+			Executors.newSingleThreadExecutor(),
+			bucket
+		);
 	}
 
 	@After
@@ -95,7 +94,7 @@ public class MinioChunkStorageTest {
 		int nChunks = 100;
 		AggregationChunker<KeyValuePair> chunker = createChunker(1);
 
-		Set<String> expected = IntStream.range(0, nChunks + 1).mapToObj(i -> i + 1 + MinioChunkStorage.LOG).collect(toSet());
+		Set<String> expected = IntStream.range(0, nChunks).mapToObj(i -> i + 1 + MinioChunkStorage.LOG).collect(toSet());
 
 		Random random = ThreadLocalRandom.current();
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofStream(
@@ -103,13 +102,18 @@ public class MinioChunkStorageTest {
 				.limit(nChunks));
 
 		Set<String> objectNames = await(supplier.streamTo(chunker)
+			.then(chunker::getResult)
+			.then(protoAggregationChunks -> storage.finish(protoAggregationChunks.stream()
+				.map(ProtoAggregationChunk::protoChunkId)
+				.toList()))
 			.map($ -> {
 				Iterable<Result<Item>> results = client.listObjects(ListObjectsArgs.builder()
+					.prefix(MinioChunkStorage.CHUNK_PREFIX)
 					.bucket(bucket)
 					.build());
 				Set<String> objects = new HashSet<>();
 				for (Result<Item> result : results) {
-					objects.add(result.get().objectName());
+					objects.add(result.get().objectName().substring(MinioChunkStorage.CHUNK_PREFIX.length()));
 				}
 				return objects;
 			}));
@@ -131,6 +135,9 @@ public class MinioChunkStorageTest {
 
 		await(supplier.streamTo(chunker));
 
+		List<ProtoAggregationChunk> protoAggregationChunks = await(chunker.getResult());
+		await(storage.finish(protoAggregationChunks.stream().map(ProtoAggregationChunk::protoChunkId).toList()));
+
 		Set<Long> chunks = await(storage.listChunks());
 
 		assertEquals(LongStream.range(1, 11).boxed().collect(Collectors.toSet()), chunks);
@@ -143,16 +150,19 @@ public class MinioChunkStorageTest {
 		AggregationChunker<KeyValuePair> chunker = createChunker(chunkSize);
 
 		Random random = ThreadLocalRandom.current();
-		List<KeyValuePair> items = Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
+		Set<KeyValuePair> items = Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
 			.limit(nObjects)
-			.toList();
+			.collect(toSet());
 		StreamSupplier<KeyValuePair> supplier = StreamSuppliers.ofIterable(items);
 
 		await(supplier.streamTo(chunker));
 
+		List<ProtoAggregationChunk> protoAggregationChunks = await(chunker.getResult());
+		await(storage.finish(protoAggregationChunks.stream().map(ProtoAggregationChunk::protoChunkId).toList()));
+
 		Set<Long> chunks = await(storage.listChunks());
 
-		List<KeyValuePair> result = new ArrayList<>(items.size());
+		Set<KeyValuePair> result = new HashSet<>(items.size());
 		for (Long chunkId : chunks) {
 			List<KeyValuePair> readItems = await(storage.read(structure, structure.getMeasures(), KeyValuePair.class, chunkId, classLoader).then(StreamSupplier::toList));
 			result.addAll(readItems);

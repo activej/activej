@@ -1,8 +1,6 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
@@ -11,6 +9,7 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
@@ -43,16 +42,17 @@ import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.toLinkedHashMap;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class CubeTest {
@@ -82,7 +82,7 @@ public final class CubeTest {
 		listenPort = getFreePort();
 		FileSystem fs = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
-		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), stubChunkIdGenerator(), FRAME_FORMAT, fs);
 		CubeStructure cubeStructure = newCubeStructure();
 		cubeReporting = createCubeReporting(cubeStructure, executor, classLoader, chunkStorage);
 	}
@@ -126,8 +126,11 @@ public final class CubeTest {
 	private static <T> Promise<Void> consume(CubeReporting cubeReporting, IAggregationChunkStorage chunkStorage, T item, T... items) {
 		return StreamSuppliers.concat(StreamSuppliers.ofValue(item), StreamSuppliers.ofValues(items))
 			.streamTo(cubeReporting.getExecutor().consume(((Class<T>) item.getClass())))
-			.then(cubeDiff -> chunkStorage.finish(cubeDiff.addedChunks().boxed().collect(toSet()))
-				.then(() -> cubeReporting.getStateManager().push(List.of(LogDiff.forCurrentPosition(cubeDiff)))));
+			.then(cubeDiff -> {
+				List<String> protoChunkIds = cubeDiff.addedProtoChunks().toList();
+				return chunkStorage.finish(protoChunkIds)
+					.then(chunkIds -> cubeReporting.getStateManager().push(List.of(LogDiff.forCurrentPosition(materializeProtoCubeDiff(cubeDiff, protoChunkIds, chunkIds)))));
+			});
 	}
 
 	@Test
@@ -165,7 +168,7 @@ public final class CubeTest {
 		HttpServer server1 = startServer(executor, serverStorage);
 		IHttpClient httpClient = HttpClient.create(getCurrentReactor());
 		HttpClientFileSystem storage = HttpClientFileSystem.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
-		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), stubChunkIdGenerator(), FRAME_FORMAT, storage);
 		cubeReporting = createCubeReporting(cubeReporting.getStructure(), executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
@@ -347,7 +350,7 @@ public final class CubeTest {
 			consume(cubeReporting, chunkStorage, new DataItem2(1, 4, 10, 20), new DataItem2(1, 5, 100, 200))
 		);
 
-		CubeDiff diff = await(cubeConsolidator.consolidate(hotSegment()));
+		ProtoCubeDiff diff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(diff.isEmpty());
 
 		diff = await(cubeConsolidator.consolidate(hotSegment()));
@@ -450,7 +453,7 @@ public final class CubeTest {
 
 		FileSystem storage = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), stubChunkIdGenerator(), FRAME_FORMAT, storage);
 		CubeStructure cubeStructure = newCubeStructure();
 		CubeExecutor cubeExecutor = CubeExecutor.create(getCurrentReactor(), cubeStructure, executor, classLoader, chunkStorage);
 
@@ -469,7 +472,7 @@ public final class CubeTest {
 
 		FileSystem storage = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		IAggregationChunkStorage chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), stubChunkIdGenerator(), FRAME_FORMAT, storage);
 		CubeStructure cubeStructure = newCubeStructure();
 		CubeExecutor cubeExecutor = CubeExecutor.create(getCurrentReactor(), cubeStructure, executor, classLoader, chunkStorage);
 

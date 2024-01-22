@@ -31,7 +31,7 @@ import java.util.Set;
  */
 @ComponentInterface
 public interface IAggregationChunkStorage {
-	Promise<Long> createId();
+	Promise<String> createProtoChunkId();
 
 	/**
 	 * Creates a {@code StreamSupplier} that streams records contained in the chunk.
@@ -50,16 +50,16 @@ public interface IAggregationChunkStorage {
 	 * Creates a {@code StreamConsumer} that persists streamed records.
 	 * The chunk to write is determined by {@code aggregationId} and {@code id}.
 	 *
-	 * @param fields      fields of chunk record
-	 * @param recordClass class of chunk record
-	 * @param chunkId     id of chunk
+	 * @param fields       fields of chunk record
+	 * @param recordClass  class of chunk record
+	 * @param protoChunkId proto id of chunk
 	 */
 	<T> Promise<StreamConsumer<T>> write(
-		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId,
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId,
 		DefiningClassLoader classLoader
 	);
 
-	Promise<Void> finish(Set<Long> chunkIds);
+	Promise<List<Long>> finish(List<String> protoChunkIds);
 
 	Promise<Set<Long>> listChunks();
 

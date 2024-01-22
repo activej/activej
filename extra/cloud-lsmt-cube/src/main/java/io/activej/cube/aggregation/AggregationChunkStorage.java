@@ -16,7 +16,6 @@
 
 package io.activej.cube.aggregation;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
@@ -57,10 +56,7 @@ import org.slf4j.Logger;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 
@@ -69,6 +65,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.difference;
 import static io.activej.cube.aggregation.util.Utils.createBinarySerializer;
+import static io.activej.cube.aggregation.util.Utils.escapeFilename;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toMap;
@@ -90,7 +87,7 @@ public final class AggregationChunkStorage extends AbstractReactive
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
 
-	private final AsyncSupplier<Long> idGenerator;
+	private final ChunkIdGenerator idGenerator;
 	private final FrameFormat frameFormat;
 
 	private final IFileSystem fileSystem;
@@ -145,7 +142,7 @@ public final class AggregationChunkStorage extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage(Reactor reactor, AsyncSupplier<Long> idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
+	private AggregationChunkStorage(Reactor reactor, ChunkIdGenerator idGenerator, FrameFormat frameFormat, IFileSystem fileSystem) {
 		super(reactor);
 		this.idGenerator = idGenerator;
 		this.frameFormat = frameFormat;
@@ -153,14 +150,14 @@ public final class AggregationChunkStorage extends AbstractReactive
 	}
 
 	public static AggregationChunkStorage create(
-		Reactor reactor, AsyncSupplier<Long> idGenerator, FrameFormat frameFormat,
+		Reactor reactor, ChunkIdGenerator idGenerator, FrameFormat frameFormat,
 		IFileSystem fileSystem
 	) {
 		return builder(reactor, idGenerator, frameFormat, fileSystem).build();
 	}
 
 	public static AggregationChunkStorage.Builder builder(
-		Reactor reactor, AsyncSupplier<Long> idGenerator, FrameFormat frameFormat,
+		Reactor reactor, ChunkIdGenerator idGenerator, FrameFormat frameFormat,
 		IFileSystem fileSystem
 	) {
 		return new AggregationChunkStorage(reactor, idGenerator, frameFormat, fileSystem).new Builder();
@@ -223,12 +220,12 @@ public final class AggregationChunkStorage extends AbstractReactive
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Promise<StreamConsumer<T>> write(
-		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId,
+		AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId,
 		DefiningClassLoader classLoader
 	) {
 		if (CHECKS) checkInReactorThread(this);
-		return fileSystem.upload(toTempPath(chunkId))
-			.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
+		return fileSystem.upload(toTempPath(protoChunkId))
+			.mapException(e -> new AggregationException("Failed to upload chunk '" + protoChunkId + '\'', e))
 			.whenComplete(promiseOpenW.recordStats())
 			.map(consumer -> StreamConsumers.<T>ofSupplier(
 					supplier -> supplier
@@ -246,22 +243,31 @@ public final class AggregationChunkStorage extends AbstractReactive
 						.transformWith(writeFile)
 						.streamTo(consumer))
 				.withAcknowledgement(ack -> ack
-					.mapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e))));
+					.mapException(e -> new AggregationException("Failed to write chunk '" + protoChunkId + '\'', e))));
 	}
 
 	@Override
-	public Promise<Void> finish(Set<Long> chunkIds) {
+	public Promise<List<Long>> finish(List<String> protoChunkIds) {
 		checkInReactorThread(this);
-		return fileSystem.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
-			.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e))
-			.whenResult(() -> finishChunks = chunkIds.size())
+		return idGenerator.convertToActualChunkIds(protoChunkIds)
+			.mapException(e -> new AggregationException("Failed to convert to actual chunk IDs: " + Utils.toString(protoChunkIds), e))
+			.then(chunkIds -> {
+				Map<String, String> renameMap = new HashMap<>(protoChunkIds.size());
+				for (int i = 0; i < protoChunkIds.size(); i++) {
+					renameMap.put(toTempPath(protoChunkIds.get(i)), toPath(chunkIds.get(i)));
+				}
+				return fileSystem.moveAll(renameMap)
+					.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(protoChunkIds), e))
+					.map($ -> chunkIds);
+			})
+			.whenResult(() -> finishChunks = protoChunkIds.size())
 			.whenComplete(promiseFinishChunks.recordStats());
 	}
 
 	@Override
-	public Promise<Long> createId() {
+	public Promise<String> createProtoChunkId() {
 		if (CHECKS) checkInReactorThread(this);
-		return idGenerator.get()
+		return idGenerator.createProtoChunkId()
 			.mapException(e -> new AggregationException("Could not create ID", e))
 			.whenComplete(promiseAsyncSupplier.recordStats());
 	}
@@ -382,8 +388,8 @@ public final class AggregationChunkStorage extends AbstractReactive
 		return toDir(chunksPath) + ChunkIdJsonCodec.toFileName(chunkId) + LOG;
 	}
 
-	private String toTempPath(long chunkId) {
-		return toDir(tempPath) + ChunkIdJsonCodec.toFileName(chunkId) + TEMP_LOG;
+	private String toTempPath(String protoChunkId) {
+		return toDir(tempPath) + escapeFilename(protoChunkId) + TEMP_LOG;
 	}
 
 	private String toBackupPath(String backupId, @Nullable Long chunkId) {

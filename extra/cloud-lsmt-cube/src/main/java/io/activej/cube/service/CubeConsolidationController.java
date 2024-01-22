@@ -23,9 +23,11 @@ import io.activej.cube.CubeConsolidator;
 import io.activej.cube.CubeConsolidator.ConsolidationStrategy;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -53,8 +55,8 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.aggregation.util.Utils.collectChunkIds;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.reactor.Reactive.checkInReactorThread;
-import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<D> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
@@ -182,13 +184,14 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 				.whenComplete(promiseConsolidateImpl.recordStats()))
 			.whenResult(this::cubeDiffJmx)
 			.whenComplete(this::logCubeDiff)
-			.then(cubeDiff -> {
-				if (cubeDiff.isEmpty()) return Promise.complete();
-				return aggregationChunkStorage.finish(addedChunks(cubeDiff))
+			.then(protoCubeDiff -> {
+				if (protoCubeDiff.isEmpty()) return Promise.complete();
+				List<String> protoChunkIds = addedProtoChunks(protoCubeDiff);
+				return aggregationChunkStorage.finish(protoChunkIds)
 					.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-					.then(() -> stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
+					.then(chunkIds -> stateManager.push(List.of(cubeDiffScheme.wrap(materializeProtoCubeDiff(protoCubeDiff, protoChunkIds, chunkIds))))
 						.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
-					.whenComplete(toLogger(logger, thisMethod(), cubeDiff));
+					.whenComplete(toLogger(logger, thisMethod(), protoCubeDiff));
 			})
 			.then((result, e) -> releaseChunks(chunksForConsolidation)
 				.then(() -> Promise.of(result, e)))
@@ -263,6 +266,32 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 			.whenComplete(() -> cleaning = false);
 	}
 
+	private void cubeDiffJmx(ProtoCubeDiff protoCubeDiff) {
+		long curAddedChunks = 0;
+		long curAddedChunksRecords = 0;
+		long curRemovedChunks = 0;
+		long curRemovedChunksRecords = 0;
+
+		Map<String, ProtoAggregationDiff> protoDiffs = protoCubeDiff.diffs();
+		for (String key : protoDiffs.keySet()) {
+			ProtoAggregationDiff protoAggregationDiff = protoDiffs.get(key);
+			curAddedChunks += protoAggregationDiff.addedChunks().size();
+			for (ProtoAggregationChunk aggregationChunk : protoAggregationDiff.addedChunks()) {
+				curAddedChunksRecords += aggregationChunk.count();
+			}
+
+			curRemovedChunks += protoAggregationDiff.removedChunks().size();
+			for (AggregationChunk aggregationChunk : protoAggregationDiff.removedChunks()) {
+				curRemovedChunksRecords += aggregationChunk.getCount();
+			}
+		}
+
+		addedChunks.recordValue(curAddedChunks);
+		addedChunksRecords.recordValue(curAddedChunksRecords);
+		removedChunks.recordValue(curRemovedChunks);
+		removedChunksRecords.recordValue(curRemovedChunksRecords);
+	}
+
 	private void cubeDiffJmx(CubeDiff cubeDiff) {
 		long curAddedChunks = 0;
 		long curAddedChunksRecords = 0;
@@ -288,13 +317,13 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 		removedChunksRecords.recordValue(curRemovedChunksRecords);
 	}
 
-	private static Set<Long> addedChunks(CubeDiff cubeDiff) {
-		return cubeDiff.addedChunks().boxed().collect(toSet());
+	private static List<String> addedProtoChunks(ProtoCubeDiff protoCubeDiff) {
+		return protoCubeDiff.addedProtoChunks().toList();
 	}
 
-	private void logCubeDiff(CubeDiff cubeDiff, Exception e) {
+	private void logCubeDiff(ProtoCubeDiff protoCubeDiff, Exception e) {
 		if (e != null) logger.warn("Consolidation failed", e);
-		else if (cubeDiff.isEmpty()) logger.info("Previous consolidation did not merge any chunks");
+		else if (protoCubeDiff.isEmpty()) logger.info("Previous consolidation did not merge any chunks");
 		else logger.info("Consolidation finished. Launching consolidation task again.");
 	}
 

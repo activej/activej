@@ -1,6 +1,7 @@
 package io.activej.cube.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.expression.impl.Loop;
 import io.activej.cube.AggregationState;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.util.PartitionPredicate;
@@ -19,9 +20,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static io.activej.common.Utils.last;
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
@@ -66,6 +65,7 @@ public final class AggregationChunkerTest {
 		List<KeyValuePair> items = new ArrayList<>();
 		IAggregationChunkStorage aggregationChunkStorage = new IAggregationChunkStorage() {
 			long chunkId;
+			final Map<String, Long> idsMap = new HashMap<>();
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
@@ -73,20 +73,22 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
+			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId, DefiningClassLoader classLoader) {
 				StreamConsumer<T> consumer = ToListStreamConsumer.create((List<T>) items);
 				consumer.getAcknowledgement().whenComplete(assertCompleteFn());
 				return Promise.of(consumer);
 			}
 
 			@Override
-			public Promise<Long> createId() {
-				return Promise.of(++chunkId);
+			public Promise<String> createProtoChunkId() {
+				String protoChunkId = UUID.randomUUID().toString();
+				idsMap.put(protoChunkId, ++chunkId);
+				return Promise.of(protoChunkId);
 			}
 
 			@Override
-			public Promise<Void> finish(Set<Long> chunkIds) {
-				return Promise.complete();
+			public Promise<List<Long>> finish(List<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
 			}
 
 			@Override
@@ -124,7 +126,7 @@ public final class AggregationChunkerTest {
 		);
 
 		await(supplier.streamTo(chunker));
-		List<AggregationChunk> list = await(chunker.getResult());
+		List<ProtoAggregationChunk> list = await(chunker.getResult());
 
 		assertEquals(3, list.size());
 		assertEquals(new KeyValuePair(3, 4, 6), items.get(0));
@@ -138,6 +140,7 @@ public final class AggregationChunkerTest {
 		IAggregationChunkStorage aggregationChunkStorage = new IAggregationChunkStorage() {
 			long chunkId;
 			final List items = new ArrayList();
+			final Map<String, Long> idsMap = new HashMap<>();
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
@@ -145,20 +148,22 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass,long chunkId, DefiningClassLoader classLoader) {
+			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId, DefiningClassLoader classLoader) {
 				StreamConsumer<T> consumer = ToListStreamConsumer.create(items);
 				listConsumers.add(consumer);
 				return Promise.of(consumer);
 			}
 
 			@Override
-			public Promise<Long> createId() {
-				return Promise.of(++chunkId);
+			public Promise<String> createProtoChunkId() {
+				String protoChunkId = UUID.randomUUID().toString();
+				idsMap.put(protoChunkId, ++chunkId);
+				return Promise.of(protoChunkId);
 			}
 
 			@Override
-			public Promise<Void> finish(Set<Long> chunkIds) {
-				return Promise.complete();
+			public Promise<List<Long>> finish(List<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
 			}
 
 			@Override
@@ -225,6 +230,7 @@ public final class AggregationChunkerTest {
 		IAggregationChunkStorage aggregationChunkStorage = new IAggregationChunkStorage() {
 			long chunkId;
 			final List items = new ArrayList();
+			final Map<String, Long> idsMap = new HashMap<>();
 
 			@Override
 			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
@@ -232,7 +238,7 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
+			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId, DefiningClassLoader classLoader) {
 				if (chunkId == 1) {
 					StreamConsumer<T> toList = ToListStreamConsumer.create(items);
 					listConsumers.add(toList);
@@ -245,13 +251,15 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public Promise<Long> createId() {
-				return Promise.of(++chunkId);
+			public Promise<String> createProtoChunkId() {
+				String protoChunkId = UUID.randomUUID().toString();
+				idsMap.put(protoChunkId, ++chunkId);
+				return Promise.of(protoChunkId);
 			}
 
 			@Override
-			public Promise<Void> finish(Set<Long> chunkIds) {
-				return Promise.complete();
+			public Promise<List<Long>> finish(List<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
 			}
 
 			@Override

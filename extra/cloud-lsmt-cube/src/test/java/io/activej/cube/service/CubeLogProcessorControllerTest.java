@@ -1,10 +1,8 @@
 package io.activej.cube.service;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.UnknownFormatException;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.ChannelFrameDecoder;
 import io.activej.csp.process.frame.ChannelFrameEncoder;
 import io.activej.csp.process.frame.FrameFormats;
@@ -14,6 +12,7 @@ import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
@@ -35,6 +34,7 @@ import java.util.Map;
 
 import static io.activej.common.Utils.first;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
@@ -57,7 +57,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		FileSystem aggregationFS = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFS.start());
-		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc),
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(),
 			FrameFormats.lz4(), aggregationFS);
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
@@ -91,7 +91,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 			.create(CLASS_LOADER, LogItem.class);
 		multilog = Multilog.create(reactor, logsFileSystem, FrameFormats.lz4(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
-		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(
+		LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logProcessor = LogProcessor.create(
 			reactor,
 			multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class),

@@ -51,12 +51,12 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * Processes logs. Creates new aggregation logs and persists to {@link ILogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class LogProcessor<T, D> extends AbstractReactive
+public final class LogProcessor<T, P, D> extends AbstractReactive
 	implements ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(LogProcessor.class);
 
 	private final IMultilog<T> multilog;
-	private final ILogDataConsumer<T, D> logStreamConsumer;
+	private final ILogDataConsumer<T, P> logStreamConsumer;
 
 	private final String log;
 	private final List<String> partitions;
@@ -71,7 +71,7 @@ public final class LogProcessor<T, D> extends AbstractReactive
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogProcessor(
-		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer, String log,
+		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, P> logStreamConsumer, String log,
 		List<String> partitions, StateManager<?, LogState<D, ?>> stateManager
 	) {
 		super(reactor);
@@ -82,8 +82,8 @@ public final class LogProcessor<T, D> extends AbstractReactive
 		this.stateManager = stateManager;
 	}
 
-	public static <T, D, S extends OTState<D>> LogProcessor<T, D> create(
-		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, D> logStreamConsumer, String log,
+	public static <T, P, D, S extends OTState<D>> LogProcessor<T, P, D> create(
+		Reactor reactor, IMultilog<T> multilog, ILogDataConsumer<T, P> logStreamConsumer, String log,
 		List<String> partitions, StateManager<LogDiff<D>, LogState<D, S>> stateManager
 	) {
 		//noinspection unchecked
@@ -102,20 +102,20 @@ public final class LogProcessor<T, D> extends AbstractReactive
 		return Promise.complete();
 	}
 
-	private final AsyncSupplier<LogDiff<D>> processLog = reuse(this::doProcessLog);
+	private final AsyncSupplier<LogDiff<P>> processLog = reuse(this::doProcessLog);
 
-	public Promise<LogDiff<D>> processLog() {
+	public Promise<LogDiff<P>> processLog() {
 		checkInReactorThread(this);
 		return processLog.get();
 	}
 
-	private Promise<LogDiff<D>> doProcessLog() {
+	private Promise<LogDiff<P>> doProcessLog() {
 		if (!enabled) return Promise.of(LogDiff.of(Map.of(), List.of()));
 		Map<String, LogPosition> positions = stateManager.query(state -> Map.copyOf(state.getPositions()));
 		logger.trace("processLog_gotPositions called. Positions: {}", positions);
 
 		StreamSupplierWithResult<T, Map<String, LogPositionDiff>> supplier = getSupplier(positions);
-		StreamConsumerWithResult<T, List<D>> consumer = logStreamConsumer.consume();
+		StreamConsumerWithResult<T, List<P>> consumer = logStreamConsumer.consume();
 		return supplier.streamTo(consumer)
 			.whenComplete(promiseProcessLog.recordStats())
 			.map(result -> LogDiff.of(result.value1(), result.value2()))

@@ -1,15 +1,14 @@
 package io.activej.cube.etcd;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.FatalErrorHandlers;
-import io.activej.common.ref.RefLong;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.CubeStructure;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.ChunkIdGenerator;
 import io.activej.cube.aggregation.PrimaryKey;
 import io.activej.cube.aggregation.ot.AggregationDiff;
 import io.activej.cube.ot.CubeDiff;
@@ -36,6 +35,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,7 +92,19 @@ public class CubeCleanerServiceTest {
 
 		FileSystem fileSystem = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fileSystem.start());
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, new ChunkIdGenerator() {
+				@Override
+				public Promise<String> createProtoChunkId() {
+					throw new AssertionError();
+				}
+
+				@Override
+				public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
+					return Promise.of(protoChunkIds.stream()
+						.map(Long::parseLong)
+						.toList());
+				}
+			},
 			FrameFormats.lz4(), fileSystem);
 
 		structure = CubeStructure.builder()
@@ -230,18 +242,21 @@ public class CubeCleanerServiceTest {
 
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 
+		List<String> protoChunkIds = new ArrayList<>(addedChunks.size());
 		for (Long addedChunk : addedChunks) {
+			String protoChunkId = String.valueOf(addedChunk);
+			protoChunkIds.add(protoChunkId);
 			Promise<StreamConsumer<Container>> writePromise = aggregationChunkStorage.write(
 				aggregationStructure,
 				List.of(),
 				Container.class,
-				addedChunk,
+				protoChunkId,
 				CLASS_LOADER
 			);
 			await(StreamSuppliers.<Container>ofValues().streamTo(writePromise));
 		}
 
-		await(aggregationChunkStorage.finish(addedChunks));
+		await(aggregationChunkStorage.finish(protoChunkIds));
 	}
 
 	private Promise<Void> processChunksAsync(long timestamp, Set<Long> addedChunks, Set<Long> removedChunks) {
@@ -249,20 +264,25 @@ public class CubeCleanerServiceTest {
 		now.setTimeProvider(ofConstant(timestamp));
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 
+		List<String> protoChunkIds = new ArrayList<>(addedChunks.size());
 		return stateManager.push(List.of(LogDiff.forCurrentPosition(CubeDiff.of(
 				Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(addedChunks), idsToChunks(removedChunks)))
 			))))
 			.then(() -> Promises.all(addedChunks.stream()
-				.map(addedChunk ->
-					StreamSuppliers.<Container>ofValues().streamTo(aggregationChunkStorage.write(
-						aggregationStructure,
-						List.of(),
-						Container.class,
-						addedChunk,
-						CLASS_LOADER
-					)))))
-			.then(() -> aggregationChunkStorage.finish(addedChunks))
-			.whenComplete(() -> now.setTimeProvider(prevProvider));
+				.map(addedChunk -> {
+					String protoChunkId = String.valueOf(addedChunk);
+					protoChunkIds.add(protoChunkId);
+					return StreamSuppliers.<Container>ofValues().streamTo(aggregationChunkStorage.write(
+							aggregationStructure,
+							List.of(),
+							Container.class,
+							protoChunkId,
+							CLASS_LOADER
+					));
+				})))
+			.then(() -> aggregationChunkStorage.finish(protoChunkIds))
+			.whenComplete(() -> now.setTimeProvider(prevProvider))
+			.toVoid();
 	}
 
 	private static Set<AggregationChunk> idsToChunks(Set<Long> addedChunks) {

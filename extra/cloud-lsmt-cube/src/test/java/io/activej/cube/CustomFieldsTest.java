@@ -1,17 +1,16 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
+import io.activej.cube.aggregation.ProtoAggregationChunk;
 import io.activej.cube.aggregation.annotation.Key;
 import io.activej.cube.aggregation.annotation.Measures;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
-import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.aggregation.util.HyperLogLog;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -30,13 +29,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
-import static io.activej.cube.TestUtils.aggregationStructureBuilder;
-import static io.activej.cube.TestUtils.createAggregationState;
+import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.*;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoAggregationDiff;
 import static io.activej.promise.TestUtils.await;
 import static junit.framework.TestCase.assertEquals;
 
@@ -96,7 +94,7 @@ public class CustomFieldsTest {
 		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormats.lz4();
-		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), frameFormat, fs);
 
 		AggregationStructure structure = aggregationStructureBuilder()
 			.withKey("siteId", FieldTypes.ofInt())
@@ -117,9 +115,10 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.42, 3),
 			new EventRecord(3, 0.13, 20));
 
-		AggregationDiff diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
-		state.apply(diff);
+		ProtoAggregationDiff diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
+		List<String> protoChunkIds = diff.addedChunks().stream().map(ProtoAggregationChunk::protoChunkId).toList();
+		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		state.apply(materializeProtoAggregationDiff(diff, protoChunkIds, chunkIds));
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(2, 0.30, 20),
@@ -127,8 +126,9 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.91, 33));
 
 		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
-		state.apply(diff);
+		protoChunkIds = diff.addedChunks().stream().map(ProtoAggregationChunk::protoChunkId).toList();
+		chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		state.apply(materializeProtoAggregationDiff(diff, protoChunkIds, chunkIds));
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(1, 0.01, 1),
@@ -136,8 +136,9 @@ public class CustomFieldsTest {
 			new EventRecord(3, 1.01, 21));
 
 		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
-		state.apply(diff);
+		protoChunkIds = diff.addedChunks().stream().map(ProtoAggregationChunk::protoChunkId).toList();
+		chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		state.apply(materializeProtoAggregationDiff(diff, protoChunkIds, chunkIds));
 
 		supplier = StreamSuppliers.ofValues(
 			new EventRecord(1, 0.35, 500),
@@ -145,8 +146,9 @@ public class CustomFieldsTest {
 			new EventRecord(2, 0.85, 50));
 
 		diff = await(supplier.streamTo(aggregationExecutor.consume(EventRecord.class)));
-		aggregationChunkStorage.finish(diff.getAddedChunks().stream().map(AggregationChunk::getChunkId).collect(Collectors.toSet()));
-		state.apply(diff);
+		protoChunkIds = diff.addedChunks().stream().map(ProtoAggregationChunk::protoChunkId).toList();
+		chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		state.apply(materializeProtoAggregationDiff(diff, protoChunkIds, chunkIds));
 
 		AggregationQuery query = new AggregationQuery();
 		query.addKeys(List.of("siteId"));

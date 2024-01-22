@@ -18,9 +18,10 @@ package io.activej.cube;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.cube.aggregation.AggregationChunk;
-import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -58,11 +59,11 @@ public final class CubeConsolidator extends AbstractReactive
 		return new CubeConsolidator(stateManager, structure, executor);
 	}
 
-	public Promise<CubeDiff> consolidate(ConsolidationStrategy strategy) {
+	public Promise<ProtoCubeDiff> consolidate(ConsolidationStrategy strategy) {
 		checkInReactorThread(this);
 		logger.info("Launching consolidation");
 
-		Map<String, AggregationDiff> map = new HashMap<>();
+		Map<String, ProtoAggregationDiff> map = new HashMap<>();
 		List<AsyncRunnable> runnables = new ArrayList<>();
 
 		Map<String, AggregationExecutor> aggregationExecutors = executor.getAggregationExecutors();
@@ -82,7 +83,7 @@ public final class CubeConsolidator extends AbstractReactive
 					));
 				return Promise.complete()
 					.then(() -> chunks.isEmpty() ?
-						Promise.of(AggregationDiff.empty()) :
+						Promise.of(new ProtoAggregationDiff(Set.of(), Set.of())) :
 						aggregationExecutor.consolidate(chunks))
 					.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
 					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
@@ -90,7 +91,7 @@ public final class CubeConsolidator extends AbstractReactive
 			});
 		}
 
-		return Promises.sequence(runnables).map($ -> CubeDiff.of(map));
+		return Promises.sequence(runnables).map($ -> new ProtoCubeDiff(map));
 	}
 
 	public CubeStructure getStructure() {

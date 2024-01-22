@@ -1,12 +1,12 @@
 package io.activej.cube.aggregation;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
+import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.consumer.ChannelConsumers;
@@ -49,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import static io.activej.cube.aggregation.util.Utils.createBinarySerializer;
+import static io.activej.cube.aggregation.util.Utils.escapeFilename;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
@@ -61,8 +62,9 @@ public final class MinioChunkStorage extends AbstractReactive
 	public static final String LOG = ".log";
 	public static final int DEFAULT_PART_SIZE = ApplicationSettings.getInt(MinioChunkStorage.class, "partSize", 10485760);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
+	public static final String CHUNK_PREFIX = "chunk.";
 
-	private final AsyncSupplier<Long> idGenerator;
+	private final ChunkIdGenerator idGenerator;
 	private final MinioAsyncClient client;
 	private final Executor executor;
 	private final String bucket;
@@ -110,7 +112,7 @@ public final class MinioChunkStorage extends AbstractReactive
 
 	private MinioChunkStorage(
 		Reactor reactor,
-		AsyncSupplier<Long> idGenerator,
+		ChunkIdGenerator idGenerator,
 		MinioAsyncClient client,
 		Executor executor,
 		String bucket
@@ -124,7 +126,7 @@ public final class MinioChunkStorage extends AbstractReactive
 
 	public static MinioChunkStorage create(
 		Reactor reactor,
-		AsyncSupplier<Long> idGenerator,
+		ChunkIdGenerator idGenerator,
 		MinioAsyncClient client,
 		Executor executor,
 		String bucket
@@ -134,7 +136,7 @@ public final class MinioChunkStorage extends AbstractReactive
 
 	public static MinioChunkStorage.Builder builder(
 		Reactor reactor,
-		AsyncSupplier<Long> idGenerator,
+		ChunkIdGenerator idGenerator,
 		MinioAsyncClient client,
 		Executor executor,
 		String bucket
@@ -170,9 +172,9 @@ public final class MinioChunkStorage extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Long> createId() {
+	public Promise<String> createProtoChunkId() {
 		if (CHECKS) checkInReactorThread(this);
-		return idGenerator.get()
+		return idGenerator.createProtoChunkId()
 			.mapException(e -> new AggregationException("Could not create ID", e))
 			.whenComplete(promiseAsyncSupplier.recordStats());
 	}
@@ -213,7 +215,7 @@ public final class MinioChunkStorage extends AbstractReactive
 	}
 
 	@Override
-	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, long chunkId, DefiningClassLoader classLoader) {
+	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, String protoChunkId, DefiningClassLoader classLoader) {
 		if (CHECKS) checkInReactorThread(this);
 
 		PipedOutputStream os = new PipedOutputStream();
@@ -221,7 +223,7 @@ public final class MinioChunkStorage extends AbstractReactive
 		try {
 			is = new PipedInputStream(os);
 		} catch (IOException e) {
-			return Promise.<StreamConsumer<T>>ofException(new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
+			return Promise.<StreamConsumer<T>>ofException(new AggregationException("Failed to upload chunk '" + protoChunkId + '\'', e))
 				.whenComplete(promiseOpenW.recordStats());
 		}
 
@@ -231,11 +233,11 @@ public final class MinioChunkStorage extends AbstractReactive
 			future = client.putObject(
 				PutObjectArgs.builder()
 					.bucket(bucket)
-					.object(toObjectName(chunkId))
+					.object(toObjectName(protoChunkId))
 					.stream(is, -1, partSize)
 					.build());
 		} catch (Exception e) {
-			return Promise.<StreamConsumer<T>>ofException(new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
+			return Promise.<StreamConsumer<T>>ofException(new AggregationException("Failed to upload chunk '" + protoChunkId + '\'', e))
 				.whenComplete(promiseOpenW.recordStats());
 		}
 
@@ -254,14 +256,56 @@ public final class MinioChunkStorage extends AbstractReactive
 				.withAcknowledgement(ack -> ack
 					.both(Promise.ofCompletionStage(future))
 					.whenResult(writtenChunks::recordEvent)
-					.mapException(e -> new AggregationException("Failed to write chunk '" + chunkId + '\'', e))))
+					.mapException(e -> new AggregationException("Failed to write chunk '" + protoChunkId + '\'', e))))
 			.whenComplete(promiseOpenW.recordStats());
 	}
 
 	@Override
-	public Promise<Void> finish(Set<Long> chunkIds) {
+	public Promise<List<Long>> finish(List<String> protoChunkIds) {
 		checkInReactorThread(this);
-		return Promise.complete();
+		return idGenerator.convertToActualChunkIds(protoChunkIds)
+			.then(chunkIds -> {
+				CompletableFuture<?>[] futures = new CompletableFuture[protoChunkIds.size()];
+				for (int i = 0; i < protoChunkIds.size(); i++) {
+					futures[i] = client.copyObject(
+						CopyObjectArgs.builder()
+							.bucket(bucket)
+							.source(CopySource.builder().bucket(bucket).object(toObjectName(protoChunkIds.get(i))).build())
+							.object(toObjectName(chunkIds.get(i)))
+							.build()
+					);
+				}
+
+				return Promise.ofCompletionStage(CompletableFuture.allOf(futures))
+					.then($ -> {
+						Iterable<Result<DeleteError>> results = client.removeObjects(
+							RemoveObjectsArgs.builder()
+								.bucket(bucket)
+								.objects(protoChunkIds.stream()
+									.map(this::toObjectName)
+									.map(DeleteObject::new)
+									.toList())
+								.build()
+						);
+
+						return Promise.ofBlocking(executor, () -> {
+							for (Result<DeleteError> result : results) {
+								DeleteError deleteError;
+
+								try {
+									deleteError = result.get();
+								} catch (Exception e) {
+									throw new AggregationException("Failed to delete temp chunks", e);
+								}
+								if (deleteError != null) {
+									throw new AggregationException("Failed to delete temp chunks: " + deleteError);
+								}
+							}
+						});
+					})
+					.map($ -> chunkIds);
+			})
+			.mapException(e -> new AggregationException("Failed to convert to actual chunk IDs: " + Utils.toString(protoChunkIds), e));
 	}
 
 	@Override
@@ -270,6 +314,7 @@ public final class MinioChunkStorage extends AbstractReactive
 
 		Iterable<Result<Item>> results = client.listObjects(
 			ListObjectsArgs.builder()
+				.prefix(CHUNK_PREFIX)
 				.bucket(bucket)
 				.build()
 		);
@@ -278,7 +323,7 @@ public final class MinioChunkStorage extends AbstractReactive
 				Set<Long> chunks = new HashSet<>();
 				for (Result<Item> result : results) {
 					Item item = result.get();
-					long chunkId = fromObjectName(item.objectName());
+					long chunkId = fromObjectName(item.objectName().substring(CHUNK_PREFIX.length()));
 					chunks.add(chunkId);
 				}
 				return chunks;
@@ -344,8 +389,12 @@ public final class MinioChunkStorage extends AbstractReactive
 		return Promise.complete();
 	}
 
+	private String toObjectName(String protoChunkId) {
+		return escapeFilename(protoChunkId) + LOG;
+	}
+
 	private String toObjectName(long chunkId) {
-		return ChunkIdJsonCodec.toFileName(chunkId) + LOG;
+		return CHUNK_PREFIX + ChunkIdJsonCodec.toFileName(chunkId) + LOG;
 	}
 
 	private long fromObjectName(String path) throws MalformedDataException {

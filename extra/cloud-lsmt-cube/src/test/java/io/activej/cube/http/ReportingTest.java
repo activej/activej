@@ -1,7 +1,5 @@
 package io.activej.cube.http;
 
-import io.activej.async.function.AsyncSupplier;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.*;
 import io.activej.cube.aggregation.AggregationChunk;
@@ -13,6 +11,7 @@ import io.activej.cube.aggregation.measure.Measure;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.supplier.StreamDataAcceptor;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -50,9 +49,11 @@ import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.cube.json.JsonCodecs.createAggregationPredicateCodec;
 import static io.activej.cube.json.JsonCodecs.createQueryResultCodec;
 import static io.activej.cube.measure.ComputedMeasures.*;
@@ -60,7 +61,6 @@ import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class ReportingTest extends CubeTestBase {
@@ -219,7 +219,7 @@ public final class ReportingTest extends CubeTestBase {
 		}
 	}
 
-	public static class LogItemSplitter extends SplitterLogDataConsumer<LogItem, CubeDiff> {
+	public static class LogItemSplitter extends SplitterLogDataConsumer<LogItem, ProtoCubeDiff> {
 		private final CubeExecutor cubeExecutor;
 
 		public LogItemSplitter(CubeExecutor cubeExecutor) {
@@ -265,7 +265,7 @@ public final class ReportingTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-			AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
+			stubChunkIdGenerator(), FrameFormats.lz4(), fs);
 
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate(LocalDate.parse("2000-01-01")))
@@ -315,7 +315,7 @@ public final class ReportingTest extends CubeTestBase {
 			SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class),
 			NAME_PARTITION_REMAINDER_SEQ);
 
-		LogProcessor<LogItem, CubeDiff> logProcessor = LogProcessor.create(reactor,
+		LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logProcessor = LogProcessor.create(reactor,
 			multilog,
 			new LogItemSplitter(cubeExecutor),
 			"testlog",
@@ -342,11 +342,11 @@ public final class ReportingTest extends CubeTestBase {
 		await(StreamSuppliers.ofIterable(concat(logItemsForAdvertisersAggregations, logItemsForAffiliatesAggregation))
 			.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
-		LogDiff<CubeDiff> logDiff = await(logProcessor.processLog());
-		await(aggregationChunkStorage
-			.finish(logDiff.diffs().flatMapToLong(CubeDiff::addedChunks).boxed().collect(toSet())));
+		LogDiff<ProtoCubeDiff> logDiff = await(logProcessor.processLog());
+		List<String> protoChunkIds = logDiff.diffs().flatMap(ProtoCubeDiff::addedProtoChunks).toList();
+		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
 
-		await(logCubeStateManager.push(List.of(logDiff)));
+		await(logCubeStateManager.push(List.of(materializeProtoCubeDiff(logDiff, protoChunkIds, chunkIds))));
 
 		queryResultJsonCodec = createQueryResultCodec(CLASS_LOADER, JsonCodecFactory.defaultInstance(), cubeStructure);
 		aggregationPredicateJsonCodec = createAggregationPredicateCodec(JsonCodecFactory.defaultInstance(), cubeStructure);

@@ -33,6 +33,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
@@ -65,7 +66,7 @@ public class CubeCleanerControllerTest {
 
 		reactor = Reactor.getCurrentReactor();
 
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(),
 			FrameFormats.lz4(), FileSystem.create(reactor, executor, aggregationsDir));
 		CubeStructure structure = CubeStructure.builder()
 			.withDimension("pub", ofInt())

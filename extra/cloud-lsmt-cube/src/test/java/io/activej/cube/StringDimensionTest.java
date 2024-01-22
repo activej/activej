@@ -1,8 +1,6 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
@@ -10,6 +8,7 @@ import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
 import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
@@ -24,12 +23,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.eq;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.promise.TestUtils.await;
-import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public class StringDimensionTest extends CubeTestBase {
@@ -42,7 +42,7 @@ public class StringDimensionTest extends CubeTestBase {
 		FileSystem fs = FileSystem.create(reactor, executor, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-			AsyncSupplier.of(new RefLong(0)::inc), FrameFormats.lz4(), fs);
+			stubChunkIdGenerator(), FrameFormats.lz4(), fs);
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("key1", ofString())
 			.withDimension("key2", ofInt())
@@ -59,20 +59,25 @@ public class StringDimensionTest extends CubeTestBase {
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
 		CubeReporting cubeReporting = CubeReporting.create(stateManager, cubeStructure, cubeExecutor);
 
-		CubeDiff consumer1Result = await(StreamSuppliers.ofValues(
+		ProtoCubeDiff consumer1Result = await(StreamSuppliers.ofValues(
 				new DataItemString1("str1", 2, 10, 20),
 				new DataItemString1("str2", 3, 10, 20))
 			.streamTo(cubeExecutor.consume(DataItemString1.class)));
 
-		CubeDiff consumer2Result = await(StreamSuppliers.ofValues(
+		ProtoCubeDiff consumer2Result = await(StreamSuppliers.ofValues(
 				new DataItemString2("str2", 3, 10, 20),
 				new DataItemString2("str1", 4, 10, 20))
 			.streamTo(cubeExecutor.consume(DataItemString2.class)));
 
-		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().boxed().collect(toSet())));
-		await(aggregationChunkStorage.finish(consumer2Result.addedChunks().boxed().collect(toSet())));
+		List<String> protoChunkIds1 = consumer1Result.addedProtoChunks().toList();
+		List<Long> chunkIds1 = await(aggregationChunkStorage.finish(protoChunkIds1));
+		List<String> protoChunkIds2 = consumer2Result.addedProtoChunks().toList();
+		List<Long> chunkIds2 = await(aggregationChunkStorage.finish(protoChunkIds2));
 
-		await(stateManager.push(List.of(LogDiff.forCurrentPosition(List.of(consumer1Result, consumer2Result)))));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(List.of(
+			materializeProtoCubeDiff(consumer1Result, protoChunkIds1, chunkIds1),
+			materializeProtoCubeDiff(consumer2Result, protoChunkIds2, chunkIds2)
+		)))));
 
 		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();
 		await(cubeReporting.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),

@@ -21,7 +21,7 @@ import io.activej.csp.process.frame.FrameFormat;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.QueryPlan.Sequence;
 import io.activej.cube.aggregation.measure.Measure;
-import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.util.Utils;
 import io.activej.datastream.consumer.StreamConsumer;
@@ -140,7 +140,7 @@ public final class AggregationExecutor extends AbstractReactive
 	 * @return consumer for streaming data to aggregation
 	 */
 	@SuppressWarnings("unchecked")
-	<T, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
+	<T, K extends Comparable> StreamConsumerWithResult<T, ProtoAggregationDiff> consume(
 		Class<T> inputClass, Map<String, String> keyFields, Map<String, String> measureFields
 	) {
 		checkInReactorThread(this);
@@ -173,11 +173,11 @@ public final class AggregationExecutor extends AbstractReactive
 
 		return StreamConsumerWithResult.of(groupReducer,
 			groupReducer.getResult()
-				.map(chunks -> AggregationDiff.of(new HashSet<>(chunks)))
+				.map(chunks -> new ProtoAggregationDiff(new HashSet<>(chunks), Set.of()))
 				.mapException(e -> new AggregationException("Failed to consume data", e)));
 	}
 
-	<T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
+	<T> StreamConsumerWithResult<T, ProtoAggregationDiff> consume(Class<T> inputClass) {
 		checkInReactorThread(this);
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass));
 	}
@@ -241,7 +241,7 @@ public final class AggregationExecutor extends AbstractReactive
 			.transformWith(sorter);
 	}
 
-	private Promise<List<AggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate) {
+	private Promise<List<ProtoAggregationChunk>> doConsolidation(List<AggregationChunk> chunksToConsolidate) {
 		Set<String> aggregationFields = new HashSet<>(structure.getMeasures());
 		Set<String> chunkFields = chunksToConsolidate.stream()
 			.flatMap(chunk -> chunk.getMeasures().stream())
@@ -439,14 +439,14 @@ public final class AggregationExecutor extends AbstractReactive
 		return supplier.transformWith(StreamTransformers.filter(filterPredicate));
 	}
 
-	Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
+	Promise<ProtoAggregationDiff> consolidate(List<AggregationChunk> chunks) {
 		checkInReactorThread(this);
 
 		consolidationStarted = reactor.currentTimeMillis();
 		logger.info("Starting consolidation of aggregation '{}'", this);
 
 		return doConsolidation(chunks)
-			.map(newChunks -> AggregationDiff.of(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
+			.map(newChunks -> new ProtoAggregationDiff(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
 			.whenResult(() -> {
 				consolidationLastTimeMillis = reactor.currentTimeMillis() - consolidationStarted;
 				consolidations++;

@@ -1,14 +1,13 @@
 package io.activej.cube;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunk;
 import io.activej.cube.aggregation.AggregationChunkStorage;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.StreamConsumers;
 import io.activej.datastream.consumer.ToListStreamConsumer;
 import io.activej.datastream.supplier.StreamSuppliers;
@@ -36,12 +35,15 @@ import java.util.stream.Stream;
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
+import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -62,7 +64,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), FRAME_FORMAT, fs);
 		BinarySerializer<LogItem> serializer = SerializerFactory.defaultInstance().create(CLASS_LOADER, LogItem.class);
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -77,7 +79,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	public void test() throws Exception {
 		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		IAggregationChunkStorage aggregationChunkStorage = AggregationChunkStorage.create(reactor, stubChunkIdGenerator(), FRAME_FORMAT, fs);
 		CubeStructure cubeStructure = CubeStructure.builder()
 			.withDimension("date", ofLocalDate())
 			.withDimension("advertiser", ofInt())
@@ -112,7 +114,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
-		LogProcessor<LogItem, CubeDiff> logOTProcessor = LogProcessor.create(reactor, multilog,
+		LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logOTProcessor = LogProcessor.create(reactor, multilog,
 			cubeExecutor.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), logCubeStateManager);
 
 		// Save and aggregate logs
@@ -165,7 +167,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> finalLogCubeStateManager = logCubeStateManager;
-		LogProcessor<LogItem, CubeDiff> finalLogOTProcessor = logOTProcessor;
+		LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> finalLogOTProcessor = logOTProcessor;
 		await(finalLogCubeStateManager.catchUp());
 		runProcessLogs(aggregationChunkStorage, finalLogCubeStateManager, finalLogOTProcessor);
 
@@ -198,11 +200,12 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		// Consolidate
 		CubeConsolidator cubeConsolidator = CubeConsolidator.create(logCubeStateManager, cubeStructure, cubeExecutor);
-		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
-		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().boxed().collect(toSet())));
+		ProtoCubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
+		List<String> protoChunkIds = consolidatingCubeDiff.addedProtoChunks().toList();
+		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
-		await(logCubeStateManager.push(List.of(LogDiff.forCurrentPosition(consolidatingCubeDiff))));
+		await(logCubeStateManager.push(List.of(LogDiff.forCurrentPosition(materializeProtoCubeDiff(consolidatingCubeDiff, protoChunkIds, chunkIds)))));
 
 		chunks = new ArrayList<>(logCubeStateManager.query(s -> s.getDataState().getAggregationState("date").getChunks().values()));
 		assertEquals(1, chunks.size());
@@ -243,8 +246,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.create(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
-			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
-			LogProcessor<LogItem, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
+			ILogDataConsumer<LogItem, ProtoCubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
+			LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
 				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), logCubeStateManager1);
 
 			await(logCubeStateManager1.catchUp());
@@ -312,9 +315,9 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			CubeExecutor cubeExecutor1 = CubeExecutor.create(reactor, cubeStructure1, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
 
-			ILogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
+			ILogDataConsumer<LogItem, ProtoCubeDiff> logStreamConsumer1 = cubeExecutor1.logStreamConsumer(LogItem.class);
 
-			LogProcessor<LogItem, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
+			LogProcessor<LogItem, ProtoCubeDiff, CubeDiff> logOTProcessor1 = LogProcessor.create(reactor,
 				multilog, logStreamConsumer1, "testlog", List.of("partitionA"), logCubeStateManager1);
 
 			await(logCubeStateManager1.catchUp());

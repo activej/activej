@@ -35,14 +35,14 @@ import io.activej.cube.CubeStructure.PreprocessedQuery;
 import io.activej.cube.aggregation.AggregationStats;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.measure.Measure;
-import io.activej.cube.aggregation.ot.AggregationDiff;
+import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicate.ValueResolver;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.function.MeasuresFunction;
 import io.activej.cube.function.RecordFunction;
 import io.activej.cube.function.TotalsFunction;
-import io.activej.cube.ot.CubeDiff;
+import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.consumer.StreamConsumer;
 import io.activej.datastream.consumer.StreamConsumerWithResult;
 import io.activej.datastream.processor.StreamSplitter;
@@ -293,21 +293,21 @@ public final class CubeExecutor extends AbstractReactive
 		}
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass) {
+	public <T> ILogDataConsumer<T, ProtoCubeDiff> logStreamConsumer(Class<T> inputClass) {
 		return logStreamConsumer(inputClass, alwaysTrue());
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, AggregationPredicate predicate) {
+	public <T> ILogDataConsumer<T, ProtoCubeDiff> logStreamConsumer(Class<T> inputClass, AggregationPredicate predicate) {
 		return logStreamConsumer(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass), predicate);
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(
+	public <T> ILogDataConsumer<T, ProtoCubeDiff> logStreamConsumer(
 		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields
 	) {
 		return logStreamConsumer(inputClass, dimensionFields, measureFields, alwaysTrue());
 	}
 
-	public <T> ILogDataConsumer<T, CubeDiff> logStreamConsumer(
+	public <T> ILogDataConsumer<T, ProtoCubeDiff> logStreamConsumer(
 		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 		AggregationPredicate predicate
 	) {
@@ -315,11 +315,11 @@ public final class CubeExecutor extends AbstractReactive
 			.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
 
-	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass) {
+	public <T> StreamConsumerWithResult<T, ProtoCubeDiff> consume(Class<T> inputClass) {
 		return consume(inputClass, alwaysTrue());
 	}
 
-	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, AggregationPredicate predicate) {
+	public <T> StreamConsumerWithResult<T, ProtoCubeDiff> consume(Class<T> inputClass, AggregationPredicate predicate) {
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass), predicate);
 	}
 
@@ -331,7 +331,7 @@ public final class CubeExecutor extends AbstractReactive
 	 * @param <T>        data records type
 	 * @return consumer for streaming data to cube
 	 */
-	public <T> StreamConsumerWithResult<T, CubeDiff> consume(
+	public <T> StreamConsumerWithResult<T, ProtoCubeDiff> consume(
 		Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 		AggregationPredicate dataPredicate
 	) {
@@ -344,7 +344,7 @@ public final class CubeExecutor extends AbstractReactive
 			}
 		});
 
-		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
+		AsyncAccumulator<Map<String, ProtoAggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		Map<String, AggregationPredicate> compatibleAggregations = structure.getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.isEmpty()) {
 			throw new IllegalArgumentException(format(
@@ -379,10 +379,10 @@ public final class CubeExecutor extends AbstractReactive
 				output = output.transformWith(StreamTransformers.filter(filterPredicate));
 			}
 
-			Promise<AggregationDiff> consume = output.streamTo(aggregationExecutor.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
+			Promise<ProtoAggregationDiff> consume = output.streamTo(aggregationExecutor.consume(inputClass, aggregationKeyFields, aggregationMeasureFields));
 			diffsAccumulator.addPromise(consume, (accumulator, diff) -> accumulator.put(aggregationId, diff));
 		}
-		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().map(CubeDiff::of));
+		return StreamConsumerWithResult.of(streamSplitter.getInput(), diffsAccumulator.run().map(ProtoCubeDiff::new));
 	}
 
 	public <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(
