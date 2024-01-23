@@ -27,10 +27,7 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.DescriptionRule;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 
@@ -136,6 +133,11 @@ public class CubeCleanerServiceTest {
 		await(cleanerService.start());
 
 		assertTrue(getStorageChunks().isEmpty());
+	}
+
+	@After
+	public void tearDown() {
+		await(cleanerService.stop());
 	}
 
 	@Test
