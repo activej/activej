@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.ot.util;
+package io.activej.cube.ot.sql;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

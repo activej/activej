@@ -115,7 +115,7 @@
                 <exclude>**/CubeStateChangesTest.java</exclude>
                 <exclude>**/CubeEtcdOTUplinkTest.java</exclude>
                 <exclude>**/EtcdChunkLockerTest.java</exclude>
-                <exclude>**/IdGeneratorSqlTest.java</exclude>
+                <exclude>**/SqlChunkIdGeneratorTest.java</exclude>
               </excludes>
             </configuration>
           </plugin>
