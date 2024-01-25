@@ -24,9 +24,11 @@ import io.activej.reactor.Reactor;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.KV;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 public final class EtcdChunkIdGenerator extends AbstractReactive
 	implements ChunkIdGenerator {
@@ -50,10 +52,13 @@ public final class EtcdChunkIdGenerator extends AbstractReactive
 	}
 
 	@Override
-	public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
-		return Promise.ofCompletionStage(EtcdUtils.atomicAdd(kvClient, idKey, protoChunkIds.size()))
-			.map(response -> IntStream.range(response.prevValue(), response.newValue())
-				.mapToObj(Long::valueOf)
-				.toList());
+	public Promise<Map<String, Long>> convertToActualChunkIds(Set<String> protoChunkIds) {
+		return Promise.ofCompletionStage(EtcdUtils.atomicAdd(kvClient, idKey, (long) protoChunkIds.size()))
+			.map(response -> {
+				Iterator<String> protoChunkIdsIt = protoChunkIds.iterator();
+				return LongStream.range(response.prevValue(), response.newValue())
+					.boxed()
+					.collect(Collectors.toMap($ -> protoChunkIdsIt.next(), Function.identity()));
+			});
 	}
 }

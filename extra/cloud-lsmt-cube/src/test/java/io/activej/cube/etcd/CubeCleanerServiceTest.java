@@ -35,12 +35,10 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.activej.cube.CubeStructure.AggregationConfig.id;
@@ -52,6 +50,7 @@ import static io.activej.cube.etcd.EtcdUtils.CLEANUP_REVISION;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.time.TestCurrentTimeProvider.*;
+import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -99,10 +98,8 @@ public class CubeCleanerServiceTest {
 				}
 
 				@Override
-				public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
-					return Promise.of(protoChunkIds.stream()
-						.map(Long::parseLong)
-						.toList());
+				public Promise<Map<String, Long>> convertToActualChunkIds(Set<String> protoChunkIds) {
+					return Promise.of(protoChunkIds.stream().collect(toMap(Function.identity(), Long::parseLong)));
 				}
 			},
 			FrameFormats.lz4(), fileSystem);
@@ -242,7 +239,7 @@ public class CubeCleanerServiceTest {
 
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 
-		List<String> protoChunkIds = new ArrayList<>(addedChunks.size());
+		Set<String> protoChunkIds = new HashSet<>(addedChunks.size());
 		for (Long addedChunk : addedChunks) {
 			String protoChunkId = String.valueOf(addedChunk);
 			protoChunkIds.add(protoChunkId);
@@ -264,7 +261,7 @@ public class CubeCleanerServiceTest {
 		now.setTimeProvider(ofConstant(timestamp));
 		AggregationStructure aggregationStructure = structure.getAggregationStructure(AGGREGATION_ID);
 
-		List<String> protoChunkIds = new ArrayList<>(addedChunks.size());
+		Set<String> protoChunkIds = new HashSet<>(addedChunks.size());
 		return stateManager.push(List.of(LogDiff.forCurrentPosition(CubeDiff.of(
 				Map.of(AGGREGATION_ID, AggregationDiff.of(idsToChunks(addedChunks), idsToChunks(removedChunks)))
 			))))
@@ -273,11 +270,11 @@ public class CubeCleanerServiceTest {
 					String protoChunkId = String.valueOf(addedChunk);
 					protoChunkIds.add(protoChunkId);
 					return StreamSuppliers.<Container>ofValues().streamTo(aggregationChunkStorage.write(
-							aggregationStructure,
-							List.of(),
-							Container.class,
-							protoChunkId,
-							CLASS_LOADER
+						aggregationStructure,
+						List.of(),
+						Container.class,
+						protoChunkId,
+						CLASS_LOADER
 					));
 				})))
 			.then(() -> aggregationChunkStorage.finish(protoChunkIds))

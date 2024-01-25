@@ -6,7 +6,6 @@ import io.activej.cube.aggregation.ChunkIdGenerator;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.measure.Measure;
-import io.activej.cube.aggregation.util.Utils;
 import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.ProtoCubeDiff;
@@ -21,13 +20,17 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.promise.TestUtils.await;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 public final class TestUtils {
 
@@ -50,10 +53,9 @@ public final class TestUtils {
 
 	public static <T> void runProcessLogs(IAggregationChunkStorage aggregationChunkStorage, StateManager<LogDiff<CubeDiff>, ?> stateManager, LogProcessor<T, ProtoCubeDiff, CubeDiff> logProcessor) {
 		LogDiff<ProtoCubeDiff> logDiff = await(logProcessor.processLog());
-		List<String> protoChunkIds = logDiff.diffs().flatMap(ProtoCubeDiff::addedProtoChunks).toList();
-		List<Long> chunkIds = await(aggregationChunkStorage
-			.finish(protoChunkIds));
-		await(stateManager.push(List.of(Utils.materializeProtoCubeDiff(logDiff, protoChunkIds, chunkIds))));
+		Set<String> protoChunkIds = logDiff.diffs().flatMap(ProtoCubeDiff::addedProtoChunks).collect(toSet());
+		Map<String, Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		await(stateManager.push(List.of(materializeProtoDiff(logDiff, chunkIds))));
 	}
 
 	public static final OTState<CubeDiff> STUB_CUBE_STATE = new OTState<>() {
@@ -158,12 +160,8 @@ public final class TestUtils {
 			}
 
 			@Override
-			public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
-				List<Long> result = new ArrayList<>(protoChunkIds.size());
-				for (String ignored : protoChunkIds) {
-					result.add(++id);
-				}
-				return Promise.of(result);
+			public Promise<Map<String, Long>> convertToActualChunkIds(Set<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().collect(toMap(Function.identity(), $ -> ++id)));
 			}
 		};
 	}

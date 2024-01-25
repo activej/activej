@@ -1,7 +1,6 @@
 package io.activej.cube.aggregation;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.expression.impl.Loop;
 import io.activej.cube.AggregationState;
 import io.activej.cube.AggregationStructure;
 import io.activej.cube.aggregation.util.PartitionPredicate;
@@ -21,6 +20,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.activej.common.Utils.last;
 import static io.activej.cube.TestUtils.aggregationStructureBuilder;
@@ -87,8 +88,8 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public Promise<List<Long>> finish(List<String> protoChunkIds) {
-				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
+			public Promise<Map<String, Long>> finish(Set<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().collect(Collectors.toMap(Function.identity(), idsMap::get)));
 			}
 
 			@Override
@@ -162,8 +163,8 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public Promise<List<Long>> finish(List<String> protoChunkIds) {
-				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
+			public Promise<Map<String, Long>> finish(Set<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().collect(Collectors.toMap(Function.identity(), idsMap::get)));
 			}
 
 			@Override
@@ -258,8 +259,8 @@ public final class AggregationChunkerTest {
 			}
 
 			@Override
-			public Promise<List<Long>> finish(List<String> protoChunkIds) {
-				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
+			public Promise<Map<String, Long>> finish(Set<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().collect(Collectors.toMap(Function.identity(), idsMap::get)));
 			}
 
 			@Override

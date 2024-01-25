@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
@@ -55,8 +56,9 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.aggregation.util.Utils.collectChunkIds;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.reactor.Reactive.checkInReactorThread;
+import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<D> extends AbstractReactive
 	implements ReactiveJmxBeanWithStats {
@@ -186,10 +188,9 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 			.whenComplete(this::logCubeDiff)
 			.then(protoCubeDiff -> {
 				if (protoCubeDiff.isEmpty()) return Promise.complete();
-				List<String> protoChunkIds = addedProtoChunks(protoCubeDiff);
-				return aggregationChunkStorage.finish(protoChunkIds)
+				return aggregationChunkStorage.finish(addedProtoChunks(protoCubeDiff))
 					.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-					.then(chunkIds -> stateManager.push(List.of(cubeDiffScheme.wrap(materializeProtoCubeDiff(protoCubeDiff, protoChunkIds, chunkIds))))
+					.then(chunkIds -> stateManager.push(List.of(cubeDiffScheme.wrap(materializeProtoDiff(protoCubeDiff, chunkIds))))
 						.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
 					.whenComplete(toLogger(logger, thisMethod(), protoCubeDiff));
 			})
@@ -317,8 +318,8 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 		removedChunksRecords.recordValue(curRemovedChunksRecords);
 	}
 
-	private static List<String> addedProtoChunks(ProtoCubeDiff protoCubeDiff) {
-		return protoCubeDiff.addedProtoChunks().toList();
+	private static Set<String> addedProtoChunks(ProtoCubeDiff protoCubeDiff) {
+		return protoCubeDiff.addedProtoChunks().collect(toSet());
 	}
 
 	private void logCubeDiff(ProtoCubeDiff protoCubeDiff, Exception e) {

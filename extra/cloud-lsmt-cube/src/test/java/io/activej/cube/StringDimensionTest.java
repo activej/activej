@@ -19,6 +19,8 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -28,8 +30,9 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.and;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.eq;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.promise.TestUtils.await;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public class StringDimensionTest extends CubeTestBase {
@@ -69,14 +72,14 @@ public class StringDimensionTest extends CubeTestBase {
 				new DataItemString2("str1", 4, 10, 20))
 			.streamTo(cubeExecutor.consume(DataItemString2.class)));
 
-		List<String> protoChunkIds1 = consumer1Result.addedProtoChunks().toList();
-		List<Long> chunkIds1 = await(aggregationChunkStorage.finish(protoChunkIds1));
-		List<String> protoChunkIds2 = consumer2Result.addedProtoChunks().toList();
-		List<Long> chunkIds2 = await(aggregationChunkStorage.finish(protoChunkIds2));
+		Set<String> protoChunkIds1 = consumer1Result.addedProtoChunks().collect(toSet());
+		Map<String, Long> chunkIds1 = await(aggregationChunkStorage.finish(protoChunkIds1));
+		Set<String> protoChunkIds2 = consumer2Result.addedProtoChunks().collect(toSet());
+		Map<String, Long> chunkIds2 = await(aggregationChunkStorage.finish(protoChunkIds2));
 
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(List.of(
-			materializeProtoCubeDiff(consumer1Result, protoChunkIds1, chunkIds1),
-			materializeProtoCubeDiff(consumer2Result, protoChunkIds2, chunkIds2)
+			materializeProtoDiff(consumer1Result, chunkIds1),
+			materializeProtoDiff(consumer2Result, chunkIds2)
 		)))));
 
 		ToListStreamConsumer<DataItemResultString> consumerToList = ToListStreamConsumer.create();

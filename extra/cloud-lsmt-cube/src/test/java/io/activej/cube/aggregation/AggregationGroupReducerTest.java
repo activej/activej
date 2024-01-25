@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.toLinkedHashMap;
@@ -74,8 +75,8 @@ public class AggregationGroupReducerTest {
 			}
 
 			@Override
-			public Promise<List<Long>> finish(List<String> protoChunkIds) {
-				return Promise.of(protoChunkIds.stream().map(idsMap::get).toList());
+			public Promise<Map<String, Long>> finish(Set<String> protoChunkIds) {
+				return Promise.of(protoChunkIds.stream().collect(Collectors.toMap(Function.identity(), idsMap::get)));
 			}
 
 			@Override

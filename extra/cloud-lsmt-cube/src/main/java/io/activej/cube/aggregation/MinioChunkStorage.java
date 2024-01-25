@@ -42,9 +42,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -261,22 +259,21 @@ public final class MinioChunkStorage extends AbstractReactive
 	}
 
 	@Override
-	public Promise<List<Long>> finish(List<String> protoChunkIds) {
+	public Promise<Map<String, Long>> finish(Set<String> protoChunkIds) {
 		checkInReactorThread(this);
-		return idGenerator.convertToActualChunkIds(protoChunkIds)
+		return idGenerator.convertToActualChunkIds(Set.copyOf(protoChunkIds))
 			.then(chunkIds -> {
-				CompletableFuture<?>[] futures = new CompletableFuture[protoChunkIds.size()];
-				for (int i = 0; i < protoChunkIds.size(); i++) {
-					futures[i] = client.copyObject(
+				List<CompletableFuture<?>> futures = new ArrayList<>(chunkIds.size());
+				for (Map.Entry<String, Long> entry : chunkIds.entrySet()) {
+					futures.add(client.copyObject(
 						CopyObjectArgs.builder()
 							.bucket(bucket)
-							.source(CopySource.builder().bucket(bucket).object(toObjectName(protoChunkIds.get(i))).build())
-							.object(toObjectName(chunkIds.get(i)))
-							.build()
-					);
+							.source(CopySource.builder().bucket(bucket).object(toObjectName(entry.getKey())).build())
+							.object(toObjectName(entry.getValue()))
+							.build()));
 				}
 
-				return Promise.ofCompletionStage(CompletableFuture.allOf(futures))
+				return Promise.ofCompletionStage(CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)))
 					.then($ -> {
 						Iterable<Result<DeleteError>> results = client.removeObjects(
 							RemoveObjectsArgs.builder()

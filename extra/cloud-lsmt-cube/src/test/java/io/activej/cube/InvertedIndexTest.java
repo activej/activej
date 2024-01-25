@@ -21,16 +21,18 @@ import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static io.activej.cube.TestUtils.*;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofString;
 import static io.activej.cube.aggregation.measure.Measures.union;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoAggregationDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
 
@@ -151,13 +153,15 @@ public class InvertedIndexTest {
 
 	public void doProcess(OTState<AggregationDiff> state, IAggregationChunkStorage aggregationChunkStorage, AggregationExecutor aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
 		ProtoAggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
-		List<String> protoChunkIds = getAddedChunks(diff);
-		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
-		state.apply(materializeProtoAggregationDiff(diff, protoChunkIds, chunkIds));
+		Set<String> protoChunkIds = getAddedChunks(diff);
+		Map<String, Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		state.apply(materializeProtoDiff(diff, chunkIds));
 	}
 
-	private List<String> getAddedChunks(ProtoAggregationDiff aggregationDiff) {
-		return aggregationDiff.addedChunks().stream().map(ProtoAggregationChunk::protoChunkId).toList();
+	private Set<String> getAddedChunks(ProtoAggregationDiff aggregationDiff) {
+		return aggregationDiff.addedChunks().stream()
+			.map(ProtoAggregationChunk::protoChunkId)
+			.collect(Collectors.toSet());
 	}
 
 }

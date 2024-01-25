@@ -247,15 +247,13 @@ public final class AggregationChunkStorage extends AbstractReactive
 	}
 
 	@Override
-	public Promise<List<Long>> finish(List<String> protoChunkIds) {
+	public Promise<Map<String, Long>> finish(Set<String> protoChunkIds) {
 		checkInReactorThread(this);
 		return idGenerator.convertToActualChunkIds(protoChunkIds)
 			.mapException(e -> new AggregationException("Failed to convert to actual chunk IDs: " + Utils.toString(protoChunkIds), e))
 			.then(chunkIds -> {
-				Map<String, String> renameMap = new HashMap<>(protoChunkIds.size());
-				for (int i = 0; i < protoChunkIds.size(); i++) {
-					renameMap.put(toTempPath(protoChunkIds.get(i)), toPath(chunkIds.get(i)));
-				}
+				Map<String, String> renameMap = chunkIds.entrySet().stream()
+					.collect(toMap(e -> toTempPath(e.getKey()), e -> toPath(e.getValue())));
 				return fileSystem.moveAll(renameMap)
 					.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(protoChunkIds), e))
 					.map($ -> chunkIds);

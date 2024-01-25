@@ -47,12 +47,13 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class CubeTest {
@@ -126,11 +127,8 @@ public final class CubeTest {
 	private static <T> Promise<Void> consume(CubeReporting cubeReporting, IAggregationChunkStorage chunkStorage, T item, T... items) {
 		return StreamSuppliers.concat(StreamSuppliers.ofValue(item), StreamSuppliers.ofValues(items))
 			.streamTo(cubeReporting.getExecutor().consume(((Class<T>) item.getClass())))
-			.then(cubeDiff -> {
-				List<String> protoChunkIds = cubeDiff.addedProtoChunks().toList();
-				return chunkStorage.finish(protoChunkIds)
-					.then(chunkIds -> cubeReporting.getStateManager().push(List.of(LogDiff.forCurrentPosition(materializeProtoCubeDiff(cubeDiff, protoChunkIds, chunkIds)))));
-			});
+			.then(cubeDiff -> chunkStorage.finish(cubeDiff.addedProtoChunks().collect(toSet()))
+				.then(chunkIds -> cubeReporting.getStateManager().push(List.of(LogDiff.forCurrentPosition(materializeProtoDiff(cubeDiff, chunkIds))))));
 	}
 
 	@Test

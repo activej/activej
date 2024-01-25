@@ -105,7 +105,7 @@ public class MinioChunkStorageTest {
 			.then(chunker::getResult)
 			.then(protoAggregationChunks -> storage.finish(protoAggregationChunks.stream()
 				.map(ProtoAggregationChunk::protoChunkId)
-				.toList()))
+				.collect(toSet())))
 			.map($ -> {
 				Iterable<Result<Item>> results = client.listObjects(ListObjectsArgs.builder()
 					.prefix(MinioChunkStorage.CHUNK_PREFIX)
@@ -136,7 +136,7 @@ public class MinioChunkStorageTest {
 		await(supplier.streamTo(chunker));
 
 		List<ProtoAggregationChunk> protoAggregationChunks = await(chunker.getResult());
-		await(storage.finish(protoAggregationChunks.stream().map(ProtoAggregationChunk::protoChunkId).toList()));
+		await(storage.finish(protoAggregationChunks.stream().map(ProtoAggregationChunk::protoChunkId).collect(toSet())));
 
 		Set<Long> chunks = await(storage.listChunks());
 
@@ -158,7 +158,7 @@ public class MinioChunkStorageTest {
 		await(supplier.streamTo(chunker));
 
 		List<ProtoAggregationChunk> protoAggregationChunks = await(chunker.getResult());
-		await(storage.finish(protoAggregationChunks.stream().map(ProtoAggregationChunk::protoChunkId).toList()));
+		await(storage.finish(protoAggregationChunks.stream().map(ProtoAggregationChunk::protoChunkId).collect(toSet())));
 
 		Set<Long> chunks = await(storage.listChunks());
 

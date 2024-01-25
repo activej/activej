@@ -86,7 +86,7 @@ public class AggregationChunkStorageTest {
 			.then(chunker::getResult)
 			.then(protoAggregationChunks -> aggregationChunkStorage.finish(protoAggregationChunks.stream()
 				.map(ProtoAggregationChunk::protoChunkId)
-				.toList()))
+				.collect(toSet())))
 			.map($ -> {
 				try (Stream<Path> list = Files.list(storageDir)) {
 					return list.filter(path -> path.toString().endsWith(AggregationChunkStorage.LOG)).collect(toList());

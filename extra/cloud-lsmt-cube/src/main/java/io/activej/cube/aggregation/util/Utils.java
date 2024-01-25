@@ -538,27 +538,7 @@ public class Utils {
 		return filename.replaceAll("\\W+", "");
 	}
 
-	private static Map<String, Long> createIdConformityMap(List<String> protoChunkIds, List<Long> chunkIds) {
-		assert protoChunkIds.size() == chunkIds.size();
-		Map<String, Long> idConformityMap = new HashMap<>(protoChunkIds.size());
-
-		for (int i = 0; i < protoChunkIds.size(); i++) {
-			idConformityMap.put(protoChunkIds.get(i), chunkIds.get(i));
-		}
-		return idConformityMap;
-	}
-
-	private static CubeDiff materializeProtoCubeDiff(ProtoCubeDiff protoCubeDiff, Map<String, Long> idConformityMap) {
-		Map<String, ProtoAggregationDiff> protoDiffs = protoCubeDiff.diffs();
-		Map<String, AggregationDiff> diffs = new HashMap<>(protoDiffs.size());
-		for (Entry<String, ProtoAggregationDiff> entry : protoDiffs.entrySet()) {
-			diffs.put(entry.getKey(), materializeProtoAggregationDiff(entry.getValue(), idConformityMap));
-		}
-
-		return CubeDiff.of(diffs);
-	}
-
-	private static AggregationDiff materializeProtoAggregationDiff(ProtoAggregationDiff protoAggregationDiff, Map<String, Long> idConformityMap) {
+	public static AggregationDiff materializeProtoDiff(ProtoAggregationDiff protoAggregationDiff, Map<String, Long> idConformityMap) {
 		Set<ProtoAggregationChunk> addedProtoChunks = protoAggregationDiff.addedChunks();
 		Set<AggregationChunk> addedChunks = new HashSet<>(addedProtoChunks.size());
 		for (ProtoAggregationChunk addedProtoChunk : addedProtoChunks) {
@@ -568,34 +548,28 @@ public class Utils {
 		return AggregationDiff.of(addedChunks, protoAggregationDiff.removedChunks());
 	}
 
-	public static AggregationDiff materializeProtoAggregationDiff(ProtoAggregationDiff protoAggregationDiff, List<String> protoChunkIds, List<Long> chunkIds) {
-		Map<String, Long> idConformityMap = Utils.createIdConformityMap(protoChunkIds, chunkIds);
-		return materializeProtoAggregationDiff(protoAggregationDiff, idConformityMap);
+	public static CubeDiff materializeProtoDiff(ProtoCubeDiff protoCubeDiff, Map<String, Long> idConformityMap) {
+		Map<String, ProtoAggregationDiff> protoDiffs = protoCubeDiff.diffs();
+		Map<String, AggregationDiff> diffs = new HashMap<>(protoDiffs.size());
+		for (Entry<String, ProtoAggregationDiff> entry : protoDiffs.entrySet()) {
+			diffs.put(entry.getKey(), materializeProtoDiff(entry.getValue(), idConformityMap));
+		}
+
+		return CubeDiff.of(diffs);
 	}
 
-	public static CubeDiff materializeProtoCubeDiff(ProtoCubeDiff protoCubeDiff, List<String> protoChunkIds, List<Long> chunkIds) {
-		Map<String, Long> idConformityMap = Utils.createIdConformityMap(protoChunkIds, chunkIds);
-		return materializeProtoCubeDiff(protoCubeDiff, idConformityMap);
+	public static LogDiff<CubeDiff> materializeProtoDiff(LogDiff<ProtoCubeDiff> logDiff, Map<String, Long> idConformityMap) {
+		return LogDiff.of(
+			logDiff.getPositions(),
+			logDiff.getDiffs().stream()
+				.map(protoCubeDiff -> materializeProtoDiff(protoCubeDiff, idConformityMap))
+				.toList()
+		);
 	}
 
-	public static LogDiff<CubeDiff> materializeProtoCubeDiff(LogDiff<ProtoCubeDiff> logDiff, List<String> protoChunkIds, List<Long> chunkIds) {
-		Map<String, Long> idConformityMap = Utils.createIdConformityMap(protoChunkIds, chunkIds);
-		List<ProtoCubeDiff> protoCubeDiffs = logDiff.getDiffs();
-		List<CubeDiff> cubeDiffs = protoCubeDiffs.stream()
-			.map(protoCubeDiff -> materializeProtoCubeDiff(protoCubeDiff, idConformityMap))
-			.toList();
-		return LogDiff.of(logDiff.getPositions(), cubeDiffs);
-	}
-
-	public static List<LogDiff<CubeDiff>> materializeProtoCubeDiff(List<LogDiff<ProtoCubeDiff>> logDiffs, List<String> protoChunkIds, List<Long> chunkIds) {
-		Map<String, Long> idConformityMap = Utils.createIdConformityMap(protoChunkIds, chunkIds);
-		return logDiffs.stream().map(logDiff -> {
-				List<ProtoCubeDiff> protoCubeDiffs = logDiff.getDiffs();
-				List<CubeDiff> cubeDiffs = protoCubeDiffs.stream()
-					.map(protoCubeDiff -> materializeProtoCubeDiff(protoCubeDiff, idConformityMap))
-					.toList();
-				return LogDiff.of(logDiff.getPositions(), cubeDiffs);
-			})
+	public static List<LogDiff<CubeDiff>> materializeProtoDiff(List<LogDiff<ProtoCubeDiff>> logDiffs, Map<String, Long> idConformityMap) {
+		return logDiffs.stream()
+			.map(logDiff -> materializeProtoDiff(logDiff, idConformityMap))
 			.toList();
 	}
 

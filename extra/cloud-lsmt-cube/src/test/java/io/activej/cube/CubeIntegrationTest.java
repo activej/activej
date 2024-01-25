@@ -33,7 +33,7 @@ import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toMap;
@@ -147,9 +147,9 @@ public class CubeIntegrationTest extends CubeTestBase {
 		ProtoCubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
-		List<String> protoChunkIds = consolidatingCubeDiff.addedProtoChunks().toList();
-		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
-		await(stateManager.push(List.of(LogDiff.forCurrentPosition(materializeProtoCubeDiff(consolidatingCubeDiff, protoChunkIds, chunkIds)))));
+		Set<String> protoChunkIds = consolidatingCubeDiff.addedProtoChunks().collect(toSet());
+		Map<String, Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		await(stateManager.push(List.of(LogDiff.forCurrentPosition(materializeProtoDiff(consolidatingCubeDiff, chunkIds)))));
 		await(aggregationChunkStorage.cleanup(stateManager.query(logState -> logState.getDataState().getAllChunks())));
 
 		// Query

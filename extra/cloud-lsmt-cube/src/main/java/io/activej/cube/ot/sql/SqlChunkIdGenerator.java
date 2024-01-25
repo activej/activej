@@ -29,10 +29,10 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static io.activej.promise.PromisePredicates.isResultOrException;
@@ -70,12 +70,17 @@ public final class SqlChunkIdGenerator extends AbstractReactive
 	}
 
 	@Override
-	public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
+	public Promise<Map<String, Long>> convertToActualChunkIds(Set<String> protoChunkIds) {
 		if (CHECKS) checkInReactorThread(this);
 		return retry(
 			isResultOrException(Objects::nonNull),
 			() -> doReserveId(protoChunkIds.size())
-				.map(from -> LongStream.range(from, from + protoChunkIds.size()).boxed().toList()));
+				.map(from -> {
+					Iterator<String> protoChunkIdsIt = protoChunkIds.iterator();
+					return LongStream.range(from, from + protoChunkIds.size())
+						.boxed()
+						.collect(Collectors.toMap($ -> protoChunkIdsIt.next(), Function.identity()));
+				}));
 	}
 
 	private Promise<Long> doReserveId(int size) {

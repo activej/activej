@@ -24,6 +24,7 @@ import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.promise.Promise;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -59,7 +60,7 @@ public interface IAggregationChunkStorage {
 		DefiningClassLoader classLoader
 	);
 
-	Promise<List<Long>> finish(List<String> protoChunkIds);
+	Promise<Map<String, Long>> finish(Set<String> protoChunkIds);
 
 	Promise<Set<Long>> listChunks();
 

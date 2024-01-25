@@ -31,7 +31,6 @@ import org.junit.runner.Description;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.cube.TestUtils.stubChunkIdGenerator;
@@ -40,6 +39,7 @@ import static io.activej.cube.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.util.Utils.singlePartition;
 import static io.activej.promise.TestUtils.await;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -114,7 +114,7 @@ public final class MinioMigrationServiceTest {
 				}
 
 				@Override
-				public Promise<List<Long>> convertToActualChunkIds(List<String> protoChunkIds) {
+				public Promise<Map<String, Long>> convertToActualChunkIds(Set<String> protoChunkIds) {
 					throw new AssertionError();
 				}
 			},
@@ -180,7 +180,7 @@ public final class MinioMigrationServiceTest {
 				PrimaryKey.ofList(List.of(0, 0L)),
 				PrimaryKey.ofList(List.of(1, 1L)),
 				10))
-			.collect(Collectors.toSet());
+			.collect(toSet());
 	}
 
 	private static Set<KeyValuePair> generateItems(int nObjects) {
@@ -188,7 +188,7 @@ public final class MinioMigrationServiceTest {
 
 		return Stream.generate(() -> new KeyValuePair(random.nextInt(), random.nextInt(), random.nextLong()))
 			.limit(nObjects)
-			.collect(Collectors.toSet());
+			.collect(toSet());
 	}
 
 	private void assertChunks(IAggregationChunkStorage storage, Set<KeyValuePair> expected, Set<Long> chunks) {
@@ -211,10 +211,10 @@ public final class MinioMigrationServiceTest {
 			fromStorage, classLoader, CHUNK_SIZE);
 	}
 
-	private List<String> getProtoChunks() {
+	private Set<String> getProtoChunks() {
 		return await(fileSystem.list("*" + AggregationChunkStorage.TEMP_LOG)).keySet().stream()
 			.map(fileName -> fileName.substring(0, fileName.length() - AggregationChunkStorage.TEMP_LOG.length()))
-			.toList();
+			.collect(toSet());
 	}
 
 	private void clearBucket() throws Exception {

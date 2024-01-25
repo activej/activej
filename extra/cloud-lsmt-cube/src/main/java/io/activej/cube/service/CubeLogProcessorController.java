@@ -22,7 +22,6 @@ import io.activej.cube.CubeState;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.ProtoAggregationChunk;
 import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
-import io.activej.cube.aggregation.util.Utils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.ProtoCubeDiff;
@@ -45,11 +44,13 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.activej.async.function.AsyncSuppliers.coalesce;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.promise.Promises.asPromises;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
@@ -171,14 +172,11 @@ public final class CubeLogProcessorController extends AbstractReactive
 					.mapException(e -> new CubeException("Failed to process logs", e))
 					.whenComplete(promiseProcessLogsImpl.recordStats())
 					.whenResult(this::cubeDiffJmx)
-					.then(protoDiffs -> {
-						List<String> protoChunkIds = addedProtoChunks(protoDiffs);
-						return chunkStorage.finish(protoChunkIds)
-							.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-							.then(chunkIds -> stateManager.push(Utils.materializeProtoCubeDiff(protoDiffs, protoChunkIds, chunkIds))
-								.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
-							.map($ -> true);
-					});
+					.then(protoDiffs -> chunkStorage.finish(addedProtoChunks(protoDiffs))
+						.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
+						.then(chunkIds -> stateManager.push(materializeProtoDiff(protoDiffs, chunkIds))
+							.mapException(e -> new CubeException("Failed to synchronize state after log processing, resetting", e)))
+						.map($ -> true));
 			})
 			.whenComplete(toLogger(logger, thisMethod(), stateManager));
 	}
@@ -204,11 +202,11 @@ public final class CubeLogProcessorController extends AbstractReactive
 		addedChunksRecords.recordValue(curAddedChunksRecords);
 	}
 
-	private List<String> addedProtoChunks(List<LogDiff<ProtoCubeDiff>> diffs) {
+	private Set<String> addedProtoChunks(List<LogDiff<ProtoCubeDiff>> diffs) {
 		return diffs.stream()
 			.flatMap(LogDiff::diffs)
 			.flatMap(ProtoCubeDiff::addedProtoChunks)
-			.toList();
+			.collect(Collectors.toSet());
 	}
 
 	@JmxAttribute

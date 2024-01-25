@@ -53,7 +53,7 @@ import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.*;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoCubeDiff;
+import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.cube.json.JsonCodecs.createAggregationPredicateCodec;
 import static io.activej.cube.json.JsonCodecs.createQueryResultCodec;
 import static io.activej.cube.measure.ComputedMeasures.*;
@@ -61,6 +61,7 @@ import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public final class ReportingTest extends CubeTestBase {
@@ -343,10 +344,12 @@ public final class ReportingTest extends CubeTestBase {
 			.streamTo(StreamConsumers.ofPromise(multilog.write("partitionA"))));
 
 		LogDiff<ProtoCubeDiff> logDiff = await(logProcessor.processLog());
-		List<String> protoChunkIds = logDiff.diffs().flatMap(ProtoCubeDiff::addedProtoChunks).toList();
-		List<Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		Set<String> protoChunkIds = logDiff.diffs()
+			.flatMap(ProtoCubeDiff::addedProtoChunks)
+			.collect(toSet());
+		Map<String, Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
 
-		await(logCubeStateManager.push(List.of(materializeProtoCubeDiff(logDiff, protoChunkIds, chunkIds))));
+		await(logCubeStateManager.push(List.of(materializeProtoDiff(logDiff, chunkIds))));
 
 		queryResultJsonCodec = createQueryResultCodec(CLASS_LOADER, JsonCodecFactory.defaultInstance(), cubeStructure);
 		aggregationPredicateJsonCodec = createAggregationPredicateCodec(JsonCodecFactory.defaultInstance(), cubeStructure);

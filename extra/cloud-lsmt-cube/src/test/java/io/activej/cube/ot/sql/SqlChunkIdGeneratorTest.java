@@ -74,9 +74,10 @@ public class SqlChunkIdGeneratorTest {
 				0,
 				j -> Promises.toList(IntStream.range(0, N_CHUNKS)
 						.mapToObj($ -> idGenerator.createProtoChunkId()))
+					.map(Set::copyOf)
 					.then(idGenerator::convertToActualChunkIds)
 					.map(chunkIds -> {
-						idsMap.computeIfAbsent(finalI, $ -> new ArrayList<>()).addAll(chunkIds);
+						idsMap.computeIfAbsent(finalI, $ -> new ArrayList<>()).addAll(chunkIds.values());
 						return j + 1;
 					}),
 				j -> j == N_ITERATIONS));
