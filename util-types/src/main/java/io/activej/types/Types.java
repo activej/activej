@@ -407,18 +407,19 @@ public class Types {
 	 * @see Class#getSimpleName()
 	 */
 	public static String getSimpleName(Type type) {
-		if (type instanceof Class) {
-			return ((Class<?>) type).getSimpleName();
-		} else if (type instanceof ParameterizedType) {
-			return Arrays.stream(((ParameterizedType) type).getActualTypeArguments())
-				.map(Types::getSimpleName)
-				.collect(joining(",", "<", ">"));
+		if (type instanceof Class<?> cls) {
+			return cls.getSimpleName();
+		} else if (type instanceof ParameterizedType parameterizedType) {
+			return getSimpleName(parameterizedType.getRawType()) +
+				   Arrays.stream(parameterizedType.getActualTypeArguments())
+					   .map(Types::getSimpleName)
+					   .collect(joining(",", "<", ">"));
 		} else if (type instanceof WildcardType wildcardType) {
 			Type[] upperBounds = wildcardType.getUpperBounds();
 			Type[] lowerBounds = wildcardType.getLowerBounds();
 			return
 				"?" +
-				(upperBounds.length == 0 ?
+				(upperBounds.length == 0 || (upperBounds.length == 1 && upperBounds[0] == Object.class) ?
 					"" :
 					" extends " +
 					Arrays.stream(upperBounds)
@@ -430,8 +431,8 @@ public class Types {
 					Arrays.stream(lowerBounds)
 						.map(Types::getSimpleName)
 						.collect(joining(" & ")));
-		} else if (type instanceof GenericArrayType) {
-			return Types.getSimpleName(((GenericArrayType) type).getGenericComponentType()) + "[]";
+		} else if (type instanceof GenericArrayType genericArrayType) {
+			return Types.getSimpleName(genericArrayType.getGenericComponentType()) + "[]";
 		}
 
 		return type.getTypeName();
