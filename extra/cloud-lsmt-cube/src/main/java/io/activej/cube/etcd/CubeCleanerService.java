@@ -43,6 +43,8 @@ import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Watch;
+import io.etcd.jetcd.common.exception.CompactedException;
+import io.etcd.jetcd.options.GetOption;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -97,6 +99,7 @@ public final class CubeCleanerService extends AbstractReactive
 
 	private volatile boolean stopped;
 	private @Nullable ScheduledRunnable cleanupSchedule;
+	private boolean retryFromCompactedRevision;
 
 	// region JMX
 	private final PromiseStats promiseCleanup = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -177,6 +180,12 @@ public final class CubeCleanerService extends AbstractReactive
 			return this;
 		}
 
+		public Builder withRetryFromCompactedRevision(boolean retryFromCompactedRevision) {
+			checkNotBuilt(this);
+			CubeCleanerService.this.retryFromCompactedRevision = retryFromCompactedRevision;
+			return this;
+		}
+
 		@Override
 		protected CubeCleanerService doBuild() {
 			return CubeCleanerService.this;
@@ -189,7 +198,7 @@ public final class CubeCleanerService extends AbstractReactive
 		return Promise.ofCompletionStage(client.getKVClient().get(revisionKey)
 				.exceptionallyCompose(e -> failedFuture(new CubeException("Could not get revision key", e.getCause())))
 			)
-			.whenResult(response -> {
+			.then(response -> {
 				List<KeyValue> kvs = response.getKvs();
 				if (kvs.isEmpty()) {
 					throw new IllegalStateException("No cleanup revision is found on key '" +
@@ -203,8 +212,12 @@ public final class CubeCleanerService extends AbstractReactive
 				} catch (MalformedEtcdDataException e) {
 					throw new CubeException("Could not decode last cleanup revision on key '" + revisionKey + "'", e);
 				}
-				this.watcher = createWatcher();
+
+				return retryFromCompactedRevision ?
+					Promise.complete() :
+					checkLastCleanupRevision();
 			})
+			.whenResult(() -> this.watcher = createWatcher())
 			.then(this::cleanup)
 			.toVoid();
 	}
@@ -382,11 +395,20 @@ public final class CubeCleanerService extends AbstractReactive
 
 				@Override
 				public void onError(Throwable throwable) {
-					logger.warn("Error occurred while watching chunks to be cleaned up", throwable);
-					watchEtcdExceptionStats.recordException(throwable, this);
 					if (throwable instanceof MalformedEtcdDataException) {
 						malformedDataExceptionStats.recordException(throwable, this);
+					} else if (throwable instanceof CompactedException compactedException) {
+						long compactedRevision = compactedException.getCompactedRevision();
+						logger.warn("Watch revision {} was compacted, compacted revision is {}",
+							revision, compactedRevision, compactedException);
+						if (retryFromCompactedRevision) {
+							logger.trace("Retrying from the compacted revision {}", compactedRevision);
+							watchRevision = compactedRevision - 1;
+						}
+					} else {
+						logger.warn("Error occurred while watching chunks to be cleaned up", throwable);
 					}
+					watchEtcdExceptionStats.recordException(throwable, this);
 					watcher.close();
 				}
 
@@ -404,6 +426,13 @@ public final class CubeCleanerService extends AbstractReactive
 						}));
 				}
 			});
+	}
+
+	private Promise<Void> checkLastCleanupRevision() {
+		return Promise.ofCompletionStage(client.getKVClient().get(
+				root.concat(cleanupRevisionKey),
+				GetOption.builder().withRevision(lastCleanupRevision).build()))
+			.toVoid();
 	}
 
 	public record DeletedChunksEntry(long deleteRevision, long deleteTimestamp, Set<Long> chunkIds) {
