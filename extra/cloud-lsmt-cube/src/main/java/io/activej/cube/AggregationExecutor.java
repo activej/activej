@@ -17,6 +17,7 @@
 package io.activej.cube;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.ref.Ref;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.QueryPlan.Sequence;
@@ -32,10 +33,12 @@ import io.activej.datastream.processor.transformer.StreamTransformers;
 import io.activej.datastream.processor.transformer.sort.StreamSorter;
 import io.activej.datastream.processor.transformer.sort.StreamSorterStorage;
 import io.activej.datastream.stats.StreamStats;
+import io.activej.datastream.supplier.ForwardingStreamSupplier;
 import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
+import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
@@ -407,11 +410,26 @@ public final class AggregationExecutor extends AbstractReactive
 		AggregationPredicate where, AggregationPredicate precondition,
 		List<AggregationChunk> individualChunks, Class<T> sequenceClass, DefiningClassLoader queryClassLoader
 	) {
+		Ref<StreamSupplier<T>> supplierRef = new Ref<>(null);
+
 		List<StreamSupplier<T>> streamSuppliers = individualChunks.stream()
-			.map(chunk -> chunkReaderWithFilter(where, precondition, chunk, sequenceClass, queryClassLoader))
+			.map(chunk -> chunkReaderWithFilter(where, precondition, chunk, sequenceClass, queryClassLoader)
+				.withEndOfStream(eos -> eos.whenException(e -> {
+					StreamSupplier<T> streamSupplier = supplierRef.get();
+					if (streamSupplier != null) {
+						streamSupplier.closeEx(e);
+					} else {
+						supplierRef.set(StreamSuppliers.closingWithError(e));
+					}
+				})))
 			.toList();
-		return StreamSuppliers.concat(streamSuppliers)
+		StreamSupplier<T> concat = StreamSuppliers.concat(streamSuppliers)
 			.withEndOfStream(eos -> eos.whenException(e -> streamSuppliers.forEach(supplier -> supplier.closeEx(e))));
+
+		StreamSupplier<T> streamSupplier = supplierRef.get();
+		if (streamSupplier != null) return streamSupplier;
+		supplierRef.set(concat);
+		return concat;
 	}
 
 	private <T> StreamSupplier<T> chunkReaderWithFilter(
