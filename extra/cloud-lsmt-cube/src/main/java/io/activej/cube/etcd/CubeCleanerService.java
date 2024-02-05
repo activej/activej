@@ -60,6 +60,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static io.activej.async.function.AsyncRunnables.coalesce;
 import static io.activej.cube.etcd.EtcdUtils.*;
+import static io.activej.etcd.EtcdUtils.convertStatusException;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 
@@ -196,7 +197,7 @@ public final class CubeCleanerService extends AbstractReactive
 	public Promise<Void> start() {
 		ByteSequence revisionKey = root.concat(cleanupRevisionKey);
 		return Promise.ofCompletionStage(client.getKVClient().get(revisionKey)
-				.exceptionallyCompose(e -> failedFuture(new CubeException("Could not get revision key", e.getCause())))
+				.exceptionallyCompose(e -> failedFuture(new CubeException("Could not get revision key", convertStatusException(e.getCause()))))
 			)
 			.then(response -> {
 				List<KeyValue> kvs = response.getKvs();
@@ -299,7 +300,7 @@ public final class CubeCleanerService extends AbstractReactive
 	private Promise<Void> updateLastCleanupRevision(long lastCleanupRevision) {
 		ByteSequence value = REVISION_CODEC.encodeValue(lastCleanupRevision);
 		return Promise.ofCompletionStage(client.getKVClient().put(root.concat(cleanupRevisionKey), value)
-				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to update last cleanup revision", e.getCause()))))
+				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to update last cleanup revision", convertStatusException(e.getCause())))))
 			.whenResult(() -> this.lastCleanupRevision = lastCleanupRevision)
 			.whenComplete(promiseUpdateLastCleanupRevision.recordStats())
 			.toVoid();
@@ -431,7 +432,8 @@ public final class CubeCleanerService extends AbstractReactive
 	private Promise<Void> checkLastCleanupRevision() {
 		return Promise.ofCompletionStage(client.getKVClient().get(
 				root.concat(cleanupRevisionKey),
-				GetOption.builder().withRevision(lastCleanupRevision).build()))
+				GetOption.builder().withRevision(lastCleanupRevision).build())
+				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
 			.toVoid();
 	}
 

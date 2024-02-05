@@ -182,7 +182,7 @@ public final class CubeEtcdOTUplink extends AbstractReactive
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
 		checkInReactorThread(this);
 		return Promise.ofCompletionStage(client.getKVClient().get(root)
-				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to fetch diffs", e.getCause()))))
+				.exceptionallyCompose(e -> failedFuture(new CubeException("Failed to fetch diffs", convertStatusException(e.getCause())))))
 			.then(response -> {
 				long targetRevision = response.getKvs().isEmpty() ? response.getHeader().getRevision() : response.getKvs().get(0).getModRevision();
 				return doFetch(currentCommitId, targetRevision)

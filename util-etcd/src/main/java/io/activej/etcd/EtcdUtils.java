@@ -27,11 +27,14 @@ import io.etcd.jetcd.options.PutOption;
 import io.etcd.jetcd.options.WatchOption;
 import io.etcd.jetcd.watch.WatchEvent;
 import io.etcd.jetcd.watch.WatchResponse;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -105,7 +108,7 @@ public class EtcdUtils {
 						.build()))
 				.toArray(Op[]::new))
 			.commit()
-			.exceptionallyCompose(e -> failedFuture(new EtcdException("Checkout failed", e.getCause())))
+			.exceptionallyCompose(e -> failedFuture(new EtcdException("Checkout failed", convertStatusException(e.getCause()))))
 			.thenCompose(new Function<TxnResponse, CompletionStage<R>>() {
 				@Override
 				public CompletionStage<R> apply(TxnResponse response) {
@@ -324,7 +327,7 @@ public class EtcdUtils {
 			.get(key, GetOption.builder().withSerializable(true).build())
 			.whenComplete((getResponse, throwable) -> {
 				if (throwable != null) {
-					future.completeExceptionally(new EtcdException("Atomic update failed", throwable.getCause()));
+					future.completeExceptionally(new EtcdException("Atomic update failed", convertStatusException(throwable.getCause())));
 					return;
 				}
 				if (getResponse.getKvs().isEmpty()) {
@@ -357,7 +360,7 @@ public class EtcdUtils {
 			.commit()
 			.whenComplete((txnResponse, throwable) -> {
 				if (throwable != null) {
-					future.completeExceptionally(new EtcdException("Atomic update failed", throwable.getCause()));
+					future.completeExceptionally(new EtcdException("Atomic update failed", convertStatusException(throwable.getCause())));
 					return;
 				}
 				if (!txnResponse.isSucceeded()) {
@@ -404,7 +407,7 @@ public class EtcdUtils {
 		}
 	}
 
-	public static <T> void checkAndInsert(TxnOps txn, EtcdKVEncoder<Long, T> codec, Collection<T> next) {
+	public static <T> void checkAndInsert(TxnOps txn, EtcdKVEncoder<?, T> codec, Collection<T> next) {
 		for (var item : next) {
 			KeyValue nextKV = codec.encodeKV(item);
 			checkAndInsert(txn, nextKV.key(), nextKV.value());
@@ -425,7 +428,7 @@ public class EtcdUtils {
 		}
 	}
 
-	public static <K> void checkAndDelete(TxnOps txn, EtcdKeyEncoder<Long> codec, Collection<Long> prev) {
+	public static <K> void checkAndDelete(TxnOps txn, EtcdKeyEncoder<K> codec, Collection<K> prev) {
 		for (var item : prev) {
 			checkAndDelete(txn, codec.encodeKey(item));
 		}
@@ -478,11 +481,44 @@ public class EtcdUtils {
 			.If(txnOps.cmps.toArray(Cmp[]::new))
 			.Then(txnOps.ops.toArray(Op[]::new))
 			.commit()
-			.exceptionallyCompose(e -> failedFuture(new EtcdException("Transaction failed", e.getCause())))
+			.exceptionallyCompose(e -> failedFuture(new EtcdException("Transaction failed", convertStatusException(e.getCause()))))
 			.thenCompose(txnResponse ->
 				txnResponse.isSucceeded() ?
 					completedFuture(txnResponse) :
 					failedFuture(new TransactionNotSucceededException()));
+	}
+
+	public static <T> CompletionStage<T> convertStatusExceptionStage(Throwable throwable) {
+		if (throwable instanceof CompletionException) {
+			throwable = throwable.getCause();
+		}
+		return failedFuture(convertStatusException(throwable));
+	}
+
+	public static Throwable convertStatusException(Throwable throwable) {
+		if (!(throwable instanceof StatusRuntimeException sre)) {
+			return throwable;
+		}
+		Status status = Status.fromThrowable(throwable);
+		return switch (status.getCode()) {
+			case OK,
+				CANCELLED,
+				NOT_FOUND,
+				ALREADY_EXISTS,
+				DEADLINE_EXCEEDED,
+				UNAVAILABLE,
+				ABORTED -> status.asException(sre.getTrailers());
+			case UNKNOWN,
+				PERMISSION_DENIED,
+				RESOURCE_EXHAUSTED,
+				INVALID_ARGUMENT,
+				OUT_OF_RANGE,
+				FAILED_PRECONDITION,
+				UNIMPLEMENTED,
+				INTERNAL,
+				DATA_LOSS,
+				UNAUTHENTICATED -> status.asRuntimeException(sre.getTrailers());
+		};
 	}
 
 }

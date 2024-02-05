@@ -6,6 +6,7 @@ import io.activej.common.Utils;
 import io.activej.common.builder.AbstractBuilder;
 import io.activej.cube.aggregation.ChunksAlreadyLockedException;
 import io.activej.cube.aggregation.IChunkLocker;
+import io.activej.etcd.EtcdUtils;
 import io.activej.etcd.codec.key.EtcdKeyCodec;
 import io.activej.etcd.codec.key.EtcdKeyCodecs;
 import io.activej.etcd.exception.MalformedEtcdDataException;
@@ -87,7 +88,8 @@ public final class EtcdChunkLocker extends AbstractReactive
 		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
-		return Promise.ofCompletionStage(client.getLeaseClient().grant(ttl.toSeconds()))
+		return Promise.ofCompletionStage(client.getLeaseClient().grant(ttl.toSeconds())
+				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
 			.map(LeaseGrantResponse::getID)
 			.then(leaseId -> Promise.ofCompletionStage(
 					executeTxnOps(client.getKVClient(), root, txnOps -> {
@@ -116,7 +118,8 @@ public final class EtcdChunkLocker extends AbstractReactive
 		Long leaseId = leaseIds.get(chunkIds);
 		Lease leaseClient = client.getLeaseClient();
 		if (leaseId != null) {
-			return Promise.ofCompletionStage(leaseClient.revoke(leaseId))
+			return Promise.ofCompletionStage(leaseClient.revoke(leaseId)
+					.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
 				.whenComplete(() -> tryCloseKeepAlive(leaseId))
 				.toVoid();
 		}
@@ -152,9 +155,10 @@ public final class EtcdChunkLocker extends AbstractReactive
 	@Override
 	public Promise<Set<Long>> getLockedChunks() {
 		return Promise.ofCompletionStage(client.getKVClient().get(root,
-				GetOption.builder()
-					.isPrefix(true)
-					.build()))
+					GetOption.builder()
+						.isPrefix(true)
+						.build())
+				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
 			.map(getResponse -> {
 				Set<Long> lockedChunks = new HashSet<>();
 				for (KeyValue kv : getResponse.getKvs()) {
@@ -190,7 +194,8 @@ public final class EtcdChunkLocker extends AbstractReactive
 
 		Lease leaseClient = client.getLeaseClient();
 		return Promises.all(leaseIdsCopy.values().stream()
-			.map(leaseId -> Promise.ofCompletionStage(leaseClient.revoke(leaseId))));
+			.map(leaseId -> Promise.ofCompletionStage(leaseClient.revoke(leaseId)
+				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))));
 	}
 
 	private CloseableClient getKeepAlive(Long leaseId) {
