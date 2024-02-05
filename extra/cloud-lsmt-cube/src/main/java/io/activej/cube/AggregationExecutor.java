@@ -407,19 +407,11 @@ public final class AggregationExecutor extends AbstractReactive
 		AggregationPredicate where, AggregationPredicate precondition,
 		List<AggregationChunk> individualChunks, Class<T> sequenceClass, DefiningClassLoader queryClassLoader
 	) {
-		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
-		return StreamSuppliers.concat(new Iterator<>() {
-			@Override
-			public boolean hasNext() {
-				return chunkIterator.hasNext();
-			}
-
-			@Override
-			public StreamSupplier<T> next() {
-				AggregationChunk chunk = chunkIterator.next();
-				return chunkReaderWithFilter(where, precondition, chunk, sequenceClass, queryClassLoader);
-			}
-		});
+		List<StreamSupplier<T>> streamSuppliers = individualChunks.stream()
+			.map(chunk -> chunkReaderWithFilter(where, precondition, chunk, sequenceClass, queryClassLoader))
+			.toList();
+		return StreamSuppliers.concat(streamSuppliers)
+			.withEndOfStream(eos -> eos.whenException(e -> streamSuppliers.forEach(supplier -> supplier.closeEx(e))));
 	}
 
 	private <T> StreamSupplier<T> chunkReaderWithFilter(

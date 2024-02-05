@@ -4,16 +4,19 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frame.FrameFormat;
 import io.activej.csp.process.frame.FrameFormats;
 import io.activej.cube.aggregation.AggregationChunkStorage;
+import io.activej.cube.aggregation.AggregationException;
 import io.activej.cube.aggregation.IAggregationChunkStorage;
 import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
+import io.activej.datastream.supplier.StreamSupplier;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.dns.DnsClient;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
 import io.activej.fs.FileSystem;
+import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.http.FileSystemServlet;
 import io.activej.fs.http.HttpClientFileSystem;
 import io.activej.http.HttpClient;
@@ -35,6 +38,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
@@ -50,11 +54,14 @@ import static io.activej.cube.aggregation.predicate.AggregationPredicates.*;
 import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.http.HttpUtils.inetAddress;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public final class CubeTest {
@@ -486,4 +493,40 @@ public final class CubeTest {
 			AggregationPredicates.alwaysTrue());
 	}
 
+	@Test
+	public void testRemovedChunks() {
+		List<DataItemResult> expected = List.of(
+			new DataItemResult(1, 2, 10, 30, 20),
+			new DataItemResult(1, 3, 10, 30, 20),
+			new DataItemResult(1, 4, 0, 30, 60),
+			new DataItemResult(1, 5, 0, 100, 200)
+		);
+
+		await(
+			consume(cubeReporting, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
+			consume(cubeReporting, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)),
+			consume(cubeReporting, chunkStorage, new DataItem2(1, 2, 10, 20), new DataItem2(1, 4, 10, 20)),
+			consume(cubeReporting, chunkStorage, new DataItem2(1, 4, 10, 20), new DataItem2(1, 5, 100, 200))
+		);
+
+		Set<Long> chunks = await(chunkStorage.listChunks());
+		StreamSupplier<DataItemResult> streamSupplier1 = cubeReporting.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
+			alwaysTrue(),
+			DataItemResult.class, classLoader
+		);
+		await(chunkStorage.deleteChunks(chunks));
+		StreamSupplier<DataItemResult> streamSupplier2 = cubeReporting.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
+			alwaysTrue(),
+			DataItemResult.class, classLoader
+		);
+
+		List<DataItemResult> actual = await(streamSupplier1.toList());
+		assertEquals(expected, actual);
+
+		AggregationException exception = awaitException(streamSupplier2.toList());
+		Throwable cause1 = exception.getCause();
+		assertThat(cause1, instanceOf(AggregationException.class));
+		Throwable cause2 = cause1.getCause();
+		assertThat(cause2, instanceOf(FileNotFoundException.class));
+	}
 }
