@@ -51,6 +51,8 @@ public class EtcdUtils {
 
 	public static final EtcdValueCodec<Long> TOUCH_TIMESTAMP_CODEC = EtcdValueCodecs.ofLongString();
 
+	private static final String DEADLINE_EXCEEDED_STATUS_MESSAGE = "context deadline exceeded";
+
 	public static ByteSequence byteSequenceFrom(char ch) {
 		checkArgument(ch <= 0x7f);
 		return byteSequenceFrom((byte) ch);
@@ -508,8 +510,7 @@ public class EtcdUtils {
 				DEADLINE_EXCEEDED,
 				UNAVAILABLE,
 				ABORTED -> status.asException(sre.getTrailers());
-			case UNKNOWN,
-				PERMISSION_DENIED,
+			case PERMISSION_DENIED,
 				RESOURCE_EXHAUSTED,
 				INVALID_ARGUMENT,
 				OUT_OF_RANGE,
@@ -518,6 +519,9 @@ public class EtcdUtils {
 				INTERNAL,
 				DATA_LOSS,
 				UNAUTHENTICATED -> status.asRuntimeException(sre.getTrailers());
+			case UNKNOWN -> DEADLINE_EXCEEDED_STATUS_MESSAGE.equals(status.getDescription()) ?
+				status.asException(sre.getTrailers()) :
+				status.asRuntimeException(sre.getTrailers());
 		};
 	}
 
