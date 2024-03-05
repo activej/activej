@@ -495,6 +495,29 @@ public final class AbstractHttpConnectionTest {
 		assertSame(fatalError, errorRef.get());
 	}
 
+	@Test
+	public void testClosedKeepAliveConnections() throws IOException {
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+			.withKeepAliveTimeout(Duration.ofSeconds(1))
+			.build();
+
+		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		await(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
+			.then(httpResponse -> Promise.of(httpResponse).async())
+			.then(() -> client.stop())
+			.then(() -> Promises.delay(Duration.ofSeconds(1)))
+			.whenComplete(server::close));
+
+		System.out.println(inspector.getHttpErrors());
+		assertEquals(0, inspector.getHttpErrors().getTotal());
+	}
+
 	private AsyncFunctionEx<HttpResponse, ByteBuf> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 			.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
