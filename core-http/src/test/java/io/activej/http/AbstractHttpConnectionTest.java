@@ -514,8 +514,8 @@ public final class AbstractHttpConnectionTest {
 			.then(() -> Promises.delay(Duration.ofSeconds(1)))
 			.whenComplete(server::close));
 
-		System.out.println(inspector.getHttpErrors());
 		assertEquals(0, inspector.getHttpErrors().getTotal());
+		assertEquals(0, inspector.getMalformedHttpExceptions().getTotal());
 	}
 
 	private AsyncFunctionEx<HttpResponse, ByteBuf> ensureHelloWorldAsyncFn() {

@@ -107,6 +107,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		this.remoteAddress = remoteAddress;
 	}
 
+	@Override
 	public PoolLabel getCurrentPool() {
 		if (pool == client.poolKeepAlive) return PoolLabel.KEEP_ALIVE;
 		if (pool == client.poolReadWrite) return PoolLabel.READ_WRITE;

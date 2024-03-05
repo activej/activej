@@ -142,6 +142,8 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 	protected abstract void onMalformedHttpException(MalformedHttpException e);
 
+	protected abstract PoolLabel getCurrentPool();
+
 	public final boolean isClosed() {
 		return flags < 0;
 	}
@@ -610,7 +612,11 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 						onMalformedHttpException(e1);
 					}
 				} else {
-					closeEx(new MalformedHttpException("Unexpected end of data"));
+					if (getCurrentPool() == PoolLabel.KEEP_ALIVE && readBuf == null) {
+						close();
+					} else {
+						onMalformedHttpException(new MalformedHttpException("Unexpected end of data"));
+					}
 				}
 			} else {
 				closeEx(translateToHttpException(e));

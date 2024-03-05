@@ -125,6 +125,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		socket.read().subscribe(readMessageConsumer);
 	}
 
+	@Override
 	public PoolLabel getCurrentPool() {
 		if (pool == server.poolNew) return PoolLabel.NEW;
 		if (pool == server.poolKeepAlive) return PoolLabel.KEEP_ALIVE;
