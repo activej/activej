@@ -39,7 +39,6 @@ public class SpringDiBenchmark {
 		private final String name;
 		private final float weight;
 
-		@Autowired
 		public Sugar() {
 			this.name = "WhiteSugar";
 			this.weight = 10.f;
@@ -59,7 +58,6 @@ public class SpringDiBenchmark {
 		private final float weight;
 		private final String name;
 
-		@Autowired
 		public Butter() {
 			this.weight = 10.f;
 			this.name = "Butter";
@@ -78,7 +76,6 @@ public class SpringDiBenchmark {
 		private final float weight;
 		private final String name;
 
-		@Autowired
 		public Flour() {
 			this.name = "GoodFlour";
 			this.weight = 100.0f;

@@ -35,12 +35,12 @@
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-core</artifactId>
-      <version>1.36</version>
+      <version>1.37</version>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
-      <version>1.36</version>
+      <version>1.37</version>
     </dependency>
   </dependencies>
 
@@ -48,6 +48,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.6.1</version>
         <executions>
           <execution>
             <id>build-classpath</id>
