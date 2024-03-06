@@ -1,8 +1,10 @@
 package io.activej.http;
 
 import io.activej.async.function.AsyncFunctionEx;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
+import io.activej.bytebuf.ByteBufStrings;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
@@ -15,6 +17,7 @@ import io.activej.http.HttpClient.JmxInspector;
 import io.activej.http.HttpMessage.Builder;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -28,6 +31,8 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -515,6 +520,36 @@ public final class AbstractHttpConnectionTest {
 			.whenComplete(server::close));
 
 		assertEquals(0, inspector.getHttpErrors().getTotal());
+		assertEquals(0, inspector.getMalformedHttpExceptions().getTotal());
+	}
+
+	@Test
+	public void testClosedConnectionRightAway() throws IOException {
+		client = HttpClient.builder(Reactor.getCurrentReactor())
+			.build();
+
+		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), request -> HttpResponse.ok200().toPromise())
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		String response = await(TcpSocket.connect(Reactor.getCurrentReactor(), new InetSocketAddress("127.0.0.1", port))
+			.then(socket -> socket.write(null)
+				.then($ -> socket.read())
+				.map(byteBuf -> byteBuf.asString(UTF_8))
+				.whenComplete(socket::close))
+			.whenComplete(server::close));
+
+		assertEquals("""
+			HTTP/1.1 400 Bad Request\r
+			Connection: close\r
+			Content-Length: 0\r
+			\r
+			""", response);
+
+		System.out.println(inspector.getMalformedHttpExceptions());
 		assertEquals(0, inspector.getMalformedHttpExceptions().getTotal());
 	}
 
