@@ -160,7 +160,10 @@ public final class HttpServer extends AbstractReactiveServer {
 			}
 			InetAddress remoteAddress = connection.getRemoteAddress();
 			String requestString = new String(malformedRequestBytes, ISO_8859_1);
-			malformedHttpExceptions.recordException(e, remoteAddress + ": " + requestString);
+			malformedHttpExceptions.recordException(e, remoteAddress +
+													   ", pool = " + connection.getCurrentPool() +
+													   ": (" + malformedRequestBytes.length + ") "
+													   + requestString);
 		}
 
 		@Override
