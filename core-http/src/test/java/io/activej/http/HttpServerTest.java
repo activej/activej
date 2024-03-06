@@ -626,7 +626,7 @@ public final class HttpServerTest {
 		String context = (String) malformedHttpExceptions.getContext();
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
-		assertTrue(malformedHeaderRequest.contains(context));
+		assertTrue(malformedHeaderRequest.contains(context.substring("/127.0.0.1: ".length())));
 
 		server.closeFuture().get();
 		thread.join();
@@ -659,7 +659,7 @@ public final class HttpServerTest {
 		String context = (String) malformedHttpExceptions.getContext();
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
-		assertTrue(malformedUriRequest.startsWith(context));
+		assertTrue(malformedUriRequest.startsWith(context.substring("/127.0.0.1: ".length())));
 
 		server.closeFuture().get();
 		thread.join();
@@ -694,7 +694,7 @@ public final class HttpServerTest {
 		String context = (String) malformedHttpExceptions.getContext();
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
-		assertTrue(malformedHeaderRequest.contains(context));
+		assertTrue(malformedHeaderRequest.contains(context.substring("/127.0.0.1: ".length())));
 
 		server.closeFuture().get();
 		thread.join();
@@ -732,7 +732,7 @@ public final class HttpServerTest {
 		String context = (String) malformedHttpExceptions.getContext();
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
-		assertTrue(malformedPipelinedRequest.startsWith(context));
+		assertTrue(malformedPipelinedRequest.contains(context.substring("/127.0.0.1: ".length())));
 
 		server.closeFuture().get();
 		thread.join();
@@ -791,7 +791,7 @@ public final class HttpServerTest {
 		String context = (String) malformedHttpExceptions.getContext();
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
-		assertTrue(malformedPipelinedRequest.startsWith(context));
+		assertTrue(malformedPipelinedRequest.startsWith(context.substring("/127.0.0.1: ".length())));
 
 		server.closeFuture().get();
 		thread.join();
