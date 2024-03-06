@@ -22,10 +22,21 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-final class HttpHeadersMultimap<K, V> {
-	static final int INITIAL_SIZE = ApplicationSettings.getInt(HttpHeadersMultimap.class, "initialSize", 8);
+import static java.lang.Integer.numberOfLeadingZeros;
 
-	Object[] kvPairs = new Object[INITIAL_SIZE];
+final class HttpHeadersMultimap<K, V> {
+	static final int INITIAL_SIZE = ApplicationSettings.getInt(HttpHeadersMultimap.class, "initialSize", 4);
+
+	Object[] kvPairs;
+
+	public HttpHeadersMultimap(int initialSize) {
+		this.kvPairs = new Object[1 << ((32 - numberOfLeadingZeros(initialSize - 1)) + 1)];
+	}
+
+	public HttpHeadersMultimap() {
+		this(INITIAL_SIZE);
+	}
+
 	int size;
 
 	@Contract(pure = true)
