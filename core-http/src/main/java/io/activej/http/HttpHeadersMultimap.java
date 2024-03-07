@@ -24,7 +24,7 @@ import java.util.*;
 
 import static java.lang.Integer.numberOfLeadingZeros;
 
-final class HttpHeadersMultimap<K, V> {
+final class HttpHeadersMultimap {
 	static final int INITIAL_SIZE = ApplicationSettings.getInt(HttpHeadersMultimap.class, "initialSize", 4);
 
 	Object[] kvPairs;
@@ -44,7 +44,7 @@ final class HttpHeadersMultimap<K, V> {
 		return size;
 	}
 
-	public void add(K key, V value) {
+	public void add(HttpHeader key, HttpHeaderValue value) {
 		if (size++ > kvPairs.length / 4) {
 			resize();
 		}
@@ -60,16 +60,15 @@ final class HttpHeadersMultimap<K, V> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void resize() {
 		int beforeResize = this.size;
 
 		Object[] oldKvPairs = this.kvPairs;
 		this.kvPairs = new Object[this.kvPairs.length * 4];
 		for (int i = 0; i != oldKvPairs.length; i += 2) {
-			K k = (K) oldKvPairs[i];
+			HttpHeader k = (HttpHeader) oldKvPairs[i];
 			if (k != null) {
-				V v = (V) oldKvPairs[i + 1];
+				HttpHeaderValue v = (HttpHeaderValue) oldKvPairs[i + 1];
 				add(k, v);
 			}
 		}
@@ -78,21 +77,20 @@ final class HttpHeadersMultimap<K, V> {
 	}
 
 	@Contract(pure = true)
-	@SuppressWarnings("unchecked")
-	public @Nullable V get(K key) {
+	public @Nullable HttpHeaderValue get(HttpHeader key) {
 		Object[] kvPairs = this.kvPairs;
 		for (int i = key.hashCode() & (kvPairs.length - 2); ; i = (i + 2) & (kvPairs.length - 2)) {
-			K k = (K) kvPairs[i];
+			HttpHeader k = (HttpHeader) kvPairs[i];
 			if (k == null) {
 				return null;
 			}
 			if (k.equals(key)) {
-				return (V) kvPairs[i + 1];
+				return (HttpHeaderValue) kvPairs[i + 1];
 			}
 		}
 	}
 
-	public Collection<Map.Entry<K, V>> getEntries() {
+	public Collection<Map.Entry<HttpHeader, HttpHeaderValue>> getEntries() {
 		return new AbstractCollection<>() {
 			@Override
 			public int size() {
@@ -100,21 +98,20 @@ final class HttpHeadersMultimap<K, V> {
 			}
 
 			@Override
-			public Iterator<Map.Entry<K, V>> iterator() {
+			public Iterator<Map.Entry<HttpHeader, HttpHeaderValue>> iterator() {
 				return new Iterator<>() {
 					int i = 0;
-					@Nullable K k;
-					@Nullable V v;
+					@Nullable HttpHeader k;
+					@Nullable HttpHeaderValue v;
 
 					{advance();}
 
-					@SuppressWarnings("unchecked")
 					private void advance() {
 						for (; i < kvPairs.length; i += 2) {
-							K k = (K) kvPairs[i];
+							HttpHeader k = (HttpHeader) kvPairs[i];
 							if (k != null) {
 								this.k = k;
-								this.v = (V) kvPairs[i + 1];
+								this.v = (HttpHeaderValue) kvPairs[i + 1];
 								i += 2;
 								return;
 							}
@@ -129,10 +126,10 @@ final class HttpHeadersMultimap<K, V> {
 					}
 
 					@Override
-					public Map.Entry<K, V> next() {
+					public Map.Entry<HttpHeader, HttpHeaderValue> next() {
 						if (k == null)
 							throw new NoSuchElementException();
-						Map.Entry<K, V> entry = new AbstractMap.SimpleImmutableEntry<>(this.k, this.v);
+						Map.Entry<HttpHeader, HttpHeaderValue> entry = new AbstractMap.SimpleImmutableEntry<>(this.k, this.v);
 						advance();
 						return entry;
 					}

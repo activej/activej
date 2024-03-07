@@ -70,7 +70,7 @@ public abstract class HttpMessage {
 	@MagicConstant(flags = {MUST_LOAD_BODY, USE_GZIP, RECYCLED})
 	byte flags;
 
-	final HttpHeadersMultimap<HttpHeader, HttpHeaderValue> headers = new HttpHeadersMultimap<>();
+	final HttpHeadersMultimap headers = new HttpHeadersMultimap();
 	@Nullable ByteBuf body;
 	@Nullable ChannelSupplier<ByteBuf> bodyStream;
 

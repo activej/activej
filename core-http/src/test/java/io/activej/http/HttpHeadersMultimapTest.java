@@ -16,7 +16,7 @@ public class HttpHeadersMultimapTest {
 
 	@Theory
 	public void testAddAndGet(@FromDataPoints("initialSizes") int initialSize) {
-		HttpHeadersMultimap<HttpHeader, HttpHeaderValue> multimap = new HttpHeadersMultimap<>();
+		HttpHeadersMultimap multimap = new HttpHeadersMultimap();
 		int totalHeaders = initialSize * 10;
 
 		for (int i = 0; i < totalHeaders; i++) {
