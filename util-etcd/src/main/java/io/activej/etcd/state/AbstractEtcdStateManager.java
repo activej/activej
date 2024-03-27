@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
+import static io.activej.common.Checks.checkState;
 import static io.activej.etcd.EtcdUtils.executeTxnOps;
 
 public abstract class AbstractEtcdStateManager<S, T> implements BlockingService {
@@ -51,6 +52,7 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 
 	@Override
 	public void start() throws Exception {
+		checkState(state == null, "Already started");
 		doCheckout().get();
 		watch();
 	}
