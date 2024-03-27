@@ -344,7 +344,9 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		if (throwable instanceof MalformedEtcdDataException) {
 			malformedDataExceptionStats.recordException(throwable, this);
 		}
-		watcher.close();
+		if (watcher != null) {
+			watcher.close();
+		}
 	}
 
 	@Override
