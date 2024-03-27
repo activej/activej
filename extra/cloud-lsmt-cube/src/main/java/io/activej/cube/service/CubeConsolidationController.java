@@ -18,12 +18,10 @@ package io.activej.cube.service;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.builder.AbstractBuilder;
-import io.activej.cube.AggregationExecutor;
 import io.activej.cube.CubeConsolidator;
 import io.activej.cube.CubeConsolidator.ConsolidationStrategy;
 import io.activej.cube.aggregation.*;
 import io.activej.cube.aggregation.ot.AggregationDiff;
-import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -42,17 +40,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToLinkedHashMap;
 import static io.activej.cube.aggregation.util.Utils.collectChunkIds;
@@ -137,13 +133,13 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 
 		public Builder withLockerStrategy(Supplier<LockerStrategy> strategy) {
 			checkNotBuilt(this);
-			CubeConsolidationController.this.strategy = strategy;
+			CubeConsolidationController.this.strategy = checkNotNull(strategy);
 			return this;
 		}
 
 		public Builder withChunkLockerFactory(Function<String, IChunkLocker> factory) {
 			checkNotBuilt(this);
-			CubeConsolidationController.this.chunkLockerFactory = factory;
+			CubeConsolidationController.this.chunkLockerFactory = checkNotNull(factory);
 			return this;
 		}
 
@@ -168,129 +164,109 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 		return cleanupIrrelevantChunks.run();
 	}
 
-	Promise<Void> doConsolidate() {
+	private Promise<Void> doConsolidate() {
 		checkInReactorThread(this);
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
+		logger.info("Launching consolidation");
 		LockerStrategy chunksFn = strategy.get();
-		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
-		return Promise.complete()
-			.then(stateManager::catchUp)
-			.mapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e))
-			.then(() -> Promises.all(cubeConsolidator.getStructure().getAggregationIds().stream()
-				.map(aggregationId -> findAndLockChunksForConsolidation(aggregationId, chunksFn)
-					.whenResult(chunks -> {
-						if (!chunks.isEmpty()) chunksForConsolidation.put(aggregationId, chunks);
-					}))))
-			.then(() -> cubeConsolidator.consolidate((id, $1, $2, $3) -> chunksForConsolidation.getOrDefault(id, List.of()))
-				.whenComplete(promiseConsolidateImpl.recordStats()))
-			.whenResult(this::cubeDiffJmx)
-			.whenComplete(this::logCubeDiff)
-			.then(protoCubeDiff -> {
-				if (protoCubeDiff.isEmpty()) return Promise.complete();
-				return aggregationChunkStorage.finish(addedProtoChunks(protoCubeDiff))
-					.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
-					.then(chunkIds -> stateManager.push(List.of(cubeDiffScheme.wrap(materializeProtoDiff(protoCubeDiff, chunkIds))))
-						.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e)))
-					.whenComplete(toLogger(logger, thisMethod(), protoCubeDiff));
-			})
-			.then((result, e) -> releaseChunks(chunksForConsolidation)
-				.then(() -> Promise.of(result, e)))
-			.whenComplete(promiseConsolidate.recordStats())
-			.whenComplete(toLogger(logger, thisMethod(), stateManager))
-			.whenComplete(() -> consolidating = false);
+		return stateManager.catchUp()
+				.mapException(e -> new CubeException("Failed to synchronize state prior to consolidation", e))
+				.then(() -> doConsolidate(chunksFn))
+				.whenComplete(this::logConsolidation)
+				.whenComplete(promiseConsolidate.recordStats())
+				.whenComplete(toLogger(logger, thisMethod(), stateManager))
+				.whenComplete(() -> consolidating = false)
+				.toVoid();
+	}
+
+	private Promise<List<String>> doConsolidate(LockerStrategy chunksFn) {
+		Set<String> aggregationIds = cubeConsolidator.getStructure().getAggregationIds();
+		List<String> consolidatedAggregations = new ArrayList<>(aggregationIds.size());
+		List<String> aggregationsList = new ArrayList<>(aggregationIds);
+		Collections.shuffle(aggregationsList);
+		Stream<AsyncRunnable> runnables = aggregationsList.stream().map(aggregationId ->
+				() -> doConsolidate(aggregationId, chunksFn)
+						.whenResult(diff -> {if (!diff.isEmpty()) consolidatedAggregations.add(aggregationId);})
+						.toVoid()
+		);
+		return Promises.sequence(runnables).map($ -> consolidatedAggregations);
+	}
+
+	private Promise<ProtoCubeDiff> doConsolidate(String aggregationId, LockerStrategy chunksFn) {
+		return findAndLockChunksForConsolidation(aggregationId, chunksFn)
+				.then(chunks -> cubeConsolidator.consolidate(Map.of(aggregationId, chunks))
+						.then(diff -> diff.isEmpty() ? Promise.of(diff) :
+								aggregationChunkStorage.finish(addedProtoChunks(diff))
+										.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
+										.then(chunkIds -> {
+											CubeDiff cubeDiff = materializeProtoDiff(diff, chunkIds);
+											return stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
+													.mapException(e -> new CubeException("Failed to synchronize state after consolidation, resetting", e))
+													.whenResult(() -> cubeDiffJmx(cubeDiff));
+										})
+										.map($ -> diff))
+						.then((result, e) -> releaseChunks(aggregationId, chunks)
+								.then(() -> Promise.of(result, e)))
+				)
+				.whenComplete(promiseConsolidateImpl.recordStats())
+				.whenComplete(toLogger(logger, thisMethod(), aggregationId));
 	}
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(
 		String aggregationId, LockerStrategy strategy
 	) {
 		IChunkLocker locker = ensureLocker(aggregationId);
-		AggregationExecutor aggregationExecutor = cubeConsolidator.getExecutor().getAggregationExecutors().get(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
-			() -> locker.getLockedChunks()
-				.map(strategy::getConsolidationStrategy)
-				.map(consolidationStrategy -> cubeConsolidator.getStateManager().query(state ->
-					consolidationStrategy.getChunksForConsolidation(
-						aggregationId,
-						state.getDataState().getAggregationStates().get(aggregationId),
-						aggregationExecutor.getMaxChunksToConsolidate(),
-						aggregationExecutor.getChunkSize()
-					)))
-				.then(chunks -> {
-					if (chunks.isEmpty()) {
-						logger.info("Nothing to consolidate in aggregation '{}'", aggregationId);
-						return Promise.of(chunks);
-					}
-					return locker.lockChunks(collectChunkIds(chunks))
-						.map($ -> chunks);
-				}));
+				() -> locker.getLockedChunks()
+						.map(strategy::getConsolidationStrategy)
+						.map(consolidationStrategy -> cubeConsolidator.findChunksForConsolidation(aggregationId, consolidationStrategy))
+						.then(chunks -> {
+							if (chunks.isEmpty()) {
+								logger.info("Nothing to consolidate in aggregation '{}'", aggregationId);
+								return Promise.of(chunks);
+							}
+							return locker.lockChunks(collectChunkIds(chunks))
+									.map($ -> chunks);
+						}));
 	}
 
-	private Promise<Void> releaseChunks(Map<String, List<AggregationChunk>> chunksForConsolidation) {
-		return Promises.all(chunksForConsolidation.entrySet().stream()
-			.map(entry -> {
-				String aggregationId = entry.getKey();
-				Set<Long> chunkIds = collectChunkIds(entry.getValue());
-				return ensureLocker(aggregationId).releaseChunks(chunkIds)
-					.map(($, e) -> {
-						if (e != null) {
-							logger.warn("Failed to release chunks: {} in aggregation {}",
+	private Promise<Void> releaseChunks(String aggregationId, List<AggregationChunk> chunks) {
+		if (chunks.isEmpty()) return Promise.complete();
+		Set<Long> chunkIds = collectChunkIds(chunks);
+		return ensureLocker(aggregationId).releaseChunks(chunkIds)
+				.map(($, e) -> {
+					if (e != null) {
+						logger.warn("Failed to release chunks: {} in aggregation {}",
 								chunkIds, aggregationId, e);
-						}
-						return null;
-					});
-			}));
+					}
+					return null;
+				});
 	}
 
 	private Promise<Void> doCleanupIrrelevantChunks() {
 		checkState(!consolidating, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		cleaning = true;
 		return stateManager.catchUp()
-			.mapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e))
-			.then(() -> {
-				Map<String, Set<AggregationChunk>> irrelevantChunks = cubeConsolidator.getStateManager().query(state -> state.getDataState().getIrrelevantChunks());
-				if (irrelevantChunks.isEmpty()) {
-					logger.info("Found no irrelevant chunks");
-					return Promise.complete();
-				}
-				logger.info("Removing irrelevant chunks: {}", irrelevantChunks.keySet());
-				Map<String, AggregationDiff> diffMap = irrelevantChunks.entrySet().stream()
-					.collect(entriesToLinkedHashMap(chunksToRemove -> AggregationDiff.of(Set.of(), chunksToRemove)));
-				CubeDiff cubeDiff = CubeDiff.of(diffMap);
-				cubeDiffJmx(cubeDiff);
-				return stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
-					.mapException(e -> new CubeException("Failed to synchronize state after cleaning up irrelevant chunks, resetting", e));
-			})
-			.whenComplete(promiseCleanupIrrelevantChunks.recordStats())
-			.whenComplete(toLogger(logger, thisMethod(), stateManager))
-			.whenComplete(() -> cleaning = false);
-	}
-
-	private void cubeDiffJmx(ProtoCubeDiff protoCubeDiff) {
-		long curAddedChunks = 0;
-		long curAddedChunksRecords = 0;
-		long curRemovedChunks = 0;
-		long curRemovedChunksRecords = 0;
-
-		Map<String, ProtoAggregationDiff> protoDiffs = protoCubeDiff.diffs();
-		for (String key : protoDiffs.keySet()) {
-			ProtoAggregationDiff protoAggregationDiff = protoDiffs.get(key);
-			curAddedChunks += protoAggregationDiff.addedChunks().size();
-			for (ProtoAggregationChunk aggregationChunk : protoAggregationDiff.addedChunks()) {
-				curAddedChunksRecords += aggregationChunk.count();
-			}
-
-			curRemovedChunks += protoAggregationDiff.removedChunks().size();
-			for (AggregationChunk aggregationChunk : protoAggregationDiff.removedChunks()) {
-				curRemovedChunksRecords += aggregationChunk.getCount();
-			}
-		}
-
-		addedChunks.recordValue(curAddedChunks);
-		addedChunksRecords.recordValue(curAddedChunksRecords);
-		removedChunks.recordValue(curRemovedChunks);
-		removedChunksRecords.recordValue(curRemovedChunksRecords);
+				.mapException(e -> new CubeException("Failed to synchronize state prior to cleaning up irrelevant chunks", e))
+				.then(() -> {
+					Map<String, Set<AggregationChunk>> irrelevantChunks = cubeConsolidator.getStateManager().query(state -> state.getDataState().getIrrelevantChunks());
+					if (irrelevantChunks.isEmpty()) {
+						logger.info("Found no irrelevant chunks");
+						return Promise.complete();
+					}
+					logger.info("Removing irrelevant chunks: {}", irrelevantChunks.keySet());
+					Map<String, AggregationDiff> diffMap = irrelevantChunks.entrySet().stream()
+							.collect(entriesToLinkedHashMap(chunksToRemove -> AggregationDiff.of(Set.of(), chunksToRemove)));
+					CubeDiff cubeDiff = CubeDiff.of(diffMap);
+					return stateManager.push(List.of(cubeDiffScheme.wrap(cubeDiff)))
+							.mapException(e -> new CubeException("Failed to synchronize state after cleaning up irrelevant chunks, resetting", e))
+							.whenResult(() -> cubeDiffJmx(cubeDiff));
+				})
+				.whenComplete(promiseCleanupIrrelevantChunks.recordStats())
+				.whenComplete(toLogger(logger, thisMethod(), stateManager))
+				.whenComplete(() -> cleaning = false);
 	}
 
 	private void cubeDiffJmx(CubeDiff cubeDiff) {
@@ -322,9 +298,9 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 		return protoCubeDiff.addedProtoChunks().collect(toSet());
 	}
 
-	private void logCubeDiff(ProtoCubeDiff protoCubeDiff, Exception e) {
+	private void logConsolidation(Collection<String> consolidated, Exception e) {
 		if (e != null) logger.warn("Consolidation failed", e);
-		else if (protoCubeDiff.isEmpty()) logger.info("Previous consolidation did not merge any chunks");
+		else if (consolidated.isEmpty()) logger.info("Previous consolidation did not merge any chunks");
 		else logger.info("Consolidation finished. Launching consolidation task again.");
 	}
 

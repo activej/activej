@@ -66,32 +66,55 @@ public final class CubeConsolidator extends AbstractReactive
 		Map<String, ProtoAggregationDiff> map = new HashMap<>();
 		List<AsyncRunnable> runnables = new ArrayList<>();
 
-		Map<String, AggregationExecutor> aggregationExecutors = executor.getAggregationExecutors();
-
 		for (String aggregationId : structure.getAggregationIds()) {
-			AggregationExecutor aggregationExecutor = aggregationExecutors.get(aggregationId);
-
 			runnables.add(() -> {
-				int maxChunksToConsolidate = aggregationExecutor.getMaxChunksToConsolidate();
-				int chunkSize = aggregationExecutor.getChunkSize();
-				List<AggregationChunk> chunks = stateManager.query(state ->
-					strategy.getChunksForConsolidation(
-						aggregationId,
-						state.getDataState().getAggregationState(aggregationId),
-						maxChunksToConsolidate,
-						chunkSize
-					));
-				return Promise.complete()
-					.then(() -> chunks.isEmpty() ?
-						Promise.of(new ProtoAggregationDiff(Set.of(), Set.of())) :
-						aggregationExecutor.consolidate(chunks))
+				List<AggregationChunk> chunks = findChunksForConsolidation(aggregationId, strategy);
+				return consolidate(aggregationId, chunks)
 					.whenResult(diff -> {if (!diff.isEmpty()) map.put(aggregationId, diff);})
-					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
 					.toVoid();
 			});
 		}
 
 		return Promises.sequence(runnables).map($ -> new ProtoCubeDiff(map));
+	}
+
+	public Promise<ProtoCubeDiff> consolidate(Map<String, List<AggregationChunk>> chunks) {
+		checkInReactorThread(this);
+		logger.info("Launching consolidation");
+
+		if (chunks.isEmpty())
+			return Promise.of(new ProtoCubeDiff(Map.of()));
+
+		Map<String, ProtoAggregationDiff> map = new HashMap<>();
+		List<AsyncRunnable> runnables = new ArrayList<>();
+
+		for (Map.Entry<String, List<AggregationChunk>> entry : chunks.entrySet()) {
+			runnables.add(() -> consolidate(entry.getKey(), entry.getValue())
+				.whenResult(diff -> {if (!diff.isEmpty()) map.put(entry.getKey(), diff);})
+				.toVoid());
+		}
+
+		return Promises.sequence(runnables).map($ -> new ProtoCubeDiff(map));
+	}
+
+	public List<AggregationChunk> findChunksForConsolidation(String aggregationId, ConsolidationStrategy strategy) {
+		AggregationExecutor aggregationExecutor = executor.getAggregationExecutors().get(aggregationId);
+		int maxChunksToConsolidate = aggregationExecutor.getMaxChunksToConsolidate();
+		int chunkSize = aggregationExecutor.getChunkSize();
+		return stateManager.query(state -> strategy.getChunksForConsolidation(
+			aggregationId,
+			state.getDataState().getAggregationState(aggregationId),
+			maxChunksToConsolidate,
+			chunkSize
+		));
+	}
+
+	private Promise<ProtoAggregationDiff> consolidate(String aggregationId, List<AggregationChunk> chunks) {
+		if (chunks.isEmpty())
+			return Promise.of(new ProtoAggregationDiff(Set.of(), Set.of()));
+		AggregationExecutor aggregationExecutor = executor.getAggregationExecutors().get(aggregationId);
+		return aggregationExecutor.consolidate(chunks)
+			.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e));
 	}
 
 	public CubeStructure getStructure() {
