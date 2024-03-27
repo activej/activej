@@ -152,10 +152,10 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		stateManagerFactory.start(stateManager);
 
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, chunkStorage);
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeExecutor);
 
 		CubeConsolidationController<LogDiff<CubeDiff>> consolidationController =
-			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, chunkStorage);
+			CubeConsolidationController.create(reactor, CubeDiffScheme.ofLogDiffs(), cubeConsolidator, cubeStructure);
 
 		Map<String, Integer> chunksBefore = getChunksByAggregation(stateManager);
 		await(consolidationController.cleanupIrrelevantChunks());

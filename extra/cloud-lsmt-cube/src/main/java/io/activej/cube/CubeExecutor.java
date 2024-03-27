@@ -483,6 +483,10 @@ public final class CubeExecutor extends AbstractReactive
 		return classLoaderCache.getOrCreate(key);
 	}
 
+	public IAggregationChunkStorage getAggregationChunkStorage() {
+		return aggregationChunkStorage;
+	}
+
 	public class RequestContext<R> {
 		DefiningClassLoader queryClassLoader;
 		PreprocessedQuery query;

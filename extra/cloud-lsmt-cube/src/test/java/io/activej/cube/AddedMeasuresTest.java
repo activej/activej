@@ -12,8 +12,6 @@ import io.activej.cube.aggregation.annotation.Measures;
 import io.activej.cube.aggregation.fieldtype.FieldType;
 import io.activej.cube.aggregation.fieldtype.FieldTypes;
 import io.activej.cube.aggregation.ot.AggregationDiff;
-import io.activej.cube.aggregation.ot.ProtoAggregationDiff;
-import io.activej.cube.aggregation.util.Utils;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.ProtoCubeDiff;
@@ -152,17 +150,10 @@ public class AddedMeasuresTest extends CubeTestBase {
 		CubeDiff cubeDiff = materializeProtoDiff(diff, chunkIds);
 		await(stateManager.push(List.of(LogDiff.forCurrentPosition(cubeDiff))));
 
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
-		ProtoCubeDiff protoCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
-		assertEquals(Set.of("test"), protoCubeDiff.diffs().keySet());
-		ProtoAggregationDiff protoAggregationDiff = protoCubeDiff.diffs().get("test");
-
-		protoChunkIds = protoAggregationDiff.addedChunks().stream()
-			.map(ProtoAggregationChunk::protoChunkId)
-			.collect(toSet());
-		chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
-
-		AggregationDiff aggregationDiff = Utils.materializeProtoDiff(protoAggregationDiff, chunkIds);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeExecutor);
+		CubeDiff consolidationCubeDiff = await(cubeConsolidator.consolidate(List.copyOf(cubeStructure.getAggregationIds()), hotSegment()));
+		assertEquals(Set.of("test"), consolidationCubeDiff.getDiffs().keySet());
+		AggregationDiff aggregationDiff = consolidationCubeDiff.getDiffs().get("test");
 
 		Set<Object> addedIds = aggregationDiff.getAddedChunks().stream()
 			.map(AggregationChunk::getChunkId)

@@ -33,7 +33,6 @@ import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toMap;
@@ -79,7 +78,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		StateManager<LogDiff<CubeDiff>, LogState<CubeDiff, CubeState>> stateManager = stateManagerFactory.create(cubeStructure, description);
 
 		CubeExecutor cubeExecutor = CubeExecutor.create(reactor, cubeStructure, EXECUTOR, CLASS_LOADER, aggregationChunkStorage);
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeStructure, cubeExecutor);
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(stateManager, cubeExecutor);
 
 		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
 		await(fileSystem.start());
@@ -144,12 +143,9 @@ public class CubeIntegrationTest extends CubeTestBase {
 		assertEquals(map, logItems.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Consolidate revision 4 as revision 5:
-		ProtoCubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
+		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(List.copyOf(cubeStructure.getAggregationIds()), hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
-		Set<String> protoChunkIds = consolidatingCubeDiff.addedProtoChunks().collect(toSet());
-		Map<String, Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
-		await(stateManager.push(List.of(LogDiff.forCurrentPosition(materializeProtoDiff(consolidatingCubeDiff, chunkIds)))));
 		await(aggregationChunkStorage.cleanup(stateManager.query(logState -> logState.getDataState().getAllChunks())));
 
 		// Query

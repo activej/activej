@@ -9,7 +9,6 @@ import io.activej.cube.aggregation.predicate.AggregationPredicate;
 import io.activej.cube.aggregation.predicate.AggregationPredicates;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
-import io.activej.cube.ot.ProtoCubeDiff;
 import io.activej.datastream.supplier.StreamSuppliers;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogState;
@@ -339,7 +338,7 @@ public final class CubeTest {
 	@Test
 	public void testConsolidate() {
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 4, 0, 30, 60));
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getStateManager(), cubeReporting.getStructure(), cubeReporting.getExecutor());
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(cubeReporting.getStateManager(), cubeReporting.getExecutor());
 
 		await(
 			consume(cubeReporting, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
@@ -348,11 +347,12 @@ public final class CubeTest {
 			consume(cubeReporting, chunkStorage, new DataItem2(1, 4, 10, 20), new DataItem2(1, 5, 100, 200))
 		);
 
-		ProtoCubeDiff diff = await(cubeConsolidator.consolidate(hotSegment()));
+		List<String> aggregationIds = List.copyOf(cubeReporting.getStructure().getAggregationIds());
+		CubeDiff diff = await(cubeConsolidator.consolidate(aggregationIds, hotSegment()));
 		assertFalse(diff.isEmpty());
 
-		diff = await(cubeConsolidator.consolidate(hotSegment()));
-		assertFalse(diff.isEmpty());
+		diff = await(cubeConsolidator.consolidate(aggregationIds, hotSegment()));
+		assertTrue(diff.isEmpty());
 
 		List<DataItemResult> list = await(cubeReporting.queryRawStream(
 			List.of("key1", "key2"),

@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static io.activej.cube.CubeConsolidator.ConsolidationStrategy.hotSegment;
@@ -40,10 +39,10 @@ import static io.activej.cube.TestUtils.stubChunkIdGenerator;
 import static io.activej.cube.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.cube.aggregation.measure.Measures.sum;
 import static io.activej.cube.aggregation.predicate.AggregationPredicates.alwaysTrue;
-import static io.activej.cube.aggregation.util.Utils.materializeProtoDiff;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -199,13 +198,9 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(map.isEmpty());
 
 		// Consolidate
-		CubeConsolidator cubeConsolidator = CubeConsolidator.create(logCubeStateManager, cubeStructure, cubeExecutor);
-		ProtoCubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(hotSegment()));
-		Set<String> protoChunkIds = consolidatingCubeDiff.addedProtoChunks().collect(toSet());
-		Map<String, Long> chunkIds = await(aggregationChunkStorage.finish(protoChunkIds));
+		CubeConsolidator cubeConsolidator = CubeConsolidator.create(logCubeStateManager, cubeExecutor);
+		CubeDiff consolidatingCubeDiff = await(cubeConsolidator.consolidate(List.copyOf(cubeStructure.getAggregationIds()), hotSegment()));
 		assertFalse(consolidatingCubeDiff.isEmpty());
-
-		await(logCubeStateManager.push(List.of(LogDiff.forCurrentPosition(materializeProtoDiff(consolidatingCubeDiff, chunkIds)))));
 
 		chunks = new ArrayList<>(logCubeStateManager.query(s -> s.getDataState().getAggregationState("date").getChunks().values()));
 		assertEquals(1, chunks.size());
