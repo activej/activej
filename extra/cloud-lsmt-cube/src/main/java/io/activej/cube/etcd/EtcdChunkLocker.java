@@ -17,14 +17,11 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
-import io.etcd.jetcd.lease.LeaseKeepAliveResponse;
 import io.etcd.jetcd.op.Cmp;
 import io.etcd.jetcd.op.CmpTarget;
 import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
-import io.etcd.jetcd.support.CloseableClient;
-import io.grpc.stub.StreamObserver;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.Duration;
@@ -51,7 +48,6 @@ public final class EtcdChunkLocker extends AbstractReactive
 	private Duration ttl = DEFAULT_TTL;
 
 	private final Map<Set<Long>, Long> leaseIds = new HashMap<>();
-	private final Map<Long, CloseableClient> keepAlives = new HashMap<>();
 
 	private EtcdChunkLocker(Reactor reactor, Client client, ByteSequence root) {
 		super(reactor);
@@ -103,10 +99,7 @@ public final class EtcdChunkLocker extends AbstractReactive
 						}
 					}))
 				.mapException(TransactionNotSucceededException.class, ChunksAlreadyLockedException::new)
-				.whenResult($ -> {
-					leaseIds.put(chunkIds, leaseId);
-					keepAlives.put(leaseId, getKeepAlive(leaseId));
-				}))
+				.whenResult($ -> leaseIds.put(chunkIds, leaseId)))
 			.toVoid();
 	}
 
@@ -120,7 +113,6 @@ public final class EtcdChunkLocker extends AbstractReactive
 		if (leaseId != null) {
 			return Promise.ofCompletionStage(leaseClient.revoke(leaseId)
 					.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))
-				.whenComplete(() -> tryCloseKeepAlive(leaseId))
 				.toVoid();
 		}
 
@@ -145,7 +137,6 @@ public final class EtcdChunkLocker extends AbstractReactive
 				}))
 			.whenResult(() -> {
 				for (Long releasedLeaseId : releasedLeaseIds) {
-					tryCloseKeepAlive(releasedLeaseId);
 					leaseClient.revoke(releasedLeaseId);
 				}
 			})
@@ -182,13 +173,6 @@ public final class EtcdChunkLocker extends AbstractReactive
 
 	@Override
 	public Promise<?> stop() {
-		Map<Long, CloseableClient> keepAlivesCopy = Map.copyOf(keepAlives);
-		keepAlives.clear();
-
-		for (CloseableClient keepAliveClient : keepAlivesCopy.values()) {
-			keepAliveClient.close();
-		}
-
 		Map<Set<Long>, Long> leaseIdsCopy = Map.copyOf(leaseIds);
 		leaseIds.clear();
 
@@ -196,29 +180,6 @@ public final class EtcdChunkLocker extends AbstractReactive
 		return Promises.all(leaseIdsCopy.values().stream()
 			.map(leaseId -> Promise.ofCompletionStage(leaseClient.revoke(leaseId)
 				.exceptionallyCompose(EtcdUtils::convertStatusExceptionStage))));
-	}
-
-	private CloseableClient getKeepAlive(Long leaseId) {
-		return client.getLeaseClient().keepAlive(leaseId, new StreamObserver<>() {
-			@Override
-			public void onNext(LeaseKeepAliveResponse leaseKeepAliveResponse) {
-			}
-
-			@Override
-			public void onError(Throwable throwable) {
-				tryCloseKeepAlive(leaseId);
-			}
-
-			@Override
-			public void onCompleted() {
-				tryCloseKeepAlive(leaseId);
-			}
-		});
-	}
-
-	private void tryCloseKeepAlive(Long leaseId) {
-		CloseableClient closeableClient = keepAlives.remove(leaseId);
-		if (closeableClient != null) closeableClient.close();
 	}
 
 	@VisibleForTesting
