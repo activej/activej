@@ -108,14 +108,15 @@ public final class CubeConsolidator extends AbstractReactive
 
 		return Promises.toList(aggregationIds.stream()
 				.map(aggregationId -> findAndLockChunksForConsolidation(aggregationId, strategy)
-					.whenResult(chunks -> lockedChunks.put(aggregationId, chunks))
-					.<AsyncRunnable>map(chunks -> () -> consolidateAggregationChunks(aggregationId, chunks)
-						.whenResult(diff -> {if (!diff.isEmpty()) diffMap.put(aggregationId, diff);})
-						.toVoid())))
+					.<AsyncRunnable>map(chunks -> () -> {
+						if (chunks.isEmpty()) return Promise.complete();
+						lockedChunks.put(aggregationId, chunks);
+						return consolidateAggregationChunks(aggregationId, chunks)
+							.whenResult(diff -> {if (!diff.isEmpty()) diffMap.put(aggregationId, diff);})
+							.toVoid();
+					})))
 			.then(asyncRunnables -> Promises.sequence(asyncRunnables))
-			.then(() -> diffMap.isEmpty() ?
-				Promise.of(CubeDiff.empty()) :
-				finishConsolidation(diffMap))
+			.then(() -> finishConsolidation(diffMap))
 			.then((cubeDiff, e) -> releaseChunks(lockedChunks)
 				.then(() -> Promise.of(cubeDiff, e)))
 			.whenComplete(toLogger(logger, thisMethod(), aggregationIds));
@@ -153,8 +154,6 @@ public final class CubeConsolidator extends AbstractReactive
 	}
 
 	private Promise<ProtoAggregationDiff> consolidateAggregationChunks(String aggregationId, List<AggregationChunk> chunks) {
-		if (chunks.isEmpty())
-			return Promise.of(new ProtoAggregationDiff(Set.of(), Set.of()));
 		AggregationExecutor aggregationExecutor = executor.getAggregationExecutors().get(aggregationId);
 		return aggregationExecutor.consolidate(chunks)
 			.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e));
@@ -169,6 +168,7 @@ public final class CubeConsolidator extends AbstractReactive
 	}
 
 	private Promise<CubeDiff> finishConsolidation(Map<String, ProtoAggregationDiff> map) {
+		if (map.isEmpty()) return Promise.of(CubeDiff.empty());
 		ProtoCubeDiff protoCubeDiff = new ProtoCubeDiff(map);
 		return executor.getAggregationChunkStorage().finish(addedProtoChunks(protoCubeDiff))
 			.mapException(e -> new CubeException("Failed to finalize chunks in storage", e))
@@ -181,6 +181,7 @@ public final class CubeConsolidator extends AbstractReactive
 	}
 
 	private Promise<Void> releaseChunks(Map<String, List<AggregationChunk>> chunks) {
+		if (chunks.isEmpty()) return Promise.complete();
 		return Promises.all(chunks.entrySet().stream()
 			.map(entry -> {
 				String aggregationId = entry.getKey();
