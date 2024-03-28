@@ -104,39 +104,10 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 	}
 
 	private Watch.Watcher doCreateWatcher() {
-		return EtcdUtils.watch(client.getWatchClient(), revision + 1L, watchRequests,
-			new EtcdListener<>() {
-
-				@Override
-				public void onConnectionEstablished() {
-					AbstractEtcdStateManager.this.onWatchConnectionEstablished();
-				}
-
-				@Override
-				public void onNext(long revision, Object[] operation) throws MalformedEtcdDataException {
-					stateLock.writeLock().lock();
-					try {
-						applyStateTransitions(state, operation);
-						AbstractEtcdStateManager.this.revision = revision;
-					} finally {
-						stateLock.writeLock().unlock();
-					}
-
-					synchronized (promisesQueue) {
-						processQueue(revision);
-					}
-				}
-
-				@Override
-				public void onError(Throwable throwable) {
-					AbstractEtcdStateManager.this.onWatchError(throwable);
-				}
-
-				@Override
-				public void onCompleted() {
-					AbstractEtcdStateManager.this.onWatchCompleted();
-				}
-			});
+		StateListener listener = new StateListener();
+		Watch.Watcher watcher = EtcdUtils.watch(client.getWatchClient(), revision + 1L, watchRequests, listener);
+		listener.setWatcher(watcher);
+		return watcher;
 	}
 
 	protected abstract void applyStateTransitions(S state, Object[] operation) throws MalformedEtcdDataException;
@@ -181,5 +152,56 @@ public abstract class AbstractEtcdStateManager<S, T> implements BlockingService 
 
 	public long getRevision() {
 		return revision;
+	}
+
+	private final class StateListener implements EtcdListener<Object[]> {
+		private volatile boolean closeWatcher;
+		private volatile Watch.Watcher watcher;
+
+		@Override
+		public void onConnectionEstablished() {
+			AbstractEtcdStateManager.this.onWatchConnectionEstablished();
+		}
+
+		@Override
+		public void onNext(long revision, Object[] operation) throws MalformedEtcdDataException {
+			stateLock.writeLock().lock();
+			try {
+				applyStateTransitions(state, operation);
+				AbstractEtcdStateManager.this.revision = revision;
+			} finally {
+				stateLock.writeLock().unlock();
+			}
+
+			synchronized (promisesQueue) {
+				processQueue(revision);
+			}
+		}
+
+		@Override
+		public void onError(Throwable throwable) {
+			AbstractEtcdStateManager.this.onWatchError(throwable);
+			closeWatcher();
+		}
+
+		@Override
+		public void onCompleted() {
+			AbstractEtcdStateManager.this.onWatchCompleted();
+			closeWatcher();
+		}
+
+		void closeWatcher() {
+			closeWatcher = true;
+			if (watcher != null) {
+				watcher.close();
+			}
+		}
+
+		void setWatcher(Watch.Watcher watcher) {
+			this.watcher = watcher;
+			if (closeWatcher) {
+				watcher.close();
+			}
+		}
 	}
 }

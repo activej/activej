@@ -82,6 +82,7 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 	private ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
+	private volatile boolean nextWatchScheduled;
 	private volatile boolean stopping;
 
 	// region JMX
@@ -344,9 +345,6 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		if (throwable instanceof MalformedEtcdDataException) {
 			malformedDataExceptionStats.recordException(throwable, this);
 		}
-		if (watcher != null) {
-			watcher.close();
-		}
 	}
 
 	@Override
@@ -354,7 +352,17 @@ public final class CubeEtcdStateManager extends AbstractEtcdStateManager<LogStat
 		logger.warn("Watch has been completed");
 		watchLastCompletedAt = now.currentInstant();
 		if (stopping) return;
-		scheduledExecutor.schedule(this::watch, WATCH_RETRY_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
+		scheduleNextWatch();
+	}
+
+	private void scheduleNextWatch() {
+		if (nextWatchScheduled) return;
+		nextWatchScheduled = true;
+		scheduledExecutor.schedule(() -> {
+				nextWatchScheduled = false;
+				watch();
+			},
+			WATCH_RETRY_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
 	}
 
 	private void notifyListeners(LogDiff<CubeDiff> diff) {
