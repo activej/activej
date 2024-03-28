@@ -36,10 +36,12 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -88,6 +90,7 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 	private final ValueStats addedChunksRecords = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
 		.withRate()
 		.build();
+	private long lastNotEmptyConsolidationTimestamp;
 
 	private Supplier<ConsolidationStrategy> strategySupplier = DEFAULT_CONSOLIDATION_STRATEGY;
 
@@ -229,7 +232,10 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 	private void logConsolidation(Collection<String> consolidated, Exception e) {
 		if (e != null) logger.warn("Consolidation failed", e);
 		else if (consolidated.isEmpty()) logger.info("Previous consolidation did not merge any chunks");
-		else logger.info("Consolidation finished. Launching consolidation task again.");
+		else {
+			logger.info("Consolidation finished. Launching consolidation task again.");
+			lastNotEmptyConsolidationTimestamp = reactor.currentTimeMillis();
+		}
 	}
 
 	@JmxAttribute
@@ -265,6 +271,11 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 	@JmxAttribute
 	public PromiseStats getPromiseCleanupIrrelevantChunks() {
 		return promiseCleanupIrrelevantChunks;
+	}
+
+	@JmxAttribute
+	public @Nullable Instant getLastNotEmptyConsolidationTime() {
+		return lastNotEmptyConsolidationTimestamp == 0L ? null : Instant.ofEpochMilli(lastNotEmptyConsolidationTimestamp);
 	}
 
 	@JmxOperation
