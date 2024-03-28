@@ -97,10 +97,6 @@ public final class CubeConsolidator extends AbstractReactive
 		return stateManager;
 	}
 
-	public CubeExecutor getExecutor() {
-		return executor;
-	}
-
 	public Promise<CubeDiff> consolidate(List<String> aggregationIds, ConsolidationStrategy strategy) {
 		checkInReactorThread(this);
 		logger.info("Launching consolidation for aggregations {}", aggregationIds);
