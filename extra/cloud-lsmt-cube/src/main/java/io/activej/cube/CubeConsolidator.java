@@ -156,7 +156,8 @@ public final class CubeConsolidator extends AbstractReactive
 	private Promise<ProtoAggregationDiff> consolidateAggregationChunks(String aggregationId, List<AggregationChunk> chunks) {
 		AggregationExecutor aggregationExecutor = executor.getAggregationExecutors().get(aggregationId);
 		return aggregationExecutor.consolidate(chunks)
-			.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e));
+			.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
+			.whenComplete(toLogger(logger, thisMethod(), aggregationId));
 	}
 
 	private IChunkLocker ensureLocker(String aggregationId) {
