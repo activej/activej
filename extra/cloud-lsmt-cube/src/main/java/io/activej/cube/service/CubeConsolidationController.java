@@ -174,6 +174,7 @@ public final class CubeConsolidationController<D> extends AbstractReactive
 		Stream<AsyncRunnable> runnables = aggregationsList.stream().map(aggregationId ->
 			() -> cubeConsolidator.consolidate(List.of(aggregationId), strategy)
 				.whenComplete(promiseConsolidateImpl.recordStats())
+				.whenResult(this::cubeDiffJmx)
 				.whenResult(diff -> {if (!diff.isEmpty()) consolidatedAggregations.add(aggregationId);})
 				.toVoid()
 		);
