@@ -1463,6 +1463,63 @@ public final class TestDI {
 		assertEquals("test4", instance.getObj());
 	}
 
+	@Test
+	public void automaticInterfaceIterableStringListString() {
+		Injector injector = Injector.of(ModuleBuilder.create()
+			.bind(new Key<Iterable<String>>() {})
+			.bind(new Key<List<String>>() {}).to(() -> List.of("test"))
+			.build()
+		);
+
+		Iterable<String> instance = injector.getInstance(new Key<>() {});
+
+		assertEquals(List.of("test"), instance);
+	}
+
+	@Test
+	public void automaticInterfaceIterableObjectListString() {
+		Injector injector = Injector.of(ModuleBuilder.create()
+			.bind(new Key<Iterable<Object>>() {})
+			.bind(new Key<List<String>>() {}).to(() -> List.of("test"))
+			.build()
+		);
+
+		Iterable<Object> instance = injector.getInstance(new Key<>() {});
+
+		assertEquals(List.of("test"), instance);
+	}
+
+	@Test
+	public void automaticInterfaceIterableStringListObject() {
+		Module module = ModuleBuilder.create()
+			.bind(new Key<Iterable<String>>() {})
+			.bind(new Key<List<Object>>() {}).to(() -> List.of("test"))
+			.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Refused to generate an explicitly requested binding for key Iterable<String>", e.getMessage());
+		}
+	}
+
+	@Test
+	public void automaticInterfaceIterableObjectLists() {
+		Module module = ModuleBuilder.create()
+			.bind(new Key<Iterable<Object>>() {})
+			.bind(new Key<List<String>>() {}).to(() -> List.of("test"))
+			.bind(new Key<List<Integer>>() {}).to(() -> List.of(1))
+			.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Refused to generate an explicitly requested binding for key Iterable", e.getMessage());
+		}
+	}
+
 	public static final class SingleInjectConstructor {
 		private final String text;
 
