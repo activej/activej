@@ -123,13 +123,13 @@ public final class Preprocessor {
 					binding = ((Multibinder) multibinder).multibind(key, bindingSet);
 			}
 		} else { // or if it was never bound
-			// first check if it was already resolved in upper scope
-			Binding<?> fromUpper = upper.get(key);
-			if (fromUpper != null) {
-				return fromUpper;
-			}
-
+			// first check if it can be resolved in current scope
 			binding = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType);
+
+			// then check if it was already resolved in upper scope
+			if (binding == null) {
+				binding = upper.get(key);
+			}
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked
 			if (binding == null) {

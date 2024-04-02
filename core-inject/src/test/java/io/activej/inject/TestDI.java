@@ -1520,6 +1520,23 @@ public final class TestDI {
 		}
 	}
 
+	@Test
+	public void automaticResolutionWithScopes() {
+		Injector injector = Injector.of(ModuleBuilder.create()
+			.bind(String.class).to(TestInterface::getObj, new Key<TestInterface<String>>() {})
+			.bind(String.class).to(TestInterface::getObj, new Key<TestInterface<String>>() {}).in(Scope1.class)
+			.bind(StringInterface.class).to(() -> new StringInterface("no scope"))
+			.bind(StringInterface.class).to(() -> new StringInterface("scope 1")).in(Scope1.class)
+			.build()
+		);
+
+		String noScopeString = injector.getInstance(String.class);
+		assertEquals("no scope", noScopeString);
+
+		String scope1String = injector.enterScope(Scope.of(Scope1.class)).getInstance(String.class);
+		assertEquals("scope 1", scope1String);
+	}
+
 	public static final class SingleInjectConstructor {
 		private final String text;
 
