@@ -1551,7 +1551,7 @@ public final class TestDI {
 		assertEquals("no scope", noScopeString);
 
 		String scope1String = injector.enterScope(Scope.of(Scope1.class)).getInstance(String.class);
-		assertEquals("scope 1", scope1String);
+		assertEquals("no scope", scope1String);
 	}
 
 	public static final class SingleInjectConstructor {
