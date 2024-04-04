@@ -142,7 +142,6 @@ public final class TestDI {
 			Injector.of(module);
 			fail("should've failed");
 		} catch (DIException e) {
-			e.printStackTrace();
 			assertTrue(e.getMessage().startsWith("Duplicate bindings for key String"));
 		}
 	}
@@ -406,7 +405,6 @@ public final class TestDI {
 			Injector.of(module2);
 			fail("should've failed, but didn't");
 		} catch (DIException e) {
-			e.printStackTrace();
 			assertTrue(e.getMessage().startsWith("Unsatisfied dependencies detected:\n\tkey Integer required"));
 		}
 	}
@@ -892,7 +890,6 @@ public final class TestDI {
 			Injector.of(module);
 			fail("Should've failed here");
 		} catch (DIException e) {
-			e.printStackTrace();
 			assertTrue(e.getMessage().contains("inject annotation on local class that closes over outside variables and/or has no default constructor"));
 		}
 	}
@@ -939,7 +936,7 @@ public final class TestDI {
 			Injector.of(module1, module2);
 			fail("Should've failed");
 		} catch (DIException e) {
-			assertTrue(e.getMessage().startsWith("Refused to generate an explicitly requested binding for key String"));
+			assertEquals("Could not synthesize explicit binding for String in scope ()Scope1", e.getMessage());
 		}
 	}
 
@@ -1444,7 +1441,7 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Refused to generate an explicitly requested binding for key TestInterface<String>", e.getMessage());
+			assertTrue(e.getMessage().startsWith("Could not synthesize a binding for TestInterface<String> in scope (). Ambigous bindings in scope ()"));
 		}
 	}
 
@@ -1500,7 +1497,7 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Refused to generate an explicitly requested binding for key Iterable<String>", e.getMessage());
+			assertEquals("Could not synthesize explicit binding for Iterable<String> in scope ()", e.getMessage());
 		}
 	}
 
@@ -1516,7 +1513,7 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Refused to generate an explicitly requested binding for key Iterable", e.getMessage());
+			assertEquals("Could not synthesize a binding for Iterable in scope (). Ambigous bindings in scope (): [List<String>, List<Integer>]", e.getMessage());
 		}
 	}
 
@@ -1552,6 +1549,23 @@ public final class TestDI {
 
 		String scope1String = injector.enterScope(Scope.of(Scope1.class)).getInstance(String.class);
 		assertEquals("no scope", scope1String);
+	}
+
+	@Test
+	public void automaticResolutionWithNestedScopes() {
+		Injector injector = Injector.of(ModuleBuilder.create()
+			.bind(String.class).to(TestInterface::getObj, new Key<TestInterface<String>>() {})
+			.bind(String.class).to(TestInterface::getObj, new Key<TestInterface<String>>() {}).in(Scope1.class, Scope2.class)
+			.bind(StringInterface.class).to(() -> new StringInterface("no scope"))
+			.bind(StringInterface.class).to(() -> new StringInterface("scope 1 -> scope 2")).in(Scope1.class, Scope2.class)
+			.build()
+		);
+
+		String noScopeString = injector.getInstance(String.class);
+		assertEquals("no scope", noScopeString);
+
+		String scope1String = injector.enterScope(Scope.of(Scope1.class)).enterScope(Scope.of(Scope2.class)).getInstance(String.class);
+		assertEquals("scope 1 -> scope 2", scope1String);
 	}
 
 	public static final class SingleInjectConstructor {

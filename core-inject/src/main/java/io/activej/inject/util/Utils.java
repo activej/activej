@@ -298,4 +298,32 @@ public final class Utils {
 			.collect(toMap(Entry::getKey, Entry::getValue,
 				(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
 	}
+
+	@SafeVarargs
+	public static <T> Iterator<T> multiIterator(Iterator<? extends T>... iterators) {
+		if (iterators.length == 0) return Collections.emptyIterator();
+
+		Iterator<Iterator<? extends T>> iterator = List.of(iterators).iterator();
+		return new Iterator<>() {
+			Iterator<? extends T> current = iterator.next();
+
+			@Override
+			public boolean hasNext() {
+				if (current == null) return false;
+				if (current.hasNext()) return true;
+				while (iterator.hasNext()) {
+					current = iterator.next();
+					if (current.hasNext()) return true;
+				}
+				return false;
+			}
+
+			@Override
+			public T next() {
+				if (!hasNext()) throw new NoSuchElementException();
+				return current.next();
+			}
+		};
+
+	}
 }

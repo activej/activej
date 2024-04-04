@@ -16,8 +16,6 @@
 
 package io.activej.inject.util;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -67,7 +65,7 @@ public final class Trie<K, V> {
 		return children.computeIfAbsent(key, k -> leaf(f.apply(k)));
 	}
 
-	public @Nullable Trie<K, V> get(K[] path) {
+	public Trie<K, V> get(K[] path) {
 		Trie<K, V> subtree = this;
 		for (K key : path) {
 			subtree = subtree.get(key);

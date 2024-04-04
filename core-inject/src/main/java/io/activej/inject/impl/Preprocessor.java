@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.union;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.SYNTHETIC;
@@ -63,7 +62,9 @@ public final class Preprocessor {
 		BindingGenerator<?> generator
 	) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> reduced = Trie.leaf(new HashMap<>());
-		reduce(UNSCOPED, Map.of(), bindings, reduced, multibinder, transformer, generator);
+		BindingSynthesizer synthesizer = new BindingSynthesizer();
+		reduce(UNSCOPED, Map.of(), bindings, reduced, multibinder, transformer, generator, synthesizer);
+		synthesizer.synthesizeMissing(reduced);
 		return reduced;
 	}
 
@@ -72,23 +73,28 @@ public final class Preprocessor {
 		Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings, Trie<Scope, Map<Key<?>, Binding<?>>> reduced,
 		Multibinder<?> multibinder,
 		BindingTransformer<?> transformer,
-		BindingGenerator<?> generator
+		BindingGenerator<?> generator,
+		BindingSynthesizer synthesizer
 	) {
 		Map<Key<?>, Set<Binding<?>>> localBindings = bindings.get();
 
-		localBindings.forEach((key, bindingSet) -> resolve(upper, localBindings, reduced.get(), scope, key, bindingSet, multibinder, transformer, generator));
+		localBindings.forEach((key, bindingSet) -> {
+			Binding<?> resolved = resolve(upper, localBindings, reduced.get(), scope, key, bindingSet, multibinder, transformer, generator, synthesizer);
+			if (resolved == null) synthesizer.addMissing(scope, key, false);
+		});
 
 		Map<Key<?>, Binding<?>> nextUpper = override(upper, reduced.get());
 
 		bindings.getChildren().forEach((subScope, subLocalBindings) ->
-			reduce(next(scope, subScope), nextUpper, subLocalBindings, reduced.computeIfAbsent(subScope, $ -> new HashMap<>()), multibinder, transformer, generator));
+			reduce(next(scope, subScope), nextUpper, subLocalBindings, reduced.computeIfAbsent(subScope, $ -> new HashMap<>()), multibinder, transformer, generator, synthesizer));
 	}
 
 	@SuppressWarnings("unchecked")
 	private static @Nullable Binding<?> resolve(
 		Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings,
 		Scope[] scope, Key<?> key, @Nullable Set<Binding<?>> bindingSet,
-		Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator
+		Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator,
+		BindingSynthesizer synthesizer
 	) {
 		// shortest path - if it was already resolved, just return it (also serves as a visited set so graph loops don't cause infinite recursion)
 		Binding<?> resolvedBinding = resolvedBindings.get(key);
@@ -99,7 +105,7 @@ public final class Preprocessor {
 		BindingLocator recursiveLocator = new BindingLocator() {
 			@Override
 			public <T> @Nullable Binding<T> get(Key<T> key) {
-				return (Binding<T>) resolve(upper, localBindings, resolvedBindings, scope, key, localBindings.get(key), multibinder, transformer, generator);
+				return (Binding<T>) resolve(upper, localBindings, resolvedBindings, scope, key, localBindings.get(key), multibinder, transformer, generator, synthesizer);
 			}
 		};
 
@@ -110,11 +116,11 @@ public final class Preprocessor {
 		if (bindingSet != null) {
 			switch (bindingSet.size()) {
 				case 0 -> {
-					binding = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType);
+					binding = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType, synthesizer);
 
-					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
 					if (binding == null) {
-						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
+						synthesizer.addMissing(scope, key, true);
+						return null;
 					}
 				}
 				case 1 -> binding = bindingSet.iterator().next();
@@ -124,21 +130,15 @@ public final class Preprocessor {
 			}
 		} else { // or if it was never bound
 			// first check if it was already resolved in upper scope
-			binding = upper.get(key);
-			if (binding != null && binding.getType() != SYNTHETIC) {
-				return binding;
+			Binding<?> fromUpper = upper.get(key);
+			if (fromUpper != null) {
+				return fromUpper;
 			}
 
-			//then check if it can be resolved in current scope
-			Binding<?> currentResolve = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType);
-			if (currentResolve != null) {
-				binding = currentResolve;
-			}
+			binding = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType, synthesizer);
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked
-			if (binding == null) {
-				return null;
-			}
+			if (binding == null) return null;
 		}
 
 		// transform it (once!)
@@ -150,13 +150,17 @@ public final class Preprocessor {
 
 		// and then recursively walk over its dependencies (so this is a recursive dfs after all)
 		for (Key<?> d : transformed.getDependencies()) {
-			resolve(upper, localBindings, resolvedBindings, scope, d, localBindings.get(d), multibinder, transformer, generator);
+			Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, d, localBindings.get(d), multibinder, transformer, generator, synthesizer);
+			if (resolved == null) synthesizer.addMissing(scope, d, false);
 		}
 
 		return transformed;
 	}
 
-	private static @Nullable Binding<?> tryResolve(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator, BindingLocator recursiveLocator, Class<?> rawType) {
+	private static @Nullable Binding<?> tryResolve(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings,
+		Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer,
+		BindingGenerator<?> generator, BindingLocator recursiveLocator, Class<?> rawType, BindingSynthesizer synthesizer
+	) {
 		Binding<?> binding;
 		// try to recursively generate a requested binding
 		//noinspection unchecked
@@ -164,12 +168,12 @@ public final class Preprocessor {
 
 		// try to resolve OptionalDependency
 		if (binding == null && rawType == OptionalDependency.class) {
-			binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+			binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, synthesizer);
 		}
 
 		// try to resolve InstanceProvider
 		if (binding == null && rawType == InstanceProvider.class) {
-			binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+			binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, synthesizer);
 		}
 
 		// try to resolve InstanceInjector
@@ -187,117 +191,34 @@ public final class Preprocessor {
 			binding = ReflectionUtils.generateImplicitBinding(key);
 		}
 
-		// try to automatically resolve child bindings
-		if (binding == null) {
-			binding = resolveChildBindings(localBindings, key);
-		}
-
 		return binding;
 	}
 
-	private static @Nullable Binding<?> resolveChildBindings(Map<Key<?>, Set<Binding<?>>> localBindings, Key<?> key) {
-		KeyPattern<?> pattern = KeyPattern.ofType(key.getType(), key.getQualifier());
-
-		Map<Key<?>, Set<Binding<?>>> candidates = new HashMap<>();
-		for (Entry<Key<?>, Set<Binding<?>>> entry : localBindings.entrySet()) {
-			Key<?> localKey = entry.getKey();
-			if (!key.equals(localKey) && pattern.match(localKey)) {
-				candidates.put(localKey, entry.getValue());
-			}
-		}
-
-		Key<?> result = tryReduceCandidates(candidates);
-
-		if (result == null) {
-			return null;
-		}
-
-		return Binding.to(result).as(SYNTHETIC);
-	}
-
-	private static @Nullable Key<?> tryReduceCandidates(Map<Key<?>, Set<Binding<?>>> candidates) {
-		Set<Key<?>> candidateKeys = candidates.keySet();
-		Set<Key<?>> keysCopy = new HashSet<>(candidateKeys);
-		for (Entry<Key<?>, Set<Binding<?>>> entry : candidates.entrySet()) {
-			Set<Binding<?>> bindingSet = entry.getValue();
-			if (bindingSet.size() == 1) {
-				Binding<?> binding = first(bindingSet);
-				if (binding instanceof BindingToKey<?> bindingToKey && candidateKeys.contains(bindingToKey.getKey())) {
-					keysCopy.remove(entry.getKey());
-				}
-			}
-		}
-
-		if (keysCopy.size() == 1) {
-			return first(keysCopy);
-		}
-
-		return null;
-	}
-
-	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
+	private static Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings,
+		Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer,
+		BindingGenerator<?> generator, BindingSynthesizer synthesizer
+	) {
 		Key<?> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		if (instanceKey.getRawType() == OptionalDependency.class) {
 			throw new DIException("Nested optional dependencies are not allowed");
 		}
-		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
-		if (resolved == null) return Binding.toInstance(OptionalDependency.empty());
-		return new Binding<OptionalDependency<?>>(Set.of(instanceKey), SYNTHETIC, null) {
-			@Override
-			public CompiledBinding<OptionalDependency<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-				return slot != null ?
-					new AbstractCompiledBinding<>(scope, slot) {
-						@Override
-						protected OptionalDependency<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-							CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
-							return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
-						}
-					} :
-					new CompiledBinding<>() {
-						@Override
-						public OptionalDependency<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-							CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
-							return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
-						}
-					};
-			}
-		};
+		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator, synthesizer);
+		if (resolved != null) return BindingSynthesizer.optinalDependencyBinding(instanceKey);
+
+		synthesizer.addMissing(scope, key, false);
+		return null;
 	}
 
-	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static @Nullable Binding<?> resolveInstanceProvider(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
+	private static @Nullable Binding<?> resolveInstanceProvider(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings,
+		Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer,
+		BindingGenerator<?> generator, BindingSynthesizer synthesizer
+	) {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
-		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
-		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(Set.of(instanceKey), SYNTHETIC, null) {
-			@Override
-			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-				return slot != null ?
-					new AbstractCompiledBinding<>(scope, slot) {
-						@Override
-						protected InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-							CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
-							// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
-							return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
-						}
-					} :
-					new CompiledBinding<>() {
-						@Override
-						public InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator, synthesizer);
+		if (resolved != null) return BindingSynthesizer.instanceProviderBinding(instanceKey);
 
-							// transient bindings for instance provider are useless and nobody should make ones
-							// however, things like mapInstance create an intermediate transient compiled bindings of their peers
-							// usually they call getInstance just once and then cache the result of their computation (e.g. the result of mapping function)
-							//
-							// anyway all the above means that it's ok here to just get the compiled binding and to not care about caching it
-
-							CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
-							return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
-						}
-					};
-			}
-		};
+		synthesizer.addMissing(scope, key, false);
+		return null;
 	}
 
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
