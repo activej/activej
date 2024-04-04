@@ -47,7 +47,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	private EventloopStats() {
 		loops = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 		selectorSelectTimeout = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)
-			.withHistogram(new int[]{-256, -128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32})
+			.withHistogram(new long[]{-256, -128, -64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32})
 			.withUnit("milliseconds")
 			.build();
 		selectorSelectTime = ValueStats.builder(DEFAULT_SMOOTHING_WINDOW)

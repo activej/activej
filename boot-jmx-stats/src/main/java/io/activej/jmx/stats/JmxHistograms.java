@@ -19,34 +19,39 @@ package io.activej.jmx.stats;
 import java.util.Arrays;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.lang.Integer.numberOfLeadingZeros;
+import static java.lang.Long.numberOfLeadingZeros;
 import static java.lang.Math.abs;
 import static java.util.Arrays.binarySearch;
 
 public final class JmxHistograms {
-	private static final int[] TABLE_10 = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+	private static final long[] TABLE_10 =
+		{
+			1L, 10L, 100L, 1000L, 10000L, 100000L, 1000000L, 10000000L, 100000000L, 1000000000L,
+			10000000000L, 100000000000L, 1000000000000L, 10000000000000L, 100000000000000L,
+			1000000000000000L, 10000000000000000L, 100000000000000000L, 1000000000000000000L
+		};
 
-	static int integerLogBase10(int v) {
-		int t = (32 - numberOfLeadingZeros(v)) * 1233 >>> 12;
+	static int longLogBase10(long v) {
+		int t = (64 - numberOfLeadingZeros(v)) * 1233 >>> 12;
 		return t - (v < TABLE_10[t] ? 1 : 0);
 	}
 
 	public abstract static class AbstractJmxHistogram implements JmxHistogram {
 		protected final long[] counters;
-		protected final int[] levels;
+		protected final long[] levels;
 
-		protected AbstractJmxHistogram(int[] levels) {
+		protected AbstractJmxHistogram(long[] levels) {
 			this.counters = new long[levels.length + 1];
 			this.levels = levels;
 		}
 
-		protected AbstractJmxHistogram(int[] levels, int counters) {
+		protected AbstractJmxHistogram(long[] levels, int counters) {
 			this.counters = new long[counters];
 			this.levels = levels;
 		}
 
 		@Override
-		public int[] levels() {
+		public long[] levels() {
 			return levels;
 		}
 
@@ -87,13 +92,13 @@ public final class JmxHistograms {
 		}
 
 		@Override
-		public void record(int value) {
-			counters[32 - numberOfLeadingZeros(value)]++;
+		public void record(long value) {
+			counters[64 - numberOfLeadingZeros(value)]++;
 		}
 
 		@Override
 		protected long getResult(int index) {
-			return counters[(index + 33 - 1) % 33];
+			return counters[(index + 65 - 1) % 65];
 		}
 	}
 
@@ -108,9 +113,9 @@ public final class JmxHistograms {
 		}
 
 		@Override
-		public void record(int value) {
+		public void record(long value) {
 			if (value >= 0) {
-				counters[integerLogBase10(value) + 2]++;
+				counters[longLogBase10(value) + 2]++;
 			} else {
 				counters[0]++;
 			}
@@ -133,16 +138,16 @@ public final class JmxHistograms {
 		}
 
 		@Override
-		public void record(int value) {
+		public void record(long value) {
 			if (value == 0) {
 				counters[1]++;
 			} else if (value > 0) {
-				int index = (32 - numberOfLeadingZeros(value)) * 1233 >>> 12;
-				int power = TABLE_10[index];
+				int index = (64 - numberOfLeadingZeros(value)) * 1233 >>> 12;
+				long power = TABLE_10[index];
 				if (value < power) {
 					power = TABLE_10[--index];
 				}
-				int subindex = value / power;
+				int subindex = (int) (value / power);
 				counters[index * 9 + subindex + 1]++;
 			} else {
 				counters[0]++;
@@ -156,7 +161,7 @@ public final class JmxHistograms {
 	}
 
 	public static final class Custom extends AbstractJmxHistogram {
-		public Custom(int[] levels) {
+		public Custom(long[] levels) {
 			super(levels);
 		}
 
@@ -166,7 +171,7 @@ public final class JmxHistograms {
 		}
 
 		@Override
-		public void record(int value) {
+		public void record(long value) {
 			counters[abs(binarySearch(levels, value) + 1)]++;
 		}
 

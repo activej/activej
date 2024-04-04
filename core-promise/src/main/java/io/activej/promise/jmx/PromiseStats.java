@@ -70,7 +70,7 @@ public class PromiseStats {
 	public class Builder extends AbstractBuilder<Builder, PromiseStats> {
 		protected Builder() {}
 
-		public final Builder withHistogram(int[] levels) {
+		public final Builder withHistogram(long[] levels) {
 			checkNotBuilt(this);
 			setHistogram(levels);
 			return this;
@@ -88,7 +88,7 @@ public class PromiseStats {
 		}
 	}
 
-	public void setHistogram(int[] levels) {
+	public void setHistogram(long[] levels) {
 		duration.setHistogram(levels);
 	}
 

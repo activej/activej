@@ -181,7 +181,7 @@ public final class TaskScheduler extends AbstractReactive
 			return this;
 		}
 
-		public Builder withStatsHistogramLevels(int[] levels) {
+		public Builder withStatsHistogramLevels(long[] levels) {
 			checkNotBuilt(this);
 			TaskScheduler.this.stats.setHistogram(levels);
 			return this;

@@ -52,7 +52,7 @@ public abstract class ServletWithStats extends AbstractReactive
 		return stats;
 	}
 
-	public void setStatsHistogramLevels(int[] levels) {
+	public void setStatsHistogramLevels(long[] levels) {
 		stats.setHistogram(levels);
 	}
 

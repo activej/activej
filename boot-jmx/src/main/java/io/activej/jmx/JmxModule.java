@@ -156,12 +156,12 @@ public final class JmxModule extends AbstractModule {
 			return this;
 		}
 
-		public Builder withHistogram(Class<?> clazz, String attrName, int[] histogramLevels) {
+		public Builder withHistogram(Class<?> clazz, String attrName, long[] histogramLevels) {
 			checkNotBuilt(this);
 			return withHistogram(Key.of(clazz), attrName, () -> JmxHistogram.ofLevels(histogramLevels));
 		}
 
-		public Builder withHistogram(Key<?> key, String attrName, int[] histogramLevels) {
+		public Builder withHistogram(Key<?> key, String attrName, long[] histogramLevels) {
 			checkNotBuilt(this);
 			return withHistogram(key, attrName, () -> JmxHistogram.ofLevels(histogramLevels));
 		}

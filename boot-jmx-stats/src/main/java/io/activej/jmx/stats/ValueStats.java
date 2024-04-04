@@ -153,7 +153,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 			return this;
 		}
 
-		public Builder withHistogram(int[] histogram) {
+		public Builder withHistogram(long[] histogram) {
 			checkNotBuilt(this);
 			setHistogram(histogram);
 			return this;
@@ -206,7 +206,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		this.histogram = histogram;
 	}
 
-	public void setHistogram(int[] levels) {
+	public void setHistogram(long[] levels) {
 		this.histogram = JmxHistogram.ofLevels(levels);
 	}
 
@@ -262,7 +262,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		lastCount++;
 
 		if (histogram != null) {
-			histogram.record((int) value);
+			histogram.record(value);
 		}
 	}
 
@@ -518,7 +518,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 			return null;
 		}
 
-		int[] levels = histogram.levels();
+		long[] levels = histogram.levels();
 		long[] counts = histogram.counts();
 		assert counts.length == levels.length + 1;
 
@@ -530,7 +530,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		int right = IntStream.iterate(levels.length, i -> i - 1).filter(i -> counts[i] != 0).findFirst().getAsInt();
 
 		int maxLevelStrLen = max(max(NEG_INF.length(), POS_INF.length()),
-			IntStream.range(left, right).map(i -> Integer.toString(levels[i]).length()).max().orElse(0));
+			IntStream.range(left, right).map(i -> Long.toString(levels[i]).length()).max().orElse(0));
 		int maxValueStrLen = IntStream.rangeClosed(left, right).map(i -> Long.toString(counts[i]).length()).max().orElse(0);
 
 		return IntStream.rangeClosed(left, right)
