@@ -390,7 +390,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		}
 
 		private void onResult(T result) {
-			int responseTime = timeElapsed();
+			long responseTime = timeElapsed();
 			connectionStats.getResponseTime().recordValue(responseTime);
 			requestStatsPerClass.getResponseTime().recordValue(responseTime);
 			rpcClient.getGeneralRequestsStats().getResponseTime().recordValue(responseTime);
@@ -400,7 +400,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 		private void onException(Exception e) {
 			if (e instanceof RpcRemoteException) {
-				int responseTime = timeElapsed();
+				long responseTime = timeElapsed();
 				connectionStats.getFailedRequests().recordEvent();
 				connectionStats.getResponseTime().recordValue(responseTime);
 				connectionStats.getServerExceptions().recordException(e, null);
@@ -419,12 +419,12 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 			callback.accept(null, e);
 		}
 
-		private int timeElapsed() {
-			return (int) stopwatch.elapsed(TimeUnit.MILLISECONDS);
+		private long timeElapsed() {
+			return stopwatch.elapsed(TimeUnit.MILLISECONDS);
 		}
 
 		private void recordOverdue() {
-			int overdue = (int) (System.currentTimeMillis() - dueTimestamp);
+			long overdue = System.currentTimeMillis() - dueTimestamp;
 			if (overdue > 0) {
 				connectionStats.getOverdues().recordValue(overdue);
 				requestStatsPerClass.getOverdues().recordValue(overdue);

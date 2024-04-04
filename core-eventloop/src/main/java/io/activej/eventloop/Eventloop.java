@@ -686,7 +686,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, React
 			}
 
 			if (monitoring && inspector != null) {
-				int overdue = (int) (System.currentTimeMillis() - runnable.timestamp());
+				long overdue = System.currentTimeMillis() - runnable.timestamp();
 				inspector.onScheduledTaskOverdue(overdue, background);
 			}
 

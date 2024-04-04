@@ -465,7 +465,7 @@ public final class CubeExecutor extends AbstractReactive
 			cubeQuery.getWhere().getDimensions()));
 		long queryStarted = reactor.currentTimeMillis();
 		return new RequestContext<>().execute(compatibleAggregations, queryClassLoader, query)
-			.whenResult(() -> queryTimes.recordValue((int) (reactor.currentTimeMillis() - queryStarted)))
+			.whenResult(() -> queryTimes.recordValue(reactor.currentTimeMillis() - queryStarted))
 			.whenException(e -> {
 				queryErrors++;
 				queryLastError = e;

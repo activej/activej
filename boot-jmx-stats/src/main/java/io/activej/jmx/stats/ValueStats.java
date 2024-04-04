@@ -48,24 +48,16 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 	private long lastTimestampMillis;
 
-	// integer runtime accumulators
-	private int lastValueInteger;
-	private int lastSumInteger;
-	private int lastSqrInteger;
-	private int lastCountInteger;
-	private int lastMinInteger;
-	private int lastMaxInteger;
-
-	// double runtime accumulators
-	private double lastValueDouble;
-	private double lastSumDouble;
-	private double lastSqrDouble;
-	private int lastCountDouble;
-	private double lastMinDouble = Double.MAX_VALUE;
-	private double lastMaxDouble = -Double.MAX_VALUE;
+	// runtime accumulators
+	private long lastValue;
+	private long lastSum;
+	private long lastSqr;
+	private long lastCount;
+	private long lastMin;
+	private long lastMax;
 
 	// calculated during refresh
-	private double totalSum;
+	private long totalSum;
 	private long totalCount;
 
 	// calculated during refresh
@@ -74,8 +66,8 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	private double smoothedCount;
 	private double smoothedMin = Double.MAX_VALUE;
 	private double smoothedMax = -Double.MAX_VALUE;
-	private double absoluteMax = Double.MAX_VALUE;
-	private double absoluteMin = -Double.MAX_VALUE;
+	private long absoluteMax = Long.MAX_VALUE;
+	private long absoluteMin = Long.MIN_VALUE;
 	private double smoothedRateCount;
 	private double smoothedRateTime;
 
@@ -128,7 +120,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	/**
 	 * Creates ValueStats builder with specified smoothing window
 	 *
-	 * @param smoothingWindow in seconds
+	 * @param smoothingWindow a smoothing window to use
 	 */
 	public static Builder builder(Duration smoothingWindow) {
 		return new ValueStats(smoothingWindow.toMillis() / 1000.0).new Builder();
@@ -231,25 +223,18 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		smoothedRateCount = 0;
 		smoothedRateTime = 0;
 
-		totalSum = 0.0;
-		totalCount = 0;
+		totalSum = 0L;
+		totalCount = 0L;
 
-		absoluteMin = Double.MAX_VALUE;
-		absoluteMax = -Double.MAX_VALUE;
+		absoluteMin = Long.MAX_VALUE;
+		absoluteMax = Long.MIN_VALUE;
 
-		lastMaxInteger = Integer.MIN_VALUE;
-		lastMinInteger = Integer.MAX_VALUE;
-		lastSumInteger = 0;
-		lastSqrInteger = 0;
-		lastCountInteger = 0;
-		lastValueInteger = 0;
-
-		lastMaxDouble = -Double.MAX_VALUE;
-		lastMinDouble = Double.MAX_VALUE;
-		lastSumDouble = 0.0;
-		lastSqrDouble = 0.0;
-		lastCountDouble = 0;
-		lastValueDouble = 0.0;
+		lastMax = Long.MIN_VALUE;
+		lastMin = Long.MAX_VALUE;
+		lastSum = 0;
+		lastSqr = 0;
+		lastCount = 0;
+		lastValue = 0;
 
 		lastTimestampMillis = 0L;
 
@@ -261,76 +246,52 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	/**
 	 * Adds value
 	 */
-	public void recordValue(int value) {
-		lastValueInteger = value;
+	public void recordValue(long value) {
+		lastValue = value;
 
-		if (value < lastMinInteger) {
-			lastMinInteger = value;
+		if (value < lastMin) {
+			lastMin = value;
 		}
 
-		if (value > lastMaxInteger) {
-			lastMaxInteger = value;
+		if (value > lastMax) {
+			lastMax = value;
 		}
 
-		lastSumInteger += value;
-		lastSqrInteger += value * value;
-		lastCountInteger++;
+		lastSum += value;
+		lastSqr += value * value;
+		lastCount++;
 
 		if (histogram != null) {
-			histogram.record(value);
+			histogram.record((int) value);
 		}
-	}
-
-	public void recordValue(double value) {
-		lastValueDouble = value;
-
-		if (value < lastMinDouble) {
-			lastMinDouble = value;
-		}
-
-		if (value > lastMaxDouble) {
-			lastMaxDouble = value;
-		}
-
-		lastSumDouble += value;
-		lastSqrDouble += value * value;
-		lastCountDouble++;
 	}
 
 	@Override
 	public void refresh(long timestamp) {
-		double lastSum = 0.0;
-		double lastSqr = 0.0;
-		long lastCount = 0;
-		double lastMin = Double.MAX_VALUE;
-		double lastMax = -Double.MAX_VALUE;
+		long lastSum;
+		long lastSqr;
+		long lastCount;
+		long lastMin;
+		long lastMax;
 
-		if (lastCountInteger > 0) {
-			lastSum += lastSumInteger;
-			lastSqr += lastSqrInteger;
-			lastCount += lastCountInteger;
-			lastMin = lastMinInteger;
-			lastMax = lastMaxInteger;
+		if (this.lastCount > 0) {
+			lastSum = this.lastSum;
+			lastSqr = this.lastSqr;
+			lastCount = this.lastCount;
+			lastMin = this.lastMin;
+			lastMax = this.lastMax;
 
-			lastSumInteger = 0;
-			lastSqrInteger = 0;
-			lastCountInteger = 0;
-			lastMinInteger = Integer.MAX_VALUE;
-			lastMaxInteger = Integer.MIN_VALUE;
-		}
-
-		if (lastCountDouble > 0) {
-			lastSum += lastSumDouble;
-			lastSqr += lastSqrDouble;
-			lastCount += lastCountDouble;
-			lastMin = min(lastMin, lastMinDouble);
-			lastMax = max(lastMax, lastMaxDouble);
-
-			lastSumDouble = 0;
-			lastSqrDouble = 0;
-			lastCountDouble = 0;
-			lastMinDouble = Double.MAX_VALUE;
-			lastMaxDouble = -Double.MAX_VALUE;
+			this.lastSum = 0;
+			this.lastSqr = 0;
+			this.lastCount = 0;
+			this.lastMin = Long.MAX_VALUE;
+			this.lastMax = Long.MIN_VALUE;
+		} else {
+			lastSum = 0L;
+			lastSqr = 0;
+			lastCount = 0;
+			lastMin = Long.MAX_VALUE;
+			lastMax = Long.MIN_VALUE;
 		}
 
 		long timeElapsedMillis = lastTimestampMillis == 0L ? 0 : timestamp - lastTimestampMillis;
@@ -352,8 +313,8 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 				smoothedMin = lastMin < smoothedMin ? lastMin : smoothedAvg + (smoothedMin - smoothedAvg) * smoothingFactor;
 				smoothedMax = lastMax > smoothedMax ? lastMax : smoothedAvg + (smoothedMax - smoothedAvg) * smoothingFactor;
 
-				absoluteMin = min(absoluteMin, lastMin);
-				absoluteMax = max(absoluteMax, lastMax);
+				absoluteMin = Long.min(absoluteMin, lastMin);
+				absoluteMax = Long.max(absoluteMax, lastMax);
 			}
 
 			smoothedRateCount = lastCount + smoothedRateCount * smoothingFactor;
@@ -389,8 +350,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 		if (anotherStats.lastTimestampMillis > lastTimestampMillis) {
 			lastTimestampMillis = anotherStats.lastTimestampMillis;
-			lastValueInteger = anotherStats.lastValueInteger;
-			lastValueDouble = anotherStats.lastValueDouble;
+			lastValue = anotherStats.lastValue;
 		}
 
 		if (addedStats == 0) {
@@ -447,8 +407,8 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	 * @return last added value
 	 */
 	@JmxAttribute(optional = true)
-	public double getLastValue() {
-		return (lastCountInteger > lastCountDouble) ? lastValueInteger : lastValueDouble;
+	public long getLastValue() {
+		return lastValue;
 	}
 
 	/**
@@ -509,8 +469,8 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	 * @return minimum of all added values
 	 */
 	@JmxAttribute(name = "absoluteMin", optional = true)
-	public double getAbsosuteMin() {
-		return totalCount == 0 ? 0.0 : absoluteMin;
+	public long getAbsoluteMin() {
+		return totalCount == 0 ? 0L : absoluteMin;
 	}
 
 	/**
@@ -519,13 +479,13 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 	 * @return maximum of all added values
 	 */
 	@JmxAttribute(name = "absoluteMax", optional = true)
-	public double getAbsoluteMax() {
-		return totalCount == 0 ? 0.0 : absoluteMax;
+	public long getAbsoluteMax() {
+		return totalCount == 0 ? 0L : absoluteMax;
 	}
 
 	@JmxAttribute(optional = true)
 	public double getAverage() {
-		return totalCount != 0L ? totalSum / totalCount : 0.0;
+		return totalCount != 0L ? (double) totalSum / totalCount : 0.0;
 	}
 
 	@JmxAttribute(optional = true)
@@ -548,7 +508,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 
 	@JmxAttribute(optional = true)
 	public long getCount() {
-		return totalCount + lastCountInteger + lastCountDouble;
+		return totalCount + lastCount;
 	}
 
 	@SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
@@ -642,7 +602,7 @@ public final class ValueStats implements JmxRefreshableStats<ValueStats>, JmxSta
 		if (useLastValue) {
 			constructorTemplate
 				.append("last: ")
-				.append(decimalFormat.format(getLastValue()))
+				.append(decimalFormat.format(lastValue))
 				.append("  ");
 		}
 

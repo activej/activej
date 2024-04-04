@@ -76,7 +76,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	public void onUpdateBusinessLogicTime(boolean taskOrKeyPresent, boolean externalTaskPresent, long businessLogicTime) {
 		loops.recordEvent();
 		if (taskOrKeyPresent) {
-			this.businessLogicTime.recordValue((int) businessLogicTime);
+			this.businessLogicTime.recordValue(businessLogicTime);
 		} else {
 			if (!externalTaskPresent) {
 				idleLoops.recordEvent();
@@ -88,18 +88,18 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 	@Override
 	public void onUpdateSelectorSelectTime(long selectorSelectTime) {
-		this.selectorSelectTime.recordValue((int) selectorSelectTime);
+		this.selectorSelectTime.recordValue(selectorSelectTime);
 	}
 
 	@Override
 	public void onUpdateSelectorSelectTimeout(long selectorSelectTimeout) {
-		this.selectorSelectTimeout.recordValue((int) selectorSelectTimeout);
+		this.selectorSelectTimeout.recordValue(selectorSelectTimeout);
 		if (selectorSelectTimeout < 0) selectOverdues.recordEvent();
 	}
 
 	@Override
 	public void onUpdateSelectedKeyDuration(Stopwatch sw) {
-		keys.oneKeyTime.recordValue((int) sw.elapsed(TimeUnit.MICROSECONDS));
+		keys.oneKeyTime.recordValue(sw.elapsed(TimeUnit.MICROSECONDS));
 	}
 
 	@Override
@@ -113,12 +113,12 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		keys.connectPerLoop.recordValue(connectKeys);
 		keys.readPerLoop.recordValue(readKeys);
 		keys.writePerLoop.recordValue(writeKeys);
-		if (lastSelectedKeys != 0) keys.loopTime.recordValue((int) loopTime);
+		if (lastSelectedKeys != 0) keys.loopTime.recordValue(loopTime);
 	}
 
 	private void updateTaskDuration(ValueStats counter, DurationRunnable longestCounter, Runnable runnable, @Nullable Stopwatch sw) {
 		if (sw != null) {
-			int elapsed = (int) sw.elapsed(TimeUnit.MICROSECONDS);
+			long elapsed = sw.elapsed(TimeUnit.MICROSECONDS);
 			counter.recordValue(elapsed);
 			if (elapsed > longestCounter.getDuration()) {
 				longestCounter.update(runnable, elapsed);
@@ -133,7 +133,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 	@Override
 	public void onUpdateLocalTasksStats(int localTasks, long loopTime) {
-		if (localTasks != 0) tasks.local.loopTime.recordValue((int) loopTime);
+		if (localTasks != 0) tasks.local.loopTime.recordValue(loopTime);
 		tasks.local.tasksPerLoop.recordValue(localTasks);
 	}
 
@@ -144,7 +144,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 
 	@Override
 	public void onUpdateConcurrentTasksStats(int newConcurrentTasks, long loopTime) {
-		if (newConcurrentTasks != 0) tasks.concurrent.loopTime.recordValue((int) loopTime);
+		if (newConcurrentTasks != 0) tasks.concurrent.loopTime.recordValue(loopTime);
 		tasks.concurrent.tasksPerLoop.recordValue(newConcurrentTasks);
 	}
 
@@ -160,10 +160,10 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	@Override
 	public void onUpdateScheduledTasksStats(int scheduledTasks, long loopTime, boolean background) {
 		if (background) {
-			if (scheduledTasks != 0) tasks.background.getLoopTime().recordValue((int) loopTime);
+			if (scheduledTasks != 0) tasks.background.getLoopTime().recordValue(loopTime);
 			tasks.background.getTasksPerLoop().recordValue(scheduledTasks);
 		} else {
-			if (scheduledTasks != 0) tasks.scheduled.getLoopTime().recordValue((int) loopTime);
+			if (scheduledTasks != 0) tasks.scheduled.getLoopTime().recordValue(loopTime);
 			tasks.scheduled.getTasksPerLoop().recordValue(scheduledTasks);
 		}
 	}
@@ -178,7 +178,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onScheduledTaskOverdue(int overdue, boolean background) {
+	public void onScheduledTaskOverdue(long overdue, boolean background) {
 		if (background) {
 			tasks.background.overdues.recordValue(overdue);
 		} else {

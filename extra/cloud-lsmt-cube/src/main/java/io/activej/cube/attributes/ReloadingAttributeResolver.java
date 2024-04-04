@@ -73,7 +73,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		long reloadTimestamp = reactor.currentTimeMillis();
 		reload(timestamp)
 			.whenResult(result -> {
-				reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
+				reloadTime.recordValue(reactor.currentTimeMillis() - reloadTimestamp);
 				cache.putAll(result);
 				timestamp = reloadTimestamp;
 			})
@@ -92,7 +92,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		long reloadTimestamp = reactor.currentTimeMillis();
 		return reload(timestamp)
 			.whenResult(result -> {
-				reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
+				reloadTime.recordValue(reactor.currentTimeMillis() - reloadTimestamp);
 				cache.putAll(result);
 				timestamp = reloadTimestamp;
 				scheduleReload(reloadPeriod);

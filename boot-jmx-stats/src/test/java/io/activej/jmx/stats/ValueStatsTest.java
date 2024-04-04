@@ -391,7 +391,7 @@ public class ValueStatsTest {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
-		double inputValue = 1;
+		long inputValue = 1;
 		int iterations = 100;
 		int rate = ONE_SECOND_IN_MILLIS;
 
@@ -411,20 +411,20 @@ public class ValueStatsTest {
 			currentTimestamp += rate;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue += 0.01;
+			inputValue += 1;
 		}
 		assertNumberOfDigitsAfterDot(valueStats);
-		assertEquals("10000.4±63.89  [9989.24...10001.99]  last: 10001.99  calls: 200 @ 1/second", valueStats.toString());
+		assertEquals("10084.63±67.31  [10059.79...10100]  last: 10100  calls: 200 @ 1/second", valueStats.toString());
 
 		for (int i = 0; i < iterations; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += rate;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue += 0.00001;
+			inputValue += 1;
 		}
 		assertNumberOfDigitsAfterDot(valueStats);
-		assertEquals("10001.99929±1.99715  [10001.97781...10002.00099]  last: 10002.00099  calls: 300 @ 1/second", valueStats.toString());
+		assertEquals("10186.07±14.58  [10172.11...10200]  last: 10200  calls: 300 @ 1/second", valueStats.toString());
 	}
 
 	@Test
@@ -433,7 +433,7 @@ public class ValueStatsTest {
 		ValueStats valueStats = ValueStats.builder(Duration.ofSeconds(10))
 			.withRate()
 			.build();
-		double inputValue = 0;
+		long inputValue = 0;
 		int iterations = 100;
 		int rate = ONE_SECOND_IN_MILLIS;
 
@@ -455,20 +455,20 @@ public class ValueStatsTest {
 			currentTimestamp += rate;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue -= 0.01;
+			inputValue -= 1;
 		}
 		assertNumberOfDigitsAfterDot(valueStats);
-		assertEquals("-0.8517±0.1408  [-0.99...-0.7151]  last: -0.99  calls: 100 @ 1/second", valueStats.toString());
+		assertEquals("-85.17±14.08  [-99...-71.51]  last: -99  calls: 100 @ 1/second", valueStats.toString());
 
 		for (int i = 0; i < iterations; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += rate;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue -= 0.00001;
+			inputValue -= 1;
 		}
 		assertNumberOfDigitsAfterDot(valueStats);
-		assertEquals("-1.000706±0.006408  [-1.00099...-0.999465]  last: -1.00099  calls: 200 @ 1/second", valueStats.toString());
+		assertEquals("-185.07±14.42  [-199...-171.14]  last: -199  calls: 200 @ 1/second", valueStats.toString());
 	}
 
 	@Test
@@ -481,28 +481,28 @@ public class ValueStatsTest {
 			.build();
 		int rate = ONE_SECOND_IN_MILLIS;
 
-		double inputValue = -1.1;
+		long inputValue = -11L;
 
-		for (int i = 0; i < 11; i++) {
+		for (int i = 0; i < 12; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += rate;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue += 0.22;
+			inputValue += 2L;
 		}
-		assertEquals("0.151±0.686  [-1.1...1.1]  last: 1.1  calls: 11 @ 1.067/second", valueStats.toString());
+		assertEquals("1.63±6.79  [-11...11]  last: 11  calls: 12 @ 1.06/second", valueStats.toString());
 
 		valueStats.resetStats();
 		valueStats.refresh(currentTimestamp);
-		inputValue = -10.1;
-		for (int i = 0; i < 101; i++) {
+		inputValue = -101L;
+		for (int i = 0; i < 102; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += rate;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue += 0.202;
+			inputValue += 2;
 		}
-		assertEquals("7.3±2.85  [-10.1...10.1]  last: 10.1  calls: 101 @ 1/second", valueStats.toString());
+		assertEquals("73.3±28.2  [-101...101]  last: 101  calls: 102 @ 1/second", valueStats.toString());
 	}
 
 	@Test
@@ -513,14 +513,14 @@ public class ValueStatsTest {
 
 		// Test if min == max
 		long currentTimestamp = 0;
-		double inputValue = 0.001;
+		long inputValue = 1;
 
 		for (int i = 0; i < 2; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += ONE_SECOND_IN_MILLIS;
 			valueStats.refresh(currentTimestamp);
 		}
-		assertEquals("0.001±0  [0.001...0.001]  last: 0.001  calls: 2 @ 1.933033/second", valueStats.toString());
+		assertEquals("1±0  [1...1]  last: 1  calls: 2 @ 1.933033/second", valueStats.toString());
 
 		// Test if min == 0
 		valueStats.resetStats();
@@ -554,16 +554,7 @@ public class ValueStatsTest {
 			.build();
 
 		long currentTimestamp = 0;
-		double inputValue = 0.123456789123456789d;
-
-		// Test if difference is 0.1 - precision should be 0.1/1000 = 0.0001 (4 digits)
-		for (int i = 0; i < 2; i++) {
-			valueStats.recordValue(inputValue);
-			currentTimestamp += ONE_SECOND_IN_MILLIS;
-			valueStats.refresh(currentTimestamp);
-			inputValue += 0.1;
-		}
-		assertNumberOfDigitsAfterDot(valueStats, 4);
+		long inputValue = 0;
 
 		// Test if difference is 1 - precision should be 1/1000 = 0.001 (3 digits)
 		valueStats.resetStats();
@@ -606,7 +597,7 @@ public class ValueStatsTest {
 		assertNumberOfDigitsAfterDot(valueStats, 0);
 
 		// Test if precision is 100, difference is 10 - precision should be 10/100 = 0.1 (1 digit)
-		inputValue = 0.123456789;
+		inputValue = 0;
 		valueStats = ValueStats.builder(SMOOTHING_WINDOW)
 			.withPrecision(100)
 			.build();
@@ -614,7 +605,7 @@ public class ValueStatsTest {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += ONE_SECOND_IN_MILLIS;
 			valueStats.refresh(currentTimestamp);
-			inputValue += 33.3;
+			inputValue += 33;
 		}
 		assertNumberOfDigitsAfterDot(valueStats, 1);
 	}
@@ -626,7 +617,7 @@ public class ValueStatsTest {
 			.build();
 
 		long currentTimestamp = 0;
-		double inputValue = 1;
+		long inputValue = 1;
 		int iterations = 100;
 
 		for (int i = 0; i < iterations; i++) {
@@ -646,7 +637,7 @@ public class ValueStatsTest {
 			.build();
 
 		long currentTimestamp = 0;
-		double inputValue = 1;
+		long inputValue = 1;
 		int iterations = 100;
 
 		for (int i = 0; i < iterations; i++) {
@@ -675,7 +666,7 @@ public class ValueStatsTest {
 		assertEquals(0, valueStats.getSmoothedRate(), 0.1);
 
 		for (int i = 0; i < events; i++) {
-			valueStats.recordValue(RANDOM.nextDouble());
+			valueStats.recordValue(RANDOM.nextLong());
 			valueStats.refresh(currentTimestamp);
 			currentTimestamp += periodInMillis;
 		}
@@ -688,7 +679,7 @@ public class ValueStatsTest {
 		assertEquals(0, valueStats.getSmoothedRate(), 0.1);
 
 		for (int i = 0; i < events; i++) {
-			valueStats.recordValue(RANDOM.nextDouble());
+			valueStats.recordValue(RANDOM.nextLong());
 			valueStats.refresh(currentTimestamp);
 			currentTimestamp += periodInMillis;
 		}
@@ -707,7 +698,7 @@ public class ValueStatsTest {
 		int periodInMillis = (int) (period * 1000);
 
 		for (int i = 0; i < events; i++) {
-			valueStats.recordValue(RANDOM.nextDouble());
+			valueStats.recordValue(RANDOM.nextLong());
 			valueStats.refresh(currentTimestamp);
 			currentTimestamp += periodInMillis;
 		}
@@ -728,7 +719,7 @@ public class ValueStatsTest {
 		int periodInMillis = (int) (period * 1000);
 
 		for (int i = 0; i < events; i++) {
-			valueStats.recordValue(RANDOM.nextDouble());
+			valueStats.recordValue(RANDOM.nextLong());
 			valueStats.refresh(currentTimestamp);
 			currentTimestamp += periodInMillis;
 		}
@@ -744,7 +735,7 @@ public class ValueStatsTest {
 			.build();
 
 		long currentTimestamp = 0;
-		double inputValue = 1.23456789;
+		long inputValue = 123456789;
 		int iterations = 100;
 
 		for (int i = 0; i < iterations; i++) {
@@ -752,20 +743,20 @@ public class ValueStatsTest {
 			currentTimestamp += ONE_SECOND_IN_MILLIS;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue += 1.23456789;
+			inputValue += 123456789;
 		}
 
-		assertEquals("1.063766E2±1.73837E1  [8.952446E1...1.234568E2]  last: 1.234568E2", valueStats.toString());
+		assertEquals("1.063766E10±0.0E0  [8.952446E9...1.234568E10]  last: 1.234568E10", valueStats.toString());
 
 		for (int i = 0; i < iterations; i++) {
 			valueStats.recordValue(inputValue);
 			currentTimestamp += ONE_SECOND_IN_MILLIS;
 			valueStats.refresh(currentTimestamp);
 
-			inputValue += 0.0000000000000001;
+			inputValue += 1;
 		}
 
-		assertEquals("1.246735E2±7.885133E-1  [1.245373E2...1.246902E2]  last: 1.246914E2", valueStats.toString());
+		assertEquals("1.246735E10±0.0E0  [1.245373E10...1.246914E10]  last: 1.246914E10", valueStats.toString());
 	}
 
 	@Test
@@ -774,11 +765,11 @@ public class ValueStatsTest {
 			.withAverageAndDeviation(false)
 			.build();
 		long currentTimestamp = 0;
-		double inputValue = 1.23456789;
+		long inputValue = 123456789;
 		valueStats1.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats1.refresh(currentTimestamp);
-		assertEquals("[1.234568...1.234568]  last: 1.234568", valueStats1.toString());
+		assertEquals("[123456789...123456789]  last: 123456789", valueStats1.toString());
 
 		ValueStats valueStats2 = ValueStats.builder(Duration.ofSeconds(10))
 			.withMinMax(false)
@@ -786,7 +777,7 @@ public class ValueStatsTest {
 		valueStats2.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats2.refresh(currentTimestamp);
-		assertEquals("1.234568±0  last: 1.234568", valueStats2.toString());
+		assertEquals("123456789±0  last: 123456789", valueStats2.toString());
 
 		ValueStats valueStats3 = ValueStats.builder(Duration.ofSeconds(10))
 			.withLastValue(false)
@@ -794,7 +785,7 @@ public class ValueStatsTest {
 		valueStats3.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats3.refresh(currentTimestamp);
-		assertEquals("1.234568±0  [1.234568...1.234568]", valueStats3.toString());
+		assertEquals("123456789±0  [123456789...123456789]", valueStats3.toString());
 
 		ValueStats valueStats4 = ValueStats.builder(Duration.ofSeconds(10))
 			.withLastValue(false)
@@ -813,14 +804,14 @@ public class ValueStatsTest {
 			.withRate()
 			.build();
 		long currentTimestamp = 0;
-		double inputValue = 1.23456789;
+		long inputValue = 123456789;
 		valueStats1.recordValue(inputValue);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats1.refresh(currentTimestamp);
 		valueStats1.recordValue(inputValue + 1);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats1.refresh(currentTimestamp);
-		assertEquals("1.7519±0.4997  [1.2692...2.2346]  last: 2.2346  calls: 2 @ 1.933/second", valueStats1.toString());
+		assertEquals("123456789.5173±0  [123456789.0346...123456790]  last: 123456790  calls: 2 @ 1.933/second", valueStats1.toString());
 
 		ValueStats valueStats2 = ValueStats.builder(Duration.ofSeconds(10))
 			.withAbsoluteValues(true)
@@ -831,7 +822,7 @@ public class ValueStatsTest {
 		valueStats2.recordValue(inputValue + 1);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats2.refresh(currentTimestamp);
-		assertEquals("1.752±0.5  [1.235...2.235]  last: 2.235", valueStats2.toString());
+		assertEquals("123456789.517±0  [123456789...123456790]  last: 123456790", valueStats2.toString());
 
 		ValueStats valueStats3 = ValueStats.builder(Duration.ofSeconds(10))
 			.withAbsoluteValues(true)
@@ -843,7 +834,7 @@ public class ValueStatsTest {
 		valueStats3.recordValue(inputValue + 1);
 		currentTimestamp += ONE_SECOND_IN_MILLIS;
 		valueStats3.refresh(currentTimestamp);
-		assertEquals("1.752±0.5  [1.235...2.235]  last: 2.235  calls: 2 @ 1.933/second", valueStats3.toString());
+		assertEquals("123456789.517±0  [123456789...123456790]  last: 123456790  calls: 2 @ 1.933/second", valueStats3.toString());
 	}
 
 	private void assertNumberOfDigitsAfterDot(ValueStats stats) {
@@ -863,16 +854,13 @@ public class ValueStatsTest {
 
 	private void assertNumberOfDigitsAfterDot(ValueStats stats, int number) {
 		String statsString = stats.toString();
-		String formattedMin = statsString.substring(statsString.indexOf('[') + 1, statsString.indexOf("..."));
-		String formattedMax = statsString.substring(statsString.indexOf("...") + 3, statsString.indexOf("]"));
-		String[] splitMin = formattedMin.split("\\.");
-		String[] splitMax = formattedMax.split("\\.");
-		if (splitMin.length == 1 && splitMax.length == 1) {
+		String formattedAvg = statsString.substring(0, statsString.indexOf("±"));
+		String[] splitAvg = formattedAvg.split("\\.");
+		if (splitAvg.length == 1) {
 			assertEquals(0, number);
 			return;
 		}
-		assertEquals(number, splitMin[1].length());
-		assertEquals(number, splitMax[1].length());
+		assertEquals(number, splitAvg[1].length());
 	}
 }
 

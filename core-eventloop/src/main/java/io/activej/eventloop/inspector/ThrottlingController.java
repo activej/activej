@@ -188,7 +188,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public void onScheduledTaskOverdue(int overdue, boolean background) {
+	public void onScheduledTaskOverdue(long overdue, boolean background) {
 
 	}
 
