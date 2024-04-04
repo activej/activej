@@ -122,7 +122,7 @@ public class PromiseStats {
 		return (value, e) -> {
 			activePromises--;
 			long now = currentTimeMillis();
-			long durationMillis = now - before;
+			int durationMillis = (int) (now - before);
 			lastCompleteTimestamp = now;
 			duration.recordValue(durationMillis);
 
