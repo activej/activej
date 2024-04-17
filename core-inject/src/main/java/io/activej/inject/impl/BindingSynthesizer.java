@@ -128,7 +128,7 @@ class BindingSynthesizer {
 
 			throw new DIException("Could not synthesize a binding for " + key.getDisplayString() +
 								  " in scope " + getScopeDisplayString(scope) + ". " +
-								  "Ambigous bindings in scope " + getScopeDisplayString(error.scope()) +
+								  "Ambiguous bindings in scope " + getScopeDisplayString(error.scope()) +
 								  ": " + error.ambiguousCandidates().stream().map(Key::getDisplayString).toList());
 		}
 

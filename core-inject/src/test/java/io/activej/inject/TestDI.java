@@ -1441,7 +1441,7 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertTrue(e.getMessage().startsWith("Could not synthesize a binding for TestInterface<String> in scope (). Ambigous bindings in scope ()"));
+			assertTrue(e.getMessage().startsWith("Could not synthesize a binding for TestInterface<String> in scope (). Ambiguous bindings in scope ()"));
 		}
 	}
 
@@ -1513,7 +1513,7 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Could not synthesize a binding for Iterable in scope (). Ambigous bindings in scope (): [List<String>, List<Integer>]", e.getMessage());
+			assertEquals("Could not synthesize a binding for Iterable in scope (). Ambiguous bindings in scope (): [List<String>, List<Integer>]", e.getMessage());
 		}
 	}
 
