@@ -156,9 +156,9 @@ public final class JmxModule extends AbstractModule {
 			return this;
 		}
 
-		public Builder withHistogram(Class<?> clazz, String attrName, long[] histogramLevels) {
+		public Builder withHistogram(Type type, String attrName, long[] histogramLevels) {
 			checkNotBuilt(this);
-			return withHistogram(Key.of(clazz), attrName, () -> JmxHistogram.ofLevels(histogramLevels));
+			return withHistogram(type, attrName, () -> JmxHistogram.ofLevels(histogramLevels));
 		}
 
 		public Builder withHistogram(Key<?> key, String attrName, long[] histogramLevels) {
@@ -166,9 +166,11 @@ public final class JmxModule extends AbstractModule {
 			return withHistogram(key, attrName, () -> JmxHistogram.ofLevels(histogramLevels));
 		}
 
-		public Builder withHistogram(Class<?> clazz, String attrName, Supplier<JmxHistogram> histogram) {
+		public Builder withHistogram(Type type, String attrName, Supplier<JmxHistogram> histogram) {
 			checkNotBuilt(this);
-			return withHistogram(Key.of(clazz), attrName, histogram);
+			return withOptional(type, attrName + "_histogram")
+				.withModifier(type, attrName, (ValueStats attribute) ->
+					attribute.setHistogram(histogram.get()));
 		}
 
 		public Builder withHistogram(Key<?> key, String attrName, Supplier<JmxHistogram> histogram) {
