@@ -32,7 +32,7 @@
 
     <dependency>
       <groupId>com.dslplatform</groupId>
-      <artifactId>dsl-json-java8</artifactId>
+      <artifactId>dsl-json</artifactId>
     </dependency>
   </dependencies>
 
