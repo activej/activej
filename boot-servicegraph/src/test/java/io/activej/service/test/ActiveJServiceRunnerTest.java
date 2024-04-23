@@ -1,4 +1,4 @@
-package io.activej.test;
+package io.activej.service.test;
 
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -7,7 +7,8 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
-import io.activej.test.ActiveJServiceRunnerTest.TestModule;
+import io.activej.service.test.ActiveJServiceRunnerTest.TestModule;
+import io.activej.test.UseModules;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

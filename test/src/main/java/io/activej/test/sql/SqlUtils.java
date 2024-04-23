@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.common.sql;
+package io.activej.test.sql;
 
 import javax.sql.DataSource;
 import java.io.IOException;

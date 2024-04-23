@@ -9,8 +9,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.common.sql.SqlUtils.executeScript;
 import static io.activej.test.TestUtils.dataSource;
+import static io.activej.test.sql.SqlUtils.executeScript;
 import static org.junit.Assert.assertEquals;
 
 public class SqlAtomicSequenceTest {

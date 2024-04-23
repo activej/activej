@@ -41,13 +41,9 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
+        <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <archive>
-            <manifestEntries>
-              <Automatic-Module-Name>io.activej.config</Automatic-Module-Name>
-            </manifestEntries>
-          </archive>
+          <argLine>--add-opens io.activej.config/io.activej.config=io.activej.inject</argLine>
         </configuration>
       </plugin>
     </plugins>

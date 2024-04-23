@@ -1,6 +1,7 @@
-package io.activej.test;
+package io.activej.service.test;
 
 import io.activej.service.ServiceGraph;
+import io.activej.test.ActiveJRunner;
 import io.activej.test.rules.LambdaStatement;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;

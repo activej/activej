@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-import static io.activej.common.sql.SqlUtils.executeScript;
 import static io.activej.etcd.EtcdUtils.byteSequenceFrom;
+import static io.activej.test.sql.SqlUtils.executeScript;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("resource")

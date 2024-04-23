@@ -969,13 +969,17 @@ public final class TestDI {
 		Module module4 = new GenericModule<String, Integer>() {};
 		Module module5 = new OtherModule();
 
-		System.out.println(module2);
+		String moduleToString = "";
+		java.lang.Module javaModule = module.getClass().getModule();
+		if (javaModule.isNamed()) {
+			moduleToString = javaModule.getName() + "@" + javaModule.getDescriptor().version().orElse(null) + "/";
+		}
 
-		assertTrue(module.toString().startsWith("AbstractModule(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));
-		assertTrue(module2.toString().startsWith("MyModule(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));
-		assertTrue(module3.toString().startsWith("InheritedModule(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));
-		assertTrue(module4.toString().startsWith("GenericModule<String, Integer>(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));
-		assertTrue(module5.toString().startsWith("RenamedModule(at io.activej.inject.TestDI.abstractModuleToString(TestDI.java:"));
+		assertTrue(module.toString().startsWith(String.format("AbstractModule(at %sio.activej.inject.TestDI.abstractModuleToString(TestDI.java:", moduleToString)));
+		assertTrue(module2.toString().startsWith(String.format("MyModule(at %sio.activej.inject.TestDI.abstractModuleToString(TestDI.java:", moduleToString)));
+		assertTrue(module3.toString().startsWith(String.format("InheritedModule(at %sio.activej.inject.TestDI.abstractModuleToString(TestDI.java:", moduleToString)));
+		assertTrue(module4.toString().startsWith(String.format("GenericModule<String, Integer>(at %sio.activej.inject.TestDI.abstractModuleToString(TestDI.java:", moduleToString)));
+		assertTrue(module5.toString().startsWith(String.format("RenamedModule(at %sio.activej.inject.TestDI.abstractModuleToString(TestDI.java:", moduleToString)));
 	}
 
 	@Test
