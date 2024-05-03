@@ -400,12 +400,15 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		this.promise = promise;
 		(pool = client.poolReadWrite).addLastNode(this);
 		poolTimestamp = reactor.currentTimeMillis();
-		HttpHeaderValue connectionHeader = CONNECTION_KEEP_ALIVE_HEADER;
-		if (++numberOfRequests >= client.maxKeepAliveRequests && client.maxKeepAliveRequests != 0
-			|| client.keepAliveTimeoutMillis == 0) {
-			connectionHeader = CONNECTION_CLOSE_HEADER;
-		}
-		request.headers.add(CONNECTION, connectionHeader);
+
+		tryAddHeader(request, CONNECTION, () -> {
+			if (++numberOfRequests >= client.maxKeepAliveRequests &&
+				client.maxKeepAliveRequests != 0 || client.keepAliveTimeoutMillis == 0) {
+				return CONNECTION_CLOSE_HEADER;
+			}
+			return CONNECTION_KEEP_ALIVE_HEADER;
+		});
+
 		ByteBuf buf = renderHttpMessage(request);
 		if (buf != null) {
 			writeBuf(buf);

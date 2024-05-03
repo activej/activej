@@ -36,11 +36,8 @@ import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseEmpty;
-import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
-import static io.activej.http.Protocol.WS;
-import static io.activej.http.Protocol.WSS;
 
 /**
  * Represents the HTTP request which {@link IHttpClient} sends to
@@ -74,18 +71,7 @@ public final class HttpRequest extends HttpMessage implements ToPromise<HttpRequ
 
 	public static Builder builder(HttpMethod method, String url) {
 		UrlParser urlParser = UrlParser.of(url);
-		Builder builder = new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null).new Builder();
-		String hostAndPort = urlParser.getHostAndPort();
-		if (hostAndPort != null) {
-			builder.withHeader(HOST, HttpHeaderValue.of(hostAndPort));
-		}
-		Protocol protocol = urlParser.getProtocol();
-		if (protocol == WS || protocol == WSS) {
-			builder.withHeader(CONNECTION, HttpHeaderValue.of("upgrade"));
-			builder.withHeader(UPGRADE, HttpHeaderValue.of("websocket"));
-			builder.withHeader(SEC_WEBSOCKET_VERSION, WEB_SOCKET_VERSION);
-		}
-		return builder;
+		return new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null).new Builder();
 	}
 
 	public static Builder get(String url) {

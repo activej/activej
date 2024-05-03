@@ -44,6 +44,7 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMessage.MUST_LOAD_BODY;
 import static io.activej.http.HttpMethod.DELETE;
 import static io.activej.http.HttpMethod.GET;
+import static io.activej.http.HttpUtils.tryAddHeader;
 import static io.activej.http.HttpVersion.HTTP_1_0;
 import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.Protocol.*;
@@ -294,12 +295,15 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	private void writeHttpResponse(HttpResponse httpResponse) {
 		boolean isWebSocket = IWebSocket.ENABLED && isWebSocket();
 		if (!isWebSocket || httpResponse.getCode() != 101) {
-			HttpHeaderValue connectionHeader = (flags & KEEP_ALIVE) != 0 ? CONNECTION_KEEP_ALIVE_HEADER : CONNECTION_CLOSE_HEADER;
-			if (server.keepAliveTimeoutMillis == 0 ||
-				numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0) {
-				connectionHeader = CONNECTION_CLOSE_HEADER;
-			}
-			httpResponse.headers.add(CONNECTION, connectionHeader);
+			tryAddHeader(httpResponse, CONNECTION, () -> {
+				if ((flags & KEEP_ALIVE) == 0 ||
+					server.keepAliveTimeoutMillis == 0 ||
+					numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0
+				) {
+					return CONNECTION_CLOSE_HEADER;
+				}
+				return CONNECTION_KEEP_ALIVE_HEADER;
+			});
 
 			if (isWebSocket) {
 				// if web socket upgrade request was unsuccessful, it is not a web socket connection
@@ -326,7 +330,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			ByteBuf body = httpMessage.body;
 			httpMessage.body = null;
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) == 0) {
-				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
+				tryAddHeader(httpMessage, CONTENT_LENGTH, () -> ofDecimal(body.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + body.readRemaining();
 				writeBuf = ensureWriteBuffer(messageSize);
 				httpMessage.writeTo(writeBuf);
@@ -334,8 +338,8 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				body.recycle();
 			} else {
 				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
-				httpMessage.headers.add(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
-				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
+				tryAddHeader(httpMessage, CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
+				tryAddHeader(httpMessage, CONTENT_LENGTH, () -> ofDecimal(gzippedBody.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + gzippedBody.readRemaining();
 				writeBuf = ensureWriteBuffer(messageSize);
 				httpMessage.writeTo(writeBuf);
@@ -347,7 +351,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		if (httpMessage.bodyStream == null) {
 			if (httpMessage.isContentLengthExpected()) {
-				httpMessage.headers.add(CONTENT_LENGTH, ofDecimal(0));
+				tryAddHeader(httpMessage, CONTENT_LENGTH, () -> ofDecimal(0));
 			}
 			writeBuf = ensureWriteBuffer(httpMessage.estimateSize());
 			httpMessage.writeTo(writeBuf);

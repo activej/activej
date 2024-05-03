@@ -44,7 +44,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * If a response has a code {@code 101} it is considered successful and the resulted promise of a web socket will be
  * completed with a {@link IWebSocket}. A successful response must have no body or body stream.
  * <p>
- * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
+ * If a response has code different from {@code 101}, it will be sent as is and the resulted promise will be completed
  * exceptionally.
  */
 public abstract class WebSocketServlet extends AbstractReactive
@@ -83,8 +83,7 @@ public abstract class WebSocketServlet extends AbstractReactive
 
 						ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 
-						ChannelSupplier<ByteBuf> bodySupplier = buffer.getSupplier();
-						response.bodyStream = bodySupplier;
+						response.bodyStream = buffer.getSupplier();
 						response.headers.add(UPGRADE, HttpHeaderValue.of("Websocket"));
 						response.headers.add(CONNECTION, HttpHeaderValue.of("Upgrade"));
 						response.headers.add(SEC_WEBSOCKET_ACCEPT, HttpHeaderValue.of(answer));

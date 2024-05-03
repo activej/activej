@@ -33,10 +33,10 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
 import static io.activej.http.IWebSocket.Frame.FrameType.*;
 import static io.activej.http.WebSocketConstants.MAGIC_STRING;
@@ -299,7 +299,7 @@ public final class HttpUtils {
 	 * (RFC3986) scheme://authority/path/?query#fragment
 	 */
 	public static @Nullable String getFullUri(HttpRequest request, int builderCapacity) {
-		String host = request.getHeader(HOST);
+		String host = request.getHostAndPort();
 		if (host == null) {
 			return null;
 		}
@@ -494,5 +494,12 @@ public final class HttpUtils {
 
 	static int hashCodeCI(byte[] array) {
 		return hashCodeCI(array, 0, array.length);
+	}
+
+	static void tryAddHeader(HttpMessage httpMessage, HttpHeader header, Supplier<HttpHeaderValue> headerValueSupplier) {
+		HttpHeaderValue existing = httpMessage.headers.get(header);
+		if (existing != null) return;
+
+		httpMessage.headers.add(header, headerValueSupplier.get());
 	}
 }

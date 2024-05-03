@@ -52,12 +52,11 @@ public final class HttpHeadersTest {
 
 		Collection<Map.Entry<HttpHeader, HttpHeaderValue>> headersCollection = request.getHeaders();
 
-		assertEquals(4, headersCollection.size());
+		assertEquals(3, headersCollection.size());
 
 		Map<HttpHeader, HttpHeaderValue> headersMap = headersCollection.stream()
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		assertEquals("example.com", headersMap.get(HOST).toString());
 		assertEquals("application/json; charset=utf-8", headersMap.get(CONTENT_TYPE).toString());
 		assertEquals("image/*; q=0.5, text/html", headersMap.get(ACCEPT).toString());
 		assertEquals("utf-8, iso-8859-1", headersMap.get(ACCEPT_CHARSET).toString());

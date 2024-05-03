@@ -59,7 +59,10 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
+import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.translateToHttpException;
+import static io.activej.http.HttpUtils.tryAddHeader;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
@@ -459,11 +462,7 @@ public final class HttpClient extends AbstractNioReactive
 
 	void returnToKeepAlivePool(HttpClientConnection connection) {
 		assert !connection.isClosed();
-		AddressLinkedList addresses = this.addresses.get(connection.remoteAddress);
-		if (addresses == null) {
-			addresses = new AddressLinkedList();
-			this.addresses.put(connection.remoteAddress, addresses);
-		}
+		AddressLinkedList addresses = this.addresses.computeIfAbsent(connection.remoteAddress, k -> new AddressLinkedList());
 		addresses.addLastNode(connection);
 		connection.switchPool(poolKeepAlive);
 
@@ -503,16 +502,29 @@ public final class HttpClient extends AbstractNioReactive
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 
+		tryAddHeader(request, CONNECTION, () -> HttpHeaderValue.of("upgrade"));
+		tryAddHeader(request, UPGRADE, () -> HttpHeaderValue.of("websocket"));
+		tryAddHeader(request, SEC_WEBSOCKET_VERSION, () -> HttpHeaderValue.ofBytes(WEB_SOCKET_VERSION));
+
 		//noinspection unchecked
 		return (Promise<IWebSocket>) doRequest(request, true);
 	}
 
 	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
 		assert reactor.inReactorThread();
-		if (inspector != null) inspector.onRequest(request);
-		String host = request.getUrl().getHost();
 
-		assert host != null;
+		String hostAndPort = request.getHeader(HOST);
+		if (hostAndPort == null) {
+			hostAndPort = request.getUrl().getHostAndPort();
+			assert hostAndPort != null;
+
+			request.headers.add(HOST, HttpHeaderValue.of(hostAndPort));
+		}
+
+		if (inspector != null) inspector.onRequest(request);
+
+		int colonIndex = hostAndPort.lastIndexOf(':');
+		String host = colonIndex == -1 ? hostAndPort : hostAndPort.substring(0, colonIndex);
 
 		++pendingResolves;
 		return dnsClient.resolve4(host)

@@ -109,23 +109,19 @@ public final class HttpMessageTest {
 	public void testHttpRequest() {
 		assertHttpMessageEquals("""
 			GET /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.get("http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			POST /index.html HTTP/1.1\r
-			Host: test.com\r
 			Content-Length: 0\r
 			\r
 			""", HttpRequest.post("http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			CONNECT /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.builder(HttpMethod.CONNECT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			GET /index.html HTTP/1.1\r
-			Host: test.com\r
 			Cookie: cookie1=value1\r
 			\r
 			""", HttpRequest.get("http://test.com/index.html")
@@ -133,7 +129,6 @@ public final class HttpMessageTest {
 			.build());
 		assertHttpMessageEquals("""
 			GET /index.html HTTP/1.1\r
-			Host: test.com\r
 			Cookie: cookie1=value1; cookie2=value2\r
 			\r
 			""", HttpRequest.get("http://test.com/index.html")
@@ -144,7 +139,6 @@ public final class HttpMessageTest {
 		buf.put("/abc".getBytes(), 0, 4);
 		assertHttpMessageEquals("""
 			POST /index.html HTTP/1.1\r
-			Host: test.com\r
 			Content-Length: 4\r
 			\r
 			/abc""", HttpRequest.post("http://test.com/index.html")
@@ -156,51 +150,42 @@ public final class HttpMessageTest {
 	public void testHttpRequestWithNoPayload() {
 		assertHttpMessageEquals("""
 			GET /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.builder(GET, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			HEAD /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.builder(HEAD, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			CONNECT /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.builder(CONNECT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			OPTIONS /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.builder(OPTIONS, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			TRACE /index.html HTTP/1.1\r
-			Host: test.com\r
 			\r
 			""", HttpRequest.builder(TRACE, "http://test.com/index.html").build());
 
 		assertHttpMessageEquals("""
 			POST /index.html HTTP/1.1\r
-			Host: test.com\r
 			Content-Length: 0\r
 			\r
 			""", HttpRequest.builder(POST, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			PUT /index.html HTTP/1.1\r
-			Host: test.com\r
 			Content-Length: 0\r
 			\r
 			""", HttpRequest.builder(PUT, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			DELETE /index.html HTTP/1.1\r
-			Host: test.com\r
 			Content-Length: 0\r
 			\r
 			""", HttpRequest.builder(DELETE, "http://test.com/index.html").build());
 		assertHttpMessageEquals("""
 			PATCH /index.html HTTP/1.1\r
-			Host: test.com\r
 			Content-Length: 0\r
 			\r
 			""", HttpRequest.builder(PATCH, "http://test.com/index.html").build());
