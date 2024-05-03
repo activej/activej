@@ -57,9 +57,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.http.AbstractHttpConnection.*;
+import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
@@ -89,6 +90,10 @@ public final class HttpClient extends AbstractNioReactive
 	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxBodySize", MemSize.ZERO);
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient.class, "maxKeepAliveRequests", 0);
+
+	public static final HttpHeaderValue UPGRADE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("Upgrade"));
+	public static final HttpHeaderValue WEBSOCKET_HEADER = HttpHeaderValue.ofBytes(encodeAscii("Websocket"));
+	public static final HttpHeaderValue WEBSOCKET_VERSION_HEADER = HttpHeaderValue.ofBytes(WEB_SOCKET_VERSION);
 
 	private IDnsClient dnsClient;
 	private SocketSettings socketSettings = SocketSettings.defaultInstance();
@@ -501,9 +506,9 @@ public final class HttpClient extends AbstractNioReactive
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 
-		request.headers.addIfAbsent(CONNECTION, () -> HttpHeaderValue.ofBytes(UPGRADE_HEADER));
-		request.headers.addIfAbsent(UPGRADE, () -> HttpHeaderValue.ofBytes(UPGRADE_WEBSOCKET));
-		request.headers.addIfAbsent(SEC_WEBSOCKET_VERSION, () -> HttpHeaderValue.ofBytes(WEB_SOCKET_VERSION));
+		request.headers.addIfAbsent(CONNECTION, UPGRADE_HEADER);
+		request.headers.addIfAbsent(UPGRADE, WEBSOCKET_HEADER);
+		request.headers.addIfAbsent(SEC_WEBSOCKET_VERSION, WEBSOCKET_VERSION_HEADER);
 
 		//noinspection unchecked
 		return (Promise<IWebSocket>) doRequest(request, true);

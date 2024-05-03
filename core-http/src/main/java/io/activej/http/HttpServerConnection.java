@@ -337,7 +337,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				body.recycle();
 			} else {
 				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
-				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, CONTENT_ENCODING_GZIP_HEADER);
 				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(gzippedBody.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + gzippedBody.readRemaining();
 				writeBuf = ensureWriteBuffer(messageSize);
@@ -350,7 +350,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		if (httpMessage.bodyStream == null) {
 			if (httpMessage.isContentLengthExpected()) {
-				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(0));
+				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, ZERO_HEADER);
 			}
 			writeBuf = ensureWriteBuffer(httpMessage.estimateSize());
 			httpMessage.writeTo(writeBuf);

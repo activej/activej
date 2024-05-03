@@ -30,6 +30,8 @@ import java.util.Arrays;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
+import static io.activej.http.HttpClient.UPGRADE_HEADER;
+import static io.activej.http.HttpClient.WEBSOCKET_HEADER;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.getWebSocketAnswer;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
@@ -84,8 +86,8 @@ public abstract class WebSocketServlet extends AbstractReactive
 						ChannelZeroBuffer<ByteBuf> buffer = new ChannelZeroBuffer<>();
 
 						response.bodyStream = buffer.getSupplier();
-						response.headers.add(UPGRADE, HttpHeaderValue.of("Websocket"));
-						response.headers.add(CONNECTION, HttpHeaderValue.of("Upgrade"));
+						response.headers.add(UPGRADE, WEBSOCKET_HEADER);
+						response.headers.add(CONNECTION, UPGRADE_HEADER);
 						response.headers.add(SEC_WEBSOCKET_ACCEPT, HttpHeaderValue.of(answer));
 
 						WebSocketFramesToBufs encoder = WebSocketFramesToBufs.create(false);

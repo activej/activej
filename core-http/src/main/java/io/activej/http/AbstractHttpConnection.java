@@ -62,10 +62,12 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	protected static final byte[] CONNECTION_KEEP_ALIVE = encodeAscii("keep-alive");
 	protected static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
 	protected static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
-
-	protected static final byte[] UPGRADE_HEADER = encodeAscii("upgrade");
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
+
+	protected static final HttpHeaderValue TRANSFER_ENCODING_CHUNKED_HEADER = ofBytes(TRANSFER_ENCODING_CHUNKED);
+	protected static final HttpHeaderValue CONTENT_ENCODING_GZIP_HEADER = ofBytes(CONTENT_ENCODING_GZIP);
+	protected static final HttpHeaderValue ZERO_HEADER = ofDecimal(0);
 
 	protected final ITcpSocket socket;
 	protected final int maxBodySize;
@@ -505,7 +507,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				return buf;
 			} else {
 				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
-				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, CONTENT_ENCODING_GZIP_HEADER);
 				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(gzippedBody.readRemaining()));
 				ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize() + gzippedBody.readRemaining());
 				httpMessage.writeTo(buf);
@@ -517,7 +519,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (httpMessage.bodyStream == null) {
 			if (httpMessage.isContentLengthExpected()) {
-				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(0));
+				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, ZERO_HEADER);
 			}
 			ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize());
 			httpMessage.writeTo(buf);
@@ -534,14 +536,14 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (!IWebSocket.ENABLED || !isWebSocket()) {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
-				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, CONTENT_ENCODING_GZIP_HEADER);
 				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
 				bodyStream.bindTo(deflater.getInput());
 				bodyStream = deflater.getOutput().getSupplier();
 			}
 
 			if (httpMessage.headers.get(CONTENT_LENGTH) == null) {
-				httpMessage.headers.addIfAbsent(TRANSFER_ENCODING, () -> ofBytes(TRANSFER_ENCODING_CHUNKED));
+				httpMessage.headers.addIfAbsent(TRANSFER_ENCODING, TRANSFER_ENCODING_CHUNKED_HEADER);
 				BufsConsumerChunkedEncoder chunker = BufsConsumerChunkedEncoder.create();
 				bodyStream.bindTo(chunker.getInput());
 				bodyStream = chunker.getOutput().getSupplier();
