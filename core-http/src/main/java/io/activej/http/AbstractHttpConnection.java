@@ -45,7 +45,8 @@ import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
 import static io.activej.http.HttpHeaders.*;
-import static io.activej.http.HttpUtils.*;
+import static io.activej.http.HttpUtils.translateToHttpException;
+import static io.activej.http.HttpUtils.trimAndDecodePositiveLong;
 import static java.lang.Math.max;
 
 @SuppressWarnings({"WeakerAccess", "PointlessBitwiseExpression"})
@@ -62,6 +63,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	protected static final byte[] TRANSFER_ENCODING_CHUNKED = encodeAscii("chunked");
 	protected static final byte[] CONTENT_ENCODING_GZIP = encodeAscii("gzip");
 
+	protected static final byte[] UPGRADE_HEADER = encodeAscii("upgrade");
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
@@ -495,7 +497,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 			ByteBuf body = httpMessage.body;
 			httpMessage.body = null;
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) == 0) {
-				tryAddHeader(httpMessage, CONTENT_LENGTH, () -> ofDecimal(body.readRemaining()));
+				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(body.readRemaining()));
 				ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize() + body.readRemaining());
 				httpMessage.writeTo(buf);
 				buf.put(body);
@@ -503,8 +505,8 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				return buf;
 			} else {
 				ByteBuf gzippedBody = GzipProcessorUtils.toGzip(body);
-				tryAddHeader(httpMessage, CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
-				tryAddHeader(httpMessage, CONTENT_LENGTH, () -> ofDecimal(gzippedBody.readRemaining()));
+				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(gzippedBody.readRemaining()));
 				ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize() + gzippedBody.readRemaining());
 				httpMessage.writeTo(buf);
 				buf.put(gzippedBody);
@@ -515,7 +517,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (httpMessage.bodyStream == null) {
 			if (httpMessage.isContentLengthExpected()) {
-				tryAddHeader(httpMessage, CONTENT_LENGTH, () -> ofDecimal(0));
+				httpMessage.headers.addIfAbsent(CONTENT_LENGTH, () -> ofDecimal(0));
 			}
 			ByteBuf buf = ByteBufPool.allocate(httpMessage.estimateSize());
 			httpMessage.writeTo(buf);
@@ -532,14 +534,14 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 		if (!IWebSocket.ENABLED || !isWebSocket()) {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
-				tryAddHeader(httpMessage, CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
+				httpMessage.headers.addIfAbsent(CONTENT_ENCODING, () -> ofBytes(CONTENT_ENCODING_GZIP));
 				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
 				bodyStream.bindTo(deflater.getInput());
 				bodyStream = deflater.getOutput().getSupplier();
 			}
 
 			if (httpMessage.headers.get(CONTENT_LENGTH) == null) {
-				tryAddHeader(httpMessage, TRANSFER_ENCODING, () -> ofBytes(TRANSFER_ENCODING_CHUNKED));
+				httpMessage.headers.addIfAbsent(TRANSFER_ENCODING, () -> ofBytes(TRANSFER_ENCODING_CHUNKED));
 				BufsConsumerChunkedEncoder chunker = BufsConsumerChunkedEncoder.create();
 				bodyStream.bindTo(chunker.getInput());
 				bodyStream = chunker.getOutput().getSupplier();

@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 import static java.lang.Integer.numberOfLeadingZeros;
 
@@ -58,6 +59,20 @@ final class HttpHeadersMultimap {
 				return;
 			}
 		}
+	}
+
+	public void addIfAbsent(HttpHeader key, HttpHeaderValue value) {
+		HttpHeaderValue existing = get(key);
+		if (existing != null) return;
+
+		add(key, value);
+	}
+
+	public void addIfAbsent(HttpHeader key, Supplier<HttpHeaderValue> valueSupplier) {
+		HttpHeaderValue existing = get(key);
+		if (existing != null) return;
+
+		add(key, valueSupplier.get());
 	}
 
 	private void resize() {

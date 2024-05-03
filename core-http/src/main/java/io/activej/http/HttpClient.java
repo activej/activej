@@ -59,10 +59,9 @@ import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.http.AbstractHttpConnection.WEB_SOCKET_VERSION;
+import static io.activej.http.AbstractHttpConnection.*;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.translateToHttpException;
-import static io.activej.http.HttpUtils.tryAddHeader;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
@@ -502,9 +501,9 @@ public final class HttpClient extends AbstractNioReactive
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 
-		tryAddHeader(request, CONNECTION, () -> HttpHeaderValue.of("upgrade"));
-		tryAddHeader(request, UPGRADE, () -> HttpHeaderValue.of("websocket"));
-		tryAddHeader(request, SEC_WEBSOCKET_VERSION, () -> HttpHeaderValue.ofBytes(WEB_SOCKET_VERSION));
+		request.headers.addIfAbsent(CONNECTION, () -> HttpHeaderValue.ofBytes(UPGRADE_HEADER));
+		request.headers.addIfAbsent(UPGRADE, () -> HttpHeaderValue.ofBytes(UPGRADE_WEBSOCKET));
+		request.headers.addIfAbsent(SEC_WEBSOCKET_VERSION, () -> HttpHeaderValue.ofBytes(WEB_SOCKET_VERSION));
 
 		//noinspection unchecked
 		return (Promise<IWebSocket>) doRequest(request, true);

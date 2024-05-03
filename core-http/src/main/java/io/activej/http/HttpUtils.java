@@ -33,7 +33,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
@@ -494,12 +493,5 @@ public final class HttpUtils {
 
 	static int hashCodeCI(byte[] array) {
 		return hashCodeCI(array, 0, array.length);
-	}
-
-	static void tryAddHeader(HttpMessage httpMessage, HttpHeader header, Supplier<HttpHeaderValue> headerValueSupplier) {
-		HttpHeaderValue existing = httpMessage.headers.get(header);
-		if (existing != null) return;
-
-		httpMessage.headers.add(header, headerValueSupplier.get());
 	}
 }

@@ -401,7 +401,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		(pool = client.poolReadWrite).addLastNode(this);
 		poolTimestamp = reactor.currentTimeMillis();
 
-		tryAddHeader(request, CONNECTION, () -> {
+		request.headers.addIfAbsent(CONNECTION, () -> {
 			if (++numberOfRequests >= client.maxKeepAliveRequests &&
 				client.maxKeepAliveRequests != 0 || client.keepAliveTimeoutMillis == 0) {
 				return CONNECTION_CLOSE_HEADER;
