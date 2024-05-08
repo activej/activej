@@ -353,6 +353,37 @@ public final class AbstractHttpConnectionTest {
 	}
 
 	@Test
+	public void testContentLengthExceedsMaxBodySize() throws Exception {
+		client = HttpClient.create(Reactor.getCurrentReactor());
+
+		HttpServer.JmxInspector inspector = new HttpServer.JmxInspector();
+		HttpServer server = HttpServer.builder(Reactor.getCurrentReactor(), $ -> {
+				throw new AssertionError("Should not be called");
+			})
+			.withListenPort(port)
+			.withMaxBodySize(10)
+			.withAcceptOnce()
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		int responseCode = await(client.request(HttpRequest.post(url)
+				.withHeader(CONTENT_LENGTH, "100")
+				.withBodyStream(ChannelSuppliers.ofStream(IntStream.range(0, 100)
+						.mapToObj(i -> wrapUtf8(String.valueOf(i))))
+					.mapAsync(buf -> Promises.delay(Duration.ofSeconds(1)).map($ -> buf)))
+				.build())
+			.map(HttpResponse::getCode));
+
+		assertEquals(400, responseCode);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Content length 100 exceeds maximum allowed body size",
+			malformedHttpExceptions.getLastMessage());
+	}
+
+	@Test
 	public void testKeepAliveWithStreamingResponse() throws Exception {
 		JmxInspector clientInspector = new JmxInspector();
 		HttpServer.JmxInspector serverInspector = new HttpServer.JmxInspector();

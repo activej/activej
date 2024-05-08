@@ -421,6 +421,12 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 			}
 		}
 
+		if (maxBodySize != 0 && contentLength > maxBodySize) {
+			onMalformedHttpException(new MalformedHttpException(
+				"Content length " + contentLength + " exceeds maximum allowed body size"));
+			return;
+		}
+
 		ByteBuf readBuf = detachReadBuf();
 		ByteBufs readBufs = new ByteBufs();
 		readBufs.add(readBuf);
