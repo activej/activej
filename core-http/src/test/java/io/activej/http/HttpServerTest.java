@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
@@ -754,6 +755,7 @@ public final class HttpServerTest {
 		HttpServer server = HttpServer.builder(eventloop, request -> {
 				assertEquals(1, inspector.getTotalRequests().getTotalCount());
 				assertEquals(1, inspector.getActiveConnections());
+				assertEquals(1, inspector.getActiveRequests());
 				return HttpResponse.ok200()
 					.withBodyStream(request.takeBodyStream())
 					.toPromise();
@@ -782,6 +784,50 @@ public final class HttpServerTest {
 
 		assertEquals(1, inspector.getTotalRequests().getTotalCount());
 		assertEquals(0, inspector.getActiveConnections());
+		assertEquals(0, inspector.getActiveRequests());
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testActiveRequestsCounterServing() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		CountDownLatch latch = new CountDownLatch(1);
+		HttpServer server = HttpServer.builder(eventloop, request -> {
+				assertEquals(1, inspector.getTotalRequests().getTotalCount());
+				assertEquals(1, inspector.getActiveConnections());
+				assertEquals(1, inspector.getActiveRequests());
+				return request.loadBody()
+					.whenException(e -> latch.countDown())
+					.map($ -> HttpResponse.ok200().build());
+			})
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
+		server.listen();
+
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, """
+				POST / HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				Content-Length: 1000\r
+				\r
+				""");
+
+			writeByRandomParts(socket, "Truncated request");
+		}
+
+		latch.await();
+
+		assertEquals(1, inspector.getTotalRequests().getTotalCount());
+		assertEquals(0, inspector.getActiveConnections());
+		assertEquals(0, inspector.getActiveRequests());
 
 		server.closeFuture().get();
 		thread.join();

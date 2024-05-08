@@ -131,17 +131,7 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		@Override
 		public void onHttpError(HttpServerConnection connection, Exception e) {
-			PoolLabel pool = connection.getCurrentPool();
-			if (pool == PoolLabel.SERVING) {
-				activeRequests--;
-			}
-			if (pool == PoolLabel.READ_WRITE) {
-				// check if request and address was already set
-				HttpRequest request = connection.getRequest();
-				if (request != null && request.isRemoteAddressSet()) {
-					activeRequests--;
-				}
-			}
+			tryDecrementActiveRequests(connection);
 			if (e instanceof AsyncTimeoutException) {
 				httpTimeouts.recordEvent();
 			} else {
@@ -151,13 +141,7 @@ public final class HttpServer extends AbstractReactiveServer {
 
 		@Override
 		public void onMalformedHttpRequest(HttpServerConnection connection, MalformedHttpException e, byte[] malformedRequestBytes) {
-			if (connection.getCurrentPool() == PoolLabel.READ_WRITE) {
-				// check if request and address was already set
-				HttpRequest request = connection.getRequest();
-				if (request != null && request.isRemoteAddressSet()) {
-					activeRequests--;
-				}
-			}
+			tryDecrementActiveRequests(connection);
 			String requestString = new String(malformedRequestBytes, ISO_8859_1);
 			malformedHttpExceptions.recordException(e, requestString);
 		}
@@ -170,6 +154,20 @@ public final class HttpServer extends AbstractReactiveServer {
 		@Override
 		public void onHttpResponseComplete(HttpServerConnection httpServerConnection) {
 			activeRequests--;
+		}
+
+		private void tryDecrementActiveRequests(HttpServerConnection connection) {
+			PoolLabel pool = connection.getCurrentPool();
+			if (pool == PoolLabel.SERVING) {
+				activeRequests--;
+			}
+			if (pool == PoolLabel.READ_WRITE) {
+				// check if request and address was already set
+				HttpRequest request = connection.getRequest();
+				if (request != null && request.isRemoteAddressSet()) {
+					activeRequests--;
+				}
+			}
 		}
 
 		@JmxAttribute(extraSubAttributes = "totalCount")
