@@ -65,6 +65,8 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
+	protected static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
 	protected static final HttpHeaderValue TRANSFER_ENCODING_CHUNKED_HEADER = ofBytes(TRANSFER_ENCODING_CHUNKED);
 	protected static final HttpHeaderValue CONTENT_ENCODING_GZIP_HEADER = ofBytes(CONTENT_ENCODING_GZIP);
 	protected static final HttpHeaderValue ZERO_HEADER = ofDecimal(0);

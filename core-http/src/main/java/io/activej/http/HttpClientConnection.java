@@ -127,7 +127,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	protected void onClosedWithError(Exception e) {
 		if (inspector != null) {
 			if (e instanceof MalformedHttpException malformed) {
-				inspector.onMalformedHttpResponse(this, malformed, readBuf == null ? new byte[0] : readBuf.getArray());
+				inspector.onMalformedHttpResponse(this, malformed, readBuf == null ? EMPTY_BYTE_ARRAY : readBuf.getArray());
 			} else {
 				inspector.onHttpError(this, e);
 			}
