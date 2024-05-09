@@ -144,13 +144,16 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void readMessage() throws MalformedHttpException {
+		boolean continueReading;
 		do {
 			request = nullify(request, HttpMessage::recycle); // nullify any previous request
 			contentLength = 0L; // RFC 7230, section 3.3.3: if no Content-Length header is set, server can assume that a length of a message is 0
 			flags = READING_MESSAGES;
 			readStartLine();
 			if (isClosed()) return;
-		} while ((flags & (KEEP_ALIVE | BODY_RECEIVED | BODY_SENT)) == (KEEP_ALIVE | BODY_RECEIVED | BODY_SENT) && readBuf != null);
+			continueReading = (flags & (KEEP_ALIVE | BODY_RECEIVED | BODY_SENT)) == (KEEP_ALIVE | BODY_RECEIVED | BODY_SENT) && readBuf != null;
+			if (continueReading && inspector != null) inspector.onHttpResponseComplete(this);
+		} while (continueReading);
 		flags &= ~READING_MESSAGES;
 		if (writeBuf != null) {
 			ByteBuf writeBuf = this.writeBuf;
@@ -295,14 +298,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		boolean isWebSocket = IWebSocket.ENABLED && isWebSocket();
 		if (!isWebSocket || httpResponse.getCode() != 101) {
 			httpResponse.headers.addIfAbsent(CONNECTION, () -> {
-					if ((flags & KEEP_ALIVE) == 0 ||
-						server.keepAliveTimeoutMillis == 0 ||
-						numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0
-					) {
-						return CONNECTION_CLOSE_HEADER;
-					}
-					return CONNECTION_KEEP_ALIVE_HEADER;
-				});
+				if ((flags & KEEP_ALIVE) == 0 ||
+					server.keepAliveTimeoutMillis == 0 ||
+					numberOfRequests >= server.maxKeepAliveRequests && server.maxKeepAliveRequests != 0
+				) {
+					return CONNECTION_CLOSE_HEADER;
+				}
+				return CONNECTION_KEEP_ALIVE_HEADER;
+			});
 
 			if (isWebSocket) {
 				// if web socket upgrade request was unsuccessful, it is not a web socket connection

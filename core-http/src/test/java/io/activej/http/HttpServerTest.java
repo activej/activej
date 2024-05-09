@@ -311,6 +311,22 @@ public final class HttpServerTest {
 		doTestPipelining(delayedHttpServer());
 	}
 
+	@Test
+	public void testActiveRequestsWithPipelining() throws Exception {
+		JmxInspector inspector = new JmxInspector();
+		HttpServer server = HttpServer.builder(eventloop,
+				request ->
+					HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())).toPromise())
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
+
+		doTestPipelining(server);
+
+		assertEquals(400, inspector.getTotalRequests().getTotalCount());
+		assertEquals(0, inspector.getActiveRequests());
+	}
+
 	private void doTestPipelining(HttpServer server) throws Exception {
 		server.listen();
 		Thread thread = new Thread(eventloop);
