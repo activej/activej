@@ -389,6 +389,37 @@ public final class HttpClientTest {
 		assertTrue(serverResponse.startsWith(context));
 	}
 
+	@Test
+	public void testErrorCounters() throws IOException {
+		String serverResponse = "\r\n";
+		SimpleServer.builder(Reactor.getCurrentReactor(), socket ->
+				socket.read()
+					.whenResult(ByteBuf::recycle)
+					.then(() -> socket.write(wrapAscii(serverResponse)))
+					.whenComplete(socket::close))
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build()
+			.listen();
+
+		JmxInspector inspector = new JmxInspector();
+		IHttpClient client = HttpClient.builder(Reactor.getCurrentReactor())
+			.withInspector(inspector)
+			.build();
+
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port).build())
+			.then(response -> response.loadBody()));
+
+		assertThat(e, instanceOf(MalformedHttpException.class));
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Invalid response", malformedHttpExceptions.getLastMessage());
+
+		ExceptionStats httpErrors = inspector.getHttpErrors();
+		assertEquals(0, httpErrors.getTotal());
+	}
+
 	private static final ByteBufsDecoder<ByteBuf> REQUEST_DECODER = bufs -> {
 		for (int i = 0; i < bufs.remainingBytes() - 3; i++) {
 			if (bufs.peekByte(i) == CR &&

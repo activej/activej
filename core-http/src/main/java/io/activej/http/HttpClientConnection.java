@@ -125,7 +125,13 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onClosedWithError(Exception e) {
-		if (inspector != null) inspector.onHttpError(this, e);
+		if (inspector != null) {
+			if (e instanceof MalformedHttpException malformed) {
+				inspector.onMalformedHttpResponse(this, malformed, readBuf == null ? new byte[0] : readBuf.getArray());
+			} else {
+				inspector.onHttpError(this, e);
+			}
+		}
 		if (promise != null) {
 			SettablePromise<HttpResponse> promise = this.promise;
 			this.promise = null;
@@ -135,10 +141,6 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onMalformedHttpException(MalformedHttpException e) {
-		if (inspector != null) {
-			inspector.onMalformedHttpResponse(this, e, readBuf == null ? new byte[0] : readBuf.getArray());
-		}
-
 		closeEx(e);
 	}
 

@@ -233,6 +233,7 @@ public final class HttpClient extends AbstractNioReactive
 
 		@Override
 		public void onMalformedHttpResponse(HttpClientConnection connection, MalformedHttpException e, byte[] malformedResponseBytes) {
+			activeRequests--;
 			String responseString = new String(malformedResponseBytes, ISO_8859_1);
 			malformedHttpExceptions.recordException(e, responseString);
 		}
