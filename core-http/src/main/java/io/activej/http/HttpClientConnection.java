@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.SP;
+import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Utils.nullify;
 import static io.activej.csp.supplier.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaderValue.ofBytes;
@@ -88,6 +89,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * </pre>
  */
 public final class HttpClientConnection extends AbstractHttpConnection {
+	private static final byte[] VALID_START_LINE_PREFIX = encodeAscii("HTTP/1.");
+
 	private @Nullable SettablePromise<HttpResponse> promise;
 	private final HttpClient client;
 	private final @Nullable Inspector inspector;
@@ -143,7 +146,10 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	@Override
 	protected boolean isValidStartLinePrefix(byte[] line, int pos, int limit) {
-		// TODO: Add client-side validation
+		int end = Math.min(VALID_START_LINE_PREFIX.length, limit - pos);
+		for (int i = 0; i < end; i++) {
+			if (line[pos + i] != VALID_START_LINE_PREFIX[i]) return false;
+		}
 		return true;
 	}
 
