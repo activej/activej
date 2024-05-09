@@ -601,6 +601,35 @@ public final class HttpServerTest {
 	}
 
 	@Test
+	public void testMalformedStartLineNoLF() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		HttpServer server = HttpServer.builder(eventloop, $ -> {
+				throw new IllegalArgumentException("Should not be called");
+			})
+			.withListenPort(port)
+			.withInspector(inspector)
+			.build();
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		// malformed header
+		String malformedHeaderRequest = "AAABBBCCC";
+		doTestMalformedRequest(malformedHeaderRequest);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Invalid start line prefix", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedHeaderRequest.contains(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
 	public void testMalformedUri() throws IOException, ExecutionException, InterruptedException {
 		JmxInspector inspector = new JmxInspector();
 		HttpServer server = HttpServer.builder(eventloop, $ -> {

@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.ApplicationSettings;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.csp.supplier.ChannelSupplier;
@@ -89,8 +88,6 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * </pre>
  */
 public final class HttpClientConnection extends AbstractHttpConnection {
-	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpClientConnection.class, "detailedErrorMessages", false);
-
 	private @Nullable SettablePromise<HttpResponse> promise;
 	private final HttpClient client;
 	private final @Nullable Inspector inspector;
@@ -142,6 +139,12 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Override
 	protected void onMalformedHttpException(MalformedHttpException e) {
 		closeEx(e);
+	}
+
+	@Override
+	protected boolean isValidStartLinePrefix(byte[] line, int pos, int limit) {
+		// TODO: Add client-side validation
+		return true;
 	}
 
 	@Override

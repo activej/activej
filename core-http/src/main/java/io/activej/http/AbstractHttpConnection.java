@@ -48,12 +48,15 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveLong;
 import static java.lang.Math.max;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 @SuppressWarnings({"WeakerAccess", "PointlessBitwiseExpression"})
 public abstract class AbstractHttpConnection extends AbstractReactive {
 	public static final MemSize MAX_HEADER_LINE_SIZE = MemSize.of(ApplicationSettings.getInt(HttpMessage.class, "maxHeaderLineSize", MemSize.kilobytes(8).toInt())); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADER_LINE_SIZE_BYTES = MAX_HEADER_LINE_SIZE.toInt(); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADERS = ApplicationSettings.getInt(HttpMessage.class, "maxHeaders", 100); // http://httpd.apache.org/docs/2.2/mod/core.html#limitrequestfields
+
+	protected static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(AbstractHttpConnection.class, "detailedErrorMessages", false);
 
 	protected static final HttpHeaderValue CONNECTION_KEEP_ALIVE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("keep-alive"));
 	protected static final HttpHeaderValue CONNECTION_CLOSE_HEADER = HttpHeaderValue.ofBytes(encodeAscii("close"));
@@ -128,6 +131,8 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;
 	}
+
+	protected abstract boolean isValidStartLinePrefix(byte[] line, int pos, int limit);
 
 	protected abstract void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException;
 
@@ -254,6 +259,12 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				readHeaders(p + 1);
 				return;
 			}
+		}
+		if (!isValidStartLinePrefix(array, head, tail)) {
+			if (!DETAILED_ERROR_MESSAGES) throw new MalformedHttpException("Invalid start line prefix");
+			throw new MalformedHttpException(
+				"Invalid start line prefix: " +
+				new String(array, head, tail, ISO_8859_1));
 		}
 		if (readBuf.readRemaining() > MAX_HEADER_LINE_SIZE_BYTES)
 			throw new MalformedHttpException("Header line exceeds max header size");

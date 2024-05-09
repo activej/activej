@@ -60,7 +60,6 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 public final class HttpServerConnection extends AbstractHttpConnection {
 	private static final boolean CHECKS = Checks.isEnabled(HttpServerConnection.class);
 
-	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
 	private static final int INITIAL_WRITE_BUFFER_SIZE = ApplicationSettings.getMemSize(HttpServerConnection.class, "initialWriteBufferSize", MemSize.ZERO).toInt();
 
 	private static final HttpMethod[] METHODS = new HttpMethod[128];
@@ -184,6 +183,21 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 		socket.write(writeBuf)
 			.whenComplete(this::close);
+	}
+
+	@Override
+	protected boolean isValidStartLinePrefix(byte[] line, int pos, int limit) {
+		out:
+		for (HttpMethod method : HttpMethod.values()) {
+			byte[] bytes = method.bytes();
+			int end = Math.min(bytes.length, limit - pos);
+			for (int i = 0; i < end; i++) {
+				if (line[pos + i] != bytes[i]) continue out;
+			}
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
