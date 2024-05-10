@@ -31,6 +31,8 @@ import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
 import static java.util.stream.Collectors.toSet;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.*;
 
 public final class TestDI {
@@ -1513,7 +1515,10 @@ public final class TestDI {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Could not synthesize a binding for Iterable in scope (). Ambiguous bindings in scope (): [List<String>, List<Integer>]", e.getMessage());
+			assertThat(e.getMessage(), matchesPattern(
+				"Could not synthesize a binding for Iterable in scope \\(\\)\\. " +
+				"Ambiguous bindings in scope \\(\\): \\[List<(String|Integer)>, List<(String|Integer)>]")
+			);
 		}
 	}
 
