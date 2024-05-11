@@ -352,6 +352,7 @@ public abstract class AbstractReactiveServer extends AbstractNioReactive
 	) {
 		assert reactor.inReactorThread();
 		accepts.recordEvent();
+		ssl = (sslContext != null) && ssl;
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
