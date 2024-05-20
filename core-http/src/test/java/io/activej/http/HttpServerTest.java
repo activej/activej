@@ -4,6 +4,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.ref.Ref;
 import io.activej.csp.supplier.ChannelSupplier;
 import io.activej.csp.supplier.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
@@ -955,6 +956,36 @@ public final class HttpServerTest {
 		assertThat(lastException.getCause(), instanceOf(TruncatedDataException.class));
 
 		thread.join();
+	}
+
+	@Test
+	public void testGetFullUri() throws IOException {
+		Ref<String> fullUriRef = new Ref<>();
+		HttpServer server = HttpServer.builder(eventloop, request -> {
+				String fullUri = HttpUtils.getFullUri(request);
+				fullUriRef.set(fullUri);
+				return HttpResponse.ok200().toPromise();
+			})
+			.withListenPort(port)
+			.withAcceptOnce()
+			.build();
+		server.listen();
+
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, "GET /a/b/c?q=1&u=2#fragment HTTP/1.1\r\n" +
+									   "Host: localhost:" + port + "\r\n" +
+									   "Connection: close\r\n" +
+									   "Content-Length: 0\r\n" +
+									   "\r\n");
+
+			skipResponse(socket);
+		}
+
+		assertEquals("http://localhost:" + port + "/a/b/c?q=1&u=2#fragment", fullUriRef.get());
 	}
 
 	private static void skipResponse(Socket socket) throws IOException {

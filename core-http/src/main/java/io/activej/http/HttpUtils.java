@@ -36,6 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
 import static io.activej.http.IWebSocket.Frame.FrameType.*;
 import static io.activej.http.WebSocketConstants.MAGIC_STRING;
@@ -298,7 +299,10 @@ public final class HttpUtils {
 	 * (RFC3986) scheme://authority/path/?query#fragment
 	 */
 	public static @Nullable String getFullUri(HttpRequest request, int builderCapacity) {
-		String host = request.getHostAndPort();
+		String host = request.getUrl().isRelativePath() ?
+			request.getHeader(HOST) :
+			request.getHostAndPort();
+
 		if (host == null) {
 			return null;
 		}
