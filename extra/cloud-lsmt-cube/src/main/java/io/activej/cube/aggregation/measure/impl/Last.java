@@ -33,7 +33,7 @@ public final class Last extends Measure {
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return constructor(ValueWithTimestamp.class, sanitizeValue(defaultValue(fieldType.getClass())), value(0L));
+		return set(accumulator, constructor(ValueWithTimestamp.class, sanitizeValue(defaultValue(fieldType.getClass())), value(0L)));
 	}
 
 	@Override

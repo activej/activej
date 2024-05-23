@@ -31,7 +31,7 @@ public final class LastNotNull extends Measure {
 
 	@Override
 	public Expression zeroAccumulator(Variable accumulator) {
-		return constructor(ValueWithTimestamp.class, nullRef(fieldType.getClass()), value(0L));
+		return set(accumulator, constructor(ValueWithTimestamp.class, nullRef(fieldType.getClass()), value(0L)));
 	}
 
 	@Override
