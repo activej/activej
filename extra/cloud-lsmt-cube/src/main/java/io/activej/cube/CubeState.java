@@ -156,6 +156,7 @@ public final class CubeState implements OTState<CubeDiff> {
 				compatibleMeasures,
 				where
 			);
+			if (chunks.isEmpty()) continue;
 			result.add(new CompatibleAggregations(record.key(), compatibleMeasures, chunks));
 		}
 
